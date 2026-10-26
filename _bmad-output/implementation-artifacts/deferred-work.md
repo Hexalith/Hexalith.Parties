@@ -1856,10 +1856,16 @@ review1_2026_10_25: Review-1 native TAG queries retain discovered obligations wi
 - source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
   summary: Tenant deletion must purge existing live/dead NL retry payloads and scoped workflow histories (high, pre-existing).
   evidence: Review R2-B7; approved Memories baseline cdd73d7 DeleteTenantDataKeysActivity already omits retry queues/payload hashes and RetryWorkflowErasure. Verify physical absence and unrelated-tenant survival through the tenant workflow.
+  status: done 2026-10-26
+  resolution: Tenant cleanup now installs the permanent fence, retains bounded content-free history discovery before scheduling/removal, preserves per-attempt scheduling uncertainty, reconciles live/dead payloads and purges independently scoped running/completed Dapr histories. Actual authenticated Dapr/Redis tests prove physical absence, restart and unrelated survival. Unknown historical coverage, uncertain scheduling and unqualified legacy scheduler drain still block cleanup; no production reconciliation is attested.
+  verification: `spec-five-nl-retry-safety-deferred-items.md`; `tests/five-nl-retry-safety-2026-10-26/final-verification.json` and `final-executed-tests.json` (125 unit/indexing and 90 actual Redis/authenticated Dapr controls, zero targeted skips). Source qualification is separate from package publication/adoption and deployment.
 
 - source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
   summary: Qualify malformed historical NL retry payload addressing (medium, pre-existing).
   evidence: Review R3-B4; Baseline cdd73d7 accepts payload MemoryUnitId differing from its hash field/member; current writers use exact addressing. Corrupt or older malformed layouts need explicit reconciliation and erasure qualification.
+  status: done 2026-10-26
+  resolution: Modern queue/hash addresses must exactly match parsed tenant and unit before retry, overflow or erasure. Misaddressed/foreign records cannot mutate another unit; malformed pruning retains a content-free unresolved-history obligation. Actual persisted-state controls exercise both tenant and unit mismatches and preserve unrelated bytes.
+  verification: `spec-five-nl-retry-safety-deferred-items.md`; `tests/five-nl-retry-safety-2026-10-26/final-verification.json` and `final-executed-tests.json` (125 unit/indexing and 90 actual Redis/authenticated Dapr controls, zero targeted skips). Source qualification is separate from package publication/adoption and deployment.
 
 - source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
   summary: Reconcile pre-tombstone orphan legacy NL hashes before namespace activation (medium, pre-existing).
@@ -1872,14 +1878,23 @@ review1_2026_10_25: Review-1 native TAG queries retain discovered obligations wi
 - source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
   summary: Make corrupt retry pruning and backlog trimming conditional on the selected payload or score (medium, pre-existing).
   evidence: Review R4-B10; baseline cdd73d7 removes selected queue members/hash fields without checking the observed bytes or score, so a concurrently replaced valid payload can be deleted. Qualify interleaved replacement through both pruning and trim paths; atomic type preflight does not settle selection freshness.
+  status: done 2026-10-26
+  resolution: Live corruption pruning, overflow and dead trimming compare the observed member, payload presence/bytes and score in the final atomic Redis mutation. Actual registry command-boundary interleavings preserve replacements in all three maintenance paths; bounded expansions and ordinary queue caps remain covered.
+  verification: `spec-five-nl-retry-safety-deferred-items.md`; `tests/five-nl-retry-safety-2026-10-26/final-verification.json` and `final-executed-tests.json` (125 unit/indexing and 90 actual Redis/authenticated Dapr controls, zero targeted skips). Source qualification is separate from package publication/adoption and deployment.
 
 - source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
   summary: Retire obsolete legacy retry aliases after modern-first completion using qualified lineage (medium, pre-existing).
   evidence: Review R5-B1; baseline cdd73d7 Complete removes the unit and exact completed JSON, leaving a different legacy JSON alias available to the old raw-input workflow. Qualify equal-score modern-first ordering and preserve genuinely newer work; current erasure fences still refuse erased units.
+  status: done 2026-10-26
+  resolution: Completion retires inspected aliases only when immutable admission lineage matches, while comparing their final observed score/payload. A content-free completion marker blocks obsolete legacy promotion across restart. Distinct/ambiguous lineage is retained for reconciliation, and modern work still progresses with batch size one.
+  verification: `spec-five-nl-retry-safety-deferred-items.md`; `tests/five-nl-retry-safety-2026-10-26/final-verification.json` and `final-executed-tests.json` (125 unit/indexing and 90 actual Redis/authenticated Dapr controls, zero targeted skips). Source qualification is separate from package publication/adoption and deployment.
 
 - source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
   summary: Bind final natural-language retry publication atomically to the current retry payload or version (medium, pre-existing).
   evidence: Review R5-B3; baseline cdd73d7 publishes generated input after asynchronous checks without a retry-version publication fence. Current exact-record checks protect generation boundaries but leave a final check/write race. Qualify replacement during index readiness and preserve newer output and queued work.
+  status: done 2026-10-26
+  resolution: Generated NL output compares the exact expected retry payload and live unit inside the final atomic publication operation, after readiness awaits. Replaced/erased attempts return content-free outcomes while preserving newer output and queue state. Scoped workflow version binding and verified terminal retirement retain replacement progress.
+  verification: `spec-five-nl-retry-safety-deferred-items.md`; `tests/five-nl-retry-safety-2026-10-26/final-verification.json` and `final-executed-tests.json` (125 unit/indexing and 90 actual Redis/authenticated Dapr controls, zero targeted skips). Source qualification is separate from package publication/adoption and deployment.
 
 - source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
   summary: Preserve retained failed audit facts beyond the processing checkpoint during shorter rebuilds (high, pre-existing).

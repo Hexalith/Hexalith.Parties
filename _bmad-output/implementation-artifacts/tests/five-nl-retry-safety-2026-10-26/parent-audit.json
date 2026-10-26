@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-26",
+  "targeted_tests": 197,
+  "all_passed": true,
+  "matrix": {
+    "tenant_deletion": [
+      {
+        "test": "RetryWorkflowErasureIntegrationTests.TenantDeletionPurgesLiveDeadAndCompletedOrRunningHistoryWhileUnknownCoverageAndSchedulingRemainBlocked",
+        "executed_passes": 1
+      },
+      {
+        "test": "RetryWorkflowErasureIntegrationTests.CollidingLegacyAddressPreservesForeignHistoryAndScopedNewSchedulesUntilTheirOwnErasure",
+        "executed_passes": 1
+      }
+    ],
+    "malformed_addressing": [
+      {
+        "test": "FailedNaturalLanguageEmbeddingRegistryTests.DequeueRejectsMisaddressedModernPayloadWithoutMutation",
+        "executed_passes": 2
+      },
+      {
+        "test": "NaturalLanguageErasureIntegrationTests.MisaddressedModernPayloadsCannotRetryOrOverflowAnotherUnit",
+        "executed_passes": 2
+      }
+    ],
+    "concurrent_pruning": [
+      {
+        "test": "NaturalLanguageErasureIntegrationTests.ObservedPruningPreservesConcurrentLiveAndDeadReplacement",
+        "executed_passes": 6
+      },
+      {
+        "test": "NaturalLanguageErasureIntegrationTests.ActualQueueMaintenancePreservesASelectionChangedAtItsFinalRedisCommand",
+        "executed_passes": 9
+      }
+    ],
+    "modern_first_completion": [
+      {
+        "test": "NaturalLanguageErasureIntegrationTests.ModernFirstCompletionRetiresVerifiedAliasesButDistinctLegacyWorkRemainsBlockedAfterRestart",
+        "executed_passes": 1
+      },
+      {
+        "test": "NaturalLanguageErasureIntegrationTests.MixedDistinctLegacyAliasPreservesModernProgressAndRemainsForReconciliation",
+        "executed_passes": 1
+      }
+    ],
+    "publication_race": [
+      {
+        "test": "NaturalLanguageErasureIntegrationTests.AdmittedModernAndJsonOnlyLegacyRetriesPersistActualNaturalLanguageOutput",
+        "executed_passes": 5
+      },
+      {
+        "test": "NaturalLanguageErasureIntegrationTests.ExactRetryAdmissionRejectsRecordReplacementDuringDescriptionOrEmbedding",
+        "executed_passes": 2
+      }
+    ]
+  },
+  "source_hashes_match": true,
+  "publication": "pending review and authorized owner-first pushes"
+}

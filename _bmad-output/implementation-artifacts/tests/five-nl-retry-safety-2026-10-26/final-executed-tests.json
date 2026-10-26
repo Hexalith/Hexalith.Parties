@@ -1,0 +1,1082 @@
+{
+  "cases": [
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSemanticActivityTests.RunAsync_InvalidTenantId_ShouldThrow",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSemanticActivityTests.RunAsync_ShouldStoreVectorWithCorrectKey",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSemanticActivityTests.RunAsync_NullEmbeddingVector_ShouldThrow",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSemanticActivityTests.RunAsync_EmptyEmbeddingVector_ShouldThrow",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSemanticActivityTests.RunAsync_IndexAlreadyExistsWithDifferentDimensions_ShouldThrow",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSemanticActivityTests.RunAsync_WhenRedisConnectionFails_ShouldPropagateException",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSemanticActivityTests.RunAsync_IndexMissingCloudEventSubjectField_ShouldAlterSchemaBeforeHashWrite",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSemanticActivityTests.RunAsync_ActiveMigrationMarkerWithOldProvider_ShouldFailBeforeHashWrite",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSemanticActivityTests.VectorByteConversion_KnownGoldValues_ShouldBeExact",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSemanticActivityTests.RunAsync_ShouldUseTenantNamespacedKey",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.NaturalLanguageEmbeddingRetryHostedServiceTests.TenantIsolationDoesNotSwallowCallerCancellation",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.NaturalLanguageEmbeddingRetryHostedServiceTests.TickAsync_DisabledDuringBacklogRead_StopsBeforeDequeuing",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.NaturalLanguageEmbeddingRetryHostedServiceTests.TickAsync_DisabledDuringBatchRead_LeavesReturnedRecordsUnscheduled",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.NaturalLanguageEmbeddingRetryHostedServiceTests.TickAsync_DisabledAfterFirstScheduleStarts_DoesNotScheduleOrFinalizeSecondRecord",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.NaturalLanguageEmbeddingRetryHostedServiceTests.GetRetryWorkflowInstanceId_PreservesScopeBoundariesAndUsesDisjointBoundedNamespace",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.NaturalLanguageEmbeddingRetryHostedServiceTests.IsTerminalStatus_MatchesExpectedTerminalStates(status: Completed, expected: True)",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.NaturalLanguageEmbeddingRetryHostedServiceTests.IsTerminalStatus_MatchesExpectedTerminalStates(status: Failed, expected: True)",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.NaturalLanguageEmbeddingRetryHostedServiceTests.IsTerminalStatus_MatchesExpectedTerminalStates(status: Canceled, expected: True)",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.NaturalLanguageEmbeddingRetryHostedServiceTests.IsTerminalStatus_MatchesExpectedTerminalStates(status: Terminated, expected: True)",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.NaturalLanguageEmbeddingRetryHostedServiceTests.IsTerminalStatus_MatchesExpectedTerminalStates(status: Running, expected: False)",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.NaturalLanguageEmbeddingRetryHostedServiceTests.IsTerminalStatus_MatchesExpectedTerminalStates(status: Pending, expected: False)",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Tenants.DeleteTenantDataKeysActivityTests.RunAsync_ShouldDeleteAllTenantDataKeysUsingExpectedPrefixes",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Tenants.DeleteTenantDataKeysActivityTests.MissingWorkflowClientRefusesReconciledHistory",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Tenants.DeleteTenantDataKeysActivityTests.CompatibleConstructorRefusesUnknownHistoryEvenWhenQueuesAreEmpty",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Tenants.DeleteTenantDataKeysActivityTests.RegisteredCompositionSelectsWorkflowAwareConstructor",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Tenants.DeleteTenantDataKeysActivityTests.RunAsync_PurgesDaprStateForRequestedTenantOnly_FailClosedOnOtherTenant",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Tenants.DeleteTenantDataKeysActivityTests.RunAsync_WhenNoConnectedServer_ShouldThrowInvalidOperationException",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Tenants.DeleteTenantDataKeysActivityTests.RunAsync_WithRealDaprStores_PurgesSeededKeysForInputTenantOnly",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexGraphActivityTests.RunAsync_ShouldCallBuilderInCorrectOrder",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexGraphActivityTests.RunAsync_WithBothCausationAndCorrelation_ShouldCreateThreeEdges",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexGraphActivityTests.NullCorrelationId_SkipsCorrelatedWithBranch",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexGraphActivityTests.RunAsync_WithCausationId_ShouldCreateCausedByEdge",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexGraphActivityTests.RunAsync_FalkorDbConnectionFailure_ShouldPropagateException",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexGraphActivityTests.CorrelationIdEqualsMemoryUnitId_NoSelfEdge_LogsDebug",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexGraphActivityTests.MultipleEventsSameCorrelationId_EachCreatesEdgeToRoot_NoFanOut",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexGraphActivityTests.RunAsync_WithCorrelationId_ShouldCreateCorrelatedWithEdge",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexGraphActivityTests.CorrelationId_CreatesRootToCurrentEdge",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexGraphActivityTests.RunAsync_WithoutCausationOrCorrelation_ShouldOnlyCreateContainsEdge",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexGraphActivityTests.RunAsync_ShouldUseTenantIdAsGraphId",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexGraphActivityTests.RunAsync_InvalidTenantId_ShouldThrow",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.CleanupActivityTests.CleanupGraph_ShouldCallBuildDeleteMemoryUnitNode",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.CleanupActivityTests.CleanupSyntactic_ShouldDeleteRedisHashKey",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.CleanupActivityTests.CleanupSemantic_DeletesBothHashes_Idempotent",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.CleanupActivityTests.CleanupSemantic_KeyDoesNotExist_ShouldNotThrow",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.CleanupActivityTests.CleanupGraph_NodeDoesNotExist_ShouldNotThrow",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.CleanupActivityTests.CleanupSyntactic_KeyDoesNotExist_ShouldNotThrow",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.CleanupActivityTests.CleanupSemantic_ShouldDeleteRedisVectorHashKey",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSemanticChunksActivityTests.RunAsync_MissingIndex_FailsBeforeWritingChunkHashes",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSemanticChunksActivityTests.RunAsync_WithReadyIndex_VerifiesReadinessOnceAndWritesChunkHashes",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.EnumerateMemoryUnitIdsActivityTests.RunAsync_NaturalLanguageSemanticKeyUnderDisjointPrefix_DoesNotCreatePhantomId",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.EnumerateMemoryUnitIdsActivityTests.RunAsync_RedisScanFailure_Throws",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.EnumerateMemoryUnitIdsActivityTests.RunAsync_RedisScanOperationCanceled_BubblesUp",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.EnumerateMemoryUnitIdsActivityTests.RunAsync_OrphanInVectorOnly_IsReturnedInUnion",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.EnumerateMemoryUnitIdsActivityTests.RunAsync_AllThreeBackendsUnion_ReturnsDeduplicatedIds",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.EnumerateMemoryUnitIdsActivityTests.RunAsync_SixtyThousandUnits_TruncatesAndFlags",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.EnumerateMemoryUnitIdsActivityTests.RunAsync_UsesCursorScan_NotKeysCommand",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.EnumerateMemoryUnitIdsActivityTests.RunAsync_OrphanInGraphOnly_IsReturnedInUnion",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.CompleteAsync_RemovesStableAndLegacyLiveMembers",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.TryDeserialize_Garbage_ReturnsNull",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.SerializeRecord_RoundTripsAllFields",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.EnqueueDequeueRoundTrip_StoresIdsPlusBoundedPayload_NotFullPayload",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.CompleteAsync_WhenPayloadChanged_DoesNotRemoveNewerLiveMember",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.EnqueueAsync_UsesMemoryUnitMemberAndPayloadHash",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.IncrementAttemptsAsync_WhenPayloadChanged_DoesNotRemoveNewerLiveMember",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.ListTenantsWithBacklogAsync_UsesTenantBacklogSetWithoutKeyScan",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.GetBacklogBytesAsync_TimeoutException_ReturnsZero",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.DequeueRejectsMisaddressedModernPayloadWithoutMutation(payloadTenant: \\\"tenant-a\\\", payloadUnit: \\\"other-unit\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.DequeueRejectsMisaddressedModernPayloadWithoutMutation(payloadTenant: \\\"other-tenant\\\", payloadUnit: \\\"selected-unit\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.ListTenantsWithBacklogAsync_WhenTenantSetMissing_ScansLegacyRetryKeys",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.LiveKeyPrefix_IsTenantScoped",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.EnqueueAsync_WhenLiveQueueExceedsCap_MovesOverflowToDeadLetter",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.PayloadKeys_AreTenantScoped",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.DequeueBatchAsync_SkipsCorruptPayloadsAndCleansLiveMembers",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.IncrementAttemptsAsync_WhenDeadLetteredAndDeadQueueExceedsCap_TrimsDeadPayloadHash",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.GetBacklogBytesAsync_RedisException_ReturnsZero",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.IncrementAttemptsAsync_RemovesStableAndLegacyLiveMembers",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.DeadKeyPrefix_IsTenantScoped",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.EnqueueAsync_WhenDuplicateMemoryUnit_UsesStableMember",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.AliasLineageRequiresAllImmutableAdmissionFields",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests.DequeueBatchAsync_WithLegacyJsonMember_ReturnsRecord",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexNaturalLanguageSemanticActivityTests.RunAsync_DimensionsMismatch_Throws",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexNaturalLanguageSemanticActivityTests.RunAsync_ExistingIndexWithDifferentDimensions_ThrowsInvalidOperationException",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexNaturalLanguageSemanticActivityTests.RunAsync_WritesConfidenceSourceField",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexNaturalLanguageSemanticActivityTests.RunAsync_WritesDistinctHashKey_FromSemanticActivity",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexNaturalLanguageSemanticActivityTests.RetryUsesLinkedSpanAndPreservesSuccessOrErrorTags(fail: False)",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexNaturalLanguageSemanticActivityTests.RetryUsesLinkedSpanAndPreservesSuccessOrErrorTags(fail: True)",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexNaturalLanguageSemanticActivityTests.RunAsync_NullConfidence_PersistsEmptyString",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexNaturalLanguageSemanticActivityTests.RunAsync_EmptyEmbeddingVector_Throws",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexNaturalLanguageSemanticActivityTests.RunAsync_ActiveMigrationMarkerWithOldProvider_ShouldFailBeforeHashWrite",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.VerifyConsistencyActivityTests.RunAsync_RedisUnavailable_ShouldPropagateException",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.VerifyConsistencyActivityTests.RunAsync_ShouldCallGraphQueryBuilder",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.VerifyConsistencyActivityTests.RunAsync_IndexedNaturalLanguageMissing_SurfacesGapNote",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.VerifyConsistencyActivityTests.RunAsync_AllBackendsPresent_ShouldReturnAllTrue",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.VerifyConsistencyActivityTests.RunAsync_GraphMissing_ShouldReturnGraphExistsFalse",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.VerifyConsistencyActivityTests.RunAsync_SemanticMissing_ShouldReturnSemanticExistsFalse",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.VerifyConsistencyActivityTests.RunAsync_QueuedNaturalLanguageMissing_SurfacesInformationalNote",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.VerifyConsistencyActivityTests.RunAsync_SyntacticMissing_ShouldReturnSyntacticExistsFalse",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.VerifyConsistencyActivityTests.RunAsync_ShouldUseTenantNamespacedKeys",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.CheckMemoryUnitExistsActivityTests.RunAsync_SyntacticHashMissing_ReturnsFalse",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.CheckMemoryUnitExistsActivityTests.RunAsync_SyntacticHashPresent_ReturnsTrue",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSyntacticActivityTests.RunAsync_RepeatedWrites_NeverCreateIndex_AndVerifyReadinessOnce",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSyntacticActivityTests.RunAsync_IndexMissingCloudEventSubjectField_ShouldAlterSchemaBeforeHashWrite",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSyntacticActivityTests.RunAsync_InvalidTenantId_ShouldThrow",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSyntacticActivityTests.RunAsync_ShouldUseTenantNamespacedKey",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSyntacticActivityTests.RunAsync_WithContentReference_StoresResolvedContent",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSyntacticActivityTests.RunAsync_ShouldStoreHashWithCorrectKeyAndFields",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSyntacticActivityTests.RunAsync_IndexInfoTemporarilyIncomplete_ShouldRetryBeforeHashWrite",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSyntacticActivityTests.RunAsync_WhenRedisConnectionFails_ShouldPropagateException",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSyntacticActivityTests.RunAsync_ShouldPersistEmbeddingModelHashField",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexingActivityRecordSerializationTests.ConsistencyResult_RoundTrip_MixedValues",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexingActivityRecordSerializationTests.ConsistencyInput_RoundTrip",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexingActivityRecordSerializationTests.CleanupInput_RoundTrip",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexingActivityRecordSerializationTests.ConsistencyResult_RoundTrip_AllTrue",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.RepairUnitActivityTests.RunAsync_Unrepairable_ReturnsSucceededFalseWithReason",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.RepairUnitActivityTests.RunAsync_RemoveOrphanedSemantic_DeletesVectorKey",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.RepairUnitActivityTests.RunAsync_ReIndexGraph_InvokesGraphNodeMerger",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.RepairUnitActivityTests.RunAsync_ReIndexSemanticAndGraph_InvokesBoth",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.RepairUnitActivityTests.RunAsync_ReIndexSemanticAndGraph_GraphMergeFailure_RecordsObservedAfterState",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.RepairUnitActivityTests.RunAsync_RemoveOrphanedGraph_InvokesDeleteMemoryUnitNode",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.RepairUnitActivityTests.RunAsync_ReIndexSemantic_InvokesSemanticIndexer",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.RepairUnitActivityTests.RunAsync_RemoveOrphanedSemanticAndGraph_PerformsBothDeletes",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.RepairUnitActivityTests.RunAsync_StaleUnrepairableReverifyConsistent_DowngradesToNoOp",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.RepairUnitActivityTests.RunAsync_ReVerifyReturnsConsistent_SkipsAction",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.RepairUnitActivityTests.RunAsync_FreshReVerifyReportsAllAbsent_ReturnsUnrepairableNotNoOp",
+      "result": "Pass"
+    },
+    {
+      "lane": "focused-server",
+      "name": "Hexalith.Memories.Server.Tests.Activities.Indexing.RepairUnitActivityTests.RunAsync_ReIndexSemanticFailure_PreservesBeforeStateOnFailure",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.InvalidAdmissionIdentityFailsBeforeAnyDurablePreparation(invalid: \\\"tenant\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.InvalidAdmissionIdentityFailsBeforeAnyDurablePreparation(invalid: \\\"case\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.InvalidAdmissionIdentityFailsBeforeAnyDurablePreparation(invalid: \\\"source\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.InvalidAdmissionIdentityFailsBeforeAnyDurablePreparation(invalid: \\\"workflow\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.InvalidAdmissionIdentityFailsBeforeAnyDurablePreparation(invalid: \\\"predecessor\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.InvalidAdmissionIdentityFailsBeforeAnyDurablePreparation(invalid: \\\"case-control\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.InvalidAdmissionIdentityFailsBeforeAnyDurablePreparation(invalid: \\\"source-control\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.InvalidAdmissionIdentityFailsBeforeAnyDurablePreparation(invalid: \\\"workflow-control\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.InvalidAdmissionIdentityFailsBeforeAnyDurablePreparation(invalid: \\\"predecessor-control\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.AcceptedIdentityBoundariesRemainReadableThroughActualPublicSdk",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.ActualTenantCleanupRemovesHashedOwnershipAndPayloadsAcrossRestartWhileOtherTenantSurvives",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.OverlappingActualSameUnitGraphWritesRetainIndependentAuthorityUntilEachAcknowledgement",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.PendingActualPayloadSaveBlocksTenantSuccessAcrossSerializedRestartAndThenConverges",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.MissingOptionalLegacyTagRemainsUnqualifiedAndPreservesTheObligation",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.CompletionPreservesHistoricalAliasesWithUnknownOrDuplicateAdmissionMetadata(shape: \\\"unknown\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.CompletionPreservesHistoricalAliasesWithUnknownOrDuplicateAdmissionMetadata(shape: \\\"duplicate\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.CompletionPreservesHistoricalAliasesWithUnknownOrDuplicateAdmissionMetadata(shape: \\\"conflicting\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.MigrationPreservesNewerCanonicalContentAndHonorsActualSourceFence",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.LargeAccumulatedDeadQueueTrimUsesBoundedLuaExpansionAndPreservesNewestPayloads",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.WrongTypeDestinationCannotDeleteOrOverwriteAdmittedLivePayload(mode: \\\"enqueue\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.WrongTypeDestinationCannotDeleteOrOverwriteAdmittedLivePayload(mode: \\\"requeue\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.WrongTypeDestinationCannotDeleteOrOverwriteAdmittedLivePayload(mode: \\\"dead\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.WrongTypeDestinationCannotDeleteOrOverwriteAdmittedLivePayload(mode: \\\"overflow\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.MixedDistinctLegacyAliasPreservesModernProgressAndRemainsForReconciliation",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.MisaddressedModernPayloadsCannotRetryOrOverflowAnotherUnit(foreignTenant: False)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.MisaddressedModernPayloadsCannotRetryOrOverflowAnotherUnit(foreignTenant: True)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.MalformedLegacyPruningRetainsOnlyAContentFreeReconciliationObligation",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.OverflowMovesValidNoncanonicalJsonUsingItsActualObservedBytes",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.UnitAndCaseDeletionPreserveForeignRawSemanticHashAtOverlappingLegacyName(caseDeletion: False, reverse: False)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.UnitAndCaseDeletionPreserveForeignRawSemanticHashAtOverlappingLegacyName(caseDeletion: True, reverse: False)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.UnitAndCaseDeletionPreserveForeignRawSemanticHashAtOverlappingLegacyName(caseDeletion: False, reverse: True)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.UnitAndCaseDeletionPreserveForeignRawSemanticHashAtOverlappingLegacyName(caseDeletion: True, reverse: True)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.IncompleteCanonicalTargetBlocksMigrationAndRetainsValidLegacyContent",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ObservedPruningPreservesConcurrentLiveAndDeadReplacement(dead: False, changed: \\\"payload\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ObservedPruningPreservesConcurrentLiveAndDeadReplacement(dead: False, changed: \\\"score\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ObservedPruningPreservesConcurrentLiveAndDeadReplacement(dead: False, changed: \\\"membership\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ObservedPruningPreservesConcurrentLiveAndDeadReplacement(dead: True, changed: \\\"payload\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ObservedPruningPreservesConcurrentLiveAndDeadReplacement(dead: True, changed: \\\"score\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ObservedPruningPreservesConcurrentLiveAndDeadReplacement(dead: True, changed: \\\"membership\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.SameUnitSchedulerLeaseSerializesAttemptsAndStaleAcknowledgementCannotClearNewAuthority",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ModernFirstCompletionRetiresVerifiedAliasesButDistinctLegacyWorkRemainsBlockedAfterRestart",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.AtomicSelectionProtectsRefreshBeforeTheFormerPayloadAndScoreReads(operation: \\\"overflow\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.AtomicSelectionProtectsRefreshBeforeTheFormerPayloadAndScoreReads(operation: \\\"corrupt\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.AtomicSelectionProtectsRefreshBeforeTheFormerPayloadAndScoreReads(operation: \\\"dead\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.RefusedUnknownLegacyDiscoveryNeverMutatesForeignRawHashOrInventory",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.LegacyDiscoveryRefusesPartialTimeoutPolicyWithoutSealingCompleteness",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ExactRetryAdmissionRejectsRecordReplacementDuringDescriptionOrEmbedding(duringEmbedding: False)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ExactRetryAdmissionRejectsRecordReplacementDuringDescriptionOrEmbedding(duringEmbedding: True)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ModernDiscoveryUsesExactOwnershipAndMissingLegacyIndexRequiresReconciliation",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.RetryAdmissionDeadLetterTrimmingAndLegacyPayloadsRemainAbsentAfterErasureAndRestart",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.LegacyNativeDiscoveryCoversExactUnitChunksAndBothNamespacesWhileOtherUnitsSurvive",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.NamespaceMigrationInventoryCapacityRefusesExplicitlyAndPreservesLegacyBytes",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.RejectedCorruptPruneDoesNotInstallAnUnresolvedHistoryMarker",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.TenantPurgeValidatesManyUnitsWithOnlyOneScanOfEachQueueAndHash",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ActualQueueMaintenancePreservesASelectionChangedAtItsFinalRedisCommand(operation: \\\"overflow\\\", changed: \\\"payload\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ActualQueueMaintenancePreservesASelectionChangedAtItsFinalRedisCommand(operation: \\\"overflow\\\", changed: \\\"score\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ActualQueueMaintenancePreservesASelectionChangedAtItsFinalRedisCommand(operation: \\\"overflow\\\", changed: \\\"membership\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ActualQueueMaintenancePreservesASelectionChangedAtItsFinalRedisCommand(operation: \\\"corrupt\\\", changed: \\\"payload\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ActualQueueMaintenancePreservesASelectionChangedAtItsFinalRedisCommand(operation: \\\"corrupt\\\", changed: \\\"score\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ActualQueueMaintenancePreservesASelectionChangedAtItsFinalRedisCommand(operation: \\\"corrupt\\\", changed: \\\"membership\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ActualQueueMaintenancePreservesASelectionChangedAtItsFinalRedisCommand(operation: \\\"dead\\\", changed: \\\"payload\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ActualQueueMaintenancePreservesASelectionChangedAtItsFinalRedisCommand(operation: \\\"dead\\\", changed: \\\"score\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ActualQueueMaintenancePreservesASelectionChangedAtItsFinalRedisCommand(operation: \\\"dead\\\", changed: \\\"membership\\\")",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.MigrationRacesErasureAcrossRecreationWithoutRetainingEitherNamespace(caseDeletion: False)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.MigrationRacesErasureAcrossRecreationWithoutRetainingEitherNamespace(caseDeletion: True)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.AdmittedModernAndJsonOnlyLegacyRetriesPersistActualNaturalLanguageOutput(legacy: False, removeDuringDescription: False, replaceAtReadiness: False, eraseAtReadiness: False, noncanonical: False)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.AdmittedModernAndJsonOnlyLegacyRetriesPersistActualNaturalLanguageOutput(legacy: True, removeDuringDescription: False, replaceAtReadiness: False, eraseAtReadiness: False, noncanonical: False)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.AdmittedModernAndJsonOnlyLegacyRetriesPersistActualNaturalLanguageOutput(legacy: False, removeDuringDescription: True, replaceAtReadiness: False, eraseAtReadiness: False, noncanonical: False)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.AdmittedModernAndJsonOnlyLegacyRetriesPersistActualNaturalLanguageOutput(legacy: False, removeDuringDescription: False, replaceAtReadiness: True, eraseAtReadiness: False, noncanonical: False)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.AdmittedModernAndJsonOnlyLegacyRetriesPersistActualNaturalLanguageOutput(legacy: False, removeDuringDescription: False, replaceAtReadiness: False, eraseAtReadiness: True, noncanonical: False)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.AdmittedModernAndJsonOnlyLegacyRetriesPersistActualNaturalLanguageOutput(legacy: False, removeDuringDescription: False, replaceAtReadiness: False, eraseAtReadiness: False, noncanonical: True)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.OwnedContainerConnectionStringUsesExplicitLoopbackIpAcceptedByWorkflowFixture",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.UnitPurgeCapacityIsAtomicAndExistingUnitsRemainIdempotentWithoutLosingFences",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ValidOnlyOverflowEnforcesTheDeadPayloadCap",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.ScopedTerminalRetirementRejectsANewerExecutionBeforePurgeAndPreservesItsActualHistory(runningReplacement: False)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.ScopedTerminalRetirementRejectsANewerExecutionBeforePurgeAndPreservesItsActualHistory(runningReplacement: True)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.ActualWorkerUnacknowledgedSubmissionRetainsAuthorityAcrossRecreationAndBlocksTenantCleanup(interruptCaller: False)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.ActualWorkerUnacknowledgedSubmissionRetainsAuthorityAcrossRecreationAndBlocksTenantCleanup(interruptCaller: True)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.WorkerSchedulesContentFreeDurableHistoryWhileAdmittedRegistryContentPersistsNaturalLanguageOutput(failAfterEmbedding: False)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.WorkerSchedulesContentFreeDurableHistoryWhileAdmittedRegistryContentPersistsNaturalLanguageOutput(failAfterEmbedding: True)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.StaleDequeuedRecordCannotRetireNewerTerminalHistoryAfterTakingTheLease(replaceDuringHistoryRead: False)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.StaleDequeuedRecordCannotRetireNewerTerminalHistoryAfterTakingTheLease(replaceDuringHistoryRead: True)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.ExistingScheduledRawRetryHistoryIsPhysicallyAbsentAfterPurgeAndAdapterRestart",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.UnverifiableLegacyScopeBlocksErasureWithoutChangingHistory(duplicateScope: False)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.UnverifiableLegacyScopeBlocksErasureWithoutChangingHistory(duplicateScope: True)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.AuthenticatedTenantHistoryDiscoveryPurgesQueueOnlyAndOrphanHashUnitsAbsentFromTheLedger",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.TenantDeletionPurgesLiveDeadAndCompletedOrRunningHistoryWhileUnknownCoverageAndSchedulingRemainBlocked",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.ContentBearingLegacyActivityCannotRestoreHistoryAfterTerminationPurgeLateCompletionAndRestart(caseDeletion: False)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.ContentBearingLegacyActivityCannotRestoreHistoryAfterTerminationPurgeLateCompletionAndRestart(caseDeletion: True)",
+      "result": "Pass"
+    },
+    {
+      "lane": "targeted-live",
+      "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.CollidingLegacyAddressPreservesForeignHistoryAndScopedNewSchedulesUntilTheirOwnErasure",
+      "result": "Pass"
+    }
+  ],
+  "total": 215,
+  "failed": 0,
+  "skipped": 0
+}

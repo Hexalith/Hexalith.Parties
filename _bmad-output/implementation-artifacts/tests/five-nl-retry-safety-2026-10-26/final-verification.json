@@ -1,0 +1,691 @@
+{
+  "date": "2026-10-26",
+  "state": "reviewed and qualified; owner published; parent adoption fitness passed",
+  "parties_baseline": "0e53be8dc88c46829be10af5f886b89dcd72464d",
+  "memories_original_baseline": "39be000902254c4717df6726bfcc3ea927b26b70",
+  "memories_rebased_onto": "71b38f42f499be2c098e934a1abd3841267daab7",
+  "memories_published_main": "22b792cf4f4a7aa5c9b6f129e6a491821169a8bf",
+  "upstream_changes": "Five pre-existing upstream commits changed independent telemetry qualification work and nested gitlink metadata; no retry files overlapped, no nested checkout was initialized or updated. The rebased full Server suite and all 90 live target controls were rerun.",
+  "source_hooks": {
+    "CustomBeforeDirectoryBuildProps": {
+      "value": "${MODULE_TOOL_WORKSPACE}/source-mapping/SourceMapping.targets",
+      "sha256": "2003f8e38ea72f43549502cda1191d1272eea5a84bbebb534d84ee97c97618ff"
+    },
+    "CustomAfterMicrosoftCommonProps": {
+      "value": "${MODULE_TOOL_WORKSPACE}/source-mapping/SourceMapping.props",
+      "sha256": "0363694f252736cdfd0bcf6a567bb077940df16cc966e410153718a552769e82"
+    },
+    "CustomBeforeDirectoryBuildTargets": {
+      "value": "${MODULE_TOOL_WORKSPACE}/source-mapping/SourceMapping.before-targets.props",
+      "sha256": "6d08277977c7e5a147e838bbf037b5844b9623f4ee97a553086d910c333eb246"
+    },
+    "CustomAfterDirectoryBuildTargets": {
+      "value": "${MODULE_TOOL_WORKSPACE}/source-mapping/SourceMapping.late.props",
+      "sha256": "2155ed00d0be463b47d7a712ce5778645c8ec5c2e20a7813e13e2b052dc56999"
+    },
+    "AfterMicrosoftNETSdkTargets": {
+      "value": "${MODULE_TOOL_WORKSPACE}/source-mapping/SourceMapping.final.targets",
+      "sha256": "64c5a28e219fe2dc1a9526a6ea494e3f1540f16a51a34b7d04f468bd3cc83ed6"
+    }
+  },
+  "mapping_sha256": "d89c9cc9fab00c60071e5575e801d7f66e292676d05e7d9110a122d3625d448c",
+  "builds": [
+    {
+      "command": "python3 /tmp/nl-source-build.py dotnet build tests/Hexalith.Memories.Server.Tests/Hexalith.Memories.Server.Tests.csproj -c Debug -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "private_raw_sha256": "c9c2c5c6a2c8e9b02473521050f1c81a1878f37d99dba2f26b450b7d40222cbf"
+    },
+    {
+      "command": "python3 /tmp/nl-source-build.py dotnet build tests/Hexalith.Memories.IntegrationTests/Hexalith.Memories.IntegrationTests.csproj -c Debug -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "private_raw_sha256": "36858ab1013b06c8a419da3ac6871c1aa34eb9f07a33d001e54e16d8b32457fc"
+    },
+    {
+      "command": "python3 /tmp/five-nl-root-build.py dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "private_raw_sha256": "f4ffb00b46ac447fbab478bee500736a1b207431263fb239082f2b887603b8eb"
+    }
+  ],
+  "targeted": {
+    "server": {
+      "total": 125,
+      "passed": 125,
+      "failed": 0,
+      "skipped": 0
+    },
+    "live": {
+      "total": 90,
+      "passed": 90,
+      "failed": 0,
+      "skipped": 0
+    },
+    "all": 215,
+    "skipped": 0,
+    "cases": "final-executed-tests.json",
+    "server_xml_sha256": "c890b6acb965a3f0951cca3ef214ce1fcd890824ccac41e89402dd09fd3554b6",
+    "live_xml_sha256": "ff67c70b36ea24901a494fd82b9f0b623017898229ba3a40767f4052846f02b0"
+  },
+  "full_server": {
+    "command": "dotnet tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.Tests.dll -xml ${PRIVATE_RESULTS_XML}",
+    "exit_code": 1,
+    "counts": {
+      "total": 3069,
+      "passed": 3063,
+      "failed": 5,
+      "skipped": 1
+    },
+    "failures": [
+      "Hexalith.Memories.Server.Tests.Architecture.AccessTelemetryA41CloseOutTests.CanonicalMatrix_ContainsExactlyC0ThroughC6AndKeepsExternalProofPending",
+      "Hexalith.Memories.Server.Tests.Deployment.AppHostSecurityConfigurationTests.ProjectAssets_RestoreEventStorePackagesAtCatalogVersion",
+      "Hexalith.Memories.Server.Tests.Deployment.AppHostSecurityConfigurationTests.Server_ReferencesEventStoreClientWithoutInlineVersion",
+      "Hexalith.Memories.Server.Tests.Deployment.AppHostSecurityConfigurationTests.BuildsCatalog_PinsEventStoreFamilyAt31270",
+      "Hexalith.Memories.Server.Tests.Deployment.OpenBaoPlatformDocumentationTests.PlatformEvidence_RecordsExecutedSmokeTestAndReviewerState"
+    ],
+    "attribution": "Same five pre-existing evidence failures as the initial receipt; unchanged gate expectations."
+  },
+  "broad_integration": {
+    "command": "dotnet tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll -xml ${PRIVATE_RESULTS_XML}",
+    "exit_code": 1,
+    "counts": {
+      "total": 515,
+      "passed": 344,
+      "failed": 170,
+      "skipped": 1
+    },
+    "all_failures_contain_nested_source_gate": true,
+    "xml_sha256": "0d21be832b3198ed43764e0167e6d3a02d242543160138163dde641068928425",
+    "attribution": "All 170 failures contain the absent nested references/Hexalith.EventStore source-metadata requirement. The later upstream-only telemetry update is covered by the rebased Server suite; the final rebased 90 live controls run independently. No gate was weakened."
+  },
+  "matrix": {
+    "tenant_deletion": [
+      {
+        "test": "RetryWorkflowErasureIntegrationTests.TenantDeletionPurgesLiveDeadAndCompletedOrRunningHistoryWhileUnknownCoverageAndSchedulingRemainBlocked",
+        "executed_passes": 1
+      },
+      {
+        "test": "RetryWorkflowErasureIntegrationTests.CollidingLegacyAddressPreservesForeignHistoryAndScopedNewSchedulesUntilTheirOwnErasure",
+        "executed_passes": 1
+      }
+    ],
+    "malformed_addressing": [
+      {
+        "test": "FailedNaturalLanguageEmbeddingRegistryTests.DequeueRejectsMisaddressedModernPayloadWithoutMutation",
+        "executed_passes": 2
+      },
+      {
+        "test": "NaturalLanguageErasureIntegrationTests.MisaddressedModernPayloadsCannotRetryOrOverflowAnotherUnit",
+        "executed_passes": 2
+      }
+    ],
+    "concurrent_pruning": [
+      {
+        "test": "NaturalLanguageErasureIntegrationTests.ObservedPruningPreservesConcurrentLiveAndDeadReplacement",
+        "executed_passes": 6
+      },
+      {
+        "test": "NaturalLanguageErasureIntegrationTests.ActualQueueMaintenancePreservesASelectionChangedAtItsFinalRedisCommand",
+        "executed_passes": 9
+      }
+    ],
+    "modern_first_completion": [
+      {
+        "test": "NaturalLanguageErasureIntegrationTests.ModernFirstCompletionRetiresVerifiedAliasesButDistinctLegacyWorkRemainsBlockedAfterRestart",
+        "executed_passes": 1
+      },
+      {
+        "test": "NaturalLanguageErasureIntegrationTests.MixedDistinctLegacyAliasPreservesModernProgressAndRemainsForReconciliation",
+        "executed_passes": 1
+      }
+    ],
+    "publication_race": [
+      {
+        "test": "NaturalLanguageErasureIntegrationTests.AdmittedModernAndJsonOnlyLegacyRetriesPersistActualNaturalLanguageOutput",
+        "executed_passes": 6
+      },
+      {
+        "test": "NaturalLanguageErasureIntegrationTests.ExactRetryAdmissionRejectsRecordReplacementDuringDescriptionOrEmbedding",
+        "executed_passes": 2
+      }
+    ]
+  },
+  "review": {
+    "layers": [
+      "blind-hunter",
+      "edge-case-hunter",
+      "verification-gap"
+    ],
+    "findings": 16,
+    "resolved": 16,
+    "new_deferrals": 0,
+    "triage": "review-triage.json"
+  },
+  "source_sha256": {
+    "docs/operations/pipeline-persistence.md": "c6b01d4f72cc3b70c5a148d91a732ddb244491d7ae5ed3a5c1b793d07484d7e6",
+    "src/Hexalith.Memories.Server/Activities/Indexing/IndexNaturalLanguageSemanticActivity.cs": "e929a626242d517634a1f05bacfdd24a440b08dd2a1392dc1c22c0f78b0b883a",
+    "src/Hexalith.Memories.Server/Activities/Tenants/DeleteTenantDataKeysActivity.cs": "80fecd5b08ce782b9906dbe3220b98faba3655024c4a6a9b1b05723298c0f265",
+    "src/Hexalith.Memories.Server/Activities/WorkflowTraceLinkedActivity.cs": "78196f4b7637bb25696dbbb68feb4577d0ddb4345db2dac17f843d9561e3ab84",
+    "src/Hexalith.Memories.Server/Ingestion/SourcePublicationVisibility.cs": "6e0497df6b4e5c0d955bbc0ec342e95572e0faf2ddadaf17e5719c0dcb30eb2f",
+    "src/Hexalith.Memories.Server/NaturalLanguage/FailedNaturalLanguageEmbeddingRegistry.cs": "336fe664975256cbdefd3cb60df26006ab680e4a7aa1bb3cd8b081d058a9d347",
+    "src/Hexalith.Memories.Server/NaturalLanguage/NaturalLanguageEmbeddingRetryHostedService.cs": "8b3a5673d6cadf9dee9c85d674504e566f8854dee0bcb5bf9cec2c82038c3154",
+    "src/Hexalith.Memories.Server/NaturalLanguage/RetryNaturalLanguageEmbeddingActivity.cs": "fdb2884edf3a0837e51819f2d3ccd5bd66b108c63ee3e8f795611f3035805944",
+    "src/Hexalith.Memories.Server/NaturalLanguage/RetryPublicationRejectedException.cs": "15a752f846e2ed84e1eeac8a91e6c978c6b8a20caf1e7a71f5bbf801dfc2da54",
+    "src/Hexalith.Memories.Server/NaturalLanguage/RetryWorkflowErasure.cs": "3f0112806214c1d6dc2f381a625af68d13e0a981c8583693bed125ee117b82e2",
+    "src/Hexalith.Memories.Server/NaturalLanguage/RetryWorkflowHistory.cs": "8a80ad6042b39a9328047859affa9953ec6d91ff5ccf69ddc94e90b94f8e668d",
+    "src/Hexalith.Memories.Server/Workflows/Contracts/NaturalLanguageEmbeddingRetryInput.cs": "7d205c7978b15895992ccf4e4951714916ae1c863378a8c6166068f79a43f60e",
+    "tests/Hexalith.Memories.IntegrationTests/Fixtures/DaprStateSidecarFixture.cs": "ce06e2a09819debe26c66e1aed9a4e8196481ee5afa32dcb737e965c67262b46",
+    "tests/Hexalith.Memories.IntegrationTests/Ingestion/NaturalLanguageErasureIntegrationTests.cs": "a2950097bd8b1165329b08d59aabf1ace0bf7a9c9b3db99ea936700b1ed1bf0c",
+    "tests/Hexalith.Memories.IntegrationTests/Ingestion/RetryDatabaseInterception.cs": "d2509a156f032c8fb61ca29f49e5463054accad7074f712bc23907de0f093d8a",
+    "tests/Hexalith.Memories.IntegrationTests/Ingestion/RetryWorkflowErasureIntegrationTests.cs": "77b7259b0aca598d11d5325e0806092fe67ef3952f37fcf06f933e0635a8fb61",
+    "tests/Hexalith.Memories.IntegrationTests/Ingestion/TenantIngestionLifecycleIntegrationTests.cs": "794b5a93b6569f2fdcc09b51d9080a6c0d948ea3032fb0c5a3941a60bab14ba8",
+    "tests/Hexalith.Memories.Server.Tests/Activities/Indexing/IndexNaturalLanguageSemanticActivityTests.cs": "4edde7dfb70c2230b0d99e6085a9b1603a2e50036af74150b935fc3c4c2cd1ff",
+    "tests/Hexalith.Memories.Server.Tests/Activities/Tenants/DeleteTenantDataKeysActivityTests.cs": "b24bf211a97e2a30bdae595c1aca1035e7cb87250c21b9f47e9dc003c9668d70",
+    "tests/Hexalith.Memories.Server.Tests/NaturalLanguage/FailedNaturalLanguageEmbeddingRegistryTests.cs": "ba074f4ebb579316afee376c1246465d675850212cbb0f1690fcaca80ce02488",
+    "tests/Hexalith.Memories.Server.Tests/NaturalLanguage/NaturalLanguageEmbeddingRetryHostedServiceTests.cs": "034e84a93b5f5bf270b3f2862258145f10b7d3a952439f194f4f7aff97ea175a"
+  },
+  "executed_assembly_sha256": {
+    "tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.Tests.dll": "f82c071f2d7aa83228c37fe183a90fb71086f5007f0f9fea0980d24b09b362a9",
+    "tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll": "388287eaec53c7c47e8c881f0f198e858e29c8456f18bf839e3f18c4d8adfe52",
+    "tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.dll": "71e3580174acc91e1d66d0ab52456222028e00a44345f717250134a5477d0be5",
+    "tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.Server.dll": "71e3580174acc91e1d66d0ab52456222028e00a44345f717250134a5477d0be5"
+  },
+  "owned_runtime": {
+    "process_count": 4,
+    "all_exit_codes": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "all_exited": true,
+    "receipt_sha256": "46ef39200b943b74997aab67f34b809c0bfc9dcd7aea8494e984fc1c0cfa82bb"
+  },
+  "boundaries": [
+    "Unknown historical workflow coverage requires independent owner reconciliation; no production completeness is attested.",
+    "Ambiguous scheduling survives restart and blocks deletion until reconciled.",
+    "Legacy erasure retains the existing default-false scheduler-drain requirement.",
+    "No packages/images published, no deployment, and no production data changed.",
+    "Parent owns independent review, ledger reconciliation and Git publication.",
+    "No production reconciliation, package/image publication or deployment was performed. Source adoption remains separate from package and deployed qualification."
+  ],
+  "parent_fitness": {
+    "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests -xml ${PRIVATE_RESULTS_XML}",
+    "exit_code": 0,
+    "total": 115,
+    "failed": 0,
+    "skipped": 0,
+    "xml_sha256": "64f604a7c9524c1b363ab9d04c83e5de88782dd80fc4edb61335ec529e2ed53c",
+    "local_adoption_test_commit": "23a03bfced8fd215f241bf18521299cb3300aa74",
+    "test_assembly_sha256": "3b517510581fb3ecfef357d79b109185630b935f150fb31a679a45022f20c6d8",
+    "source_sha256": "536a1ed395877a269e9f0ca8e3059c8e09bb5fdc9babe62611a47b7a9808b5e3",
+    "cases": [
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsOtherHiddenSourceProjects(dependency: \\\"Hexalith.Commons.Http\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsOtherHiddenSourceProjects(dependency: \\\"Hexalith.FrontComposer.Contracts\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsOtherHiddenSourceProjects(dependency: \\\"Hexalith.Tenants.Contracts\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsOtherHiddenSourceProjects(dependency: \\\"Hexalith.Memories.Contracts\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsOtherHiddenSourceProjects(dependency: \\\"Hexalith.McpCli.Abstractions\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsOtherHiddenSourceProjects(dependency: \\\"Hexalith.PolymorphicSerializations\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.McpCliSiblingLayoutsDoNotSelectSourceWithoutToolMapping(relativeMcpCliRoot: \\\"Hexalith.McpCli\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.McpCliSiblingLayoutsDoNotSelectSourceWithoutToolMapping(relativeMcpCliRoot: \\\"references/Hexalith.McpCli\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.MsbuildJsonParsingIgnoresSurroundingDiagnostics(prefix: \\\"\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.MsbuildJsonParsingIgnoresSurroundingDiagnostics(prefix: \\\"Restore complete.\\\\n\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.MsbuildJsonParsingIgnoresSurroundingDiagnostics(prefix: \\\"warning: unresolved {Property}\\\\n\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.MsbuildJsonParsingIgnoresSurroundingDiagnostics(prefix: \\\"warning: {\\\\\\\"level\\\\\\\":\\\\\\\"diagnostic\\\\\\\"}\\\\n\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.MsbuildJsonParsingIgnoresSurroundingDiagnostics(prefix: \\\"{\\\\\\\"level\\\\\\\":\\\\\\\"diagnostic\\\\\\\"}\\\\n\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimeGraphsMatchTheIndependentlyEvaluatedPartiesPackageSelection(configuration: \\\"Debug\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimeGraphsMatchTheIndependentlyEvaluatedPartiesPackageSelection(configuration: \\\"Release\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.Matrix_KeepsNoMigrationGateAndResidualBlockers",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.CurrentStoryDiff_DoesNotModifyUnapprovedProductionMigrationPaths",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.MsbuildJsonParsingRejectsInvalidPayload(output: \\\"preamble\\\\n{\\\\\\\"Properties\\\\\\\":{\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.MsbuildJsonParsingRejectsInvalidPayload(output: \\\"preamble\\\\n{invalid}\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.MsbuildJsonParsingRejectsInvalidPayload(output: \\\"{\\\\\\\"Properties\\\\\\\":{\\\\\\\"Value\\\\\\\":\\\\\\\"outer\\\\\\\"},\\\\\\\"Items\\\\\\\":{\\\\\\\"Properti\\\"\u00b7\u00b7\u00b7)",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimeInventoryRejectsNonliteralPathCombineSegments",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ConsumerPropertyFixturesRejectEffectiveVersionDriftAndMissingProjects(version: \\\"3.125.0\\\", versionOverride: \\\"\\\", missingProject: False)",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ConsumerPropertyFixturesRejectEffectiveVersionDriftAndMissingProjects(version: \\\"\\\", versionOverride: \\\"3.125.0\\\", missingProject: False)",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ConsumerPropertyFixturesRejectEffectiveVersionDriftAndMissingProjects(version: \\\"\\\", versionOverride: \\\"\\\", missingProject: True)",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimeInventoryMatchesAppHostDeclarations",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.Matrix_ValidationEvidenceNamesExpectedSymbols",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsUnevaluatedReferenceContexts(metadata: \\\"AdditionalProperties\\\", value: \\\"DependencyVersion=8.0.0\\\", publishProfile: \\\"\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsUnevaluatedReferenceContexts(metadata: \\\"Properties\\\", value: \\\"DependencyVersion=8.0.0\\\", publishProfile: \\\"\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsUnevaluatedReferenceContexts(metadata: \\\"GlobalPropertiesToRemove\\\", value: \\\"DependencyVersion\\\", publishProfile: \\\"\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsUnevaluatedReferenceContexts(metadata: \\\"GlobalPropertiesToRemove\\\", value: \\\"WebPublishProfileFile\\\", publishProfile: \\\"selected-profile\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsUnevaluatedReferenceContexts(metadata: \\\"SetConfiguration\\\", value: \\\"Configuration=Debug\\\", publishProfile: \\\"\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsUnevaluatedReferenceContexts(metadata: \\\"SetTargetFramework\\\", value: \\\"TargetFramework=net9.0\\\", publishProfile: \\\"\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsUnevaluatedReferenceContexts(metadata: \\\"SetPlatform\\\", value: \\\"Platform=x86\\\", publishProfile: \\\"\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.CompletedStoryMigrationScopeRejectsRawForbiddenPathsAndRenamedDeletions(forbiddenPath: \\\"src/Hexalith.Parties/Domain/\u00c9preuve.cs\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.CompletedStoryMigrationScopeRejectsRawForbiddenPathsAndRenamedDeletions(forbiddenPath: \\\"src/Hexalith.Parties/Domain/Line\\\\nBreak.cs\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.CompletedStoryMigrationScopeRejectsRawForbiddenPathsAndRenamedDeletions(forbiddenPath: \\\"src/Hexalith.Parties/Domain/PartyAggregate.cs\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.CompletedStoryMigrationScopeRejectsRawForbiddenPathsAndRenamedDeletions(forbiddenPath: \\\".gitmodules\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.CompletedStoryMigrationScopeRejectsRawForbiddenPathsAndRenamedDeletions(forbiddenPath: \\\"references/Hexalith.EventStore\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.CompletedStoryMigrationScopeRejectsRawForbiddenPathsAndRenamedDeletions(forbiddenPath: \\\"references/Hexalith.Builds\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.CompletedStoryMigrationScopeRejectsRawForbiddenPathsAndRenamedDeletions(forbiddenPath: \\\"references/Directory.Build.targets\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimeInventoryRejectsUnsupportedAddProjectArguments",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.Matrix_EvidencePathsExistAndMatchDeclaredOwner",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.MsbuildJsonParsingRejectsMissingPayload",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.DependencyReceiptValidationFailsClosedForMissingOrMismatchedIdentity(actualIdentity: \\\"\\\", expectedIdentity: \\\"865cd9e49273dffbb1cdae85efeaf1aac322e09e\\\", expectedGap: \\\"missing\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.DependencyReceiptValidationFailsClosedForMissingOrMismatchedIdentity(actualIdentity: \\\"0000000000000000000000000000000000000000\\\", expectedIdentity: \\\"865cd9e49273dffbb1cdae85efeaf1aac322e09e\\\", expectedGap: \\\"mismatched\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.Matrix_AvailableRowsStillRequireReleaseOrSubmoduleProof",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.Matrix_StatusesUseApprovedVocabulary",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.DeliveredApiCommandEvidenceCannotBeReplacedByProse(surface: \\\"EventStore degraded response and DAPR health check\\\"\u00b7\u00b7\u00b7, pattern: \\\"AddEventStoreDaprHealthChecks\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.DeliveredApiCommandEvidenceCannotBeReplacedByProse(surface: \\\"Aspire publish helpers\\\", pattern: \\\"WithEventStoreJwtAuthentication\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.DeliveredApiCommandEvidenceCannotBeReplacedByProse(surface: \\\"Aspire publish helpers\\\", pattern: \\\"HexalithEventStoreJwtAuthenticationOptions\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.DeliveredApiCommandEvidenceCannotBeReplacedByProse(surface: \\\"Aspire publish helpers\\\", pattern: \\\"PrimaryAudience\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.DeliveredApiCommandEvidenceCannotBeReplacedByProse(surface: \\\"Aspire publish helpers\\\", pattern: \\\"ValidAudiences\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.DeliveredApiCommandEvidenceCannotBeReplacedByProse(surface: \\\"FrontComposer UI primitives\\\", pattern: \\\"aria-live=\\\\\\\"@(_suppressSpeech ? \\\\\\\"off\\\\\\\" : \\\\\\\"polite\\\\\\\")\\\\\\\"\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.Matrix_ContainsRequiredRowsAndRequiredGapRows",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.Matrix_NamedAvailableRowsRecordImmutableConsumptionIdentities",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExplicitlyMappedMcpCliSiblingLayoutsSelectOnlyAbstractionsProject(relativeMcpCliRoot: \\\"Hexalith.McpCli\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExplicitlyMappedMcpCliSiblingLayoutsSelectOnlyAbstractionsProject(relativeMcpCliRoot: \\\"references/Hexalith.McpCli\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.CompletedStoryMigrationScopeFailsClosedForMissingRevisions(missingBaseline: True)",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.CompletedStoryMigrationScopeFailsClosedForMissingRevisions(missingBaseline: False)",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsUnexpandedTargetFrameworks",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.MsbuildJsonParsingFailureRetainsBoundedProjectDiagnostics",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.Matrix_AllRowsNameProofAndRollbackPath",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.AvailableRowConsumersFailClosedOnMissingOrMismatchedIdentity",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.Matrix_ValidationEvidenceCommandsAreReproducible",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.Matrix_CoversKnownFablePlatformGaps",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.DeliveredApiCommandEvidenceRequiresPositiveExactSourcePaths(surface: \\\"EventStore degraded response and DAPR health check\\\"\u00b7\u00b7\u00b7, expectMatch: True)",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.DeliveredApiCommandEvidenceRequiresPositiveExactSourcePaths(surface: \\\"EventStore degraded response and DAPR health check\\\"\u00b7\u00b7\u00b7, expectMatch: False)",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.DeliveredApiCommandEvidenceRequiresPositiveExactSourcePaths(surface: \\\"FrontComposer UI primitives\\\", expectMatch: True)",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.DeliveredApiCommandEvidenceRequiresPositiveExactSourcePaths(surface: \\\"FrontComposer UI primitives\\\", expectMatch: False)",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsIncompatibleSelectedDependencies(failure: \\\"version\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsIncompatibleSelectedDependencies(failure: \\\"override\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsIncompatibleSelectedDependencies(failure: \\\"source\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsIncompatibleSelectedDependencies(failure: \\\"source-uppercase\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsIncompatibleSelectedDependencies(failure: \\\"project\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsIncompatibleSelectedDependencies(failure: \\\"missing\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsOtherSourceSelectors(selector: \\\"HexalithCommonsFromSource\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsOtherSourceSelectors(selector: \\\"HexalithCommonsHttpFromSource\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsOtherSourceSelectors(selector: \\\"HexalithCommonsServiceDefaultsFromSource\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsOtherSourceSelectors(selector: \\\"HexalithFrontComposerFromSource\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsOtherSourceSelectors(selector: \\\"HexalithTenantsFromSource\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsOtherSourceSelectors(selector: \\\"HexalithMemoriesFromSource\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsOtherSourceSelectors(selector: \\\"HexalithMcpCliFromSource\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightRejectsOtherSourceSelectors(selector: \\\"HexalithPolymorphicSerializationsFromSource\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ConsumerDiscoveryRetainsIdentitiesWithRemovedOrMisspelledSelectors(condition: \\\"\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ConsumerDiscoveryRetainsIdentitiesWithRemovedOrMisspelledSelectors(condition: \\\"'$(HexalithEventStoreFromSorce)' == 'true'\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceRowsRequireUniqueExactIdentityReceipts(dependency: \\\"McpCli\\\", scenario: \\\"valid\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceRowsRequireUniqueExactIdentityReceipts(dependency: \\\"Platform\\\", scenario: \\\"describe-in-prose\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceRowsRequireUniqueExactIdentityReceipts(dependency: \\\"McpCli\\\", scenario: \\\"describe-in-prose\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceRowsRequireUniqueExactIdentityReceipts(dependency: \\\"Platform\\\", scenario: \\\"wrong-describe\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceRowsRequireUniqueExactIdentityReceipts(dependency: \\\"McpCli\\\", scenario: \\\"wrong-describe\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceRowsRequireUniqueExactIdentityReceipts(dependency: \\\"Platform\\\", scenario: \\\"wrong-sha\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceRowsRequireUniqueExactIdentityReceipts(dependency: \\\"McpCli\\\", scenario: \\\"wrong-sha\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceRowsRequireUniqueExactIdentityReceipts(dependency: \\\"Platform\\\", scenario: \\\"compact\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceRowsRequireUniqueExactIdentityReceipts(dependency: \\\"McpCli\\\", scenario: \\\"compact\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceRowsRequireUniqueExactIdentityReceipts(dependency: \\\"Platform\\\", scenario: \\\"duplicate-spaced\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceRowsRequireUniqueExactIdentityReceipts(dependency: \\\"McpCli\\\", scenario: \\\"duplicate-spaced\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceRowsRequireUniqueExactIdentityReceipts(dependency: \\\"Platform\\\", scenario: \\\"duplicate\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceRowsRequireUniqueExactIdentityReceipts(dependency: \\\"McpCli\\\", scenario: \\\"duplicate\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceRowsRequireUniqueExactIdentityReceipts(dependency: \\\"Platform\\\", scenario: \\\"missing\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceRowsRequireUniqueExactIdentityReceipts(dependency: \\\"McpCli\\\", scenario: \\\"missing\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceRowsRequireUniqueExactIdentityReceipts(dependency: \\\"Platform\\\", scenario: \\\"valid\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceRowsRequireUniqueExactIdentityReceipts(dependency: \\\"McpCli\\\", scenario: \\\"missing-column\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceRowsRequireUniqueExactIdentityReceipts(dependency: \\\"Platform\\\", scenario: \\\"missing-column\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightEvaluatesConfigurationSpecificSelections(configuration: \\\"Debug\\\", expected: \\\"8.0.0\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightEvaluatesConfigurationSpecificSelections(configuration: \\\"Release\\\", expected: \\\"9.0.0\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimeInventoryRejectsUndeclaredRootSubmodules",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimePreflightDeduplicatesSelectedReferencesAndCycles",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalConsumptionRowIdentityValidationFailsClosedOnSwappedOrMissingTokens",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceSelectionsMatchCurrentGitReceipts(dependency: \\\"McpCli\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceSelectionsMatchCurrentGitReceipts(dependency: \\\"Platform\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.EvaluatedPackageMetadataRetainsVersionAndOverridePrecedence(version: \\\"\\\", versionOverride: \\\"\\\", expected: \\\"3.126.0\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.EvaluatedPackageMetadataRetainsVersionAndOverridePrecedence(version: \\\"3.125.0\\\", versionOverride: \\\"\\\", expected: \\\"3.125.0\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.EvaluatedPackageMetadataRetainsVersionAndOverridePrecedence(version: \\\"3.125.0\\\", versionOverride: \\\"3.124.0\\\", expected: \\\"3.124.0\\\")",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.CompletedStoryMigrationScopeRejectsForbiddenProductionPaths",
+        "result": "Pass"
+      }
+    ],
+    "qualification": "Runs after local adoption commit because the gate reads HEAD gitlinks. Subsequent amendments update evidence only; selected code and pointers remain unchanged."
+  },
+  "commitlint": "commitlint.json"
+}

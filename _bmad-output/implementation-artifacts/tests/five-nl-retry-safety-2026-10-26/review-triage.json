@@ -1,0 +1,125 @@
+{
+  "review_diff": "/tmp/five-nl-review-jt2w7u9i.diff",
+  "layers": [
+    "blind-hunter",
+    "edge-case-hunter",
+    "verification-gap"
+  ],
+  "findings": [
+    {
+      "id": "BH-1",
+      "verdict": "high",
+      "route": "patch",
+      "evidence": "A stale dequeued version can acquire the lease and retire a newer terminal execution; the lease currently has no current-payload comparison. Revalidate admission before retirement.",
+      "resolution": "resolved by local correction and executed regression; final targeted result 215/215, zero skips"
+    },
+    {
+      "id": "BH-2",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "The new scope exception escapes TickAsync tenant iteration and repeats on the first malformed tenant, starving later tenants. Isolate this demonstrated tenant failure.",
+      "resolution": "resolved by local correction and executed regression; final targeted result 215/215, zero skips"
+    },
+    {
+      "id": "BH-3",
+      "verdict": "high",
+      "route": "patch",
+      "evidence": "Rank selection returns only members; a replacement before later payload/score reads becomes the guarded state and is removed. Capture an atomic selection snapshot.",
+      "resolution": "resolved by local correction and executed regression; final targeted result 215/215, zero skips"
+    },
+    {
+      "id": "BH-4",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "RemoveObservedAsync writes Unresolved before the conditional script; rejected pruning can permanently block cleanup. Commit that marker only after a successful comparison.",
+      "resolution": "resolved by local correction and executed regression; final targeted result 215/215, zero skips"
+    },
+    {
+      "id": "BH-5",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "PurgeUnitAsync uses unbounded SADD while other writers enforce 65536; a new member can exceed the tenant cleanup bound. Preserve bounded idempotent admission.",
+      "resolution": "resolved by local correction and executed regression; final targeted result 215/215, zero skips"
+    },
+    {
+      "id": "BH-6",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "Tenant cleanup already has the full validated union but repeats both queue scans per unit. Remove that quadratic rediscovery under the permanent tenant fence.",
+      "resolution": "resolved by local correction and executed regression; final targeted result 215/215, zero skips"
+    },
+    {
+      "id": "BH-7",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "New permanent leases and default-false historical coverage need a supported owner reconciliation procedure. Document evidence, exact-scope inspection and uncertainty rules without granting inferred completeness.",
+      "resolution": "resolved by local correction and executed regression; final targeted result 215/215, zero skips"
+    },
+    {
+      "id": "BH-8",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "ReadCurrentAsync accepts formatted JSON but publication compares a new serialization, rejecting unchanged valid bytes. Preserve observed bytes or conditionally normalize admission.",
+      "resolution": "resolved by local correction and executed regression; final targeted result 215/215, zero skips"
+    },
+    {
+      "id": "BH-9",
+      "verdict": "high",
+      "route": "patch",
+      "evidence": "TryDeserialize ignores unknown members and duplicate property ambiguity; record equality alone can authorize deletion of unproved alias lineage. Retain ambiguous JSON shapes.",
+      "resolution": "resolved by local correction and executed regression; final targeted result 215/215, zero skips"
+    },
+    {
+      "id": "BH-10",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "RunRetryAsync bypasses sealed traced RunAsync, removing the existing linked span and outcome tags. Reuse traced execution without a new public/protected API.",
+      "resolution": "resolved by local correction and executed regression; final targeted result 215/215, zero skips"
+    },
+    {
+      "id": "EC-1",
+      "verdict": "high",
+      "route": "patch",
+      "evidence": "Independent edge tracing confirms the pre-payload-read selection race in BH-3; same root cause.",
+      "resolution": "resolved by local correction and executed regression; final targeted result 215/215, zero skips"
+    },
+    {
+      "id": "EC-2",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "Independent edge tracing confirms missing capacity enforcement in PurgeUnitAsync; same root cause as BH-5.",
+      "resolution": "resolved by local correction and executed regression; final targeted result 215/215, zero skips"
+    },
+    {
+      "id": "EC-3",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "Deletion pass confirms retry execution bypasses WorkflowTraceLinkedActivity.RunAsync; same root cause as BH-10.",
+      "resolution": "resolved by local correction and executed regression; final targeted result 215/215, zero skips"
+    },
+    {
+      "id": "VG-1",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "Pre-verified gap: existing tenant deletion seeds every unit into the ledger; add actual queue-only/hash-only history discovery and physical absence assertions.",
+      "resolution": "resolved by local correction and executed regression; final targeted result 215/215, zero skips"
+    },
+    {
+      "id": "VG-2",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "Pre-verified gap: helper tests manually manipulate authority; actual worker submissions always acknowledge. Add a worker submission failure/recreation test with persisted uncertainty and cleanup refusal.",
+      "resolution": "resolved by local correction and executed regression; final targeted result 215/215, zero skips"
+    },
+    {
+      "id": "VG-3",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "Verified against the valid indented JSON fixture and bytewise HGET guard: unchanged noncanonical payload is refused. Same root cause as BH-8.",
+      "resolution": "resolved by local correction and executed regression; final targeted result 215/215, zero skips"
+    }
+  ],
+  "routing": "Local corrections to demonstrated state and test gaps; no intent change, new public surface or frozen-block edits required.",
+  "resolved_findings": 16,
+  "new_deferrals": 0
+}

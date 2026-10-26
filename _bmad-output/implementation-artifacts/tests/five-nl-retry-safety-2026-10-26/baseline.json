@@ -1,0 +1,100 @@
+{
+  "commands": [
+    {
+      "command": "aspire start --non-interactive --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "exit_code": 0
+    },
+    {
+      "command": "aspire describe --non-interactive --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json",
+      "exit_code": 0
+    },
+    {
+      "command": "aspire stop --non-interactive --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "exit_code": 0
+    }
+  ],
+  "resource_states": [
+    {
+      "name": "eventstore-admin-dapr-cli-khucxjsw",
+      "state": "Waiting",
+      "health": null
+    },
+    {
+      "name": "eventstore-admin-hjwuapqn",
+      "state": "Waiting",
+      "health": null
+    },
+    {
+      "name": "eventstore-admin-ui-dapr-cli-vpyxbhyh",
+      "state": "Waiting",
+      "health": null
+    },
+    {
+      "name": "eventstore-admin-ui-dwyyfvag",
+      "state": "NotStarted",
+      "health": null
+    },
+    {
+      "name": "eventstore-app-api-token",
+      "state": "Running",
+      "health": "Healthy"
+    },
+    {
+      "name": "eventstore-dapr-cli-wqxbpguv",
+      "state": "Waiting",
+      "health": null
+    },
+    {
+      "name": "eventstore-tbebabfn",
+      "state": "Waiting",
+      "health": null
+    },
+    {
+      "name": "parties-dapr-cli-gcnnbnuh",
+      "state": "Waiting",
+      "health": null
+    },
+    {
+      "name": "parties-jgttshvu",
+      "state": "Waiting",
+      "health": null
+    },
+    {
+      "name": "parties-mcp-bpwmxjxv",
+      "state": "NotStarted",
+      "health": null
+    },
+    {
+      "name": "parties-ui-tmhzxxym",
+      "state": "Waiting",
+      "health": null
+    },
+    {
+      "name": "security-eventstore-client-password",
+      "state": "Running",
+      "health": "Healthy"
+    },
+    {
+      "name": "security-eventstore-client-username",
+      "state": "Running",
+      "health": "Healthy"
+    },
+    {
+      "name": "security-nudpwjar",
+      "state": "Running",
+      "health": "Unhealthy"
+    },
+    {
+      "name": "tenants-dapr-cli-bdffhruk",
+      "state": "Waiting",
+      "health": null
+    },
+    {
+      "name": "tenants-ytzurffw",
+      "state": "Waiting",
+      "health": null
+    }
+  ],
+  "raw_describe_sha256": "eaa56bdcaef47644212259601f6ec03985d8c9b4a16b50ce03f28fe8b7d2eda5",
+  "limitation": "AppHost lifecycle and resource inspection only; dependencies were waiting and the security container was unhealthy. Another pre-existing Tenants AppHost was preserved. Raw output is private."
+}

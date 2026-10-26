@@ -628,3 +628,26 @@ registration, policy and test/factory sources with released `2.29.15`. Client
 package selection is separate from this Server policy. Independent sidecar token
 publication, containers/deployment, historical recovery reconciliation and the
 existing migration/inventory gates remain open.
+
+
+## Natural-language retry safety qualification (2026-10-26)
+
+The [five-item receipt](../_bmad-output/implementation-artifacts/tests/five-nl-retry-safety-2026-10-26/README.md)
+qualifies the selected Memories source with pinned module-tool source mappings.
+Run its Server.Tests registry, tenant-cleanup, retry-worker and indexing filters,
+then the IntegrationTests `NaturalLanguageErasureIntegrationTests`,
+`RetryWorkflowErasureIntegrationTests` and `TenantIngestionLifecycleIntegrationTests`
+against owned Redis/FalkorDB and an authenticated Dapr workflow sidecar.
+Per-test results cover all five approved matrix rows without targeted skips.
+
+Tenant deletion now requires independently reconciled historical retry coverage,
+even with empty queues, and refuses uncertain scheduling. Fixtures attest only
+the histories they created. Preserve default-false legacy scheduler-drain gates;
+this source receipt supplies no production migration or completeness attestation.
+The full server suite retains five prior package/documentation evidence failures;
+the broad integration suite retains its nested-reference metadata gate. Neither
+gate was weakened, and no nested submodule was initialized.
+
+Final parent verification executes 125 unit/indexing and 90 actual Redis/Dapr/lifecycle
+controls, all passing with zero targeted skips. All 16 review findings are resolved;
+see the batch final-verification.json and final-executed-tests.json.

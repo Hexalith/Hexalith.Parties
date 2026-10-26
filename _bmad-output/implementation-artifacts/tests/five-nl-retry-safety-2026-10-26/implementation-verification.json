@@ -1,0 +1,473 @@
+{
+  "date": "2026-10-26",
+  "state": "targeted-implementation-qualified; broad-blockers-recorded; independent-parent-review-pending",
+  "baseline_revisions": {
+    "parties": "0e53be8dc88c46829be10af5f886b89dcd72464d",
+    "memories": "39be000902254c4717df6726bfcc3ea927b26b70"
+  },
+  "path_placeholders": {
+    "PARTIES_ROOT": "owning Parties checkout",
+    "MEMORIES_ROOT": "${PARTIES_ROOT}/references/Hexalith.Memories",
+    "MODULE_TOOL_WORKSPACE": "existing pinned module-tool 4.34.0 generated workspace retained by the 2026-10-24 source qualification"
+  },
+  "source_hooks": {
+    "CustomBeforeDirectoryBuildProps": {
+      "value": "${MODULE_TOOL_WORKSPACE}/source-mapping/SourceMapping.targets",
+      "sha256": "2003f8e38ea72f43549502cda1191d1272eea5a84bbebb534d84ee97c97618ff"
+    },
+    "CustomAfterMicrosoftCommonProps": {
+      "value": "${MODULE_TOOL_WORKSPACE}/source-mapping/SourceMapping.props",
+      "sha256": "0363694f252736cdfd0bcf6a567bb077940df16cc966e410153718a552769e82"
+    },
+    "CustomBeforeDirectoryBuildTargets": {
+      "value": "${MODULE_TOOL_WORKSPACE}/source-mapping/SourceMapping.before-targets.props",
+      "sha256": "6d08277977c7e5a147e838bbf037b5844b9623f4ee97a553086d910c333eb246"
+    },
+    "CustomAfterDirectoryBuildTargets": {
+      "value": "${MODULE_TOOL_WORKSPACE}/source-mapping/SourceMapping.late.props",
+      "sha256": "2155ed00d0be463b47d7a712ce5778645c8ec5c2e20a7813e13e2b052dc56999"
+    },
+    "AfterMicrosoftNETSdkTargets": {
+      "value": "${MODULE_TOOL_WORKSPACE}/source-mapping/SourceMapping.final.targets",
+      "sha256": "64c5a28e219fe2dc1a9526a6ea494e3f1540f16a51a34b7d04f468bd3cc83ed6"
+    }
+  },
+  "mapping_sha256": "d89c9cc9fab00c60071e5575e801d7f66e292676d05e7d9110a122d3625d448c",
+  "mapping_origin_receipt": "../five-memories-inventory-and-publication-2026-10-24/review2-verification.json",
+  "builds": [
+    {
+      "command": "dotnet build tests/Hexalith.Memories.Server.Tests/Hexalith.Memories.Server.Tests.csproj -c Debug -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "cwd": "${MEMORIES_ROOT}",
+      "environment": "all five source_hooks above",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "private_raw_sha256": "2297e57833d885a68080be4761ca8b4df914c6e41dff9421fa82a63d6f6dca9e"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Memories.IntegrationTests/Hexalith.Memories.IntegrationTests.csproj -c Debug -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "cwd": "${MEMORIES_ROOT}",
+      "environment": "all five source_hooks above",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "private_raw_sha256": "22592927725fc31297ad613d403c7d7cfda19e48d6d5a6d9e14363e65aa4e727"
+    }
+  ],
+  "tests": [
+    {
+      "counts": {
+        "total": 122,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "failed_tests": [],
+      "private_raw_sha256": "2ef482725eef216a252d7746321c3ad7f0fdff45c420d8c5ad3e54b8e8ce334a",
+      "lane": "focused-server",
+      "command": "dotnet tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.Tests.dll -class Hexalith.Memories.Server.Tests.NaturalLanguage.FailedNaturalLanguageEmbeddingRegistryTests -class Hexalith.Memories.Server.Tests.Activities.Tenants.DeleteTenantDataKeysActivityTests -class Hexalith.Memories.Server.Tests.NaturalLanguage.NaturalLanguageEmbeddingRetryHostedServiceTests -class Hexalith.Memories.Server.Tests.Activities.Indexing.* -xml ${PRIVATE_RESULTS_XML}",
+      "cwd": "${MEMORIES_ROOT}",
+      "exit_code": 0,
+      "skipped_tests": [],
+      "xml_sha256": "0703644b1ab45b60500ace001fe3cfd6335e90e36e60a6ce3b098ced9c9c30dc",
+      "xml_case_count": 122
+    },
+    {
+      "counts": {
+        "total": 3065,
+        "errors": 0,
+        "failed": 5,
+        "skipped": 1,
+        "not_run": 0
+      },
+      "failed_tests": [
+        "Hexalith.Memories.Server.Tests.Deployment.OpenBaoPlatformDocumentationTests.PlatformEvidence_RecordsExecutedSmokeTestAndReviewerState",
+        "Hexalith.Memories.Server.Tests.Deployment.AppHostSecurityConfigurationTests.ProjectAssets_RestoreEventStorePackagesAtCatalogVersion",
+        "Hexalith.Memories.Server.Tests.Deployment.AppHostSecurityConfigurationTests.Server_ReferencesEventStoreClientWithoutInlineVersion",
+        "Hexalith.Memories.Server.Tests.Deployment.AppHostSecurityConfigurationTests.BuildsCatalog_PinsEventStoreFamilyAt31270",
+        "Hexalith.Memories.Server.Tests.Architecture.AccessTelemetryA41CloseOutTests.CanonicalMatrix_ContainsExactlyC0ThroughC6AndKeepsExternalProofPending"
+      ],
+      "private_raw_sha256": "96887ee7c50849117705db4ce881d8cdeda274af5116813a1e0256fbbd98d2d5",
+      "lane": "server-all",
+      "command": "dotnet tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.Tests.dll",
+      "cwd": "${MEMORIES_ROOT}",
+      "exit_code": 1,
+      "skipped_tests": [
+        "Hexalith.Memories.Server.Tests.NaturalLanguage.SubmoduleGuardTests.CheckSubmodulesTarget_FailsBuildWhenSubmoduleGitMarkerIsMissing"
+      ]
+    },
+    {
+      "counts": {
+        "total": 75,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "failed_tests": [],
+      "private_raw_sha256": "09d96750121cacd069508376f989ed811b6ed6620311b6108f4537597950e560",
+      "lane": "targeted-live",
+      "command": "dotnet tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll -class Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests -class Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests -class Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests -xml ${PRIVATE_RESULTS_XML}",
+      "cwd": "${MEMORIES_ROOT}",
+      "exit_code": 0,
+      "skipped_tests": [],
+      "environment": {
+        "MEMORIES_TEST_OWNED_NATIVE": "1",
+        "MEMORIES_TEST_REDISSTACK_CONNECTION": "${OWNED_REDISSTACK_CONNECTION}",
+        "MEMORIES_TEST_FALKORDB_CONNECTION": "${OWNED_FALKORDB_CONNECTION}",
+        "MEMORIES_DAPR_PLACEMENT_HOST_ADDRESS": "${OWNED_DAPR_PLACEMENT_HOST_ADDRESS}",
+        "MEMORIES_DAPR_SCHEDULER_HOST_ADDRESS": "${OWNED_DAPR_SCHEDULER_HOST_ADDRESS}"
+      },
+      "xml_sha256": "5f71f5dd87bae11eeee9fb1c8e2c433cb0af8a14f4225613e2dd2cb192252186",
+      "xml_case_count": 75
+    },
+    {
+      "counts": {
+        "total": 497,
+        "errors": 0,
+        "failed": 170,
+        "skipped": 1,
+        "not_run": 0
+      },
+      "failed_tests": [
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantConfigurationIntegrationTests.ListTenants_ReturnsEnrichedSummaryWithCountsAndIndexHealth",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantConfigurationIntegrationTests.GetConfiguration_ReturnsComposedView_WithFullEmbeddingConfig",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantConfigurationIntegrationTests.GetConfiguration_UnknownTenant_Returns404TenantNotFound",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantConfigurationIntegrationTests.PatchDisplayName_UpdatesRegistryAndReflectsInSubsequentGet",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantConfigurationIntegrationTests.PatchDisplayName_NonActiveTenant_Returns409",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantConfigurationIntegrationTests.PutEmbeddingConfig_BreakingChange_WithoutForceReindex_Returns409",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantConfigurationIntegrationTests.PutEmbeddingConfig_BreakingChange_WithForceReindex_Returns200AndSetsReindexRequired",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantConfigurationIntegrationTests.PutEmbeddingConfig_RateLimitChange_PropagatesToRateLimiterOnNextIngest",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantConfigurationIntegrationTests.IngestMemoryUnit_EndToEnd_PersistsEmbeddingProviderAndModel",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantContextEnforcementIntegrationTests.EmbeddingConfig_UnknownTenant_Returns404TenantNotFound",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantContextEnforcementIntegrationTests.EmbeddingConfig_ProvisioningTenant_Returns409TenantProvisioning",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantContextEnforcementIntegrationTests.ProvisionStatus_UnknownTenant_Returns404TenantNotFound",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantContextEnforcementIntegrationTests.DeletionStatus_DeletingTenant_Returns200",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantContextEnforcementIntegrationTests.Verify_FailedTenant_Returns200",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantContextEnforcementIntegrationTests.Verify_UnknownTenant_Returns404TenantNotFound",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantContextEnforcementIntegrationTests.MemoryUnit_CorruptedTenantId_Returns404WithoutLeakingData",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantContextEnforcementIntegrationTests.Search_CrossTenantScope_ReturnsZeroResultsFromOtherTenant",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantContextEnforcementIntegrationTests.DaprSidecar_RequestWithoutApiToken_IsRejected",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantDeletionIntegrationTests.DeleteTenant_NonExistent_Returns404",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantDeletionIntegrationTests.DeleteTenant_ConcurrentRequests_ShouldReuseSingleWorkflowInstance",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantDeletionIntegrationTests.DeleteTenant_WithIndexedData_ShouldRemoveRegistryAndBackendState",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantDeletionIntegrationTests.BatchedGraphDeletion_LargeTenant_CompletesInBatches",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantDeletionIntegrationTests.DeleteTenant_SearchReturnsZero_AfterDeletion",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantDeletionIntegrationTests.TenantStatusGuard_RejectsDeletingTenant",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantDeletionIntegrationTests.DropIndexDD_OnlyDeletesIndexedKeys",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantIsolationIntegrationTests.VerifyTenant_WithTwoProvisionedTenants_CoreIsolationChecksShouldPass",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantIsolationIntegrationTests.VerifyTenant_IdenticalGraphStructures_ZeroCrossTenantNodes",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantIsolationIntegrationTests.VerifyTenant_PlantedForeignGraphEdgeMarker_CollisionAssertionsDetectLeakage",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantIsolationIntegrationTests.VerifyTenant_MalformedTenantId_Returns400",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantIsolationIntegrationTests.VerifyTenant_NonExistentTenant_Returns404",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantIsolationIntegrationTests.VerifyTenant_AfterOtherTenantDeleted_IsolationUnaffected",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantIsolationIntegrationTests.VerifyTenant_PlantedCrossTenantData_DetectsLeakage",
+        "Hexalith.Memories.IntegrationTests.Tenants.TenantIsolationIntegrationTests.VerifyTenant_PlantedActiveSemanticMarkerDefects_ReturnsDistinctNonDestructiveDiagnostics",
+        "Hexalith.Memories.IntegrationTests.Telemetry.AccessTelemetryAspireRoutedIntegrationTests.AppHost_DaprRoutesClockHeartbeatActorStateInspectionAndHealth",
+        "Hexalith.Memories.IntegrationTests.Telemetry.AspireEndToEndTraceTests.CliSearch_EndToEnd_SingleTraceIdAcrossAllHops",
+        "Hexalith.Memories.IntegrationTests.Telemetry.AspireEndToEndTraceTests.CliSearch_AuditEvent_TraceIdMatchesSpan",
+        "Hexalith.Memories.IntegrationTests.Telemetry.AuditLogStreamIntegrationTests.SearchOperation_EmitsOneAuditEvent_WithAC4Schema",
+        "Hexalith.Memories.IntegrationTests.Telemetry.AuditLogStreamIntegrationTests.IngestOperation_EmitsOneAuditEvent_WithAC4Schema",
+        "Hexalith.Memories.IntegrationTests.Telemetry.AuditLogStreamIntegrationTests.TraverseOperation_EmitsOneAuditEvent_WithAC4Schema",
+        "Hexalith.Memories.IntegrationTests.Telemetry.AuditLogStreamIntegrationTests.CaseAccessOperation_EmitsOneAuditEvent_WithAC4Schema",
+        "Hexalith.Memories.IntegrationTests.Telemetry.AuditLogStreamIntegrationTests.SearchOperation_RetrySequence_EmitsDistinctAuditEventsPerStatus",
+        "Hexalith.Memories.IntegrationTests.Telemetry.AuditLogStreamIntegrationTests.HealthProbes_EmitZeroAuditEvents",
+        "Hexalith.Memories.IntegrationTests.Telemetry.AuditLogStreamIntegrationTests.SchemaVersion_IsOneForAllEmittedEvents",
+        "Hexalith.Memories.IntegrationTests.Search.DegradationIntegrationTests.HybridSearch_RedisVectorStopped_ShouldReturn200Degraded",
+        "Hexalith.Memories.IntegrationTests.Search.DegradationIntegrationTests.HybridSearch_FalkorDbStopped_ShouldDegradeToSyntacticAndSemantic",
+        "Hexalith.Memories.IntegrationTests.Search.DegradationIntegrationTests.HybridSearch_AllBackendsStopped_ShouldReturn503AllBackendsUnavailable",
+        "Hexalith.Memories.IntegrationTests.Search.DegradationIntegrationTests.SingleAxisSearch_RedisStopped_ShouldReturn503BackendUnavailable",
+        "Hexalith.Memories.IntegrationTests.Search.ExplainSearchApiIntegrationTests.GetSearch_WithExplainEnabledOnDefaultSyntactic_ShouldIncludeSyntacticExplanation",
+        "Hexalith.Memories.IntegrationTests.Search.ExplainSearchApiIntegrationTests.GetSearch_WithExplainEnabledOnSemanticAxis_ShouldIncludeSemanticExplanation",
+        "Hexalith.Memories.IntegrationTests.Search.ExplainSearchApiIntegrationTests.GetSearch_WithExplainEnabledOnPureGraphAxis_ShouldIncludeGraphExplanation",
+        "Hexalith.Memories.IntegrationTests.Search.ExplainSearchApiIntegrationTests.GetSearch_WithExplainEnabledOnGraphScopedSyntactic_ShouldIncludeSyntacticExplanation",
+        "Hexalith.Memories.IntegrationTests.Search.ExplainSearchApiIntegrationTests.GetSearch_WithExplainEnabledOnGraphScopedSemantic_ShouldIncludeSemanticExplanation",
+        "Hexalith.Memories.IntegrationTests.Search.ExplainSearchApiIntegrationTests.GetSearch_WithExplainEnabledOnHybridGraphAxis_ShouldIncludeGraphExplanationAndWeights",
+        "Hexalith.Memories.IntegrationTests.Search.ExplainSearchApiIntegrationTests.GetSearch_WithHybridExplainDisabled_ShouldOmitExplanationFromJson",
+        "Hexalith.Memories.IntegrationTests.Search.ExplainSearchApiIntegrationTests.GetSearch_WithHybridGraphRequestedWithoutStartNode_ShouldExplainOnlyExecutedSemanticAxis",
+        "Hexalith.Memories.IntegrationTests.Search.HybridSearchApiIntegrationTests.GetSearch_WithGraphStartNodeIdAlias_ShouldReturnHybridGraphResultsAsync",
+        "Hexalith.Memories.IntegrationTests.Search.HybridSearchApiIntegrationTests.GetSearch_HybridSyntacticOffsetBeyondOneHundredWithinWindow_ShouldReturnFusedPageAsync",
+        "Hexalith.Memories.IntegrationTests.Search.HybridSearchApiIntegrationTests.GetSearch_HybridSyntacticOffsetBeyondCandidateWindow_ShouldReturnPaginationLimitExceededAsync",
+        "Hexalith.Memories.IntegrationTests.Search.SemanticSearchApiIntegrationTests.GetSearch_WithInvalidAxis_ShouldReturnBadRequestErrorResponse",
+        "Hexalith.Memories.IntegrationTests.Search.SemanticSearchApiIntegrationTests.GetSearch_WithoutAxis_ShouldDefaultToSyntacticResults",
+        "Hexalith.Memories.IntegrationTests.Search.SemanticSearchApiIntegrationTests.GetSearch_WithSemanticAxis_ShouldReturnSemanticResults",
+        "Hexalith.Memories.IntegrationTests.Search.SemanticSearchApiIntegrationTests.GetSearch_WithSemanticAxisAndOffset_ShouldReturnDisjointStablePages",
+        "Hexalith.Memories.IntegrationTests.Search.SemanticSearchApiIntegrationTests.GetSearch_WithSemanticAxisAndMetadataQueryBeyondInitialWindow_ShouldReturnLaterFilteredMatches",
+        "Hexalith.Memories.IntegrationTests.Search.SemanticSearchApiIntegrationTests.GetSearch_WithSemanticAxisAndSourceTypeBeyondInitialWindow_ShouldReturnLaterFilteredMatches",
+        "Hexalith.Memories.IntegrationTests.Restore.BackupRestoreFidelityIntegrationTests.ExportThenImport_RestoresEveryHashAndEdge",
+        "Hexalith.Memories.IntegrationTests.Performance.PipelinePersistencePerformanceTests.RunPipelinePersistenceBenchmarks_ShouldMeetWarmRestartAndThroughputTargets",
+        "Hexalith.Memories.IntegrationTests.Mcp.McpAuthenticationIntegrationTests.PostMcp_NoAuthorizationHeader_ReturnsBearerChallenge",
+        "Hexalith.Memories.IntegrationTests.Mcp.McpAuthenticationIntegrationTests.GetHealth_AllowsAnonymous",
+        "Hexalith.Memories.IntegrationTests.Mcp.McpAuthenticationIntegrationTests.CallTool_ValidBearer_MatchingTenantClaim_Succeeds",
+        "Hexalith.Memories.IntegrationTests.Mcp.McpAuthenticationIntegrationTests.CallTool_ValidBearer_CrossTenantClaim_ReturnsTenantForbidden",
+        "Hexalith.Memories.IntegrationTests.Mcp.McpServerIntegrationTests.ListTools_EndToEnd_ReturnsFourToolsWithTypedSchemas",
+        "Hexalith.Memories.IntegrationTests.Mcp.McpServerIntegrationTests.CallSearchMemory_EndToEnd_ExecutesAcrossDaprHop",
+        "Hexalith.Memories.IntegrationTests.Ingestion.DirectoryIngestionIntegrationTests.DirectoryIngestion_MixedFiles_ShouldIndexSupportedAndSkipUnsupported",
+        "Hexalith.Memories.IntegrationTests.Ingestion.DirectoryIngestionIntegrationTests.DirectoryIngestion_CrossTenantIsolation_ShouldNotSerialize",
+        "Hexalith.Memories.IntegrationTests.Ingestion.IngestionPipelineTests.PostIngest_ShouldIndexMemoryUnitAcrossAllBackends",
+        "Hexalith.Memories.IntegrationTests.Ingestion.IngestionPipelineTests.PostIngest_PayloadLargerThanOneMegabyte_ShouldReturnBadRequest",
+        "Hexalith.Memories.IntegrationTests.Ingestion.PipelinePersistenceIntegrationTests.RestartTopology_InFlightUrlIngestion_ShouldResumeWithoutDuplicateWrites",
+        "Hexalith.Memories.IntegrationTests.Ingestion.PipelinePersistenceIntegrationTests.RestartTopology_InFlightUrlIngestion_ShouldKeepSingleDedupKeyAndStableMemoryUnitId",
+        "Hexalith.Memories.IntegrationTests.Ingestion.PipelinePersistenceIntegrationTests.RestartTopology_InFlightUrlIngestion_ShouldRestoreCaseCounterActorState",
+        "Hexalith.Memories.IntegrationTests.Ingestion.PipelinePersistenceIntegrationTests.RestartTopology_ShouldPreserveEmbeddingRateLimiterBudget",
+        "Hexalith.Memories.IntegrationTests.Ingestion.PipelinePersistenceIntegrationTests.RestartTopology_ShouldPreserveOrRehydrateCorpusStatistics",
+        "Hexalith.Memories.IntegrationTests.Ingestion.PipelinePersistenceIntegrationTests.RestartTopology_ShouldKeepFailedUnitVisibleAndAllowReingestionAfterRecovery",
+        "Hexalith.Memories.IntegrationTests.Ingestion.PipelinePersistenceIntegrationTests.RestartTopology_ShouldPreserveIndexedRedisBackedDataAcrossControlledRestart",
+        "Hexalith.Memories.IntegrationTests.Ingestion.RateLimitingIntegrationTests.TwoTenantIsolation_ShouldEnforceIndependentCeilings",
+        "Hexalith.Memories.IntegrationTests.Ingestion.RateLimitingIntegrationTests.BatchVsSingleIngest_ShouldNotStarveRealTimeTenant",
+        "Hexalith.Memories.IntegrationTests.Ingestion.RetryFailureIntegrationTests.ReIngestBulk_MixedOutcomes_EnumeratedInResponse",
+        "Hexalith.Memories.IntegrationTests.Ingestion.RetryFailureIntegrationTests.CounterActor_TracksConcurrentInflightWorkflows",
+        "Hexalith.Memories.IntegrationTests.Ingestion.UrlIngestionIntegrationTests.UrlIngestion_SmallTextPage_ShouldCompleteAndBeSearchable",
+        "Hexalith.Memories.IntegrationTests.Ingestion.UrlIngestionIntegrationTests.UrlIngestion_404Url_ShouldFailAfterRetries",
+        "Hexalith.Memories.IntegrationTests.Ingestion.UrlIngestionIntegrationTests.UrlIngestion_PrivateIpWithAllowDisabled_ShouldRejectBeforeScheduling",
+        "Hexalith.Memories.IntegrationTests.Health.HealthEndpointIntegrationTests.ReadyEndpoint_AllHealthy_Returns200WithFiveEntries",
+        "Hexalith.Memories.IntegrationTests.Health.HealthEndpointIntegrationTests.AliveEndpoint_Default_Returns200WithSidecarAndSelfOnly",
+        "Hexalith.Memories.IntegrationTests.Health.HealthEndpointIntegrationTests.ReadyEndpoint_FalkorDbDown_ReturnsDegradedWithCapabilities",
+        "Hexalith.Memories.IntegrationTests.Health.HealthEndpointIntegrationTests.AliveEndpoint_DaprSidecarDown_Returns503Unhealthy",
+        "Hexalith.Memories.IntegrationTests.Graph.ConfidencePromotionIntegrationTests.PromoteInferredEdge_Returns200WithAuditFields",
+        "Hexalith.Memories.IntegrationTests.Graph.ConfidencePromotionIntegrationTests.PromoteExplicitEdge_SucceedsAndPreservesOrigin",
+        "Hexalith.Memories.IntegrationTests.Graph.ConfidencePromotionIntegrationTests.DoublePromotion_PreservesAuditChain",
+        "Hexalith.Memories.IntegrationTests.Graph.ConfidencePromotionIntegrationTests.PromoteNonexistentEdge_Returns404",
+        "Hexalith.Memories.IntegrationTests.Graph.ConfidencePromotionIntegrationTests.PromoteWithInvalidConfidence_Returns400",
+        "Hexalith.Memories.IntegrationTests.Graph.ConfidencePromotionIntegrationTests.PromoteWithMissingEdgeType_Returns400",
+        "Hexalith.Memories.IntegrationTests.Graph.ConfidencePromotionIntegrationTests.PromoteWithMissingNewConfidence_Returns400",
+        "Hexalith.Memories.IntegrationTests.Graph.ConfidencePromotionIntegrationTests.PromoteWithEmptyVerifiedBy_Returns400",
+        "Hexalith.Memories.IntegrationTests.Graph.ConfidencePromotionIntegrationTests.PromoteContainsEdge_StructuralEdgePromotable",
+        "Hexalith.Memories.IntegrationTests.Graph.GapDetectionIntegrationTests.Traverse_SingleGap_StubNodeDetectedAsGapMarker",
+        "Hexalith.Memories.IntegrationTests.Graph.GapDetectionIntegrationTests.Traverse_MultipleGaps_AllFlaggedIndividually",
+        "Hexalith.Memories.IntegrationTests.Graph.GapDetectionIntegrationTests.Traverse_WithCaseId_PreservesGapMarkersAndGapEdges",
+        "Hexalith.Memories.IntegrationTests.Graph.GapDetectionIntegrationTests.Traverse_RetroactiveGapResolution_StubBecomesFullNode",
+        "Hexalith.Memories.IntegrationTests.Graph.GapDetectionIntegrationTests.Traverse_ContentMissingInGraphButPresentInRedis_DoesNotCreateGapMarker",
+        "Hexalith.Memories.IntegrationTests.Graph.GapDetectionIntegrationTests.Traverse_NoGaps_FullNodesNotFlaggedAsGaps",
+        "Hexalith.Memories.IntegrationTests.Graph.GapDetectionIntegrationTests.Traverse_GapMarkerHasEdges",
+        "Hexalith.Memories.IntegrationTests.Graph.TraversalEdgeTypeEndpointIntegrationTests.Traverse_InvalidEdgeType_Returns400WithErrorCode",
+        "Hexalith.Memories.IntegrationTests.Graph.TraversalEdgeTypeEndpointIntegrationTests.Traverse_MixedValidAndInvalidEdgeTypes_Returns400FailFast",
+        "Hexalith.Memories.IntegrationTests.Graph.TraversalEdgeTypeEndpointIntegrationTests.Traverse_UnderscoreFormat_Returns400",
+        "Hexalith.Memories.IntegrationTests.Graph.TraversalEdgeTypeEndpointIntegrationTests.Traverse_EmptyEdgeTypes_Returns200WithDefaultSemanticTypes",
+        "Hexalith.Memories.IntegrationTests.Graph.TraversalEdgeTypeEndpointIntegrationTests.Traverse_WhitespacePaddedValues_ParsesCorrectly",
+        "Hexalith.Memories.IntegrationTests.Graph.TraversalEdgeTypeEndpointIntegrationTests.Traverse_ValidEdgeTypes_Returns200",
+        "Hexalith.Memories.IntegrationTests.Graph.TraversalEdgeTypeEndpointIntegrationTests.Traverse_NoEdgeTypesParam_Returns200WithDefaultBehavior",
+        "Hexalith.Memories.IntegrationTests.Fixtures.OpenBaoTopologyIntegrationTests.DaprSecretReads_RuntimeAndAccessTelemetryCanariesMatchExpectedFingerprints",
+        "Hexalith.Memories.IntegrationTests.Fixtures.OpenBaoTopologyIntegrationTests.ProviderBoundary_DaprScopesKeyScopesPoliciesPrefixesAndBulkOperationsFailClosed",
+        "Hexalith.Memories.IntegrationTests.Fixtures.OpenBaoTopologyIntegrationTests.DaprSidecarMatrix_EnforcesExactComponentAndKeyAllowDenyBoundaries",
+        "Hexalith.Memories.IntegrationTests.Fixtures.OpenBaoTopologyIntegrationTests.FullTopologyRestart_ReinitializesOpenBaoAndRecoversPermittedDaprReads",
+        "Hexalith.Memories.IntegrationTests.Fixtures.OpenBaoTopologyIntegrationTests.InPlaceOpenBaoRestart_RotatesGenerationAndRecoversDependentSidecars",
+        "Hexalith.Memories.IntegrationTests.Fixtures.OpenBaoTopologyIntegrationTests.DiagnosticsModelGeneratedFilesAndLogs_ContainNoSensitiveMaterial",
+        "Hexalith.Memories.IntegrationTests.Fixtures.OpenBaoTopologyIntegrationTests.OpenBaoColdStart_TopologyAcceptsQueriesWithinNfr7",
+        "Hexalith.Memories.IntegrationTests.Export.ExportWorkflowIntegrationTests.IngestThreeUnits_ExportCase_RoundTripsThroughStream",
+        "Hexalith.Memories.IntegrationTests.Export.ExportWorkflowIntegrationTests.IngestTwoCases_ExportTenant_ReturnsEverything",
+        "Hexalith.Memories.IntegrationTests.EventStoreIntegration.EventIngestionPipelineIntegrationTests.PostEventsIngest_ShouldIndexMemoryUnitAndRespectExactSubjectFilter",
+        "Hexalith.Memories.IntegrationTests.EventStoreIntegration.EventIngestionPipelineIntegrationTests.PublishViaDaprPubSub_ShouldBecomeSearchableWithinFiveSeconds_AndIgnoreDuplicateReplay",
+        "Hexalith.Memories.IntegrationTests.Consistency.ConsistencyWorkflowIntegrationTests.VerifyOnCleanTenant_ReportsZeroDiscrepancies",
+        "Hexalith.Memories.IntegrationTests.Consistency.ConsistencyWorkflowIntegrationTests.SeedOrphanThenVerify_ReportsOneDiscrepancyWithCorrectRecommendation",
+        "Hexalith.Memories.IntegrationTests.Consistency.ConsistencyWorkflowIntegrationTests.SeedOrphanThenRepair_ConvergesToConsistent",
+        "Hexalith.Memories.IntegrationTests.Cli.CliErrorMessagesIntegrationTests.SearchInspect_NonexistentTenantValidFormat_EmitsCliJsonErrorEnvelope",
+        "Hexalith.Memories.IntegrationTests.Cli.CliSearchIntegrationTests.HybridSearchAsync_AfterIngestion_ReturnsCompositeScoreAndCaveat",
+        "Hexalith.Memories.IntegrationTests.Cli.CliTenantListIntegrationTests.ListTenantsAsync_AfterProvisioning_ReturnsCreatedTenant",
+        "Hexalith.Memories.IntegrationTests.Cli.QuickstartDryRunIntegrationTests.Quickstart_DryRunJson_EmitsAllDryRunSteps",
+        "Hexalith.Memories.IntegrationTests.Cli.QuickstartLiveIntegrationTests.Quickstart_AgainstLiveFixture_SucceedsWithinSixtySeconds",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.PostCase_ThenList_ShouldReturnCreatedCase",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.GetCase_WhenMissing_ShouldReturnNotFoundErrorResponse",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.PostCase_ThenIngest_ShouldReportMemoryUnitCountAndContainsEdge",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.PutMember_ThenList_ThenDelete_ShouldRoundTrip",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.PutMember_Idempotent_ShouldReturn201Then200",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.PutMember_WhenBodyOmitsMemberType_ShouldReturn400",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.PutMember_WhenCaseNotFound_ShouldReturn404",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.DeleteMember_WhenNotFound_ShouldReturn404",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.ListCasesAsync_AfterAddingMembers_ShouldNotCountMembersKeyAsCase",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.GetCaseStatus_AfterAddingMembers_ShouldIncludeMemberCount",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.PutMember_WhenLimitReached_ShouldReturn400MemberLimitExceeded",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.PutMember_WhenCaseAtLimitButMemberAlreadyExists_ShouldReturn200",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.PutMember_ConcurrentSameMember_ShouldProduceExactlyOneMemberAddedEvent",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.PostAnnotation_WhenTargetNotFullyIndexed_ShouldReturn400",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.PostAnnotation_ThenList_ShouldReturnStoredAnnotationWithMetadata",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.PostAnnotation_TwiceOnSameTarget_ShouldListTwoDistinctAnnotations",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.GetAnnotations_WhenMemoryUnitMissingOrWrongCase_ShouldReturn404",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.DeleteMemoryUnit_Roundtrip_ShouldReturn204AndRemoveFromCase",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.DeleteMemoryUnit_NotFound_ShouldReturn404",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.DeleteMemoryUnit_WrongCase_ShouldReturn404AndLeaveOriginalMemoryUnit",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.GetCaseStatus_WhenDeleting_ShouldReturnDeletingWithDeletionStartedAt",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.DeleteMemoryUnit_WhenCaseDeleting_ShouldReturn409",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.DeleteCase_EmptyCase_ShouldReturn204AndRemoveCase",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.DeleteCase_WithIndexedMemoryUnits_ShouldRemoveAllBackendState",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.DeleteCase_WithMembers_ShouldReturn204AndCleanUp",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.DeleteCase_NotFound_ShouldReturn404",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.DeleteCase_ListCasesShouldNoLongerIncludeDeletedCase",
+        "Hexalith.Memories.IntegrationTests.Cases.CaseEndpointIntegrationTests.DeleteCase_Idempotent_SecondDeleteReturns404",
+        "Hexalith.Memories.IntegrationTests.Ingestion.OllamaEmbeddingEndToEndTests.Story13_7_AC2_OllamaEmbeddingEndToEnd_ShouldIndexAndSearchWith2560Dimensions",
+        "Hexalith.Memories.IntegrationTests.Ingestion.EmbeddingProviderFailureIntegrationTests.Provider500_ExhaustsRetriesAndPersistsFailedUnit",
+        "Hexalith.Memories.IntegrationTests.Ingestion.EmbeddingProviderFailureIntegrationTests.TransientIngestionFailure_ShouldCompleteSuccessfullyAfterRetries",
+        "Hexalith.Memories.IntegrationTests.Ingestion.EmbeddingProviderFailureIntegrationTests.Provider429_ShouldReportToActorAndRetry",
+        "Hexalith.Memories.IntegrationTests.EventStoreIntegration.EventStoreAppHostResourceGraphTests.EventStoreResource_HasExpectedDaprSidecarAndComponentReferences",
+        "Hexalith.Memories.IntegrationTests.Fixtures.AppHostComponentFileOrderingTests.SidecarStart_ObservesCurrentRedisAndOpenBaoGenerationFiles"
+      ],
+      "skipped_tests": [
+        "Hexalith.Memories.IntegrationTests.EventStoreIntegration.EventStoreAppHostResourceGraphTests.EventStoreResource_StartsAndBecomesHealthy"
+      ],
+      "private_raw_sha256": "79ee7ffd45cea23e69dfb4c2127a964617bfe61be2f950cf70a6eb79cd3f0852",
+      "lane": "integration-all",
+      "command": "dotnet tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+      "cwd": "${MEMORIES_ROOT}",
+      "exit_code": 1,
+      "environment": {
+        "MEMORIES_DAPR_PLACEMENT_HOST_ADDRESS": "${OWNED_DAPR_PLACEMENT_HOST_ADDRESS}",
+        "MEMORIES_DAPR_SCHEDULER_HOST_ADDRESS": "${OWNED_DAPR_SCHEDULER_HOST_ADDRESS}"
+      },
+      "blocker": "170 tests hit the runtime source metadata requirement for the absent nested ${MEMORIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/Hexalith.EventStore.csproj. The task forbids nested submodule initialization. The 164 shared-fixture and six direct failures have this same cause. Targeted physical Redis/Dapr checks ran independently.",
+      "qualification_phase": "Executed after the tenant lifecycle fixture corrections; the later terminal re-read and malformed-history follow-ups are qualified by the final 75-case target and XML. The unchanged nested-reference metadata gate blocks broad topology initialization independently."
+    }
+  ],
+  "matrix": {
+    "tenant_deletion": [
+      "RetryWorkflowErasureIntegrationTests.TenantDeletionPurgesLiveDeadAndCompletedOrRunningHistoryWhileUnknownCoverageAndSchedulingRemainBlocked",
+      "RetryWorkflowErasureIntegrationTests.CollidingLegacyAddressPreservesForeignHistoryAndScopedNewSchedulesUntilTheirOwnErasure"
+    ],
+    "malformed_addressing": [
+      "FailedNaturalLanguageEmbeddingRegistryTests.DequeueRejectsMisaddressedModernPayloadWithoutMutation",
+      "NaturalLanguageErasureIntegrationTests.MisaddressedModernPayloadsCannotRetryOrOverflowAnotherUnit"
+    ],
+    "concurrent_pruning": [
+      "NaturalLanguageErasureIntegrationTests.ObservedPruningPreservesConcurrentLiveAndDeadReplacement",
+      "NaturalLanguageErasureIntegrationTests.ActualQueueMaintenancePreservesASelectionChangedAtItsFinalRedisCommand"
+    ],
+    "modern_first_completion": [
+      "NaturalLanguageErasureIntegrationTests.ModernFirstCompletionRetiresVerifiedAliasesButDistinctLegacyWorkRemainsBlockedAfterRestart",
+      "NaturalLanguageErasureIntegrationTests.MixedDistinctLegacyAliasPreservesModernProgressAndRemainsForReconciliation"
+    ],
+    "publication_race": [
+      "NaturalLanguageErasureIntegrationTests.AdmittedModernAndJsonOnlyLegacyRetriesPersistActualNaturalLanguageOutput",
+      "NaturalLanguageErasureIntegrationTests.ExactRetryAdmissionRejectsRecordReplacementDuringDescriptionOrEmbedding"
+    ]
+  },
+  "additional_controls": [
+    "NaturalLanguageErasureIntegrationTests.SameUnitSchedulerLeaseSerializesAttemptsAndStaleAcknowledgementCannotClearNewAuthority",
+    "RetryWorkflowErasureIntegrationTests.WorkerSchedulesContentFreeDurableHistoryWhileAdmittedRegistryContentPersistsNaturalLanguageOutput",
+    "DeleteTenantDataKeysActivityTests.RegisteredCompositionSelectsWorkflowAwareConstructor",
+    "RetryWorkflowErasureIntegrationTests.ScopedTerminalRetirementRejectsANewerExecutionBeforePurgeAndPreservesItsActualHistory",
+    "NaturalLanguageErasureIntegrationTests.MalformedLegacyPruningRetainsOnlyAContentFreeReconciliationObligation",
+    "TenantIngestionLifecycleIntegrationTests"
+  ],
+  "policy_checks": {
+    "warning_override_guard": {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "cwd": "${PARTIES_ROOT}",
+      "exit_code": 0
+    },
+    "whitespace": {
+      "command": "git diff --check",
+      "exit_code": 0
+    }
+  },
+  "source_sha256": {
+    "docs/operations/pipeline-persistence.md": "7250a8c04e2342cf0819ea120fe20107ae568f2bb3520b7bc109370cb1beba1d",
+    "src/Hexalith.Memories.Server/Activities/Indexing/IndexNaturalLanguageSemanticActivity.cs": "21a852f819bb218362ab4846f3ab20ea73e659887f715cfc3001c44d5db4bb67",
+    "src/Hexalith.Memories.Server/Activities/Tenants/DeleteTenantDataKeysActivity.cs": "80fecd5b08ce782b9906dbe3220b98faba3655024c4a6a9b1b05723298c0f265",
+    "src/Hexalith.Memories.Server/Ingestion/SourcePublicationVisibility.cs": "6e0497df6b4e5c0d955bbc0ec342e95572e0faf2ddadaf17e5719c0dcb30eb2f",
+    "src/Hexalith.Memories.Server/NaturalLanguage/FailedNaturalLanguageEmbeddingRegistry.cs": "f2b74ce66bbf4eb884fc5620d20f07184e12804a9c2f4d0a27a09cd18f2a106d",
+    "src/Hexalith.Memories.Server/NaturalLanguage/NaturalLanguageEmbeddingRetryHostedService.cs": "68e5809d8a6e8955a2fc0f5da95241e31c79714d3deb35522a127fcf6fc09659",
+    "src/Hexalith.Memories.Server/NaturalLanguage/RetryNaturalLanguageEmbeddingActivity.cs": "9e312a8d2015a6838dcc388867624f718c3f6461a66eebfede5410ec9657eb96",
+    "src/Hexalith.Memories.Server/NaturalLanguage/RetryPublicationRejectedException.cs": "15a752f846e2ed84e1eeac8a91e6c978c6b8a20caf1e7a71f5bbf801dfc2da54",
+    "src/Hexalith.Memories.Server/NaturalLanguage/RetryWorkflowErasure.cs": "3f0112806214c1d6dc2f381a625af68d13e0a981c8583693bed125ee117b82e2",
+    "src/Hexalith.Memories.Server/NaturalLanguage/RetryWorkflowHistory.cs": "21613b23661ca5735dc7d5242022c65b939c8525d8acad977e079862918d208d",
+    "src/Hexalith.Memories.Server/Workflows/Contracts/NaturalLanguageEmbeddingRetryInput.cs": "7d205c7978b15895992ccf4e4951714916ae1c863378a8c6166068f79a43f60e",
+    "tests/Hexalith.Memories.IntegrationTests/Fixtures/DaprStateSidecarFixture.cs": "ce06e2a09819debe26c66e1aed9a4e8196481ee5afa32dcb737e965c67262b46",
+    "tests/Hexalith.Memories.IntegrationTests/Ingestion/NaturalLanguageErasureIntegrationTests.cs": "1abbaed292defcfd638d6337b447c76180f50ed27d129f22c822e51561b360be",
+    "tests/Hexalith.Memories.IntegrationTests/Ingestion/RetryDatabaseInterception.cs": "1f875e16862b0f2769e2e0ae49c80911473e1d09a591e2e10e0a197eaa2854f8",
+    "tests/Hexalith.Memories.IntegrationTests/Ingestion/RetryWorkflowErasureIntegrationTests.cs": "73f9f3e63a90af567e44f0db8a5f32336fd2597d88097763d29046285c3891e7",
+    "tests/Hexalith.Memories.IntegrationTests/Ingestion/TenantIngestionLifecycleIntegrationTests.cs": "794b5a93b6569f2fdcc09b51d9080a6c0d948ea3032fb0c5a3941a60bab14ba8",
+    "tests/Hexalith.Memories.Server.Tests/Activities/Tenants/DeleteTenantDataKeysActivityTests.cs": "2f730237d2cfae7779dc7482af0deb9efbcd08cfa1e535b2c6a99aa106491c07",
+    "tests/Hexalith.Memories.Server.Tests/NaturalLanguage/FailedNaturalLanguageEmbeddingRegistryTests.cs": "00796231e72a423926f65804cb18a66be3a026e24bd50e750b04425c92d4e2fc"
+  },
+  "review_dispositions": [
+    {
+      "finding": "Existing mixed-alias test authorized dropping differing raw content by unit/time alone",
+      "disposition": "Changed test to preserve distinct alias bytes and prove modern progress, matching the frozen specification."
+    },
+    {
+      "finding": "One unit-only scheduler marker could lose overlapping authority",
+      "disposition": "Added atomic nonexpiring per-unit lease and unique per-attempt token; actual Redis restart/stale-ack/purge control passed."
+    },
+    {
+      "finding": "A completed older payload could prevent replacement progress",
+      "disposition": "Retire independently scoped terminal history under the scheduler lease and execute replacement through the real authenticated Dapr worker; passed."
+    },
+    {
+      "finding": "Terminal retirement needed an explicit comparison with the caller-observed execution",
+      "disposition": "Re-read scope, complete input, CreatedAt and terminal state before purge; preserve changed completed/running executions, retain the lease and verify absence afterward. Actual Dapr controls passed."
+    },
+    {
+      "finding": "Malformed legacy members could copy unknown raw JSON into the content-free discovery ledger",
+      "disposition": "Retain a content-free unresolved marker without copying an unverified member; actual Redis absence/reconciliation control passed."
+    }
+  ],
+  "boundaries": [
+    "Unknown historical workflow coverage requires independent owner reconciliation; no production completeness is attested.",
+    "Ambiguous scheduling survives restart and blocks deletion until reconciled.",
+    "Legacy erasure retains the existing default-false scheduler-drain requirement.",
+    "No packages/images published, no deployment, and no production data changed.",
+    "Parent owns independent review, ledger reconciliation and Git publication.",
+    "Cooperative registered schedulers own the durable lease; Dapr exposes no execution-conditional purge for out-of-band mutations."
+  ],
+  "broad_server_attribution": {
+    "prior_receipt": "../five-published-sdk-and-runtime-closure-2026-10-26/validation.json",
+    "unchanged_owner_test_git_blobs": {
+      "tests/Hexalith.Memories.Server.Tests/Deployment/OpenBaoPlatformDocumentationTests.cs": "e01f23a422e16be98185ebee5d5b9de850d51988",
+      "tests/Hexalith.Memories.Server.Tests/Deployment/AppHostSecurityConfigurationTests.cs": "ddd10a5670da6dc1d9f0ef7ccbb060a36eeab628",
+      "tests/Hexalith.Memories.Server.Tests/Architecture/AccessTelemetryA41CloseOutTests.cs": "fe26ebbca59d0f5209023fc5ea84891245cab5fb"
+    },
+    "explanation": "The five full-suite failures match the prior receipt exactly, and these test blobs are unchanged from the recorded owner baseline. No policy expectation was weakened."
+  },
+  "runtime_ownership": {
+    "run_id": "five-nl-retry-live-h4lqp4kv",
+    "owned_processes": 4,
+    "all_owned_processes_exited": true,
+    "all_exit_codes": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "private_receipt_sha256": "41f89df1dc0d0bed6b82678b885aba55561cdfe0dd77a4907bac80f25b847a74",
+    "native_backends": {
+      "redis_server_sha256": "cb55ff7ea8f994364668d388d7cbd39a98e78fd70450f6da021fffe47e46ed84",
+      "redisearch_module_sha256": "c55c19e785a6f98e3176643d0b01b47dd8b4456f0986beef9ae4a5acea67b064",
+      "falkordb_server_sha256": "87dd1979b0c12e68d2ed0187bb8eff8b64a2bdc6ac72db8e5c561f1758745d28",
+      "falkordb_module_sha256": "494cda4085cc8e11bdcc9c16734855cd2f6c936a96815ba35a553d948fb2c745"
+    },
+    "native_command_template": [
+      "${NATIVE_REDIS_OR_FALKOR_SERVER}",
+      "--port",
+      "${OWNED_BACKEND_PORT}",
+      "--bind",
+      "127.0.0.1",
+      "--dir",
+      "${OWNED_RUNTIME_ROOT}/${BACKEND}",
+      "--save",
+      "",
+      "--appendonly",
+      "yes",
+      "--loadmodule",
+      "${NATIVE_REDISEARCH_OR_FALKOR_MODULE}"
+    ],
+    "fixture": "Existing explicit owned-native fixture seam; fresh append-only backend directories and separately owned placement/scheduler. Authenticated workflow sidecars remain fixture-owned."
+  },
+  "intermediate_failures": [
+    {
+      "run": "initial unit assertion",
+      "result": "28/29 passed; corrected a test-only Redis overload assertion; final focused lane passes."
+    },
+    {
+      "run": "initial integration test compile",
+      "result": "Removed a duplicate readiness callback inserted into an unrelated older test; final builds pass."
+    },
+    {
+      "run": "initial broader integration tenant lifecycle",
+      "result": "Three fixtures lacked explicit known-empty history coverage and the workflow-aware constructor; corrected fixture setup; final affected lifecycle controls pass."
+    },
+    {
+      "run": "intermediate container target run",
+      "result": "FalkorDB fixture initial connection failed for six workflow fixture cases before tests ran. Earlier complete 59-case owned-container matrix passed; final expanded 75-case owned-native run passed with no skips."
+    }
+  ]
+}

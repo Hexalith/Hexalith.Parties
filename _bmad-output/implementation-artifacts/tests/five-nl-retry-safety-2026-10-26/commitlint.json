@@ -1,0 +1,44 @@
+{
+  "memories": {
+    "command": [
+      "node",
+      "node_modules/@commitlint/cli/cli.js",
+      "--edit",
+      "/tmp/five-nl-owner-message.txt",
+      "--verbose"
+    ],
+    "exit_code": 0,
+    "stdout": "\u29d7   --- input ---\nfix!: fence retry publication and tenant erasure\n\nCompare selected retry state before cleanup or publication.\nRetain scoped history and uncertain scheduling across restarts.\n\nBREAKING CHANGE: tenant erasure now requires reconciled historical\nretry coverage and rejects unresolved scheduling authority.\n\u2714   found 0 problems, 0 warnings\n",
+    "stderr": "",
+    "message": "fix!: fence retry publication and tenant erasure\n\nCompare selected retry state before cleanup or publication.\nRetain scoped history and uncertain scheduling across restarts.\n\nBREAKING CHANGE: tenant erasure now requires reconciled historical\nretry coverage and rejects unresolved scheduling authority.\n",
+    "message_sha256": "f3c90c718875d733cafe07efec783d6e60b883f3f0ffb4b4702bc6d38ad1ae94",
+    "installed_cli": "21.2.2",
+    "lock_cli": "21.2.2",
+    "node": "v26.4.0",
+    "committed_sha": "22b792cf4f4a7aa5c9b6f129e6a491821169a8bf",
+    "post_commit_exit_code": 0,
+    "post_commit_stdout": "\u29d7   --- input ---\nfix!: fence retry publication and tenant erasure\n\nCompare selected retry state before cleanup or publication.\nRetain scoped history and uncertain scheduling across restarts.\n\nBREAKING CHANGE: tenant erasure now requires reconciled historical\nretry coverage and rejects unresolved scheduling authority.\n\u2714   found 0 problems, 0 warnings\n",
+    "rebased_onto": "71b38f42f499be2c098e934a1abd3841267daab7"
+  },
+  "parties": {
+    "command": [
+      "node",
+      "node_modules/@commitlint/cli/cli.js",
+      "--edit",
+      "/tmp/five-nl-parent-message.txt",
+      "--verbose"
+    ],
+    "exit_code": 0,
+    "stdout": "\u29d7   --- input ---\nfix!: adopt retry safety fixes and qualification\n\nAdopt Memories 22b792cf4f4a7aa5c9b6f129e6a491821169a8bf.\nClose five deferred source fixes with reviewed persistence evidence.\n\nBREAKING CHANGE: selected Memories tenant erasure requires explicit\nhistorical retry reconciliation before cleanup can succeed.\n\u2714   found 0 problems, 0 warnings\n",
+    "stderr": "",
+    "message": "fix!: adopt retry safety fixes and qualification\n\nAdopt Memories 22b792cf4f4a7aa5c9b6f129e6a491821169a8bf.\nClose five deferred source fixes with reviewed persistence evidence.\n\nBREAKING CHANGE: selected Memories tenant erasure requires explicit\nhistorical retry reconciliation before cleanup can succeed.\n",
+    "message_sha256": "f2759701a01e75b0dbaadeeabf9e28cbbcef1ad416bc6a0adc2c375d251d1bd3",
+    "installed_cli": "21.2.2",
+    "lock_cli": "21.2.2",
+    "node": "v26.4.0",
+    "post_commit_exit_code": 0,
+    "post_commit_stdout": "\u29d7   --- input ---\nfix!: adopt retry safety fixes and qualification\n\nAdopt Memories 22b792cf4f4a7aa5c9b6f129e6a491821169a8bf.\nClose five deferred source fixes with reviewed persistence evidence.\n\nBREAKING CHANGE: selected Memories tenant erasure requires explicit\nhistorical retry reconciliation before cleanup can succeed.\n\u2714   found 0 problems, 0 warnings\n",
+    "message_bytes_match": true,
+    "validated_local_adoption_commit": "23a03bfced8fd215f241bf18521299cb3300aa74"
+  }
+}

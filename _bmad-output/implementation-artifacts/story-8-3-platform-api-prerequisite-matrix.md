@@ -99,7 +99,7 @@ source selection and default Release packages are distinct.
 | Root dependency | Current source identity | Release use |
 | --- | --- | --- |
 | EventStore | `1b404e7fbcdbb5604418f04025d16756436cec24` (`v3.128.0-2-g1b404e7f`) | Package `3.128.0`; qualification belongs to the current executed receipts. |
-| Memories | `39be000902254c4717df6726bfcc3ea927b26b70` (`v2.29.15-30-g39be0009`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
+| Memories | `22b792cf4f4a7aa5c9b6f129e6a491821169a8bf` (`v2.29.15-36-g22b792cf`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
 | FrontComposer | `9c4166e4b7cb45e2512e2b6db887a071f35ce244` (`v4.7.0-106-g9c4166e4`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
 | Tenants | `692c17b27d94677a3a4d065330d150b262cdb570` (`v5.10.1-56-g692c17b2`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
 | AI.Tools | `3f194e17174994d308ec84af9ee2b5aa68674d0d` (`3f194e17`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
