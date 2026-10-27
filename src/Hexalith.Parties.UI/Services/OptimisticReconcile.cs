@@ -81,7 +81,7 @@ public sealed class OptimisticReconcile(
                 Subscribe = callback => subscription.Subscribe(request.ProjectionKey.ProjectionType, request.ProjectionKey.Tenant, callback),
                 IsConnected = () => subscription.IsConnected,
                 RunFallback = fallback.RunAsync,
-                ReadFailed = () => logger.LogWarning("Reconcile re-read failed; will retry on the next confirm/poll."),
+                ReadFailed = () => OptimisticReconcileLog.ReadFailed(logger),
             }, cancellationToken).ConfigureAwait(false);
             return;
         }

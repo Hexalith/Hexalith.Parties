@@ -76,7 +76,19 @@
     <PackageReference Include="Hexalith.FrontComposer.SourceTools"
                       Condition="'$(HexalithFrontComposerFromSource)' != 'true'"
                       PrivateAssets="all" />
+    <!-- Microsoft.Extensions.Logging.Abstractions is framework-provided in this Web project.
+         Package pruning drops the [LoggerMessage] generator and leaves CS8795. Restore the
+         analyzer path the same way Hexalith.Parties does. -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" GeneratePathProperty="true" ExcludeAssets="all" NoWarn="NU1510" />
   </ItemGroup>
+
+  <Target Name="_RestoreLoggerMessageGenerator" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <Analyzer Include="$(PkgMicrosoft_Extensions_Logging_Abstractions)\analyzers\dotnet\roslyn4.4\cs\Microsoft.Extensions.Logging.Generators.dll"
+                Condition="Exists('$(PkgMicrosoft_Extensions_Logging_Abstractions)\analyzers\dotnet\roslyn4.4\cs\Microsoft.Extensions.Logging.Generators.dll')
+                           and !@(Analyzer->AnyHaveMetadataValue('Filename', 'Microsoft.Extensions.Logging.Generators'))" />
+    </ItemGroup>
+  </Target>
 
   <!-- Generated from the evaluated pinned-tool mapping; browser qualification verifies
        the corresponding actually served assets before accepting source coverage. -->
