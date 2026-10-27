@@ -39,4 +39,3 @@ public readonly record struct CommandAcceptance
     public static CommandAcceptance Rejected(StatusKind failureStatus, string? failureReason)
         => new(false, failureStatus, failureReason);
 }
-

@@ -416,3 +416,20 @@ absent from that release are outside this batch.
 
 See the [2026-10-26 receipts](../_bmad-output/implementation-artifacts/tests/five-published-sdk-and-runtime-closure-2026-10-26/README.md)
 for actual resolved package identities, executed results and remaining gates.
+
+
+### FrontComposer shared UI candidate qualification
+
+The five-item B–F batch prepares shared freshness, live regions, reconciliation,
+downloads and typed-name confirmation behind the existing Parties adapters.
+`Parties:FrontComposer:UseSharedUiPrimitives` defaults to false. In a supported
+pinned-tool Debug source graph, setting it to true registers the shared candidate
+services; the browser fixture enables it for parity checks. Published 4.7.0
+continues to use the retained local paths. Keep those paths until named owner
+acceptance and matching package delivery are qualified.
+
+The [qualification receipt](../_bmad-output/implementation-artifacts/tests/five-frontcomposer-ui-deferred-items-2026-10-27/README.md)
+contains the commands, actual source/package identities, immutable evidence
+archive and rollback gates. Local API-compatibility packages are test artifacts;
+they do not establish upstream package delivery. No G4-A picker or Story 8.9
+status is changed by these slices.

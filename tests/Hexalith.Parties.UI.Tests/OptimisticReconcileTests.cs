@@ -5,6 +5,7 @@ using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.UI.Services;
 using Hexalith.Parties.UI.Status;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
@@ -26,6 +27,9 @@ public sealed class OptimisticReconcileTests
     [Fact]
     public async Task HappyPath_ViaFreshnessCurrent_AppliesOptimistic_AnnouncesSaving_ThenReconcilesPolitely()
     {
+        typeof(OptimisticReconcile).GetConstructor([
+            typeof(PartiesProjectionSubscription), typeof(ProjectionFreshnessFallback), typeof(ILogger<OptimisticReconcile>),
+        ]).ShouldNotBeNull();
         var recorder = new Recorder();
         // Disconnected → the polling fallback owns the re-read; its immediate tick returns Current at once.
         FakeProjectionStream stream = NewStream(connected: false);
@@ -281,7 +285,9 @@ public sealed class OptimisticReconcileTests
     {
         var recorder = new Recorder();
         FakeProjectionStream stream = NewStream(connected: true);
-        OptimisticReconcile primitive = NewPrimitive(stream);
+        var logger = Substitute.For<ILogger<OptimisticReconcile>>();
+        logger.IsEnabled(LogLevel.Warning).Returns(true);
+        OptimisticReconcile primitive = NewPrimitive(stream, logger);
 
         int reads = 0;
         OptimisticReconcileRequest request = recorder.BuildRequest(
@@ -309,6 +315,13 @@ public sealed class OptimisticReconcileTests
         recorder.Reverted.ShouldBeFalse();
         (StatusKind finalKind, _) = recorder.Announcements[^1];
         StatusPresentation.PolitenessFor(finalKind).ShouldBe(LiveRegionPoliteness.Polite);
+#if HFC_SHARED_UI
+        // Exercise the generated warning on the actual adapter path, with no exception payload.
+        var warning = logger.ReceivedCalls().Where(call => call.GetMethodInfo().Name == "Log").ShouldHaveSingleItem();
+        warning.GetArguments()[0].ShouldBe(LogLevel.Warning);
+        warning.GetArguments()[2]!.ToString().ShouldBe("Reconcile re-read failed; will retry on the next confirm/poll.");
+        warning.GetArguments()[3].ShouldBeNull();
+#endif
     }
 
     private static CommandAcceptance MapGdpr(AdminPortalGdprCommandResult result)
@@ -318,7 +331,7 @@ public sealed class OptimisticReconcileTests
 
     private static FakeProjectionStream NewStream(bool connected) => new() { IsConnected = connected };
 
-    private static OptimisticReconcile NewPrimitive(FakeProjectionStream stream)
+    private static OptimisticReconcile NewPrimitive(FakeProjectionStream stream, ILogger<OptimisticReconcile>? logger = null)
     {
         var subscription = new PartiesProjectionSubscription(stream, NullLogger<PartiesProjectionSubscription>.Instance);
         var options = Options.Create(new ProjectionFreshnessOptions { PollingIntervalSeconds = 30 });
@@ -327,9 +340,9 @@ public sealed class OptimisticReconcileTests
         var provider = Substitute.For<IServiceProvider>();
         provider.GetService(typeof(Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler))
             .Returns(new Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler());
-        return new OptimisticReconcile(subscription, fallback, NullLogger<OptimisticReconcile>.Instance, provider);
+        return new OptimisticReconcile(subscription, fallback, logger ?? NullLogger<OptimisticReconcile>.Instance, provider);
 #else
-        return new OptimisticReconcile(subscription, fallback, NullLogger<OptimisticReconcile>.Instance);
+        return new OptimisticReconcile(subscription, fallback, logger ?? NullLogger<OptimisticReconcile>.Instance);
 #endif
     }
 

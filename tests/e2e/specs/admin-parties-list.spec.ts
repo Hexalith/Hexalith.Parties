@@ -298,11 +298,18 @@ test.describe('Admin parties list', () => {
     }
     await expect(page.locator(`#${labelledBy}`)).toHaveText('Erase party');
     await expect(page.getByRole('dialog')).toHaveCount(1);
+    const configuration = process.env.CI ? 'Release' : 'Debug';
+    const [fromSource, mappingMode] = (await readFile(new URL(
+      `../../../src/Hexalith.Parties.UI/bin/${configuration}/net10.0/Hexalith.Parties.UI.source-metadata.txt`, import.meta.url), 'utf8'))
+      .trim().split(/\r?\n/);
+    const sharedSource = fromSource === 'true';
+    if (sharedSource) expect(mappingMode).toBe('source');
+    await expect(eraseDialogContent.getByTestId('fc-destructive-dialog')).toHaveCount(sharedSource ? 1 : 0);
     const warning = eraseDialogContent.locator('p[id^="erasure-warning-"], #fc-destructive-dialog-description');
     await expect(warning).toBeVisible();
     await expect(warning).toContainText('irreversible verification');
     const typedConfirmInput = eraseDialogContent.getByRole('textbox', { name: 'Type the selected party display name', exact: true });
-    if (await eraseDialogContent.getByTestId('fc-destructive-dialog').count()) {
+    if (sharedSource) {
       await expect(eraseDialogContent.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();
     } else {
       await expect(typedConfirmInput).toBeFocused();
@@ -320,6 +327,14 @@ test.describe('Admin parties list', () => {
         text: 'Erasure destroys protected party data and starts irreversible verification.' });
     }
     await expect(typedConfirmInput).toHaveAccessibleDescription(/irreversible verification/);
+    if (sharedSource) {
+      const originalWarning = await warning.textContent();
+      const updatedWarning = 'Updated erasure warning: irreversible verification still applies.';
+      await warning.evaluate((element, text) => { element.firstChild!.nodeValue = text; }, updatedWarning);
+      await expect(typedConfirmInput).toHaveAccessibleDescription(updatedWarning);
+      await warning.evaluate((element, text) => { element.textContent = text; }, originalWarning);
+      await expect(typedConfirmInput).toHaveAccessibleDescription(/irreversible verification/);
+    }
     await expect(eraseDialogContent.getByRole('button', { name: 'Erase' })).toBeDisabled();
     await typedConfirmInput.fill('Grace hopper');
     await expect(eraseDialogContent.getByRole('button', { name: 'Erase' })).toBeDisabled();

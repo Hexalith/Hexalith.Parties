@@ -651,6 +651,8 @@ status: open
 progress: 2026-10-21 Reviewed FrontComposer source fix and producer/Parties source regressions delivered on main. Producer browser cases pass 105/105 across three engines, consumer candidate cases pass 8/8, and the original six package assertions remain enforced. Owner publication, catalog/package adoption and removal of the two explicit source opt-ins remain required before closure. See spec-dw-91-forward-skip-links.md and tests/dw-91-forward-skip-links-2026-10-21/validation-resume.json.
 decision: 2026-09-06 Restore forward skip access — Adjust FrontComposer route focus so skip links remain forward reachable while retaining an accessible route announcement, then add producer and Parties Playwright coverage.
 
+implementation_2026_10_27: Source qualification now includes a deterministic regression for a delayed 150 ms landmark-focus retry found during this batch. Mounted skip targets focus once; overlay-editor focus retains its existing path. Forward route and compact keyboard assertions remain enforced. Published Shell 4.7.0 still needs matching publication/adoption. Qualification and remaining gates: `tests/five-frontcomposer-ui-deferred-items-2026-10-27/README.md`. Status stays open; this batch does not promote G4 or Story 8.9.
+
 ### DW-92: Read the EventStore version from the Builds catalog
 
 status: done 2026-10-21
@@ -715,6 +717,8 @@ source_spec: `_bmad-output/implementation-artifacts/spec-8-9-ui-frontcomposer-an
 reason: This independently shippable UI-state slice was split from Story 8.9 after its hardened draft exceeded the 1,600-token workflow limit.
 status: open
 
+implementation_2026_10_27: FrontComposer now supplies transport-neutral record freshness, polite/assertive/none live regions and callback-based reconciliation. Parties retains its wire/status mapping and polling/subscription adapters. Source parity uses actual shared registration; production adoption remains gated on named owner acceptance and publication. Qualification and remaining gates: `tests/five-frontcomposer-ui-deferred-items-2026-10-27/README.md`. Status stays open; this batch does not promote G4 or Story 8.9.
+
 ### DW-101: Consolidate Admin and Consumer exports onto the approved FrontComposer browser-download service after G4-D delivery
 
 origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
@@ -723,6 +727,8 @@ source_spec: `_bmad-output/implementation-artifacts/spec-8-9-ui-frontcomposer-an
 reason: This independently testable download and cleanup slice was split from Story 8.9 after its hardened draft exceeded the 1,600-token workflow limit.
 status: open
 
+implementation_2026_10_27: FrontComposer now supplies injectable stream/file/unchanged-JSON download with safe leaf names, cancellation and browser/interop cleanup. Admin and Consumer source candidates preserve bytes and safe caller filenames. Existing package-mode helpers remain the rollback pending owner acceptance and matching publication. Qualification and remaining gates: `tests/five-frontcomposer-ui-deferred-items-2026-10-27/README.md`. Status stays open; this batch does not promote G4 or Story 8.9.
+
 ### DW-102: Adopt the FrontComposer typed-name destructive confirmation mode for Admin erasure after G4-E delivery
 
 origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
@@ -730,6 +736,8 @@ location: Admin erasure UI and FrontComposer destructive confirmation
 source_spec: `_bmad-output/implementation-artifacts/spec-8-9-ui-frontcomposer-and-fluent-consolidation.md`
 reason: This independently shippable destructive-interaction slice was split from Story 8.9 after its hardened draft exceeded the 1,600-token workflow limit.
 status: open
+
+implementation_2026_10_27: FrontComposer now supplies optional ordinal typed-name confirmation with guarded single submit, safe Cancel focus, Escape and a native accessible warning across the V5 shadow boundary. Admin keeps its authorization and exact-name callback guard. Ordinary dialog callers and the local package fallback remain covered; owner acceptance/publication remain open. Qualification and remaining gates: `tests/five-frontcomposer-ui-deferred-items-2026-10-27/README.md`. Status stays open; this batch does not promote G4 or Story 8.9.
 
 ### DW-103: Complete Fluent UI V5 and Fluent 2 styling and accordion conformance across all Parties UI RCLs
 
@@ -837,6 +845,8 @@ verification_2026_10_24: `tests/five-memories-inventory-and-publication-2026-10-
 
 review_loop_1_2026_10_24: Re-executed mapped source bUnit (415/415) and actual source browser (4/4, zero skips) with owner asset comparison. Forced package bUnit and actual-browser controls fail for duplicate navigation targets as expected; matching package adoption remains deferred. Evidence: `tests/five-memories-inventory-and-publication-2026-10-24/review1-verification.json`; prior same-day counts above remain historical.
   review_loop_2_2026_10_24: The preserved mapped compact/browser and package-negative controls are rerun in the loop2 receipt; owner package publication/adoption and deployed qualification remain open.
+
+implementation_2026_10_27: Existing unique mounted navigation targets and compact link conditions remain intact. Source viewport/resize controls now include the landmark-focus ownership correction described under DW-91. Published Shell 4.7.0 negative controls and publication/adoption gates remain separate. Qualification and remaining gates: `tests/five-frontcomposer-ui-deferred-items-2026-10-27/README.md`. Status stays open; this batch does not promote G4 or Story 8.9.
 
 ### DW-113: Parse only the first complete JSON object from MSBuild `-getProperty/-getItem` stdout.
 
@@ -1925,3 +1935,11 @@ verification_final: `tests/five-processing-and-memories-erasure-2026-10-25/`; sp
   status: done 2026-10-27
   resolution: The existing separate resume-recovery archive retains all 17 original historical receipt hashes and exact bytes, including the original 446-pass/4-fail Server XML, Local exit 1 and both Live refusals. Read-only checks confirm accepted, available and liveQualified remain false and installed hashes/date remain null. Neither EXT Local nor Live was executed; no owner delivery or production custody is qualified.
   verification: `spec-five-legacy-recovery-and-evidence-deferred-items.md`; `tests/five-legacy-recovery-and-evidence-2026-10-27/`. Source safety qualification and evidence preservation remain separate from publication/adoption, deployment and owner acceptance.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-frontcomposer-ui-deferred-items.md`
+  summary: Reconciliation can miss a confirmation delivered before subscription registration.
+  evidence: Both retained Parties ReconcileAsync and the extracted producer subscribe after IssueCommand; a fast projection confirmation then produces no read until another signal.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-frontcomposer-ui-deferred-items.md`
+  summary: Reconciliation does not re-enter polling after a connected subscription later disconnects.
+  evidence: Both retained Parties ReconcileAsync and the extracted producer inspect connectivity once; later disconnect leaves completion waiting until cancellation or another confirmation.

@@ -77,7 +77,8 @@
                       Condition="'$(HexalithFrontComposerFromSource)' != 'true'"
                       PrivateAssets="all" />
     <!-- Microsoft.Extensions.Logging.Abstractions is framework-provided in this Web project.
-         Package pruning drops the [LoggerMessage] generator and leaves CS8795. Restore the
+         DW-100 / _bmad-output/implementation-artifacts/spec-five-frontcomposer-ui-deferred-items.md:
+         package pruning drops the [LoggerMessage] generator and leaves CS8795. Restore the
          analyzer path the same way Hexalith.Parties does. -->
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" GeneratePathProperty="true" ExcludeAssets="all" NoWarn="NU1510" />
   </ItemGroup>

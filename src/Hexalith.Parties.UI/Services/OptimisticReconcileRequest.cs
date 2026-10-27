@@ -31,4 +31,3 @@ public sealed record OptimisticReconcileRequest
     /// </summary>
     public required Action<StatusKind, string?> Announce { get; init; }
 }
-

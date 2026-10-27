@@ -663,7 +663,7 @@ async function qualifyShellSource(page: import('@playwright/test').Page, forcePa
   if (fromSource !== 'true') return; // An explicitly forced package negative control must execute and fail its behavioral assertions.
   expect(mode).toBe('source');
   expect(path.isAbsolute(root)).toBe(true);
-  for (const asset of ['js/fc-focus.js', 'js/fc-keyboard.js', 'css/fc-shell.css']) {
+  for (const asset of ['js/fc-focus.js', 'js/fc-keyboard.js', 'js/fc-download.js', 'css/fc-shell.css']) {
     const selected = await readFile(path.join(root,
       'src/Hexalith.FrontComposer.Shell/wwwroot', asset));
     const served = await page.request.get(`/_content/Hexalith.FrontComposer.Shell/${asset}`);

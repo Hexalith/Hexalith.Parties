@@ -338,3 +338,10 @@ references/Hexalith.FrontComposer|0fc5f4efca4b31ef700ac253f898ef051c9b17e4|valid
 references/Hexalith.FrontComposer|5b6b55cad59598e6bedf8690f27ef4e39d58321b|validated-advance|v4.7.0-131-g5b6b55ca|jpiquot|2026-10-27
 references/Hexalith.Tenants|e3901469fe3e931c89fa0df01ba5faa83556f82d|validated-advance|v5.10.1-75-ge3901469|jpiquot|2026-10-27
 references/Hexalith.Tenants|d73bc3dcb9d5aa1741b63929eaa8b11de4a4e021|validated-advance|v5.10.1-79-gd73bc3dc|jpiquot|2026-10-27
+
+# --- Approved five-item FrontComposer UI source task, 2026-10-27.
+#     Authenticated owner jpiquot approved the frozen spec and requested main
+#     pushes. This reviewed and verified producer revision is on owner main.
+#     Source selection only: named G4 acceptance and matching package publication
+#     remain open; no whole-G4, Story 8.9, deployment or rollback approval.
+references/Hexalith.FrontComposer|c2b925bae1c9b3bfa8c3a4698ad0104de02ed5a4|validated-advance|v4.7.0-137-gc2b925ba|jpiquot|2026-10-27

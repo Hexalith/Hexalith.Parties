@@ -1282,3 +1282,29 @@ Commands, selected identities, exact outcomes and limitations:
 `tests/five-identity-routing-deferred-items-2026-10-22/validation.json` and its
 adjacent API, build, routing and startup receipts. Fresh dependency-reconciliation
 fitness checks pass 2/2; no historical parity is recertified.
+
+
+## FrontComposer B–F maintenance qualification — 2026-10-27
+
+This amendment covers DW-91, DW-100, DW-101, DW-102 and DW-112 only.
+G4 stays `needs-additive-api`; the G4-A picker spec, ordered prerequisites and
+Story 8.9 remain authoritative. Source candidates use
+`Parties:FrontComposer:UseSharedUiPrimitives=true` only after tool-owned source
+selection; the option defaults to false. Named owner acceptance and producer /
+consumer parity are still required before production migration. Published
+Shell and Contracts.UI 4.7.0 retain the local adapters and existing package gates.
+
+| Slice | Candidate behavior | Remaining gate and rollback |
+| --- | --- | --- |
+| B/C — DW-100 | UI-normalized freshness and live regions; callback reconciliation preserves Parties labels, wire/status mappings and transport lifetimes. | Owner acceptance and matching publication; leave the option false to retain existing components/reconciliation. |
+| D — DW-101 | Shared ephemeral stream/file/JSON download preserves original bytes, safe caller filenames and failure feedback. | Owner acceptance and matching publication; retained Admin/Consumer helpers remain available. |
+| E — DW-102 | Optional ordinal typed-name mode retains guarded authorization, one submit, safe cancellation and accessible warning semantics. | Owner acceptance and matching publication; retained Admin dialog remains the package path. |
+| F — DW-91 / DW-112 | Existing route/mounted-target fixes plus one-shot landmark focus prevent a late retry from stealing later focus. | Matching published Shell adoption; package negative controls remain enforced. |
+
+The [batch receipt](tests/five-frontcomposer-ui-deferred-items-2026-10-27/README.md)
+records exact revisions, executed binaries/assets, source mapping, public API
+compatibility, failures and final checks. Concurrent external Git work advanced
+reference identities during implementation; a HEAD alone is not a substitute for
+its recorded source checksums. The narrow FrontComposer/Tenants metadata
+conditions defer to the pinned mapper while retaining legacy selection outside
+mapped mode. They do not bypass its validation guards.

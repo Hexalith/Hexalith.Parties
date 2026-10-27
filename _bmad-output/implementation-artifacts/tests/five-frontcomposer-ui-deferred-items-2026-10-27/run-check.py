@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import tempfile
 from datetime import datetime, timezone
 
 HERE = Path(__file__).resolve().parent
@@ -27,6 +28,10 @@ def observed_inputs():
         cwd = ROOT / relative
         head = subprocess.check_output(['git','rev-parse','HEAD'],cwd=cwd,text=True).strip()
         entry = {'head':head}
+        entry['configuration_sha256'] = {name:digest(cwd/name) for name in [
+            'Directory.Build.props','Directory.Build.targets','Directory.Packages.props',
+            'deps.local.props','deps.nuget.props','global.json','.editorconfig','.gitattributes',
+            '.config/dotnet-tools.json','module/hexalith.module-manifest.v2.json'] if (cwd/name).is_file()}
         baseline = baselines.get(relative)
         # A drifted checkout can contain already-committed task edits; hash from the approved baseline.
         if baseline and subprocess.run(['git','cat-file','-e',baseline],cwd=cwd,stderr=subprocess.DEVNULL).returncode == 0:
@@ -43,6 +48,7 @@ def main():
     parser.add_argument('--cwd', default='.')
     parser.add_argument('--source', type=Path)
     parser.add_argument('--node', type=Path)
+    parser.add_argument('--host-configuration', choices=['Debug','Release'])
     parser.add_argument('command', nargs=argparse.REMAINDER)
     args = parser.parse_args()
     command = args.command[1:] if args.command[:1] == ['--'] else args.command
@@ -64,18 +70,43 @@ def main():
                       'tooling_sha256': generation['tooling_sha256'],
                       'selection': generation['selection'], 'environment': selected,
                       'generated_sha256': generation['generated_sha256']}
+    def host_snapshot():
+        if not args.host_configuration:
+            return None
+        directory = ROOT / 'src/Hexalith.Parties.UI/bin' / args.host_configuration / 'net10.0'
+        binaries = {str(path.relative_to(ROOT)): digest(path) for path in directory.glob('*')
+            if path.suffix in {'.dll','.pdb'} and path.stem in {'Hexalith.Parties.UI','Hexalith.Parties.AdminPortal',
+                'Hexalith.Parties.ConsumerPortal','Hexalith.FrontComposer.Shell','Hexalith.FrontComposer.Contracts.UI'}}
+        assets = {name:digest(ROOT/'references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/wwwroot'/name)
+                  for name in ['js/fc-focus.js','js/fc-keyboard.js','js/fc-download.js','css/fc-shell.css']}
+        return {'configuration':args.host_configuration,'binaries':binaries,'selected_source_assets':assets}
+    host_before = host_snapshot()
     before = observed_inputs()
+    executed_binaries = {}
+    if len(command) > 1 and command[0] == 'dotnet' and command[1].endswith('.dll'):
+        binary = (ROOT / args.cwd / command[1]).resolve()
+        names = {binary.stem, 'Hexalith.FrontComposer.Shell', 'Hexalith.FrontComposer.Contracts.UI',
+                 'Hexalith.Parties.UI', 'Hexalith.Parties.AdminPortal', 'Hexalith.Parties.ConsumerPortal'}
+        for name in sorted(names):
+            for suffix in ['.dll', '.pdb']:
+                artifact = binary.parent / (name + suffix)
+                if artifact.exists():
+                    executed_binaries[str(artifact)] = digest(artifact)
     result = subprocess.run(command, cwd=ROOT / args.cwd, env=env, stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT, text=True)
-    log = Path('/tmp') / ('five-frontcomposer-' + args.id + '.log')
-    log.write_text(result.stdout)
+    # Receipts outlive reruns: never overwrite a previous execution's raw log.
+    with tempfile.NamedTemporaryFile(mode='w', prefix='five-frontcomposer-' + args.id + '-',
+                                     suffix='.log', delete=False) as handle:
+        handle.write(result.stdout)
+        log = Path(handle.name)
     summary = result.stdout[-12000:]
     receipt = {'command': command, 'cwd': str(ROOT / args.cwd),
                'finished_utc': datetime.now(timezone.utc).isoformat(),
                'exit_code': result.returncode, 'raw_log_sha256': digest(log),
                'raw_log_local_path': str(log), 'source_mapping': provenance,
                'node_bin': str(args.node.resolve()) if args.node else None,
-               'summary': summary, 'observed_before': before, 'observed_after': observed_inputs()}
+               'summary': summary, 'executed_binaries': executed_binaries,
+               'browser_host_before': host_before, 'browser_host_after': host_snapshot(), 'observed_before': before, 'observed_after': observed_inputs()}
     if '-result-xml' in command:
         from xml.etree import ElementTree as ET
         xml_path = Path(command[command.index('-result-xml') + 1])
@@ -83,6 +114,9 @@ def main():
             assemblies = ET.parse(xml_path).getroot().findall('assembly')
             receipt['tests'] = [{key: item.get(key) for key in ['total','passed','failed','skipped','not-run','errors']} for item in assemblies]
             receipt['result_xml_sha256'] = digest(xml_path)
+            receipt['skipped_tests'] = [{'name': test.get('name'),
+                'reason': ''.join(test.find('reason').itertext()).strip() if test.find('reason') is not None else None}
+                for test in ET.parse(xml_path).getroot().iter('test') if test.get('result') == 'Skip']
     output = HERE / 'checks' / (args.id + '.json')
     output.parent.mkdir(exist_ok=True)
     if output.exists():

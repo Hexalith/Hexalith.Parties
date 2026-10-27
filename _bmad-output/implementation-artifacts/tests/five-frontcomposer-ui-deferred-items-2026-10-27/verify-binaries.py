@@ -13,6 +13,11 @@ using System.Security.Cryptography;
 using System.Text.Json;
 var root = args[0];
 var inputs = new[] {
+  ("references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests/bin/Debug/net10.0/Hexalith.FrontComposer.Shell", "references/Hexalith.FrontComposer/", new[] {
+    "src/Hexalith.FrontComposer.Shell/Services/Downloads/FcBrowserDownloadService.cs",
+    "src/Hexalith.FrontComposer.Shell/Services/Feedback/FcOptimisticReconciler.cs",
+    "src/Hexalith.FrontComposer.Shell/Components/Forms/FcDestructiveConfirmationDialog.razor.cs",
+    "src/Hexalith.FrontComposer.Shell/Components/Forms/FcDestructiveConfirmationDialog.razor" }),
   ("src/Hexalith.Parties.UI/bin/Debug/net10.0/Hexalith.FrontComposer.Shell", "references/Hexalith.FrontComposer/", new[] {
     "src/Hexalith.FrontComposer.Shell/Services/Downloads/FcBrowserDownloadService.cs",
     "src/Hexalith.FrontComposer.Shell/Services/Feedback/FcOptimisticReconciler.cs",
@@ -21,8 +26,21 @@ var inputs = new[] {
   ("src/Hexalith.Parties.UI/bin/Debug/net10.0/Hexalith.FrontComposer.Contracts.UI", "references/Hexalith.FrontComposer/", new[] {
     "src/Hexalith.FrontComposer.Contracts.UI/Downloads/IFcBrowserDownloadService.cs",
     "src/Hexalith.FrontComposer.Contracts.UI/Freshness/FcOptimisticReconcileRequest.cs" }),
+  ("tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.FrontComposer.Shell", "references/Hexalith.FrontComposer/", new[] {
+    "src/Hexalith.FrontComposer.Shell/Services/Downloads/FcBrowserDownloadService.cs",
+    "src/Hexalith.FrontComposer.Shell/Components/Forms/FcDestructiveConfirmationDialog.razor.cs",
+    "src/Hexalith.FrontComposer.Shell/Components/Forms/FcDestructiveConfirmationDialog.razor" }),
+  ("tests/Hexalith.Parties.AdminPortal.Tests/bin/Debug/net10.0/Hexalith.FrontComposer.Shell", "references/Hexalith.FrontComposer/", new[] {
+    "src/Hexalith.FrontComposer.Shell/Services/Downloads/FcBrowserDownloadService.cs",
+    "src/Hexalith.FrontComposer.Shell/Components/Forms/FcDestructiveConfirmationDialog.razor.cs",
+    "src/Hexalith.FrontComposer.Shell/Components/Forms/FcDestructiveConfirmationDialog.razor" }),
+  ("tests/Hexalith.Parties.ConsumerPortal.Tests/bin/Debug/net10.0/Hexalith.FrontComposer.Shell", "references/Hexalith.FrontComposer/", new[] {
+    "src/Hexalith.FrontComposer.Shell/Services/Downloads/FcBrowserDownloadService.cs",
+    "src/Hexalith.FrontComposer.Shell/Components/Forms/FcDestructiveConfirmationDialog.razor.cs",
+    "src/Hexalith.FrontComposer.Shell/Components/Forms/FcDestructiveConfirmationDialog.razor" }),
   ("src/Hexalith.Parties.UI/bin/Debug/net10.0/Hexalith.Parties.UI", "", new[] {
     "src/Hexalith.Parties.UI/Services/OptimisticReconcile.cs",
+    "src/Hexalith.Parties.UI/Services/OptimisticReconcileLog.cs",
     "src/Hexalith.Parties.UI/Components/Shared/DataFreshnessIndicator.razor.cs" }),
   ("src/Hexalith.Parties.UI/bin/Debug/net10.0/Hexalith.Parties.AdminPortal", "", new[] {
     "src/Hexalith.Parties.AdminPortal/Components/PartyGdprOperationsPanel.razor" }),

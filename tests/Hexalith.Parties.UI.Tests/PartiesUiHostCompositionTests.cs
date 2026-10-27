@@ -41,6 +41,40 @@ namespace Hexalith.Parties.UI.Tests;
 /// </summary>
 public sealed class PartiesUiHostCompositionTests
 {
+    [Theory]
+    [InlineData(null)]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ActualHost_SharedUiRegistrationRequiresTheStartupOption(bool? enabled)
+    {
+        await using WebApplicationFactory<global::Program> factory = RoutingHost().WithWebHostBuilder(builder =>
+        {
+            if (enabled.HasValue)
+            {
+                builder.UseSetting("Parties:FrontComposer:UseSharedUiPrimitives", enabled.Value.ToString());
+            }
+        });
+        using IServiceScope scope = factory.Services.CreateScope();
+#if HFC_SHARED_UI
+        object? reconcile = scope.ServiceProvider.GetService<Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler>();
+        object? download = scope.ServiceProvider.GetService<Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService>();
+        if (enabled == true)
+        {
+            reconcile.ShouldBeOfType<Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler>();
+            download.ShouldBeOfType<Hexalith.FrontComposer.Shell.Services.Downloads.FcBrowserDownloadService>();
+        }
+        else
+        {
+            reconcile.ShouldBeNull();
+            download.ShouldBeNull();
+        }
+#else
+        // Package mode cannot register APIs absent from the actually selected package.
+        typeof(Hexalith.FrontComposer.Shell.Components.Layout.FrontComposerShell).Assembly
+            .GetType("Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler").ShouldBeNull();
+#endif
+    }
+
     [Fact]
     public void QuickstartChainWithDomainMarker_ComposesUnderValidateScopes()
     {

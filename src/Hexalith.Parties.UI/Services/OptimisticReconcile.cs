@@ -37,6 +37,18 @@ public sealed class OptimisticReconcile(
     ILogger<OptimisticReconcile> logger,
     IServiceProvider? services = null)
 {
+    /// <summary>Preserves the existing three-argument adapter constructor for compiled callers.</summary>
+    /// <param name="subscription">The caller-owned projection transport adapter.</param>
+    /// <param name="fallback">The caller-owned polling fallback.</param>
+    /// <param name="logger">The existing service-category logger.</param>
+    public OptimisticReconcile(
+        PartiesProjectionSubscription subscription,
+        ProjectionFreshnessFallback fallback,
+        ILogger<OptimisticReconcile> logger)
+        : this(subscription, fallback, logger, null)
+    {
+    }
+
     private const string SavingMessage = "Saving…";
 
     /// <summary>Runs the optimistic-then-reconcile flow for <paramref name="request"/>.</summary>
