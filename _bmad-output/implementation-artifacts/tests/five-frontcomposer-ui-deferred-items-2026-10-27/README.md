@@ -68,3 +68,8 @@ and active-transfer cancellation coverage. Two existing transport gaps (early
 confirmation delivery and later disconnection polling) were recorded separately
 in the deferred ledger. The generic custom-download registration concern was
 triaged as negligible for the actual opt-in host and left unchanged.
+
+Published source: FrontComposer `c2b925bae1c9b3bfa8c3a4698ad0104de02ed5a4` and Parties
+implementation `03fecb86e742055e87d8b7ff6ac40a12b73372ef`, both verified on owning main.
+`publication.json` records exact readbacks and gitlink proof. All task execution
+steps are complete; the named acceptance and package-delivery gates stay open.

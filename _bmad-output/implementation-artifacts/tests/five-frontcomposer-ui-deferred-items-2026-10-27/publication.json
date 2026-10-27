@@ -1,0 +1,23 @@
+{
+  "observed_utc": "2026-10-27T21:24:03.956157+00:00",
+  "parties_implementation_commit": "03fecb86e742055e87d8b7ff6ac40a12b73372ef",
+  "parties_remote_readback": "03fecb86e742055e87d8b7ff6ac40a12b73372ef",
+  "producer_commit": "c2b925bae1c9b3bfa8c3a4698ad0104de02ed5a4",
+  "producer_remote_readback": "c2b925bae1c9b3bfa8c3a4698ad0104de02ed5a4",
+  "parent_producer_gitlink": "c2b925bae1c9b3bfa8c3a4698ad0104de02ed5a4",
+  "retained_tested_tenants_commit": "d73bc3dcb9d5aa1741b63929eaa8b11de4a4e021",
+  "tenants_commit_is_published_main_ancestor": true,
+  "gitlink_push_range_base": "c82aa2b2d97b796285c50b609f4b485f21467da3",
+  "gitlink_push_range_gate": "pass",
+  "source_option_default": false,
+  "items": [
+    "DW-91",
+    "DW-100",
+    "DW-101",
+    "DW-102",
+    "DW-112"
+  ],
+  "ledger_status": "all remain open for named owner acceptance and/or matching publication/adoption",
+  "additional_preexisting_transport_deferrals": 2,
+  "final_proof_commit": "This file is recorded by the following documentation commit; its own SHA is verified by remote readback in the final tool output."
+}

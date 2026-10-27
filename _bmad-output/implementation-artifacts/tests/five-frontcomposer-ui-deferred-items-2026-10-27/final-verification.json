@@ -7,7 +7,7 @@
     "DW-112"
   ],
   "sealed_utc": "2026-10-27T21:22:06.395042+00:00",
-  "result": "implementation and independent review complete; named owner acceptance and upstream publication/adoption remain open",
+  "result": "source implementation, independent review, verification and owning-main publication complete; named owner acceptance and upstream package publication/adoption remain open",
   "archive": {
     "file": "raw-evidence.zip",
     "sha256": "aa0c3cc3ae51f0132343d20e1d646745a1316c153dc613960d592a47445bf52b",
@@ -1638,10 +1638,7 @@
     }
   },
   "rollback": "Parties:FrontComposer:UseSharedUiPrimitives defaults false; local adapters/helpers remain. Only the explicitly enabled mapped source fixture uses the additive APIs.",
-  "parent_owned_remaining": [
-    "Parties task commit and main push",
-    "Parties publication readback and final completion record"
-  ],
+  "parent_owned_remaining": [],
   "unchanged_gates": [
     "G4-A picker",
     "whole G4 promotion",
@@ -1698,5 +1695,6 @@
     "pre_existing_transport_deferrals": 2,
     "low_extension_concern_rejected": 1,
     "approved_frozen_intent_sha256": "519b088b583d66c259d938874088204b8a680a939b0c0a30f676ad7f8762e420"
-  }
+  },
+  "publication_proof": "publication.json"
 }

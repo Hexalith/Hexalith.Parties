@@ -96,7 +96,7 @@ manually or alter release workflows to bypass owner publication gates.
   package behavior; remove opt-ins only after positive package proof.
 - [x] `deferred-work.md`, prerequisite matrix and a new evidence directory —
   record exact scope, commands, executed assets, review and remaining gates.
-- [ ] Owning Git metadata and parent gitlink — validate exact messages with
+- [x] Owning Git metadata and parent gitlink — validate exact messages with
   pinned commitlint, inspect divergence, push without force, verify remote SHAs.
 
 **Acceptance Criteria:**
@@ -203,3 +203,8 @@ manually or alter release workflows to bypass owner publication gates.
   package publication/adoption, final review and parent-owned Git completion
   remain separate gates. The evidence archive retains failed attempts separately
   from final passing checks, including ENOSPC and browser setup failures.
+
+- Git completion: producer main c2b925bae1c9b3bfa8c3a4698ad0104de02ed5a4 and Parties integration main
+  03fecb86e742055e87d8b7ff6ac40a12b73372ef were pushed without force and read back exactly. The parent
+  gitlink matches; pinned commitlint and the main-push gitlink range gate pass.
+  See the batch publication.json. Named owner/package gates remain open.
