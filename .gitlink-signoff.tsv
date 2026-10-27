@@ -320,3 +320,17 @@ references/Hexalith.Tenants|09a545ff0323f5f16d13934fba01bfea4f1db9fa|validated-a
 #     package publication, historical parity, deployment or rollback authority.
 references/Hexalith.Memories|7b0c8b5692600e293346eea7a84652eb87e4c346|validated-advance|v2.29.15-28-g7b0c8b56|jpiquot|2026-10-25
 references/Hexalith.EventStore|694e37bad3e667931fbafc6a1ed9f85e4a0b4912|validated-advance|v3.127.0-41-g694e37bad|jpiquot|2026-10-25
+
+# --- 2026-10-27 /pushall sync. The operator requested every local change and
+#     root submodule be pushed, then the failed main-push RC gate repaired so a
+#     release can run. These exact owner-main revisions are the published tips
+#     after that sync. McpCli did not move in this commit; its current tip still
+#     differs from v1.6.0 and had no ledger line, so the release diff needs it.
+#     Source selection only: no package publication or rollback approval.
+references/Hexalith.Builds|7b09f8ba27ebda27901fc04e3f56f5a52231ac69|validated-advance|v4.38.0-42-g7b09f8b|jpiquot|2026-10-27
+references/Hexalith.EventStore|5c198ae56a7ad4029cea883a82a8995c7f2111d4|validated-advance|v3.128.2-34-g5c198ae56|jpiquot|2026-10-27
+references/Hexalith.FrontComposer|813b9c70a6d25cae1ddf74a14115834fc64bc483|validated-advance|v4.7.0-126-g813b9c70|jpiquot|2026-10-27
+references/Hexalith.McpCli|8bfd1e0592bfee258b381f41b098fe3b35170fdd|validated-advance|v1.0.0-87-g8bfd1e0|jpiquot|2026-10-27
+references/Hexalith.Memories|3e7dcb504b3d816366427f53be51df187f837376|validated-advance|v2.29.15-42-g3e7dcb50|jpiquot|2026-10-27
+references/Hexalith.Platform|9ead86f9061695bf3e30bcb0e020c0b830ddaf7e|validated-advance|9ead86f|jpiquot|2026-10-27
+references/Hexalith.Tenants|a4489bc79f3178437f2491e0bb9e0bed983697ea|validated-advance|v5.10.1-72-ga4489bc7|jpiquot|2026-10-27

@@ -298,10 +298,15 @@ test.describe('Admin parties list', () => {
     }
     await expect(page.locator(`#${labelledBy}`)).toHaveText('Erase party');
     await expect(page.getByRole('dialog')).toHaveCount(1);
-    await expect(eraseDialogContent.locator('p[id^="erasure-warning-"]')).toBeVisible();
-    await expect(eraseDialogContent.locator('p[id^="erasure-warning-"]')).toContainText('irreversible verification');
+    const warning = eraseDialogContent.locator('p[id^="erasure-warning-"], #fc-destructive-dialog-description');
+    await expect(warning).toBeVisible();
+    await expect(warning).toContainText('irreversible verification');
     const typedConfirmInput = eraseDialogContent.getByRole('textbox', { name: 'Type the selected party display name', exact: true });
-    await expect(typedConfirmInput).toBeFocused();
+    if (await eraseDialogContent.getByTestId('fc-destructive-dialog').count()) {
+      await expect(eraseDialogContent.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();
+    } else {
+      await expect(typedConfirmInput).toBeFocused();
+    }
     const describedBy = await typedConfirmInput.getAttribute('aria-describedby');
     if (!describedBy) {
       throw new Error('Typed-confirm input must describe the irreversible warning.');

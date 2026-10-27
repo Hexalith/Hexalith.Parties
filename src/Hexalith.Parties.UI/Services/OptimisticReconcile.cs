@@ -7,72 +7,6 @@ using Microsoft.Extensions.Logging;
 namespace Hexalith.Parties.UI.Services;
 
 /// <summary>
-/// Whether the command the call site issued was <strong>accepted</strong> (enters the reconcile path) or
-/// <strong>rejected</strong> by a non-throwing "validation outcome" (e.g. a GDPR
-/// <c>AdminPortalGdprCommandResult</c> whose <c>Outcome</c> is not <c>Accepted</c>) — which the primitive
-/// treats exactly like a thrown rejection: revert + an assertive inline reason.
-/// </summary>
-/// <remarks>
-/// This keeps <see cref="OptimisticReconcile"/> <strong>slice-agnostic</strong>: the call site maps its own
-/// result type (a thrown <see cref="PartiesClientException"/>, or a returned domain result) into this small
-/// primitive-owned shape, so the primitive never references a screen's command/GDPR result types.
-/// </remarks>
-public readonly record struct CommandAcceptance
-{
-    private CommandAcceptance(bool isAccepted, StatusKind failureStatus, string? failureReason)
-    {
-        IsAccepted = isAccepted;
-        FailureStatus = failureStatus;
-        FailureReason = failureReason;
-    }
-
-    /// <summary>Gets whether the command was accepted (200/202 / <c>Outcome == Accepted</c>).</summary>
-    public bool IsAccepted { get; }
-
-    /// <summary>Gets the canonical UI state for a non-throwing rejection (ignored when accepted).</summary>
-    public StatusKind FailureStatus { get; }
-
-    /// <summary>Gets the non-PII inline reason for a non-throwing rejection (ignored when accepted).</summary>
-    public string? FailureReason { get; }
-
-    /// <summary>An accepted command — proceed to reconcile.</summary>
-    public static CommandAcceptance Accepted { get; } = new(true, StatusKind.AcceptedProcessing, null);
-
-    /// <summary>A rejected "validation outcome" — revert + announce the mapped state assertively.</summary>
-    public static CommandAcceptance Rejected(StatusKind failureStatus, string? failureReason)
-        => new(false, failureStatus, failureReason);
-}
-
-/// <summary>
-/// The delegate-driven request the call site hands <see cref="OptimisticReconcile.ExecuteAsync"/>. Carrying
-/// only delegates keeps the primitive slice-agnostic, so every screen reuses it verbatim.
-/// </summary>
-public sealed record OptimisticReconcileRequest
-{
-    /// <summary>Dispatches/applies the optimistic slice state (caller's job).</summary>
-    public required Action ApplyOptimistic { get; init; }
-
-    /// <summary>Issues the command via the self-scoped / tenant-scoped client; returns acceptance.</summary>
-    public required Func<CancellationToken, Task<CommandAcceptance>> IssueCommand { get; init; }
-
-    /// <summary>The caller's <strong>idempotent</strong> re-read; returns the freshness so the primitive knows when <c>Current</c>.</summary>
-    public required Func<CancellationToken, Task<ProjectionFreshnessStatus>> Reconcile { get; init; }
-
-    /// <summary>Reverts the optimistic state (caller's job) on rejection.</summary>
-    public required Action Revert { get; init; }
-
-    /// <summary>The <c>(projectionType, tenant)</c> key to await a SignalR projection-confirm on.</summary>
-    public required (string ProjectionType, string Tenant) ProjectionKey { get; init; }
-
-    /// <summary>
-    /// Announces a <see cref="StatusKind"/> + non-PII reason; the caller renders it via
-    /// <c>StatusLiveRegion</c> (the primitive never touches the DOM/focus). Politeness follows the kind via
-    /// <c>StatusPresentation.PolitenessFor</c> — never a second mapping.
-    /// </summary>
-    public required Action<StatusKind, string?> Announce { get; init; }
-}
-
-/// <summary>
 /// The single shared optimistic-then-reconcile orchestration (Story 1.7, AC1/AC3;
 /// <c>architecture.md:479</c> "one shared effect pattern, not per-screen"; <c>656-659</c> command data
 /// flow). Exactly one implementation, reused verbatim by every screen and by the generated <c>[Command]</c>
@@ -100,7 +34,8 @@ public sealed record OptimisticReconcileRequest
 public sealed class OptimisticReconcile(
     PartiesProjectionSubscription subscription,
     ProjectionFreshnessFallback fallback,
-    ILogger<OptimisticReconcile> logger)
+    ILogger<OptimisticReconcile> logger,
+    IServiceProvider? services = null)
 {
     private const string SavingMessage = "Saving…";
 
@@ -108,7 +43,51 @@ public sealed class OptimisticReconcile(
     public async Task ExecuteAsync(OptimisticReconcileRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
+#if HFC_SHARED_UI
+        if (services?.GetService(typeof(Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler))
+            is Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler shared)
+        {
+            CommandAcceptance sharedAcceptance = default;
+            await shared.ExecuteAsync(new Hexalith.FrontComposer.Contracts.Freshness.FcOptimisticReconcileRequest
+            {
+                ApplyOptimistic = request.ApplyOptimistic,
+                IssueCommand = async token =>
+                {
+                    sharedAcceptance = await request.IssueCommand(token).ConfigureAwait(false);
+                    return sharedAcceptance.IsAccepted;
+                },
+                Reconcile = async token => (await request.Reconcile(token).ConfigureAwait(false)) switch
+                {
+                    ProjectionFreshnessStatus.Current => Hexalith.FrontComposer.Contracts.Freshness.FcFreshnessStatus.Current,
+                    ProjectionFreshnessStatus.Stale => Hexalith.FrontComposer.Contracts.Freshness.FcFreshnessStatus.Stale,
+                    _ => Hexalith.FrontComposer.Contracts.Freshness.FcFreshnessStatus.Degraded,
+                },
+                Revert = request.Revert,
+                Rejected = () => request.Announce(sharedAcceptance.FailureStatus, sharedAcceptance.FailureReason),
+                Failed = exception =>
+                {
+                    if (exception is PartiesClientException clientException)
+                    {
+                        request.Announce(StatusPresentation.FromClientException(clientException), clientException.Detail ?? clientException.Title);
+                    }
+                    else
+                    {
+                        request.Announce(StatusPresentation.FromException(exception), exception.Message);
+                    }
+                },
+                Announce = state => request.Announce(
+                    state == Hexalith.FrontComposer.Contracts.Freshness.FcReconcileState.Degraded ? StatusKind.Degraded : StatusKind.AcceptedProcessing,
+                    state == Hexalith.FrontComposer.Contracts.Freshness.FcReconcileState.Saving ? SavingMessage : null),
+                Subscribe = callback => subscription.Subscribe(request.ProjectionKey.ProjectionType, request.ProjectionKey.Tenant, callback),
+                IsConnected = () => subscription.IsConnected,
+                RunFallback = fallback.RunAsync,
+                ReadFailed = () => logger.LogWarning("Reconcile re-read failed; will retry on the next confirm/poll."),
+            }, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+#endif
 
+        _ = services;
         request.ApplyOptimistic();
         request.Announce(StatusKind.AcceptedProcessing, SavingMessage); // polite, no focus steal
 

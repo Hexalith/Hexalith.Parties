@@ -12,6 +12,27 @@ namespace Hexalith.Parties.UI.Tests;
 
 public sealed class DataFreshnessIndicatorTests : BunitContext
 {
+    public DataFreshnessIndicatorTests()
+    {
+#if HFC_SHARED_UI
+        Hexalith.FrontComposer.Shell.Extensions.FrontComposerFeedbackServiceExtensions.AddFrontComposerFeedback(Services);
+#endif
+    }
+
+    [Fact]
+    public void SelectedDependencyModeUsesOnlyAnAvailableRegisteredCapability()
+    {
+        var cut = Render<DataFreshnessIndicator>();
+#if HFC_SHARED_UI
+        cut.FindComponent<Hexalith.FrontComposer.Shell.Components.Feedback.FcFreshnessIndicator>();
+        cut.Find("[data-fc-freshness='degraded']").TextContent.ShouldBe("Showing last known");
+#else
+        cut.FindAll("[data-fc-freshness]").ShouldBeEmpty();
+        typeof(Hexalith.FrontComposer.Shell.Components.Layout.FrontComposerShell).Assembly
+            .GetType("Hexalith.FrontComposer.Shell.Components.Feedback.FcFreshnessIndicator").ShouldBeNull();
+#endif
+    }
+
     [Theory]
     [InlineData(ProjectionFreshnessStatus.Current, "Up to date")]
     [InlineData(ProjectionFreshnessStatus.Stale, "Showing what we last knew - refreshing")]

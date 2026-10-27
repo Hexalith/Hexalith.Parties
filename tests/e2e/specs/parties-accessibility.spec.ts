@@ -142,8 +142,7 @@ test.describe('Parties UI accessibility specimen', () => {
   });
 
   test('route-heading announcement leaves skip links forward reachable and focuses their targets', async ({ page }) => {
-    test.skip(process.env.PARTIES_E2E_FORWARD_SKIP_LINKS !== '1',
-      'DW-91 source qualification requires the fixed FrontComposer shell; package adoption is pending');
+    await qualifyForwardSource(page);
     await gotoSpecimen(page);
     await expect(page.locator('#parties-accessibility-specimen-title')).toBeFocused();
 
@@ -166,8 +165,7 @@ test.describe('Parties UI accessibility specimen', () => {
   });
 
   test('client-side route focus restores forward skip access', async ({ page }) => {
-    test.skip(process.env.PARTIES_E2E_FORWARD_SKIP_LINKS !== '1',
-      'DW-91 source qualification requires the fixed FrontComposer shell; package adoption is pending');
+    await qualifyForwardSource(page);
     await gotoSpecimen(page);
     await page.evaluate(() => {
       document.documentElement.setAttribute('data-dw91-document', 'original');
@@ -628,17 +626,25 @@ const collectVisualBaseline = async (page: import('@playwright/test').Page): Pro
 // Resolve the same validated module-tool selection as the build, and compare the actual
 // browser asset bytes before letting source-only coverage qualify. An opt-in variable
 // cannot turn a package or a stale/unrelated server into source evidence.
+async function qualifyForwardSource(page: import('@playwright/test').Page): Promise<void> {
+  await qualifyShellSource(page, process.env.PARTIES_E2E_FORWARD_SKIP_LINKS === '1', 'DW-91');
+}
+
 async function qualifyCompactSource(page: import('@playwright/test').Page): Promise<void> {
+  await qualifyShellSource(page, process.env.PARTIES_E2E_COMPACT_SKIP_LINKS === '1', 'DW-112');
+}
+
+async function qualifyShellSource(page: import('@playwright/test').Page, forcePackageControl: boolean, gate: string): Promise<void> {
   const configuration = process.env.CI ? 'Release' : 'Debug';
   const metadataPath = fileURLToPath(new URL(
     `../../../src/Hexalith.Parties.UI/bin/${configuration}/net10.0/Hexalith.Parties.UI.source-metadata.txt`, import.meta.url));
   const [fromSource, mode, root] = (await readFile(metadataPath, 'utf8')).trim().split(/\r?\n/);
-  test.skip(fromSource !== 'true' && process.env.PARTIES_E2E_COMPACT_SKIP_LINKS !== '1',
-    'DW-112 source qualification; matching compact-navigation package publication/adoption is pending');
+  test.skip(fromSource !== 'true' && !forcePackageControl,
+    `${gate} source qualification; matching package publication/adoption is pending`);
   if (fromSource !== 'true') return; // An explicitly forced package negative control must execute and fail its behavioral assertions.
   expect(mode).toBe('source');
   expect(path.isAbsolute(root)).toBe(true);
-  for (const asset of ['js/fc-focus.js', 'css/fc-shell.css']) {
+  for (const asset of ['js/fc-focus.js', 'js/fc-keyboard.js', 'css/fc-shell.css']) {
     const selected = await readFile(path.join(root,
       'src/Hexalith.FrontComposer.Shell/wwwroot', asset));
     const served = await page.request.get(`/_content/Hexalith.FrontComposer.Shell/${asset}`);

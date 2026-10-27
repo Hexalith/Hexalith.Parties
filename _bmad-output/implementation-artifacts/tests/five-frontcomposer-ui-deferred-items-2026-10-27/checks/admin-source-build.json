@@ -1,0 +1,47 @@
+{
+  "command": [
+    "dotnet",
+    "build",
+    "tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj",
+    "-c",
+    "Debug",
+    "-m:1",
+    "-p:NuGetAudit=false",
+    "-p:MinVerVersionOverride=1.0.0"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "finished_utc": "2026-10-27T18:59:17.560862+00:00",
+  "exit_code": 0,
+  "raw_log_sha256": "0def2ed4eecf7c0321f0a2b7683758a0fe892ac64db416f0b6ae93d61c5e0400",
+  "raw_log_local_path": "/tmp/five-frontcomposer-admin-source-build.log",
+  "source_mapping": {
+    "generation_receipt_sha256": "c27e68354fbe2b636ef9845c6de4893368b2cecdb5bf7648daf1dee7213f9f70",
+    "tool_version": "4.34.0",
+    "tooling_sha256": "5909d7434096a3f01639ed4d0a4f88839d5b468a91f842ff901dfef4b5ca3433",
+    "selection": "retained producer input",
+    "environment": {
+      "CustomBeforeDirectoryBuildProps": "/tmp/five-frontcomposer-retained-source/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "/tmp/five-frontcomposer-retained-source/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "/tmp/five-frontcomposer-retained-source/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "/tmp/five-frontcomposer-retained-source/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "/tmp/five-frontcomposer-retained-source/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "f623f72993733202fb9611a108e00c366ef69c79693717daeb1f1fe090b64e99",
+      "Configuration": "Debug"
+    },
+    "generated_sha256": {
+      "source-mapping/SourceMapping.final.targets": "6dbac3b210da97d41cec2c4c7ed270b7128d9853d7f8daf6914efc37a66af9dd",
+      "source-mapping/SourceMapping.before-targets.props": "affec064e2a7d9538130b0036351a33fcf36c5e0ecda1d8e4d04bba392a3c56a",
+      "source-mapping/mapping.json": "d89c9cc9fab00c60071e5575e801d7f66e292676d05e7d9110a122d3625d448c",
+      "source-mapping/SourceMapping.values.props": "ed7412258b5cae84eba2d9953fbd4024ba341eeb8f5da9a569b663155c3f3137",
+      "source-mapping/SourceMapping.late.props": "dc1fd856145ef94fd858e180e75fa60f1708fbc491a7616e028098f4bf9bc148",
+      "source-mapping/catalog-versions.json": "5c3765c5c11207e58851cd6918ff204c5272d5ae779c5c1dd84dfdaac0ef74e9",
+      "source-mapping/SourceMapping.targets": "2003f8e38ea72f43549502cda1191d1272eea5a84bbebb534d84ee97c97618ff",
+      "source-mapping/SourceMapping.values.targets": "60ac04462e1e41ff908d372af1da3e8adfe258c556364b5ae3380c2e2d3f80b5",
+      "source-mapping/__HXW_DefaultCatalog__.proj": "1dcba327f79da3a324af07a657018157a71f67e7cb7c0b2c27ef5317be4a13ef",
+      "source-mapping/Hexalith.Folders.Aspire.proj": "1dcba327f79da3a324af07a657018157a71f67e7cb7c0b2c27ef5317be4a13ef",
+      "source-mapping/SourceMapping.props": "0363694f252736cdfd0bcf6a567bb077940df16cc966e410153718a552769e82",
+      "source-mapping/pinned-tree/Props/Directory.Packages.props": "48b3abca2eb67bc09bde33f3f0203e10fbca810614d0582852be4ab54294dc9d"
+    }
+  },
+  "summary": "  Determining projects to restore...\n  Restored /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj (in 172 ms).\n  14 of 15 projects are up-to-date for restore.\n  Hexalith.Commons.UniqueIds -> /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/bin/Debug/net10.0/Hexalith.Commons.UniqueIds.dll\n  Successfully created package '/home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/bin/Debug/Hexalith.Commons.UniqueIds.1.0.0.nupkg'.\n  Successfully created package '/home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/bin/Debug/Hexalith.Commons.UniqueIds.1.0.0.snupkg'.\n  Hexalith.Commons.Http -> /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.Http/bin/Debug/net10.0/Hexalith.Commons.Http.dll\n  Hexalith.EventStore.Contracts -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/bin/Debug/net10.0/Hexalith.EventStore.Contracts.dll\n  Hexalith.McpCli.Analyzers -> /home/administrator/projects/hexalith/parties/references/Hexalith.McpCli/src/Hexalith.McpCli.Analyzers/bin/Debug/netstandard2.0/Hexalith.McpCli.Analyzers.dll\n  Hexalith.McpCli.Abstractions -> /home/administrator/projects/hexalith/parties/references/Hexalith.McpCli/src/Hexalith.McpCli.Abstractions/bin/Debug/net10.0/Hexalith.McpCli.Abstractions.dll\n  Hexalith.Parties.Contracts -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/bin/Debug/net10.0/Hexalith.Parties.Contracts.dll\n  Hexalith.Parties.Client -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Client/bin/Debug/net10.0/Hexalith.Parties.Client.dll\n  Hexalith.FrontComposer.Contracts -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/bin/Debug/net10.0/Hexalith.FrontComposer.Contracts.dll\n  Hexalith.FrontComposer.Contracts.UI -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts.UI/bin/Debug/net10.0/Hexalith.FrontComposer.Contracts.UI.dll\n  Hexalith.FrontComposer.Shell -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/bin/Debug/net10.0/Hexalith.FrontComposer.Shell.dll\n  Hexalith.Commons.UniqueIds -> /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/bin/Debug/net10.0/Hexalith.Commons.UniqueIds.dll\n  Successfully created package '/home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/bin/Debug/Hexalith.Commons.UniqueIds.3.128.2.nupkg'.\n  Successfully created package '/home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/bin/Debug/Hexalith.Commons.UniqueIds.3.128.2.snupkg'.\n  Hexalith.EventStore.Contracts -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/bin/Debug/net10.0/Hexalith.EventStore.Contracts.dll\n  Hexalith.McpCli.Analyzers -> /home/administrator/projects/hexalith/parties/references/Hexalith.McpCli/src/Hexalith.McpCli.Analyzers/bin/Debug/netstandard2.0/Hexalith.McpCli.Analyzers.dll\n  Hexalith.McpCli.Abstractions -> /home/administrator/projects/hexalith/parties/references/Hexalith.McpCli/src/Hexalith.McpCli.Abstractions/bin/Debug/net10.0/Hexalith.McpCli.Abstractions.dll\n  Hexalith.Tenants.Contracts -> /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants.Contracts/bin/Debug/net10.0/Hexalith.Tenants.Contracts.dll\n  Hexalith.EventStore.Client -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Client/bin/Debug/net10.0/Hexalith.EventStore.Client.dll\n  Hexalith.Tenants.Client -> /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants.Client/bin/Debug/net10.0/Hexalith.Tenants.Client.dll\n  Hexalith.EventStore.Client -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Client/bin/Debug/net10.0/Hexalith.EventStore.Client.dll\n  Hexalith.Parties.AdminPortal -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AdminPortal/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.dll\n  Hexalith.Parties.AdminPortal.Tests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.AdminPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.Tests.dll\n\nBuild succeeded.\n    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:13.08\n"
+}

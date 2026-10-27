@@ -1,4 +1,12 @@
 <Project>
+  <!-- Candidate B–F APIs exist only in the mapped producer source. Runtime registration
+       remains opt-in until named owner acceptance and consumer parity are recorded. -->
+  <Target Name="ConfigureFrontComposerFeedbackCandidate" BeforeTargets="PrepareForBuild;CoreCompile"
+          Condition="'$(HexalithFrontComposerFromSource)' == 'true'">
+    <PropertyGroup>
+      <DefineConstants>$(DefineConstants);HFC_SHARED_UI</DefineConstants>
+    </PropertyGroup>
+  </Target>
   <Target Name="ConfigureMemoriesSourceCompilation" BeforeTargets="PrepareForBuild;GetAssemblyAttributes;GenerateCompileDependencyCache;CoreCompile"
           Condition="'$(MSBuildProjectName)' == 'Hexalith.Parties' or '$(MSBuildProjectName)' == 'Hexalith.Parties.Tests'">
     <!-- Evaluate after the generated final source imports, before compile inputs and assembly metadata are captured. -->

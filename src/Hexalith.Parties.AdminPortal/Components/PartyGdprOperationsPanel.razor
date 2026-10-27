@@ -3,6 +3,7 @@
 @inject AdminPortalEventStoreAdminLinks EventStoreLinks
 @inject AdminPortalGdprStateCoordinator GdprCoordinator
 @inject IJSRuntime JsRuntime
+@inject IServiceProvider Services
 
 <section class="hx-parties-admin__gdpr" aria-labelledby="@($"gdpr-operations-heading-{_instanceId}")">
     <h3 id="@($"gdpr-operations-heading-{_instanceId}")"
@@ -32,8 +33,14 @@
             <FluentDialog @ref="_erasureDialog" Modal="true" Class="hx-parties-admin__erasure-modal"
                           type="modal"
                           aria-label="@Labels.GdprEraseDialogTitle"
-                          aria-labelledby="@ErasureDialogTitleId"
+                          aria-labelledby="@(SharedDestructiveDialogType is null ? ErasureDialogTitleId : "fc-destructive-dialog-title")"
                           @onkeydown="HandleErasureDialogKeyDownAsync">
+                @if (SharedDestructiveDialogType is { } sharedType)
+                {
+                    <DynamicComponent @key="ConfirmationResetKey" Type="@sharedType" Parameters="@SharedDestructiveDialogParameters" />
+                }
+                else
+                {
                 <FluentDialogBody>
                     <TitleTemplate>
                         <span id="@ErasureDialogTitleId">@Labels.GdprEraseDialogTitle</span>
@@ -73,6 +80,7 @@
                         </FluentButton>
                     </ActionTemplate>
                 </FluentDialogBody>
+                }
             </FluentDialog>
         }
         else
@@ -170,6 +178,36 @@
 </section>
 
 @code {
+    private Type? SharedDestructiveDialogType
+    {
+        get
+        {
+#if HFC_SHARED_UI
+            if (Services.GetService(typeof(Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService)) is not null)
+            {
+                return typeof(Hexalith.FrontComposer.Shell.Components.Forms.FcDestructiveConfirmationDialog);
+            }
+#endif
+            return null;
+        }
+    }
+
+    private IDictionary<string, object> SharedDestructiveDialogParameters => new Dictionary<string, object>
+    {
+        ["Title"] = Labels.GdprEraseDialogTitle,
+        ["Body"] = Labels.GdprErasureWarning,
+        ["RequiredName"] = Party.DisplayName ?? string.Empty,
+        ["DestructiveLabel"] = Labels.GdprConfirmErasure,
+        ["CancelLabel"] = Labels.GdprCancel,
+        ["ConfirmationInputLabel"] = Labels.GdprEraseConfirmationInputLabel,
+        ["ConfirmationHelp"] = Labels.GdprEraseConfirmationHelp,
+        ["ConfirmationReadyMessage"] = Labels.GdprEraseEnabledAnnouncement,
+        ["Disabled"] = !CanRequestErasure,
+        ["TypedNameChanged"] = EventCallback.Factory.Create<string?>(this, OnErasureTypedNameChanged),
+        ["OnConfirm"] = EventCallback.Factory.Create(this, ConfirmErasureAsync),
+        ["OnCancel"] = EventCallback.Factory.Create(this, CancelErasure),
+    };
+
     private const string GdprExportContentType = "application/json";
 
     private readonly string[] _lawfulBasisOptions = Enum.GetNames<LawfulBasis>();
@@ -843,11 +881,21 @@
 
             try
             {
+#if HFC_SHARED_UI
+                if (Services.GetService(typeof(Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService))
+                    is Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService download)
+                {
+                    await download.DownloadFileAsync(export.Payload, safeFileName, GdprExportContentType, token).ConfigureAwait(false);
+                }
+                else
+#endif
+                {
                 await JsRuntime.InvokeVoidAsync(
                     "HexalithPartiesAdminPortal.downloadJson",
                     safeFileName,
                     GdprExportContentType,
                     Convert.ToBase64String(export.Payload)).ConfigureAwait(false);
+                }
                 _exportFileName = safeFileName;
             }
             catch (JSDisconnectedException)

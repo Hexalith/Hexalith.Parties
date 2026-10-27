@@ -50,6 +50,74 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         Services.AddScoped<PartiesAdminListCoordinator>();
     }
 
+#if HFC_SHARED_UI
+    [Fact]
+    public async Task SharedTypedConfirmationCandidateRetainsOrdinalDomainGuardAndOneSubmit()
+    {
+        Services.AddLocalization();
+        Hexalith.FrontComposer.Shell.Extensions.FrontComposerFeedbackServiceExtensions.AddFrontComposerFeedback(Services);
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-shared", "Exact Candidate", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-shared", "Exact Candidate", PartyType.Person, isActive: true));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        var cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Exact Candidate"));
+        ClickFluentButton(cut, "Exact Candidate");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR operations"));
+        ClickFluentButton(cut, "Request erasure");
+        var shared = cut.FindComponent<Hexalith.FrontComposer.Shell.Components.Forms.FcDestructiveConfirmationDialog>();
+        foreach (string typed in new[] { "", " ", "exact candidate", "Exact Candidate " })
+        {
+            SetTextInput(cut, "Type the selected party display name", typed);
+            FindFluentButton(cut, "Erase").HasAttribute("disabled").ShouldBeTrue();
+        }
+        await cut.InvokeAsync(() => shared.Instance.OnConfirm.InvokeAsync()).ConfigureAwait(true);
+        api.ErasureRequests.ShouldBeEmpty();
+        SetTextInput(cut, "Type the selected party display name", "Exact Candidate");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Erase").HasAttribute("disabled").ShouldBeFalse());
+        FluentButton confirm = shared.FindComponents<FluentButton>().Single(button => button.Instance.Class == "fc-destructive-confirm").Instance;
+        await cut.InvokeAsync(() => confirm.OnClick.InvokeAsync()).ConfigureAwait(true);
+        await cut.InvokeAsync(() => confirm.OnClick.InvokeAsync()).ConfigureAwait(true);
+        api.ErasureRequests.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void SharedDownloadCandidatePreservesAdminBytesAndSafeCallerFilename()
+    {
+        Hexalith.FrontComposer.Shell.Extensions.FrontComposerFeedbackServiceExtensions.AddFrontComposerFeedback(Services);
+        var module = JSInterop.SetupModule("./_content/Hexalith.FrontComposer.Shell/js/fc-download.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-shared-export", "Shared Export", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-shared-export", "Shared Export", PartyType.Person, isActive: true));
+        byte[] payload = [123, 10, 32, 125];
+        api.EnqueueExport(new AdminPortalExportDownload("attacker-name.json", "text/html", payload));
+        byte[]? actual = null;
+        module.SetupVoid("downloadStream", invocation =>
+        {
+            using var copy = new MemoryStream();
+            ((DotNetStreamReference)invocation.Arguments[3]!).Stream.CopyTo(copy);
+            actual = copy.ToArray();
+            return true;
+        }).SetVoidResult();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        var cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Shared Export"));
+        ClickFluentButton(cut, "Shared Export");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR operations"));
+        ClickFluentButton(cut, "Export party data");
+        cut.WaitForAssertion(() =>
+        {
+            actual.ShouldBe(payload);
+            var invocation = module.Invocations["downloadStream"].Single();
+            invocation.Arguments[1]!.ToString()!.ShouldStartWith("party-party-shared-export-");
+            invocation.Arguments[2].ShouldBe("application/json");
+            module.Invocations["cancelDownload"].Count.ShouldBe(1);
+            JSInterop.Invocations.ShouldNotContain(call => call.Identifier == "HexalithPartiesAdminPortal.downloadJson");
+        });
+    }
+#endif
+
     [Fact]
     public void PartiesAdminPortal_InitialBrowse_RendersDensePartyRows()
     {

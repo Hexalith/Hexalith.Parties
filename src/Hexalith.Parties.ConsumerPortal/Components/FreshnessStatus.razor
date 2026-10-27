@@ -1,11 +1,57 @@
+@inject IServiceProvider Services
 @using Hexalith.Parties.Contracts.Models
 
 <p class="hx-parties-profile__freshness @StatusClass">
     <span class="hx-parties-profile__freshness-dot" aria-hidden="true"></span>
+    @if (SharedFreshnessType is { } sharedType)
+    {
+        <DynamicComponent Type="@sharedType" Parameters="@SharedFreshnessParameters" />
+    }
+    else
+    {
     <span role="status" aria-live="polite">@Message</span>
+    }
 </p>
 
 @code {
+    private Type? SharedFreshnessType
+    {
+        get
+        {
+#if HFC_SHARED_UI
+            if (Services.GetService(typeof(Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService)) is not null)
+            {
+                return typeof(Hexalith.FrontComposer.Shell.Components.Feedback.FcFreshnessIndicator);
+            }
+#endif
+            return null;
+        }
+    }
+
+    private IDictionary<string, object> SharedFreshnessParameters
+    {
+        get
+        {
+#if HFC_SHARED_UI
+            var status = Freshness?.Status switch
+            {
+                ProjectionFreshnessStatus.Current => Hexalith.FrontComposer.Contracts.Freshness.FcFreshnessStatus.Current,
+                ProjectionFreshnessStatus.Stale => Hexalith.FrontComposer.Contracts.Freshness.FcFreshnessStatus.Stale,
+                _ => Hexalith.FrontComposer.Contracts.Freshness.FcFreshnessStatus.Degraded,
+            };
+            return new Dictionary<string, object>
+            {
+                ["Freshness"] = new Hexalith.FrontComposer.Contracts.Freshness.FcRecordFreshness(status),
+                ["CurrentLabel"] = ConsumerPortalLabels.MyProfileFreshnessCurrent,
+                ["StaleLabel"] = ConsumerPortalLabels.MyProfileFreshnessStale,
+                ["DegradedLabel"] = ConsumerPortalLabels.MyProfileFreshnessLastKnown,
+            };
+#else
+            return new Dictionary<string, object>();
+#endif
+        }
+    }
+
     [Parameter]
     public ProjectionFreshnessMetadata? Freshness { get; set; }
 

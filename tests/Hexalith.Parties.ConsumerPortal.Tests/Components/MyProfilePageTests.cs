@@ -17,6 +17,9 @@ public sealed class MyProfilePageTests : BunitContext
     public MyProfilePageTests()
     {
         Services.AddFluentUIComponents();
+#if HFC_SHARED_UI
+        Hexalith.FrontComposer.Shell.Extensions.FrontComposerFeedbackServiceExtensions.AddFrontComposerFeedback(Services);
+#endif
     }
 
     [Fact]

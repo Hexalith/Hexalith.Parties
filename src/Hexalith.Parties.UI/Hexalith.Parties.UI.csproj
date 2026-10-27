@@ -59,6 +59,8 @@
          root the AppHost uses (Directory.Build.props). -->
     <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.SignalR\Hexalith.EventStore.SignalR.csproj" Condition="'$(HexalithEventStoreFromSource)' == 'true'" />
     <PackageReference Include="Hexalith.EventStore.SignalR" Condition="'$(HexalithEventStoreFromSource)' != 'true'" />
+    <ProjectReference Include="$(HexalithFrontComposerRoot)\src\Hexalith.FrontComposer.Contracts.UI\Hexalith.FrontComposer.Contracts.UI.csproj" Condition="'$(HexalithFrontComposerFromSource)' == 'true'" />
+    <PackageReference Include="Hexalith.FrontComposer.Contracts.UI" Condition="'$(HexalithFrontComposerFromSource)' != 'true'" />
     <ProjectReference Include="$(HexalithFrontComposerRoot)\src\Hexalith.FrontComposer.Shell\Hexalith.FrontComposer.Shell.csproj" Condition="'$(HexalithFrontComposerFromSource)' == 'true'" />
     <PackageReference Include="Hexalith.FrontComposer.Shell" Condition="'$(HexalithFrontComposerFromSource)' != 'true'" />
     <ProjectReference Include="$(HexalithFrontComposerRoot)\src\Hexalith.FrontComposer.Mcp\Hexalith.FrontComposer.Mcp.csproj" Condition="'$(HexalithFrontComposerFromSource)' == 'true'" />

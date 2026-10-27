@@ -1,0 +1,54 @@
+{
+  "command": [
+    "dotnet",
+    "tests/Hexalith.Parties.AdminPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.Tests.dll",
+    "-result-xml",
+    "_bmad-output/implementation-artifacts/tests/five-frontcomposer-ui-deferred-items-2026-10-27/admin-source.xml"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "finished_utc": "2026-10-27T19:00:05.444618+00:00",
+  "exit_code": 1,
+  "raw_log_sha256": "eab81fb317cdc3ed29a76d172b58237007a1bfcdc22eb389b29371a35298ac23",
+  "raw_log_local_path": "/tmp/five-frontcomposer-admin-source-suite.log",
+  "source_mapping": {
+    "generation_receipt_sha256": "c27e68354fbe2b636ef9845c6de4893368b2cecdb5bf7648daf1dee7213f9f70",
+    "tool_version": "4.34.0",
+    "tooling_sha256": "5909d7434096a3f01639ed4d0a4f88839d5b468a91f842ff901dfef4b5ca3433",
+    "selection": "retained producer input",
+    "environment": {
+      "CustomBeforeDirectoryBuildProps": "/tmp/five-frontcomposer-retained-source/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "/tmp/five-frontcomposer-retained-source/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "/tmp/five-frontcomposer-retained-source/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "/tmp/five-frontcomposer-retained-source/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "/tmp/five-frontcomposer-retained-source/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "f623f72993733202fb9611a108e00c366ef69c79693717daeb1f1fe090b64e99",
+      "Configuration": "Debug"
+    },
+    "generated_sha256": {
+      "source-mapping/SourceMapping.final.targets": "6dbac3b210da97d41cec2c4c7ed270b7128d9853d7f8daf6914efc37a66af9dd",
+      "source-mapping/SourceMapping.before-targets.props": "affec064e2a7d9538130b0036351a33fcf36c5e0ecda1d8e4d04bba392a3c56a",
+      "source-mapping/mapping.json": "d89c9cc9fab00c60071e5575e801d7f66e292676d05e7d9110a122d3625d448c",
+      "source-mapping/SourceMapping.values.props": "ed7412258b5cae84eba2d9953fbd4024ba341eeb8f5da9a569b663155c3f3137",
+      "source-mapping/SourceMapping.late.props": "dc1fd856145ef94fd858e180e75fa60f1708fbc491a7616e028098f4bf9bc148",
+      "source-mapping/catalog-versions.json": "5c3765c5c11207e58851cd6918ff204c5272d5ae779c5c1dd84dfdaac0ef74e9",
+      "source-mapping/SourceMapping.targets": "2003f8e38ea72f43549502cda1191d1272eea5a84bbebb534d84ee97c97618ff",
+      "source-mapping/SourceMapping.values.targets": "60ac04462e1e41ff908d372af1da3e8adfe258c556364b5ae3380c2e2d3f80b5",
+      "source-mapping/__HXW_DefaultCatalog__.proj": "1dcba327f79da3a324af07a657018157a71f67e7cb7c0b2c27ef5317be4a13ef",
+      "source-mapping/Hexalith.Folders.Aspire.proj": "1dcba327f79da3a324af07a657018157a71f67e7cb7c0b2c27ef5317be4a13ef",
+      "source-mapping/SourceMapping.props": "0363694f252736cdfd0bcf6a567bb077940df16cc966e410153718a552769e82",
+      "source-mapping/pinned-tree/Props/Directory.Packages.props": "48b3abca2eb67bc09bde33f3f0203e10fbca810614d0582852be4ab54294dc9d"
+    }
+  },
+  "summary": "xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)\n  Discovering: Hexalith.Parties.AdminPortal.Tests\n  Discovered:  Hexalith.Parties.AdminPortal.Tests\n  Starting:    Hexalith.Parties.AdminPortal.Tests\n    Hexalith.Parties.AdminPortal.Tests.Components.PartiesAdminPortalComponentTests.SharedTypedConfirmationCandidateRetainsOrdinalDomainGuardAndOneSubmit [FAIL]\n      System.InvalidOperationException : Cannot provide a value for property 'Localizer' on type 'Hexalith.FrontComposer.Shell.Components.Forms.FcDestructiveConfirmationDialog'. There is no registered service of type 'Microsoft.Extensions.Localization.IStringLocalizer`1[Hexalith.FrontComposer.Shell.Resources.FcShellResources]'.\n      Stack Trace:\n           at Microsoft.AspNetCore.Components.ComponentFactory.<>c__DisplayClass11_0.<CreatePropertyInjector>g__Initialize|1(IServiceProvider serviceProvider, IComponent component)\n           at Microsoft.AspNetCore.Components.ComponentFactory.InstantiateComponent(IServiceProvider serviceProvider, Type componentType, IComponentRenderMode callerSpecifiedRenderMode, Nullable`1 parentComponentId)\n           at Microsoft.AspNetCore.Components.RenderTree.Renderer.InstantiateChildComponentOnFrame(RenderTreeFrame[] frames, Int32 frameIndex, Int32 parentComponentId)\n           at Microsoft.AspNetCore.Components.RenderTree.RenderTreeDiffBuilder.InitializeNewComponentFrame(DiffContext& diffContext, Int32 frameIndex)\n           at Microsoft.AspNetCore.Components.RenderTree.RenderTreeDiffBuilder.InitializeNewSubtree(DiffContext& diffContext, Int32 frameIndex)\n           at Microsoft.AspNetCore.Components.RenderTree.RenderTreeDiffBuilder.InsertNewFrame(DiffContext& diffContext, Int32 newFrameIndex)\n           at Microsoft.AspNetCore.Components.RenderTree.RenderTreeDiffBuilder.AppendDiffEntriesForRange(DiffContext& diffContext, Int32 oldStartIndex, Int32 oldEndIndexExcl, Int32 newStartIndex, Int32 newEndIndexExcl)\n           at Microsoft.AspNetCore.Components.RenderTree.RenderTreeDiffBuilder.ComputeDiff(Renderer renderer, RenderBatchBuilder batchBuilder, Int32 componentId, ArrayRange`1 oldTree, ArrayRange`1 newTree)\n           at Microsoft.AspNetCore.Components.Rendering.ComponentState.RenderIntoBatch(RenderBatchBuilder batchBuilder, RenderFragment renderFragment, Exception& renderFragmentException)\n           at Microsoft.AspNetCore.Components.RenderTree.Renderer.ProcessRenderQueue()\n        --- End of stack trace from previous location ---\n        /_/src/bunit/Rendering/BunitRenderer.cs(738,0): at Bunit.Rendering.BunitRenderer.AssertNoUnhandledExceptions()\n        /_/src/bunit/Rendering/BunitRenderer.cs(249,0): at Bunit.Rendering.BunitRenderer.DispatchEventAsync(UInt64 eventHandlerId, EventFieldInfo fieldInfo, EventArgs eventArgs, Boolean ignoreUnknownEventHandlers)\n        /_/src/bunit/EventDispatchExtensions/TriggerEventDispatchExtensions.cs(135,0): at Bunit.TriggerEventDispatchExtensions.GetDispatchEventTasks(BunitRenderer renderer, IElement element, String eventName, EventArgs eventArgs)\n        /_/src/bunit/EventDispatchExtensions/TriggerEventDispatchExtensions.cs(110,0): at Bunit.TriggerEventDispatchExtensions.TriggerBubblingEventAsync(BunitRenderer renderer, IElement element, String eventName, EventArgs eventArgs)\n        /_/src/bunit/EventDispatchExtensions/TriggerEventDispatchExtensions.cs(86,0): at Bunit.TriggerEventDispatchExtensions.TriggerEventsAsync(BunitRenderer renderer, IElement element, String eventName, EventArgs eventArgs)\n        /_/src/bunit/EventDispatchExtensions/TriggerEventDispatchExtensions.cs(73,0): at Bunit.TriggerEventDispatchExtensions.<>c__DisplayClass3_0.<TriggerEventAsync>b__0()\n           at Microsoft.AspNetCore.Components.Rendering.RendererSynchronizationContext.<>c.<<InvokeAsync>b__10_0>d.MoveNext()\n        --- End of stack trace from previous location ---\n        /_/src/bunit/EventDispatchExtensions/TriggerEventDispatchExtensions.cs(254,0): at Bunit.TriggerEventDispatchExtensions.ThrowIfFailedSynchronously(Task result)\n        /_/src/bunit/EventDispatchExtensions/TriggerEventDispatchExtensions.cs(75,0): at Bunit.TriggerEventDispatchExtensions.TriggerEventAsync(IElement element, String eventName, EventArgs eventArgs)\n        /_/src/bunit/obj/Release/net10.0/bunit.generators.internal/Bunit.Blazor.EventDispatcherExtensionGenerator/EventHandlerDispatchExtensions.g.cs(1209,0): at Bunit.EventHandlerDispatchExtensions.ClickAsync(IElement element, MouseEventArgs eventArgs)\n        /_/src/bunit/obj/Release/net10.0/bunit.generators.internal/Bunit.Blazor.EventDispatcherExtensionGenerator/EventHandlerDispatchExtensions.g.cs(1200,0): at Bunit.EventHandlerDispatchExtensions.Click(IElement element, MouseEventArgs eventArgs)\n        tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs(4411,0): at Hexalith.Parties.AdminPortal.Tests.Components.PartiesAdminPortalComponentTests.ClickFluentButton(IRenderedComponent`1 cut, String text)\n        tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs(66,0): at Hexalith.Parties.AdminPortal.Tests.Components.PartiesAdminPortalComponentTests.SharedTypedConfirmationCandidateRetainsOrdinalDomainGuardAndOneSubmit()\n        --- End of stack trace from previous location ---\n  Finished:    Hexalith.Parties.AdminPortal.Tests (ID = 'e81b0735c5d07794fc568207f41cc9c81788683e36e767388e1fb24f4ea25c87')\n=== TEST EXECUTION SUMMARY ===\n   Hexalith.Parties.AdminPortal.Tests  Total: 325, Errors: 0, Failed: 1, Skipped: 0, Not Run: 0, Time: 15.147s\n",
+  "tests": [
+    {
+      "total": "325",
+      "passed": "324",
+      "failed": "1",
+      "skipped": "0",
+      "not-run": "0",
+      "errors": "0"
+    }
+  ],
+  "result_xml_sha256": "763d35631efad654faa0dab43bcbcb044d64ffce71cbfbd3d992da6e8d6aaac5"
+}

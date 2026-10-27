@@ -421,6 +421,41 @@ public sealed class MyPrivacyPageTests : BunitContext
             .First(button => button.TextContent.Contains(text, StringComparison.Ordinal))
             .Click();
 
+#if HFC_SHARED_UI
+    [Fact]
+    public void SharedDownloadCandidatePreservesConsumerBytesFilenameAndRepeatedDownload()
+    {
+        Hexalith.FrontComposer.Shell.Extensions.FrontComposerFeedbackServiceExtensions.AddFrontComposerFeedback(Services);
+        var module = JSInterop.SetupModule("./_content/Hexalith.FrontComposer.Shell/js/fc-download.js");
+        module.Mode = JSRuntimeMode.Loose;
+        byte[] payload = [123, 10, 32, 125];
+        var received = new List<byte[]>();
+        module.SetupVoid("downloadStream", invocation =>
+        {
+            using var copy = new MemoryStream();
+            ((DotNetStreamReference)invocation.Arguments[3]!).Stream.CopyTo(copy);
+            received.Add(copy.ToArray());
+            return true;
+        }).SetVoidResult();
+        Services.AddSingleton<IConsumerPrivacyExportClient>(new QueuePrivacyExportClient(_ => Task.FromResult(Ready(payload: payload))));
+        var cut = Render<MyPrivacyPage>();
+        ClickFluentButton(cut, "Export my data");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Download JSON"));
+        ClickFluentButton(cut, "Download JSON");
+        ClickFluentButton(cut, "Download JSON");
+        cut.WaitForAssertion(() =>
+        {
+            received.Count.ShouldBe(2);
+            received.ShouldAllBe(bytes => bytes.SequenceEqual(payload));
+            module.Invocations["downloadStream"].ShouldAllBe(invocation =>
+                Equals(invocation.Arguments[1], "my-data-export-20260610000000Z.json")
+                && Equals(invocation.Arguments[2], "application/json"));
+            module.Invocations["cancelDownload"].Count.ShouldBe(2);
+            JSInterop.Invocations.ShouldNotContain(invocation => invocation.Identifier == "HexalithPartiesConsumerPortal.downloadJson");
+        });
+    }
+#endif
+
     private static ConsumerPrivacyExportResult Ready(
         ConsumerPrivacyExportOutcome outcome = ConsumerPrivacyExportOutcome.Ready,
         string safeFileName = "my-data-export-20260610000000Z.json",

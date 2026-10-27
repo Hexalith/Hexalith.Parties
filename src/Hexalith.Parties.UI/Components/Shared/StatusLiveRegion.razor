@@ -1,4 +1,5 @@
 @namespace Hexalith.Parties.UI.Components.Shared
+@inject IServiceProvider Services
 @using Hexalith.Parties.UI.Status
 
 @*
@@ -11,11 +12,51 @@
 
 @if (Kind is { } kind && StatusPresentation.PolitenessFor(kind) is var politeness and not LiveRegionPoliteness.None)
 {
-    var (role, ariaLive) = StatusPresentation.LiveRegionAttributes(politeness);
-    <div role="@role" aria-live="@ariaLive">@Message@ChildContent</div>
+    @if (SharedLiveRegionType is { } sharedType)
+    {
+        <DynamicComponent Type="@sharedType" Parameters="@SharedLiveRegionParameters" />
+    }
+    else
+    {
+        var (role, ariaLive) = StatusPresentation.LiveRegionAttributes(politeness);
+        <div role="@role" aria-live="@ariaLive">@Message@ChildContent</div>
+    }
 }
 
 @code {
+    private Type? SharedLiveRegionType
+    {
+        get
+        {
+#if HFC_SHARED_UI
+            if (Services.GetService(typeof(Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService)) is not null)
+            {
+                return typeof(Hexalith.FrontComposer.Shell.Components.Feedback.FcLiveRegion);
+            }
+#endif
+            return null;
+        }
+    }
+
+    private IDictionary<string, object> SharedLiveRegionParameters
+    {
+        get
+        {
+#if HFC_SHARED_UI
+            return new Dictionary<string, object>
+            {
+                ["Politeness"] = Kind is { } kind && StatusPresentation.PolitenessFor(kind) == LiveRegionPoliteness.Assertive
+                    ? Hexalith.FrontComposer.Contracts.Freshness.FcLiveRegionPoliteness.Assertive
+                    : Hexalith.FrontComposer.Contracts.Freshness.FcLiveRegionPoliteness.Polite,
+                ["Message"] = Message!,
+                ["ChildContent"] = ChildContent!,
+            };
+#else
+            return new Dictionary<string, object>();
+#endif
+        }
+    }
+
     /// <summary>The mapped UI state to announce. <c>null</c> (or <see cref="StatusKind.SignInRequired"/>) renders nothing.</summary>
     [Parameter]
     public StatusKind? Kind { get; set; }

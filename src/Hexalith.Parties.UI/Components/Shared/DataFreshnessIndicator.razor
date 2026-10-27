@@ -1,11 +1,19 @@
 @namespace Hexalith.Parties.UI.Components.Shared
+@inject IServiceProvider Services
 @using System.Globalization
 @using Hexalith.Parties.Contracts.Models
 @using Hexalith.Parties.UI.Status
 
 <span class="data-freshness-indicator @StatusClass">
     <span class="data-freshness-indicator__dot" aria-hidden="true"></span>
-    <span role="@LiveRegionRole" aria-live="@LiveRegionAriaLive">@Message</span>
+    @if (SharedFreshnessType is { } sharedType)
+    {
+        <DynamicComponent Type="@sharedType" Parameters="@SharedFreshnessParameters" />
+    }
+    else
+    {
+        <span role="@LiveRegionRole" aria-live="@LiveRegionAriaLive">@Message</span>
+    }
 </span>
 
 @code {

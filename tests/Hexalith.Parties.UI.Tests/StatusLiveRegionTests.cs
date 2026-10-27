@@ -18,6 +18,13 @@ namespace Hexalith.Parties.UI.Tests;
 /// </summary>
 public sealed class StatusLiveRegionTests : BunitContext
 {
+    public StatusLiveRegionTests()
+    {
+#if HFC_SHARED_UI
+        Hexalith.FrontComposer.Shell.Extensions.FrontComposerFeedbackServiceExtensions.AddFrontComposerFeedback(Services);
+#endif
+    }
+
     [Theory]
     [MemberData(nameof(PoliteKinds))]
     public void PoliteKinds_render_a_polite_status_region_with_the_message(StatusKind kind)

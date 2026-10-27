@@ -50,6 +50,7 @@ export default defineConfig({
           Hexalith__Parties__AdminPortalE2E__Enabled: 'true',
           Parties__BaseUrl: 'http://127.0.0.1:59999',
           Parties__Tenant: 'test-tenant',
+          Parties__FrontComposer__UseSharedUiPrimitives: 'true',
         },
       },
 });

@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { expectNoBlockingAxeViolations } from '../helpers/a11y.js';
 import { expectAccordionFocusClearance } from '../helpers/accordion-focus.js';
 import { portalAction } from '../helpers/portal-actions.js';
@@ -256,13 +257,7 @@ test.describe('Consumer portal route shells', () => {
     const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
 
     await page.goto('/me/privacy');
-    await page.evaluate(() => {
-      window.HexalithPartiesConsumerPortal = {
-        downloadJson: async (fileName: string, contentType: string) => {
-          window.__consumerPrivacyExportDownload = { fileName, contentType };
-        },
-      };
-    });
+
 
     await expect(page.getByRole('heading', { name: 'Export my data' })).toBeVisible();
     await expect(page.getByText('Machine-readable JSON')).toBeVisible();
@@ -273,11 +268,15 @@ test.describe('Consumer portal route shells', () => {
     await expect(page.getByText('Preparing your export - this can take a little while.')).toHaveCount(0);
     await expect(page.getByText('under one minute')).toHaveCount(0);
     await expect(page.getByText('party-bound-001')).toHaveCount(0);
+    const pendingDownload = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Download JSON' }).click();
-    await expect.poll(async () => await page.evaluate(() => window.__consumerPrivacyExportDownload?.contentType ?? null))
-      .toBe('application/json');
-    await expect.poll(async () => await page.evaluate(() => window.__consumerPrivacyExportDownload?.fileName ?? null))
-      .toContain('my-data-export-');
+    const download = await pendingDownload;
+    expect(await download.failure()).toBeNull();
+    expect(download.suggestedFilename()).toMatch(/^my-data-export-[0-9TZ]+\.json$/);
+    const downloadedPath = await download.path();
+    expect(downloadedPath).not.toBeNull();
+    const expectedExport = '{"partyId":"party-bound-001","tenantId":"test-tenant","status":"Erased","exportedAt":"2026-06-10T10:00:00Z","exportedBy":"consumer-e2e","correlationId":"corr-export-e2e","party":null,"processingRecords":[]}';
+    expect(await readFile(downloadedPath!)).toEqual(Buffer.from(expectedExport, 'utf8'));
     expect(new URL(page.url()).pathname).toBe('/me/privacy');
     expect(browserVisibleDataRequests).toEqual([]);
   });
@@ -445,10 +444,8 @@ test.describe('Consumer portal route shells', () => {
 
     await page.goto('/me/privacy');
     await page.evaluate(() => {
-      window.HexalithPartiesConsumerPortal = {
-        downloadJson: async () => {
-          throw new Error('download unavailable');
-        },
+      HTMLAnchorElement.prototype.click = () => {
+        throw new Error('download unavailable');
       };
     });
 

@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
 using Shouldly;
+using NSubstitute;
 
 namespace Hexalith.Parties.UI.Tests;
 
@@ -322,7 +323,14 @@ public sealed class OptimisticReconcileTests
         var subscription = new PartiesProjectionSubscription(stream, NullLogger<PartiesProjectionSubscription>.Instance);
         var options = Options.Create(new ProjectionFreshnessOptions { PollingIntervalSeconds = 30 });
         var fallback = new ProjectionFreshnessFallback(stream, new ManualTimeProvider(), options);
+#if HFC_SHARED_UI
+        var provider = Substitute.For<IServiceProvider>();
+        provider.GetService(typeof(Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler))
+            .Returns(new Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler());
+        return new OptimisticReconcile(subscription, fallback, NullLogger<OptimisticReconcile>.Instance, provider);
+#else
         return new OptimisticReconcile(subscription, fallback, NullLogger<OptimisticReconcile>.Instance);
+#endif
     }
 
     private sealed class Recorder

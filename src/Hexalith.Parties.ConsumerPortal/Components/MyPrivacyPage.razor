@@ -8,6 +8,7 @@
 @inject IConsumerPrivacyErasureClient ErasureClient
 @inject IConsumerPrivacyProcessingClient ProcessingClient
 @inject IJSRuntime JsRuntime
+@inject IServiceProvider Services
 
 <PageTitle>@ConsumerPortalLabels.PrivacyTitle</PageTitle>
 
@@ -443,9 +444,20 @@
 
         _isDownloading = true;
         _failureVisible = false;
+        CancellationToken downloadToken = _exportCts?.Token ?? CancellationToken.None;
 
         try
         {
+#if HFC_SHARED_UI
+            if (Services.GetService(typeof(Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService))
+                is Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService download)
+            {
+                await download.DownloadFileAsync(_download.Payload, _download.SafeFileName, _download.ContentType,
+                    downloadToken).ConfigureAwait(false);
+            }
+            else
+#endif
+            {
             await using var stream = new MemoryStream(_download.Payload, writable: false);
             using var streamReference = new DotNetStreamReference(stream);
             await JsRuntime.InvokeVoidAsync(
@@ -453,6 +465,10 @@
                 _download.SafeFileName,
                 _download.ContentType,
                 streamReference).ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException) when (downloadToken.IsCancellationRequested)
+        {
         }
         catch (JSDisconnectedException)
         {
