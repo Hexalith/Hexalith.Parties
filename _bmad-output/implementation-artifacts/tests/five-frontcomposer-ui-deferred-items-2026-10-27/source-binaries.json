@@ -1,0 +1,87 @@
+[
+  {
+    "binary": "src/Hexalith.Parties.UI/bin/Debug/net10.0/Hexalith.FrontComposer.Shell",
+    "dll_sha256": "192540319d33a02044764b9146938cec6b72766f89553f0a5b42495d103e1568",
+    "pdb_sha256": "75a8c361bcef0fd75a61599ff75d418a081aa2f16bb968bcafd348695419475c",
+    "documents": [
+      {
+        "source": "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Services/Downloads/FcBrowserDownloadService.cs",
+        "document": "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Services/Downloads/FcBrowserDownloadService.cs",
+        "sha256": "dde609544ba1ad59a13397ba02d93fd78832570d533289126487249f8452ea12"
+      },
+      {
+        "source": "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Services/Feedback/FcOptimisticReconciler.cs",
+        "document": "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Services/Feedback/FcOptimisticReconciler.cs",
+        "sha256": "3c814b159e13af44f5f195702171d020e9767a3f182959f7c476181420e528b2"
+      },
+      {
+        "source": "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Components/Forms/FcDestructiveConfirmationDialog.razor.cs",
+        "document": "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Components/Forms/FcDestructiveConfirmationDialog.razor.cs",
+        "sha256": "e8791559dff5ee7ad7eb29247175cecce5d883b217400e6c43ec5cc1326d9dc9"
+      },
+      {
+        "source": "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Components/Forms/FcDestructiveConfirmationDialog.razor",
+        "document": "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Components/Forms/FcDestructiveConfirmationDialog.razor",
+        "sha256": "821585131a2581284a6991dccf4002a874d5a5622b6e7a355cb5a60099295461"
+      }
+    ]
+  },
+  {
+    "binary": "src/Hexalith.Parties.UI/bin/Debug/net10.0/Hexalith.FrontComposer.Contracts.UI",
+    "dll_sha256": "c928882f2a2a76450f017524b32be897fcf8132d04471e936e752cc311d34a0f",
+    "pdb_sha256": "97eeec57b8f4c5a9d131d17df6a6063b98d27b84275d45ed5c94478b857a42af",
+    "documents": [
+      {
+        "source": "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts.UI/Downloads/IFcBrowserDownloadService.cs",
+        "document": "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts.UI/Downloads/IFcBrowserDownloadService.cs",
+        "sha256": "40182a415e26422cbe0d39d19378bf4d6819880bac432f4ecd5ea2fb2a6fca2d"
+      },
+      {
+        "source": "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts.UI/Freshness/FcOptimisticReconcileRequest.cs",
+        "document": "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts.UI/Freshness/FcOptimisticReconcileRequest.cs",
+        "sha256": "e7f3f81e432689e78b6e0a3a6af1e5efc1cb47b932526294767aa7a5273b241c"
+      }
+    ]
+  },
+  {
+    "binary": "src/Hexalith.Parties.UI/bin/Debug/net10.0/Hexalith.Parties.UI",
+    "dll_sha256": "eca02aa5bc22714fa6cb593305ede55ad2d227ed4bb56d1604412f5c71128a19",
+    "pdb_sha256": "ac010774f8d0fd6ca7efd3d994b590454f6f3a2201b9d06f1b12dbdb074fca8e",
+    "documents": [
+      {
+        "source": "src/Hexalith.Parties.UI/Services/OptimisticReconcile.cs",
+        "document": "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.UI/Services/OptimisticReconcile.cs",
+        "sha256": "ddc44794d3a987185cefda28b3be8c19ba0a1cffdba75416aded20cb92382505"
+      },
+      {
+        "source": "src/Hexalith.Parties.UI/Components/Shared/DataFreshnessIndicator.razor.cs",
+        "document": "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.UI/Components/Shared/DataFreshnessIndicator.razor.cs",
+        "sha256": "29595421c85e3e2d6eee46973cb84cc2fde03a8ad91ac182cb46083a182757fd"
+      }
+    ]
+  },
+  {
+    "binary": "src/Hexalith.Parties.UI/bin/Debug/net10.0/Hexalith.Parties.AdminPortal",
+    "dll_sha256": "e29f8386bc94ddb65403e884846a5cb58ffbdbd96fd7e50b2dba29f2011b74c5",
+    "pdb_sha256": "53372dec97d236bea350688dad3ee0e5fcf3f46937ff6c45af51cd33bba13f4c",
+    "documents": [
+      {
+        "source": "src/Hexalith.Parties.AdminPortal/Components/PartyGdprOperationsPanel.razor",
+        "document": "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AdminPortal/Components/PartyGdprOperationsPanel.razor",
+        "sha256": "10f58c2e7575b2bc6be4b1a62b0b2c0540241505637dd574e7eb3f386967e552"
+      }
+    ]
+  },
+  {
+    "binary": "src/Hexalith.Parties.UI/bin/Debug/net10.0/Hexalith.Parties.ConsumerPortal",
+    "dll_sha256": "f68c6fe53159c314de5e0f7be35c7943bfdc3bc90e037bc7a56730029003434b",
+    "pdb_sha256": "f32427b84d24493b1bb2398263d161b77263d9f61a47fb642965aac405a95c49",
+    "documents": [
+      {
+        "source": "src/Hexalith.Parties.ConsumerPortal/Components/MyPrivacyPage.razor",
+        "document": "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.ConsumerPortal/Components/MyPrivacyPage.razor",
+        "sha256": "923144e8addb05e714287b2161451f7b7306335321d6f8a7f10b81e9b7ab92c6"
+      }
+    ]
+  }
+]
