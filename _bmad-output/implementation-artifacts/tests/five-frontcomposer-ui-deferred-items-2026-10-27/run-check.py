@@ -85,6 +85,11 @@ def main():
             receipt['result_xml_sha256'] = digest(xml_path)
     output = HERE / 'checks' / (args.id + '.json')
     output.parent.mkdir(exist_ok=True)
+    if output.exists():
+        previous = json.loads(output.read_text())
+        history = HERE / 'historical'
+        history.mkdir(exist_ok=True)
+        (history / (args.id + '-' + previous['raw_log_sha256'][:12] + '.json')).write_bytes(output.read_bytes())
     output.write_text(json.dumps(receipt, indent=2) + '\n')
     print(result.stdout[-3000:])
     return result.returncode

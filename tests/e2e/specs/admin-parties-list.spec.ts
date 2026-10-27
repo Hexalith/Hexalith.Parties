@@ -308,10 +308,17 @@ test.describe('Admin parties list', () => {
       await expect(typedConfirmInput).toBeFocused();
     }
     const describedBy = await typedConfirmInput.getAttribute('aria-describedby');
-    if (!describedBy) {
-      throw new Error('Typed-confirm input must describe the irreversible warning.');
+    if (describedBy) {
+      await expect(page.locator(`#${describedBy}`)).toContainText('irreversible verification');
+    } else {
+      // V5 shadow controls can reference a light-DOM warning through ARIA element reflection.
+      // Require the actual element relationship as well as its accessible description below.
+      const descriptions = await typedConfirmInput.evaluate(element =>
+        ((element as Element & { ariaDescribedByElements: Element[] | null }).ariaDescribedByElements ?? [])
+          .map(description => ({ id: description.id, text: description.textContent })));
+      expect(descriptions).toContainEqual({ id: 'fc-destructive-dialog-description',
+        text: 'Erasure destroys protected party data and starts irreversible verification.' });
     }
-    await expect(page.locator(`#${describedBy}`)).toContainText('irreversible verification');
     await expect(typedConfirmInput).toHaveAccessibleDescription(/irreversible verification/);
     await expect(eraseDialogContent.getByRole('button', { name: 'Erase' })).toBeDisabled();
     await typedConfirmInput.fill('Grace hopper');

@@ -109,9 +109,23 @@ test.describe('Parties UI accessibility specimen', () => {
     await expect(page.locator(':focus')).toHaveAttribute('id', 'fc-nav');
   });
 
-  test('compact and resized layouts expose only mounted skip targets and preserve keyboard content access', async ({ page }) => {
+  test('compact and resized layouts expose only mounted skip targets and preserve keyboard content access', async ({ page }, testInfo) => {
     await qualifyCompactSource(page);
     await gotoSpecimen(page);
+    await page.evaluate(() => {
+      const events: { event: string; width: number; id: string; tag: string; stack?: string }[] = [];
+      const focus = HTMLElement.prototype.focus;
+      HTMLElement.prototype.focus = function (options?: FocusOptions) {
+        events.push({ event: 'focus-call', width: innerWidth, id: this.id, tag: this.tagName, stack: new Error().stack });
+        focus.call(this, options);
+      };
+      (window as Window & { __fcCompactFocus?: typeof events }).__fcCompactFocus = events;
+      document.addEventListener('focusin', event => {
+        const target = event.composedPath()[0];
+        if (target instanceof Element) events.push({ event: 'focusin', width: innerWidth, id: target.id, tag: target.tagName });
+      });
+    });
+    try {
     for (const width of [1280, 390, 800, 1280, 390, 1280]) {
       await page.setViewportSize({ width, height: 900 });
       const mounted = width >= 1024;
@@ -138,6 +152,11 @@ test.describe('Parties UI accessibility specimen', () => {
         await page.keyboard.press('Enter');
         await expect(page.locator('#fc-nav')).toBeFocused();
       }
+    }
+    } finally {
+      const events = await page.evaluate(() =>
+        (window as Window & { __fcCompactFocus?: unknown[] }).__fcCompactFocus ?? []);
+      await testInfo.attach('compact-focus-events.json', { body: JSON.stringify(events), contentType: 'application/json' });
     }
   });
 
