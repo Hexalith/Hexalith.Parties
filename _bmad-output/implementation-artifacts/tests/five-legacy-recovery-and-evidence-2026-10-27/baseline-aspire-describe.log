@@ -1,0 +1,994 @@
+{
+  "resources": [
+    {
+      "name": "eventstore-admin-dapr-cli-bhsywdgj",
+      "displayName": "eventstore-admin-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Waiting",
+      "waitingFor": [
+        "security"
+      ],
+      "source": "dapr",
+      "dashboardUrl": "http://localhost:33869/?resource=eventstore-admin-dapr-cli-bhsywdgj",
+      "relationships": [
+        {
+          "type": "Parent",
+          "resourceName": "eventstore-admin-janghkwq"
+        }
+      ],
+      "urls": [],
+      "volumes": [],
+      "properties": {
+        "executable.args": null,
+        "executable.path": "/usr/local/bin/dapr",
+        "executable.pid": null,
+        "executable.workDir": "${PARTIES_ROOT}/src/Hexalith.Parties.AppHost",
+        "resource.appArgs": null,
+        "resource.appArgsSensitivity": null,
+        "resource.parentName": "eventstore-admin-janghkwq",
+        "resource.waitingFor": [
+          "security-ewtkxusn"
+        ]
+      },
+      "environment": {},
+      "healthReports": {},
+      "commands": {
+        "start": {
+          "displayName": "Start",
+          "description": "Start resource",
+          "state": "Enabled",
+          "sortOrder": 0
+        }
+      }
+    },
+    {
+      "name": "eventstore-admin-janghkwq",
+      "displayName": "eventstore-admin",
+      "resourceType": "Project",
+      "state": "Waiting",
+      "waitingFor": [
+        "security"
+      ],
+      "source": "Hexalith.EventStore.Admin.Server.Host.csproj",
+      "dashboardUrl": "http://localhost:33869/?resource=eventstore-admin-janghkwq",
+      "relationships": [
+        {
+          "type": "Reference",
+          "resourceName": "eventstore-mtrnzqec"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "security-ewtkxusn"
+        },
+        {
+          "type": "WaitFor",
+          "resourceName": "security-ewtkxusn"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "security-ewtkxusn"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "security-ewtkxusn"
+        }
+      ],
+      "urls": [],
+      "volumes": [],
+      "properties": {
+        "executable.args": null,
+        "executable.path": "dotnet",
+        "executable.pid": null,
+        "executable.workDir": "${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server.Host",
+        "project.launchProfile": "http",
+        "project.path": "${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server.Host/Hexalith.EventStore.Admin.Server.Host.csproj",
+        "resource.appArgs": null,
+        "resource.appArgsSensitivity": null,
+        "resource.launchConfigurationType": "project",
+        "resource.waitingFor": [
+          "security-ewtkxusn"
+        ]
+      },
+      "environment": {},
+      "healthReports": {},
+      "commands": {
+        "rebuild": {
+          "displayName": "Rebuild",
+          "description": "Stop the resource, rebuild the project from source, and restart. Use this to apply source code changes.",
+          "state": "Enabled",
+          "sortOrder": 3
+        },
+        "start": {
+          "displayName": "Start",
+          "description": "Start resource",
+          "state": "Enabled",
+          "sortOrder": 0
+        }
+      }
+    },
+    {
+      "name": "eventstore-admin-ui-dapr-cli-uyambrsq",
+      "displayName": "eventstore-admin-ui-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Waiting",
+      "waitingFor": [
+        "eventstore-admin",
+        "security"
+      ],
+      "source": "dapr",
+      "dashboardUrl": "http://localhost:33869/?resource=eventstore-admin-ui-dapr-cli-uyambrsq",
+      "relationships": [
+        {
+          "type": "Parent",
+          "resourceName": "eventstore-admin-ui-fdcnvyjy"
+        }
+      ],
+      "urls": [],
+      "volumes": [],
+      "properties": {
+        "executable.args": null,
+        "executable.path": "/usr/local/bin/dapr",
+        "executable.pid": null,
+        "executable.workDir": "${PARTIES_ROOT}/src/Hexalith.Parties.AppHost",
+        "resource.appArgs": null,
+        "resource.appArgsSensitivity": null,
+        "resource.parentName": "eventstore-admin-ui-fdcnvyjy",
+        "resource.waitingFor": [
+          "eventstore-admin-janghkwq",
+          "security-ewtkxusn"
+        ]
+      },
+      "environment": {},
+      "healthReports": {},
+      "commands": {
+        "start": {
+          "displayName": "Start",
+          "description": "Start resource",
+          "state": "Enabled",
+          "sortOrder": 0
+        }
+      }
+    },
+    {
+      "name": "eventstore-admin-ui-fdcnvyjy",
+      "displayName": "eventstore-admin-ui",
+      "resourceType": "Project",
+      "state": "NotStarted",
+      "source": "Hexalith.EventStore.Admin.UI.csproj",
+      "dashboardUrl": "http://localhost:33869/?resource=eventstore-admin-ui-fdcnvyjy",
+      "relationships": [
+        {
+          "type": "Reference",
+          "resourceName": "eventstore-admin-janghkwq"
+        },
+        {
+          "type": "WaitFor",
+          "resourceName": "eventstore-admin-janghkwq"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "security-ewtkxusn"
+        },
+        {
+          "type": "WaitFor",
+          "resourceName": "security-ewtkxusn"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "eventstore-admin-janghkwq"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "eventstore-admin-janghkwq"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "eventstore-mtrnzqec"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "security-ewtkxusn"
+        }
+      ],
+      "urls": [],
+      "volumes": [],
+      "properties": {
+        "executable.args": null,
+        "executable.path": "dotnet",
+        "executable.pid": null,
+        "executable.workDir": "${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI",
+        "project.launchProfile": "Hexalith.EventStore.Admin.UI",
+        "project.path": "${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj",
+        "resource.appArgs": null,
+        "resource.appArgsSensitivity": null,
+        "resource.launchConfigurationType": "project"
+      },
+      "environment": {},
+      "healthReports": {},
+      "commands": {
+        "start": {
+          "displayName": "Start",
+          "description": "Start resource",
+          "state": "Enabled",
+          "sortOrder": 0
+        }
+      }
+    },
+    {
+      "name": "eventstore-app-api-token",
+      "displayName": "eventstore-app-api-token",
+      "resourceType": "Parameter",
+      "state": "Running",
+      "source": "Parameters:eventstore-app-api-token",
+      "healthStatus": "Healthy",
+      "dashboardUrl": "http://localhost:33869/?resource=eventstore-app-api-token",
+      "relationships": [],
+      "urls": [],
+      "volumes": [],
+      "properties": {
+        "resource.source": "Parameters:eventstore-app-api-token",
+        "Value": null
+      },
+      "environment": {},
+      "healthReports": {},
+      "commands": {
+        "delete-parameter": {
+          "displayName": "Delete parameter",
+          "description": "Delete parameter value",
+          "state": "Enabled",
+          "sortOrder": 1,
+          "argumentInputs": [
+            {
+              "name": "DeleteFromUserSecrets",
+              "label": "Delete from user secrets",
+              "description": "Delete a value that is saved in [user secrets](https://aka.ms/aspire/user-secrets).",
+              "enableDescriptionMarkdown": true,
+              "inputType": "Boolean",
+              "disabled": true,
+              "dynamicLoading": {
+                "alwaysLoadOnStart": true
+              }
+            }
+          ]
+        },
+        "set-parameter": {
+          "displayName": "Set parameter",
+          "description": "Set parameter value",
+          "state": "Enabled",
+          "sortOrder": 0,
+          "argumentInputs": [
+            {
+              "name": "Value",
+              "label": "eventstore-app-api-token",
+              "inputType": "SecretText",
+              "required": true,
+              "placeholder": "Enter value for eventstore-app-api-token",
+              "dynamicLoading": {
+                "alwaysLoadOnStart": true
+              }
+            },
+            {
+              "name": "SaveToUserSecrets",
+              "label": "Save to user secrets",
+              "description": "Requires user secrets to be configured for the AppHost. Run `aspire secret set <key> <value>` to initialize user secrets, or see [user secrets](https://aka.ms/aspire/user-secrets) for more information.",
+              "enableDescriptionMarkdown": true,
+              "inputType": "Boolean",
+              "disabled": true,
+              "dynamicLoading": {
+                "alwaysLoadOnStart": true,
+                "dependsOnInputs": [
+                  "Value"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "eventstore-dapr-cli-jreyjpxp",
+      "displayName": "eventstore-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Waiting",
+      "waitingFor": [
+        "security"
+      ],
+      "source": "dapr",
+      "dashboardUrl": "http://localhost:33869/?resource=eventstore-dapr-cli-jreyjpxp",
+      "relationships": [
+        {
+          "type": "Parent",
+          "resourceName": "eventstore-mtrnzqec"
+        }
+      ],
+      "urls": [],
+      "volumes": [],
+      "properties": {
+        "executable.args": null,
+        "executable.path": "/usr/local/bin/dapr",
+        "executable.pid": null,
+        "executable.workDir": "${PARTIES_ROOT}/src/Hexalith.Parties.AppHost",
+        "resource.appArgs": null,
+        "resource.appArgsSensitivity": null,
+        "resource.parentName": "eventstore-mtrnzqec",
+        "resource.waitingFor": [
+          "security-ewtkxusn"
+        ]
+      },
+      "environment": {},
+      "healthReports": {},
+      "commands": {
+        "start": {
+          "displayName": "Start",
+          "description": "Start resource",
+          "state": "Enabled",
+          "sortOrder": 0
+        }
+      }
+    },
+    {
+      "name": "eventstore-mtrnzqec",
+      "displayName": "eventstore",
+      "resourceType": "Project",
+      "state": "Waiting",
+      "waitingFor": [
+        "security"
+      ],
+      "source": "Hexalith.EventStore.csproj",
+      "dashboardUrl": "http://localhost:33869/?resource=eventstore-mtrnzqec",
+      "relationships": [
+        {
+          "type": "Reference",
+          "resourceName": "eventstore-app-api-token"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "security-ewtkxusn"
+        },
+        {
+          "type": "WaitFor",
+          "resourceName": "security-ewtkxusn"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "security-ewtkxusn"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "security-ewtkxusn"
+        }
+      ],
+      "urls": [],
+      "volumes": [],
+      "properties": {
+        "executable.args": null,
+        "executable.path": "dotnet",
+        "executable.pid": null,
+        "executable.workDir": "${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore",
+        "project.launchProfile": "http",
+        "project.path": "${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/Hexalith.EventStore.csproj",
+        "resource.appArgs": null,
+        "resource.appArgsSensitivity": null,
+        "resource.launchConfigurationType": "project",
+        "resource.waitingFor": [
+          "security-ewtkxusn"
+        ]
+      },
+      "environment": {},
+      "healthReports": {},
+      "commands": {
+        "rebuild": {
+          "displayName": "Rebuild",
+          "description": "Stop the resource, rebuild the project from source, and restart. Use this to apply source code changes.",
+          "state": "Enabled",
+          "sortOrder": 3
+        },
+        "start": {
+          "displayName": "Start",
+          "description": "Start resource",
+          "state": "Enabled",
+          "sortOrder": 0
+        }
+      }
+    },
+    {
+      "name": "parties-dapr-cli-gvqvpjbt",
+      "displayName": "parties-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Waiting",
+      "waitingFor": [
+        "eventstore",
+        "tenants",
+        "security"
+      ],
+      "source": "dapr",
+      "dashboardUrl": "http://localhost:33869/?resource=parties-dapr-cli-gvqvpjbt",
+      "relationships": [
+        {
+          "type": "Parent",
+          "resourceName": "parties-pherhwyf"
+        }
+      ],
+      "urls": [],
+      "volumes": [],
+      "properties": {
+        "executable.args": null,
+        "executable.path": "/usr/local/bin/dapr",
+        "executable.pid": null,
+        "executable.workDir": "${PARTIES_ROOT}/src/Hexalith.Parties.AppHost",
+        "resource.appArgs": null,
+        "resource.appArgsSensitivity": null,
+        "resource.parentName": "parties-pherhwyf",
+        "resource.waitingFor": [
+          "eventstore-mtrnzqec",
+          "tenants-vjwzzvpn",
+          "security-ewtkxusn"
+        ]
+      },
+      "environment": {},
+      "healthReports": {},
+      "commands": {
+        "start": {
+          "displayName": "Start",
+          "description": "Start resource",
+          "state": "Enabled",
+          "sortOrder": 0
+        }
+      }
+    },
+    {
+      "name": "parties-mcp-fbcrksps",
+      "displayName": "parties-mcp",
+      "resourceType": "Project",
+      "state": "NotStarted",
+      "source": "Hexalith.Parties.Mcp.csproj",
+      "dashboardUrl": "http://localhost:33869/?resource=parties-mcp-fbcrksps",
+      "relationships": [
+        {
+          "type": "Reference",
+          "resourceName": "eventstore-mtrnzqec"
+        },
+        {
+          "type": "WaitFor",
+          "resourceName": "eventstore-mtrnzqec"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "parties-pherhwyf"
+        },
+        {
+          "type": "WaitFor",
+          "resourceName": "parties-pherhwyf"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "eventstore-mtrnzqec"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "security-ewtkxusn"
+        },
+        {
+          "type": "WaitFor",
+          "resourceName": "security-ewtkxusn"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "security-ewtkxusn"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "security-ewtkxusn"
+        }
+      ],
+      "urls": [],
+      "volumes": [],
+      "properties": {
+        "executable.args": null,
+        "executable.path": "dotnet",
+        "executable.pid": null,
+        "executable.workDir": "${PARTIES_ROOT}/src/Hexalith.Parties.Mcp",
+        "project.launchProfile": "Hexalith.Parties.Mcp",
+        "project.path": "${PARTIES_ROOT}/src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj",
+        "resource.appArgs": null,
+        "resource.appArgsSensitivity": null,
+        "resource.launchConfigurationType": "project"
+      },
+      "environment": {},
+      "healthReports": {},
+      "commands": {
+        "start": {
+          "displayName": "Start",
+          "description": "Start resource",
+          "state": "Enabled",
+          "sortOrder": 0
+        }
+      }
+    },
+    {
+      "name": "parties-pherhwyf",
+      "displayName": "parties",
+      "resourceType": "Project",
+      "state": "Waiting",
+      "waitingFor": [
+        "eventstore",
+        "tenants",
+        "security"
+      ],
+      "source": "Hexalith.Parties.csproj",
+      "dashboardUrl": "http://localhost:33869/?resource=parties-pherhwyf",
+      "relationships": [
+        {
+          "type": "Reference",
+          "resourceName": "eventstore-mtrnzqec"
+        },
+        {
+          "type": "WaitFor",
+          "resourceName": "eventstore-mtrnzqec"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "tenants-vjwzzvpn"
+        },
+        {
+          "type": "WaitFor",
+          "resourceName": "tenants-vjwzzvpn"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "security-ewtkxusn"
+        },
+        {
+          "type": "WaitFor",
+          "resourceName": "security-ewtkxusn"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "security-ewtkxusn"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "security-ewtkxusn"
+        }
+      ],
+      "urls": [],
+      "volumes": [],
+      "properties": {
+        "executable.args": null,
+        "executable.path": "dotnet",
+        "executable.pid": null,
+        "executable.workDir": "${PARTIES_ROOT}/src/Hexalith.Parties",
+        "project.launchProfile": "http",
+        "project.path": "${PARTIES_ROOT}/src/Hexalith.Parties/Hexalith.Parties.csproj",
+        "resource.appArgs": null,
+        "resource.appArgsSensitivity": null,
+        "resource.launchConfigurationType": "project",
+        "resource.waitingFor": [
+          "eventstore-mtrnzqec",
+          "tenants-vjwzzvpn",
+          "security-ewtkxusn"
+        ]
+      },
+      "environment": {},
+      "healthReports": {},
+      "commands": {
+        "rebuild": {
+          "displayName": "Rebuild",
+          "description": "Stop the resource, rebuild the project from source, and restart. Use this to apply source code changes.",
+          "state": "Enabled",
+          "sortOrder": 3
+        },
+        "start": {
+          "displayName": "Start",
+          "description": "Start resource",
+          "state": "Enabled",
+          "sortOrder": 0
+        }
+      }
+    },
+    {
+      "name": "parties-ui-wqdgjcxd",
+      "displayName": "parties-ui",
+      "resourceType": "Project",
+      "state": "Waiting",
+      "waitingFor": [
+        "eventstore",
+        "tenants",
+        "security"
+      ],
+      "source": "Hexalith.Parties.UI.csproj",
+      "dashboardUrl": "http://localhost:33869/?resource=parties-ui-wqdgjcxd",
+      "relationships": [
+        {
+          "type": "Reference",
+          "resourceName": "eventstore-mtrnzqec"
+        },
+        {
+          "type": "WaitFor",
+          "resourceName": "eventstore-mtrnzqec"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "tenants-vjwzzvpn"
+        },
+        {
+          "type": "WaitFor",
+          "resourceName": "tenants-vjwzzvpn"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "eventstore-mtrnzqec"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "security-ewtkxusn"
+        },
+        {
+          "type": "WaitFor",
+          "resourceName": "security-ewtkxusn"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "security-ewtkxusn"
+        }
+      ],
+      "urls": [],
+      "volumes": [],
+      "properties": {
+        "executable.args": null,
+        "executable.path": "dotnet",
+        "executable.pid": null,
+        "executable.workDir": "${PARTIES_ROOT}/src/Hexalith.Parties.UI",
+        "project.launchProfile": "Hexalith.Parties.UI",
+        "project.path": "${PARTIES_ROOT}/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj",
+        "resource.appArgs": null,
+        "resource.appArgsSensitivity": null,
+        "resource.launchConfigurationType": "project",
+        "resource.waitingFor": [
+          "eventstore-mtrnzqec",
+          "tenants-vjwzzvpn",
+          "security-ewtkxusn"
+        ]
+      },
+      "environment": {},
+      "healthReports": {},
+      "commands": {
+        "rebuild": {
+          "displayName": "Rebuild",
+          "description": "Stop the resource, rebuild the project from source, and restart. Use this to apply source code changes.",
+          "state": "Enabled",
+          "sortOrder": 3
+        },
+        "start": {
+          "displayName": "Start",
+          "description": "Start resource",
+          "state": "Enabled",
+          "sortOrder": 0
+        }
+      }
+    },
+    {
+      "name": "security-eventstore-client-password",
+      "displayName": "security-eventstore-client-password",
+      "resourceType": "Parameter",
+      "state": "Running",
+      "source": "Parameters:security-eventstore-client-password",
+      "healthStatus": "Healthy",
+      "dashboardUrl": "http://localhost:33869/?resource=security-eventstore-client-password",
+      "relationships": [],
+      "urls": [],
+      "volumes": [],
+      "properties": {
+        "resource.source": "Parameters:security-eventstore-client-password",
+        "Value": null
+      },
+      "environment": {},
+      "healthReports": {},
+      "commands": {
+        "delete-parameter": {
+          "displayName": "Delete parameter",
+          "description": "Delete parameter value",
+          "state": "Enabled",
+          "sortOrder": 1,
+          "argumentInputs": [
+            {
+              "name": "DeleteFromUserSecrets",
+              "label": "Delete from user secrets",
+              "description": "Delete a value that is saved in [user secrets](https://aka.ms/aspire/user-secrets).",
+              "enableDescriptionMarkdown": true,
+              "inputType": "Boolean",
+              "disabled": true,
+              "dynamicLoading": {
+                "alwaysLoadOnStart": true
+              }
+            }
+          ]
+        },
+        "set-parameter": {
+          "displayName": "Set parameter",
+          "description": "Set parameter value",
+          "state": "Enabled",
+          "sortOrder": 0,
+          "argumentInputs": [
+            {
+              "name": "Value",
+              "label": "security-eventstore-client-password",
+              "inputType": "SecretText",
+              "required": true,
+              "placeholder": "Enter value for security-eventstore-client-password",
+              "dynamicLoading": {
+                "alwaysLoadOnStart": true
+              }
+            },
+            {
+              "name": "SaveToUserSecrets",
+              "label": "Save to user secrets",
+              "description": "Requires user secrets to be configured for the AppHost. Run `aspire secret set <key> <value>` to initialize user secrets, or see [user secrets](https://aka.ms/aspire/user-secrets) for more information.",
+              "enableDescriptionMarkdown": true,
+              "inputType": "Boolean",
+              "disabled": true,
+              "dynamicLoading": {
+                "alwaysLoadOnStart": true,
+                "dependsOnInputs": [
+                  "Value"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "security-eventstore-client-username",
+      "displayName": "security-eventstore-client-username",
+      "resourceType": "Parameter",
+      "state": "Running",
+      "source": "Parameters:security-eventstore-client-username",
+      "healthStatus": "Healthy",
+      "dashboardUrl": "http://localhost:33869/?resource=security-eventstore-client-username",
+      "relationships": [],
+      "urls": [],
+      "volumes": [],
+      "properties": {
+        "resource.source": "Parameters:security-eventstore-client-username",
+        "Value": null
+      },
+      "environment": {},
+      "healthReports": {},
+      "commands": {
+        "delete-parameter": {
+          "displayName": "Delete parameter",
+          "description": "Delete parameter value",
+          "state": "Enabled",
+          "sortOrder": 1,
+          "argumentInputs": [
+            {
+              "name": "DeleteFromUserSecrets",
+              "label": "Delete from user secrets",
+              "description": "Delete a value that is saved in [user secrets](https://aka.ms/aspire/user-secrets).",
+              "enableDescriptionMarkdown": true,
+              "inputType": "Boolean",
+              "disabled": true,
+              "dynamicLoading": {
+                "alwaysLoadOnStart": true
+              }
+            }
+          ]
+        },
+        "set-parameter": {
+          "displayName": "Set parameter",
+          "description": "Set parameter value",
+          "state": "Enabled",
+          "sortOrder": 0,
+          "argumentInputs": [
+            {
+              "name": "Value",
+              "label": "security-eventstore-client-username",
+              "inputType": "SecretText",
+              "required": true,
+              "placeholder": "Enter value for security-eventstore-client-username",
+              "dynamicLoading": {
+                "alwaysLoadOnStart": true
+              }
+            },
+            {
+              "name": "SaveToUserSecrets",
+              "label": "Save to user secrets",
+              "description": "Requires user secrets to be configured for the AppHost. Run `aspire secret set <key> <value>` to initialize user secrets, or see [user secrets](https://aka.ms/aspire/user-secrets) for more information.",
+              "enableDescriptionMarkdown": true,
+              "inputType": "Boolean",
+              "disabled": true,
+              "dynamicLoading": {
+                "alwaysLoadOnStart": true,
+                "dependsOnInputs": [
+                  "Value"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "security-ewtkxusn",
+      "displayName": "security",
+      "resourceType": "Container",
+      "state": "Starting",
+      "creationTimestamp": "2026-10-27T17:04:03+00:00",
+      "source": "quay.io/keycloak/keycloak:26.6",
+      "dashboardUrl": "http://localhost:33869/?resource=security-ewtkxusn",
+      "relationships": [
+        {
+          "type": "Reference",
+          "resourceName": "security-eventstore-client-username"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "security-eventstore-client-password"
+        }
+      ],
+      "urls": [],
+      "volumes": [],
+      "properties": {
+        "container.args": null,
+        "container.command": null,
+        "container.id": null,
+        "container.image": "quay.io/keycloak/keycloak:26.6",
+        "container.lifetime": "Session",
+        "container.ports": [
+          9000,
+          8443
+        ],
+        "resource.appArgs": [
+          "start-dev",
+          "--import-realm"
+        ],
+        "resource.appArgsSensitivity": [
+          0,
+          0
+        ]
+      },
+      "environment": {
+        "HEXALITH_EVENTSTORE_CLIENT_PASSWORD": null,
+        "HEXALITH_EVENTSTORE_CLIENT_USERNAME": null,
+        "KC_BOOTSTRAP_ADMIN_PASSWORD": null,
+        "KC_BOOTSTRAP_ADMIN_USERNAME": "admin",
+        "KC_FEATURES": "opentelemetry",
+        "KC_HEALTH_ENABLED": "true",
+        "KC_HTTPS_CERTIFICATE_FILE": "/usr/lib/ssl/aspire/private/ED6C9438F604A23BCB61B2E08EE0F6E33DD3CA06.crt",
+        "KC_HTTPS_CERTIFICATE_KEY_FILE": "/usr/lib/ssl/aspire/private/ED6C9438F604A23BCB61B2E08EE0F6E33DD3CA06.key",
+        "KC_HTTPS_PORT": "8443",
+        "OTEL_BLRP_SCHEDULE_DELAY": "1000",
+        "OTEL_BSP_SCHEDULE_DELAY": "1000",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "http://aspire.dev.internal:41791",
+        "OTEL_EXPORTER_OTLP_HEADERS": "x-otlp-api-key=80b2f8e8badf7ef0153c92b7992a6a89",
+        "OTEL_EXPORTER_OTLP_PROTOCOL": "grpc",
+        "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT": "true",
+        "OTEL_METRIC_EXPORT_INTERVAL": "1000",
+        "OTEL_METRICS_EXEMPLAR_FILTER": "trace_based",
+        "OTEL_RESOURCE_ATTRIBUTES": "service.instance.id={{- index .Annotations \"otel-service-instance-id\" -}}",
+        "OTEL_SERVICE_NAME": "{{- index .Annotations \"otel-service-name\" -}}",
+        "OTEL_TRACES_SAMPLER": "always_on",
+        "SSL_CERT_DIR": "/usr/lib/ssl/aspire/certs:/etc/ssl/certs:/usr/local/share/ca-certificates:/etc/pki/tls/certs"
+      },
+      "healthReports": {
+        "security_management_/health/ready_200_check": {}
+      },
+      "commands": {}
+    },
+    {
+      "name": "tenants-dapr-cli-bepcjxpk",
+      "displayName": "tenants-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Waiting",
+      "waitingFor": [
+        "eventstore",
+        "security"
+      ],
+      "source": "dapr",
+      "dashboardUrl": "http://localhost:33869/?resource=tenants-dapr-cli-bepcjxpk",
+      "relationships": [
+        {
+          "type": "Parent",
+          "resourceName": "tenants-vjwzzvpn"
+        }
+      ],
+      "urls": [],
+      "volumes": [],
+      "properties": {
+        "executable.args": null,
+        "executable.path": "/usr/local/bin/dapr",
+        "executable.pid": null,
+        "executable.workDir": "${PARTIES_ROOT}/src/Hexalith.Parties.AppHost",
+        "resource.appArgs": null,
+        "resource.appArgsSensitivity": null,
+        "resource.parentName": "tenants-vjwzzvpn",
+        "resource.waitingFor": [
+          "eventstore-mtrnzqec",
+          "security-ewtkxusn"
+        ]
+      },
+      "environment": {},
+      "healthReports": {},
+      "commands": {
+        "start": {
+          "displayName": "Start",
+          "description": "Start resource",
+          "state": "Enabled",
+          "sortOrder": 0
+        }
+      }
+    },
+    {
+      "name": "tenants-vjwzzvpn",
+      "displayName": "tenants",
+      "resourceType": "Project",
+      "state": "Waiting",
+      "waitingFor": [
+        "eventstore",
+        "security"
+      ],
+      "source": "Hexalith.Tenants.csproj",
+      "dashboardUrl": "http://localhost:33869/?resource=tenants-vjwzzvpn",
+      "relationships": [
+        {
+          "type": "Reference",
+          "resourceName": "eventstore-mtrnzqec"
+        },
+        {
+          "type": "WaitFor",
+          "resourceName": "eventstore-mtrnzqec"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "security-ewtkxusn"
+        },
+        {
+          "type": "WaitFor",
+          "resourceName": "security-ewtkxusn"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "security-ewtkxusn"
+        },
+        {
+          "type": "Reference",
+          "resourceName": "security-ewtkxusn"
+        }
+      ],
+      "urls": [],
+      "volumes": [],
+      "properties": {
+        "executable.args": null,
+        "executable.path": "dotnet",
+        "executable.pid": null,
+        "executable.workDir": "${PARTIES_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants",
+        "project.launchProfile": "Hexalith.Tenants",
+        "project.path": "${PARTIES_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/Hexalith.Tenants.csproj",
+        "resource.appArgs": null,
+        "resource.appArgsSensitivity": null,
+        "resource.launchConfigurationType": "project",
+        "resource.waitingFor": [
+          "eventstore-mtrnzqec",
+          "security-ewtkxusn"
+        ]
+      },
+      "environment": {},
+      "healthReports": {},
+      "commands": {
+        "rebuild": {
+          "displayName": "Rebuild",
+          "description": "Stop the resource, rebuild the project from source, and restart. Use this to apply source code changes.",
+          "state": "Enabled",
+          "sortOrder": 3
+        },
+        "start": {
+          "displayName": "Start",
+          "description": "Start resource",
+          "state": "Enabled",
+          "sortOrder": 0
+        }
+      }
+    }
+  ]
+}

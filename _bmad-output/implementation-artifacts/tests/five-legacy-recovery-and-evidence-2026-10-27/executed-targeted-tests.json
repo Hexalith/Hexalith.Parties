@@ -1,0 +1,817 @@
+[
+  {
+    "lane": "parties-debug-preparation",
+    "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.RebuildPreparationRefusesRetainedFailedAuditBoundaryWithoutWritingAsync(bucketed: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-preparation",
+    "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.RebuildPreparationRefusesRetainedFailedAuditBoundaryWithoutWritingAsync(bucketed: True)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.RebuildCannotReplaceProcessingCheckpointWhenDetailLagsAsync",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CompetingInlineAppendAtCutoverUsesNewSnapshotForStagingAndPromotionAsync",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.UnresolvedAuditRetriesSameDispatchAndResolvesWithoutCheckpointDriftAsync(count: 40)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.UnresolvedAuditRetriesSameDispatchAndResolvesWithoutCheckpointDriftAsync(count: 96)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.InvalidInlineHistoryCannotStageOrSelectMigrationAsync(defect: \\\"hole\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.InvalidInlineHistoryCannotStageOrSelectMigrationAsync(defect: \\\"duplicate\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.InvalidInlineHistoryCannotStageOrSelectMigrationAsync(defect: \\\"scope\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CompetingSelectedBucketAppendRetriesSameDispatchAgainstItsNewSnapshotAsync",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CompetingAppendOrErasureInvalidatesLargeMigrationOrDispatcherRebuildPromotionAsync(rebuild: False, erase: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CompetingAppendOrErasureInvalidatesLargeMigrationOrDispatcherRebuildPromotionAsync(rebuild: False, erase: True)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CompetingAppendOrErasureInvalidatesLargeMigrationOrDispatcherRebuildPromotionAsync(rebuild: True, erase: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CompetingAppendOrErasureInvalidatesLargeMigrationOrDispatcherRebuildPromotionAsync(rebuild: True, erase: True)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.TerminalAnchorCrashAfterManifestReclamationAllowsColdRedeliveryAndNewDeliveryAsync(crash: RecoveryManifestReclaimed)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.TerminalAnchorCrashAfterManifestReclamationAllowsColdRedeliveryAndNewDeliveryAsync(crash: RecoveryAnchorCompacted)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.InterruptedLegacyAuditErasureResumesItsPersistedGenerationAcrossEraserRecreationAsync",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.UnqualifiedHistoricalRecoveryRefusesErasureWithEveryPersistedByteUnchangedAsync",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.RebuildPreservesFailedAuditBeyondCheckpointAndRepairsOnlyWithCompleteUncontendedReplayAsync(bucketed: False, compete: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.RebuildPreservesFailedAuditBeyondCheckpointAndRepairsOnlyWithCompleteUncontendedReplayAsync(bucketed: False, compete: True)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.RebuildPreservesFailedAuditBeyondCheckpointAndRepairsOnlyWithCompleteUncontendedReplayAsync(bucketed: True, compete: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.RebuildPreservesFailedAuditBeyondCheckpointAndRepairsOnlyWithCompleteUncontendedReplayAsync(bucketed: True, compete: True)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.AcceptedLargeLegacyActorMetadataMigratesAndRebuildPreparationRemainsPureAsync(rebuild: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.AcceptedLargeLegacyActorMetadataMigratesAndRebuildPreparationRemainsPureAsync(rebuild: True)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CorruptTouchedBucketCannotAdvanceEitherCanonicalAuthorityAsync(defect: \\\"scope\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CorruptTouchedBucketCannotAdvanceEitherCanonicalAuthorityAsync(defect: \\\"capacity\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CorruptTouchedBucketCannotAdvanceEitherCanonicalAuthorityAsync(defect: \\\"order\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CorruptTouchedBucketCannotAdvanceEitherCanonicalAuthorityAsync(defect: \\\"duplicate\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CorruptTouchedBucketCannotAdvanceEitherCanonicalAuthorityAsync(defect: \\\"coverage\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CorruptTouchedBucketCannotAdvanceEitherCanonicalAuthorityAsync(defect: \\\"metadata\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.ErasureRetiresSdkPrivateCanonicalManifestAfterCrashBeforeFirstParticipantAsync",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.InterruptedLargeMigrationOrDispatcherRebuildResumesPersistedBucketsBeforeAuthorityCutoverAsync(rebuild: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.InterruptedLargeMigrationOrDispatcherRebuildResumesPersistedBucketsBeforeAuthorityCutoverAsync(rebuild: True)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.LargeAuditRecoversPendingCanonicalEnvelopesAcrossHandlerRestartAsync(failurePhase: MarkerPrepared)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.LargeAuditRecoversPendingCanonicalEnvelopesAcrossHandlerRestartAsync(failurePhase: AfterInstallOperation)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.LargeAuditRecoversPendingCanonicalEnvelopesAcrossHandlerRestartAsync(failurePhase: BeforeCommit)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.LargeAuditRecoversPendingCanonicalEnvelopesAcrossHandlerRestartAsync(failurePhase: AfterCommit)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.LargeAuditRecoversPendingCanonicalEnvelopesAcrossHandlerRestartAsync(failurePhase: BeforeCompaction)",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.RedeliveredValidPrefixRepairsLaggingDetailBeforeAcknowledgementAsync",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.AcceptedLargeLegacyAuditMetadataSurvivesErasureConversionWithoutTruncationAsync",
+    "result": "Pass"
+  },
+  {
+    "lane": "parties-debug-generation",
+    "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CommittedLiveRegistrationsSettleAcrossColdRestartsBeforeRedeliveryAndDifferentBucketAppendsAsync",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-debug-migration-workflow",
+    "name": "Hexalith.Memories.Server.Tests.Workflows.NaturalLanguageEmbeddingRetryWorkflowTests.RunAsync_ContentFreeInputDelegatesOnlyToFencedRetryActivity(indexed: True, reason: null)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-debug-migration-workflow",
+    "name": "Hexalith.Memories.Server.Tests.Workflows.NaturalLanguageEmbeddingRetryWorkflowTests.RunAsync_ContentFreeInputDelegatesOnlyToFencedRetryActivity(indexed: False, reason: \\\"memory-unit-deleted-during-retry\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-debug-migration-workflow",
+    "name": "Hexalith.Memories.Server.Tests.Workflows.NaturalLanguageEmbeddingRetryWorkflowTests.RunAsync_LegacyRawInputNeverPropagatesIntoDurableActivityHistory",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-debug-migration-workflow",
+    "name": "Hexalith.Memories.Server.Tests.Migration.RedisEmbeddingMigrationStoreTests.GetCountsAsync_LegacyNaturalLanguageHashExists_CountsItAsNaturalLanguageNotRaw",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-debug-migration-workflow",
+    "name": "Hexalith.Memories.Server.Tests.Migration.RedisEmbeddingMigrationStoreTests.StartMigrationMarkerAsync_OtherOwnerLockExists_FailsClosed",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-debug-migration-workflow",
+    "name": "Hexalith.Memories.Server.Tests.Migration.RedisEmbeddingMigrationStoreTests.CompleteMigrationMarkerAsync_OwnerMismatchRefusesAndKeepsLock",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-debug-migration-workflow",
+    "name": "Hexalith.Memories.Server.Tests.Migration.RedisEmbeddingMigrationStoreTests.PrepareStagingSemanticIndexesAsync_LegacyNaturalLanguageHashExists_MigratesBeforeCreatingStagingIndexes",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-debug-migration-workflow",
+    "name": "Hexalith.Memories.Server.Tests.Migration.RedisEmbeddingMigrationStoreTests.CompleteMigrationMarkerAsync_OwnedLockWritesCompletedMarkerAndDeletesLock",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-debug-migration-workflow",
+    "name": "Hexalith.Memories.Server.Tests.Migration.RedisEmbeddingMigrationStoreTests.AbortMigrationAsync_StartedMarkerDropsStagingWritesAbortedAndDeletesLock",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-debug-migration-workflow",
+    "name": "Hexalith.Memories.Server.Tests.Migration.RedisEmbeddingMigrationStoreTests.StagingSemanticWrites_UseCanonicalMarkerlessShapesWithoutLifecycleMutation",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-debug-migration-workflow",
+    "name": "Hexalith.Memories.Server.Tests.Migration.RedisEmbeddingMigrationStoreTests.StartMigrationMarkerAsync_ResumePreservesPreviousRollbackFields",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-debug-migration-workflow",
+    "name": "Hexalith.Memories.Server.Tests.Migration.RedisEmbeddingMigrationStoreTests.StartMigrationMarkerAsync_UsesSetNxOwnerLockWithTtl",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-debug-migration-workflow",
+    "name": "Hexalith.Memories.Server.Tests.Migration.RedisEmbeddingMigrationStoreTests.StartMigrationMarkerAsync_WritesConsistentPerTargetAndActiveMarkerFields",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-debug-migration-workflow",
+    "name": "Hexalith.Memories.Server.Tests.Migration.RedisNaturalLanguageNamespaceMigratorTests.MigrateAsync_DelegatesExactUnitCopyAndRetirementToOneFencedAtomicScript",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-debug-migration-workflow",
+    "name": "Hexalith.Memories.Server.Tests.Migration.RedisNaturalLanguageNamespaceMigratorTests.MigrateAsync_CancellationNeverStartsTheAtomicMutation",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-debug-migration-workflow",
+    "name": "Hexalith.Memories.Server.Tests.Migration.RedisNaturalLanguageNamespaceMigratorTests.MigrateAsync_UnprovenLiveOwnerReturnsBoundedReconciliationRefusal(result: -3, reason: \\\"nl-namespace-live-owner-reconciliation-required\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-debug-migration-workflow",
+    "name": "Hexalith.Memories.Server.Tests.Migration.RedisNaturalLanguageNamespaceMigratorTests.MigrateAsync_UnprovenLiveOwnerReturnsBoundedReconciliationRefusal(result: -4, reason: \\\"nl-namespace-legacy-owner-reconciliation-required\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-debug-migration-workflow",
+    "name": "Hexalith.Memories.Server.Tests.Migration.RedisNaturalLanguageNamespaceMigratorTests.MigrateAsync_UnprovenLiveOwnerReturnsBoundedReconciliationRefusal(result: -1, reason: \\\"nl-namespace-canonical-owner-reconciliation-requir\\\"\u00b7\u00b7\u00b7)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.InvalidAdmissionIdentityFailsBeforeAnyDurablePreparation(invalid: \\\"tenant\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.InvalidAdmissionIdentityFailsBeforeAnyDurablePreparation(invalid: \\\"case\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.InvalidAdmissionIdentityFailsBeforeAnyDurablePreparation(invalid: \\\"source\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.InvalidAdmissionIdentityFailsBeforeAnyDurablePreparation(invalid: \\\"workflow\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.InvalidAdmissionIdentityFailsBeforeAnyDurablePreparation(invalid: \\\"predecessor\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.InvalidAdmissionIdentityFailsBeforeAnyDurablePreparation(invalid: \\\"case-control\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.InvalidAdmissionIdentityFailsBeforeAnyDurablePreparation(invalid: \\\"source-control\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.InvalidAdmissionIdentityFailsBeforeAnyDurablePreparation(invalid: \\\"workflow-control\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.InvalidAdmissionIdentityFailsBeforeAnyDurablePreparation(invalid: \\\"predecessor-control\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.AcceptedIdentityBoundariesRemainReadableThroughActualPublicSdk",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.ActualTenantCleanupRemovesHashedOwnershipAndPayloadsAcrossRestartWhileOtherTenantSurvives",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.OverlappingActualSameUnitGraphWritesRetainIndependentAuthorityUntilEachAcknowledgement",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests.PendingActualPayloadSaveBlocksTenantSuccessAcrossSerializedRestartAndThenConverges",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.MissingOptionalLegacyTagRemainsUnqualifiedAndPreservesTheObligation",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.NamespaceMigrationRefusesUnprovenLiveOwnershipAtomicallyAcrossRestart(defect: \\\"missing\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.NamespaceMigrationRefusesUnprovenLiveOwnershipAtomicallyAcrossRestart(defect: \\\"foreign-unit\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.NamespaceMigrationRefusesUnprovenLiveOwnershipAtomicallyAcrossRestart(defect: \\\"foreign-tenant\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.NamespaceMigrationRefusesUnprovenLiveOwnershipAtomicallyAcrossRestart(defect: \\\"foreign-case\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.NamespaceMigrationRefusesUnprovenLiveOwnershipAtomicallyAcrossRestart(defect: \\\"removed-after-read\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.CompletionPreservesHistoricalAliasesWithUnknownOrDuplicateAdmissionMetadata(shape: \\\"unknown\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.CompletionPreservesHistoricalAliasesWithUnknownOrDuplicateAdmissionMetadata(shape: \\\"duplicate\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.CompletionPreservesHistoricalAliasesWithUnknownOrDuplicateAdmissionMetadata(shape: \\\"conflicting\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.MigrationPreservesNewerCanonicalContentAndHonorsActualSourceFence",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.LargeAccumulatedDeadQueueTrimUsesBoundedLuaExpansionAndPreservesNewestPayloads",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.WrongTypeDestinationCannotDeleteOrOverwriteAdmittedLivePayload(mode: \\\"enqueue\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.WrongTypeDestinationCannotDeleteOrOverwriteAdmittedLivePayload(mode: \\\"requeue\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.WrongTypeDestinationCannotDeleteOrOverwriteAdmittedLivePayload(mode: \\\"dead\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.WrongTypeDestinationCannotDeleteOrOverwriteAdmittedLivePayload(mode: \\\"overflow\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.MixedDistinctLegacyAliasPreservesModernProgressAndRemainsForReconciliation",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.MisaddressedModernPayloadsCannotRetryOrOverflowAnotherUnit(foreignTenant: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.MisaddressedModernPayloadsCannotRetryOrOverflowAnotherUnit(foreignTenant: True)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.MalformedLegacyPruningRetainsOnlyAContentFreeReconciliationObligation",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.OverflowMovesValidNoncanonicalJsonUsingItsActualObservedBytes",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.UnitAndCaseDeletionPreserveForeignRawSemanticHashAtOverlappingLegacyName(caseDeletion: False, reverse: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.UnitAndCaseDeletionPreserveForeignRawSemanticHashAtOverlappingLegacyName(caseDeletion: True, reverse: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.UnitAndCaseDeletionPreserveForeignRawSemanticHashAtOverlappingLegacyName(caseDeletion: False, reverse: True)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.UnitAndCaseDeletionPreserveForeignRawSemanticHashAtOverlappingLegacyName(caseDeletion: True, reverse: True)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.IncompleteCanonicalTargetBlocksMigrationAndRetainsValidLegacyContent",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ObservedPruningPreservesConcurrentLiveAndDeadReplacement(dead: False, changed: \\\"payload\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ObservedPruningPreservesConcurrentLiveAndDeadReplacement(dead: False, changed: \\\"score\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ObservedPruningPreservesConcurrentLiveAndDeadReplacement(dead: False, changed: \\\"membership\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ObservedPruningPreservesConcurrentLiveAndDeadReplacement(dead: True, changed: \\\"payload\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ObservedPruningPreservesConcurrentLiveAndDeadReplacement(dead: True, changed: \\\"score\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ObservedPruningPreservesConcurrentLiveAndDeadReplacement(dead: True, changed: \\\"membership\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.SameUnitSchedulerLeaseSerializesAttemptsAndStaleAcknowledgementCannotClearNewAuthority",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ModernFirstCompletionRetiresVerifiedAliasesButDistinctLegacyWorkRemainsBlockedAfterRestart",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.AtomicSelectionProtectsRefreshBeforeTheFormerPayloadAndScoreReads(operation: \\\"overflow\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.AtomicSelectionProtectsRefreshBeforeTheFormerPayloadAndScoreReads(operation: \\\"corrupt\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.AtomicSelectionProtectsRefreshBeforeTheFormerPayloadAndScoreReads(operation: \\\"dead\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.RefusedUnknownLegacyDiscoveryNeverMutatesForeignRawHashOrInventory",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.LegacyDiscoveryRefusesPartialTimeoutPolicyWithoutSealingCompleteness",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ExactRetryAdmissionRejectsRecordReplacementDuringDescriptionOrEmbedding(duringEmbedding: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ExactRetryAdmissionRejectsRecordReplacementDuringDescriptionOrEmbedding(duringEmbedding: True)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ModernDiscoveryUsesExactOwnershipAndMissingLegacyIndexRequiresReconciliation",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.RetryAdmissionDeadLetterTrimmingAndLegacyPayloadsRemainAbsentAfterErasureAndRestart",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.NamespaceMigrationNeverEnrollsForeignOrMalformedLegacyOrCanonicalKeys(defect: \\\"legacy-unit\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.NamespaceMigrationNeverEnrollsForeignOrMalformedLegacyOrCanonicalKeys(defect: \\\"legacy-tenant\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.NamespaceMigrationNeverEnrollsForeignOrMalformedLegacyOrCanonicalKeys(defect: \\\"legacy-fields\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.NamespaceMigrationNeverEnrollsForeignOrMalformedLegacyOrCanonicalKeys(defect: \\\"canonical-unit\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.NamespaceMigrationNeverEnrollsForeignOrMalformedLegacyOrCanonicalKeys(defect: \\\"canonical-tenant\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.NamespaceMigrationNeverEnrollsForeignOrMalformedLegacyOrCanonicalKeys(defect: \\\"canonical-case\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.NamespaceMigrationNeverEnrollsForeignOrMalformedLegacyOrCanonicalKeys(defect: \\\"canonical-fields\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.LegacyNativeDiscoveryCoversExactUnitChunksAndBothNamespacesWhileOtherUnitsSurvive",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.NamespaceMigrationInventoryCapacityRefusesExplicitlyAndPreservesLegacyBytes",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.RejectedCorruptPruneDoesNotInstallAnUnresolvedHistoryMarker",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.TenantPurgeValidatesManyUnitsWithOnlyOneScanOfEachQueueAndHash",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ActualQueueMaintenancePreservesASelectionChangedAtItsFinalRedisCommand(operation: \\\"overflow\\\", changed: \\\"payload\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ActualQueueMaintenancePreservesASelectionChangedAtItsFinalRedisCommand(operation: \\\"overflow\\\", changed: \\\"score\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ActualQueueMaintenancePreservesASelectionChangedAtItsFinalRedisCommand(operation: \\\"overflow\\\", changed: \\\"membership\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ActualQueueMaintenancePreservesASelectionChangedAtItsFinalRedisCommand(operation: \\\"corrupt\\\", changed: \\\"payload\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ActualQueueMaintenancePreservesASelectionChangedAtItsFinalRedisCommand(operation: \\\"corrupt\\\", changed: \\\"score\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ActualQueueMaintenancePreservesASelectionChangedAtItsFinalRedisCommand(operation: \\\"corrupt\\\", changed: \\\"membership\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ActualQueueMaintenancePreservesASelectionChangedAtItsFinalRedisCommand(operation: \\\"dead\\\", changed: \\\"payload\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ActualQueueMaintenancePreservesASelectionChangedAtItsFinalRedisCommand(operation: \\\"dead\\\", changed: \\\"score\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ActualQueueMaintenancePreservesASelectionChangedAtItsFinalRedisCommand(operation: \\\"dead\\\", changed: \\\"membership\\\")",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.MigrationRacesErasureAcrossRecreationWithoutRetainingEitherNamespace(caseDeletion: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.MigrationRacesErasureAcrossRecreationWithoutRetainingEitherNamespace(caseDeletion: True)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.AdmittedModernAndJsonOnlyLegacyRetriesPersistActualNaturalLanguageOutput(legacy: False, removeDuringDescription: False, replaceAtReadiness: False, eraseAtReadiness: False, noncanonical: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.AdmittedModernAndJsonOnlyLegacyRetriesPersistActualNaturalLanguageOutput(legacy: True, removeDuringDescription: False, replaceAtReadiness: False, eraseAtReadiness: False, noncanonical: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.AdmittedModernAndJsonOnlyLegacyRetriesPersistActualNaturalLanguageOutput(legacy: False, removeDuringDescription: True, replaceAtReadiness: False, eraseAtReadiness: False, noncanonical: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.AdmittedModernAndJsonOnlyLegacyRetriesPersistActualNaturalLanguageOutput(legacy: False, removeDuringDescription: False, replaceAtReadiness: True, eraseAtReadiness: False, noncanonical: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.AdmittedModernAndJsonOnlyLegacyRetriesPersistActualNaturalLanguageOutput(legacy: False, removeDuringDescription: False, replaceAtReadiness: False, eraseAtReadiness: True, noncanonical: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.AdmittedModernAndJsonOnlyLegacyRetriesPersistActualNaturalLanguageOutput(legacy: False, removeDuringDescription: False, replaceAtReadiness: False, eraseAtReadiness: False, noncanonical: True)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.OwnedContainerConnectionStringUsesExplicitLoopbackIpAcceptedByWorkflowFixture",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.UnitPurgeCapacityIsAtomicAndExistingUnitsRemainIdempotentWithoutLosingFences",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.ValidOnlyOverflowEnforcesTheDeadPayloadCap",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.OriginalSameNameRawRetrySuspendedInEachContentActivityTerminatesAfterWorkerUpgradeAndPurgesHistory(embeddingPhase: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.OriginalSameNameRawRetrySuspendedInEachContentActivityTerminatesAfterWorkerUpgradeAndPurgesHistory(embeddingPhase: True)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.ScopedTerminalRetirementRejectsANewerExecutionBeforePurgeAndPreservesItsActualHistory(runningReplacement: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.ScopedTerminalRetirementRejectsANewerExecutionBeforePurgeAndPreservesItsActualHistory(runningReplacement: True)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.ActualWorkerUnacknowledgedSubmissionRetainsAuthorityAcrossRecreationAndBlocksTenantCleanup(interruptCaller: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.ActualWorkerUnacknowledgedSubmissionRetainsAuthorityAcrossRecreationAndBlocksTenantCleanup(interruptCaller: True)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.WorkerSchedulesContentFreeDurableHistoryWhileAdmittedRegistryContentPersistsNaturalLanguageOutput(failAfterEmbedding: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.WorkerSchedulesContentFreeDurableHistoryWhileAdmittedRegistryContentPersistsNaturalLanguageOutput(failAfterEmbedding: True)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.StaleDequeuedRecordCannotRetireNewerTerminalHistoryAfterTakingTheLease(replaceDuringHistoryRead: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.StaleDequeuedRecordCannotRetireNewerTerminalHistoryAfterTakingTheLease(replaceDuringHistoryRead: True)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.ExistingScheduledRawRetryHistoryIsPhysicallyAbsentAfterPurgeAndAdapterRestart",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.UnverifiableLegacyScopeBlocksErasureWithoutChangingHistory(duplicateScope: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.UnverifiableLegacyScopeBlocksErasureWithoutChangingHistory(duplicateScope: True)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.AuthenticatedTenantHistoryDiscoveryPurgesQueueOnlyAndOrphanHashUnitsAbsentFromTheLedger",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.TenantDeletionPurgesLiveDeadAndCompletedOrRunningHistoryWhileUnknownCoverageAndSchedulingRemainBlocked",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.ContentBearingLegacyActivityCannotRestoreHistoryAfterTerminationPurgeLateCompletionAndRestart(caseDeletion: False)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.ContentBearingLegacyActivityCannotRestoreHistoryAfterTerminationPurgeLateCompletionAndRestart(caseDeletion: True)",
+    "result": "Pass"
+  },
+  {
+    "lane": "memories-actual-redis-falkor-dapr-affected",
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.CollidingLegacyAddressPreservesForeignHistoryAndScopedNewSchedulesUntilTheirOwnErasure",
+    "result": "Pass"
+  }
+]

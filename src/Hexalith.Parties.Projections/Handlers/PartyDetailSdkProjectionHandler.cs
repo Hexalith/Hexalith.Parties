@@ -229,7 +229,18 @@ public sealed partial class PartyDetailSdkProjectionHandler(
         ReadModelBatchConcurrency processingConcurrency = currentProcessing?.ETag is { Length: > 0 } processingEtag
             ? ReadModelBatchConcurrency.Match(processingEtag)
             : ReadModelBatchConcurrency.CreateOnly;
-        if ((current?.Value?.LastSequenceNumber ?? long.MinValue) > candidate.LastSequenceNumber
+        // Failed deliveries retain audit facts without advancing either checkpoint. A full
+        // rebuild must cover those facts too, before any immutable generation is staged.
+        long retainedAuditBoundary = long.MinValue;
+        if (currentProcessing?.Value is { } retainedProcessing)
+        {
+            PartyProcessingBucketValidation.ValidateCoverage(retainedProcessing);
+            retainedAuditBoundary = retainedProcessing.BucketGeneration is null
+                ? retainedProcessing.Records.Select(record => record.SequenceNumber).DefaultIfEmpty(long.MinValue).Max()
+                : retainedProcessing.LastRecordSequenceNumber ?? long.MinValue;
+        }
+        if (retainedAuditBoundary > processingCandidate.LastSequenceNumber
+            || (current?.Value?.LastSequenceNumber ?? long.MinValue) > candidate.LastSequenceNumber
             || (currentProcessing?.Value?.LastSequenceNumber ?? long.MinValue) > processingCandidate.LastSequenceNumber
             || current?.Value?.ErasureSequenceNumber is not null && candidate.ErasureSequenceNumber is null
             || currentProcessing?.Value?.ErasureSequenceNumber is not null && processingCandidate.ErasureSequenceNumber is null)

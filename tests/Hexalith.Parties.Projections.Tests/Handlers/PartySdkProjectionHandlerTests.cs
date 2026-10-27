@@ -45,6 +45,35 @@ public sealed class PartySdkProjectionHandlerTests
     private static readonly IOptions<PartySdkReadModelOptions> s_options =
         Options.Create(new PartySdkReadModelOptions { ReadModelStateStoreName = "statestore", HistoricalPrivateRecoveryReconciliationAttested = true });
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task RebuildPreparationRefusesRetainedFailedAuditBoundaryWithoutWritingAsync(bool bucketed)
+    {
+        var token = TestContext.Current.CancellationToken;
+        var store = new InMemoryReadModelBatchStore();
+        var full = CreateRequest() with { Events = [CreateRequest().Events[0],
+            .. Enumerable.Range(2, 99).Select(sequence => Event(new PartyDeactivated(), sequence, DateTimeOffset.UnixEpoch.AddSeconds(sequence)))] };
+        var prefix = full with { Events = full.Events.Take(50).ToArray() };
+        string detailKey = PartySdkReadModelAddresses.Detail(full.TenantId, full.AggregateId);
+        string processingKey = PartySdkReadModelAddresses.Processing(full.TenantId, full.AggregateId);
+        var failed = full with { Events = full.Events.Select(item => item.SequenceNumber > 50
+            ? item with { EventTypeName = "FutureUnresolvedType" } : item).ToArray() };
+        var processing = PartyProcessingActivityFold.Fold(failed, null) with { LastSequenceNumber = 50 };
+        if (bucketed) processing = PartyDetailSdkProjectionHandler.ToBucketMetadata(processing, "retained-audit", processing.Records, 100);
+        await store.SaveAsync("statestore", detailKey, PartyDetailSdkProjectionHandler.Fold(prefix, null), token);
+        await store.SaveAsync("statestore", processingKey, processing, token);
+        var beforeDetail = await store.GetAsync<PartyDetailSdkReadModel>("statestore", detailKey, token);
+        var beforeProcessing = await store.GetAsync<PartyProcessingSdkReadModel>("statestore", processingKey, token);
+        var batches = Substitute.For<IReadModelBatchStore>();
+        var refusal = await Should.ThrowAsync<InvalidOperationException>(() => new PartyDetailSdkProjectionHandler(store, batches, s_options)
+            .PrepareRebuildAsync(prefix, "short-audit-rebuild", token));
+        refusal.Message.ShouldBe("processing-rebuild-would-replace-newer-authority");
+        batches.ReceivedCalls().ShouldBeEmpty();
+        (await store.GetAsync<PartyDetailSdkReadModel>("statestore", detailKey, token)).ETag.ShouldBe(beforeDetail.ETag);
+        (await store.GetAsync<PartyProcessingSdkReadModel>("statestore", processingKey, token)).ETag.ShouldBe(beforeProcessing.ETag);
+    }
+
     [Fact]
     public async Task LargeUnresolvedDeliveryRetainsEveryFactAndRejectsConflictingDuplicateAcrossChunksAsync()
     {

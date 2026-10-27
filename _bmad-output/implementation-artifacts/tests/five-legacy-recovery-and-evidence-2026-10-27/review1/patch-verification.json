@@ -1,0 +1,292 @@
+{
+  "stage": "Review 1 bounded patch before parent owner commit/rebase/final combined verification",
+  "prior_receipt": "../implementation-verification.json",
+  "prior_receipt_sha256": "d1713d37d7693cf7dc9db75ffef93d2996447b3d87016f29c609bacb8cd94079",
+  "source_files": [
+    {
+      "path": "_bmad-output/implementation-artifacts/deferred-work.md",
+      "lf_normalized_sha256": "9d40d45503bb6ee97b45077be8194abaeb9c6bf08e571786208e58d1582e27cb",
+      "sha256": "ccbed3357762cdeb71ee76c3e490aa07ec9584b158e33a2bdf832a8e92b006a7"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/README.md",
+      "lf_normalized_sha256": "b943be8e4b2d9b90e5ad872f1fda93b25c67ade0ce26ddba697f4147ee93ae40",
+      "sha256": "b943be8e4b2d9b90e5ad872f1fda93b25c67ade0ce26ddba697f4147ee93ae40"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/build-source.py",
+      "lf_normalized_sha256": "532e6a18f4ed14798c36deb375195db0fb6da0a585959ca9fc16720954b8eb49",
+      "sha256": "532e6a18f4ed14798c36deb375195db0fb6da0a585959ca9fc16720954b8eb49"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/review1/source-build/RegenerateSourceMapping.cs",
+      "lf_normalized_sha256": "493f3de7e6989fd72f18e19fc98c150192bba769c7338c7642ed598d25954b76",
+      "sha256": "493f3de7e6989fd72f18e19fc98c150192bba769c7338c7642ed598d25954b76"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/review1/source-build/configuration.json",
+      "lf_normalized_sha256": "1b0728eb458f4c74cb0ec1992067dc4d191a337988af5d79811b27f192981018",
+      "sha256": "1b0728eb458f4c74cb0ec1992067dc4d191a337988af5d79811b27f192981018"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/review1/source-build/historical-generated-input.json",
+      "lf_normalized_sha256": "1b6a5ee29fbe9fcf958f88f1c23507482caa4e5534b5f532b2edb704c42bbc22",
+      "sha256": "1b6a5ee29fbe9fcf958f88f1c23507482caa4e5534b5f532b2edb704c42bbc22"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/review1/source-build/replay-provenance.json",
+      "lf_normalized_sha256": "253e7d0006e8f82bd2ef4c1c71fdd204fca082ab742299844ad12741b5ca425e",
+      "sha256": "253e7d0006e8f82bd2ef4c1c71fdd204fca082ab742299844ad12741b5ca425e"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/review1/test_evidence_controls.py",
+      "lf_normalized_sha256": "df20cc9cc656a89895bc3858145e30ac5747cc023d990fa1fba999fe43c98996",
+      "sha256": "df20cc9cc656a89895bc3858145e30ac5747cc023d990fa1fba999fe43c98996"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/run-owned-runtime.py",
+      "lf_normalized_sha256": "fa1180d6629d56dd349d0ecbab77e7aebba34fcea3dda28786446bc9182e84d7",
+      "sha256": "fa1180d6629d56dd349d0ecbab77e7aebba34fcea3dda28786446bc9182e84d7"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/verify-implementation.py",
+      "lf_normalized_sha256": "f3bd416bc82d35973380f677ee0c371eb8a0183de67810e444d0d90e8ae249ac",
+      "sha256": "f3bd416bc82d35973380f677ee0c371eb8a0183de67810e444d0d90e8ae249ac"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/verify-preservation.py",
+      "lf_normalized_sha256": "4da6f7d3fdee45a78d65aad0d064f6086ef610a9679f1699d8a7a7df74405a18",
+      "sha256": "4da6f7d3fdee45a78d65aad0d064f6086ef610a9679f1699d8a7a7df74405a18"
+    },
+    {
+      "path": "docs/gdpr-processing-activity-records.md",
+      "lf_normalized_sha256": "7b471902b0bf8c38e6a9c62d05e9668c4aa5861e2fb1956411692d5c5badff3d",
+      "sha256": "7b471902b0bf8c38e6a9c62d05e9668c4aa5861e2fb1956411692d5c5badff3d"
+    },
+    {
+      "path": "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/TenantIngestionOwnership.cs",
+      "lf_normalized_sha256": "4a5f0bdf313a3f444034f95476978ae9a576c84b7f42fc30e74af9c7677d46c5",
+      "sha256": "4a5f0bdf313a3f444034f95476978ae9a576c84b7f42fc30e74af9c7677d46c5"
+    },
+    {
+      "path": "references/Hexalith.Memories/src/Hexalith.Memories.Server/Migration/RedisNaturalLanguageNamespaceMigrator.cs",
+      "lf_normalized_sha256": "65f85951b087a573ba230bb4f89fa48fd6e92fbed3874493b057ac38f30fd4fb",
+      "sha256": "65f85951b087a573ba230bb4f89fa48fd6e92fbed3874493b057ac38f30fd4fb"
+    },
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Ingestion/HistoricalNaturalLanguageEmbeddingRetryWorkflow.cs",
+      "lf_normalized_sha256": "d29c4e86ec88ec6d96b868864997d28fe0e606502a59f34c30f38e50e4d9f8fd",
+      "sha256": "08087df34e815e7263b53114d3588de3b3aad480fbbd04dd9cab36e743487d9b"
+    },
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Ingestion/NaturalLanguageErasureIntegrationTests.cs",
+      "lf_normalized_sha256": "405ab89115b3a7885e2d4bf9520f8264f46bb38622c2d902dafb75a5453507f6",
+      "sha256": "405ab89115b3a7885e2d4bf9520f8264f46bb38622c2d902dafb75a5453507f6"
+    },
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Ingestion/RetryWorkflowErasureIntegrationTests.cs",
+      "lf_normalized_sha256": "07d4402594a998f99071264466b760ee3142c9b34d059be407a4731362f7c3fd",
+      "sha256": "cdeffd7468c07c38af10de2a556ef138cb2824ed56abaf5378867f61f79f2bd4"
+    },
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/Migration/RedisEmbeddingMigrationStoreTests.cs",
+      "lf_normalized_sha256": "1d168424c920a25b85fe7b33be9c1444b207b3544872b9ce334ceea309bc8f92",
+      "sha256": "e61b94f7e3a95d1fe521987a998ffeda4262975ffee64724d8f55830a2d7ba74"
+    },
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/Migration/RedisNaturalLanguageNamespaceMigratorTests.cs",
+      "lf_normalized_sha256": "df58cc2d3ec230750c8fc6317ce96221fdb7c178ca259ff6217be104c90035c3",
+      "sha256": "df58cc2d3ec230750c8fc6317ce96221fdb7c178ca259ff6217be104c90035c3"
+    },
+    {
+      "path": "src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs",
+      "lf_normalized_sha256": "eb1fd91bc58b874d8adc8ed08a0e30c454c349ef1a50170d66d0fd6dfaa874f3",
+      "sha256": "42d9de5526e43ab76d46d9911b537a4de90541ae9c0dc2d95d992ba6bf83a977"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs",
+      "lf_normalized_sha256": "c8d43d6a75365f4f4991bcc4580ef5380603549eae0bd91b54261b1bb3c76aac",
+      "sha256": "30f03b9be2e399af53441ec4090bfce2a1795985e8132f128585705e0306cbad"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/Projections/PartyProcessingGenerationRecoveryTests.cs",
+      "lf_normalized_sha256": "a93d40f698cc9abe59762dd4a37472f82dac8a75d34a2b43bba895b2ee3a053e",
+      "sha256": "a93d40f698cc9abe59762dd4a37472f82dac8a75d34a2b43bba895b2ee3a053e"
+    },
+    {
+      "path": "tests/README.md",
+      "lf_normalized_sha256": "e78d47d76a7b40ad93cd26d532ad91dc14a67f9cfe080d6f63cb1165528d10a0",
+      "sha256": "56ac12e40a8c9bd00bef1a096c37246eaadfc62b10e30e2120e36a4b686eff94"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/review1/source-build/fresh-generation-receipt.json",
+      "lf_normalized_sha256": "43f9900bc7ac42070fe10811bd17d5f0d65b09f27a5d8c9ca7e13a6328dd44d8",
+      "sha256": "43f9900bc7ac42070fe10811bd17d5f0d65b09f27a5d8c9ca7e13a6328dd44d8"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/review1/source-build/fresh-generated-input.json",
+      "lf_normalized_sha256": "bd6629c91f1d2bcc8413c4ef806d9ff4ea9790d459fad8c4bc25793c5ebf8c41",
+      "sha256": "bd6629c91f1d2bcc8413c4ef806d9ff4ea9790d459fad8c4bc25793c5ebf8c41"
+    }
+  ],
+  "executed_artifacts": [
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+      "sha256": "4bcb6820ebe5038ad9695ccedc798d22bdcdd23a30e3411daa7f1bc02054b35f"
+    },
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.Server.dll",
+      "sha256": "60554481f7ed672d43d33711caac691aef001f6965bd0749916a1816d3db1ad1"
+    }
+  ],
+  "commands": [
+    {
+      "lane": "initial-fresh-regeneration",
+      "argv": [
+        "python3",
+        "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/build-source.py",
+        "--workspace",
+        "${INITIAL_MAPPING_WORKSPACE}",
+        "--regenerate",
+        "--cwd",
+        "references/Hexalith.Memories",
+        "--",
+        "dotnet",
+        "build",
+        "tests/Hexalith.Memories.IntegrationTests",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--nologo"
+      ],
+      "exit_code": 1,
+      "raw_log_sha256": "dc7fe1f352d2eb66c84acfa54822d05da0869ed98112aac9c0d3d478817c9a52",
+      "blocker": "Pinned Builds catalog f9142d8a845a16e54ee060e6a0250c773d00e0ba was unavailable; the parent subsequently fetched only that exact object without changing HEAD/gitlinks."
+    },
+    {
+      "lane": "historical-input-focused-fallback",
+      "argv": [
+        "python3",
+        "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/build-source.py",
+        "--workspace",
+        "${FALLBACK_MAPPING_WORKSPACE}",
+        "--replay-retained",
+        "--cwd",
+        "references/Hexalith.Memories",
+        "--",
+        "dotnet",
+        "build",
+        "tests/Hexalith.Memories.IntegrationTests",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--nologo"
+      ],
+      "exit_code": 0,
+      "raw_log_sha256": "00ef6147f9e96ca8045f59c8b14e417be40d56df40d16a162a5f9b515059614c",
+      "scope": "Retained producer input only; no fresh graph qualification."
+    },
+    {
+      "lane": "fresh-authoritative-regeneration-and-build",
+      "argv": [
+        "python3",
+        "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/build-source.py",
+        "--workspace",
+        "${MAPPING_WORKSPACE}",
+        "--regenerate",
+        "--cwd",
+        "references/Hexalith.Memories",
+        "--",
+        "dotnet",
+        "build",
+        "tests/Hexalith.Memories.IntegrationTests",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--nologo",
+        "--no-restore"
+      ],
+      "exit_code": 0,
+      "raw_log_sha256": "d96df2921be7dfcd4ae43537075cd1cc3c5628cd85df928e92bdf38ebbd23c44",
+      "build": {
+        "warnings": 0,
+        "errors": 0
+      }
+    },
+    {
+      "lane": "final-retained-admission-test-build",
+      "argv": [
+        "python3",
+        "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/build-source.py",
+        "--workspace",
+        "${MAPPING_WORKSPACE}",
+        "--cwd",
+        "references/Hexalith.Memories",
+        "--",
+        "dotnet",
+        "build",
+        "tests/Hexalith.Memories.IntegrationTests",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--nologo",
+        "--no-restore"
+      ],
+      "exit_code": 0,
+      "raw_log_sha256": "5442f281bfaea0bfe0581a3425c9d3ec8da6dd9a60fa49318868ad1e63ca65a9",
+      "build": {
+        "warnings": 0,
+        "errors": 0
+      }
+    },
+    {
+      "lane": "focused-redis-and-upgrade",
+      "argv": [
+        "/usr/bin/python3",
+        "${PARTIES_ROOT}/_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/run-owned-runtime.py",
+        "--runtime-root",
+        "${OWNED_RUNTIME}",
+        "--output",
+        "${PRIVATE_RUNTIME}",
+        "--method",
+        "*NamespaceMigrationRefusesUnprovenLiveOwnershipAtomicallyAcrossRestart",
+        "--method",
+        "*OriginalSameNameRawRetrySuspendedInEachContentActivityTerminatesAfterWorkerUpgradeAndPurgesHistory"
+      ],
+      "exit_code": 0,
+      "counts": {
+        "total": 10,
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0
+      },
+      "raw_log_sha256": "55147bb573c69302687ea36b2aaf753f0d7bff3f66590de8ff97fa719aff392f",
+      "raw_xml_sha256": "8b8aab5d24e09229fe9d07945595563ecb531cdf14208a5c8f643f7b3207b05f",
+      "raw_receipt_sha256": "5d6a1dfa8a5179e838b4bd800b4977c580ae897268cd50f1af33398a454f4124",
+      "public_receipt": "runtime-receipt.json"
+    },
+    {
+      "lane": "optimized-verifier-and-runner-controls",
+      "argv": [
+        "python3",
+        "-B",
+        "-O",
+        "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/review1/test_evidence_controls.py"
+      ],
+      "exit_code": 0,
+      "tests": 7,
+      "raw_log_sha256": "76e7f662bd28bd5d330178153070aaa83042cfa78ab3c00991a37c5f4cdd43a5",
+      "mutations": "Disposable copies only; historical repository artifacts unmodified."
+    }
+  ],
+  "producer_identity": {
+    "package": "hexalith.builds.module.cli/4.34.0",
+    "materializer_sha256": "5909d7434096a3f01639ed4d0a4f88839d5b468a91f842ff901dfef4b5ca3433"
+  },
+  "full_combined_verification": "Parent-owned; not executed by this patch",
+  "git_mutations_performed": false,
+  "baseline_revisions": {
+    "parties": "67d16261ee9ba5f8b8595351ba96c211ebb5f9d2",
+    "memories": "22b792cf4f4a7aa5c9b6f129e6a491821169a8bf"
+  }
+}

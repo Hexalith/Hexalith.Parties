@@ -1,0 +1,12 @@
+{
+  "package": "hexalith.builds.module.cli",
+  "version": "4.34.0",
+  "tooling_sha256": "5909d7434096a3f01639ed4d0a4f88839d5b468a91f842ff901dfef4b5ca3433",
+  "manifest": "module/hexalith.module-manifest.v2.json",
+  "generator": "review1/source-build/RegenerateSourceMapping.cs",
+  "historical_input": "review1/source-build/historical-generated-input.json",
+  "historical_input_sha256": "1b6a5ee29fbe9fcf958f88f1c23507482caa4e5534b5f532b2edb704c42bbc22",
+  "original_receipt_sha256": "d1713d37d7693cf7dc9db75ffef93d2996447b3d87016f29c609bacb8cd94079",
+  "original_mapping_json_sha256": "d89c9cc9fab00c60071e5575e801d7f66e292676d05e7d9110a122d3625d448c",
+  "original_mapping_content_hash": "f623f72993733202fb9611a108e00c366ef69c79693717daeb1f1fe090b64e99"
+}

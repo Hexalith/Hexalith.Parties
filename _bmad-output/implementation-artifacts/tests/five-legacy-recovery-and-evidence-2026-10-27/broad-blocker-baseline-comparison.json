@@ -1,0 +1,80 @@
+{
+  "scope": "Differential source/config evidence; no complete baseline suite was rerun from another checkout.",
+  "unchanged_inputs": [
+    {
+      "repository": "references/Hexalith.Memories",
+      "revision": "22b792cf4f4a7aa5c9b6f129e6a491821169a8bf",
+      "path": "tests/Hexalith.Memories.Server.Tests/Architecture/AccessTelemetryA41CloseOutTests.cs",
+      "baseline_blob_sha256": "27a3b77e534ba77cf5beb6b6d38edb208d1049d3546d16dd7cef66dd36e7adce",
+      "current_bytes_sha256": "383c96ed400a2e3300b9a9c8a8ded41eb03b3d9f55dfd738c65456a294aa1217",
+      "normalized_unchanged": true
+    },
+    {
+      "repository": "references/Hexalith.Memories",
+      "revision": "22b792cf4f4a7aa5c9b6f129e6a491821169a8bf",
+      "path": "tests/Hexalith.Memories.Server.Tests/Deployment/AppHostSecurityConfigurationTests.cs",
+      "baseline_blob_sha256": "b58b5e1f69f104302207fb539a1f6523e1d94be343fa1b635c8912d1993c3670",
+      "current_bytes_sha256": "3c93ecc3f8213c20fbe9c4bf02fff711a8b63ecaf1658c46beb114479569b4e6",
+      "normalized_unchanged": true
+    },
+    {
+      "repository": "references/Hexalith.Memories",
+      "revision": "22b792cf4f4a7aa5c9b6f129e6a491821169a8bf",
+      "path": "tests/Hexalith.Memories.Server.Tests/Deployment/OpenBaoPlatformDocumentationTests.cs",
+      "baseline_blob_sha256": "f7cbe508193320cdcfc8ea4c333e6967112e5479c0e5e9784e07339db4ec63e2",
+      "current_bytes_sha256": "2d61e49a7783c2d1d357ca0bd9ff8216297d812d502dc3b8d7467d6ecbedc4b4",
+      "normalized_unchanged": true
+    },
+    {
+      "repository": "references/Hexalith.Memories",
+      "revision": "22b792cf4f4a7aa5c9b6f129e6a491821169a8bf",
+      "path": "_bmad-output/implementation-artifacts/tests/27-4-retention-verification-evidence.md",
+      "baseline_blob_sha256": "b98237eb712a6df9a0ad3305cbdf10010f6818c898dbf444bde53608c6e1c4da",
+      "current_bytes_sha256": "1ce9fd1c823f916e31904d1caedd56d026e0d50c23a4ab49e27443e080c13d7f",
+      "normalized_unchanged": true
+    },
+    {
+      "repository": "references/Hexalith.Memories",
+      "revision": "22b792cf4f4a7aa5c9b6f129e6a491821169a8bf",
+      "path": "_bmad-output/implementation-artifacts/tests/31-1-openbao-platform-evidence.md",
+      "baseline_blob_sha256": "4449f3cba050e2d5960fc1c8a6d1ad0f04a13a9e7d51582cce98ff19f8179efb",
+      "current_bytes_sha256": "5a0187db175a5926c0baea752110cb477e38f254f0f749dc7b55f1a67b6d5c37",
+      "normalized_unchanged": true
+    },
+    {
+      "repository": "references/Hexalith.Memories",
+      "revision": "22b792cf4f4a7aa5c9b6f129e6a491821169a8bf",
+      "path": "_bmad-output/implementation-artifacts/31-1-openbao-platform-hardening-and-documentation.md",
+      "baseline_blob_sha256": "0816d8a1821c4f8ab1090e4f9ac6ebd1450d83ddcc743962299a858e0321c6ab",
+      "current_bytes_sha256": "1f69f4f079d2408fdc051ae3b8971bb071cc8f4886014546d93363a8f0fbf05d",
+      "normalized_unchanged": true
+    },
+    {
+      "repository": "references/Hexalith.Memories",
+      "revision": "22b792cf4f4a7aa5c9b6f129e6a491821169a8bf",
+      "path": "src/Hexalith.Memories.Server/Hexalith.Memories.Server.csproj",
+      "baseline_blob_sha256": "f4f99af3d05195d79ab51b52fdd5b69a35ea6dbfffa82b09dfb9d5b2a180af7c",
+      "current_bytes_sha256": "984916a1e4a6647195d8412a1adf33d04133d30a6b8069bacf502fde69006489",
+      "normalized_unchanged": true
+    },
+    {
+      "repository": "references/Hexalith.Builds",
+      "revision": "db897eac9f2819220b32d237109d7255218b46a9",
+      "path": "Props/Directory.Packages.props",
+      "baseline_blob_sha256": "140e161c0ac14183be0cca8babce5cc896355174e1c621979b92d49826bdadb2",
+      "current_bytes_sha256": "c31f6ca3fb021992e054b9eda7828fada0247fbd7be6cc53ac95e28cbdee5b9a",
+      "normalized_unchanged": true
+    }
+  ],
+  "restored_server_eventstore_libraries": {
+    "Hexalith.EventStore.Client/3.128.0": "project",
+    "Hexalith.EventStore.Contracts/3.128.0": "project",
+    "Hexalith.EventStore.DomainService/3.128.0": "project",
+    "Hexalith.EventStore.ServiceDefaults/3.128.0": "project"
+  },
+  "package_mode_assertion_requires": "Hexalith.EventStore.Client/3.127.0, type package",
+  "current_lane": "Debug with generated project-reference source mapping",
+  "waiver_expiry": "2026-10-26",
+  "observed_utc_date": "2026-10-27",
+  "waiver_effect": "The unchanged date-sensitive gate now refuses expired C7 evidence. No waiver was extended or replaced."
+}

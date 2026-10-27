@@ -1852,6 +1852,9 @@ review1_2026_10_25: Review-1 native TAG queries retain discovered obligations wi
 - source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
   summary: Qualify deterministic replay of the original content-bearing NL retry workflow under upgraded workers (medium, unverified).
   evidence: Review R2-B5; suspend an actual original workflow in description or embedding, upgrade the registered worker, and verify terminal/retry behavior plus retained-history erasure. The new worker path is content-free; the replay defect itself has not been reproduced.
+  status: done 2026-10-27
+  resolution: Qualified the original cdd73d7361f67781a523f63f04853491a687f426 protocol under the production workflow name. Actual authenticated Dapr workers stop with description or embedding blocked, upgrade, resume to the bounded legacy restart result without reexecuting content activities, run the modern scheduler through fenced NL publication and purge historical input across another restart. No incompatibility reproduced at these boundaries; production retry behavior remains unchanged. Unknown deployed histories and legacy scheduler-drain attestation remain unqualified.
+  verification: `spec-five-legacy-recovery-and-evidence-deferred-items.md`; `tests/five-legacy-recovery-and-evidence-2026-10-27/`. Source safety qualification and evidence preservation remain separate from publication/adoption, deployment and owner acceptance.
 
 - source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
   summary: Tenant deletion must purge existing live/dead NL retry payloads and scoped workflow histories (high, pre-existing).
@@ -1870,6 +1873,9 @@ review1_2026_10_25: Review-1 native TAG queries retain discovered obligations wi
 - source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
   summary: Reconcile pre-tombstone orphan legacy NL hashes before namespace activation (medium, pre-existing).
   evidence: Review R3-B5; Baseline migration copies valid legacy hashes without syntactic unit existence. Current tombstones fence known erasures; no qualification of unknown historical orphan owners is inferred.
+  status: done 2026-10-27
+  resolution: Namespace migration checks exact live syntactic id, tenant, case and nonempty observed source URI in its final atomic script before shared key ownership enrollment. Missing, foreign and concurrently removed owners cause a bounded reconciliation refusal without activating or retiring content. Actual Redis tests preserve orphan and unrelated bytes across restart; explicit synthetic owner repair then permits migration. No production data was migrated and unknown historical completeness remains unqualified.
+  verification: `spec-five-legacy-recovery-and-evidence-deferred-items.md`; `tests/five-legacy-recovery-and-evidence-2026-10-27/`. Source safety qualification and evidence preservation remain separate from publication/adoption, deployment and owner acceptance.
 
 - source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
   summary: Correct named-argument casing in the concurrent identity-history test helper (medium, external work).
@@ -1899,6 +1905,9 @@ review1_2026_10_25: Review-1 native TAG queries retain discovered obligations wi
 - source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
   summary: Preserve retained failed audit facts beyond the processing checkpoint during shorter rebuilds (high, pre-existing).
   evidence: Review R5-B4; baseline 1ef274e PrepareRebuildAsync replaces Processing using the requested replay without checking either checkpoint or retained audit boundaries. Qualify unresolved retained facts through sequence 100 followed by a resolved rebuild through 50, for both inline and bucket storage, without losing retained facts or inventing replay completeness.
+  status: done 2026-10-27
+  resolution: Pure rebuild preparation protects the last retained inline or bucket audit sequence independently of both checkpoints. Checkpoint 50 with failed facts through 100 refuses replay through 50 before staging/publication with unchanged persisted bytes. Full resolved replay repairs the facts and advances coordinated checkpoints; a concurrent failed fact 101 wins the ETag race in both storage modes.
+  verification: `spec-five-legacy-recovery-and-evidence-deferred-items.md`; `tests/five-legacy-recovery-and-evidence-2026-10-27/`. Source safety qualification and evidence preservation remain separate from publication/adoption, deployment and owner acceptance.
 
 resolution_2026_10_25_final: Memories 7b0c8b5692600e293346eea7a84652eb87e4c346 publishes bounded exact-key discovery and ownership checks. Missing TAG/unknown coverage remains an explicit reconciliation requirement; no production completeness or attestation is inferred.
 verification_final: `tests/five-processing-and-memories-erasure-2026-10-25/`; spec `spec-five-processing-and-memories-erasure-deferred-items.md`.
@@ -1906,7 +1915,13 @@ verification_final: `tests/five-processing-and-memories-erasure-2026-10-25/`; sp
 - source_spec: `_bmad-output/implementation-artifacts/spec-ext-parties-1-owner-delivery.md`
   summary: Retain the EXT-PARTIES-1 review-triage record outside the owner-delivery spec.
   evidence: Token split from the stopped owner-delivery spec. Findings BH-01–BH-10, EC-01, VG-01, and VG-02 stay in `_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/review-triage.json`. This split does not authorize Identity test edits, a custody backend, or Live.
+  status: done 2026-10-27
+  resolution: The existing separate resume-recovery archive retains all 13 finding IDs and dispositions, its reviewed diff and 14 source snapshots. A reproducible read-only check verifies their recorded hashes against the existing 71-file manifest without historical temporary files. This reconciles evidence retention only; stopped owner-delivery intent and approval gates remain unchanged.
+  verification: `spec-five-legacy-recovery-and-evidence-deferred-items.md`; `tests/five-legacy-recovery-and-evidence-2026-10-27/`. Source safety qualification and evidence preservation remain separate from publication/adoption, deployment and owner acceptance.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-ext-parties-1-owner-delivery.md`
   summary: Retain the EXT-PARTIES-1 Local and Live verification history outside the owner-delivery spec.
   evidence: Token split from the stopped owner-delivery spec. Command results, source snapshots, and hashes stay in `_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/`. The historical Local exit 1 is not Available. This split does not execute Live.
+  status: done 2026-10-27
+  resolution: The existing separate resume-recovery archive retains all 17 original historical receipt hashes and exact bytes, including the original 446-pass/4-fail Server XML, Local exit 1 and both Live refusals. Read-only checks confirm accepted, available and liveQualified remain false and installed hashes/date remain null. Neither EXT Local nor Live was executed; no owner delivery or production custody is qualified.
+  verification: `spec-five-legacy-recovery-and-evidence-deferred-items.md`; `tests/five-legacy-recovery-and-evidence-2026-10-27/`. Source safety qualification and evidence preservation remain separate from publication/adoption, deployment and owner acceptance.

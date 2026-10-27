@@ -1,0 +1,624 @@
+{
+  "stage": "Implementation handoff before independent review/commits/pushes",
+  "date": "2026-10-27",
+  "root_baseline_revision": "67d16261ee9ba5f8b8595351ba96c211ebb5f9d2",
+  "memories_baseline_revision": "22b792cf4f4a7aa5c9b6f129e6a491821169a8bf",
+  "source_mapping_tool": {
+    "id": "hexalith.builds.module.cli",
+    "version": "4.34.0",
+    "environment": {
+      "CustomBeforeDirectoryBuildProps": "${SOURCE_MAPPING}/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${SOURCE_MAPPING}/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${SOURCE_MAPPING}/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${SOURCE_MAPPING}/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${SOURCE_MAPPING}/SourceMapping.final.targets"
+    },
+    "generated_hook_hashes": {
+      "SourceMapping.targets": "2003f8e38ea72f43549502cda1191d1272eea5a84bbebb534d84ee97c97618ff",
+      "SourceMapping.props": "0363694f252736cdfd0bcf6a567bb077940df16cc966e410153718a552769e82",
+      "SourceMapping.before-targets.props": "6d08277977c7e5a147e838bbf037b5844b9623f4ee97a553086d910c333eb246",
+      "SourceMapping.late.props": "2155ed00d0be463b47d7a712ce5778645c8ec5c2e20a7813e13e2b052dc56999",
+      "SourceMapping.final.targets": "64c5a28e219fe2dc1a9526a6ea494e3f1540f16a51a34b7d04f468bd3cc83ed6"
+    },
+    "mapping_json_sha256": "d89c9cc9fab00c60071e5575e801d7f66e292676d05e7d9110a122d3625d448c"
+  },
+  "commands": [
+    {
+      "lane": "parties-projections-debug",
+      "cwd": "${MEMORIES_ROOT}",
+      "argv": [
+        "python3",
+        "${PRIVATE_RUN}/nl-source-build.py",
+        "dotnet",
+        "build",
+        "${PARTIES_ROOT}/tests/Hexalith.Parties.Projections.Tests",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--nologo"
+      ],
+      "exit_code": 0,
+      "raw_log_sha256": "888e9cab8e86ddae67aa6f693fc81e4677b09e98bdbf7bbec94af92322ed29b0",
+      "build": {
+        "warnings": 0,
+        "errors": 0
+      },
+      "source_mapping_environment": true
+    },
+    {
+      "lane": "parties-service-debug",
+      "cwd": "${MEMORIES_ROOT}",
+      "argv": [
+        "python3",
+        "${PRIVATE_RUN}/nl-source-build.py",
+        "dotnet",
+        "build",
+        "${PARTIES_ROOT}/tests/Hexalith.Parties.Tests",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--nologo"
+      ],
+      "exit_code": 0,
+      "raw_log_sha256": "9b6a50b4b379118a92dadec20c1ae560ee7541bd6569193db48401711e76dfc2",
+      "build": {
+        "warnings": 0,
+        "errors": 0
+      },
+      "source_mapping_environment": true
+    },
+    {
+      "lane": "memories-server-tests-debug",
+      "cwd": "${MEMORIES_ROOT}",
+      "argv": [
+        "python3",
+        "${PRIVATE_RUN}/nl-source-build.py",
+        "dotnet",
+        "build",
+        "tests/Hexalith.Memories.Server.Tests",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--nologo"
+      ],
+      "exit_code": 0,
+      "raw_log_sha256": "d815050805cffd26c61c519634ec01f211e11b4e0df9320ffaa98afe02161fc5",
+      "build": {
+        "warnings": 0,
+        "errors": 0
+      },
+      "source_mapping_environment": true
+    },
+    {
+      "lane": "memories-integration-debug",
+      "cwd": "${MEMORIES_ROOT}",
+      "argv": [
+        "python3",
+        "${PRIVATE_RUN}/nl-source-build.py",
+        "dotnet",
+        "build",
+        "tests/Hexalith.Memories.IntegrationTests",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--nologo"
+      ],
+      "exit_code": 0,
+      "raw_log_sha256": "7d42e8a2123b0438f7f030ec06810a65485e235eddc293421ca3f61b644d73ea",
+      "build": {
+        "warnings": 0,
+        "errors": 0
+      },
+      "source_mapping_environment": true
+    },
+    {
+      "lane": "parties-package-solution",
+      "cwd": "${PARTIES_ROOT}",
+      "argv": [
+        "dotnet",
+        "build",
+        "Hexalith.Parties.slnx",
+        "-c",
+        "Release",
+        "-m:1",
+        "-p:NuGetAudit=false",
+        "-p:MinVerVersionOverride=1.0.0",
+        "--nologo"
+      ],
+      "exit_code": 0,
+      "raw_log_sha256": "6c70ef999506ce31c911e344506d4292ecad23cf5e732ad3816776658c7c127c",
+      "source_mapping_environment": false,
+      "build": {
+        "warnings": 0,
+        "errors": 0
+      },
+      "blocker": null
+    },
+    {
+      "lane": "parties-mapped-debug-solution",
+      "cwd": "${PARTIES_ROOT}",
+      "argv": [
+        "python3",
+        "${PRIVATE_RUN}/five-nl-root-build.py",
+        "dotnet",
+        "build",
+        "Hexalith.Parties.slnx",
+        "-c",
+        "Debug",
+        "-m:1",
+        "-p:NuGetAudit=false",
+        "-p:MinVerVersionOverride=1.0.0",
+        "--nologo"
+      ],
+      "exit_code": 1,
+      "raw_log_sha256": "11381a99244b29e42d0b9ab5d3cecf1796af6af24acaf93ef4ee00db5b4a029f",
+      "source_mapping_environment": true,
+      "build": {
+        "warnings": 0,
+        "errors": 4
+      },
+      "blocker": "HXW006: four FrontComposer retained ProjectReferences set AdditionalProperties and cannot override mapped configuration"
+    },
+    {
+      "lane": "parties-debug-preparation",
+      "cwd": "${PARTIES_ROOT}",
+      "argv": [
+        "dotnet",
+        "tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll",
+        "-method",
+        "*RebuildPreparationRefusesRetainedFailedAuditBoundaryWithoutWritingAsync"
+      ],
+      "exit_code": 0,
+      "counts": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "errors": 0
+      },
+      "raw_log_sha256": "2c36d4116ab1e8e71b1f8b18708ae284a89ba5171a62f25b6529ab3d6df80cbc",
+      "executed_assembly_sha256": "318114555e52ce29bd7b612177de3564f9d3f85a37d1576704195444d5b72f62"
+    },
+    {
+      "lane": "parties-debug-generation",
+      "cwd": "${PARTIES_ROOT}",
+      "argv": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests",
+        "-xml",
+        "${PRIVATE_RUN}/legacy-parties-generations.xml"
+      ],
+      "exit_code": 0,
+      "counts": {
+        "total": 39,
+        "passed": 39,
+        "failed": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "errors": 0
+      },
+      "raw_log_sha256": "c3e56c2289dca8d0363b903715ad19867b323759bcb580aa6fedde163b7ee57d",
+      "executed_assembly_sha256": "ea434cf465838627844905dd194e0c3b45df3a61de6714ce5464734a6ca3b149",
+      "raw_xml_sha256": "e9e4a227e3666cd93de3a0e03eb00c09adf5baaae8355a13eb4a1435ca8961d9",
+      "failures": []
+    },
+    {
+      "lane": "memories-debug-migration-workflow",
+      "cwd": "${MEMORIES_ROOT}",
+      "argv": [
+        "dotnet",
+        "tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.Tests.dll",
+        "-class",
+        "Hexalith.Memories.Server.Tests.Migration.RedisNaturalLanguageNamespaceMigratorTests",
+        "-class",
+        "Hexalith.Memories.Server.Tests.Migration.RedisEmbeddingMigrationStoreTests",
+        "-class",
+        "Hexalith.Memories.Server.Tests.Workflows.NaturalLanguageEmbeddingRetryWorkflowTests",
+        "-xml",
+        "${PRIVATE_RUN}/legacy-owner-focused.xml"
+      ],
+      "exit_code": 0,
+      "counts": {
+        "total": 18,
+        "passed": 18,
+        "failed": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "errors": 0
+      },
+      "raw_log_sha256": "dabb35cd8c6f43e1c32e75de2016b5e67c9c160885407a0ce0ba67d2c9b5a109",
+      "executed_assembly_sha256": "6d746f86f12001a9270c921afdd01bb05eb1b52f3308f9926d196c8d7a27f839",
+      "raw_xml_sha256": "72506504946443c2af34cbf6aa2711860f367d49c486fca58adc32a7863d338a",
+      "failures": []
+    },
+    {
+      "lane": "parties-projections-all-debug",
+      "cwd": "${PARTIES_ROOT}",
+      "argv": [
+        "dotnet",
+        "tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll",
+        "-xml",
+        "${PRIVATE_RUN}/legacy-parties-projections-all.xml"
+      ],
+      "exit_code": 0,
+      "counts": {
+        "total": 465,
+        "passed": 464,
+        "failed": 0,
+        "skipped": 1,
+        "not-run": 0,
+        "errors": 0
+      },
+      "raw_log_sha256": "5a14714c3d58ae683842f70c561f300eb0c2f2d050f6b6ce5293205b62f215fe",
+      "executed_assembly_sha256": "318114555e52ce29bd7b612177de3564f9d3f85a37d1576704195444d5b72f62",
+      "raw_xml_sha256": "35fc5fd2088dc2bf7c8f23f341cd7c6ca9c8b11f62084335b50727346fcfea2d",
+      "failures": []
+    },
+    {
+      "lane": "parties-service-all-debug",
+      "cwd": "${PARTIES_ROOT}",
+      "argv": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-xml",
+        "${PRIVATE_RUN}/legacy-parties-service-all.xml"
+      ],
+      "exit_code": 1,
+      "counts": {
+        "total": 2794,
+        "passed": 2788,
+        "failed": 2,
+        "skipped": 4,
+        "not-run": 0,
+        "errors": 0
+      },
+      "raw_log_sha256": "ebbbdd7c93c034a500326343032702389a5eb60c17203d7c3e7870a4f6714789",
+      "executed_assembly_sha256": "ea434cf465838627844905dd194e0c3b45df3a61de6714ce5464734a6ca3b149",
+      "raw_xml_sha256": "7bb01569e5fc73d215a5703f9790e171cb8e2d2ed12a29d15a9ed89baacb02f4",
+      "failures": [
+        {
+          "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph",
+          "message": "Shouldly.ShouldAssertException : RunGit(root, \\\"-C\\\", relativePath, \\\"status\\\", \\\"--porcelain\\\") (\\\" M src/Hexalith.Memories.Server/Ingestion/TenantIngestionOwnership.cs\n M src/Hexalith.Memories.Server/Migration/RedisNaturalLanguageNamespaceMigrator.cs\n M tests/Hexalith.Memories.IntegrationTests/Ingestion/NaturalLanguageErasureIntegrationTests.cs\n M tests/Hexalith.Memories.IntegrationTests/Ingestion/RetryWorkflowErasureIntegrationTests.cs\n M tests/Hexalith.Memories.Server.Tests/Migration/RedisEmbeddingMigrationStoreTests.cs\n M tests/Hexalith.Memories.Server.Tests/Migration/RedisNaturalLanguageNamespaceMigratorTests.cs\n?? tests/Hexalith.Memories.IntegrationTests/Ingestion/HistoricalNaturalLanguageEmbeddingRetryWorkflow.cs\n\\\")\n    should be null or white space\n\nAdditional Info:\n    references/Hexalith.Memories must be clean for immutable consumption proof."
+        },
+        {
+          "name": "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.CurrentClosureIdentityCanBeDerivedWithoutClaimingQualification",
+          "message": "Shouldly.ShouldAssertException : RunGit(root, \\\"-C\\\", fullPath, \\\"status\\\", \\\"--porcelain\\\", \\\"--untracked-files=normal\\\", \\\"--ignore-submodules=all\\\")\n    should be empty but was\n\\\" M src/Hexalith.Memories.Server/Ingestion/TenantIngestionOwnership.cs\n M src/Hexalith.Memories.Server/Migration/RedisNaturalLanguageNamespaceMigrator.cs\n M tests/Hexalith.Memories.IntegrationTests/Ingestion/NaturalLanguageErasureIntegrationTests.cs\n M tests/Hexalith.Memories.IntegrationTests/Ingestion/RetryWorkflowErasureIntegrationTests.cs\n M tests/Hexalith.Memories.Server.Tests/Migration/RedisEmbeddingMigrationStoreTests.cs\n M tests/Hexalith.Memories.Server.Tests/Migration/RedisNaturalLanguageNamespaceMigratorTests.cs\n?? tests/Hexalith.Memories.IntegrationTests/Ingestion/HistoricalNaturalLanguageEmbeddingRetryWorkflow.cs\n\\\"\n\nAdditional Info:\n    Root checkout must be clean before qualification: references/Hexalith.Memories"
+        }
+      ]
+    },
+    {
+      "lane": "memories-server-all-debug",
+      "cwd": "${MEMORIES_ROOT}",
+      "argv": [
+        "dotnet",
+        "tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.Tests.dll",
+        "-xml",
+        "${PRIVATE_RUN}/legacy-owner-server-all-final.xml"
+      ],
+      "exit_code": 1,
+      "counts": {
+        "total": 3072,
+        "passed": 3066,
+        "failed": 5,
+        "skipped": 1,
+        "not-run": 0,
+        "errors": 0
+      },
+      "raw_log_sha256": "a77a1eb8b179646ea2c8a16bd84b2b60ad86922760c6f557669c339d0323d58e",
+      "executed_assembly_sha256": "6d746f86f12001a9270c921afdd01bb05eb1b52f3308f9926d196c8d7a27f839",
+      "raw_xml_sha256": "fe92ef8c3c7e0d635a40f26ded6f92338004f99e4c3554c15041d77c1ee2070b",
+      "failures": [
+        {
+          "name": "Hexalith.Memories.Server.Tests.Architecture.AccessTelemetryA41CloseOutTests.CanonicalMatrix_ContainsExactlyC0ThroughC6AndKeepsExternalProofPending",
+          "message": "Shouldly.ShouldAssertException : posture\n    should contain\n\\\"No target was queried\\\"\n    but was actually\n\\\"\nLatest `WINDOW` run `0673d50339f4e1058c26e3a9b2d680a2` supplies passing local functional evidence: ...\\\""
+        },
+        {
+          "name": "Hexalith.Memories.Server.Tests.Deployment.AppHostSecurityConfigurationTests.ProjectAssets_RestoreEventStorePackagesAtCatalogVersion",
+          "message": "Shouldly.ShouldAssertException : libraries.TryGetProperty($\\\"Hexalith.EventStore.Client/{EventStoreCatalogVersion}\\\", out JsonElement client)\n    should be\nTrue\n    but was\nFalse\n\nAdditional Info:\n    Server restore must include the exact library key Hexalith.EventStore.Client/3.127.0."
+        },
+        {
+          "name": "Hexalith.Memories.Server.Tests.Deployment.AppHostSecurityConfigurationTests.Server_ReferencesEventStoreClientWithoutInlineVersion",
+          "message": "Shouldly.ShouldAssertException : serverProject\n    should contain\n\\\"<PackageReference Include=\\\"Hexalith.EventStore.Client\\\" />\\\"\n    but was actually\n\\\"<Project Sdk=\\\"Microsoft.NET.Sdk.Web\\\">\n\n  <PropertyGroup>\n    <IsPackable>false</IsPackable>\n    ...\\\""
+        },
+        {
+          "name": "Hexalith.Memories.Server.Tests.Deployment.AppHostSecurityConfigurationTests.BuildsCatalog_PinsEventStoreFamilyAt31270",
+          "message": "Shouldly.ShouldAssertException : catalog\n    should contain\n\\\"<HexalithEventStoreVersion Condition=\\\"'$(HexalithEventStoreVersion)' == ''\\\">3.127.0</HexalithEventStoreVersion>\\\"\n    but was actually\n\\\"<Project>\n  <PropertyGroup>\n    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentral...\\\""
+        },
+        {
+          "name": "Hexalith.Memories.Server.Tests.Deployment.OpenBaoPlatformDocumentationTests.PlatformEvidence_RecordsExecutedSmokeTestAndReviewerState",
+          "message": "Shouldly.ShouldAssertException : DateOnly.Parse(expiry.Value, CultureInfo.InvariantCulture)\n    should be greater than\n10/27/2026\n    but was\n10/26/2026\n\nAdditional Info:\n    The C7 waiver has expired: checkpoint C7 reverts to `pending` / `not complete` and the security evaluation AC2 requires is owed."
+        }
+      ]
+    },
+    {
+      "lane": "parties-package-preparation",
+      "cwd": "${PARTIES_ROOT}",
+      "argv": [
+        "dotnet",
+        "tests/Hexalith.Parties.Projections.Tests/bin/Release/net10.0/Hexalith.Parties.Projections.Tests.dll",
+        "-method",
+        "*RebuildPreparationRefusesRetainedFailedAuditBoundaryWithoutWritingAsync",
+        "-xml",
+        "${PRIVATE_RUN}/legacy-parties-package-preparation.xml"
+      ],
+      "exit_code": 0,
+      "counts": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "errors": 0
+      },
+      "raw_log_sha256": "d2d12afda630b7204a76184ad38946c6b286c2515ea02aaf504a24e83737e5d8",
+      "executed_assembly_sha256": "637ebb19058ccb1ed240bfc298d7cbbae0c56b8c48301e5ed648d11c03ccdd18",
+      "raw_xml_sha256": "552ee586d130a11d4f639f0220580efe0ed1055c08ed02ab7d7efa8cc9b72fc1",
+      "failures": []
+    },
+    {
+      "lane": "parties-package-generation",
+      "cwd": "${PARTIES_ROOT}",
+      "argv": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests",
+        "-xml",
+        "${PRIVATE_RUN}/legacy-parties-package-generation.xml"
+      ],
+      "exit_code": 0,
+      "counts": {
+        "total": 39,
+        "passed": 39,
+        "failed": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "errors": 0
+      },
+      "raw_log_sha256": "9fb34c47167d3d6a3c25eaea7963faeca046db39f4220c79568b717a2868b852",
+      "executed_assembly_sha256": "19b87b12450ea4ea4d76e9d9ccc9654bb93d2aca4b312d98e8b99577ad212c46",
+      "raw_xml_sha256": "de5c0fbb94d5fb6b0278cf850b7899a7eadc98064ad01d8c5107d1f9be6645da",
+      "failures": []
+    },
+    {
+      "lane": "memories-actual-redis-falkor-dapr-affected",
+      "cwd": "${PARTIES_ROOT}",
+      "argv": [
+        "python3",
+        "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/run-owned-runtime.py",
+        "--runtime-root",
+        "${OWNED_RUNTIME}",
+        "--output",
+        "${PRIVATE_RUNTIME}",
+        "--scope",
+        "affected"
+      ],
+      "test_argv": [
+        "dotnet",
+        "tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests",
+        "-class",
+        "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests",
+        "-class",
+        "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests",
+        "-xml",
+        "${PRIVATE_RUNTIME}/results.xml"
+      ],
+      "exit_code": 0,
+      "counts": {
+        "total": 104,
+        "passed": 104,
+        "failed": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "errors": 0
+      },
+      "raw_log_sha256": "766675738d6372909baa784c842becc212174924dc5d7cae5324e865cdb6cb78",
+      "raw_xml_sha256": "e11a4d20d247f354ac25d96b19a8abe45bf5e6e7b408e510d09474ae899b5108",
+      "raw_receipt_sha256": "31ca57601eaf7f16c0b5e81be4dba191d68c543be4cb5372b460ce099e89af22",
+      "runner_sha256": "a5181cf78924b689d13d6b8aa3a806f747e09a46e84d9c21951b960554370a42",
+      "binary_sha256": {
+        "dapr/placement": "7972c776bbfa2a3fab7f49465d5731ab837f0f90bf3b54bd31478eae548037da",
+        "dapr/scheduler": "31910d22dfb7f8c3635254b8f59a9c1b9187c6c6303e17a612f01bba93a3e2ce",
+        "native-redis/redis-server": "cb55ff7ea8f994364668d388d7cbd39a98e78fd70450f6da021fffe47e46ed84",
+        "native-redis/redisearch.so": "c55c19e785a6f98e3176643d0b01b47dd8b4456f0986beef9ae4a5acea67b064",
+        "native-falkor/redis-server": "87dd1979b0c12e68d2ed0187bb8eff8b64a2bdc6ac72db8e5c561f1758745d28",
+        "native-falkor/falkordb.so": "494cda4085cc8e11bdcc9c16734855cd2f6c936a96815ba35a553d948fb2c745"
+      },
+      "daprd_version": "1.18.7",
+      "daprd_sha256": "e988a6f53abec017fc9ebcb4f89de9bed11bce005eb49bd8e85e8d3d6adbf488",
+      "dapr_workflow_sdk": "1.18.10",
+      "owned_process_exit_codes": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "lane": "warning-and-nested-submodule-guard",
+      "cwd": "${PARTIES_ROOT}",
+      "argv": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "exit_code": 0,
+      "result": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts."
+    },
+    {
+      "lane": "ext-retained-preservation",
+      "cwd": "${PARTIES_ROOT}",
+      "argv": [
+        "python3",
+        "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/verify-preservation.py"
+      ],
+      "exit_code": 0,
+      "result_file": "preservation-verification.json"
+    },
+    {
+      "lane": "crlf-aware-whitespace",
+      "cwd": "${PARTIES_ROOT}",
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0
+    },
+    {
+      "lane": "crlf-aware-whitespace",
+      "cwd": "${MEMORIES_ROOT}",
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0
+    },
+    {
+      "lane": "exact-source-and-executed-artifact-verification",
+      "cwd": "${PARTIES_ROOT}",
+      "argv": [
+        "python3",
+        "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/verify-implementation.py",
+        "--artifacts"
+      ],
+      "exit_code": 0,
+      "result_file": "source-and-artifact-verification.json"
+    }
+  ],
+  "source_build_wrapper_sha256": "3d03532b95536416f67972494c9d0db5e8842a028cf7fb7f321eb826d962bb95",
+  "focused_debug_total": 163,
+  "focused_debug_skipped": 0,
+  "focused_package_total": 41,
+  "git_mutations_performed": false,
+  "ext_local_or_live_executed": false,
+  "production_completeness_attested": false,
+  "source_files": [
+    {
+      "path": "_bmad-output/implementation-artifacts/deferred-work.md",
+      "sha256": "ccbed3357762cdeb71ee76c3e490aa07ec9584b158e33a2bdf832a8e92b006a7",
+      "lf_normalized_sha256": "9d40d45503bb6ee97b45077be8194abaeb9c6bf08e571786208e58d1582e27cb"
+    },
+    {
+      "path": "docs/gdpr-processing-activity-records.md",
+      "sha256": "7b471902b0bf8c38e6a9c62d05e9668c4aa5861e2fb1956411692d5c5badff3d",
+      "lf_normalized_sha256": "7b471902b0bf8c38e6a9c62d05e9668c4aa5861e2fb1956411692d5c5badff3d"
+    },
+    {
+      "path": "src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs",
+      "sha256": "42d9de5526e43ab76d46d9911b537a4de90541ae9c0dc2d95d992ba6bf83a977",
+      "lf_normalized_sha256": "eb1fd91bc58b874d8adc8ed08a0e30c454c349ef1a50170d66d0fd6dfaa874f3"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs",
+      "sha256": "30f03b9be2e399af53441ec4090bfce2a1795985e8132f128585705e0306cbad",
+      "lf_normalized_sha256": "c8d43d6a75365f4f4991bcc4580ef5380603549eae0bd91b54261b1bb3c76aac"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/Projections/PartyProcessingGenerationRecoveryTests.cs",
+      "sha256": "a93d40f698cc9abe59762dd4a37472f82dac8a75d34a2b43bba895b2ee3a053e",
+      "lf_normalized_sha256": "a93d40f698cc9abe59762dd4a37472f82dac8a75d34a2b43bba895b2ee3a053e"
+    },
+    {
+      "path": "tests/README.md",
+      "sha256": "56ac12e40a8c9bd00bef1a096c37246eaadfc62b10e30e2120e36a4b686eff94",
+      "lf_normalized_sha256": "e78d47d76a7b40ad93cd26d532ad91dc14a67f9cfe080d6f63cb1165528d10a0"
+    },
+    {
+      "path": "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/TenantIngestionOwnership.cs",
+      "sha256": "4a5f0bdf313a3f444034f95476978ae9a576c84b7f42fc30e74af9c7677d46c5",
+      "lf_normalized_sha256": "4a5f0bdf313a3f444034f95476978ae9a576c84b7f42fc30e74af9c7677d46c5"
+    },
+    {
+      "path": "references/Hexalith.Memories/src/Hexalith.Memories.Server/Migration/RedisNaturalLanguageNamespaceMigrator.cs",
+      "sha256": "65f85951b087a573ba230bb4f89fa48fd6e92fbed3874493b057ac38f30fd4fb",
+      "lf_normalized_sha256": "65f85951b087a573ba230bb4f89fa48fd6e92fbed3874493b057ac38f30fd4fb"
+    },
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Ingestion/NaturalLanguageErasureIntegrationTests.cs",
+      "sha256": "0fbe4ef9abdb99ce3a9efe8425b6c56476c5680b5c968a551feca03feaad10cc",
+      "lf_normalized_sha256": "0fbe4ef9abdb99ce3a9efe8425b6c56476c5680b5c968a551feca03feaad10cc"
+    },
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Ingestion/RetryWorkflowErasureIntegrationTests.cs",
+      "sha256": "adc46d36628c7b4d5f0b1eefb28a3bc32221ceb5d7ab56f3bff6f451b772772b",
+      "lf_normalized_sha256": "5e254e18c1c03f7f28191081dfba93b36b688b786949ff0222f346da25f99141"
+    },
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/Migration/RedisEmbeddingMigrationStoreTests.cs",
+      "sha256": "e61b94f7e3a95d1fe521987a998ffeda4262975ffee64724d8f55830a2d7ba74",
+      "lf_normalized_sha256": "1d168424c920a25b85fe7b33be9c1444b207b3544872b9ce334ceea309bc8f92"
+    },
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/Migration/RedisNaturalLanguageNamespaceMigratorTests.cs",
+      "sha256": "df58cc2d3ec230750c8fc6317ce96221fdb7c178ca259ff6217be104c90035c3",
+      "lf_normalized_sha256": "df58cc2d3ec230750c8fc6317ce96221fdb7c178ca259ff6217be104c90035c3"
+    },
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Ingestion/HistoricalNaturalLanguageEmbeddingRetryWorkflow.cs",
+      "sha256": "08087df34e815e7263b53114d3588de3b3aad480fbbd04dd9cab36e743487d9b",
+      "lf_normalized_sha256": "d29c4e86ec88ec6d96b868864997d28fe0e606502a59f34c30f38e50e4d9f8fd"
+    }
+  ],
+  "executed_artifacts": [
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+      "sha256": "67b6dded79b344158640c735a69448f611437534a6a71e66b4373c44c46519bb"
+    },
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.Server.dll",
+      "sha256": "60554481f7ed672d43d33711caac691aef001f6965bd0749916a1816d3db1ad1"
+    },
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.Tests.dll",
+      "sha256": "6d746f86f12001a9270c921afdd01bb05eb1b52f3308f9926d196c8d7a27f839"
+    },
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.dll",
+      "sha256": "60554481f7ed672d43d33711caac691aef001f6965bd0749916a1816d3db1ad1"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll",
+      "sha256": "318114555e52ce29bd7b612177de3564f9d3f85a37d1576704195444d5b72f62"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.dll",
+      "sha256": "7c7ea88380bf6f08c319c6509c7fc051cd0cc1eb1ee13e807254cc86dcb766d9"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Projections.Tests/bin/Release/net10.0/Hexalith.Parties.Projections.Tests.dll",
+      "sha256": "637ebb19058ccb1ed240bfc298d7cbbae0c56b8c48301e5ed648d11c03ccdd18"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Projections.Tests/bin/Release/net10.0/Hexalith.Parties.Projections.dll",
+      "sha256": "853c1aea84760e30b09378e484ef65a14bea925d4968700abd80ade64afcc968"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.dll",
+      "sha256": "7c7ea88380bf6f08c319c6509c7fc051cd0cc1eb1ee13e807254cc86dcb766d9"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "sha256": "ea434cf465838627844905dd194e0c3b45df3a61de6714ce5464734a6ca3b149"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Projections.dll",
+      "sha256": "853c1aea84760e30b09378e484ef65a14bea925d4968700abd80ade64afcc968"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+      "sha256": "19b87b12450ea4ea4d76e9d9ccc9654bb93d2aca4b312d98e8b99577ad212c46"
+    }
+  ],
+  "independent_review_state": "Pending parent bmad-build review after this handoff; no independent approval is claimed."
+}

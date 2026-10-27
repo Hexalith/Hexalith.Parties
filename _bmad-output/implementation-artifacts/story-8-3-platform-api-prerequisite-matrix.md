@@ -48,7 +48,38 @@ retention action, and does not change Story 8.7's `blocked` status: the
 release adds Story 8.6's shared-projection rebuild completion mechanics only,
 not the G5 runtime engine.
 
-### Current source observation — 2026-10-26
+### Current source observation — 2026-10-27
+
+The approved five-item legacy recovery task starts at Parties
+`67d16261ee9ba5f8b8595351ba96c211ebb5f9d2`. Only the Memories root selection
+changes, to reviewed owner commit `f480fd70a7c25587264f50b5174358eee709c513`, rebased onto
+upstream `2bfc735600ed153bce9069570a43ba93fe77ac0f`. The source implementation and
+runtime/evidence qualification are retained in
+`tests/five-legacy-recovery-and-evidence-2026-10-27/`; the prior dated observation
+remains below. Selection does not revalidate historical parity receipts or grant
+publication, deployment, custody, migration or owner-release authority.
+
+EventStore package `3.128.0` and the effective central catalog remain selected.
+The module tool remains the sole source-root and mode authority. Inspect each
+exact source object listed below with `git -C references/Hexalith.<dependency>
+rev-parse <revision>^{commit}` and `git -C references/Hexalith.<dependency>
+describe --tags --always --abbrev=8 <revision>`. Moving HEAD diagnostics establish
+current state only; they do not reproduce a dated receipt.
+
+| Root dependency | Current source identity | Release use |
+| --- | --- | --- |
+| EventStore | `1b404e7fbcdbb5604418f04025d16756436cec24` (`v3.128.0-2-g1b404e7f`) | Package `3.128.0`; qualification belongs to the current executed receipts. |
+| Memories | `f480fd70a7c25587264f50b5174358eee709c513` (`v2.29.15-38-gf480fd70`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
+| FrontComposer | `9c4166e4b7cb45e2512e2b6db887a071f35ce244` (`v4.7.0-106-g9c4166e4`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
+| Tenants | `692c17b27d94677a3a4d065330d150b262cdb570` (`v5.10.1-56-g692c17b2`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
+| AI.Tools | `3f194e17174994d308ec84af9ee2b5aa68674d0d` (`3f194e17`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
+| Commons | `1663028fb6d9f46a0bf17919edeb21bb99be1587` (`v2.30.3-4-g1663028f`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
+| Builds | `db897eac9f2819220b32d237109d7255218b46a9` (`v4.38.0-14-gdb897eac`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
+| PolymorphicSerializations | `221ac4592ba908ae7661ba1fa9e2d1fcc23baee0` (`v1.19.5`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
+| McpCli | `dc282889e624a4c990faa3f005ad7eaa8db7a473` (`v1.0.0-76-gdc282889`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
+| Platform | `8d61addebff5bb2f0af81b3e373d2d31a3a774a2` (`8d61adde`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
+
+### Historical source observation — 2026-10-26
 
 The approved published-SDK closure task starts at Parties
 `463ad1bf14701f0622b68af4352e07941d1a7969`. Every source row below matches its

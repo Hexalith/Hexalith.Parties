@@ -1,0 +1,42 @@
+{
+  "review_preservation": {
+    "passed": true,
+    "finding_ids": [
+      "BH-01",
+      "BH-02",
+      "BH-03",
+      "BH-04",
+      "BH-05",
+      "BH-06",
+      "BH-07",
+      "BH-08",
+      "BH-09",
+      "BH-10",
+      "EC-01",
+      "VG-01",
+      "VG-02"
+    ],
+    "source_snapshots": 14,
+    "triage_sha256": "557ccbc87198f1f393cdbb69de4d6e1f29e07ac1c32af85202da9748aeb10e25"
+  },
+  "local_live_history_preservation": {
+    "passed": true,
+    "original_receipts": 17,
+    "retained_manifest_files": 71,
+    "local_exit_code": 1,
+    "historical_server": {
+      "total": 450,
+      "passed": 446,
+      "failed": 4
+    },
+    "live_refusals": [
+      "missing twelve inputs",
+      "production custody and complete lanes not installed"
+    ],
+    "accepted": false,
+    "available": false,
+    "liveQualified": false
+  },
+  "executed_ext_qualification": false,
+  "historical_temporary_files_required": false
+}

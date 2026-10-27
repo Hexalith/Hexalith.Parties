@@ -1,0 +1,42 @@
+[
+  {
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.NamespaceMigrationRefusesUnprovenLiveOwnershipAtomicallyAcrossRestart(defect: \\\"missing\\\")",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.NamespaceMigrationRefusesUnprovenLiveOwnershipAtomicallyAcrossRestart(defect: \\\"foreign-unit\\\")",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.NamespaceMigrationRefusesUnprovenLiveOwnershipAtomicallyAcrossRestart(defect: \\\"foreign-tenant\\\")",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.NamespaceMigrationRefusesUnprovenLiveOwnershipAtomicallyAcrossRestart(defect: \\\"foreign-case\\\")",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.NamespaceMigrationRefusesUnprovenLiveOwnershipAtomicallyAcrossRestart(defect: \\\"removed-after-read\\\")",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.NamespaceMigrationRefusesUnprovenLiveOwnershipAtomicallyAcrossRestart(defect: \\\"source-changed-after-read\\\")",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.NamespaceMigrationRefusesUnprovenLiveOwnershipAtomicallyAcrossRestart(defect: \\\"missing-source\\\")",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests.NamespaceMigrationRefusesUnprovenLiveOwnershipAtomicallyAcrossRestart(defect: \\\"empty-source\\\")",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.OriginalSameNameRawRetrySuspendedInEachContentActivityTerminatesAfterWorkerUpgradeAndPurgesHistory(embeddingPhase: False)",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.OriginalSameNameRawRetrySuspendedInEachContentActivityTerminatesAfterWorkerUpgradeAndPurgesHistory(embeddingPhase: True)",
+    "result": "Pass"
+  }
+]

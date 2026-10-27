@@ -486,6 +486,78 @@ public sealed class PartyProcessingGenerationRecoveryTests
         await AssertCompleteGenerationAsync(store, selected, history, token);
     }
 
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task RebuildPreservesFailedAuditBeyondCheckpointAndRepairsOnlyWithCompleteUncontendedReplayAsync(bool bucketed, bool compete)
+    {
+        var token = TestContext.Current.CancellationToken;
+        var store = new InMemoryReadModelStore();
+        var full = History() with { Events = History().Events.Take(100).ToArray() };
+        var prefix = full with { Events = full.Events.Take(50).ToArray() };
+        await SeedLegacyAsync(store, prefix, token);
+        var failed = full with { Events = full.Events.Select(item => item.SequenceNumber > 50
+            ? item with { EventTypeName = "FutureUnresolvedType" } : item).ToArray() };
+        var retained = PartyProcessingActivityFold.Fold(failed, null) with { LastSequenceNumber = 50 };
+        if (bucketed)
+        {
+            foreach (var operation in PartyDetailSdkProjectionHandler.BucketOperations(full, "retained-audit", retained.Records))
+                store.SeedRaw(StoreName, operation.Key, JsonSerializer.Deserialize<PartyProcessingBucket>(operation.CanonicalValue.Span, JsonSerializerOptions.Web)!);
+            retained = PartyDetailSdkProjectionHandler.ToBucketMetadata(retained, "retained-audit", retained.Records, 100);
+        }
+        await store.SaveAsync(StoreName, s_processingKey, retained, token);
+        const string survivor = "unrelated-audit-survivor";
+        store.SeedRaw(StoreName, survivor, new { Value = "untouched" });
+        var before = store.SnapshotRawEntries(StoreName);
+        var batches = new List<ReadModelBatch>();
+        var recorder = Recorder(store, batches);
+        var handler = new PartyDetailSdkProjectionHandler(store, recorder, s_options);
+        var refusal = await Should.ThrowAsync<InvalidOperationException>(() => handler.PrepareRebuildAsync(prefix, "shorter-failed-audit", token));
+        refusal.Message.ShouldBe("processing-rebuild-would-replace-newer-authority");
+        batches.ShouldBeEmpty();
+        store.SnapshotRawEntries(StoreName).Keys.ShouldBe(before.Keys, ignoreOrder: true);
+        foreach (var row in before) store.SnapshotRaw(StoreName, row.Key).ShouldBe(row.Value);
+
+        byte[]? winningDetail = null;
+        byte[]? winningProcessing = null;
+        bool competed = false;
+        recorder = Recorder(store, batches, async (batch, cancellation) =>
+        {
+            if (!compete || competed || IsGeneration(batch)) return;
+            competed = true;
+            var newer = Append(full, new PartyReactivated());
+            var failedTail = newer with { Events = newer.Events.Skip(50).Select(item => item with { EventTypeName = "FutureUnresolvedType" }).ToArray() };
+            (await new PartyDetailSdkProjectionHandler(store, store, s_options).ProjectAsync(failedTail, "concurrent-audit", cancellation).ConfigureAwait(false))
+                .Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+            winningDetail = store.SnapshotRaw(StoreName, s_detailKey)!;
+            winningProcessing = store.SnapshotRaw(StoreName, s_processingKey)!;
+        });
+        handler = new PartyDetailSdkProjectionHandler(store, recorder, s_options);
+        (await ExecuteAsync(handler, recorder, full, "complete-failed-audit", true, token))
+            .ShouldBe(compete ? ProjectionDispatchStatus.Retryable : ProjectionDispatchStatus.Completed);
+        if (compete)
+        {
+            competed.ShouldBeTrue();
+            store.SnapshotRaw(StoreName, s_detailKey).ShouldBe(winningDetail);
+            store.SnapshotRaw(StoreName, s_processingKey).ShouldBe(winningProcessing);
+            var winner = (await store.GetAsync<PartyProcessingSdkReadModel>(StoreName, s_processingKey, token)).Value!;
+            winner.LastSequenceNumber.ShouldBe(50);
+            winner.LastRecordSequenceNumber.ShouldBe(101);
+            var last = (await store.GetAsync<PartyProcessingBucket>(StoreName, BucketKey(winner.BucketGeneration!, PartyProcessingBucket.Number(101)), token)).Value!;
+            last.Records.Single(record => record.SequenceNumber == 101).Outcome.ShouldBe("Failed");
+        }
+        else
+        {
+            var repaired = (await store.GetAsync<PartyProcessingSdkReadModel>(StoreName, s_processingKey, token)).Value!;
+            repaired.LastSequenceNumber.ShouldBe(100);
+            (await store.GetAsync<PartyDetailSdkReadModel>(StoreName, s_detailKey, token)).Value!.LastSequenceNumber.ShouldBe(100);
+            await AssertCompleteGenerationAsync(store, repaired.BucketGeneration!, full, token);
+        }
+        store.SnapshotRaw(StoreName, survivor).ShouldBe(before[survivor]);
+    }
+
     [Fact]
     public async Task RebuildCannotReplaceProcessingCheckpointWhenDetailLagsAsync()
     {

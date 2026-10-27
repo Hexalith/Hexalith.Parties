@@ -651,3 +651,59 @@ gate was weakened, and no nested submodule was initialized.
 Final parent verification executes 125 unit/indexing and 90 actual Redis/Dapr/lifecycle
 controls, all passing with zero targeted skips. All 16 review findings are resolved;
 see the batch final-verification.json and final-executed-tests.json.
+
+
+## Legacy audit, NL migration and worker upgrade qualification (2026-10-27)
+
+The [bounded recovery receipt](../_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/README.md)
+binds the selected source revisions, executed assembly hashes, commands and results.
+Build the affected projects in Debug with the pinned module tool's generated source
+hooks. Invoke the built Parties assemblies with `-class` for
+`Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests` and
+`Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests`.
+The new focused controls require checkpoint 50 with failed facts through 100:
+shorter rebuild preparation writes nothing, complete replay repairs every fact,
+and a concurrent failed fact 101 prevents stale publication in both storage modes.
+The existing old-package-only compatibility case is separate from these controls.
+
+Run Memories Server.Tests migration and retry-workflow classes and the actual
+IntegrationTests `NaturalLanguageErasureIntegrationTests` and
+`RetryWorkflowErasureIntegrationTests` with owned Redis/FalkorDB and an authenticated
+Dapr workflow sidecar. Migration requires exact live syntactic id, tenant, case
+and a nonempty unchanged source URI inside its final atomic operation, before
+shared ownership enrollment. Missing, foreign or concurrently removed ownership
+retains the legacy content and returns
+`nl-namespace-live-owner-reconciliation-required`. Foreign or malformed legacy
+and canonical hashes also refuse before ownership enrollment, retaining all bytes
+for reconciliation. The synthetic fixture's explicit repair grants no authority
+to reconcile production data.
+
+The historical helper pins the original protocol at Memories
+`cdd73d7361f67781a523f63f04853491a687f426` and registers it under the production
+workflow name. Description and embedding remain blocked while the original worker
+stops. The upgraded worker resumes to the bounded legacy restart result without
+executing either content activity again. The actual modern scheduler publishes
+fresh replacement content; terminal historical input is then purged and remains
+absent across another worker restart. No replay incompatibility reproduced in
+these two qualified boundaries, so the production retry workflow was unchanged.
+This does not attest unknown deployed histories or drain older schedulers.
+
+Validate the separately retained EXT-PARTIES-1 evidence with:
+
+```bash
+python3 _bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/verify-preservation.py
+```
+
+This read-only check requires no historical temporary files and executes neither
+EXT Local nor Live. It checks the 13 triaged findings, 14 reviewed source snapshots,
+17 original historical receipts and the enclosing 71-file checksum manifest.
+Local exit 1, both Live refusals, `accepted=false`, `available=false` and
+`liveQualified=false` remain historical facts. Installed hashes, a new owner date,
+owner approval, independent publication/adoption and deployment remain open.
+
+Final parent combined-source verification at Memories
+`f480fd70a7c25587264f50b5174358eee709c513` passes 107 actual runtime controls,
+41 package recovery controls and 2,790 service tests with zero failures. The
+service lane retains four optional skips; targeted runtime/package controls
+have none. The full projection suite has 464 passes and one compatibility skip.
+The same five broad Memories evidence gates remain recorded separately.

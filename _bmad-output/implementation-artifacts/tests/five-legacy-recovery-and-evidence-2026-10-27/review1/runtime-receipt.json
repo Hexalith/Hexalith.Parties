@@ -1,0 +1,197 @@
+{
+  "invocation": [
+    "/usr/bin/python3",
+    "${PARTIES_ROOT}/_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/run-owned-runtime.py",
+    "--runtime-root",
+    "${OWNED_RUNTIME}",
+    "--output",
+    "${PRIVATE_RUNTIME}",
+    "--method",
+    "*NamespaceMigrationRefusesUnprovenLiveOwnershipAtomicallyAcrossRestart",
+    "--method",
+    "*OriginalSameNameRawRetrySuspendedInEachContentActivityTerminatesAfterWorkerUpgradeAndPurgesHistory"
+  ],
+  "outcome": "passed",
+  "exit_code": 0,
+  "attempts": [
+    {
+      "label": "placement",
+      "command": [
+        "${OWNED_RUNTIME}/dapr/placement",
+        "--port",
+        "50117",
+        "--listen-address",
+        "127.0.0.1",
+        "--initial-cluster",
+        "dapr-placement-0=127.0.0.1:46069",
+        "--healthz-listen-address",
+        "127.0.0.1",
+        "--healthz-port",
+        "49337",
+        "--enable-metrics=false"
+      ],
+      "cwd": null,
+      "outcome": "ready",
+      "exit_code": null,
+      "pid": 2132891,
+      "cleanup_exit_code": 0
+    },
+    {
+      "label": "scheduler",
+      "command": [
+        "${OWNED_RUNTIME}/dapr/scheduler",
+        "--port",
+        "33233",
+        "--listen-address",
+        "127.0.0.1",
+        "--override-broadcast-host-port",
+        "127.0.0.1:33233",
+        "--etcd-initial-cluster",
+        "dapr-scheduler-server-0=http://127.0.0.1:56439",
+        "--etcd-client-port",
+        "43397",
+        "--etcd-data-dir",
+        "${PRIVATE_RUNTIME}/scheduler-data",
+        "--healthz-listen-address",
+        "127.0.0.1",
+        "--healthz-port",
+        "52389",
+        "--enable-metrics=false"
+      ],
+      "cwd": null,
+      "outcome": "ready",
+      "exit_code": null,
+      "pid": 2133004,
+      "cleanup_exit_code": 0
+    },
+    {
+      "label": "redis",
+      "command": [
+        "${OWNED_RUNTIME}/native-redis/redis-server",
+        "--port",
+        "53157",
+        "--bind",
+        "127.0.0.1",
+        "--dir",
+        "${PRIVATE_RUNTIME}/redis",
+        "--save",
+        "",
+        "--appendonly",
+        "yes",
+        "--loadmodule",
+        "${OWNED_RUNTIME}/native-redis/redisearch.so"
+      ],
+      "cwd": null,
+      "outcome": "ready",
+      "exit_code": null,
+      "pid": 2133027,
+      "cleanup_exit_code": 0
+    },
+    {
+      "label": "falkor",
+      "command": [
+        "${OWNED_RUNTIME}/native-falkor/redis-server",
+        "--port",
+        "56749",
+        "--bind",
+        "127.0.0.1",
+        "--dir",
+        "${PRIVATE_RUNTIME}/falkor",
+        "--save",
+        "",
+        "--appendonly",
+        "yes",
+        "--loadmodule",
+        "${OWNED_RUNTIME}/native-falkor/falkordb.so"
+      ],
+      "cwd": null,
+      "outcome": "ready",
+      "exit_code": null,
+      "pid": 2133033,
+      "cleanup_exit_code": 0
+    },
+    {
+      "label": "tests",
+      "command": [
+        "dotnet",
+        "${PARTIES_ROOT}/references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+        "-method",
+        "*NamespaceMigrationRefusesUnprovenLiveOwnershipAtomicallyAcrossRestart",
+        "-method",
+        "*OriginalSameNameRawRetrySuspendedInEachContentActivityTerminatesAfterWorkerUpgradeAndPurgesHistory",
+        "-xml",
+        "${PRIVATE_RUNTIME}/results.xml"
+      ],
+      "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+      "outcome": "passed",
+      "exit_code": 0,
+      "pid": 2133058,
+      "cleanup_exit_code": 0
+    }
+  ],
+  "binary_sha256": {
+    "test_dll": {
+      "path": "${PARTIES_ROOT}/references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+      "sha256": "4bcb6820ebe5038ad9695ccedc798d22bdcdd23a30e3411daa7f1bc02054b35f"
+    },
+    "server_dll": {
+      "path": "${PARTIES_ROOT}/references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.Server.dll",
+      "sha256": "60554481f7ed672d43d33711caac691aef001f6965bd0749916a1816d3db1ad1"
+    },
+    "daprd": {
+      "path": "${USER_HOME}/.dapr/bin/daprd",
+      "sha256": "e988a6f53abec017fc9ebcb4f89de9bed11bce005eb49bd8e85e8d3d6adbf488"
+    },
+    "dotnet": {
+      "path": "${USER_HOME}/.dotnet/dotnet",
+      "sha256": "594657cba5f6f34b80e927951f144881ff875df269b6fb5eba1c595730267753"
+    },
+    "dapr/placement": {
+      "path": "${OWNED_RUNTIME}/dapr/placement",
+      "sha256": "7972c776bbfa2a3fab7f49465d5731ab837f0f90bf3b54bd31478eae548037da"
+    },
+    "dapr/scheduler": {
+      "path": "${OWNED_RUNTIME}/dapr/scheduler",
+      "sha256": "31910d22dfb7f8c3635254b8f59a9c1b9187c6c6303e17a612f01bba93a3e2ce"
+    },
+    "native-redis/redis-server": {
+      "path": "${OWNED_RUNTIME}/native-redis/redis-server",
+      "sha256": "cb55ff7ea8f994364668d388d7cbd39a98e78fd70450f6da021fffe47e46ed84"
+    },
+    "native-redis/redisearch.so": {
+      "path": "${OWNED_RUNTIME}/native-redis/redisearch.so",
+      "sha256": "c55c19e785a6f98e3176643d0b01b47dd8b4456f0986beef9ae4a5acea67b064"
+    },
+    "native-falkor/redis-server": {
+      "path": "${OWNED_RUNTIME}/native-falkor/redis-server",
+      "sha256": "87dd1979b0c12e68d2ed0187bb8eff8b64a2bdc6ac72db8e5c561f1758745d28"
+    },
+    "native-falkor/falkordb.so": {
+      "path": "${OWNED_RUNTIME}/native-falkor/falkordb.so",
+      "sha256": "494cda4085cc8e11bdcc9c16734855cd2f6c936a96815ba35a553d948fb2c745"
+    },
+    "runner": {
+      "path": "${PARTIES_ROOT}/_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/run-owned-runtime.py",
+      "sha256": "fa1180d6629d56dd349d0ecbab77e7aebba34fcea3dda28786446bc9182e84d7"
+    }
+  },
+  "test_invocation": {
+    "label": "tests",
+    "command": [
+      "dotnet",
+      "${PARTIES_ROOT}/references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+      "-method",
+      "*NamespaceMigrationRefusesUnprovenLiveOwnershipAtomicallyAcrossRestart",
+      "-method",
+      "*OriginalSameNameRawRetrySuspendedInEachContentActivityTerminatesAfterWorkerUpgradeAndPurgesHistory",
+      "-xml",
+      "${PRIVATE_RUNTIME}/results.xml"
+    ],
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+    "outcome": "passed",
+    "exit_code": 0,
+    "pid": 2133058,
+    "cleanup_exit_code": 0
+  },
+  "cleanup_complete": true
+}

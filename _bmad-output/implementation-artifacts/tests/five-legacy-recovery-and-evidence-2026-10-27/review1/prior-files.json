@@ -1,0 +1,22 @@
+[
+  {
+    "original_path": "README.md",
+    "retained_prior_version": "prior-scripts/README.md",
+    "sha256": "88f2d75488836479188ae285f4c844784463b16837d19d23520b654d4ace727d"
+  },
+  {
+    "original_path": "verify-implementation.py",
+    "retained_prior_version": "prior-scripts/verify-implementation.py",
+    "sha256": "30caa714ac8efcc4b822946a144af565019070e95730db48a563930672133ed4"
+  },
+  {
+    "original_path": "verify-preservation.py",
+    "retained_prior_version": "prior-scripts/verify-preservation.py",
+    "sha256": "a4b42ccc4b0b307b42bbbc500f99f484df1b16e0d736d572fb1d0e6860e11758"
+  },
+  {
+    "original_path": "run-owned-runtime.py",
+    "retained_prior_version": "prior-scripts/run-owned-runtime.py",
+    "sha256": "a5181cf78924b689d13d6b8aa3a806f747e09a46e84d9c21951b960554370a42"
+  }
+]

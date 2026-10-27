@@ -1,0 +1,31 @@
+{
+  "command": [
+    "dotnet",
+    "run",
+    "--file",
+    "${MAPPING_WORKSPACE}/RegenerateSourceMapping.cs",
+    "--",
+    "${USER_HOME}/.nuget/packages/hexalith.builds.module.cli/4.34.0/tools/net10.0/any",
+    "${PARTIES_ROOT}/module/hexalith.module-manifest.v2.json",
+    "${MAPPING_WORKSPACE}"
+  ],
+  "selection": "fresh producer resolver",
+  "tool_version": "4.34.0",
+  "tooling_sha256": "5909d7434096a3f01639ed4d0a4f88839d5b468a91f842ff901dfef4b5ca3433",
+  "configuration_sha256": "1b0728eb458f4c74cb0ec1992067dc4d191a337988af5d79811b27f192981018",
+  "generator_sha256": "493f3de7e6989fd72f18e19fc98c150192bba769c7338c7642ed598d25954b76",
+  "generated_sha256": {
+    "source-mapping/SourceMapping.final.targets": "77ba123f3eb815e5eb908b1760319a2379d5a2100b90c157d0df70aab39b3816",
+    "source-mapping/SourceMapping.before-targets.props": "92c1721e4a4c98f091b4b1c3af00e5471470577b7f9e94c405612bdf81cd2825",
+    "source-mapping/mapping.json": "f5e0e49bf1043cc2eb5491b2382e0977a05f18f0c1bc4bbda30538445c27dc8a",
+    "source-mapping/SourceMapping.values.props": "a580e2939b173afa6e5ec9d9fe2e548f39feef2985483c6681616e58be5fe990",
+    "source-mapping/SourceMapping.late.props": "f62d926060dd28123d8a087df04fa5534faa42bccf5b496112a8d0391db29ee9",
+    "source-mapping/catalog-versions.json": "864d16c05ea66d27595859bba38c85f8bba08f724bc8bdd3ae2dfa35e2ae0533",
+    "source-mapping/SourceMapping.targets": "2003f8e38ea72f43549502cda1191d1272eea5a84bbebb534d84ee97c97618ff",
+    "source-mapping/SourceMapping.values.targets": "5acc0ca91d1946993d0a169d98986ac7287f49a63752a017a6e9ae3ccfd9d2f8",
+    "source-mapping/__HXW_DefaultCatalog__.proj": "38a69bba6a2ae5d4c771a0bd7f6ee8ec260d1fc86946ad29e03cae00b0730d69",
+    "source-mapping/Hexalith.Folders.Aspire.proj": "38a69bba6a2ae5d4c771a0bd7f6ee8ec260d1fc86946ad29e03cae00b0730d69",
+    "source-mapping/SourceMapping.props": "0363694f252736cdfd0bcf6a567bb077940df16cc966e410153718a552769e82",
+    "source-mapping/pinned-tree/Props/Directory.Packages.props": "bb549d4e0ad37eed3c9f86d7af3fef670af64ad67b739ce02257983e082a4820"
+  }
+}

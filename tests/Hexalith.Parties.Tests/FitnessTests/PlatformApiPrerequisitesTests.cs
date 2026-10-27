@@ -69,7 +69,7 @@ public sealed class PlatformApiPrerequisitesTests
         ["references/Hexalith.Commons"] = "1663028fb6d9f46a0bf17919edeb21bb99be1587",
         [EventStoreRelativePath] = CurrentReleaseEventStoreSha,
         ["references/Hexalith.FrontComposer"] = "9c4166e4b7cb45e2512e2b6db887a071f35ce244",
-        ["references/Hexalith.Memories"] = "22b792cf4f4a7aa5c9b6f129e6a491821169a8bf",
+        ["references/Hexalith.Memories"] = "f480fd70a7c25587264f50b5174358eee709c513",
         ["references/Hexalith.PolymorphicSerializations"] = "221ac4592ba908ae7661ba1fa9e2d1fcc23baee0",
         ["references/Hexalith.Tenants"] = "692c17b27d94677a3a4d065330d150b262cdb570",
         ["references/Hexalith.McpCli"] = "dc282889e624a4c990faa3f005ad7eaa8db7a473",
@@ -81,7 +81,7 @@ public sealed class PlatformApiPrerequisitesTests
         ["references/Hexalith.Builds"] = "v4.38.0-14-gdb897eac",
         [EventStoreRelativePath] = CurrentSourceEventStoreDescribe,
         ["references/Hexalith.FrontComposer"] = "v4.7.0-106-g9c4166e4",
-        ["references/Hexalith.Memories"] = "v2.29.15-36-g22b792cf",
+        ["references/Hexalith.Memories"] = "v2.29.15-38-gf480fd70",
         ["references/Hexalith.Tenants"] = "v5.10.1-56-g692c17b2",
         ["references/Hexalith.AI.Tools"] = "3f194e17",
         ["references/Hexalith.Commons"] = "v2.30.3-4-g1663028f",
@@ -2588,7 +2588,7 @@ public sealed class PlatformApiPrerequisitesTests
 
     private static string ReadCurrentSourceSelection(string matrix)
     {
-        const string currentHeading = "### Current source observation — 2026-10-26";
+        const string currentHeading = "### Current source observation — 2026-10-27";
         int currentStart = matrix.IndexOf(currentHeading, StringComparison.Ordinal);
         currentStart.ShouldBeGreaterThanOrEqualTo(0, currentHeading);
         int historicalStart = matrix.IndexOf("### Historical source observation", currentStart, StringComparison.Ordinal);

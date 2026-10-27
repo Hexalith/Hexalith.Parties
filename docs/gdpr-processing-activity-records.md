@@ -141,3 +141,14 @@ with matching participant counts, a content-free terminal receipt and a durable
 manifest barrier. Prepared work is preserved; normal settlement never retires or
 commits a guarded rebuild. Conditional bucket publication identities bind the
 observed Detail and Processing ETags, allowing a losing append to replan safely.
+
+Full rebuild preparation also compares the replay head with the last retained audit
+sequence, using the inline records or the selected bucket metadata. Failed audit
+facts can extend beyond both canonical checkpoints. A shorter replay is refused
+with `processing-rebuild-would-replace-newer-authority` before staging or
+publication; all persisted authority remains unchanged. A complete resolved replay
+can repair those facts and advance both checkpoints in the coordinated SDK batch.
+An intervening audit write still wins through the observed canonical ETags.
+The [2026-10-27 recovery receipt](../_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/README.md)
+qualifies synthetic inline and bucket histories and concurrent publication only;
+it grants no historical completeness attestation or deployed migration authority.

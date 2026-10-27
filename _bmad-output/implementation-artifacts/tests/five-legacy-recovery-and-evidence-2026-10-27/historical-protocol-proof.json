@@ -1,0 +1,19 @@
+{
+  "original_revision": "cdd73d7361f67781a523f63f04853491a687f426",
+  "original_workflow_path": "src/Hexalith.Memories.Server/Workflows/NaturalLanguageEmbeddingRetryWorkflow.cs",
+  "original_workflow_sha256": "557e96c97812cd8f71c26a085c831e31be7416a9ddcb1f7c77ba1cd8b8090be0",
+  "original_input_sha256": "d178a3862492d4323d04e8eb322cccf59a67a1705a0ce319e7c00405820baf36",
+  "historical_helper": "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Ingestion/HistoricalNaturalLanguageEmbeddingRetryWorkflow.cs",
+  "historical_helper_sha256": "08087df34e815e7263b53114d3588de3b3aad480fbbd04dd9cab36e743487d9b",
+  "run_body_identical_after_line_ending_normalization": true,
+  "run_body_sha256": "32c1bf8889304a93f2b3c333a1d20844c0eb4d9db916df81a8d589cfeb6a4f73",
+  "wire_name": "NaturalLanguageEmbeddingRetryWorkflow",
+  "serialized_input_fields": 9,
+  "later_payload_version_member_absent": true,
+  "boundaries": [
+    "description still executing when original worker stops",
+    "embedding still executing when original worker stops"
+  ],
+  "historical_sdk_distribution_recreated": false,
+  "scope": "Original implementation/activity protocol on the selected current Dapr SDK/runtime; no claim for other historical SDK distributions or unknown deployed histories."
+}

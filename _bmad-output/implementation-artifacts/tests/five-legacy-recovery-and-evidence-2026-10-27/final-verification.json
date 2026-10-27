@@ -1,0 +1,509 @@
+{
+  "stage": "Final combined-source validation; root publication follows the metadata amendment",
+  "parties_baseline_revision": "67d16261ee9ba5f8b8595351ba96c211ebb5f9d2",
+  "memories_revision": "f480fd70a7c25587264f50b5174358eee709c513",
+  "memories_upstream_revision": "2bfc735600ed153bce9069570a43ba93fe77ac0f",
+  "memories_remote_main_verified": true,
+  "source_files": [
+    {
+      "path": "_bmad-output/implementation-artifacts/deferred-work.md",
+      "sha256": "ccbed3357762cdeb71ee76c3e490aa07ec9584b158e33a2bdf832a8e92b006a7",
+      "lf_normalized_sha256": "9d40d45503bb6ee97b45077be8194abaeb9c6bf08e571786208e58d1582e27cb"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/README.md",
+      "sha256": "d228a7b3b81430a27aa9a10f6054a26f190fc370e2d88692ed5ca98d36fd4214",
+      "lf_normalized_sha256": "d228a7b3b81430a27aa9a10f6054a26f190fc370e2d88692ed5ca98d36fd4214"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/build-source.py",
+      "sha256": "532e6a18f4ed14798c36deb375195db0fb6da0a585959ca9fc16720954b8eb49",
+      "lf_normalized_sha256": "532e6a18f4ed14798c36deb375195db0fb6da0a585959ca9fc16720954b8eb49"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/review1/source-build/RegenerateSourceMapping.cs",
+      "sha256": "493f3de7e6989fd72f18e19fc98c150192bba769c7338c7642ed598d25954b76",
+      "lf_normalized_sha256": "493f3de7e6989fd72f18e19fc98c150192bba769c7338c7642ed598d25954b76"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/review1/source-build/configuration.json",
+      "sha256": "1b0728eb458f4c74cb0ec1992067dc4d191a337988af5d79811b27f192981018",
+      "lf_normalized_sha256": "1b0728eb458f4c74cb0ec1992067dc4d191a337988af5d79811b27f192981018"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/review1/source-build/historical-generated-input.json",
+      "sha256": "1b6a5ee29fbe9fcf958f88f1c23507482caa4e5534b5f532b2edb704c42bbc22",
+      "lf_normalized_sha256": "1b6a5ee29fbe9fcf958f88f1c23507482caa4e5534b5f532b2edb704c42bbc22"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/review1/source-build/replay-provenance.json",
+      "sha256": "253e7d0006e8f82bd2ef4c1c71fdd204fca082ab742299844ad12741b5ca425e",
+      "lf_normalized_sha256": "253e7d0006e8f82bd2ef4c1c71fdd204fca082ab742299844ad12741b5ca425e"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/review1/test_evidence_controls.py",
+      "sha256": "df20cc9cc656a89895bc3858145e30ac5747cc023d990fa1fba999fe43c98996",
+      "lf_normalized_sha256": "df20cc9cc656a89895bc3858145e30ac5747cc023d990fa1fba999fe43c98996"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/run-owned-runtime.py",
+      "sha256": "fa1180d6629d56dd349d0ecbab77e7aebba34fcea3dda28786446bc9182e84d7",
+      "lf_normalized_sha256": "fa1180d6629d56dd349d0ecbab77e7aebba34fcea3dda28786446bc9182e84d7"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/verify-implementation.py",
+      "sha256": "f3bd416bc82d35973380f677ee0c371eb8a0183de67810e444d0d90e8ae249ac",
+      "lf_normalized_sha256": "f3bd416bc82d35973380f677ee0c371eb8a0183de67810e444d0d90e8ae249ac"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/verify-preservation.py",
+      "sha256": "4da6f7d3fdee45a78d65aad0d064f6086ef610a9679f1699d8a7a7df74405a18",
+      "lf_normalized_sha256": "4da6f7d3fdee45a78d65aad0d064f6086ef610a9679f1699d8a7a7df74405a18"
+    },
+    {
+      "path": "docs/gdpr-processing-activity-records.md",
+      "sha256": "7b471902b0bf8c38e6a9c62d05e9668c4aa5861e2fb1956411692d5c5badff3d",
+      "lf_normalized_sha256": "7b471902b0bf8c38e6a9c62d05e9668c4aa5861e2fb1956411692d5c5badff3d"
+    },
+    {
+      "path": "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/TenantIngestionOwnership.cs",
+      "sha256": "2d1cacf36d77afa5f4eb4fff1041ccc3cfec4368cd86cafedf5085cc5829c285",
+      "lf_normalized_sha256": "4a5f0bdf313a3f444034f95476978ae9a576c84b7f42fc30e74af9c7677d46c5"
+    },
+    {
+      "path": "references/Hexalith.Memories/src/Hexalith.Memories.Server/Migration/RedisNaturalLanguageNamespaceMigrator.cs",
+      "sha256": "ded08a406b5882312ba03c47b39c8e893b8ddd4b14c41aba6d96c39ec0d410fd",
+      "lf_normalized_sha256": "65f85951b087a573ba230bb4f89fa48fd6e92fbed3874493b057ac38f30fd4fb"
+    },
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Ingestion/HistoricalNaturalLanguageEmbeddingRetryWorkflow.cs",
+      "sha256": "08087df34e815e7263b53114d3588de3b3aad480fbbd04dd9cab36e743487d9b",
+      "lf_normalized_sha256": "d29c4e86ec88ec6d96b868864997d28fe0e606502a59f34c30f38e50e4d9f8fd"
+    },
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Ingestion/NaturalLanguageErasureIntegrationTests.cs",
+      "sha256": "d16375f5fecc57c58fe14594fbde1f85f4efc2a5c7debd309a70054ac3792143",
+      "lf_normalized_sha256": "405ab89115b3a7885e2d4bf9520f8264f46bb38622c2d902dafb75a5453507f6"
+    },
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Ingestion/RetryWorkflowErasureIntegrationTests.cs",
+      "sha256": "cdeffd7468c07c38af10de2a556ef138cb2824ed56abaf5378867f61f79f2bd4",
+      "lf_normalized_sha256": "07d4402594a998f99071264466b760ee3142c9b34d059be407a4731362f7c3fd"
+    },
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/Migration/RedisEmbeddingMigrationStoreTests.cs",
+      "sha256": "95cb7b0b148e44b5fac1bebc4e97d84348d4f81d6ed71613f26e4c4847700214",
+      "lf_normalized_sha256": "1d168424c920a25b85fe7b33be9c1444b207b3544872b9ce334ceea309bc8f92"
+    },
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/Migration/RedisNaturalLanguageNamespaceMigratorTests.cs",
+      "sha256": "09a5ac8ff24f2ae49d2998c94141e59a551cb0c2243415103c5b6c669ea7ebab",
+      "lf_normalized_sha256": "df58cc2d3ec230750c8fc6317ce96221fdb7c178ca259ff6217be104c90035c3"
+    },
+    {
+      "path": "src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs",
+      "sha256": "42d9de5526e43ab76d46d9911b537a4de90541ae9c0dc2d95d992ba6bf83a977",
+      "lf_normalized_sha256": "eb1fd91bc58b874d8adc8ed08a0e30c454c349ef1a50170d66d0fd6dfaa874f3"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs",
+      "sha256": "30f03b9be2e399af53441ec4090bfce2a1795985e8132f128585705e0306cbad",
+      "lf_normalized_sha256": "c8d43d6a75365f4f4991bcc4580ef5380603549eae0bd91b54261b1bb3c76aac"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/Projections/PartyProcessingGenerationRecoveryTests.cs",
+      "sha256": "a93d40f698cc9abe59762dd4a37472f82dac8a75d34a2b43bba895b2ee3a053e",
+      "lf_normalized_sha256": "a93d40f698cc9abe59762dd4a37472f82dac8a75d34a2b43bba895b2ee3a053e"
+    },
+    {
+      "path": "tests/README.md",
+      "sha256": "78310598f653a01484b3bab0d81a75d7fe811ea184b75dbf18d38594248ccd15",
+      "lf_normalized_sha256": "da5ec49aa585921cbaa7c4d9988830394778a2051fded7aad409fdd080fc01b4"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/review1/source-build/fresh-generation-receipt.json",
+      "sha256": "43f9900bc7ac42070fe10811bd17d5f0d65b09f27a5d8c9ca7e13a6328dd44d8",
+      "lf_normalized_sha256": "43f9900bc7ac42070fe10811bd17d5f0d65b09f27a5d8c9ca7e13a6328dd44d8"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/review1/source-build/fresh-generated-input.json",
+      "sha256": "bd6629c91f1d2bcc8413c4ef806d9ff4ea9790d459fad8c4bc25793c5ebf8c41",
+      "lf_normalized_sha256": "bd6629c91f1d2bcc8413c4ef806d9ff4ea9790d459fad8c4bc25793c5ebf8c41"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs",
+      "sha256": "7f4b0460503757f27a1a3a7a4b19ac53c26402f997a2eb330ecf3a545ff7eb0f",
+      "lf_normalized_sha256": "941ef72cf8c810cba2b57e5d1fd4777daacf20fe710c36d1e6133c51820a45a7"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md",
+      "sha256": "5894e0ba39445f780f8864281c1bec983c5f03b3a4e7e18519c579acd0049562",
+      "lf_normalized_sha256": "4a4ec89a669265b07963d18f8598afd62b439e687608d7bf855af7f3cb722d57"
+    }
+  ],
+  "executed_artifacts": [
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+      "sha256": "483d87f7cdc9a6e9ce32ff5c77eec34e76d5ae88ba4648929e8c3f1c1d6ba673"
+    },
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.Server.dll",
+      "sha256": "f2b21766de976ea838f9dc3007617098aa1a5e6313edfeb8b1f7798adff38657"
+    },
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.Tests.dll",
+      "sha256": "5ccfd1c10ccafab2add9474804b43e92f12c802beb53b09bc4267d885e4ce951"
+    },
+    {
+      "path": "references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.dll",
+      "sha256": "f2b21766de976ea838f9dc3007617098aa1a5e6313edfeb8b1f7798adff38657"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll",
+      "sha256": "3ee574d2c03ab18bc2ecf278f27820992d08af933821c5f133d212334a28403a"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.dll",
+      "sha256": "079c1d0c7e9ca6884079681c498fb91fe639bdb1a5535de74bb8501efac30e03"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Projections.Tests/bin/Release/net10.0/Hexalith.Parties.Projections.Tests.dll",
+      "sha256": "7a25382742156c74a5086306dec1dece969594e62517260e916e4582ffc0180f"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Projections.Tests/bin/Release/net10.0/Hexalith.Parties.Projections.dll",
+      "sha256": "d3553ace7b3df02e64b28bedc63060952769a47095b6a1cd29ee746bc545a2d1"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.dll",
+      "sha256": "079c1d0c7e9ca6884079681c498fb91fe639bdb1a5535de74bb8501efac30e03"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "sha256": "8c42b52ee93d12736fd39011d21d29ad6f1be9a70485242cfc5fd4bc110449f7"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Projections.dll",
+      "sha256": "d3553ace7b3df02e64b28bedc63060952769a47095b6a1cd29ee746bc545a2d1"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+      "sha256": "367c5202fcf3389dd106cd22b2fc59320f724d643c2e2993e7c06e37b0abff37"
+    }
+  ],
+  "runtime": {
+    "counts": {
+      "total": 107,
+      "passed": 107,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0
+    },
+    "failures": [],
+    "xml_sha256": "d23240ff3e3a7048269240ed7c953fcb0d6e1cccf4cbdcf2bc10fa9faedda2f5"
+  },
+  "projections": {
+    "counts": {
+      "total": 465,
+      "passed": 464,
+      "failed": 0,
+      "skipped": 1,
+      "errors": 0
+    },
+    "failures": [],
+    "xml_sha256": "ba5ffaa72a64a0b17117ea1166b8cb86b3686a19ff5443923d513a2f471d0f48"
+  },
+  "memories_server": {
+    "counts": {
+      "total": 3072,
+      "passed": 3066,
+      "failed": 5,
+      "skipped": 1,
+      "errors": 0
+    },
+    "failures": [
+      "Hexalith.Memories.Server.Tests.Architecture.AccessTelemetryA41CloseOutTests.CanonicalMatrix_ContainsExactlyC0ThroughC6AndKeepsExternalProofPending",
+      "Hexalith.Memories.Server.Tests.Deployment.AppHostSecurityConfigurationTests.ProjectAssets_RestoreEventStorePackagesAtCatalogVersion",
+      "Hexalith.Memories.Server.Tests.Deployment.AppHostSecurityConfigurationTests.Server_ReferencesEventStoreClientWithoutInlineVersion",
+      "Hexalith.Memories.Server.Tests.Deployment.AppHostSecurityConfigurationTests.BuildsCatalog_PinsEventStoreFamilyAt31270",
+      "Hexalith.Memories.Server.Tests.Deployment.OpenBaoPlatformDocumentationTests.PlatformEvidence_RecordsExecutedSmokeTestAndReviewerState"
+    ],
+    "xml_sha256": "b59e655cd7bdfaa16c583fd17c2bf4ee9e2e24885ae697c2f988abdba18e4a00"
+  },
+  "runtime_invocation": {
+    "invocation": [
+      "/usr/bin/python3",
+      "${PARTIES_ROOT}/_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/run-owned-runtime.py",
+      "--runtime-root",
+      "${OWNED_RUNTIME}",
+      "--output",
+      "${PRIVATE_PARENT_RUN}/runtime-final",
+      "--scope",
+      "affected"
+    ],
+    "outcome": "passed",
+    "exit_code": 0,
+    "attempts": [
+      {
+        "label": "placement",
+        "command": [
+          "${OWNED_RUNTIME}/dapr/placement",
+          "--port",
+          "41903",
+          "--listen-address",
+          "127.0.0.1",
+          "--initial-cluster",
+          "dapr-placement-0=127.0.0.1:47141",
+          "--healthz-listen-address",
+          "127.0.0.1",
+          "--healthz-port",
+          "49673",
+          "--enable-metrics=false"
+        ],
+        "cwd": null,
+        "outcome": "ready",
+        "exit_code": null,
+        "pid": 2264989,
+        "cleanup_exit_code": 0
+      },
+      {
+        "label": "scheduler",
+        "command": [
+          "${OWNED_RUNTIME}/dapr/scheduler",
+          "--port",
+          "48617",
+          "--listen-address",
+          "127.0.0.1",
+          "--override-broadcast-host-port",
+          "127.0.0.1:48617",
+          "--etcd-initial-cluster",
+          "dapr-scheduler-server-0=http://127.0.0.1:43769",
+          "--etcd-client-port",
+          "35625",
+          "--etcd-data-dir",
+          "${PRIVATE_PARENT_RUN}/runtime-final/scheduler-data",
+          "--healthz-listen-address",
+          "127.0.0.1",
+          "--healthz-port",
+          "49791",
+          "--enable-metrics=false"
+        ],
+        "cwd": null,
+        "outcome": "ready",
+        "exit_code": null,
+        "pid": 2265077,
+        "cleanup_exit_code": 0
+      },
+      {
+        "label": "redis",
+        "command": [
+          "${OWNED_RUNTIME}/native-redis/redis-server",
+          "--port",
+          "36139",
+          "--bind",
+          "127.0.0.1",
+          "--dir",
+          "${PRIVATE_PARENT_RUN}/runtime-final/redis",
+          "--save",
+          "",
+          "--appendonly",
+          "yes",
+          "--loadmodule",
+          "${OWNED_RUNTIME}/native-redis/redisearch.so"
+        ],
+        "cwd": null,
+        "outcome": "ready",
+        "exit_code": null,
+        "pid": 2265224,
+        "cleanup_exit_code": 0
+      },
+      {
+        "label": "falkor",
+        "command": [
+          "${OWNED_RUNTIME}/native-falkor/redis-server",
+          "--port",
+          "48525",
+          "--bind",
+          "127.0.0.1",
+          "--dir",
+          "${PRIVATE_PARENT_RUN}/runtime-final/falkor",
+          "--save",
+          "",
+          "--appendonly",
+          "yes",
+          "--loadmodule",
+          "${OWNED_RUNTIME}/native-falkor/falkordb.so"
+        ],
+        "cwd": null,
+        "outcome": "ready",
+        "exit_code": null,
+        "pid": 2265311,
+        "cleanup_exit_code": 0
+      },
+      {
+        "label": "tests",
+        "command": [
+          "dotnet",
+          "${PARTIES_ROOT}/references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+          "-class",
+          "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests",
+          "-class",
+          "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests",
+          "-class",
+          "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests",
+          "-xml",
+          "${PRIVATE_PARENT_RUN}/runtime-final/results.xml"
+        ],
+        "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+        "outcome": "passed",
+        "exit_code": 0,
+        "pid": 2265461,
+        "cleanup_exit_code": 0
+      }
+    ],
+    "binary_sha256": {
+      "test_dll": {
+        "path": "${PARTIES_ROOT}/references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+        "sha256": "483d87f7cdc9a6e9ce32ff5c77eec34e76d5ae88ba4648929e8c3f1c1d6ba673"
+      },
+      "server_dll": {
+        "path": "${PARTIES_ROOT}/references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.Server.dll",
+        "sha256": "f2b21766de976ea838f9dc3007617098aa1a5e6313edfeb8b1f7798adff38657"
+      },
+      "daprd": {
+        "path": "/home/administrator/.dapr/bin/daprd",
+        "sha256": "e988a6f53abec017fc9ebcb4f89de9bed11bce005eb49bd8e85e8d3d6adbf488"
+      },
+      "dotnet": {
+        "path": "/home/administrator/.dotnet/dotnet",
+        "sha256": "594657cba5f6f34b80e927951f144881ff875df269b6fb5eba1c595730267753"
+      },
+      "dapr/placement": {
+        "path": "${OWNED_RUNTIME}/dapr/placement",
+        "sha256": "7972c776bbfa2a3fab7f49465d5731ab837f0f90bf3b54bd31478eae548037da"
+      },
+      "dapr/scheduler": {
+        "path": "${OWNED_RUNTIME}/dapr/scheduler",
+        "sha256": "31910d22dfb7f8c3635254b8f59a9c1b9187c6c6303e17a612f01bba93a3e2ce"
+      },
+      "native-redis/redis-server": {
+        "path": "${OWNED_RUNTIME}/native-redis/redis-server",
+        "sha256": "cb55ff7ea8f994364668d388d7cbd39a98e78fd70450f6da021fffe47e46ed84"
+      },
+      "native-redis/redisearch.so": {
+        "path": "${OWNED_RUNTIME}/native-redis/redisearch.so",
+        "sha256": "c55c19e785a6f98e3176643d0b01b47dd8b4456f0986beef9ae4a5acea67b064"
+      },
+      "native-falkor/redis-server": {
+        "path": "${OWNED_RUNTIME}/native-falkor/redis-server",
+        "sha256": "87dd1979b0c12e68d2ed0187bb8eff8b64a2bdc6ac72db8e5c561f1758745d28"
+      },
+      "native-falkor/falkordb.so": {
+        "path": "${OWNED_RUNTIME}/native-falkor/falkordb.so",
+        "sha256": "494cda4085cc8e11bdcc9c16734855cd2f6c936a96815ba35a553d948fb2c745"
+      },
+      "runner": {
+        "path": "${PARTIES_ROOT}/_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/run-owned-runtime.py",
+        "sha256": "fa1180d6629d56dd349d0ecbab77e7aebba34fcea3dda28786446bc9182e84d7"
+      }
+    },
+    "test_invocation": {
+      "label": "tests",
+      "command": [
+        "dotnet",
+        "${PARTIES_ROOT}/references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests",
+        "-class",
+        "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests",
+        "-class",
+        "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests",
+        "-xml",
+        "${PRIVATE_PARENT_RUN}/runtime-final/results.xml"
+      ],
+      "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+      "outcome": "passed",
+      "exit_code": 0,
+      "pid": 2265461,
+      "cleanup_exit_code": 0
+    },
+    "cleanup_complete": true
+  },
+  "build_logs": {
+    "owner-integration-build.log": {
+      "sha256": "011c36efb5b992986dd24c35d34489e22e8481fcbc68fc68059c98dde6d1e345",
+      "zero_warnings_errors": true
+    },
+    "owner-server-build.log": {
+      "sha256": "e701824206d156e0e5b8bb7239dced6d3e30fcc1efecc94905abbf04dfa954df",
+      "zero_warnings_errors": true
+    },
+    "parties-service-build.log": {
+      "sha256": "00f9d610d4e783fea03960f8c01ac22eddf061c27a0c366b95c5be96fa757329",
+      "zero_warnings_errors": true
+    },
+    "parties-projections-build.log": {
+      "sha256": "c0b9b41c15cfe93564c0d1d30db909e29735c98005407ff543021ce7ac74d55a",
+      "zero_warnings_errors": true
+    },
+    "release-solution-build.log": {
+      "sha256": "554801d7c46ce09d450128d51d1cd9b0e4a02e4616e65fa8dec7a2804798d7fc",
+      "zero_warnings_errors": true
+    }
+  },
+  "review": {
+    "layers": 3,
+    "edge_case_findings": 0,
+    "triaged_findings": 12,
+    "patched_findings": 11,
+    "rejected_low_findings": 1,
+    "new_deferrals": 0,
+    "patch_controls": {
+      "runtime_passed": 10,
+      "optimized_python_passed": 7
+    }
+  },
+  "commitlint": {
+    "version": "21.2.2",
+    "memories_message": "fix: fence orphan migration before key enrollment\n\nRequire live syntactic ownership and valid legacy/canonical hashes\nbefore enrolling cleanup keys or activating migrated content.\n\nQualify original same-name workflow upgrades and retained retry progress\nwith authenticated persisted-state and history-erasure controls.\n",
+    "parties_message": "fix: preserve legacy recovery and retained evidence\n\nProtect audit facts beyond projection checkpoints during short rebuilds.\nQualify legacy retries and reconcile the five approved deferred items.\n\nRetain historical EXT findings and failed Local/Live evidence separately\nfrom source qualification and remaining owner publication gates.\n",
+    "both_exact_candidates_passed": true
+  },
+  "remaining_post_commit_checks": [
+    "root main push and remote SHA read-back after metadata amendment"
+  ],
+  "validated_root_revision_before_evidence_amendment": "c649ccbd2edff4b5bb63fd496bb3f17036350217",
+  "parties_service": {
+    "counts": {
+      "total": 2794,
+      "passed": 2790,
+      "failed": 0,
+      "skipped": 4,
+      "errors": 0
+    },
+    "xml_sha256": "b587de4ab5769a5cd9d87b42a1a25a551daa072e2276fff49f3746c2c8bdb021"
+  },
+  "package_controls": [
+    {
+      "counts": {
+        "total": 39,
+        "passed": 39,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0
+      },
+      "xml_sha256": "aaa31641c473de2088e69ec4324e6b7d2915eca5f5080c68b5ac40a79b2009c5"
+    },
+    {
+      "counts": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0
+      },
+      "xml_sha256": "3a934d0003fc42a85128406e4c1e85ebf7089a7379d8bd2cb4f448716d137621"
+    }
+  ],
+  "no_implementation_change_after_final_tests": true
+}
