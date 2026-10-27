@@ -8,8 +8,8 @@ The solution-level build must remain green on a fresh clone with root-repository
 git clone <repo> /path/to/clean
 cd /path/to/clean
 git submodule update --init            # root-repository submodules only - no --recursive
-dotnet restore Hexalith.Parties.slnx
-dotnet build Hexalith.Parties.slnx --configuration Release
+dotnet restore Hexalith.Parties.Standalone.slnx
+dotnet build Hexalith.Parties.Standalone.slnx --configuration Release
 ```
 
 All four steps must exit zero with **no** command-line warnings-as-errors override and **no** nested-submodule initialization. The gate blocks:
@@ -25,7 +25,7 @@ All four steps must exit zero with **no** command-line warnings-as-errors overri
 1. Checkout with root-repository submodules only, not recursive.
 2. Setup .NET SDK via `actions/setup-dotnet`.
 3. Cache NuGet packages keyed by `global.json`, `Directory.Packages.props`, `Directory.Build.props`, and every `*.csproj`.
-4. `dotnet restore Hexalith.Parties.slnx`.
+4. `dotnet restore Hexalith.Parties.Standalone.slnx`.
 5. `dotnet build "$SOLUTION_FILE" --configuration Release --no-restore`.
 6. Package consumer validation and the configured test tiers.
 
@@ -69,8 +69,8 @@ A submodule pointer bump may re-introduce a warning class:
 Run the same sequence locally before pushing:
 
 ```powershell
-dotnet restore Hexalith.Parties.slnx
-dotnet build Hexalith.Parties.slnx --configuration Release --no-restore
+dotnet restore Hexalith.Parties.Standalone.slnx
+dotnet build Hexalith.Parties.Standalone.slnx --configuration Release --no-restore
 bash scripts/check-no-warning-override.sh
 ```
 
@@ -91,3 +91,17 @@ The gate does **not** enforce:
 - Epic 4 retrospective (action D16 / TD-4-B): `_bmad-output/implementation-artifacts/epic-4-retro-2026-05-22.md`
 - Epic 5 retrospective (action B13 / TD-5-A): `_bmad-output/implementation-artifacts/epic-5-retro-2026-05-22.md`
 - General CI documentation: `docs/ci.md`
+
+## Package-only CI and release solution
+
+CI and release preparation use `Hexalith.Parties.Standalone.slnx`, which includes
+every owned project and excludes external diagnostic source projects. Use this
+solution for local Release/package parity. `Hexalith.Parties.slnx` remains the
+development solution for source diagnostics. Building external projects alongside
+package consumers previously caused concurrent EventStore output writes and mixed
+Debug/Release outputs.
+
+Consumer verification restores support dependencies from the configured package
+feeds by default and validates their exact central family versions in restored
+assets. Diagnostic source packing requires `--source-support-packages` and already
+built Release support projects; CI and release do not select that option.

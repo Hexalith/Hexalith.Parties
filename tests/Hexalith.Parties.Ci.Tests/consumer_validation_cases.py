@@ -101,10 +101,11 @@ class RestoredVersions(unittest.TestCase):
     """Qualify family selections before building either generated consumer."""
 
     def test_consumer_checks_each_selected_family_and_required_portal_packages(self):
-        families = {'Hexalith.EventStore': CONSUMER.PORTAL_REQUIRED_EVENT_STORE_PACKAGE_IDS,
+        families = {'Hexalith.Commons': CONSUMER.COMMONS_SUPPORT_PACKAGE_IDS,
+                    'Hexalith.EventStore': CONSUMER.PORTAL_REQUIRED_EVENT_STORE_PACKAGE_IDS,
                     'Hexalith.FrontComposer': CONSUMER.FRONT_COMPOSER_SUPPORT_PACKAGE_IDS,
                     'Hexalith.Tenants': CONSUMER.TENANTS_SUPPORT_PACKAGE_IDS}
-        versions = {'Hexalith.EventStore': '7.6.5', 'Hexalith.FrontComposer': '6.5.4', 'Hexalith.Tenants': '5.4.3'}
+        versions = {'Hexalith.Commons': '9.8.7', 'Hexalith.EventStore': '7.6.5', 'Hexalith.FrontComposer': '6.5.4', 'Hexalith.Tenants': '5.4.3'}
         with tempfile.TemporaryDirectory() as temp:
             project = Path(temp) / 'PortalConsumer.csproj'
             assets = project.parent / 'obj' / 'project.assets.json'
@@ -120,14 +121,14 @@ class RestoredVersions(unittest.TestCase):
                 with patch.object(CONSUMER, 'run_dotnet', side_effect=lambda args, cwd: calls.append(args[0])):
                     try:
                         CONSUMER.validate_consumer(project, '7.6.5.0', families['Hexalith.EventStore'],
-                                                  '6.5.4+build.9', '5.4.3', require_portal_packages=portal)
+                                                  '6.5.4+build.9', '5.4.3', require_portal_packages=portal, commons_version='9.8.7')
                     except ValueError:
                         self.assertEqual(calls, ['restore'], 'Invalid selections must fail before build')
                         raise
                 self.assertEqual(calls, ['restore', 'build'])
 
             validate(good)
-            validate({key: value for key, value in good.items() if key.startswith('Hexalith.EventStore.')}, portal=False)
+            validate({key: value for key, value in good.items() if key.startswith(('Hexalith.EventStore.', 'Hexalith.Commons.'))}, portal=False)
             for family, required in families.items():
                 for key in [key for key in good if key.startswith(family + '.')]:
                     for version in ('0.0.1', versions[family] + '.1', versions[family] + '-preview.1'):
@@ -147,9 +148,10 @@ class RestoredVersions(unittest.TestCase):
                         validate(bad)
             # Client selection still rejects a mismatched optional family.
             for family in ('Hexalith.FrontComposer', 'Hexalith.Tenants'):
-                bad = {key: value for key, value in good.items() if key.startswith('Hexalith.EventStore.')}
+                bad = {key: value for key, value in good.items()
+                       if key.startswith(('Hexalith.EventStore.', 'Hexalith.Commons.'))}
                 bad[f'{family}.Transitive/0.0.1'] = {'type': 'package'}
-                with self.subTest(client=family), self.assertRaises(ValueError):
+                with self.subTest(client=family), self.assertRaisesRegex(ValueError, family):
                     validate(bad, portal=False)
 
 

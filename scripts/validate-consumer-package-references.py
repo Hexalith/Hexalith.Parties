@@ -423,9 +423,11 @@ def validate_consumer(
     tenants_version: str,
     *,
     require_portal_packages: bool,
+    commons_version: str,
 ) -> None:
     run_dotnet(["restore", str(project_file)], project_file.parent)
     assets_file = project_file.parent / "obj" / "project.assets.json"
+    validate_family_assets(assets_file, commons_version, COMMONS_SUPPORT_PACKAGE_IDS, "Commons")
     validate_event_store_assets(
         assets_file,
         event_store_version,
@@ -462,6 +464,11 @@ def main() -> int:
         action="append",
         help="NuGet source to use alongside local feeds. Repeat for multiple sources; replaces the nuget.org default.",
     )
+    parser.add_argument(
+        "--source-support-packages",
+        action="store_true",
+        help="Pack diagnostic support packages from prebuilt Release source outputs instead of using published dependencies.",
+    )
     args = parser.parse_args()
 
     commons_version = resolve_hexalith_commons_version(REPO_ROOT)
@@ -476,15 +483,17 @@ def main() -> int:
     if work_directory.exists():
         shutil.rmtree(work_directory)
     work_directory.mkdir(parents=True)
-    support_feed = pack_support_packages(
-        work_directory / "support-packages",
-        commons_version,
-        event_store_version,
-        front_composer_version,
-        tenants_version,
-    )
+    package_feeds = [package_directory]
+    if args.source_support_packages:
+        package_feeds.append(pack_support_packages(
+            work_directory / "support-packages",
+            commons_version,
+            event_store_version,
+            front_composer_version,
+            tenants_version,
+        ))
     sources = args.nuget_source if args.nuget_source is not None else ["https://api.nuget.org/v3/index.json"]
-    write_nuget_config(work_directory, [package_directory, support_feed], sources)
+    write_nuget_config(work_directory, package_feeds, sources)
 
     validate_consumer(
         write_client_consumer(work_directory, version),
@@ -493,6 +502,7 @@ def main() -> int:
         front_composer_version,
         tenants_version,
         require_portal_packages=False,
+        commons_version=commons_version,
     )
     validate_consumer(
         write_portal_consumer(work_directory, version),
@@ -501,6 +511,7 @@ def main() -> int:
         front_composer_version,
         tenants_version,
         require_portal_packages=True,
+        commons_version=commons_version,
     )
 
     print(f"Validated package-only consumers for Hexalith.Parties packages at version {version}.")

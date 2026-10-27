@@ -27,7 +27,9 @@ public sealed class CommonsHttpRestoreRoutingTests
         props.Descendants("HexalithCommonsHttpPackageVersion").ShouldBeEmpty();
         string packages = CiTestPaths.ReadRepoFile("Directory.Packages.props");
         XDocument packageProps = XDocument.Parse(packages);
-        packageProps.Descendants("PackageVersion").ShouldBeEmpty();
+        XElement contractUiVersion = packageProps.Descendants("PackageVersion").ShouldHaveSingleItem();
+        contractUiVersion.Attribute("Include")!.Value.ShouldBe("Hexalith.FrontComposer.Contracts.UI");
+        contractUiVersion.Attribute("Version")!.Value.ShouldBe("$(HexalithFrontComposerVersion)");
         packageProps.Descendants("HexalithBuildsRoot").ShouldBeEmpty();
         packages.ShouldContain("$(Hexalith1BuildPackageProps)");
         packages.ShouldContain("$(Hexalith2BuildPackageProps)");
@@ -605,6 +607,7 @@ with tempfile.TemporaryDirectory() as temporary_root:
             str(consumer_packages),
             "--work-directory",
             str(temporary_root / "consumer-work"),
+            "--source-support-packages",
         ],
     ):
         if consumer.main() != 0:
@@ -615,9 +618,9 @@ with tempfile.TemporaryDirectory() as temporary_root:
         raise SystemExit(f"Consumer main did not resolve every central property: {resolved_properties!r}")
     if captured_consumer_validations != [
         ("ClientConsumer.csproj", event_store_version, consumer.CLIENT_REQUIRED_EVENT_STORE_PACKAGE_IDS,
-         front_composer_version, tenants_version, {"require_portal_packages": False}),
+         front_composer_version, tenants_version, {"require_portal_packages": False, "commons_version": commons_version}),
         ("PortalConsumer.csproj", event_store_version, consumer.PORTAL_REQUIRED_EVENT_STORE_PACKAGE_IDS,
-         front_composer_version, tenants_version, {"require_portal_packages": True}),
+         front_composer_version, tenants_version, {"require_portal_packages": True, "commons_version": commons_version}),
     ]:
         raise SystemExit(f"Consumer asset validations were not wired correctly: {captured_consumer_validations!r}")
     print(f"consumer|{commons_version}|{event_store_version}")
@@ -678,7 +681,9 @@ spec.loader.exec_module(module)
 for name in ("commons", "event_store", "front_composer", "tenants"):
     setattr(module, f"resolve_hexalith_{name}_version", lambda root: "1.0.0")
 module.package_versions = lambda directory: {package_id: "1.0.0" for package_id in module.PACKAGE_IDS}
-module.pack_support_packages = lambda output, *versions: output
+def reject_source_support(*args):
+    raise SystemExit("Default consumer validation must not pack external source dependencies")
+module.pack_support_packages = reject_source_support
 validated = []
 module.validate_consumer = lambda project, *args, **kwargs: validated.append(project.name)
 
@@ -701,9 +706,9 @@ with tempfile.TemporaryDirectory() as directory:
             assert module.main() == 0
         sources = ElementTree.parse(work / "NuGet.Config").getroot().find("packageSources")
         assert sources is not None
-        assert [child.tag for child in sources] == ["clear", *(["add"] * (2 + len(expected)))], ElementTree.tostring(sources)
+        assert [child.tag for child in sources] == ["clear", *(["add"] * (1 + len(expected)))], ElementTree.tostring(sources)
         assert [child.attrib["value"] for child in sources.findall("add")] == [
-            str(packages.resolve()), str((work / "support-packages").resolve()), *expected
+            str(packages.resolve()), *expected
         ]
     assert validated == ["ClientConsumer.csproj", "PortalConsumer.csproj"] * len(cases), validated
 print("source-selection-cases=4")

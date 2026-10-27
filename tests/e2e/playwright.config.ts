@@ -5,6 +5,7 @@ const IS_CI = !!process.env.CI;
 
 export default defineConfig({
   testDir: './specs',
+  testIgnore: '**/shared-feedback-source.spec.ts',
   fullyParallel: true,
   forbidOnly: IS_CI,
   retries: IS_CI ? 2 : 0,

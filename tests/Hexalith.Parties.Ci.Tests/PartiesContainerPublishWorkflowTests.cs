@@ -79,7 +79,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         string workflow = CiTestPaths.ReadRepoFile(".github/workflows/ci.yml");
 
         workflow.ShouldContain($"Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@{BuildsValidationSha}");
-        workflow.ShouldContain("solution: Hexalith.Parties.slnx");
+        workflow.ShouldContain("solution: Hexalith.Parties.Standalone.slnx");
         workflow.ShouldContain("test-platform: microsoft-testing-platform");
         workflow.ShouldContain("run-consumer-validation: true");
         workflow.ShouldContain("run-coverage-gate: false");
@@ -129,7 +129,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         release.ShouldNotContain("domain-release.yml@");
         preparation.ShouldContain($"uses: Hexalith/Hexalith.Builds/Github/prepare-domain-release@{BuildsExecutionSha}\n");
         preparation.ShouldContain($"builds-execution-sha: {BuildsExecutionSha}\n");
-        preparation.ShouldContain("solution: Hexalith.Parties.slnx\n");
+        preparation.ShouldContain("solution: Hexalith.Parties.Standalone.slnx\n");
         preparation.ShouldContain("node-version: '24.22.1'\n");
         preparation.ShouldContain("source-branch: main\n");
         preparation.ShouldContain("source-ci-workflow: ci.yml\n");

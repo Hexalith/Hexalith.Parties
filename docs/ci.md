@@ -129,9 +129,9 @@ still pass the shared publisher's full smoke and publication verification.
 
 The active NuGet trusted publishing policy has package owner `Hexalith`, creator account `jpiquot`, GitHub repository `Hexalith/Hexalith.Parties`, workflow filename `release.yml`, and environment `production`. Set `NUGET_USER=jpiquot` as a repository variable; the creator account is distinct from the package owner and GitHub actor. Authentication stays in the Parties job because NuGet matches the caller workflow identity; [NuGet/login issue 6](https://github.com/NuGet/login/issues/6) records the reusable-workflow limitation. No long-lived NuGet secret or fallback is used. Local policy JSON records registration and does not create a policy in NuGet.
 
-Consumer validation clears inherited NuGet package sources, fallback package
+Consumer validation uses published support dependencies and clears inherited NuGet package sources, fallback package
 folders and disabled-source settings. By default it uses
-the local Parties and support-package feeds plus nuget.org. Supplying
+the local Parties feed plus nuget.org. Supplying
 `--nuget-source SOURCE` replaces the nuget.org default; repeat the option for
 each desired source, including nuget.org if needed. Generated configuration excludes
 inherited `packageSources`, `fallbackPackageFolders` and `disabledPackageSources`
@@ -140,7 +140,7 @@ entries. Consumer subprocesses also discard inherited
 
 Support artifacts use NuGet-normalized version identities and filenames, including
 zero fourth components and build metadata. After restore, every selected
-EventStore, FrontComposer and Tenants package must match its evaluated central
+Commons, EventStore, FrontComposer and Tenants package must match its evaluated central
 version. Portal consumers also require the four direct FrontComposer/Tenants
 support packages; missing packages and project substitutions fail before build.
 
@@ -266,8 +266,8 @@ The release workflow does not apply runtime deployment manifests and does not pu
 Use these commands before pushing CI/CD changes:
 
 ```powershell
-dotnet restore Hexalith.Parties.slnx
-dotnet build Hexalith.Parties.slnx --configuration Release --no-restore -m:1
+dotnet restore Hexalith.Parties.Standalone.slnx
+dotnet build Hexalith.Parties.Standalone.slnx --configuration Release --no-restore -m:1
 pwsh -NoProfile -File scripts/test.ps1 -Lane unit -Configuration Release
 pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release
 ```
@@ -324,9 +324,9 @@ the existing container liveness gate remains required. The separately built
 EventStore diagnostic source project retains its own upstream catalog and can
 still report the older SignalR vulnerability; this is not the owned package graph.
 
-Package mode remains the authoritative CI and release path; source mode is diagnostic only. The solution also builds its orchestration projects and the documented Commons HTTP/ServiceDefaults source fallbacks; these do not switch Parties' EventStore package consumers to source mode.
+Package mode remains the authoritative CI and release path; source mode is diagnostic only. The standalone solution builds owned projects and restores external dependencies as packages. The development solution retains external source projects for diagnostics.
 
-Normal package-mode `dotnet restore Hexalith.Parties.slnx` and the serialized Release solution build complete without errors. The full restore/build reports two NU1903 warnings from the separately built EventStore SignalR diagnostic source project, which retains its upstream package catalog; owned consumers use the fixed package or UI runtime floor described above. The earlier two CS1061 errors against 3.115.0 and the August projection-rebuild CS0246 failure are historical. The host security calls and projection-rebuild implementation remain intact.
+The standalone package-mode restore and Release build complete with zero warnings and errors. Earlier development-solution restores reported NU1903 warnings from the external EventStore SignalR diagnostic source project; it is excluded from the package-only CI solution. The earlier two CS1061 errors against 3.115.0 and the August projection-rebuild CS0246 failure are historical. The host security calls and projection-rebuild implementation remain intact.
 
 ### Required EventStore publication
 
@@ -388,3 +388,22 @@ Final executed evidence: [review-loop 2 receipt](../_bmad-output/implementation-
 
 
 The 2026-10-24 Memories inventory batch retains immutable Builds publisher `11a3a79cfac4bba9548c6364a17a01ee9b561370` and validator SHA-256 `1913f75bdf39c494c5723bca5c04fcb2e6dc0474ad2d86c22e63aae96b9e850c`. Loop3 rechecks source admission, maintenance publication, tenant teardown, total HTTP deadlines and privileged-route denials separately from package behavior. An existing submodule-mutating guard skip cannot establish runtime acceptance. Source browser, real backend, authenticated owned runtime and OCI negative controls retain their own receipts; owner publication and committed adoption remain parent-owned gates.
+
+## Package-only CI and release solution
+
+CI and release preparation use `Hexalith.Parties.Standalone.slnx`, which includes
+every owned project and excludes external diagnostic source projects. Use this
+solution for local Release/package parity. `Hexalith.Parties.slnx` remains the
+development solution for source diagnostics. Building external projects alongside
+package consumers previously caused concurrent EventStore output writes and mixed
+Debug/Release outputs.
+
+Consumer verification restores support dependencies from the configured package
+feeds by default and validates their exact central family versions in restored
+assets. Diagnostic source packing requires `--source-support-packages` and already
+built Release support projects; CI and release do not select that option.
+
+The optional mapped shared-download cancellation qualification lives in
+`shared-feedback-source.spec.ts`. Run `npm run test:source-feedback` after a
+mapped source UI build; it fails if the required source capability is absent.
+The required package portal specs contain no skip or optional capability gate.

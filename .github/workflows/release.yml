@@ -322,7 +322,7 @@ jobs:
         id: prepare
         uses: Hexalith/Hexalith.Builds/Github/prepare-domain-release@11a3a79cfac4bba9548c6364a17a01ee9b561370
         with:
-          solution: Hexalith.Parties.slnx
+          solution: Hexalith.Parties.Standalone.slnx
           node-version: '24.22.1'
           builds-execution-sha: 11a3a79cfac4bba9548c6364a17a01ee9b561370
           source-branch: main
