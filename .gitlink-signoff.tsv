@@ -345,3 +345,14 @@ references/Hexalith.Tenants|d73bc3dcb9d5aa1741b63929eaa8b11de4a4e021|validated-a
 #     Source selection only: named G4 acceptance and matching package publication
 #     remain open; no whole-G4, Story 8.9, deployment or rollback approval.
 references/Hexalith.FrontComposer|c2b925bae1c9b3bfa8c3a4698ad0104de02ed5a4|validated-advance|v4.7.0-137-gc2b925ba|jpiquot|2026-10-27
+
+# --- 2026-10-28 operator-authorized synchronization and release.
+#     Fast-forward clean root submodules to fetched upstream main; retain exact
+#     source selections for the RC gate. Automated CI/publication proof is separate.
+references/Hexalith.Builds|51a71cb1cfe860d5fc135eb3b8521fd80c413810|validated-advance|v4.38.1-2-g51a71cb|jpiquot|2026-10-28
+references/Hexalith.EventStore|eff7066ed5c8c7ec57e1b42862fddee479044134|validated-advance|v3.128.3-1-geff7066ed|jpiquot|2026-10-28
+references/Hexalith.FrontComposer|5688c3eba98567133285b0f51843d9daa8f24f0b|validated-advance|v4.7.1|jpiquot|2026-10-28
+references/Hexalith.McpCli|8d4a8c07636c1ad065dfc8dc28dbfc956d5deb82|validated-advance|v1.1.0|jpiquot|2026-10-28
+references/Hexalith.Memories|790670897c1fc684d41b980fc5e40934be796122|validated-advance|v3.0.0-1-g79067089|jpiquot|2026-10-28
+references/Hexalith.Platform|b742b1b7a496ac72d6961ca6db5213d3df42d234|validated-advance|b742b1b|jpiquot|2026-10-28
+references/Hexalith.Tenants|1436044bf6452bbc5bdb2eaa8b585ab2ce9362ca|validated-advance|v5.10.1-89-g1436044b|jpiquot|2026-10-28
