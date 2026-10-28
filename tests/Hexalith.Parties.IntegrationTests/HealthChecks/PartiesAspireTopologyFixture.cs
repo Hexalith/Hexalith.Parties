@@ -199,6 +199,15 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             if (_completeMtlsProfile)
             {
                 PartiesMtlsProfile.ConfigureOptionalDependencies(_builder);
+                // An explicit-start UI has no listener yet. Let Dapr wait for Kestrel,
+                // rather than queue its first app callback through an already-listening DCP proxy.
+                _ = _builder.CreateResourceBuilder<ProjectResource>("eventstore-admin-ui")
+                    .WithEndpoint("http", endpoint =>
+                    {
+                        endpoint.IsProxied = false;
+                        endpoint.Port = null;
+                        endpoint.TargetPort = null;
+                    }, createIfNotExists: false);
                 IResourceBuilder<ParameterResource> token = _builder.AddParameter("fixture-parties-channel-token", _appChannelToken, secret: true);
                 _ = _builder.CreateResourceBuilder<ProjectResource>("parties").WithEventStoreAppChannelToken(token);
                 IResourceBuilder<ParameterResource> sampleToken = _builder.AddParameter("fixture-sample-channel-token",
@@ -332,12 +341,14 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 return;
             }
 
+            InitializationPhase = "parties-resource-health";
             // Wait for parties to be healthy. This includes the DAPR health checks
             // (sidecar, state store, pub/sub) becoming healthy after sidecar initialization.
             await _app.ResourceNotifications
                 .WaitForResourceHealthyAsync("parties", cts.Token)
                 .WaitAsync(TimeSpan.FromMinutes(5), cts.Token)
                 .ConfigureAwait(false);
+            InitializationPhase = "eventstore-resource-health";
             await _app.ResourceNotifications
                 .WaitForResourceHealthyAsync("eventstore", cts.Token)
                 .WaitAsync(TimeSpan.FromMinutes(5), cts.Token)
@@ -348,6 +359,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             _eventStoreClient = _app.CreateHttpClient("eventstore");
             _eventStoreClient.Timeout = TimeSpan.FromSeconds(60);
 
+            InitializationPhase = "writer-protocol-activation";
             // The disposable topology starts with no v2 writer cutover. Activate through
             // EventStore's operator API; shared developer Redis is never contacted.
             string sourceCommit = await ProjectionDeliveryWriterProtocolTestLease
@@ -361,6 +373,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 "disposable-parties-aspire-fixture-backup",
                 cts.Token).ConfigureAwait(false);
 
+            InitializationPhase = "parties-health-endpoint";
             // Wait for the /health endpoint to actually return 200 via HTTP.
             await WaitForEndpointAsync(
                 _partiesClient,
@@ -368,6 +381,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 [HttpStatusCode.OK],
                 TimeSpan.FromMinutes(3),
                 TimeSpan.FromSeconds(3), cts.Token).ConfigureAwait(false);
+            InitializationPhase = "eventstore-health-endpoint";
             await WaitForEndpointAsync(
                 _eventStoreClient,
                 "/health",
@@ -377,6 +391,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
 
             if (_completeMtlsProfile)
             {
+                InitializationPhase = "tenant-bootstrap";
                 TenantBootstrapHost = await PartiesTenantBootstrapHost.StartAsync(_appChannelToken, cts.Token).ConfigureAwait(false);
                 using HttpClient localClient = TenantBootstrapHost.CreateClient();
                 await PartiesTenantBootstrapHost.SeedAsync(_partiesClient, _appChannelToken, cts.Token).ConfigureAwait(false);
@@ -387,7 +402,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         catch (Exception ex)
         {
             IsAvailable = false;
-            UnavailableReason = $"{ex.GetType().Name}: {ex.Message}";
+            UnavailableReason = $"{InitializationPhase}: {ex.GetType().Name}: {ex.Message}";
             if (ObserveInitializationFailureAsync is not null)
             {
                 await ObserveInitializationFailureAsync(ex).ConfigureAwait(false);
@@ -477,6 +492,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     {
         foreach (string appId in appIds)
         {
+            InitializationPhase = $"sidecar-{appId}";
             using HttpClient client = CreateSidecarClient(appId);
             if (_sidecarApiTokens?.TryGetValue(appId, out string? apiToken) == true)
             {
@@ -882,15 +898,16 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
 
     /// <summary>Reads a live process's immutable start identity, or null after exit.</summary>
     /// <param name="processId">The PID in an owned resource snapshot.</param>
+    /// <param name="readProcStat">Optional Linux proc reader for deterministic OS-error controls.</param>
     /// <returns>Kernel start-clock ticks on Linux; process start-time ticks elsewhere.</returns>
-    internal static long? ReadWorkerStartIdentity(int processId)
+    internal static long? ReadWorkerStartIdentity(int processId, Func<string, string>? readProcStat = null)
     {
         if (processId <= 0) { return null; }
         try
         {
             if (OperatingSystem.IsLinux())
             {
-                string stat = File.ReadAllText($"/proc/{processId}/stat");
+                string stat = (readProcStat ?? File.ReadAllText)($"/proc/{processId}/stat");
                 // comm is parenthesized and may itself contain spaces or parentheses.
                 string[] fields = stat[(stat.LastIndexOf(')') + 2)..].Split(' ', StringSplitOptions.RemoveEmptyEntries);
                 return fields[0] is "Z" or "X" ? null
@@ -901,6 +918,8 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         }
         catch (FileNotFoundException) { return null; }
         catch (DirectoryNotFoundException) { return null; }
+        // Linux can report ESRCH when the process exits after its proc file is opened.
+        catch (IOException exception) when (OperatingSystem.IsLinux() && exception.HResult == 3) { return null; }
         catch (ArgumentException) { return null; }
         catch (InvalidOperationException) { return null; }
         catch (System.ComponentModel.Win32Exception exception) when (exception.NativeErrorCode == 3) { return null; }

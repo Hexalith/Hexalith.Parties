@@ -165,6 +165,21 @@ public sealed class PartiesTopologyCleanupTests
     }
 
     [Fact]
+    public void WorkerObservation_ToleratesDisappearanceDuringProcReadAndPreservesOtherFailures()
+    {
+        if (!OperatingSystem.IsLinux()) { Assert.Skip("Linux proc read error controls."); }
+        var disappeared = new IOException("Process exited during proc read", 3);
+        PartiesAspireTopologyFixture.ReadWorkerStartIdentity(Environment.ProcessId, _ => throw disappeared).ShouldBeNull();
+
+        var ioFailure = new IOException("Unrelated proc I/O failure", 5);
+        Should.Throw<IOException>(() => PartiesAspireTopologyFixture.ReadWorkerStartIdentity(Environment.ProcessId, _ => throw ioFailure))
+            .ShouldBeSameAs(ioFailure);
+        var denied = new UnauthorizedAccessException("Proc access denied");
+        Should.Throw<UnauthorizedAccessException>(() => PartiesAspireTopologyFixture.ReadWorkerStartIdentity(Environment.ProcessId, _ => throw denied))
+            .ShouldBeSameAs(denied);
+    }
+
+    [Fact]
     public async Task FreshWorkerObservation_RecognizesExitAndRejectsAReusedPidIdentityAsync()
     {
         await WithControlledWorkerAsync(async child =>
