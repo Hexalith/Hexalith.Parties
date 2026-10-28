@@ -1,0 +1,657 @@
+{
+  "date": "2026-10-28",
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "commands": [
+    {
+      "name": "service-build",
+      "argv": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--nologo"
+      ],
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "projections-build",
+      "argv": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Projections.Tests",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--nologo"
+      ],
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "service-focused",
+      "argv": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-noColor",
+        "-class",
+        "Hexalith.Parties.Tests.Search.PartyMemory*",
+        "-class-",
+        "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+        "-class-",
+        "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests",
+        "-class",
+        "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests",
+        "-class",
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests",
+        "-failSkips",
+        "-result-xml",
+        "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-data-lifecycle-qualification-2026-10-28/service-focused.xml"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "projections-focused",
+      "argv": [
+        "dotnet",
+        "tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll",
+        "-noColor",
+        "-class",
+        "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests",
+        "-method-",
+        "*PublishedSdkPreservesLargeLegacyLiveAndRebuildCompatibilityAsync",
+        "-failSkips",
+        "-result-xml",
+        "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-data-lifecycle-qualification-2026-10-28/projections-focused.xml"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "source-build",
+      "argv": [
+        "python3",
+        "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/build-source.py",
+        "--workspace",
+        "/tmp/parties-data-lifecycle-source-20261028",
+        "--regenerate",
+        "--",
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--nologo",
+        "--artifacts-path",
+        "/tmp/parties-data-lifecycle-source-20261028/artifacts"
+      ],
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "source-version-mismatch",
+      "argv": [
+        "dotnet",
+        "/tmp/parties-data-lifecycle-source-20261028/artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll",
+        "-noColor",
+        "-class",
+        "Hexalith.Parties.Tests.Search.PartyMemory*",
+        "-class-",
+        "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+        "-class-",
+        "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests",
+        "-class",
+        "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests",
+        "-class",
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests",
+        "-failSkips",
+        "-result-xml",
+        "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-data-lifecycle-qualification-2026-10-28/source-focused.xml"
+      ],
+      "exit_code": 1,
+      "result": "942 failed tests from assembly reference 3.128.4 versus mapped source assembly 3.128.3; original attempt preserved"
+    },
+    {
+      "name": "source-aligned-build",
+      "argv": [
+        "python3",
+        "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/build-source.py",
+        "--workspace",
+        "/tmp/parties-data-lifecycle-source-20261028",
+        "--",
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--nologo",
+        "--artifacts-path",
+        "/tmp/parties-data-lifecycle-source-20261028/artifacts",
+        "-p:HexalithEventStoreVersion=3.128.3"
+      ],
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "source-aligned-focused",
+      "argv": [
+        "dotnet",
+        "/tmp/parties-data-lifecycle-source-20261028/artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll",
+        "-noColor",
+        "-class",
+        "Hexalith.Parties.Tests.Search.PartyMemory*",
+        "-class-",
+        "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+        "-class-",
+        "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests",
+        "-class",
+        "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests",
+        "-class",
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests",
+        "-failSkips",
+        "-result-xml",
+        "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-data-lifecycle-qualification-2026-10-28/source-aligned-focused.xml"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "custody-live",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "eng/verify-ext-parties-1.ps1",
+        "-Mode",
+        "Live",
+        "-EvidenceDirectory",
+        "/tmp/parties-data-lifecycle-custody-live-20261028"
+      ],
+      "exit_code": 1,
+      "expected_refusal": true,
+      "transport_attempted": false
+    },
+    {
+      "name": "warning-override",
+      "argv": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "whitespace",
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "package-properties",
+      "argv": [
+        "dotnet",
+        "msbuild",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-nologo",
+        "-t:ConfigureMemoriesSourceCompilation",
+        "-getProperty:HexalithEventStoreVersion,HexalithMemoriesVersion,HexalithMemoriesFromSource,HexalithSourceMappingMode,MemoriesSourceRefreshSupported,DefineConstants",
+        "-p:Configuration=Debug"
+      ],
+      "exit_code": 0,
+      "result": {
+        "Properties": {
+          "HexalithEventStoreVersion": "3.128.4",
+          "HexalithMemoriesVersion": "3.0.3",
+          "HexalithMemoriesFromSource": "",
+          "HexalithSourceMappingMode": "",
+          "MemoriesSourceRefreshSupported": "true",
+          "DefineConstants": "TRACE;HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY;DEBUG;HEXALITH_MEMORIES_SOURCE_REFRESH"
+        }
+      }
+    },
+    {
+      "name": "unsupported-older-properties",
+      "argv": [
+        "dotnet",
+        "msbuild",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-nologo",
+        "-t:ConfigureMemoriesSourceCompilation",
+        "-getProperty:HexalithMemoriesVersion,MemoriesSourceRefreshSupported,DefineConstants",
+        "-p:Configuration=Debug",
+        "-p:HexalithMemoriesVersion=3.0.2"
+      ],
+      "exit_code": 0,
+      "result": {
+        "Properties": {
+          "HexalithMemoriesVersion": "3.0.2",
+          "MemoriesSourceRefreshSupported": "false",
+          "DefineConstants": "TRACE;HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY;DEBUG"
+        }
+      }
+    },
+    {
+      "name": "unsupported-future-properties",
+      "argv": [
+        "dotnet",
+        "msbuild",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-nologo",
+        "-t:ConfigureMemoriesSourceCompilation",
+        "-getProperty:HexalithMemoriesVersion,MemoriesSourceRefreshSupported,DefineConstants",
+        "-p:Configuration=Debug",
+        "-p:HexalithMemoriesVersion=3.0.4"
+      ],
+      "exit_code": 0,
+      "result": {
+        "Properties": {
+          "HexalithMemoriesVersion": "3.0.4",
+          "MemoriesSourceRefreshSupported": "false",
+          "DefineConstants": "TRACE;HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY;DEBUG"
+        }
+      }
+    },
+    {
+      "name": "source-aligned-properties",
+      "argv": [
+        "python3",
+        "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/build-source.py",
+        "--workspace",
+        "/tmp/parties-data-lifecycle-source-20261028",
+        "--",
+        "dotnet",
+        "msbuild",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-nologo",
+        "-t:ConfigureMemoriesSourceCompilation",
+        "-getProperty:HexalithEventStoreVersion,HexalithMemoriesVersion,HexalithMemoriesFromSource,HexalithSourceMappingMode,MemoriesSourceRefreshSupported,DefineConstants",
+        "-p:Configuration=Debug",
+        "-p:HexalithEventStoreVersion=3.128.3"
+      ],
+      "exit_code": 0,
+      "result": {
+        "Properties": {
+          "HexalithEventStoreVersion": "3.128.3",
+          "HexalithMemoriesVersion": "3.0.3",
+          "HexalithMemoriesFromSource": "true",
+          "HexalithSourceMappingMode": "source",
+          "MemoriesSourceRefreshSupported": "true",
+          "DefineConstants": "TRACE;HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY;DEBUG;HEXALITH_MEMORIES_SOURCE_REFRESH"
+        }
+      }
+    }
+  ],
+  "lanes": {
+    "service-focused": {
+      "executed": 1197,
+      "results": {
+        "Pass": 1197
+      },
+      "classes": {
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests": {
+          "Pass": 875
+        },
+        "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests": {
+          "Pass": 39
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryCleanupCancellationTests": {
+          "Pass": 5
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryCleanupServiceTests": {
+          "Pass": 34
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryCompensationTests": {
+          "Pass": 1
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryCoordinationTests": {
+          "Pass": 59
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryIndexEntrySearchIndexerTests": {
+          "Pass": 24
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests": {
+          "Pass": 5
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryMappingConcurrencyTests": {
+          "Pass": 23
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryRegressionTests": {
+          "Pass": 14
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests": {
+          "Pass": 25
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryRestClientRecoveryTests": {
+          "Pass": 26
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemorySearchOptionsValidatorTests": {
+          "Pass": 7
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests": {
+          "Pass": 18
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryUnitMapperTests": {
+          "Pass": 10
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryUnitMappingStoreTests": {
+          "Pass": 32
+        }
+      }
+    },
+    "projections-focused": {
+      "executed": 218,
+      "results": {
+        "Pass": 218
+      },
+      "classes": {
+        "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests": {
+          "Pass": 218
+        }
+      }
+    },
+    "source-version-mismatch": {
+      "executed": 1197,
+      "results": {
+        "Pass": 255,
+        "Fail": 942
+      },
+      "classes": {
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests": {
+          "Fail": 874,
+          "Pass": 1
+        },
+        "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests": {
+          "Fail": 39
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryCleanupCancellationTests": {
+          "Pass": 5
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryCleanupServiceTests": {
+          "Pass": 34
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryCompensationTests": {
+          "Pass": 1
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryCoordinationTests": {
+          "Pass": 43,
+          "Fail": 16
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryIndexEntrySearchIndexerTests": {
+          "Fail": 9,
+          "Pass": 15
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests": {
+          "Pass": 5
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryMappingConcurrencyTests": {
+          "Pass": 23
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryRegressionTests": {
+          "Pass": 14
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests": {
+          "Pass": 25
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryRestClientRecoveryTests": {
+          "Pass": 26
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemorySearchOptionsValidatorTests": {
+          "Pass": 3,
+          "Fail": 4
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests": {
+          "Pass": 18
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryUnitMapperTests": {
+          "Pass": 10
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryUnitMappingStoreTests": {
+          "Pass": 32
+        }
+      }
+    },
+    "source-aligned-focused": {
+      "executed": 1197,
+      "results": {
+        "Pass": 1197
+      },
+      "classes": {
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests": {
+          "Pass": 875
+        },
+        "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests": {
+          "Pass": 39
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryCleanupCancellationTests": {
+          "Pass": 5
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryCleanupServiceTests": {
+          "Pass": 34
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryCompensationTests": {
+          "Pass": 1
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryCoordinationTests": {
+          "Pass": 59
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryIndexEntrySearchIndexerTests": {
+          "Pass": 24
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests": {
+          "Pass": 5
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryMappingConcurrencyTests": {
+          "Pass": 23
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryRegressionTests": {
+          "Pass": 14
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests": {
+          "Pass": 25
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryRestClientRecoveryTests": {
+          "Pass": 26
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemorySearchOptionsValidatorTests": {
+          "Pass": 7
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests": {
+          "Pass": 18
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryUnitMapperTests": {
+          "Pass": 10
+        },
+        "Hexalith.Parties.Tests.Search.PartyMemoryUnitMappingStoreTests": {
+          "Pass": 32
+        }
+      }
+    }
+  },
+  "raw_private_receipts": {
+    "custody-live-gate.txt": {
+      "path": "/tmp/parties-data-lifecycle-receipts-20261028/custody-live-gate.txt",
+      "sha256": "b60753bd1e52b607eb2f91bdc4cb3bbd67b760c8a87814215fb91ceb2cd9bdfd",
+      "bytes": 364
+    },
+    "custody-live.txt": {
+      "path": "/tmp/parties-data-lifecycle-receipts-20261028/custody-live.txt",
+      "sha256": "494a7f949c8dadf3383453f1a00e4a0de3f31274188ca5bf97fab7eb4391dafc",
+      "bytes": 377
+    },
+    "projections-build.txt": {
+      "path": "/tmp/parties-data-lifecycle-receipts-20261028/projections-build.txt",
+      "sha256": "c5ece67fd6ecfe22f7f73cf1206105f8da1f7f2ed0199308ff531670ff1851ed",
+      "bytes": 970
+    },
+    "projections-focused.txt": {
+      "path": "/tmp/parties-data-lifecycle-receipts-20261028/projections-focused.txt",
+      "sha256": "1b928d2cc2c24ab3d292e13402d51df4241c548661c055c7df76c60428c1d51a",
+      "bytes": 486
+    },
+    "projections-focused.xml": {
+      "path": "/tmp/parties-data-lifecycle-receipts-20261028/projections-focused.xml",
+      "sha256": "7456c3f32c80ce86c73dfaa2993dc454944b0ba02d6ab2deb05dc9dd35c1408b",
+      "bytes": 153204
+    },
+    "projections-invalid-filter.txt": {
+      "path": "/tmp/parties-data-lifecycle-receipts-20261028/projections-invalid-filter.txt",
+      "sha256": "ca448298cb0e04e648dcd1a5a62ebe88e974c39cd770dabc37db0907dd441b56",
+      "bytes": 43
+    },
+    "service-build.txt": {
+      "path": "/tmp/parties-data-lifecycle-receipts-20261028/service-build.txt",
+      "sha256": "2bf8eb74b3d79790e4a87ec597daa70e8d9fd5fac9aa1c6fec404edc5bc84b55",
+      "bytes": 2028
+    },
+    "service-focused.txt": {
+      "path": "/tmp/parties-data-lifecycle-receipts-20261028/service-focused.txt",
+      "sha256": "d4e6c732c0fceada5dbea142ac1e640cd59059e03753e9ef53df878b83c0b7c5",
+      "bytes": 428
+    },
+    "service-focused.xml": {
+      "path": "/tmp/parties-data-lifecycle-receipts-20261028/service-focused.xml",
+      "sha256": "db71159cff1d222953f034ffa9542de3bc3d486c3f0836ecf3f24511c46adafc",
+      "bytes": 835702
+    },
+    "service-invalid-filter.txt": {
+      "path": "/tmp/parties-data-lifecycle-receipts-20261028/service-invalid-filter.txt",
+      "sha256": "c57289b2604dd25b8261a4b21768781c0eed76ed141503b8a9a45bcf7891545e",
+      "bytes": 42
+    },
+    "source-aligned-build.txt": {
+      "path": "/tmp/parties-data-lifecycle-receipts-20261028/source-aligned-build.txt",
+      "sha256": "f6d5a25776240ab6874f2acec3098a37c6e40eea38474cfa6c8418b74c84b208",
+      "bytes": 10721
+    },
+    "source-aligned-focused.txt": {
+      "path": "/tmp/parties-data-lifecycle-receipts-20261028/source-aligned-focused.txt",
+      "sha256": "480f9c231a074613de15ab1ed90f94e7822c2cfa62e7d96eae0f806abbb61eb6",
+      "bytes": 428
+    },
+    "source-aligned-focused.xml": {
+      "path": "/tmp/parties-data-lifecycle-receipts-20261028/source-aligned-focused.xml",
+      "sha256": "6d662bc35b6ce5fcfdd5c0b972e7795b383547596ac8dda35215661011347130",
+      "bytes": 835787
+    },
+    "source-build.txt": {
+      "path": "/tmp/parties-data-lifecycle-receipts-20261028/source-build.txt",
+      "sha256": "6cd31318915f267e47734cabc5982360ae8cfb76efebc111d5e99e6b2357ded3",
+      "bytes": 11788
+    },
+    "source-version-mismatch.txt": {
+      "path": "/tmp/parties-data-lifecycle-receipts-20261028/source-version-mismatch.txt",
+      "sha256": "4e081a3e3160331c221da83a8408c6d2fef8cef7cad62731fd6d8fbeac1675b0",
+      "bytes": 1029303
+    },
+    "source-version-mismatch.xml": {
+      "path": "/tmp/parties-data-lifecycle-receipts-20261028/source-version-mismatch.xml",
+      "sha256": "b967a8544ef832dfbca2268b0f612c7804d0b2ce60a237b86613c9511e7deb8a",
+      "bytes": 1730622
+    },
+    "warning-override.txt": {
+      "path": "/tmp/parties-data-lifecycle-receipts-20261028/warning-override.txt",
+      "sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604",
+      "bytes": 93
+    },
+    "whitespace.txt": {
+      "path": "/tmp/parties-data-lifecycle-receipts-20261028/whitespace.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  },
+  "initial_runner_invocation_error": {
+    "exit_code": 3,
+    "reason": "-notclass/-notmethod are unsupported; corrected to -class-/-method- before any test execution",
+    "receipts": [
+      "service-invalid-filter.txt",
+      "projections-invalid-filter.txt"
+    ]
+  },
+  "source_disposition": "Unmodified selected mapped source builds, but fails runtime assembly resolution (root package selection 3.128.4 versus source assembly 3.128.3). Diagnostic override HexalithEventStoreVersion=3.128.3 passes all 1197 controls; this does not qualify the unchanged 3.128.4 source graph. No tracked dependency or gitlink changed.",
+  "excluded_controls": [
+    {
+      "class": "PartyMemoryRuntimeTests",
+      "reason": "requires owned producer runtime; separate external gate, not targeted consumer coverage"
+    },
+    {
+      "class": "PartyMemoryPersistenceRuntimeTests",
+      "reason": "requires owned SDK/Dapr persistence runtime; synthetic-store receipt does not claim real Dapr evidence"
+    },
+    {
+      "method": "PublishedSdkPreservesLargeLegacyLiveAndRebuildCompatibilityAsync",
+      "reason": "explicit old SDK without generation compatibility control; current generation behavior executes in RetainedProcessingHistoryUsesBoundedBucketsAndPureLargeRebuildAsync"
+    }
+  ],
+  "remaining_external_gates": {
+    "DW-50": [
+      "deployed older-writer drain",
+      "independent historical private recovery reconciliation",
+      "authorized migration/cutover and deployed state/rollback qualification"
+    ],
+    "DW-82": [
+      "legacy inventory reconciliation and owner completeness attestation after writer drain",
+      "installed selected producer/workload and deployed cleanup qualification"
+    ],
+    "DW-168": [
+      "installed selected producer delayed-ingestion/deletion and physical erasure",
+      "production workload/key/trust configuration and deployment",
+      "legacy source inventory reconciliation and owner acceptance"
+    ],
+    "DW-130": [
+      "complete installed custody/policy/restore/failure-injection bindings",
+      "actual exclusive 365-day expiry and ordinary command/replay persisted continuity"
+    ],
+    "DW-149": [
+      "same installed custody/expiry evidence",
+      "determine replay failure then value-free lifecycle continuity if needed; generic read denial is insufficient"
+    ]
+  },
+  "retained_native_xml": {
+    "service-focused.xml": {
+      "retained": "service-focused.xml.gz",
+      "compression": "gzip, deterministic mtime=0",
+      "sha256": "5e2c9f1e866af3154c83d481cb417ece747084116555752232616feb37effb0a",
+      "sanitized_xml_sha256": "b42663ecaeed5f519b147b89efa35f6a521b46e82b17c88985e1903a18c2ed92",
+      "original_xml_sha256": "db71159cff1d222953f034ffa9542de3bc3d486c3f0836ecf3f24511c46adafc",
+      "test_cases": 1197,
+      "sanitization": "Only absolute Parties/source-workspace paths replaced with placeholders; native per-test results preserved"
+    },
+    "projections-focused.xml": {
+      "retained": "projections-focused.xml.gz",
+      "compression": "gzip, deterministic mtime=0",
+      "sha256": "f53f7b1f8dd4ce72c589bbde0de445de9766b3bb57b6b986a14d0a421febe43c",
+      "sanitized_xml_sha256": "aa12c62c32f14f4c5978bac3dd8813d78773503d3d2587ee0863a68ff6f322a2",
+      "original_xml_sha256": "7456c3f32c80ce86c73dfaa2993dc454944b0ba02d6ab2deb05dc9dd35c1408b",
+      "test_cases": 218,
+      "sanitization": "Only absolute Parties/source-workspace paths replaced with placeholders; native per-test results preserved"
+    },
+    "source-version-mismatch.xml": {
+      "retained": "source-version-mismatch.xml.gz",
+      "compression": "gzip, deterministic mtime=0",
+      "sha256": "8c09669f7b9ee7310bfdbb9f31dcf78e7b4105308bd22b675adfaa5057951c92",
+      "sanitized_xml_sha256": "5a3212093769ebc6e58b429db8b03d36f9a1bbbdb35e3516e3cca17d47860b40",
+      "original_xml_sha256": "b967a8544ef832dfbca2268b0f612c7804d0b2ce60a237b86613c9511e7deb8a",
+      "test_cases": 1197,
+      "sanitization": "Only absolute Parties/source-workspace paths replaced with placeholders; native per-test results preserved"
+    },
+    "source-aligned-focused.xml": {
+      "retained": "source-aligned-focused.xml.gz",
+      "compression": "gzip, deterministic mtime=0",
+      "sha256": "28c643c140c08817eabb21cac88f3f9490a53ecbab3788039d65a08baaadf03d",
+      "sanitized_xml_sha256": "90613c7da1f12d6d9c9a85ac516de2773b161294c4784f88c8d80405bd68892f",
+      "original_xml_sha256": "6d662bc35b6ce5fcfdd5c0b972e7795b383547596ac8dda35215661011347130",
+      "test_cases": 1197,
+      "sanitization": "Only absolute Parties/source-workspace paths replaced with placeholders; native per-test results preserved"
+    }
+  }
+}

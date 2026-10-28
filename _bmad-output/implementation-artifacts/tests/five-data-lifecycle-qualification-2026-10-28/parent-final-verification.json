@@ -1,0 +1,192 @@
+{
+  "recorded_utc": "2026-10-28T13:33:30.975695+00:00",
+  "execution_scope": "Parent full affected suites after independently validating original focused receipts and package assembly hashes, before review C# remediation. Original outcomes remain historical.",
+  "initial_execution_assemblies": [
+    {
+      "path": "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "sha256": "4e82ce1703f04ae8faca5461611120259e1015b0db1e14c8330ad9dad7ac3b13",
+      "bytes": 2706944
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.dll",
+      "sha256": "75a7c3b142f4626400f84af833dcf086238f42917198d1efeb9a1af6becbbdf0",
+      "bytes": 585216
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.dll",
+      "sha256": "96c2c211cc6afc2f8dcab0782418df8ab11ddf364e50763da178f32af464c0d7",
+      "bytes": 156672
+    },
+    {
+      "path": "tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll",
+      "sha256": "114291da31b41cf66b406222da9698f1733380e133270d871ccf5bd9ee57b48e",
+      "bytes": 476672
+    }
+  ],
+  "runs": [
+    {
+      "name": "service-full",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-noColor",
+        "-result-xml",
+        "/tmp/parties-data-lifecycle-parent-20261028/service-full.xml"
+      ],
+      "exit_code": 1,
+      "total": 2800,
+      "results": {
+        "Pass": 2790,
+        "Fail": 6,
+        "Skip": 4
+      },
+      "failures": [
+        {
+          "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimeGraphsMatchTheIndependentlyEvaluatedPartiesPackageSelection(configuration: \\\"Debug\\\")",
+          "class": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests",
+          "method": "ExternalRuntimeGraphsMatchTheIndependentlyEvaluatedPartiesPackageSelection",
+          "message": "Shouldly.ShouldAssertException : graph.PackageMetadata[package][\\\"EffectiveVersion\\\"]\n    should be\n\\\"3.128.4\\\"\n    but was\n\\\"3.128.3\\\"\n    difference\nDifference     |                                |   \n               |                               \\\\|/  \nIndex          | 0    1    2    3    4    5    6    \nExpected Value | 3    .    1    2    8    .    4    \nActual Value   | 3    .    1    2    8    .    3    \nExpected Code  | 51   46   49   50   56   46   52   \nActual Code    | 51   46   49   50   56   46   51   \n\nAdditional Info:\n    ${PARTIES_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/Hexalith.Tenants.csproj: Hexalith.EventStore.Gateway must match the independently evaluated Parties EventStore package selection"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimeGraphsMatchTheIndependentlyEvaluatedPartiesPackageSelection(configuration: \\\"Release\\\")",
+          "class": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests",
+          "method": "ExternalRuntimeGraphsMatchTheIndependentlyEvaluatedPartiesPackageSelection",
+          "message": "Shouldly.ShouldAssertException : graph.PackageMetadata[package][\\\"EffectiveVersion\\\"]\n    should be\n\\\"3.128.4\\\"\n    but was\n\\\"3.128.3\\\"\n    difference\nDifference     |                                |   \n               |                               \\\\|/  \nIndex          | 0    1    2    3    4    5    6    \nExpected Value | 3    .    1    2    8    .    4    \nActual Value   | 3    .    1    2    8    .    3    \nExpected Code  | 51   46   49   50   56   46   52   \nActual Code    | 51   46   49   50   56   46   51   \n\nAdditional Info:\n    ${PARTIES_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/Hexalith.Tenants.csproj: Hexalith.EventStore.Gateway must match the independently evaluated Parties EventStore package selection"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph",
+          "class": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests",
+          "method": "FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph",
+          "message": "Shouldly.ShouldAssertException : currentSelection\n    should contain (case insensitive comparison)\n\\\"EventStore package `3.128.4`\\\"\n    but was actually\n\\\"### Current source observation \u2014 2026-10-28\n\nThe operator requested synchronization of the root su...\\\""
+        },
+        {
+          "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceSelectionsMatchCurrentGitReceipts(dependency: \\\"McpCli\\\")",
+          "class": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests",
+          "method": "NonConsumedSourceSelectionsMatchCurrentGitReceipts",
+          "message": "Shouldly.ShouldAssertException : gitlink.Replace('\\\\t', ' ')\n    should be\n\\\"160000 commit 8a860ee409d0c6f87a82bfdb87d9a84a15c49018 references/Hexalith.McpCli\\\"\n    but was\n\\\"160000 commit 2d7311cbbcc592c0ea0348463037389251d1cb4b references/Hexalith.McpCli\\\"\n    difference\nDifference     |       |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |         |    |    |        \n               |      \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/       \\\\|/  \\\\|/  \\\\|/       \nIndex          | ...  14   15   16   17   18   19   20   21   22   23   24   25   26   27   28   29   30   31   32   33   34   ...  \nExpected Value | ...  8    a    8    6    0    e    e    4    0    9    d    0    c    6    f    8    7    a    8    2    b    ...  \nActual Value   | ...  2    d    7    3    1    1    c    b    b    c    c    5    9    2    c    0    e    a    0    3    4    ...  \nExpected Code  | ...  56   97   56   54   48   101  101  52   48   57   100  48   99   54   102  56   55   97   56   50   98   ...  \nActual Code    | ...  50   100  55   51   49   49   99   98   98   99   99   53   57   50   99   48   101  97   48   51   52   ...  \n\nDifference     |       |    |    |    |    |    |    |    |    |         |    |    |    |    |    |    |    |    |    |             \n               |      \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/       \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/            \nIndex          | ...  34   35   36   37   38   39   40   41   42   43   44   45   46   47   48   49   50   51   52   53   54   ...  \nExpected Value | ...  b    f    d    b    8    7    d    9    a    8    4    a    1    5    c    4    9    0    1    8    \\\\s   ...  \nActual Value   | ...  4    8    4    6    3    0    3    7    3    8    9    2    5    1    d    1    c    b    4    b    \\\\s   ...  \nExpected Code  | ...  98   102  100  98   56   55   100  57   97   56   52   97   49   53   99   52   57   48   49   56   32   ...  \nActual Code    | ...  52   56   52   54   51   48   51   55   51   56   57   50   53   49   100  49   99   98   52   98   32   ...  \n\nAdditional Info:\n    references/Hexalith.McpCli committed gitlink must match selected 8a860ee409d0c6f87a82bfdb87d9a84a15c49018; HEAD entry was '160000 commit 2d7311cbbcc592c0ea0348463037389251d1cb4b\\treferences/Hexalith.McpCli'."
+        },
+        {
+          "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceSelectionsMatchCurrentGitReceipts(dependency: \\\"Platform\\\")",
+          "class": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests",
+          "method": "NonConsumedSourceSelectionsMatchCurrentGitReceipts",
+          "message": "Shouldly.ShouldAssertException : gitlink.Replace('\\\\t', ' ')\n    should be\n\\\"160000 commit c8acfe4ee08737ec0beca735083f7e08cd8885d0 references/Hexalith.Platform\\\"\n    but was\n\\\"160000 commit 8de90958bc41b7fd01b7ed22b8ab364447a800e4 references/Hexalith.Platform\\\"\n    difference\nDifference     |       |    |    |    |    |    |    |    |    |    |    |    |    |         |    |         |    |    |    |        \n               |      \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/       \\\\|/  \\\\|/       \\\\|/  \\\\|/  \\\\|/  \\\\|/       \nIndex          | ...  14   15   16   17   18   19   20   21   22   23   24   25   26   27   28   29   30   31   32   33   34   ...  \nExpected Value | ...  c    8    a    c    f    e    4    e    e    0    8    7    3    7    e    c    0    b    e    c    a    ...  \nActual Value   | ...  8    d    e    9    0    9    5    8    b    c    4    1    b    7    f    d    0    1    b    7    e    ...  \nExpected Code  | ...  99   56   97   99   102  101  52   101  101  48   56   55   51   55   101  99   48   98   101  99   97   ...  \nActual Code    | ...  56   100  101  57   48   57   53   56   98   99   52   49   98   55   102  100  48   49   98   55   101  ...  \n\nDifference     |       |    |    |    |    |         |    |    |    |    |    |    |    |    |         |    |    |    |             \n               |      \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/       \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/       \\\\|/  \\\\|/  \\\\|/  \\\\|/            \nIndex          | ...  34   35   36   37   38   39   40   41   42   43   44   45   46   47   48   49   50   51   52   53   54   ...  \nExpected Value | ...  a    7    3    5    0    8    3    f    7    e    0    8    c    d    8    8    8    5    d    0    \\\\s   ...  \nActual Value   | ...  e    d    2    2    b    8    a    b    3    6    4    4    4    7    a    8    0    0    e    4    \\\\s   ...  \nExpected Code  | ...  97   55   51   53   48   56   51   102  55   101  48   56   99   100  56   56   56   53   100  48   32   ...  \nActual Code    | ...  101  100  50   50   98   56   97   98   51   54   52   52   52   55   97   56   48   48   101  52   32   ...  \n\nAdditional Info:\n    references/Hexalith.Platform committed gitlink must match selected c8acfe4ee08737ec0beca735083f7e08cd8885d0; HEAD entry was '160000 commit 8de90958bc41b7fd01b7ed22b8ab364447a800e4\\treferences/Hexalith.Platform'."
+        },
+        {
+          "name": "Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests.MaintainedTechnologyTablesMatchCentralPackageCatalog",
+          "class": "Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests",
+          "method": "MaintainedTechnologyTablesMatchCentralPackageCatalog",
+          "message": "Shouldly.ShouldAssertException : architecture\n    should contain (case insensitive comparison)\n\\\"| Actors & pub/sub | DAPR client/actors/AspNetCore | `1.19.0` |\\\"\n    but was actually\n\\\"# Architecture \u2014 Hexalith.Parties\n\n> Regenerated by BMAD *Document Project* (**full rescan**, deep, ...\\\""
+        }
+      ],
+      "native_xml": {
+        "path": "service-full.xml.gz",
+        "sha256": "c513020fa4424b396bef51599134f460dcf646c4fa0cdb85c2a5a8141a00a7c3",
+        "sanitized_xml_sha256": "eaa4f940124e43f68ebfee8e1fbddf16534876cec9ca3758e7f9912c734cc0c4",
+        "original_xml_sha256": "8d51bd8f8b095615b946b0fd309b3157c14f0a6cbe2e4f1b90bdad6a68bceff6"
+      },
+      "log": {
+        "path": "/tmp/parties-data-lifecycle-parent-20261028/service-full.txt",
+        "sha256": "0955c98012f42a0ebc6c13cf00f5a566b589f5c9e110deb3ba61dd0c434e4468",
+        "bytes": 1042490
+      },
+      "retained_log": {
+        "path": "service-full.txt.gz",
+        "sha256": "3e26ba71b76a87c7ab20ea0b99b15108bde88f02c92923ed2f5a469cd1e2217d",
+        "sanitized_sha256": "91e777b98fe6b07b0727a08802a3eb3e8eb95fcab92c3bcde113ba02bb8a5e09",
+        "original_sha256": "0955c98012f42a0ebc6c13cf00f5a566b589f5c9e110deb3ba61dd0c434e4468"
+      }
+    },
+    {
+      "name": "projections-full",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll",
+        "-noColor",
+        "-result-xml",
+        "/tmp/parties-data-lifecycle-parent-20261028/projections-full.xml"
+      ],
+      "exit_code": 0,
+      "total": 467,
+      "results": {
+        "Pass": 466,
+        "Skip": 1
+      },
+      "failures": [],
+      "native_xml": {
+        "path": "projections-full.xml.gz",
+        "sha256": "624b3265a7ef6e36b189cbc8a8eca4966e8eb800abec0bb6c6be34c8cfb7f941",
+        "sanitized_xml_sha256": "4d553d6a4a24c155ee6578a875047ea7837476e5929b5ae217afe2de7a17f21d",
+        "original_xml_sha256": "57bf1c4028df14c3d519503f24169d3b8fe4702c2bfe0ea516812e79e0b341c1"
+      },
+      "log": {
+        "path": "/tmp/parties-data-lifecycle-parent-20261028/projections-full.txt",
+        "sha256": "75a6dc0347c151c98b9469b1546997110159d6ac9887d0692440edb3f76dcbb2",
+        "bytes": 746
+      },
+      "retained_log": {
+        "path": "projections-full.txt.gz",
+        "sha256": "74d38cb046068d35d2a3c1238a08c7cfd2b861bf0b15302763d6ea59a0b702be",
+        "sanitized_sha256": "75a6dc0347c151c98b9469b1546997110159d6ac9887d0692440edb3f76dcbb2",
+        "original_sha256": "75a6dc0347c151c98b9469b1546997110159d6ac9887d0692440edb3f76dcbb2"
+      }
+    }
+  ],
+  "broad_gate_disposition": "Six service fitness failures are in unchanged dependency graph/owner receipt/catalog table inputs: external EventStore3.128.3 versus root3.128.4 (Debug/Release), stale selected package receipt, McpCli/Platform approved-source identities and Dapr technology table. No pin, assertion, owner acceptance or gate was changed to hide these failures. Focused task controls separately pass without skips.",
+  "transformation": {
+    "procedure": "retain_receipt.py:retain",
+    "parties_root": "/home/administrator/projects/hexalith/parties",
+    "source_workspace": "/tmp/parties-data-lifecycle-source-20261028",
+    "replacements": [
+      "${PARTIES_ROOT}",
+      "${SOURCE_WORKSPACE}"
+    ],
+    "compression": "gzip, deterministic mtime=0"
+  },
+  "post_review_focused": {
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "-noColor",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemory*",
+      "-class-",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+      "-class-",
+      "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests",
+      "-class",
+      "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests",
+      "-failSkips",
+      "-result-xml",
+      "/tmp/parties-data-lifecycle-parent-20261028/service-post-review.xml"
+    ],
+    "exit_code": 0,
+    "total": 1198,
+    "results": {
+      "Pass": 1198
+    },
+    "native_xml": {
+      "path": "service-post-review.xml.gz",
+      "sha256": "fe42741875df0afb8c27644a2704755da39584966cfa1259bf21bd98130a3481",
+      "sanitized_xml_sha256": "ba48a911e18281d76042623b4d2262790514dcaf11f5dcf74922a477c02cd83c",
+      "original_xml_sha256": "d397abda1ee55f0fb648eed95e1b70edd8aa137a1e069db3750b7f3339e73a49"
+    },
+    "current_exercised_outputs": {
+      "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll": "dda5a4a9435c6fd3cb63fd5479cc0c069ac37324e75cc4655bd03427b3e95a61",
+      "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.dll": "75a7c3b142f4626400f84af833dcf086238f42917198d1efeb9a1af6becbbdf0",
+      "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.dll": "96c2c211cc6afc2f8dcab0782418df8ab11ddf364e50763da178f32af464c0d7",
+      "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Memories.Client.Rest.dll": "4e2fd100ef85f832a54b7220c6c1005108ab738e1180d3afeb9e1e6e1b069291",
+      "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Memories.Contracts.dll": "e9950d4b94f5ffff057bc6e18de805237bb1f50cdf6ab35a03e89337bb76ae06",
+      "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.EventStore.Client.dll": "6410e83f18c98b263f186833438a142f6a611f402494a2a5a5618e9f60e24123",
+      "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.EventStore.Contracts.dll": "1f30b66c42b66b44fb588cff339576ae118dda5627c71f87d0458de2bf10d286",
+      "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.EventStore.DomainService.dll": "feb43fd3fdeb8f0335c330199cabd72932732513024471a1e227a8f1535bcc0a"
+    },
+    "matrix_audit": {
+      "published_refresh": 8,
+      "inventory_cleanup": 15,
+      "processing_history": 35,
+      "history_expiry": 0
+    }
+  }
+}

@@ -1,0 +1,11 @@
+⧗   --- input ---
+fix(search)!: enable published source refresh
+
+Enable the reviewed Memories 3.0.3 refresh protocol and record
+current evidence and remaining gates for five deferred items.
+
+BREAKING CHANGE: Rich search indexing with package dependencies now
+requires a canonical revision and original refresh proof. Reconcile
+retained legacy ingestion obligations before rollout; unknown
+admissions stay blocked.
+✔   found 0 problems, 0 warnings

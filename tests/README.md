@@ -714,3 +714,45 @@ Final parent combined-source verification at Memories
 service lane retains four optional skips; targeted runtime/package controls
 have none. The full projection suite has 464 passes and one compatibility skip.
 The same five broad Memories evidence gates remain recorded separately.
+
+
+## Data lifecycle package qualification (2026-10-28)
+
+Build `tests/Hexalith.Parties.Tests` and
+`tests/Hexalith.Parties.Projections.Tests` individually in Debug. The selected
+Memories 3.0.3 package now compiles the existing explicit-refresh controls; the
+selected EventStore 3.128.4 package supplies processing generation support. Run
+the built xUnit assemblies with single-dash `-class`, `-class-` and `-method-`
+filters and fresh XML. `-failSkips` makes an unexpected targeted skip fail.
+The always-compiled
+`SelectedPackageSendsRefreshRevisionAndAdvertisesItsCompiledCapability` control
+asserts the actual request and assembly capability independently of the selector.
+Run `PartyMemoryRestClientRecoveryTests` for focused package-activation changes.
+
+The service lane includes `PartyMemory*` search controls except the two opt-in
+runtime classes, plus `PartyProcessingGenerationRecoveryTests` and
+`PartySdkQueryHandlerTests`. The projection lane runs
+`PartySdkProjectionHandlerTests`, excluding the explicitly obsolete
+`PublishedSdkPreservesLargeLegacyLiveAndRebuildCompatibilityAsync` case, which
+requires the old package without generations. The separate current-package
+generation control must execute. These lanes inspect actual REST requests and
+serialized synthetic store end-state; they qualify consumer behavior, not a
+live Memories producer, deployment or production historical completeness.
+
+Retain effective capability properties, restored nupkg repository metadata and
+hashes, exercised implementation/test assembly hashes, commands, per-test XML
+and matrix coverage. Probe older and future unqualified package selectors
+without restoring or changing dependency files; they must leave refresh
+disabled. Attempt mapped source separately through pinned module tool 4.34.0;
+retain the initial disposition and identify any diagnostic version override.
+
+Invoke `eng/verify-ext-parties-1.ps1 -Mode Live` only with available inputs and a
+fresh evidence directory. Missing custody prerequisites must refuse before
+endpoint access and establish no expiry or lifecycle continuity. Missing inputs
+are only the observed first refusal: Live also always refuses with all inputs
+present because the complete authenticated P-01-P-10 persisted-state/restart/
+restore/failure-injection qualification lanes are not implemented in the Live
+verifier or installed. Input completion alone cannot enable qualification. The
+[bounded receipt](../_bmad-output/implementation-artifacts/tests/five-data-lifecycle-qualification-2026-10-28/README.md)
+records commands and the outstanding DW-50/82/168/130/149 external gates. Dated
+earlier receipts retain their original scope.

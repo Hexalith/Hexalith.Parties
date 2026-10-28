@@ -439,3 +439,39 @@ The [adoption receipt](../_bmad-output/implementation-artifacts/tests/five-publi
 records package revisions, exact commands, executed binaries/assets and the current
 source-launch prerequisite blocker. The original B–F source/compatibility receipt
 remains historical and does not replace published-package proof.
+
+
+### Current data lifecycle package qualification (2026-10-28)
+
+The selected Memories Client.Rest/Contracts 3.0.3 packages support explicit source
+refresh with canonical revision, stable retry identity, refresh acknowledgement
+and bounded source inventory. `HEXALITH_MEMORIES_SOURCE_REFRESH` now enables the
+existing protocol for that exact package selection as well as mapped source.
+The existing `HexalithMemoriesSourceRefresh` assembly metadata key is preserved.
+Other package selections keep the legacy submission path until separately
+qualified; API similarity alone does not enable the capability.
+
+The selected EventStore 3.128.4 packages execute bounded processing generations,
+restart recovery, revision-scoped cursor paging and complete compatibility
+exports. Earlier publication blockers for DW-50/82/168 are superseded only for
+these restored package identities and consumer controls. Before deployment,
+drain older writers and independently reconcile historical private recovery
+material and legacy source inventory. Empty local state cannot attest coverage.
+Selected producer workload/trust configuration, delayed ingestion/deletion,
+physical erasure and deployed acceptance remain independent gates.
+
+DW-130/149 still require an installed qualified identity-history custody provider
+and actual exclusive 365-day expiry followed by ordinary profile, erasure,
+replay and switch-back commands. The existing EXT-PARTIES-1 Live gate refuses
+before transport when prerequisites are missing. This is the observed first
+refusal only: even with every input present, Live always refuses because the
+complete authenticated P-01-P-10 persisted-state/restart/restore/failure-injection
+qualification lanes are not implemented in the Live verifier or installed.
+Supplying inputs alone cannot open the gate. Synthetic custody tests and ordinary
+read denials cannot substitute for qualified expiry or authorize
+skipping expired history. Preserve independent history custody and rollback.
+
+See the [bounded qualification receipt](../_bmad-output/implementation-artifacts/tests/five-data-lifecycle-qualification-2026-10-28/README.md)
+for actual restored packages, executed assemblies, commands and the separate
+mapped-source disposition. All five deferred entries remain open at their
+external gates.

@@ -71,9 +71,10 @@ sequence. The projection notification seam forwards this sequence through an add
 default interface overload, preserving existing indexer implementations. Transient
 `JsonIgnore` contact/identifier collections cannot create a second producer after
 canonical deserialization. A source URI never replaces another distinct unit in the
-mapping inventory. In a validated mapped-source build, Parties uses Memories'
-explicit refresh API with the canonical application sequence as its monotonic source
-revision and the observed canonical predecessor. An exact retry binds content bytes,
+mapping inventory. With the selected Client.Rest/Contracts 3.0.3 packages or a
+validated mapped-source build, Parties uses Memories' explicit refresh API with
+the canonical application sequence as its monotonic source revision and the
+observed canonical predecessor. An exact retry binds content bytes,
 content type and metadata to the same token. Publication atomically changes Redis
 visibility and dedup pointers; graph selection mirrors the current source revision.
 A missing canonical sequence blocks before local reservation or remote submission; canonical redelivery can then proceed. A lost acceptance acknowledgement is recovered by bounded, scope-checked source inventory and the exact persisted retry-token digest. The recovered handle still requires an independent successful workflow status before mapping publication.
@@ -83,9 +84,10 @@ The Redis publication transaction also retains a graph repair journal and advanc
 Superseded candidates remain in the inventory and are physically compensated. A newer
 revision that loses a predecessor race remains retryable through a durably linked
 successor attempt; an older revision cannot rebase over it. Ordinary ingestion keeps
-its existing dedup behavior. Package builds retain the published ingest API until the
-new Memories and multi-domain EventStore owner capabilities are published/adopted;
-a new token alone does not qualify refresh in that mode. Explicit refresh also requires
+its existing dedup behavior. Only the qualified 3.0.3 package selection enables
+this refresh capability; other package versions retain the legacy ingest path
+until separately qualified. A new token alone never qualifies refresh. Explicit
+refresh also requires
 the authenticated `X-Hexalith-Source-Refresh: source-refresh-v1` acknowledgement. A legacy
 producer that ignores the new fields leaves an unresolved durable obligation and cannot
 return qualified indexing success.
@@ -103,8 +105,9 @@ only `memories-tenants,memories-cases,memories-memory-units` at
 match `Authentication:WorkloadIssuer:Workload`; the receiving Dapr ACL must allow the
 exact bound-command POST. Missing proof configuration fails closed before submission.
 The owned Development fixture generates ephemeral test keys; this change provisions no
-production keys. Matching SDK/Memories package publication and deployment configuration
-remain separate prerequisites.
+production keys. The selected EventStore 3.128.4 and Memories 3.0.3 packages
+supply the consumer capabilities; installed producer workload/trust configuration and deployment
+qualification remain separate prerequisites.
 
 Authoritative commands require the separate `Hexalith.Memories.DomainService` host.
 The optional local AppHost flag `EnableMemoriesDomainService=true` registers its real
@@ -114,7 +117,7 @@ Memories Server retains its REST/pub/sub routes and exposes no `/process` route.
 The dedicated host executes existing decisions and folds, including snapshot/tail and
 administrative replay, using unchanged event identities. Publish/configure that workload
 and its exact EventStore caller, audience, app-channel token and deny-default Dapr ACL
-before enabling this source capability in a deployment. Existing installations acquire
+before enabling this capability in a deployment. Existing installations acquire
 neither a new host nor domain registrations unless explicitly configured.
 
 Both the `EventStore` and legacy `EventStoreIntegration` gateway prefixes are supported.
@@ -142,6 +145,25 @@ in-flight registry never establish historical coverage. Only explicit owner
 reconciliation of the fenced historical scope can establish the coverage marker.
 Missing, corrupt, interrupted, unauthorized or incomplete inventories retain obligations
 and block completion. No production reconciliation/migration is executed by this change.
+
+Activating the 3.0.3 protocol does not upgrade retained legacy intents. An intent
+without the original refresh protocol, canonical revision, body digest or producer
+authority cannot become refresh proof, even if it already names a canonical unit.
+Such redelivery remains retryable and retains its obligation. Do not infer missing
+proof, clear ledgers, replace retry identities or blindly resubmit an uncertain
+admission. Before rollout, drain older writers and have the qualified owner
+reconcile each retained intent against its exact producer, tenant, source, case,
+workflow terminality and physical output. Unknown historical inventory remains
+incomplete until separately attested. No automatic legacy-intent migration or
+production reconciliation is supplied here.
+
+If qualification or reconciliation is unavailable, pause new rich-search indexing
+and retain the existing endpoint, credentials, ledgers, fences and cleanup
+configuration. A rollback must use the retained, qualified pre-cutover binary and
+configuration under owner control, preserve every durable obligation and authority
+binding, and reconcile work admitted by either version before writers resume.
+Disabling indexing or returning to legacy ingest proves neither cleanup nor
+historical absence; do not roll back a producer fence or erase refresh obligations.
 
 A canonical output or producer deletion marker does not prove workflow completion.
 Cleanup independently validates terminal evidence while output-known producers are

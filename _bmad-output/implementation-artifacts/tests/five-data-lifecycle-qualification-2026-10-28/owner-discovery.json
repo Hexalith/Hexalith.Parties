@@ -1,0 +1,179 @@
+{
+  "observed_utc": "2026-10-28T13:33:30.974714+00:00",
+  "scope": "Read-only sibling owner records, named current Kubernetes context, local Docker/Dapr records and current Azure authentication; no secrets, domain data, acceptance changes or deployment operations. Other undisclosed installations are outside this inspected scope.",
+  "authoritative_sources": [
+    {
+      "path": "/home/administrator/projects/hexalith/agents/_bmad-output/planning-artifacts/external-dependency-register.md",
+      "sha256": "e29b7fc41cb404209e0abb5fb1e735f29cab253ce4012b142a2c8c30a9c19860",
+      "bytes": 75611
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-parties-1-custody-proposal-2026-10-25/decision-and-binding-ledger.json",
+      "sha256": "a8496d20f44b0c0511de4e17a988db4f3ec9dc7330b5e8e37380b5c2277e42ad",
+      "bytes": 64286
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-parties-1-custody-direction-2026-10-25.md",
+      "sha256": "e733c85418706644372312f37640e9df2310fe05f5d7e7a53154892c7a60db3a",
+      "bytes": 5563
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/platform/docs/implementation/story-5-4-owner-continuation-2026-10-26/installation-ledger.json",
+      "sha256": "3c2421b0420137a13fde0466d8a9febbe4f3fda5053fc9d01941d1bda5e4c79b",
+      "bytes": 33750
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/memories/docs/operations/failure-recovery.md",
+      "sha256": "3d3ed6d0a83fa04554bba76f18ff35a68d8daf9c18c1f8a59f9b02d53774e596",
+      "bytes": 15557
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/memories/docs/operations/pipeline-persistence.md",
+      "sha256": "c6b01d4f72cc3b70c5a148d91a732ddb244491d7ae5ed3a5c1b793d07484d7e6",
+      "bytes": 12594
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/memories/src/Hexalith.Memories.Server/Endpoints/SourceInventoryQualificationEndpoints.cs",
+      "sha256": "7d07e1b3283bc03adab2b3dc3bae09046dbb604df97598d74c481e2ec4f29bc5",
+      "bytes": 9176
+    }
+  ],
+  "agents_ext_parties_1": {
+    "AcceptedStatus": "Committed",
+    "TargetVersionOrCommit": "56cb4401c4179d431385ad3d931fefa402e4fc5a",
+    "TargetIntegrationDate": "2026-10-08"
+  },
+  "platform_custody_decisions": {
+    "status": "ProposedNotApprovedNotInstalled",
+    "ownerAccepted": false,
+    "available": false,
+    "liveQualified": false,
+    "qualifyingInstallationEstablished": false,
+    "acceptedReplacementIntegrationDate": null
+  },
+  "unresolved_decision_paths": 661,
+  "unresolved_command_bindings": 165,
+  "platform_installation": {
+    "status": "Blocked",
+    "dependencyAvailable": false,
+    "completeReplacementPacket": false,
+    "installedHashes": {
+      "providerProfile": null,
+      "custodyConfiguration": null,
+      "authorityEnrollment": null,
+      "publicTrust": null,
+      "executorAnchor": null,
+      "observerAnchor": null,
+      "enrollmentAnchor": null,
+      "hostInstalledProfile": null,
+      "protectionInstalledProfile": null,
+      "installedImageInventory": null,
+      "physicalQualificationPlan": null,
+      "jointConfiguration": null
+    }
+  },
+  "kubernetes": {
+    "command": [
+      "kubectl",
+      "get",
+      "deployments,statefulsets",
+      "-A",
+      "--request-timeout=15s",
+      "-o",
+      "jsonpath={range .items[*]}{.metadata.namespace}{\"\\t\"}{.metadata.name}{\"\\t\"}{.spec.template.spec.containers[*].image}{\"\\n\"}{end}"
+    ],
+    "exit_code": 0,
+    "observed_deployment_statefulset_count": 52,
+    "relevant_workloads": [
+      {
+        "namespace": "ext-secrets-1-isolated",
+        "name": "eventstore",
+        "images": "registry.hexalith.com/ext-secrets-1-eventstore@sha256:7cc365ff65351070e7156fef2ab858ff26a05943985b532b838b33ffc39878c1 ghcr.io/dapr/daprd:1.18.1"
+      },
+      {
+        "namespace": "ext-secrets-1-isolated",
+        "name": "ext-secrets-1-custody",
+        "images": "registry.hexalith.com/ext-secrets-1-custody@sha256:864428d5dc8405b7b1f1f450102ebe6ecd311a27ab9fd0b57e386c7391ddfc64 ghcr.io/dapr/daprd:1.18.1"
+      },
+      {
+        "namespace": "ext-secrets-1-isolated",
+        "name": "inventory",
+        "images": "registry.hexalith.com/ext-secrets-1-inventory@sha256:ee870e6be7b043268e8452a9fa65aa16424146d33cb34f4dc39c052a1cc34b8e ghcr.io/dapr/daprd:1.18.1"
+      },
+      {
+        "namespace": "ext-secrets-1-isolated",
+        "name": "registry-idp",
+        "images": "quay.io/keycloak/keycloak@sha256:82a77884f3af238beab1e7afd63b5f530e1b5c0590bd7aa60b40a40463e29b2c"
+      },
+      {
+        "namespace": "ext-secrets-1-isolated",
+        "name": "tenants",
+        "images": "registry.hexalith.com/ext-secrets-1-tenants@sha256:d2e67a06bacf9f88e30270cb5f47a8de8bc6b568d3bcf1b5831eb908cdf8fd0b ghcr.io/dapr/daprd:1.18.1"
+      },
+      {
+        "namespace": "hexalith-memories",
+        "name": "memories",
+        "images": "registry.hexalith.com/memories@sha256:71e49b6e806ec2fa7c221e58600ba02115693923db05915663396be01b1c042c"
+      },
+      {
+        "namespace": "hexalith-memories",
+        "name": "memories-access-telemetry",
+        "images": "registry.hexalith.com/memories-access-telemetry@sha256:b3790e08c0091dfb723f6819e4706a6b1ef36a051b8c4afe38f5e362c5bdf8ea"
+      },
+      {
+        "namespace": "hexalith-memories",
+        "name": "memories-access-telemetry-clock",
+        "images": "registry.hexalith.com/memories-access-telemetry-clock@sha256:50413b716ca051fad7c4d68119527a1fc5f64c566eea22827769fd85d9de4c70"
+      },
+      {
+        "namespace": "hexalith-memories",
+        "name": "memories-mcp",
+        "images": "registry.hexalith.com/memories-mcp@sha256:4d5cd738a89fdca71b7202d7661cecea8bab6b6e45d4fe505670cf7287205bb7"
+      },
+      {
+        "namespace": "ext-secrets-1-isolated",
+        "name": "ext-secrets-1-hmac-authority",
+        "images": "registry.hexalith.com/ext-secrets-1-hmac-authority@sha256:ea2017a757192bb4e6bafe59b2a558a9a9e9671dc3f9f844fd243a6718bc8bfa ghcr.io/dapr/daprd:1.18.1"
+      },
+      {
+        "namespace": "ext-secrets-1-isolated",
+        "name": "registry-idp-db",
+        "images": "docker.io/library/postgres:18.6-trixie@sha256:5a5a84b19854a9ffaa54082c166ff4ec27473a361e496e5ea167f298f2da9722"
+      },
+      {
+        "namespace": "ext-secrets-1-isolated",
+        "name": "registry-state",
+        "images": "redis/redis-stack-server:7.4.0-v8@sha256:798ab84d9f266936b034ab11c4d04a2b8e4b441884c5aa7d17ac951eefdf742a"
+      },
+      {
+        "namespace": "hexalith-memories",
+        "name": "access-telemetry-postgresql",
+        "images": "docker.io/library/postgres:18.6-trixie@sha256:5a5a84b19854a9ffaa54082c166ff4ec27473a361e496e5ea167f298f2da9722"
+      },
+      {
+        "namespace": "hexalith-memories",
+        "name": "falkordb",
+        "images": "falkordb/falkordb:v4.12.0@sha256:7927eb194df0fadf70e2deb6c20c8178743ec92aacd739c790f8a35ce5dee613"
+      },
+      {
+        "namespace": "hexalith-memories",
+        "name": "redis-stack",
+        "images": "redis/redis-stack-server:7.4.0-v8@sha256:798ab84d9f266936b034ab11c4d04a2b8e4b441884c5aa7d17ac951eefdf742a"
+      },
+      {
+        "namespace": "openbao",
+        "name": "hexalith-keys",
+        "images": "quay.io/openbao/openbao:2.6.2@sha256:11fd73a2102cda9c55d5d881a8c3210303146a7ec1e8ac76f526e175c6d24641"
+      }
+    ],
+    "named_parties_workloads": [],
+    "interpretation": "Running generic OpenBao, EXT-SECRETS custody and Memories workloads are present. Their presence does not supply accepted EXT-PARTIES-1 history/expiry bindings, complete legacy inventory or writer-drain evidence."
+  },
+  "memories_owner_disposition": "Maintained operations guidance requires independent owner reconciliation, full historical coverage and older-writer/scheduler drain. SourceInventoryQualificationEndpoints refuses Production and requires explicit fake-embedding/owned synthetic mode. No complete deployed historical reconciliation/cutover receipt was found in inspected Memories, EventStore or CI/CD owner documentation. No domain-store contents were inspected or altered.",
+  "azure": {
+    "account_metadata_available": true,
+    "resource_list_exit_code": 1,
+    "blocker": "Current account metadata is cached, but resource listing requires an absent MSAL cache entry. No login or account change performed."
+  },
+  "result": "No complete approved actor-history custody/expiry installation or deployed Parties/Memories legacy reconciliation and writer-drain evidence located; all five deferred gates remain open."
+}

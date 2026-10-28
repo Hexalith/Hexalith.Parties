@@ -1,0 +1,10 @@
+{
+  "Properties": {
+    "HexalithEventStoreVersion": "3.128.4",
+    "HexalithMemoriesVersion": "3.0.3",
+    "HexalithMemoriesFromSource": "",
+    "HexalithSourceMappingMode": "",
+    "MemoriesSourceRefreshSupported": "true",
+    "DefineConstants": "TRACE;HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY;DEBUG;HEXALITH_MEMORIES_SOURCE_REFRESH"
+  }
+}

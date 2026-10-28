@@ -1,0 +1,16 @@
+{
+  "command": [
+    "/tmp/five-frontcomposer-node24/node-v24.22.1-linux-x64/bin/node",
+    "node_modules/@commitlint/cli/cli.js",
+    "--edit",
+    "/tmp/parties-data-lifecycle-commit-message.txt",
+    "--verbose"
+  ],
+  "exit_code": 0,
+  "node_version": "v24.22.1",
+  "cli_version": "21.2.2",
+  "message_sha256": "590fb88b6d8763fe353e32fcf08f991730a0da90c18678bb51ea98e81580a586",
+  "message": "commit-message.txt",
+  "log_sha256": "c051177d68443c7065043f8b832d7185eac8529f4e0571a98a3329fb25c7e86d",
+  "policy": "Conventional Commits; allowed Hexalith fix type; lowercase imperative enable; no period; breaking behavior explicit; body lines below72 characters"
+}

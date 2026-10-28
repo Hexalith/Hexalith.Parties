@@ -1,0 +1,187 @@
+{
+  "published_refresh": {
+    "scope": "Current review-1 actual REST class; all 27 cases pass. Controls in other classes/lanes retain their original historical scope pending parent final verification.",
+    "controls": [
+      {
+        "method": "PublishedAcknowledgementAndTokenSurviveRestartWithoutSecondSubmission",
+        "class": "Hexalith.Parties.Tests.Search.PartyMemoryRestClientRecoveryTests",
+        "lane": "review1-rest-focused",
+        "passed_cases": 1
+      },
+      {
+        "method": "LostAcknowledgementRequiresExactExplicitRefreshAdmissionAcrossSerializedRestart",
+        "class": "Hexalith.Parties.Tests.Search.PartyMemoryRestClientRecoveryTests",
+        "lane": "review1-rest-focused",
+        "passed_cases": 2
+      },
+      {
+        "method": "OriginalRefreshBindingSurvivesCanonicalSerializationAndChangedDeliveryContext",
+        "class": "Hexalith.Parties.Tests.Search.PartyMemoryRestClientRecoveryTests",
+        "lane": "review1-rest-focused",
+        "passed_cases": 1
+      },
+      {
+        "method": "SupersededRefreshRedeliveryRegistersAndPublishesStableSuccessor",
+        "class": "Hexalith.Parties.Tests.Search.PartyMemoryRestClientRecoveryTests",
+        "lane": "review1-rest-focused",
+        "passed_cases": 1
+      },
+      {
+        "method": "MissingRevisionFailsBeforeReservationThenCanonicalRedeliverySucceeds",
+        "class": "Hexalith.Parties.Tests.Search.PartyMemoryRestClientRecoveryTests",
+        "lane": "review1-rest-focused",
+        "passed_cases": 1
+      },
+      {
+        "method": "OlderProducerIgnoringExplicitRefreshCannotPublishOrLoseItsUncertainAdmissionAcrossRestart",
+        "class": "Hexalith.Parties.Tests.Search.PartyMemoryRestClientRecoveryTests",
+        "lane": "review1-rest-focused",
+        "passed_cases": 1
+      },
+      {
+        "method": "SelectedPackageSendsRefreshRevisionAndAdvertisesItsCompiledCapability",
+        "class": "Hexalith.Parties.Tests.Search.PartyMemoryRestClientRecoveryTests",
+        "lane": "review1-rest-focused",
+        "passed_cases": 1
+      }
+    ]
+  },
+  "inventory_cleanup": {
+    "scope": "actual restored SDK consumer HTTP/serialized synthetic store controls; no selected producer deployment claim",
+    "controls": [
+      {
+        "method": "ActualRestRecoveryAcceptsVariablePagesThroughFullInventoryCapacity",
+        "class": "Hexalith.Parties.Tests.Search.PartyMemoryRestClientRecoveryTests",
+        "lane": "review1-rest-focused",
+        "passed_cases": 1
+      },
+      {
+        "method": "EmptyLocalStateRequiresExplicitCompleteRemoteCoverage",
+        "class": "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+        "lane": "service-focused",
+        "passed_cases": 2
+      },
+      {
+        "method": "PartialHistoricalPagesAndPendingProducersSurviveRestartUntilTerminalAbsence",
+        "class": "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+        "lane": "service-focused",
+        "passed_cases": 1
+      },
+      {
+        "method": "UnavailableInventoryNeverSettlesEmptyLocalState",
+        "class": "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+        "lane": "service-focused",
+        "passed_cases": 4
+      },
+      {
+        "method": "WrongTenantInventoryCannotAuthorizeDeletion",
+        "class": "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+        "lane": "service-focused",
+        "passed_cases": 1
+      },
+      {
+        "method": "AdmissionAuthorityUsesActualTypedClientAfterConfiguredEndpointChanges",
+        "class": "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+        "lane": "service-focused",
+        "passed_cases": 1
+      },
+      {
+        "method": "PermanentClosureFromOneProducerDoesNotCertifyAnotherEndpointOrLegacyUnknownAuthority",
+        "class": "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+        "lane": "service-focused",
+        "passed_cases": 1
+      },
+      {
+        "method": "OutputKnownOrDeletedStillRequiresIndependentWorkflowTerminalEvidence",
+        "class": "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+        "lane": "service-focused",
+        "passed_cases": 2
+      },
+      {
+        "method": "CanonicalMappingCannotBypassRunningProducerTerminalEvidence",
+        "class": "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+        "lane": "service-focused",
+        "passed_cases": 1
+      },
+      {
+        "method": "DirectUnitCleanupDoesNotReuseAnotherProducerAbsenceForIdenticalIdentifiers",
+        "class": "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+        "lane": "service-focused",
+        "passed_cases": 1
+      }
+    ]
+  },
+  "processing_history": {
+    "scope": "actual restored SDK consumer HTTP/serialized synthetic store controls; no selected producer deployment claim",
+    "controls": [
+      {
+        "method": "InterruptedLargeMigrationOrDispatcherRebuildResumesPersistedBucketsBeforeAuthorityCutoverAsync",
+        "class": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests",
+        "lane": "service-focused",
+        "passed_cases": 2
+      },
+      {
+        "method": "CompetingAppendOrErasureInvalidatesLargeMigrationOrDispatcherRebuildPromotionAsync",
+        "class": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests",
+        "lane": "service-focused",
+        "passed_cases": 4
+      },
+      {
+        "method": "UnqualifiedHistoricalRecoveryRefusesErasureWithEveryPersistedByteUnchangedAsync",
+        "class": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests",
+        "lane": "service-focused",
+        "passed_cases": 1
+      },
+      {
+        "method": "RebuildPreservesFailedAuditBeyondCheckpointAndRepairsOnlyWithCompleteUncontendedReplayAsync",
+        "class": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests",
+        "lane": "service-focused",
+        "passed_cases": 4
+      },
+      {
+        "method": "RetainedProcessingHistoryUsesBoundedBucketsAndPureLargeRebuildAsync",
+        "class": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests",
+        "lane": "projections-focused",
+        "passed_cases": 1
+      },
+      {
+        "method": "ProcessingBucketPagesProtectScopeAndCompatibilityReadsRemainCompleteAsync",
+        "class": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests",
+        "lane": "service-focused",
+        "passed_cases": 7
+      },
+      {
+        "method": "InlineProcessingPagesTraverseProtectedFirstContinuationAndTerminalMetadataAsync",
+        "class": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests",
+        "lane": "service-focused",
+        "passed_cases": 1
+      },
+      {
+        "method": "ProcessingReadsRejectBrokenCoverageAndMidReadRevisionChangesAsync",
+        "class": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests",
+        "lane": "service-focused",
+        "passed_cases": 7
+      },
+      {
+        "method": "InlineProcessingReadsRefuseMisplacedForeignFactsWithoutPayloadAsync",
+        "class": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests",
+        "lane": "service-focused",
+        "passed_cases": 6
+      },
+      {
+        "method": "ProcessingFirstPageWithoutRevisionAuthorityReturnsReadModelUnavailableAsync",
+        "class": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests",
+        "lane": "service-focused",
+        "passed_cases": 3
+      }
+    ]
+  },
+  "history_expiry": {
+    "expected": "refuse before endpoint access when installed custody prerequisites are absent",
+    "result": "Pass: negative readiness gate; expiry/continuity not qualified",
+    "command": "custody-live",
+    "exit_code": 1,
+    "live_qualified": false,
+    "gate": "Missing live inputs: EXT_PARTIES_GATEWAY_URL, EXT_PARTIES_TENANT_A, EXT_PARTIES_TENANT_B, EXT_PARTIES_PROVISIONER_CREDENTIAL, EXT_PARTIES_IDENTITY_WRITER_CREDENTIAL, EXT_PARTIES_READER_CREDENTIAL, EXT_PARTIES_POLICY_ID, EXT_PARTIES_RETENTION, EXT_PARTIES_EXPIRY_TRIGGER, EXT_PARTIES_CUSTODY_TARGET, EXT_PARTIES_RESTORE_TARGET, EXT_PARTIES_FAILURE_INJECTION_TARGET"
+  }
+}

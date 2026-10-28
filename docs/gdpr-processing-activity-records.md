@@ -73,12 +73,14 @@ newer checkpoints and retained erasure fences prevent stale promotion. Abandoned
 generations never become authoritative.
 
 Before deploying a cutover, drain every older processing writer. Older binaries
-cannot honor bucket authority. Matching EventStore SDK generation support must
-be published and adopted first; the unchanged currently selected package preserves its complete legacy live
-and rebuild behavior. Automatic bucket conversion stays disabled until that
-capability is published and adopted. Source verification
-is not package-publication or deployment evidence. No deployed conversion is
-performed by this change.
+cannot honor bucket authority. The selected EventStore 3.128.4 packages provide generation support; the
+2026-10-28 package controls qualify bounded conversion, interrupted staging and
+restart, stale publication refusal and complete paged/export reads. Automatic
+bucket conversion is active with this capability. Package qualification supplies
+neither deployed writer-drain evidence nor historical private-recovery
+reconciliation. No deployed conversion is performed by this change. The
+[qualification receipt](../_bmad-output/implementation-artifacts/tests/five-data-lifecycle-qualification-2026-10-28/README.md)
+keeps source diagnostics and deployment gates separate.
 
 `GetProcessingRecords` without SDK paging still returns the complete authorized
 array. Data portability exports also retain the complete history and allocate
@@ -113,7 +115,7 @@ must implement this additive preflight contract as well.
 
 PII-bearing retained canonical batches opt into SDK `DiscoverableRecovery`.
 The SDK enrolls content-free scope evidence before storing private preparation
-bytes. The source-capable eraser closes that aggregate's recovery admission,
+bytes. The recovery-capable eraser closes that aggregate's recovery admission,
 retires registered preparations, then reloads and redacts canonical state.
 It reopens admission only after the coordinated tombstone batch succeeds.
 Retired manifest keys hold permanent content-free sentinels so paused create-only
@@ -123,10 +125,10 @@ obligation and admission fence intact.
 This qualification covers enrolled preparations. Before cutover, a qualified
 owner must reconcile private recovery histories from older unregistered writers
 and drain those writers. An empty new directory does not prove their historical
-absence. Matching published SDK adoption and deployed cutover remain separate
-from these source controls.
+absence. The current package controls qualify enrolled synthetic preparations;
+deployed reconciliation and cutover remain separate.
 
-Source erasure checks
+Erasure checks
 `Parties:Projections:HistoricalPrivateRecoveryReconciliationAttested` before any
 mutation. It defaults to false. Only an operator who has qualified the selected
 store's older private recovery history and drained older writers may enable

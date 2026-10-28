@@ -1,0 +1,7 @@
+{
+  "Properties": {
+    "HexalithMemoriesVersion": "3.0.4",
+    "MemoriesSourceRefreshSupported": "false",
+    "DefineConstants": "TRACE;HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY;DEBUG"
+  }
+}

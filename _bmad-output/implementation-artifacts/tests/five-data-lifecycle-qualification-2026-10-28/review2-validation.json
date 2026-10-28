@@ -1,0 +1,106 @@
+{
+  "status": "pass",
+  "verified_case_counts": {
+    "service-focused": 1197,
+    "projections-focused": 218,
+    "source-version-mismatch": 1197,
+    "source-aligned-focused": 1197,
+    "review1-rest-focused": 27
+  },
+  "negative_mutations": [
+    {
+      "mutation": "compressed-hash",
+      "result": "rejected",
+      "reason": "compressed hash: service-focused.xml.gz"
+    },
+    {
+      "mutation": "uncompressed-hash",
+      "result": "rejected",
+      "reason": "uncompressed hash: review1-rest-focused.xml.gz"
+    },
+    {
+      "mutation": "declared-total-with-rehashed-XML",
+      "result": "rejected",
+      "reason": "declared total: service-focused"
+    },
+    {
+      "mutation": "duplicate-ID-with-rehashed-XML",
+      "result": "rejected",
+      "reason": "empty or duplicate test IDs: service-focused"
+    },
+    {
+      "mutation": "empty-XML-with-rehashed-XML",
+      "result": "rejected",
+      "reason": "empty XML assemblies: service-focused"
+    },
+    {
+      "mutation": "declared-runner-errors",
+      "result": "rejected",
+      "reason": "declared errors: service-focused"
+    },
+    {
+      "mutation": "successful-lane-exit",
+      "result": "rejected",
+      "reason": "successful lane exit: review1-rest-focused"
+    },
+    {
+      "mutation": "exact-matrix-method-count",
+      "result": "rejected",
+      "reason": "matrix method count: SelectedPackageSendsRefreshRevisionAndAdvertisesItsCompiledCapability"
+    },
+    {
+      "mutation": "test-result-mutation",
+      "result": "rejected",
+      "reason": "declared passed: review1-rest-focused"
+    },
+    {
+      "mutation": "matrix-nonpassing-method",
+      "result": "rejected",
+      "reason": "mandatory matrix control identities: review1-matrix.json/published_refresh"
+    },
+    {
+      "mutation": "nonzero-build-warning",
+      "result": "rejected",
+      "reason": "nonzero build warnings: review1-service-build"
+    },
+    {
+      "mutation": "missing-custody-refusal",
+      "result": "rejected",
+      "reason": "missing custody refusal"
+    },
+    {
+      "mutation": "missing-mandatory-matrix-rows",
+      "result": "rejected",
+      "reason": "missing mandatory matrix row: matrix.json"
+    },
+    {
+      "mutation": "empty-mandatory-matrix-controls",
+      "result": "rejected",
+      "reason": "empty mandatory matrix controls: published_refresh"
+    },
+    {
+      "mutation": "deleted-processing-method-from-both-matrices",
+      "result": "rejected",
+      "reason": "mandatory matrix control identities: matrix.json/processing_history"
+    }
+  ],
+  "stage": "Review-2 mandatory matrix coverage; prior review1-validation.json is historical",
+  "command": [
+    "python3",
+    "_bmad-output/implementation-artifacts/tests/five-data-lifecycle-qualification-2026-10-28/verify_receipts.py",
+    "--self-test"
+  ],
+  "exit_code": 0,
+  "validator_sha256": "477df9d113742a43a111672049455c16339c879f1a5b7ab268190bf671c425b5",
+  "optimized_validation": {
+    "argv": [
+      "python3",
+      "-O",
+      "_bmad-output/implementation-artifacts/tests/five-data-lifecycle-qualification-2026-10-28/verify_receipts.py",
+      "--self-test"
+    ],
+    "exit_code": 0,
+    "status": "pass",
+    "rejected_mutations": 15
+  }
+}

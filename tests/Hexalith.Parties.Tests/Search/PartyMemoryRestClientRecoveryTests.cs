@@ -16,6 +16,35 @@ public sealed class PartyMemoryRestClientRecoveryTests
 {
     private static CancellationToken Token => TestContext.Current.CancellationToken;
 
+    /// <summary>Qualifies the selected package refresh path without depending on its compilation selector.</summary>
+    [Fact]
+    public async Task SelectedPackageSendsRefreshRevisionAndAdvertisesItsCompiledCapability()
+    {
+        // This current-package qualification must remain independent of the selector
+        // being tested, so removing package activation cannot remove the test.
+        PartyMemoryIndexingService.SupportsExplicitSourceRefresh.ShouldBeTrue();
+        typeof(PartyMemoryIndexingService).Assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyMetadataAttribute), false)
+            .Cast<System.Reflection.AssemblyMetadataAttribute>()
+            .Single(attribute => attribute.Key == "HexalithMemoriesSourceRefresh").Value.ShouldBe("true");
+        var state = new PartyMemoryTestReadModelStore();
+        var handler = new PartyMemoryRestHandler();
+        handler.Recovery.Workflows["workflow"] = PartyMemoryRecoveryHandler.Completed();
+        using var http = PartyMemoryRecoveryTests.Http(handler);
+        var context = PartyMemoryRecoveryTests.Context() with { SequenceNumber = 23 };
+
+        (await PartyMemoryRecoveryTests.Indexer(state, Client(http)).IndexAsync(PartyMemoryRecoveryTests.Entry(), context, Token))
+            .ShouldNotBeNull().Indexed.ShouldBeTrue();
+
+        var request = handler.Submissions.ShouldHaveSingleItem();
+        request.GetProperty("refreshExistingSource").GetBoolean().ShouldBeTrue();
+        request.GetProperty("sourceRevisionNumber").GetInt64().ShouldBe(23);
+        var intent = (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", Token)).ShouldHaveSingleItem();
+        request.GetProperty("idempotencyToken").GetString().ShouldBe(intent.AttemptId);
+        intent.SourceRevisionNumber.ShouldBe(23);
+        (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", Token))
+            .ShouldHaveSingleItem().MemoryUnitId.ShouldBe("canonical");
+    }
+
 #if HEXALITH_MEMORIES_SOURCE_REFRESH
     [Fact]
     public async Task ActualRestRecoveryAcceptsVariablePagesThroughFullInventoryCapacity()
@@ -218,6 +247,10 @@ public sealed class PartyMemoryRestClientRecoveryTests
         request.GetProperty("sourceUri").GetString().ShouldBe(PartyMemoryUrn.Build("tenant", "party"));
         request.GetProperty("ingestedBy").GetString().ShouldBe("Hexalith.Parties");
         request.GetProperty("contentType").GetString().ShouldBe("text/plain");
+#if HEXALITH_MEMORIES_SOURCE_REFRESH
+        request.GetProperty("refreshExistingSource").GetBoolean().ShouldBeTrue();
+        request.GetProperty("sourceRevisionNumber").GetInt64().ShouldBe(7);
+#endif
         Encoding.UTF8.GetString(request.GetProperty("contentBytes").GetBytesFromBase64()).ShouldContain("private-personal-name");
         string attempt = (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", Token)).ShouldHaveSingleItem().AttemptId;
         request.GetProperty("idempotencyToken").GetString().ShouldBe(attempt);
@@ -231,6 +264,12 @@ public sealed class PartyMemoryRestClientRecoveryTests
         var retained = (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", Token)).ShouldHaveSingleItem();
         retained.AttemptId.ShouldBe(attempt);
         retained.MemoryUnitId.ShouldBe("canonical");
+#if HEXALITH_MEMORIES_SOURCE_REFRESH
+        retained.SourceRevisionNumber.ShouldBe(7);
+        retained.RefreshProtocolVersion.ShouldBe(Hexalith.Memories.Contracts.V1.SourceRefreshProtocol.Version);
+        retained.RefreshIdentityDigest.ShouldBe(SubmittedBinding(request));
+        retained.ProducerAuthority.ShouldBe(PartyMemoryCleanupService.BuildProducerAuthority(http.BaseAddress));
+#endif
         (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", Token)).ShouldHaveSingleItem().MemoryUnitId.ShouldBe("canonical");
     }
 

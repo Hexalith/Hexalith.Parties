@@ -349,6 +349,11 @@ resolution_2026_10_25_final: Source bucket/paging/recovery implementation is rev
 verification_final: `tests/five-processing-and-memories-erasure-2026-10-25/`; spec `spec-five-processing-and-memories-erasure-deferred-items.md`.
 
 
+qualification_2026_10_28: Restored EventStore 3.128.4 supplies the generation/recovery APIs. Current package controls execute large legacy conversion, bounded staging, interrupted restart, retained audit facts, concurrent-write refusal, scoped/stale/corrupt cursor rejection and complete authorized history/export reads. This supersedes the earlier package-publication blocker for the selected identity only; source diagnostics are recorded separately.
+remaining_gate_2026_10_28: Drain all deployed older processing writers, independently reconcile historical private recovery material, authorize migration/cutover and qualify deployed state plus rollback. The default-false historical reconciliation attestation remains required. No production conversion or writer-drain proof is supplied; status remains open.
+verification_2026_10_28: `tests/five-data-lifecycle-qualification-2026-10-28/` binds current nupkg provenance and executed assemblies to commands and per-test XML.
+
+
 ### DW-51: Resolve projection-handler performance and validation-coupling debt
 
 status: done 2026-10-21
@@ -592,6 +597,11 @@ verification_2026_10_24: `spec-five-memories-inventory-and-publication-deferred-
 
 review_loop_1_2026_10_24: Source inventory now retains independently verifiable scheduling, candidate/claim-check and terminal provenance. Proven unscheduled and independently failed work is physically reconciled; missing/terminated workflows and ambiguous payload writes remain fenced. Durable payload write tokens prevent deletion from certifying absence while a save can still materialize. The final real-backend lane passes 21/21; parent review/publication and legacy reconciliation remain open. Evidence: `tests/five-memories-inventory-and-publication-2026-10-24/review1-verification.json`; prior same-day counts above remain historical.
   review_loop_2_2026_10_24: Source inventory now batches exact deletion receipts and withholds terminal proof until every retained discarded candidate, failed-unit record and claim-checked payload is reconciled. Unknown legacy completeness stays open; final loop2 receipt is separate from earlier evidence.
+
+qualification_2026_10_28: Restored Memories Client.Rest/Contracts 3.0.3 supplies explicit revision-aware refresh and bounded authoritative source inventory. Parties enables its existing protocol for this exact package selection; actual REST/serialized-state controls cover empty/partial mappings, bounded reconciliation, tenant/source/producer authority, incomplete coverage and pending/foreign terminal evidence. The current package publication/adoption prerequisite is superseded for these consumer controls.
+remaining_gate_2026_10_28: Independently reconcile unknown legacy inventory after older writers drain, provide owner completeness attestation, and qualify the installed selected producer/workload configuration and deployed cleanup. Empty stores, dedup/search and synthetic fixture ownership cannot establish historical completeness; status remains open.
+verification_2026_10_28: `tests/five-data-lifecycle-qualification-2026-10-28/`; prior source/live receipts remain historical and do not transfer qualification to a deployment.
+
 
 ### DW-83: Persist recovery when mapping and compensating deletion both fail
 
@@ -1023,6 +1033,11 @@ location: src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs:143; sr
 severity: high (unverified)
 status: open
 
+qualification_2026_10_28: The existing EXT-PARTIES-1 Live gate refuses before endpoint access because all twelve required live inputs are absent. No installed qualified identity-history custody binding or expiry run is supplied. Existing synthetic custody controls establish only their bounded behavior.
+remaining_gate_2026_10_28: Supply the complete owner-approved installed custody/policy/restore/failure-injection bindings and qualify actual exclusive 365-day expiry, then execute ordinary profile, erasure, replay and switch-back commands and inspect persisted lifecycle continuity without expired actor values. Ordinary read denial must not authorize history skipping. Preserve independent history custody and rollback; status remains open.
+verification_2026_10_28: `tests/five-data-lifecycle-qualification-2026-10-28/custody-live-gate.txt`; no continuity or expiry qualification is claimed.
+
+
 ### DW-149: Determine whether finite history expiry prevents ordinary Party command replay and establish value-free lifecycle continuity if needed.
 
 origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md"; original review: Story 8.10 baseline review after three-pin approval (2026-10-04)), 2026-10-13
@@ -1030,6 +1045,11 @@ location: src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs:143; sr
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 reason: Blind 4: command replay unwraps every history event, but fallback catches only destroyed profile keys. A live qualified custody expiry outcome was not exercised, so harm remains unverified. Existing identity-feature paths, unchanged here. Settle by advancing an actual qualified provider beyond expiry and running profile, erasure, and replay/switch-back commands; demonstrate replayable lifecycle state without expired actor values or record the exact failure.
 status: open
+
+qualification_2026_10_28: Fresh EXT-PARTIES-1 Live execution refuses before transport on twelve missing installed-provider inputs. No provider was invented or selected, no expiry was advanced and no ordinary replay after qualified expiry was exercised.
+remaining_gate_2026_10_28: Complete installed owner-approved custody acceptance and actual exclusive 365-day expiry qualification, then determine the behavior of profile, erasure, replay and switch-back commands from persisted end-state. If qualified expiry prevents ordinary replay, establish value-free lifecycle continuity without expired actor values; a generic read denial is insufficient authority. Preserve independent history custody and rollback; status remains open.
+verification_2026_10_28: `tests/five-data-lifecycle-qualification-2026-10-28/`; synthetic provider receipts do not close this external gate.
+
 
 ### DW-131: Validate identity fold wire representations
 
@@ -1285,6 +1305,11 @@ verification_2026_10_24: `tests/five-memories-inventory-and-publication-2026-10-
 
 review_loop_1_2026_10_24: The enhanced authenticated three-host wrapper and child pass 1/1 each, zero skips, with normal lost-ack indexing recovery, real extraction-failure/Dapr-payload absence, native persisted stream/replay comparison, delayed producer/deletion controls and unrelated survivors. Payload/save and failed-metadata fences close the delayed-writer boundaries. Deployed/workload configuration and legacy gates remain separate. Evidence: `tests/five-memories-inventory-and-publication-2026-10-24/review1-verification.json`; prior same-day counts above remain historical.
   review_loop_2_2026_10_24: Discarded post-index losers and lost output acknowledgements retain independent cleanup obligations across restart. Annotation graph failure records non-scheduling only from the actual pre-child workflow history; ambiguous calls and lost Preparing work stay fenced. Source/package/runtime/deployed evidence remains separate.
+
+qualification_2026_10_28: Restored Memories Client.Rest/Contracts 3.0.3 and EventStore 3.128.4 remove the earlier selected-package prerequisite for consumer refresh/inventory/recovery controls. Actual REST requests now carry canonical revision and stable refresh identity in package builds. Supersession, lost acknowledgement, cancellation, pending producers, delayed terminal evidence and uncertain deletion retain durable obligations across serialized restart. This consumer evidence does not recertify the historical source-owned runtime against the newly selected deployed package topology.
+remaining_gate_2026_10_28: Qualify the installed selected producer's delayed-ingestion/deletion and physical-erasure behavior, production workload/key/trust configuration and deployment, and independently reconcile historical source inventory after older writers drain. Whole-topology health, immutable adoption/owner acceptance and production reconciliation remain separate. No deployment or historical completeness is claimed; status remains open.
+verification_2026_10_28: `tests/five-data-lifecycle-qualification-2026-10-28/` retains per-test package evidence and exact external gates.
+
 
 ### DW-169: D7 — Use concurrency-aware removal when cleaning a party memory-unit mapping inventory.
 

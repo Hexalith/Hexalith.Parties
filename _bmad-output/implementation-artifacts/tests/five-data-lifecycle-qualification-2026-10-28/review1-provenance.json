@@ -1,0 +1,64 @@
+{
+  "stage": "Review-1 focused package REST controls",
+  "assets": {
+    "path": "tests/Hexalith.Parties.Tests/obj/project.assets.json",
+    "sha256": "9ae4684a40b6995eb9885b76b1590c62c9689c31544c8f9c3b7bf2b97be4b825",
+    "bytes": 440155
+  },
+  "compiled_inputs": [
+    {
+      "path": "Directory.Build.targets",
+      "sha256": "1d3c392dace4f527b252152c9f9b841b14a6360f2371e893ac8dd78611e5082c",
+      "bytes": 12116
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/Search/PartyMemoryRestClientRecoveryTests.cs",
+      "sha256": "f65208e489a1380ec7d649733a7b235c32d7528e3e966380d4dc8f955ef241c1",
+      "bytes": 27315
+    }
+  ],
+  "exercised_outputs": [
+    {
+      "path": "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "sha256": "dda5a4a9435c6fd3cb63fd5479cc0c069ac37324e75cc4655bd03427b3e95a61",
+      "bytes": 2709504
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.dll",
+      "sha256": "75a7c3b142f4626400f84af833dcf086238f42917198d1efeb9a1af6becbbdf0",
+      "bytes": 585216
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.dll",
+      "sha256": "96c2c211cc6afc2f8dcab0782418df8ab11ddf364e50763da178f32af464c0d7",
+      "bytes": 156672
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Memories.Client.Rest.dll",
+      "sha256": "4e2fd100ef85f832a54b7220c6c1005108ab738e1180d3afeb9e1e6e1b069291",
+      "bytes": 96256
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Memories.Contracts.dll",
+      "sha256": "e9950d4b94f5ffff057bc6e18de805237bb1f50cdf6ab35a03e89337bb76ae06",
+      "bytes": 1298432
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.EventStore.Client.dll",
+      "sha256": "6410e83f18c98b263f186833438a142f6a611f402494a2a5a5618e9f60e24123",
+      "bytes": 1209344
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.EventStore.Contracts.dll",
+      "sha256": "1f30b66c42b66b44fb588cff339576ae118dda5627c71f87d0458de2bf10d286",
+      "bytes": 815616
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.EventStore.DomainService.dll",
+      "sha256": "feb43fd3fdeb8f0335c330199cabd72932732513024471a1e227a8f1535bcc0a",
+      "bytes": 1178624
+    }
+  ],
+  "original_provenance": "provenance.json; initial compiled-input/test hashes are historical after the added unconditional test",
+  "new_control": "SelectedPackageSendsRefreshRevisionAndAdvertisesItsCompiledCapability"
+}

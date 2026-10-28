@@ -1,0 +1,140 @@
+{
+  "stage": "Review-1 remediation; earlier verification.json outcomes remain historical and unchanged",
+  "commands": [
+    {
+      "name": "review1-service-build",
+      "argv": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--nologo"
+      ],
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "review1-rest-focused",
+      "argv": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-noColor",
+        "-class",
+        "Hexalith.Parties.Tests.Search.PartyMemoryRestClientRecoveryTests",
+        "-failSkips",
+        "-result-xml",
+        "/tmp/parties-data-lifecycle-review1-20261028/rest-focused.xml"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "lanes": {
+    "review1-rest-focused": {
+      "executed": 27,
+      "results": {
+        "Pass": 27
+      },
+      "classes": {
+        "Hexalith.Parties.Tests.Search.PartyMemoryRestClientRecoveryTests": {
+          "Pass": 27
+        }
+      }
+    }
+  },
+  "retained_native_xml": {
+    "review1-rest-focused.xml": {
+      "retained": "review1-rest-focused.xml.gz",
+      "sha256": "3b2879a281f5adb15a55e12ac4553d27346a483a6295e35f9e2e3fd7130c837b",
+      "sanitized_sha256": "9585e6120337153039c3f20e8c72bf533db5054d2d230a438ba7b70b48808c3e",
+      "original_sha256": "5cfccee9c4d7dfc09947b5af00877e7c942c50dcacd94b2c778079d2cd139bc1",
+      "compressed_bytes": 2767,
+      "sanitized_bytes": 18541,
+      "test_cases": 27
+    }
+  },
+  "retained_build_logs": {
+    "service-build": {
+      "retained": "service-build.txt.gz",
+      "sha256": "88337d502177c63c301906289179380251b5fa8140fae54d0fad5834ad5cab37",
+      "sanitized_sha256": "e018781e2f990e9ecdcfe66827164b95548d741bfabd3ab194c95353376f8456",
+      "original_sha256": "2bf8eb74b3d79790e4a87ec597daa70e8d9fd5fac9aa1c6fec404edc5bc84b55",
+      "compressed_bytes": 404,
+      "sanitized_bytes": 1668,
+      "command_manifest": "verification.json",
+      "command_name": "service-build",
+      "warnings": 0,
+      "errors": 0
+    },
+    "projections-build": {
+      "retained": "projections-build.txt.gz",
+      "sha256": "2843c2b11306f581901b30c4eb409f31f28c253b824195a3731f89e1e0ea7efe",
+      "sanitized_sha256": "cf0327e25e791a8e05e2c5bbaad9abd1bd4364e2238eb486304b2c14aa8956f5",
+      "original_sha256": "c5ece67fd6ecfe22f7f73cf1206105f8da1f7f2ed0199308ff531670ff1851ed",
+      "compressed_bytes": 293,
+      "sanitized_bytes": 820,
+      "command_manifest": "verification.json",
+      "command_name": "projections-build",
+      "warnings": 0,
+      "errors": 0
+    },
+    "source-build": {
+      "retained": "source-build.txt.gz",
+      "sha256": "da6d8c8d74eb721a1910075e2350f105a81ec5e17624acd9ae9f8226cb7df721",
+      "sanitized_sha256": "0f75bc3086ef4bbb63f06fec93c19242a6e3e25c9cc5b4aadb7729239b40825d",
+      "original_sha256": "6cd31318915f267e47734cabc5982360ae8cfb76efebc111d5e99e6b2357ded3",
+      "compressed_bytes": 1206,
+      "sanitized_bytes": 9838,
+      "command_manifest": "verification.json",
+      "command_name": "source-build",
+      "warnings": 0,
+      "errors": 0
+    },
+    "source-aligned-build": {
+      "retained": "source-aligned-build.txt.gz",
+      "sha256": "7516d694fe2eb0c6f9d33a72904c01ee8eaa1710855ea302bf6765f910cc785e",
+      "sanitized_sha256": "0c5ff6f9fccb4f3d7b979344bec329d8e2b32193a04ef71dfaf0f639331c0cb7",
+      "original_sha256": "f6d5a25776240ab6874f2acec3098a37c6e40eea38474cfa6c8418b74c84b208",
+      "compressed_bytes": 1062,
+      "sanitized_bytes": 8927,
+      "command_manifest": "verification.json",
+      "command_name": "source-aligned-build",
+      "warnings": 0,
+      "errors": 0
+    },
+    "review1-service-build": {
+      "retained": "review1-service-build.txt.gz",
+      "sha256": "201f6a2733600e00c40e841362d8e53b18f9c8b641eec1343a3f18122dbb2f79",
+      "sanitized_sha256": "df2481de845dbf500497e59f0d9cd8e925e9b479f93258076cbd80bdfc666b62",
+      "original_sha256": "fc13a64887f1e0939b61b539d5ce339f37ffd298ec8f8b14d427604fd7c61ec2",
+      "compressed_bytes": 344,
+      "sanitized_bytes": 1324,
+      "command_manifest": "review1-verification.json",
+      "command_name": "review1-service-build",
+      "warnings": 0,
+      "errors": 0
+    }
+  },
+  "transformation": {
+    "procedure": "retain_receipt.py",
+    "procedure_sha256": "bf2a3a804b6c2c477940fa40bbbb02435e5c29594822d69d1ca5edd9532ce507",
+    "parties_root": "/home/administrator/projects/hexalith/parties",
+    "source_workspace": "/tmp/parties-data-lifecycle-source-20261028",
+    "algorithm": "Two UTF-8 path byte substitutions in listed order, then gzip.compress(sanitized, mtime=0); no newline or XML rewrite"
+  },
+  "custody": {
+    "observed_first_blocker": "Missing all twelve live inputs; retained live-gate refuses before transport",
+    "additional_blocker": "Even with all inputs, Live always refuses because complete authenticated P-01-P-10 persisted-state/restart/restore/failure-injection lanes are not implemented in the Live verifier or installed",
+    "additional_blocker_evidence": "static existing Live branch, not an all-input execution",
+    "source": {
+      "path": "eng/verify-ext-parties-1.ps1",
+      "sha256": "4dd903a4ee4f2667aee6908da9706493ce0783348675cbfa8fdc01de428ada00",
+      "bytes": 12195
+    },
+    "all_inputs_refusal_literal": "Live qualification remains blocked: production custody/policy and complete authenticated P-01-P-10 persisted-state/restart/restore/failure-injection lanes are not installed.",
+    "live_qualified": false
+  },
+  "artifact_scope": "Only edited REST test class rerun; original larger lanes remain historical. Parent owns broad final verification."
+}
