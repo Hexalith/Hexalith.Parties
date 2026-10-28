@@ -2,7 +2,7 @@
 title: 'Adopt five published FrontComposer UI capabilities'
 type: 'refactor'
 created: '2026-10-28'
-status: 'draft'
+status: 'in-progress'
 route: 'dispatch'
 review_loop_iteration: 0
 baseline_commit: '4e4bfb9b73bb1f0cc8b8fd44aa216d949a748cfa'
