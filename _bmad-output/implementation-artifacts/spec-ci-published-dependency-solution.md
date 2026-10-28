@@ -48,3 +48,7 @@ context: []
 - Full CI now passes 6,103 unit/integration tests (six existing optional skips). The final Aspire lane exposed one actual TLS UntrustedRoot error in concurrent-session UI routing. Adopt immutable Builds domain-ci 1745ea0f09df9e518aeea3eeb1a7df836f67e09d for its existing preparation hook, bounded at two minutes; trust the ephemeral SDK development certificate and propagate SSL_CERT_DIR before running unchanged mandatory topology assertions.
 
 - Trust follow-up verification: all 464 CI contract tests pass; shell syntax and exported/persisted environment probe pass; 15 prior clean TRX reports satisfy the updated workflow validator. Review found only stale same-revision wording, now corrected to independent CI and commitlint pins.
+
+- The TLS preparation passes in real CI. A subsequent cold runner showed only the optional Admin UI process-launch message before the per-sidecar two-minute readiness timer expired (start 01:31:05, stopped 01:33:06, no app stdout). Allow the sidecar check to consume the existing shared five-minute startup deadline; do not change overall lifetime, health responses, persisted-state checks or isolation assertions.
+
+- All six lifecycle/cancellation controls pass with zero skips. Review confirms both callers pass the existing shared five-minute cancellation token; overall startup duration and all readiness/identity assertions remain bounded and unchanged. Cold compilation is a plausible cause of the pending process startup, not independently proven by retained output.

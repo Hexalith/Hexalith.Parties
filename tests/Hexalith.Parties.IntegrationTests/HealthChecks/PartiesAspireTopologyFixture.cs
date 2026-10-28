@@ -482,8 +482,10 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             {
                 client.DefaultRequestHeaders.Add("dapr-api-token", apiToken);
             }
+            // Cold external hosts build on first launch. Give each sidecar the remaining
+            // shared startup budget; the caller's five-minute deadline still bounds the whole topology.
             await WaitForEndpointAsync(client, "/v1.0/healthz", [HttpStatusCode.NoContent],
-                TimeSpan.FromMinutes(2), TimeSpan.FromMilliseconds(250), cancellationToken).ConfigureAwait(false);
+                TimeSpan.FromMinutes(5), TimeSpan.FromMilliseconds(250), cancellationToken).ConfigureAwait(false);
             using JsonDocument metadata = await client.GetFromJsonAsync<JsonDocument>("/v1.0/metadata", cancellationToken).ConfigureAwait(false)
                 ?? throw new InvalidOperationException($"Sidecar '{appId}' returned no metadata.");
             if (metadata.RootElement.GetProperty("id").GetString() != Session.AppId(appId))
