@@ -15,7 +15,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Repository type | Monolith — single cohesive .NET solution (`Hexalith.Parties.slnx`), exactly 14 projects under `src` plus one sample project + 16 runnable .NET test projects + 1 support host + Playwright e2e |
 | Primary language | C# / **.NET 10** (SDK pinned `10.0.402`) |
 | Architecture style | Event sourcing + CQRS + EventStore SDK domain/projection/query handlers, gateway-fronted (EventStore) |
-| Orchestration | .NET Aspire 13.6.3 (`dotnet aspire run`) |
+| Orchestration | .NET Aspire 13.6.4 (`dotnet aspire run`) |
 | Eventing | DAPR pub/sub (Redis local; Kafka/RabbitMQ/Service Bus in prod) |
 | Persistence | Event stream + projection state in DAPR state store (Redis); optional Hexalith.Memories for rich search |
 | Distribution | NuGet packages + immutable container images; runtime deployment orchestration is externally owned |
@@ -50,7 +50,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Category | Technology | Version |
 |----------|-----------|---------|
 | Runtime | .NET | `net10.0` (SDK `10.0.402`, rollForward latestPatch) |
-| Orchestration | .NET Aspire (`Aspire.Hosting` + hosting integrations) | `13.6.3` |
+| Orchestration | .NET Aspire (`Aspire.Hosting` + hosting integrations) | `13.6.4` |
 | Actors & pub/sub | DAPR client/actors/AspNetCore | `1.18.10` |
 | | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.6.1-beta.935` |
 | Gateway/eventing | Hexalith.EventStore | package selected by `HexalithEventStoreVersion` in the effective MSBuild graph; source and installed acceptance remain separately verified |
@@ -77,7 +77,7 @@ Current selection does not recertify that identity's owner approvals or parity.
 
 Solution-wide build settings (`Directory.Build.props`): `Nullable=enable`, `ImplicitUsings=enable`, **`TreatWarningsAsErrors=true`** (enforced by a build gate — see §11). Central package management via `Directory.Packages.props`.
 
-The AppHost SDK and Aspire packages are aligned at `13.6.3`; DAPR client,
+The AppHost SDK and Aspire packages are aligned at `13.6.4`; DAPR client,
 actors, and ASP.NET Core packages are aligned at `1.18.10`.
 
 Historical root source identities follow the Story 8.10 final set approved by

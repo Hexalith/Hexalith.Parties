@@ -356,3 +356,14 @@ references/Hexalith.McpCli|8d4a8c07636c1ad065dfc8dc28dbfc956d5deb82|validated-ad
 references/Hexalith.Memories|790670897c1fc684d41b980fc5e40934be796122|validated-advance|v3.0.0-1-g79067089|jpiquot|2026-10-28
 references/Hexalith.Platform|b742b1b7a496ac72d6961ca6db5213d3df42d234|validated-advance|b742b1b|jpiquot|2026-10-28
 references/Hexalith.Tenants|1436044bf6452bbc5bdb2eaa8b585ab2ce9362ca|validated-advance|v5.10.1-89-g1436044b|jpiquot|2026-10-28
+
+# --- 2026-10-28 release follow-up: upstream Aspire 13.6.4 catalog
+#     matches the concurrently updated AppHost SDK; synchronize clean owner main
+#     tips under the operator request. Exact-source CI remains mandatory.
+references/Hexalith.Builds|1745ea0f09df9e518aeea3eeb1a7df836f67e09d|validated-advance|v4.38.1-5-g1745ea0|jpiquot|2026-10-28
+references/Hexalith.EventStore|eec6ed131a8959c85ae191dff75f88dd34a74832|validated-advance|v3.128.3-2-geec6ed131|jpiquot|2026-10-28
+references/Hexalith.FrontComposer|8f7c4906a91387c2caf8d46dddc4d3e6dd0af905|validated-advance|v4.7.1-1-g8f7c4906|jpiquot|2026-10-28
+references/Hexalith.McpCli|8a860ee409d0c6f87a82bfdb87d9a84a15c49018|validated-advance|v1.1.0-1-g8a860ee|jpiquot|2026-10-28
+references/Hexalith.Memories|c9d07c7cdbb93f4c0999b85bfca11a2ffc5d0cbe|validated-advance|v3.0.0-2-gc9d07c7c|jpiquot|2026-10-28
+references/Hexalith.Platform|c8acfe4ee08737ec0beca735083f7e08cd8885d0|validated-advance|v1.0.0-2-gc8acfe4|jpiquot|2026-10-28
+references/Hexalith.Tenants|3d13880bceb43fbbb686ad5089170f9ce5f97eb3|validated-advance|v5.10.1-93-g3d13880b|jpiquot|2026-10-28

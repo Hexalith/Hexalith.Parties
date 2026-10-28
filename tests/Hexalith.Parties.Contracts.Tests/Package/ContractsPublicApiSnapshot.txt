@@ -560,6 +560,12 @@ type class Hexalith.Parties.Contracts.Models.PartySearchResult interfaces:System
   property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.Models.MatchMetadata> Matches required getset
   property Hexalith.Parties.Contracts.Models.PartyIndexEntry Party required getset
   property System.Double RelevanceScore getset
+type class Hexalith.Parties.Contracts.Models.ProcessingActivityPage interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.ProcessingActivityPage>
+  ctor (System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.Models.ProcessingActivityRecord> Items, System.String NextCursor, System.Nullable<System.Int64> TotalCount)
+  property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.Models.ProcessingActivityRecord> Items getset
+  property System.String NextCursor getset
+  property System.Nullable<System.Int64> TotalCount getset
+  method System.Void Deconstruct(System.Collections.Generic.IReadOnlyList`1[[Hexalith.Parties.Contracts.Models.ProcessingActivityRecord, Hexalith.Parties.Contracts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Items, System.String& NextCursor, System.Nullable`1[[System.Int64, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& TotalCount)
 type class Hexalith.Parties.Contracts.Models.ProcessingActivityRecord interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.ProcessingActivityRecord>
   ctor ()
   property System.String ActorId getset
@@ -622,6 +628,9 @@ type class Hexalith.Parties.Contracts.Queries.ChatBotPartyAuthorityResult interf
   property System.String TenantId getset
   method System.Void Deconstruct(System.String& TenantId, System.String& PrincipalId, System.String& PartyId, System.String& Operation, System.String& ActorClass, System.String& Origin, System.Boolean& Allowed, System.Int64& SourceVersion, System.String& ObservationId, System.DateTimeOffset& ObservedAt)
 type class Hexalith.Parties.Contracts.Queries.GetParty interfaces:System.IEquatable<Hexalith.Parties.Contracts.Queries.GetParty>
+  ctor ()
+  property System.String PartyId required getset
+type class Hexalith.Parties.Contracts.Queries.GetProcessingRecords interfaces:System.IEquatable<Hexalith.Parties.Contracts.Queries.GetProcessingRecords>
   ctor ()
   property System.String PartyId required getset
 type class Hexalith.Parties.Contracts.Queries.ListParties interfaces:System.IEquatable<Hexalith.Parties.Contracts.Queries.ListParties>

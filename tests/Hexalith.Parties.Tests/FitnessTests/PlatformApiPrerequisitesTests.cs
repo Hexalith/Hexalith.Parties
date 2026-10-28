@@ -58,35 +58,35 @@ public sealed class PlatformApiPrerequisitesTests
     ];
 
     // Release selection is separate from the historical migration/parity receipt constants.
-    private const string CurrentReleaseEventStoreSha = "1b404e7fbcdbb5604418f04025d16756436cec24";
-    private const string CurrentReleaseEventStoreDescribe = "v3.128.0-2-g1b404e7f";
-    private const string CurrentSourceEventStoreDescribe = "v3.128.0-2-g1b404e7f";
-    private const string CurrentReleaseEventStoreTag = "v3.128.0";
+    private const string CurrentReleaseEventStoreSha = "eec6ed131a8959c85ae191dff75f88dd34a74832";
+    private const string CurrentReleaseEventStoreDescribe = "v3.128.3-2-geec6ed13";
+    private const string CurrentSourceEventStoreDescribe = "v3.128.3-2-geec6ed13";
+    private const string CurrentReleaseEventStoreTag = "v3.128.3";
     private static readonly IReadOnlyDictionary<string, string> CurrentReleaseGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["references/Hexalith.AI.Tools"] = AiToolsSha,
-        ["references/Hexalith.Builds"] = "db897eac9f2819220b32d237109d7255218b46a9",
+        ["references/Hexalith.Builds"] = "1745ea0f09df9e518aeea3eeb1a7df836f67e09d",
         ["references/Hexalith.Commons"] = "1663028fb6d9f46a0bf17919edeb21bb99be1587",
         [EventStoreRelativePath] = CurrentReleaseEventStoreSha,
-        ["references/Hexalith.FrontComposer"] = "9c4166e4b7cb45e2512e2b6db887a071f35ce244",
-        ["references/Hexalith.Memories"] = "f480fd70a7c25587264f50b5174358eee709c513",
+        ["references/Hexalith.FrontComposer"] = "8f7c4906a91387c2caf8d46dddc4d3e6dd0af905",
+        ["references/Hexalith.Memories"] = "c9d07c7cdbb93f4c0999b85bfca11a2ffc5d0cbe",
         ["references/Hexalith.PolymorphicSerializations"] = "221ac4592ba908ae7661ba1fa9e2d1fcc23baee0",
-        ["references/Hexalith.Tenants"] = "692c17b27d94677a3a4d065330d150b262cdb570",
-        ["references/Hexalith.McpCli"] = "dc282889e624a4c990faa3f005ad7eaa8db7a473",
-        ["references/Hexalith.Platform"] = "8d61addebff5bb2f0af81b3e373d2d31a3a774a2",
+        ["references/Hexalith.Tenants"] = "3d13880bceb43fbbb686ad5089170f9ce5f97eb3",
+        ["references/Hexalith.McpCli"] = "8a860ee409d0c6f87a82bfdb87d9a84a15c49018",
+        ["references/Hexalith.Platform"] = "c8acfe4ee08737ec0beca735083f7e08cd8885d0",
     };
 
     private static readonly IReadOnlyDictionary<string, string> CurrentSourceDescribes = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        ["references/Hexalith.Builds"] = "v4.38.0-14-gdb897eac",
+        ["references/Hexalith.Builds"] = "v4.38.1-5-g1745ea0f",
         [EventStoreRelativePath] = CurrentSourceEventStoreDescribe,
-        ["references/Hexalith.FrontComposer"] = "v4.7.0-106-g9c4166e4",
-        ["references/Hexalith.Memories"] = "v2.29.15-38-gf480fd70",
-        ["references/Hexalith.Tenants"] = "v5.10.1-56-g692c17b2",
+        ["references/Hexalith.FrontComposer"] = "v4.7.1-1-g8f7c4906",
+        ["references/Hexalith.Memories"] = "v3.0.0-2-gc9d07c7c",
+        ["references/Hexalith.Tenants"] = "v5.10.1-93-g3d13880b",
         ["references/Hexalith.AI.Tools"] = "3f194e17",
         ["references/Hexalith.Commons"] = "v2.30.3-4-g1663028f",
-        ["references/Hexalith.McpCli"] = "v1.0.0-76-gdc282889",
-        ["references/Hexalith.Platform"] = "8d61adde",
+        ["references/Hexalith.McpCli"] = "v1.1.0-1-g8a860ee4",
+        ["references/Hexalith.Platform"] = "v1.0.0-2-gc8acfe4e",
         ["references/Hexalith.PolymorphicSerializations"] = "v1.19.5",
     };
 

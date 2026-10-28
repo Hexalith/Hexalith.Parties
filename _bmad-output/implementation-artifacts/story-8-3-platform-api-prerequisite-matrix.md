@@ -48,7 +48,31 @@ retention action, and does not change Story 8.7's `blocked` status: the
 release adds Story 8.6's shared-projection rebuild completion mechanics only,
 not the G5 runtime engine.
 
-### Current source observation — 2026-10-27
+### Current source observation — 2026-10-28
+
+The operator requested synchronization of the root submodules and a release.
+These exact revisions are clean upstream main selections; the new Builds catalog
+aligns Aspire 13.6.4 with the AppHost SDK. EventStore package `3.128.3` matches
+the independently evaluated external runtime package graphs.
+Selection does not revalidate historical parity receipts or grant production
+migration, data-custody, deployment or rollback qualification. Automated CI and
+exact-source registry verification remain separate required release evidence.
+The module tool remains the source-root and dependency-mode authority.
+
+| Root dependency | Current source identity | Release use |
+| --- | --- | --- |
+| EventStore | `eec6ed131a8959c85ae191dff75f88dd34a74832` (`v3.128.3-2-geec6ed13`) | Package `3.128.3`; consumer qualification belongs to current executed receipts. |
+| Memories | `c9d07c7cdbb93f4c0999b85bfca11a2ffc5d0cbe` (`v3.0.0-2-gc9d07c7c`) | Observed source selection only; package/runtime gates retain their own evidence. |
+| FrontComposer | `8f7c4906a91387c2caf8d46dddc4d3e6dd0af905` (`v4.7.1-1-g8f7c4906`) | Observed source selection only; package/runtime gates retain their own evidence. |
+| Tenants | `3d13880bceb43fbbb686ad5089170f9ce5f97eb3` (`v5.10.1-93-g3d13880b`) | Observed source selection only; package/runtime gates retain their own evidence. |
+| AI.Tools | `3f194e17174994d308ec84af9ee2b5aa68674d0d` (`3f194e17`) | Observed source selection only; package/runtime gates retain their own evidence. |
+| Commons | `1663028fb6d9f46a0bf17919edeb21bb99be1587` (`v2.30.3-4-g1663028f`) | Observed source selection only; package/runtime gates retain their own evidence. |
+| Builds | `1745ea0f09df9e518aeea3eeb1a7df836f67e09d` (`v4.38.1-5-g1745ea0f`) | Observed source selection only; package/runtime gates retain their own evidence. |
+| PolymorphicSerializations | `221ac4592ba908ae7661ba1fa9e2d1fcc23baee0` (`v1.19.5`) | Observed source selection only; package/runtime gates retain their own evidence. |
+| McpCli | `8a860ee409d0c6f87a82bfdb87d9a84a15c49018` (`v1.1.0-1-g8a860ee4`) | Observed source selection only; package/runtime gates retain their own evidence. |
+| Platform | `c8acfe4ee08737ec0beca735083f7e08cd8885d0` (`v1.0.0-2-gc8acfe4e`) | Observed source selection only; package/runtime gates retain their own evidence. |
+
+### Historical source observation — 2026-10-27
 
 The approved five-item legacy recovery task starts at Parties
 `67d16261ee9ba5f8b8595351ba96c211ebb5f9d2`. Only the Memories root selection
