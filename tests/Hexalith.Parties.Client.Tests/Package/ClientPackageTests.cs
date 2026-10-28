@@ -11,7 +11,6 @@ public sealed class ClientPackageTests : IDisposable
 {
     private const string LocalVersionOverride = "0.0.0-local.0";
     private const string LocalPackVersionProperties = $"-p:MinVerVersionOverride={LocalVersionOverride} -p:PackageVersion={LocalVersionOverride}";
-    private const string CommonsPackVersionProperties = "-p:MinVerVersionOverride=2.27.0 -p:PackageVersion=2.27.0";
     private const int MaxDeclaredDependencyCount = 16;
     private const long MaxPackedClientPackageBytes = 5L * 1024L * 1024L;
 
@@ -184,33 +183,8 @@ public sealed class ClientPackageTests : IDisposable
             repoRoot,
             "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj",
             "HexalithEventStoreVersion");
-        string eventStorePackVersionProperties =
-            $"-p:MinVerVersionOverride={eventStoreVersion} -p:PackageVersion={eventStoreVersion}";
-        string uniqueIdsProject = Path.Combine(
-            repoRoot,
-            "references",
-            "Hexalith.Commons",
-            "src",
-            "libraries",
-            "Hexalith.Commons.UniqueIds",
-            "Hexalith.Commons.UniqueIds.csproj");
-
-        RunDotnet(
-            "build",
-            $"\"{uniqueIdsProject}\" --configuration Release -m:1 {CommonsPackVersionProperties}",
-            repoRoot);
-        RunDotnet(
-            "pack",
-            $"\"{uniqueIdsProject}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {CommonsPackVersionProperties}",
-            repoRoot);
-        RunDotnet(
-            "pack",
-            $"\"{Path.Combine(repoRoot, "references", "Hexalith.Commons", "src", "libraries", "Hexalith.Commons.Http", "Hexalith.Commons.Http.csproj")}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {CommonsPackVersionProperties}",
-            repoRoot);
-        RunDotnet(
-            "pack",
-            $"\"{Path.Combine(repoRoot, "references", "Hexalith.EventStore", "src", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {eventStorePackVersionProperties}",
-            repoRoot);
+        // External dependencies are the published packages selected by the central
+        // catalog. Only the two packages under test belong in this local feed.
         RunDotnet(
             "pack",
             $"\"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Contracts", "Hexalith.Parties.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {LocalPackVersionProperties}",

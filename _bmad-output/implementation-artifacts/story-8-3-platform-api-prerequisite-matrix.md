@@ -58,6 +58,8 @@ Selection does not revalidate historical parity receipts or grant production
 migration, data-custody, deployment or rollback qualification. Automated CI and
 exact-source registry verification remain separate required release evidence.
 The module tool remains the source-root and dependency-mode authority.
+Source descriptions are anchored to the tag captured in each observation; later
+tags on the same exact commit do not rewrite that historical descriptor.
 
 | Root dependency | Current source identity | Release use |
 | --- | --- | --- |

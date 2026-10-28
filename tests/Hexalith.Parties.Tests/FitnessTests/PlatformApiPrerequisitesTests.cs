@@ -765,9 +765,7 @@ public sealed class PlatformApiPrerequisitesTests
 
         AssertCurrentSourceRow(ReadCurrentSourceSelection(ReadMatrix()), path, identity, describe);
         AssertGitlinkAndCheckout(root, path, identity);
-        RunGit(root, "-C", path, "describe", "--tags", "--always", "--abbrev=8", "HEAD")
-            .Trim()
-            .ShouldBe(describe, path);
+        DescribeObservedSource(root, path, describe).ShouldBe(describe, path);
     }
 
     [Fact]
@@ -786,9 +784,7 @@ public sealed class PlatformApiPrerequisitesTests
             string describe = CurrentSourceDescribes[path];
             AssertCurrentSourceRow(currentSelection, path, identity, describe);
             AssertGitlinkAndCheckout(root, path, identity);
-            RunGit(root, "-C", path, "describe", "--tags", "--always", "--abbrev=8", "HEAD")
-                .Trim()
-                .ShouldBe(describe, path);
+            DescribeObservedSource(root, path, describe).ShouldBe(describe, path);
         }
 
         RunGit(root, "-C", EventStoreRelativePath, "describe", "--tags", "--match", CurrentReleaseEventStoreTag, "--abbrev=8", "HEAD")
@@ -2585,6 +2581,18 @@ public sealed class PlatformApiPrerequisitesTests
     private static bool IsNotBuildOutput(string root, string path)
         => !Path.GetRelativePath(root, path).Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
             && !Path.GetRelativePath(root, path).Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Reproduces an observed descriptor without adopting tags published after the receipt.</summary>
+    private static string DescribeObservedSource(string root, string path, string observedDescribe)
+    {
+        if (Regex.IsMatch(observedDescribe, "^[0-9a-f]{8}$", RegexOptions.CultureInvariant))
+        {
+            return RunGit(root, "-C", path, "rev-parse", "--short=8", "HEAD").Trim();
+        }
+
+        string observedTag = Regex.Replace(observedDescribe, @"-\d+-g[0-9a-f]+$", string.Empty, RegexOptions.CultureInvariant);
+        return RunGit(root, "-C", path, "describe", "--tags", "--match", observedTag, "--abbrev=8", "HEAD").Trim();
+    }
 
     private static string ReadCurrentSourceSelection(string matrix)
     {

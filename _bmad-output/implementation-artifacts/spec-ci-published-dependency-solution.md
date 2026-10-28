@@ -41,3 +41,6 @@ context: []
 
 - Follow-up full service tests exposed stale current-selection receipts and EventStore package skew against the refreshed Tenants runtime graph. Select published EventStore 3.128.3, matching the catalog/runtime roots; update current source identity constants and add a dated matrix observation while preserving historical qualification receipts. Current Aspire technology tables now reflect 13.6.4.
 - Public API snapshot adds only existing ProcessingActivityPage and GetProcessingRecords records from prior source commit 0455c28a8604bf68d7065d36977c1c2ccf13e2e7; the remaining 225 Contracts controls were unchanged and all 226 passed after the refresh. Independent review confirmed no API removal or hidden change.
+
+- Clean-run follow-up: ClientPackageTests now packs only owned Contracts/Client artifacts and restores published external dependencies, removing latent dependencies on pre-existing external source output. Both package probes pass.
+- Immutable source proof still checks exact committed and checked-out SHAs. Receipt descriptions now constrain git describe to the tag captured by the observation; raw short-SHA observations use rev-parse. Fetching the new Memories v3.0.1 tag reproduced the previous failure while the anchored v3.0.0 description remained unchanged.
