@@ -196,28 +196,16 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
 
             PartiesMtlsProfile.ConfigureInternalGrpcEndpoints(_builder, Session);
             PartiesMtlsProfile.ConfigureAdminServerSidecarEndpoint(_builder);
+            PartiesMtlsProfile.ConfigureAppChannelEndpoint(_builder, "eventstore");
+            if (_completeMtlsProfile || _memoriesReadinessScope)
+            {
+                PartiesMtlsProfile.ConfigureAppChannelEndpoint(_builder, "memories");
+            }
             _redis = PartiesTestRedis.Configure(_builder);
-            // Dapr reads actor configuration once. Its first callback must wait for
-            // Kestrel, rather than connect to a proxy before the gateway is listening.
-            _ = _builder.CreateResourceBuilder<ProjectResource>("eventstore")
-                .WithEndpoint("http", endpoint =>
-                {
-                    endpoint.IsProxied = false;
-                    endpoint.Port = null;
-                    endpoint.TargetPort = null;
-                }, createIfNotExists: false);
             if (_completeMtlsProfile)
             {
                 PartiesMtlsProfile.ConfigureOptionalDependencies(_builder);
-                // An explicit-start UI has no listener yet. Let Dapr wait for Kestrel,
-                // rather than queue its first app callback through an already-listening DCP proxy.
-                _ = _builder.CreateResourceBuilder<ProjectResource>("eventstore-admin-ui")
-                    .WithEndpoint("http", endpoint =>
-                    {
-                        endpoint.IsProxied = false;
-                        endpoint.Port = null;
-                        endpoint.TargetPort = null;
-                    }, createIfNotExists: false);
+                PartiesMtlsProfile.ConfigureAppChannelEndpoint(_builder, "eventstore-admin-ui");
                 IResourceBuilder<ParameterResource> token = _builder.AddParameter("fixture-parties-channel-token", _appChannelToken, secret: true);
                 _ = _builder.CreateResourceBuilder<ProjectResource>("parties").WithEventStoreAppChannelToken(token);
                 IResourceBuilder<ParameterResource> sampleToken = _builder.AddParameter("fixture-sample-channel-token",

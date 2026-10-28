@@ -33,7 +33,21 @@ internal static class PartiesMtlsProfile
         }
     }
 
-    /// <summary>Follows the gateway sidecar's actual listener after Aspire randomizes test ports.</summary>
+    /// <summary>Makes Dapr discover Kestrel instead of an already-listening startup proxy.</summary>
+    /// <param name="builder">The owned application model.</param>
+    /// <param name="resourceName">The exact fixture app whose HTTP listener Dapr probes.</param>
+    internal static void ConfigureAppChannelEndpoint(IDistributedApplicationBuilder builder, string resourceName)
+    {
+        _ = builder.CreateResourceBuilder<ProjectResource>(resourceName)
+            .WithEndpoint("http", endpoint =>
+            {
+                endpoint.IsProxied = false;
+                endpoint.Port = null;
+                endpoint.TargetPort = null;
+            }, createIfNotExists: false);
+    }
+
+    /// <summary>Follows the gateway sidecar's allocated consumer endpoint after Aspire randomizes ports.</summary>
     /// <param name="builder">The owned application model.</param>
     internal static void ConfigureAdminServerSidecarEndpoint(IDistributedApplicationBuilder builder)
     {
@@ -43,10 +57,10 @@ internal static class PartiesMtlsProfile
         _ = builder.CreateResourceBuilder<ProjectResource>("eventstore-admin").WithEnvironment(context =>
         {
             // The toolkit creates its CLI resource during BeforeStart. Resolve it only
-            // when child environments are evaluated, then follow the listener passed to daprd.
+            // when child environments are evaluated, then consume its exported HTTP endpoint.
+            // TargetPort can contain a producer-only DCP template, so it cannot cross resources.
             ExecutableResource cli = builder.Resources.OfType<ExecutableResource>().Single(resource => resource.Name == cliName);
-            context.EnvironmentVariables["AdminServer__EventStoreDaprHttpEndpoint"] = ReferenceExpression.Create(
-                $"http://127.0.0.1:{cli.GetEndpoint("http").Property(EndpointProperty.TargetPort)}");
+            context.EnvironmentVariables["AdminServer__EventStoreDaprHttpEndpoint"] = cli.GetEndpoint("http");
         });
     }
 
