@@ -652,11 +652,14 @@ archived: 2026-10-25
 origin: migrated from legacy ledger ("Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-08-19)"), 2026-09-06
 location: FrontComposer shell route-focus handling and tests/e2e/specs/parties-accessibility.spec.ts
 reason: `frontcomposer-skip-link-reachability-after-route-focus` — **route to FrontComposer shell owners.** Measured 2026-08-19 on the accessibility specimen at FrontComposer `7a337a21`: once the shell hydrates it moves focus to the route `<h1>` (`h1#parties-accessibility-specimen-title`). That is a deliberate SPA announcement pattern, but it also advances the browser's sequential focus navigation point past both `.fc-skip-link` anchors, so the first `Tab` after load reaches the page's first interactive control rather than "Skip to content". A keyboard user would have to Shift+Tab backwards to reach a skip link after a client-side route change. On a cold document load the DOM order is correct — the skip links are the shell's first two focusable descendants, which `parties-accessibility.spec.ts` now asserts explicitly by seeding focus on `.fc-shell-root`. Question for the owners: should the shell reset the sequential focus navigation point (for example by focusing a container ahead of the skip links, or by focusing the skip link itself) so WCAG 2.4.1 bypass remains forward-reachable after route changes? Also recorded in "Deferred from: code review of story-8-10 (2026-09-06)": Skip links are no longer the real first-Tab keyboard stop after a client-side route change — already routed to FrontComposer shell owners as `frontcomposer-skip-link-reachability-after-route-focus` above; the review layer that raised this again confirmed no further action is needed beyond what that entry already tracks. [tests/e2e/specs/parties-accessibility.spec.ts:37-49]
-status: open
+status: done 2026-10-28
 progress: 2026-10-21 Reviewed FrontComposer source fix and producer/Parties source regressions delivered on main. Producer browser cases pass 105/105 across three engines, consumer candidate cases pass 8/8, and the original six package assertions remain enforced. Owner publication, catalog/package adoption and removal of the two explicit source opt-ins remain required before closure. See spec-dw-91-forward-skip-links.md and tests/dw-91-forward-skip-links-2026-10-21/validation-resume.json.
 decision: 2026-09-06 Restore forward skip access — Adjust FrontComposer route focus so skip links remain forward reachable while retaining an accessible route announcement, then add producer and Parties Playwright coverage.
 
 implementation_2026_10_27: Source qualification now includes a deterministic regression for a delayed 150 ms landmark-focus retry found during this batch. Mounted skip targets focus once; overlay-editor focus retains its existing path. Forward route and compact keyboard assertions remain enforced. Published Shell 4.7.0 still needs matching publication/adoption. Qualification and remaining gates: `tests/five-frontcomposer-ui-deferred-items-2026-10-27/README.md`. Status stays open; this batch does not promote G4 or Story 8.9.
+
+adoption_2026_10_28: Shell 4.7.1 at published producer 5688c3eba98567133285b0f51843d9daa8f24f0b is adopted. Cold/hydrated and client-navigation forward-Tab browser controls now execute without opt-ins or capability skips; the heading announcement and skip-target/onward flow pass against exact installed/served package bytes. This closes the named package-adoption exit only; G4 and Story 8.9 remain blocked. Evidence: `tests/five-published-frontcomposer-adoption-2026-10-28/README.md` (UI 445/445, Admin 327/327, Consumer 85/85 and browser 68/68, zero skips/retries).
+
 
 ### DW-92: Read the EventStore version from the Builds catalog
 
@@ -724,15 +727,21 @@ status: open
 
 implementation_2026_10_27: FrontComposer now supplies transport-neutral record freshness, polite/assertive/none live regions and callback-based reconciliation. Parties retains its wire/status mapping and polling/subscription adapters. Source parity uses actual shared registration; production adoption remains gated on named owner acceptance and publication. Qualification and remaining gates: `tests/five-frontcomposer-ui-deferred-items-2026-10-27/README.md`. Status stays open; this batch does not promote G4 or Story 8.9.
 
+adoption_2026_10_28: The opt-in 4.7.1 package now supplies actual shared freshness and polite/assertive/none live regions while preserving Parties labels, freshness mapping and unregistered local rollback. Registered package services continue to use corrected local reconciliation: readiness precedes dispatch, early confirmations wait for acceptance, cancellation drains work and completion occurs once. The package lacks the newer registration-readiness contract, so fixed shared-reconciler publication/adoption remains open. Package parity does not qualify the current source graph or all G4-B/C. Evidence: `tests/five-published-frontcomposer-adoption-2026-10-28/README.md` (UI 445/445, Admin 327/327, Consumer 85/85 and browser 68/68, zero skips/retries).
+
+
 ### DW-101: Consolidate Admin and Consumer exports onto the approved FrontComposer browser-download service after G4-D delivery
 
 origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
 location: Admin and Consumer exports and FrontComposer browser-download service
 source_spec: `_bmad-output/implementation-artifacts/spec-8-9-ui-frontcomposer-and-fluent-consolidation.md`
 reason: This independently testable download and cleanup slice was split from Story 8.9 after its hardened draft exceeded the 1,600-token workflow limit.
-status: open
+status: done 2026-10-28
 
 implementation_2026_10_27: FrontComposer now supplies injectable stream/file/unchanged-JSON download with safe leaf names, cancellation and browser/interop cleanup. Admin and Consumer source candidates preserve bytes and safe caller filenames. Existing package-mode helpers remain the rollback pending owner acceptance and matching publication. Qualification and remaining gates: `tests/five-frontcomposer-ui-deferred-items-2026-10-27/README.md`. Status stays open; this batch does not promote G4 or Story 8.9.
+
+adoption_2026_10_28: Approved package service adoption is qualified in Admin and Consumer flows with the runtime opt-in. Component/browser controls preserve JSON bytes, safe caller filenames, MIME type, repeated transfer, object-URL/anchor cleanup, cancellation and existing failure feedback. The package browser gate serves original assets without source substitution. Retained helpers remain available when registration is disabled; G4 and Story 8.9 are not promoted. Evidence: `tests/five-published-frontcomposer-adoption-2026-10-28/README.md` (UI 445/445, Admin 327/327, Consumer 85/85 and browser 68/68, zero skips/retries).
+
 
 ### DW-102: Adopt the FrontComposer typed-name destructive confirmation mode for Admin erasure after G4-E delivery
 
@@ -740,9 +749,12 @@ origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferra
 location: Admin erasure UI and FrontComposer destructive confirmation
 source_spec: `_bmad-output/implementation-artifacts/spec-8-9-ui-frontcomposer-and-fluent-consolidation.md`
 reason: This independently shippable destructive-interaction slice was split from Story 8.9 after its hardened draft exceeded the 1,600-token workflow limit.
-status: open
+status: done 2026-10-28
 
 implementation_2026_10_27: FrontComposer now supplies optional ordinal typed-name confirmation with guarded single submit, safe Cancel focus, Escape and a native accessible warning across the V5 shadow boundary. Admin keeps its authorization and exact-name callback guard. Ordinary dialog callers and the local package fallback remain covered; owner acceptance/publication remain open. Qualification and remaining gates: `tests/five-frontcomposer-ui-deferred-items-2026-10-27/README.md`. Status stays open; this batch does not promote G4 or Story 8.9.
+
+adoption_2026_10_28: The approved package typed-name mode is adopted with actual shared rendering. Empty, case and whitespace mismatches refuse submission; ordinal exact match and domain authorization guards permit exactly one request. Safe initial Cancel focus, accessible warning/description, Cancel/Escape and one-shot restoration to the recreated initiating button pass. The unregistered local dialog remains rollback; G4 and Story 8.9 are unchanged. Evidence: `tests/five-published-frontcomposer-adoption-2026-10-28/README.md` (UI 445/445, Admin 327/327, Consumer 85/85 and browser 68/68, zero skips/retries).
+
 
 ### DW-103: Complete Fluent UI V5 and Fluent 2 styling and accordion conformance across all Parties UI RCLs
 
@@ -837,7 +849,7 @@ origin: code review of spec-8-10-final-readiness-documentation-and-retirement-ga
 location: references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Components/Layout/FrontComposerShell.razor
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 reason: The skip-to-navigation link renders whenever `HasNavigation` is true, but `#fc-nav` mounts only when `HasNavigation && !IsSubCompactDesktopViewport`. On Tablet/Phone the href has no focus target. Parties consumes the shell and does not edit this submodule; route to FrontComposer shell owners.
-status: open
+status: done 2026-10-28
 decision: 2026-09-07 Hide compact link — Render Skip to navigation only when #fc-nav is mounted, preserve Skip to content, and add producer plus Parties viewport coverage.
 implementation_2026_10_23: The owning FrontComposer shell now uses the identical link/target viewport condition. Producer desktop/compact/resize cases pass. Parties component/browser compact checks are explicitly opt-in; the published-package negative control fails as expected, while its existing desktop keyboard flow passes.
 remaining_gate_2026_10_23: Matching FrontComposer publication/adoption and positive Parties compact browser/component source qualification remain open. Pinned source Debug reaches Platform HXR020; focused consumer mapping fails MSB4044 (AssetsFile), including explicit net10 fallback. No warning/source gate was bypassed.
@@ -852,6 +864,9 @@ review_loop_1_2026_10_24: Re-executed mapped source bUnit (415/415) and actual s
   review_loop_2_2026_10_24: The preserved mapped compact/browser and package-negative controls are rerun in the loop2 receipt; owner package publication/adoption and deployed qualification remain open.
 
 implementation_2026_10_27: Existing unique mounted navigation targets and compact link conditions remain intact. Source viewport/resize controls now include the landmark-focus ownership correction described under DW-91. Published Shell 4.7.0 negative controls and publication/adoption gates remain separate. Qualification and remaining gates: `tests/five-frontcomposer-ui-deferred-items-2026-10-27/README.md`. Status stays open; this batch does not promote G4 or Story 8.9.
+
+adoption_2026_10_28: Shell 4.7.1 package adoption closes the named mounted-target gate. Component and actual desktop/phone/tablet/repeated-resize browser controls run unconditionally with exact installed/served asset comparisons: navigation bypass exists exactly with one mounted navigation target, and the content bypass/route announcement survive. Source launch currently refuses HXR015 and receives no qualification from these package passes; aggregate gates remain blocked. Evidence: `tests/five-published-frontcomposer-adoption-2026-10-28/README.md` (UI 445/445, Admin 327/327, Consumer 85/85 and browser 68/68, zero skips/retries).
+
 
 ### DW-113: Parse only the first complete JSON object from MSBuild `-getProperty/-getItem` stdout.
 

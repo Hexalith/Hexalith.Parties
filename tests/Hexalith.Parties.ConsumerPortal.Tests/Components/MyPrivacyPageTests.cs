@@ -4,6 +4,7 @@ using Hexalith.Parties.ConsumerPortal.Components;
 using Hexalith.Parties.ConsumerPortal.Services;
 using Hexalith.Parties.Contracts.Models;
 
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.FluentUI.AspNetCore.Components;
@@ -422,6 +423,31 @@ public sealed class MyPrivacyPageTests : BunitContext
             .Click();
 
 #if HFC_SHARED_UI
+    [Fact]
+    public async Task RegisteredSharedDownloadCancellationDrainsInteropWithoutLateFeedback()
+    {
+        Hexalith.FrontComposer.Shell.Extensions.FrontComposerFeedbackServiceExtensions.AddFrontComposerFeedback(Services);
+        var module = JSInterop.SetupModule("./_content/Hexalith.FrontComposer.Shell/js/fc-download.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var transfer = module.SetupVoid("downloadStream", _ => true);
+        Services.AddSingleton<IConsumerPrivacyExportClient>(new QueuePrivacyExportClient());
+        var cut = Render<MyPrivacyPage>();
+        ClickFluentButton(cut, "Export my data");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Download JSON"));
+        Task click = cut.FindAll("fluent-button").First(button => button.TextContent.Contains("Download JSON", StringComparison.Ordinal))
+            .ClickAsync(new MouseEventArgs());
+        cut.WaitForAssertion(() => module.Invocations["downloadStream"].Count.ShouldBe(1));
+        cut.Dispose();
+        await click.WaitAsync(TimeSpan.FromSeconds(5), Xunit.TestContext.Current.CancellationToken);
+        string operationId = module.Invocations["beginDownload"].Single().Arguments[0]!.ToString()!;
+        operationId.ShouldNotBeNullOrWhiteSpace();
+        module.Invocations["downloadStream"].Single().Arguments[0].ShouldBe(operationId);
+        module.Invocations["cancelDownload"].Single().Arguments[0].ShouldBe(operationId);
+        JSInterop.Invocations.ShouldNotContain(invocation => invocation.Identifier == "HexalithPartiesConsumerPortal.downloadJson");
+        transfer.SetVoidResult();
+        module.Invocations["downloadStream"].Count.ShouldBe(1);
+    }
+
     [Fact]
     public void SharedDownloadCandidatePreservesConsumerBytesFilenameAndRepeatedDownload()
     {

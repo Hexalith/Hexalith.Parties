@@ -1,0 +1,22 @@
+{
+  "name": "ui-build",
+  "started_utc": "2026-10-28T11:39:43.130945+00:00",
+  "command": [
+    "dotnet",
+    "build",
+    "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+    "--configuration",
+    "Debug",
+    "-m:1",
+    "-p:UseHexalithProjectReferences=false",
+    "-p:UseNuGetDeps=true",
+    "-p:NuGetAudit=false",
+    "-p:MinVerVersionOverride=1.0.0"
+  ],
+  "cwd": "${WORKSPACE}",
+  "environment_overrides": {},
+  "exit_code": 0,
+  "log": "ui-build.txt",
+  "log_sha256": "9d934b90cec4c04336356bdffa31f46847a1a730852bcb93f636f112fc0d96ba",
+  "private_original_sha256": "a7c2eadbb95f9ad6f852ae0feb03bc0ccaae9442b84d8f39c1d3c090c5fb35ac"
+}

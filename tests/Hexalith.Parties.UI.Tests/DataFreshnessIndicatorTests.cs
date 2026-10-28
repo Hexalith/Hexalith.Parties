@@ -34,6 +34,17 @@ public sealed class DataFreshnessIndicatorTests : BunitContext
 #endif
     }
 
+    [Fact]
+    public void MissingSharedRegistrationRetainsLocalFreshnessMarkup()
+    {
+        using var context = new BunitContext();
+        var cut = context.Render<DataFreshnessIndicator>();
+        cut.FindAll("[data-fc-freshness]").ShouldBeEmpty();
+        IElement status = cut.Find("[role='status']");
+        status.GetAttribute("aria-live").ShouldBe("polite");
+        status.TextContent.ShouldBe("Showing last known");
+    }
+
     [Theory]
     [InlineData(ProjectionFreshnessStatus.Current, "Up to date")]
     [InlineData(ProjectionFreshnessStatus.Stale, "Showing what we last knew - refreshing")]

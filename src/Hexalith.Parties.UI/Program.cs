@@ -52,7 +52,7 @@ builder.Services.Configure<Hexalith.FrontComposer.Shell.Options.FrontComposerRou
 builder.Services.AddHexalithFrontComposerQuickstart(o => o.ScanAssemblies(typeof(Program).Assembly));
 builder.Services.AddFrontComposerDevMode(builder.Environment);
 #if HFC_SHARED_UI
-// Qualification opt-in only. Published 4.7.0 has no feedback/download APIs.
+// Approved 4.7.1 primitives remain opt-in. Registration does not enable its older reconciler.
 if (builder.Configuration.GetValue<bool>("Parties:FrontComposer:UseSharedUiPrimitives"))
 {
     builder.Services.AddFrontComposerFeedback();

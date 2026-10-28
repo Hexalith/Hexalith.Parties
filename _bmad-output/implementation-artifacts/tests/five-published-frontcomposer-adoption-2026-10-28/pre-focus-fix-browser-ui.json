@@ -1,0 +1,17 @@
+{
+  "name": "browser-ui",
+  "started_utc": "2026-10-28T11:36:08.991742+00:00",
+  "command": [
+    "npm",
+    "run",
+    "test:ui"
+  ],
+  "cwd": "${WORKSPACE}/tests/e2e",
+  "environment_overrides": {
+    "PATH": "${NODE24_BIN}:${INHERITED_PATH}"
+  },
+  "exit_code": 1,
+  "log": "pre-focus-fix-browser-ui.txt",
+  "log_sha256": "35fc8c658dfa19a9bb22bbd1e987f4af9f1c307704d27ceaad18df3115863d05",
+  "private_original_sha256": "cbd8ac00a457a17c0aeb5d7d21e896d5f5df365a8b203922e267999504474a54"
+}

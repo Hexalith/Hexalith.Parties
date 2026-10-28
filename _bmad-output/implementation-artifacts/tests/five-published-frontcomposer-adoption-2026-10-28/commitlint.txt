@@ -1,0 +1,9 @@
+⧗   --- input ---
+fix(ui): adopt published feedback primitives
+
+Qualify FrontComposer 4.7.1 components, downloads and keyboard flows.
+Keep corrected local reconciliation until its shared fix is published.
+
+Align the approved EventStore pin and verify cancellation, rollback
+focus, exact package assets and retained execution evidence.
+✔   found 0 problems, 0 warnings

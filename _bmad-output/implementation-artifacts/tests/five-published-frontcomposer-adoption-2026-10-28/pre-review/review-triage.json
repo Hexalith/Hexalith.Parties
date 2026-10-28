@@ -1,0 +1,85 @@
+{
+  "layers": [
+    "blind-hunter",
+    "edge-case-hunter",
+    "verification-gap"
+  ],
+  "findings": [
+    {
+      "id": "BH-01",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "Fallback Escape calls ClearErasureDialogState directly and bypasses the new restoration flag; route it through CancelErasure."
+    },
+    {
+      "id": "BH-02",
+      "verdict": "low",
+      "route": "patch",
+      "evidence": "Pending restoration survives ClearSensitiveOperationState during party/tenant changes; clear it at that existing reset."
+    },
+    {
+      "id": "BH-03",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "Package browser cancellation bypasses the actual service/page navigation; the only navigation test is source-only."
+    },
+    {
+      "id": "BH-04",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "The bUnit test counts cancelDownload without binding its ID to beginDownload/downloadStream; an incorrect ID passes."
+    },
+    {
+      "id": "BH-05",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "run-check.py attaches pre-existing XML when a failed runner emits none. Require fresh results."
+    },
+    {
+      "id": "BH-06",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "The verifier omits final .NET suite and Client build exit-code checks; altered nonzero exits still report success."
+    },
+    {
+      "id": "BH-07",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "Assembly counters are not tied to retained case count/errors; an empty case list satisfies all(...)."
+    },
+    {
+      "id": "BH-08",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "Native browser XML checks only failure/skipped elements; empty testsuites passes. Bind counts/errors/identities."
+    },
+    {
+      "id": "BH-09",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "Unstaged-only git diff omits staged implementation from refreshed input inventory. Include staged changes/new files."
+    },
+    {
+      "id": "BH-10",
+      "verdict": "low",
+      "route": "patch",
+      "evidence": "Receipt omits actual Parties implementation DLL hashes; add host/test output hashes for the exercised implementation."
+    },
+    {
+      "id": "EC-01",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "Same fallback Escape root cause as BH-01; actual handler directly clears state despite the reviewer snippet naming CancelErasure."
+    },
+    {
+      "id": "VG-01",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "Pre-verified: mocked counts/direct native calls do not bind package service cancellation to page disposal. Same root cause as BH-03."
+    }
+  ],
+  "grouped_duplicates": {
+    "EC-01": "BH-01",
+    "VG-01": "BH-03"
+  }
+}

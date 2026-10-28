@@ -1,0 +1,8 @@
+
+Running 1 test using 1 worker
+
+(node:1678917) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › specs/consumer-portal-routes.spec.ts:314:3 › Consumer portal route shells › bound Consumer navigation cancels an active shared download without late feedback or browser resources (1.2s)
+
+  1 passed (6.0s)

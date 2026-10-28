@@ -1,0 +1,17 @@
+{
+  "name": "browser-ui",
+  "started_utc": "2026-10-28T11:40:23.849309+00:00",
+  "command": [
+    "npm",
+    "run",
+    "test:ui"
+  ],
+  "cwd": "${WORKSPACE}/tests/e2e",
+  "environment_overrides": {
+    "PATH": "${NODE24_BIN}:${INHERITED_PATH}"
+  },
+  "exit_code": 0,
+  "log": "browser-ui.txt",
+  "log_sha256": "7cfbe41411bb8dde52693ebb7665b3baf148e5f6061b1e78c531c534e5d36ff4",
+  "private_original_sha256": "7cfbe41411bb8dde52693ebb7665b3baf148e5f6061b1e78c531c534e5d36ff4"
+}

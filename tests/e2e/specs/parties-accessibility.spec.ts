@@ -1,5 +1,4 @@
-import { fileURLToPath } from 'node:url';
-import path from 'node:path';
+import { qualifyFrontComposerAssets } from '../helpers/frontcomposer-assets.js';
 import { expectAccordionFocusClearance } from '../helpers/accordion-focus.js';
 import { expect, test } from '@playwright/test';
 import { createHash } from 'node:crypto';
@@ -45,7 +44,8 @@ test.describe('Parties UI accessibility specimen', () => {
         mode: 'managed', command: server.command,
         environment: Object.fromEntries(Object.entries(server.env ?? {})
           .filter(([key]) => ['ASPNETCORE_ENVIRONMENT', 'Hexalith__Parties__AccessibilitySpecimens__Enabled',
-            'Hexalith__Parties__AdminPortalE2E__Enabled', 'Parties__BaseUrl', 'Parties__Tenant'].includes(key))),
+            'Hexalith__Parties__AdminPortalE2E__Enabled', 'Parties__BaseUrl', 'Parties__Tenant',
+            'Parties__FrontComposer__UseSharedUiPrimitives'].includes(key))),
       } : { mode: 'external', environment: 'not observed' },
       assets,
     }, null, 2)}\n`);
@@ -88,9 +88,7 @@ test.describe('Parties UI accessibility specimen', () => {
     });
   }
 
-  // Always-on package coverage checks shell order and skip targets from its root.
-  // Forward reachability from the announced route heading is qualified separately below;
-  // those source regressions become unconditional after a fixed package is adopted (DW-91).
+  // Shell order and route-heading forward access execute for both approved dependency modes.
   test('skip links are the first two focusable elements in the shell and focus their targets', async ({ page }) => {
     await gotoSpecimen(page);
     await page.locator('.fc-shell-root').focus();
@@ -110,7 +108,7 @@ test.describe('Parties UI accessibility specimen', () => {
   });
 
   test('compact and resized layouts expose only mounted skip targets and preserve keyboard content access', async ({ page }, testInfo) => {
-    await qualifyCompactSource(page);
+    await qualifyFrontComposerAssets(page, testInfo);
     await gotoSpecimen(page);
     await page.evaluate(() => {
       const events: { event: string; width: number; id: string; tag: string; stack?: string }[] = [];
@@ -160,8 +158,8 @@ test.describe('Parties UI accessibility specimen', () => {
     }
   });
 
-  test('route-heading announcement leaves skip links forward reachable and focuses their targets', async ({ page }) => {
-    await qualifyForwardSource(page);
+  test('route-heading announcement leaves skip links forward reachable and focuses their targets', async ({ page }, testInfo) => {
+    await qualifyFrontComposerAssets(page, testInfo);
     await gotoSpecimen(page);
     await expect(page.locator('#parties-accessibility-specimen-title')).toBeFocused();
 
@@ -183,8 +181,8 @@ test.describe('Parties UI accessibility specimen', () => {
     await expect(page.locator(':focus')).toHaveAttribute('id', 'fc-nav');
   });
 
-  test('client-side route focus restores forward skip access', async ({ page }) => {
-    await qualifyForwardSource(page);
+  test('client-side route focus restores forward skip access', async ({ page }, testInfo) => {
+    await qualifyFrontComposerAssets(page, testInfo);
     await gotoSpecimen(page);
     await page.evaluate(() => {
       document.documentElement.setAttribute('data-dw91-document', 'original');
@@ -641,34 +639,3 @@ const collectVisualBaseline = async (page: import('@playwright/test').Page): Pro
       .evaluate((element) => getComputedStyle(element).backgroundColor !== 'rgb(0, 151, 167)'),
   },
 });
-
-// Resolve the same validated module-tool selection as the build, and compare the actual
-// browser asset bytes before letting source-only coverage qualify. An opt-in variable
-// cannot turn a package or a stale/unrelated server into source evidence.
-async function qualifyForwardSource(page: import('@playwright/test').Page): Promise<void> {
-  await qualifyShellSource(page, process.env.PARTIES_E2E_FORWARD_SKIP_LINKS === '1', 'DW-91');
-}
-
-async function qualifyCompactSource(page: import('@playwright/test').Page): Promise<void> {
-  await qualifyShellSource(page, process.env.PARTIES_E2E_COMPACT_SKIP_LINKS === '1', 'DW-112');
-}
-
-async function qualifyShellSource(page: import('@playwright/test').Page, forcePackageControl: boolean, gate: string): Promise<void> {
-  const configuration = process.env.CI ? 'Release' : 'Debug';
-  const metadataPath = fileURLToPath(new URL(
-    `../../../src/Hexalith.Parties.UI/bin/${configuration}/net10.0/Hexalith.Parties.UI.source-metadata.txt`, import.meta.url));
-  const [fromSource, mode, root] = (await readFile(metadataPath, 'utf8')).trim().split(/\r?\n/);
-  test.skip(fromSource !== 'true' && !forcePackageControl,
-    `${gate} source qualification; matching package publication/adoption is pending`);
-  if (fromSource !== 'true') return; // An explicitly forced package negative control must execute and fail its behavioral assertions.
-  expect(mode).toBe('source');
-  expect(path.isAbsolute(root)).toBe(true);
-  for (const asset of ['js/fc-focus.js', 'js/fc-keyboard.js', 'js/fc-download.js', 'css/fc-shell.css']) {
-    const selected = await readFile(path.join(root,
-      'src/Hexalith.FrontComposer.Shell/wwwroot', asset));
-    const served = await page.request.get(`/_content/Hexalith.FrontComposer.Shell/${asset}`);
-    expect(served.ok()).toBe(true);
-    expect(createHash('sha256').update(await served.body()).digest('hex')).toBe(
-      createHash('sha256').update(selected).digest('hex'));
-  }
-}

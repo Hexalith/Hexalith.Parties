@@ -418,18 +418,24 @@ See the [2026-10-26 receipts](../_bmad-output/implementation-artifacts/tests/fiv
 for actual resolved package identities, executed results and remaining gates.
 
 
-### FrontComposer shared UI candidate qualification
+### FrontComposer shared UI qualification
 
-The five-item B–F batch prepares shared freshness, live regions, reconciliation,
-downloads and typed-name confirmation behind the existing Parties adapters.
-`Parties:FrontComposer:UseSharedUiPrimitives` defaults to false. In a supported
-pinned-tool Debug source graph, setting it to true registers the shared candidate
-services; the browser fixture enables it for parity checks. Published 4.7.0
-continues to use the retained local paths. Keep those paths until named owner
-acceptance and matching package delivery are qualified.
+The selected Shell/Contracts.UI 4.7.1 packages supply the approved freshness,
+live regions, downloads, typed confirmation and shell keyboard behavior.
+`Parties:FrontComposer:UseSharedUiPrimitives` still defaults to false; setting it
+to true registers the shared services and selects those components. The browser
+fixture enables it and compares served assets with the actual selected package.
+Leaving it false retains the local component/download/dialog paths for rollback.
 
-The [qualification receipt](../_bmad-output/implementation-artifacts/tests/five-frontcomposer-ui-deferred-items-2026-10-27/README.md)
-contains the commands, actual source/package identities, immutable evidence
-archive and rollback gates. Local API-compatibility packages are test artifacts;
-they do not establish upstream package delivery. No G4-A picker or Story 8.9
-status is changed by these slices.
+Compilation separates shared primitives (`HFC_SHARED_UI`) from corrected shared
+reconciliation (`HFC_SHARED_RECONCILE_READINESS`). Package 4.7.1 lacks registration
+readiness, so registering its services keeps the corrected local reconciliation:
+commands wait for registration, early confirmations wait for acceptance, and
+cancellation drains owned work. Only validated mapped source can select the newer
+producer reconciliation branch. DW-100's fixed-reconciler package gate, G4-A,
+whole G4 and Story 8.9 remain open. Package passes do not qualify source mode.
+
+The [adoption receipt](../_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/README.md)
+records package revisions, exact commands, executed binaries/assets and the current
+source-launch prerequisite blocker. The original B–F source/compatibility receipt
+remains historical and does not replace published-package proof.

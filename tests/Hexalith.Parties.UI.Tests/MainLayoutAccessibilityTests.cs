@@ -113,10 +113,6 @@ public sealed class MainLayoutAccessibilityTests : BunitContext
         string? Metadata(string key) => assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
             .SingleOrDefault(attribute => attribute.Key == key)?.Value;
         bool fromSource = string.Equals(Metadata("HexalithFrontComposerFromSource"), "true", StringComparison.OrdinalIgnoreCase);
-        if (!fromSource && Environment.GetEnvironmentVariable("PARTIES_E2E_COMPACT_SKIP_LINKS") != "1")
-        {
-            Assert.Skip("DW-112 compact source qualification requires the fixed FrontComposer; matching package adoption is pending.");
-        }
         if (fromSource)
         {
             Metadata("HexalithSourceMappingMode").ShouldBe("source", "Compact source coverage requires the validated pinned-tool mapping.");

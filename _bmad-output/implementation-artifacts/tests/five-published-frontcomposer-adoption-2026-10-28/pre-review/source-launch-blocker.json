@@ -1,0 +1,24 @@
+{
+  "name": "source-launch-blocker",
+  "started_utc": "2026-10-28T11:42:39.436057+00:00",
+  "command": [
+    "dotnet",
+    "tool",
+    "run",
+    "hexalith-module",
+    "--",
+    "debug",
+    "--manifest",
+    "module/hexalith.module-manifest.v2.json",
+    "--evidence",
+    "_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/source-mapping.json",
+    "--output",
+    "json"
+  ],
+  "cwd": "${WORKSPACE}",
+  "environment_overrides": {},
+  "exit_code": 2,
+  "log": "source-launch-blocker.txt",
+  "log_sha256": "8377e0ffe7bda1808b0075c577ff54750841228c5baa69e2b7907e0233c9986c",
+  "private_original_sha256": "8377e0ffe7bda1808b0075c577ff54750841228c5baa69e2b7907e0233c9986c"
+}

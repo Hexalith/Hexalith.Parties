@@ -59,7 +59,7 @@ public sealed class OptimisticReconcile(
         {
             return;
         }
-#if HFC_SHARED_UI
+#if HFC_SHARED_RECONCILE_READINESS
         if (services?.GetService(typeof(Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler))
             is Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler shared)
         {

@@ -1,0 +1,21 @@
+{
+  "name": "primary-client-tests",
+  "started_utc": "2026-10-28T11:42:47.044480+00:00",
+  "command": [
+    "dotnet",
+    "tests/Hexalith.Parties.Client.Tests/bin/Debug/net10.0/Hexalith.Parties.Client.Tests.dll",
+    "-result-xml",
+    "_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/primary-client-tests.xml"
+  ],
+  "cwd": "${WORKSPACE}",
+  "environment_overrides": {},
+  "exit_code": 0,
+  "log": "primary-client-tests.txt",
+  "log_sha256": "6077c23e711640a1a6a5200a0df574c03c37b81fbf17c4524bf6205688037984",
+  "private_original_sha256": "6077c23e711640a1a6a5200a0df574c03c37b81fbf17c4524bf6205688037984",
+  "xunit_xml": {
+    "path": "primary-client-tests.xml",
+    "sha256": "a732d4ab77efabffbd9f1a4ee7bcb19ba3125acbe7038f9a1cf7ddce1d27fa9f",
+    "private_original_sha256": "0558f5e0c2d4a826d2927e4a6c41f5ac43ac869cda075d9a79ccaca9e0b96e4f"
+  }
+}

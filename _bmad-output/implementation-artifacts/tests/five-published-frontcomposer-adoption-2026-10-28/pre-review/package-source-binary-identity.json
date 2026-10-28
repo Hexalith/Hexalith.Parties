@@ -1,0 +1,143 @@
+{
+  "repositories": {
+    "parties": "afe8cd2616066c13001ec6e0bd353bcdb3b31e96",
+    "Builds": {
+      "checkout": "d1931b1e803144048d927fff16cb8119afde541e",
+      "root_gitlink": "d1931b1e803144048d927fff16cb8119afde541e"
+    },
+    "FrontComposer": {
+      "checkout": "5af87f9e5cc8db16896fc97d19b6a828b2ed0d0d",
+      "root_gitlink": "5af87f9e5cc8db16896fc97d19b6a828b2ed0d0d"
+    },
+    "EventStore": {
+      "checkout": "36c78f3435d2d492a73f1b0707cf865c8735d740",
+      "root_gitlink": "36c78f3435d2d492a73f1b0707cf865c8735d740"
+    },
+    "Tenants": {
+      "checkout": "7ddb864cda5e942925b056391617eae4895c1253",
+      "root_gitlink": "7ddb864cda5e942925b056391617eae4895c1253"
+    }
+  },
+  "packages": {
+    "hexalith.frontcomposer.shell": {
+      "version": "4.7.1",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Hexalith/Hexalith.FrontComposer",
+        "commit": "5688c3eba98567133285b0f51843d9daa8f24f0b"
+      },
+      "nupkg_sha256": "04e1645c4540ed7bc20e5d6d283259c8470f2bbff0816aad6be359889eddbb83",
+      "nuspec_sha256": "7981216b222077eba820227d017b17553cca9ad93bc742ec1192c9571f32ccae",
+      "dll_sha256": "5347247d64f9a348dd0a0418711fb785370100133cd56f06dc5959e97756e80c",
+      "copied_assemblies": [
+        {
+          "path": "src/Hexalith.Parties.UI/bin/Debug/net10.0/Hexalith.FrontComposer.Shell.dll",
+          "sha256": "5347247d64f9a348dd0a0418711fb785370100133cd56f06dc5959e97756e80c"
+        },
+        {
+          "path": "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.FrontComposer.Shell.dll",
+          "sha256": "5347247d64f9a348dd0a0418711fb785370100133cd56f06dc5959e97756e80c"
+        },
+        {
+          "path": "tests/Hexalith.Parties.AdminPortal.Tests/bin/Debug/net10.0/Hexalith.FrontComposer.Shell.dll",
+          "sha256": "5347247d64f9a348dd0a0418711fb785370100133cd56f06dc5959e97756e80c"
+        },
+        {
+          "path": "tests/Hexalith.Parties.ConsumerPortal.Tests/bin/Debug/net10.0/Hexalith.FrontComposer.Shell.dll",
+          "sha256": "5347247d64f9a348dd0a0418711fb785370100133cd56f06dc5959e97756e80c"
+        }
+      ],
+      "assets": [
+        {
+          "servedPath": "/_content/Hexalith.FrontComposer.Shell/js/fc-focus.js",
+          "selectedPath": "hexalith.frontcomposer.shell/4.7.1/staticwebassets/js/fc-focus.js",
+          "sha256": "cf0d25667667fab41a6a146a280d7777644b132ffac021f013072b2e01650aca",
+          "bytes": 55317
+        },
+        {
+          "servedPath": "/_content/Hexalith.FrontComposer.Shell/js/fc-keyboard.js",
+          "selectedPath": "hexalith.frontcomposer.shell/4.7.1/staticwebassets/js/fc-keyboard.js",
+          "sha256": "ec2ca7ae51b6597ab102a1623530e9367fc3f342041ba81835a6ce90ce08b7e5",
+          "bytes": 20025
+        },
+        {
+          "servedPath": "/_content/Hexalith.FrontComposer.Shell/js/fc-download.js",
+          "selectedPath": "hexalith.frontcomposer.shell/4.7.1/staticwebassets/js/fc-download.js",
+          "sha256": "ce8a8f32468f1d1fd5a84fdc0667d7ba8f792f49c4be36880db5b8a8ac3a0181",
+          "bytes": 1196
+        },
+        {
+          "servedPath": "/_content/Hexalith.FrontComposer.Shell/css/fc-shell.css",
+          "selectedPath": "hexalith.frontcomposer.shell/4.7.1/staticwebassets/css/fc-shell.css",
+          "sha256": "dceb51b05c81b0b5f1a90b5318ede9366dfdb9c2d10b6b1d9f89f4389a35d3a3",
+          "bytes": 2042
+        }
+      ]
+    },
+    "hexalith.frontcomposer.contracts.ui": {
+      "version": "4.7.1",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Hexalith/Hexalith.FrontComposer",
+        "commit": "5688c3eba98567133285b0f51843d9daa8f24f0b"
+      },
+      "nupkg_sha256": "6d5d092f0a26d8c69a4f8fd7ec195efc5d510b2a615c82b1dff3ec8f627f13a3",
+      "nuspec_sha256": "0ec1708c732c991fe3c724750342e0c592dc570780b9880c05bee2358c080a70",
+      "dll_sha256": "dbc07d5501ee3e0cc2141c5cd14593c727ae06facb157487f837b6dab21b3e8b",
+      "copied_assemblies": [
+        {
+          "path": "src/Hexalith.Parties.UI/bin/Debug/net10.0/Hexalith.FrontComposer.Contracts.UI.dll",
+          "sha256": "dbc07d5501ee3e0cc2141c5cd14593c727ae06facb157487f837b6dab21b3e8b"
+        },
+        {
+          "path": "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.FrontComposer.Contracts.UI.dll",
+          "sha256": "dbc07d5501ee3e0cc2141c5cd14593c727ae06facb157487f837b6dab21b3e8b"
+        },
+        {
+          "path": "tests/Hexalith.Parties.AdminPortal.Tests/bin/Debug/net10.0/Hexalith.FrontComposer.Contracts.UI.dll",
+          "sha256": "dbc07d5501ee3e0cc2141c5cd14593c727ae06facb157487f837b6dab21b3e8b"
+        },
+        {
+          "path": "tests/Hexalith.Parties.ConsumerPortal.Tests/bin/Debug/net10.0/Hexalith.FrontComposer.Contracts.UI.dll",
+          "sha256": "dbc07d5501ee3e0cc2141c5cd14593c727ae06facb157487f837b6dab21b3e8b"
+        }
+      ]
+    }
+  },
+  "inputs_sha256": {
+    "Directory.Build.targets": "218bab85f634cb8f3f4fbbae1bc4fbd676848e6b951fad3957997bed8bceb08c",
+    "Directory.Packages.props": "82623837226f73db410456fea2f9ad17c449a458a31f7f25ca1179ff3b6f44f7",
+    "src/Hexalith.Parties.AdminPortal/Components/PartyGdprOperationsPanel.razor": "cb4b1295bbf123798ec83ac4b9ef76e0717c37ac8933c5204825baec3582ff28",
+    "src/Hexalith.Parties.UI/Components/Shared/DataFreshnessIndicator.razor.cs": "d9a15c5efab7dc2baf1fdd43af56f2910708395ae460c9b389b7771fa79680f9",
+    "src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj": "452f879362ac497e2336a41d44864d96bac65c0fcc6c83387e7c1279750ee321",
+    "src/Hexalith.Parties.UI/Program.cs": "5112110c8ce00ebaa4f3fdf15bb60042909df07441f297f07903d8d52716d257",
+    "src/Hexalith.Parties.UI/Services/OptimisticReconcile.cs": "d0ebd6ed6ea7da47f9ab3dd7d66518ca8e7760e67342fc2ba27f6ce7c3e26048",
+    "tests/Hexalith.Parties.ConsumerPortal.Tests/Components/MyPrivacyPageTests.cs": "b24bdb31d45a9e12c7839a465674a9e2a6598b033225384b371f590b0520d192",
+    "tests/Hexalith.Parties.ConsumerPortal.Tests/Components/MyProfilePageTests.cs": "6e1a2de08e988b77d984ed91ac0b035915a97fdcbedd2125e8b7804a2af87518",
+    "tests/Hexalith.Parties.UI.Tests/DataFreshnessIndicatorTests.cs": "8965f6e1a3b4cc44ed36d89c20ab68b09f5858a03a2fdadb16371931fb5000a3",
+    "tests/Hexalith.Parties.UI.Tests/MainLayoutAccessibilityTests.cs": "f07896489ba538b954eb00e55957904f9f5563cfe3658b4e70b67d84622e105e",
+    "tests/Hexalith.Parties.UI.Tests/OptimisticReconcileTests.cs": "fafd4e1981b93171fe2cb15473bfe7c62971b615989d0365084f0e935607ec7c",
+    "tests/Hexalith.Parties.UI.Tests/StatusLiveRegionTests.cs": "e951e4524e36100cb3d2c28263664d4b33a6a1d17b7f81eaf46733bda99293da",
+    "tests/README.md": "a5b4cb40f1dd13c21eadff575913849af5b1caff497d01d5b0bfb08ead206ff8",
+    "tests/e2e/specs/admin-parties-list.spec.ts": "847f900ffc7737e1158dd0372fab881b9cd94cfebb0a96f1eda923bd7ab49504",
+    "tests/e2e/specs/consumer-portal-routes.spec.ts": "7e9ec03efb8c63ec0c578857dec6ca69bc7b5bebf62015d7a4c949ab07cfaebd",
+    "tests/e2e/specs/parties-accessibility.spec.ts": "31d546605b54dd6f08685113194601f7bd42f4a3e8e26dec9ac3c44aba2adbd4",
+    "tests/e2e/specs/shared-feedback-source.spec.ts": "ac398d3a4e69d9435398a64253f15b5739e49d8f8488b5cc4636c65c095511c9",
+    "tests/e2e/helpers/frontcomposer-assets.ts": "8f7342356ea1943d8d706f46505e29256753da36ed91cbb5762a449acb07843e",
+    "references/Hexalith.Builds/Props/Directory.Packages.props": "443beb3037f215fc602fb0a2bc7eca06ae1bb46fc16ef1df0a2c3fb3b468d2b0",
+    "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/wwwroot/js/fc-focus.js": "cf0d25667667fab41a6a146a280d7777644b132ffac021f013072b2e01650aca",
+    "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/wwwroot/js/fc-keyboard.js": "ec2ca7ae51b6597ab102a1623530e9367fc3f342041ba81835a6ce90ce08b7e5",
+    "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/wwwroot/js/fc-download.js": "ce8a8f32468f1d1fd5a84fdc0667d7ba8f792f49c4be36880db5b8a8ac3a0181",
+    "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts.UI/Freshness/FcOptimisticReconcileRequest.cs": "b2e523b3380f529458aa1f00793a9254803a162e21dde958944697754f8c35a4"
+  },
+  "test_assemblies": {
+    "UI": "5daac941c440bb08b1d32fa77864081e6ab60b7db1d6b990d9d7573178402991",
+    "AdminPortal": "7d172fd523bb4f280cbc24079a00d0510cf8013bf8be4ce18f755023c2f15259",
+    "ConsumerPortal": "092d9022ea466e7e273223dfcfb973eefcb050b343a4bc8ff3fdbd2920e34683"
+  },
+  "project_assets_sha256": {
+    "UI": "31ba94b8b3d92be988196fbd41b82476ebd1e5d7b6f20468f30d61750f7477df",
+    "AdminPortal": "d52b3a9c7478dbb19f1140c5e224385f2e36916455b11d889435a7ddb4d09c8b",
+    "ConsumerPortal": "ffc0680461658e4436401679570a5bb12b4de348ac8c714d1b12885ced2d689f"
+  }
+}

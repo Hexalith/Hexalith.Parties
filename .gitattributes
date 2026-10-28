@@ -1,2 +1,6 @@
 # Preserve tested patch bytes and required single-space context lines.
 _bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/parties-consumer-adoption.patch -text whitespace=-blank-at-eol,cr-at-eol
+
+# Preserve captured command/XML receipt bytes, including tool-emitted whitespace.
+_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/**/*.txt -text whitespace=-blank-at-eol,-blank-at-eof,cr-at-eol
+_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/**/*.xml -text whitespace=-blank-at-eol,-blank-at-eof,cr-at-eol

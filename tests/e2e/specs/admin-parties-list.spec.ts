@@ -1,3 +1,4 @@
+import { qualifyFrontComposerAssets } from '../helpers/frontcomposer-assets.js';
 import { expectNoBlockingAxeViolations } from '../helpers/a11y.js';
 import { expectAccordionFocusClearance } from '../helpers/accordion-focus.js';
 import { portalAction } from '../helpers/portal-actions.js';
@@ -298,22 +299,13 @@ test.describe('Admin parties list', () => {
     }
     await expect(page.locator(`#${labelledBy}`)).toHaveText('Erase party');
     await expect(page.getByRole('dialog')).toHaveCount(1);
-    const configuration = process.env.CI ? 'Release' : 'Debug';
-    const [fromSource, mappingMode] = (await readFile(new URL(
-      `../../../src/Hexalith.Parties.UI/bin/${configuration}/net10.0/Hexalith.Parties.UI.source-metadata.txt`, import.meta.url), 'utf8'))
-      .trim().split(/\r?\n/);
-    const sharedSource = fromSource === 'true';
-    if (sharedSource) expect(mappingMode).toBe('source');
-    await expect(eraseDialogContent.getByTestId('fc-destructive-dialog')).toHaveCount(sharedSource ? 1 : 0);
+    await qualifyFrontComposerAssets(page);
+    await expect(eraseDialogContent.getByTestId('fc-destructive-dialog')).toHaveCount(1);
     const warning = eraseDialogContent.locator('p[id^="erasure-warning-"], #fc-destructive-dialog-description');
     await expect(warning).toBeVisible();
     await expect(warning).toContainText('irreversible verification');
     const typedConfirmInput = eraseDialogContent.getByRole('textbox', { name: 'Type the selected party display name', exact: true });
-    if (sharedSource) {
-      await expect(eraseDialogContent.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();
-    } else {
-      await expect(typedConfirmInput).toBeFocused();
-    }
+    await expect(eraseDialogContent.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();
     const describedBy = await typedConfirmInput.getAttribute('aria-describedby');
     if (describedBy) {
       await expect(page.locator(`#${describedBy}`)).toContainText('irreversible verification');
@@ -327,7 +319,7 @@ test.describe('Admin parties list', () => {
         text: 'Erasure destroys protected party data and starts irreversible verification.' });
     }
     await expect(typedConfirmInput).toHaveAccessibleDescription(/irreversible verification/);
-    if (sharedSource) {
+    {
       const originalWarning = await warning.textContent();
       const updatedWarning = 'Updated erasure warning: irreversible verification still applies.';
       await warning.evaluate((element, text) => { element.firstChild!.nodeValue = text; }, updatedWarning);
@@ -336,12 +328,22 @@ test.describe('Admin parties list', () => {
       await expect(typedConfirmInput).toHaveAccessibleDescription(/irreversible verification/);
     }
     await expect(eraseDialogContent.getByRole('button', { name: 'Erase' })).toBeDisabled();
-    await typedConfirmInput.fill('Grace hopper');
-    await expect(eraseDialogContent.getByRole('button', { name: 'Erase' })).toBeDisabled();
+    for (const mismatch of ['', ' ', 'Grace hopper', 'Grace Hopper ']) {
+      await typedConfirmInput.fill(mismatch);
+      await expect(eraseDialogContent.getByRole('button', { name: 'Erase' })).toBeDisabled();
+    }
     await expect.poll(async () => (await latestErasureRequest(request))?.partyId ?? null).toBe(null);
     await eraseDialogContent.getByRole('button', { name: 'Cancel' }).click();
     await expect(eraseDialog).toHaveCount(0);
+    await expect(portalAction(detail, 'Request erasure')).toBeFocused();
     await expect(page.getByText(/^Grace hopper$/)).toHaveCount(0);
+    await expect.poll(async () => (await latestErasureRequest(request))?.partyId ?? null).toBe(null);
+
+    await portalAction(detail, 'Request erasure').click();
+    await expect(eraseDialog).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(eraseDialog).toHaveCount(0);
+    await expect(portalAction(detail, 'Request erasure')).toBeFocused();
     await expect.poll(async () => (await latestErasureRequest(request))?.partyId ?? null).toBe(null);
 
     await portalAction(detail, 'Request erasure').click();
@@ -387,6 +389,7 @@ test.describe('Admin parties list', () => {
       }
     });
 
+    await qualifyFrontComposerAssets(page, testInfo);
     await page.goto(`${ADMIN_ROUTE}/erased-route/gdpr`);
 
     const detail = page.getByLabel('Party detail');

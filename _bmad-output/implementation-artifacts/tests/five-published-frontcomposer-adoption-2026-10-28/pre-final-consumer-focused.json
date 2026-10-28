@@ -1,0 +1,25 @@
+{
+  "name": "consumer-focused",
+  "started_utc": "2026-10-28T11:34:54.392383+00:00",
+  "command": [
+    "dotnet",
+    "tests/Hexalith.Parties.ConsumerPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.ConsumerPortal.Tests.dll",
+    "-class",
+    "Hexalith.Parties.ConsumerPortal.Tests.Components.MyProfilePageTests",
+    "-class",
+    "Hexalith.Parties.ConsumerPortal.Tests.Components.MyPrivacyPageTests",
+    "-result-xml",
+    "_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/consumer-focused.xml"
+  ],
+  "cwd": "${WORKSPACE}",
+  "environment_overrides": {},
+  "exit_code": 0,
+  "log": "pre-final-consumer-focused.txt",
+  "log_sha256": "bdfb3448c459b2721aada892e2c847f7deeb708ba8811f2e54919b16f1d75e26",
+  "private_original_sha256": "bdfb3448c459b2721aada892e2c847f7deeb708ba8811f2e54919b16f1d75e26",
+  "xunit_xml": {
+    "path": "pre-final-consumer-focused.xml",
+    "sha256": "d6d54b863c8e3be6cea797db9aa6883e933cdff2edec6ade05b3aa9450878275",
+    "private_original_sha256": "461b066ca8243f88e71c63894c32015afe19dcc0d318337c86a84fbc68868aa0"
+  }
+}

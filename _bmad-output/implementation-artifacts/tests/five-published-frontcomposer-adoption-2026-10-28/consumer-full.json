@@ -1,0 +1,21 @@
+{
+  "name": "consumer-full",
+  "started_utc": "2026-10-28T12:09:07.105621+00:00",
+  "command": [
+    "dotnet",
+    "tests/Hexalith.Parties.ConsumerPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.ConsumerPortal.Tests.dll",
+    "-result-xml",
+    "_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/consumer-full.xml"
+  ],
+  "cwd": "${WORKSPACE}",
+  "environment_overrides": {},
+  "exit_code": 0,
+  "log": "consumer-full.txt",
+  "log_sha256": "41536a44925b492e55b6a2a3df75a93581b672d31def56d2ad4fc9599ea353eb",
+  "private_original_sha256": "41536a44925b492e55b6a2a3df75a93581b672d31def56d2ad4fc9599ea353eb",
+  "xunit_xml": {
+    "path": "consumer-full.xml",
+    "sha256": "7c5da1f97ded285557c4f3ea4d0e6f42c0d834bfbb3514893a045a2080a0c1be",
+    "private_original_sha256": "56db6dd8ee09a4baa1ffafc7e44cfad52b8a730a844024a799c7d6b20b3f3990"
+  }
+}

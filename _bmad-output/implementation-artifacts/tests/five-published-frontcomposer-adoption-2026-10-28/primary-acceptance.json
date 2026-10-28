@@ -1,0 +1,13 @@
+{
+  "result": "pass",
+  "dotnet_passed": 1202,
+  "browser_passed": 68,
+  "skipped": 0,
+  "browser_retries": 0,
+  "matrix_rows": 6,
+  "evidence_controls": 11,
+  "historical_hashes_verified": 68,
+  "review": "All findings resolved; independent cancellation/evidence recheck verified",
+  "remaining_gate": "DW-100 fixed shared-reconciler package adoption; source HXR015 and whole-story gates remain separate",
+  "commitlint_exit": 0
+}

@@ -1,0 +1,67 @@
+{
+  "result": "pass",
+  "rows": {
+    "Route focus": [
+      "route-heading announcement leaves skip links forward reachable and focuses their targets",
+      "client-side route focus restores forward skip access"
+    ],
+    "Compact layout": [
+      "compact and resized layouts expose only mounted skip targets and preserve keyboard content access"
+    ],
+    "Freshness": [
+      "Hexalith.Parties.UI.Tests.DataFreshnessIndicatorTests.Every_freshness_status_renders_a_decorative_dot_and_visible_text(status: Current, expectedText: \\\"Up to date\\\")",
+      "Hexalith.Parties.UI.Tests.DataFreshnessIndicatorTests.Every_freshness_status_renders_a_decorative_dot_and_visible_text(status: Stale, expectedText: \\\"Showing what we last knew - refreshing\\\")",
+      "Hexalith.Parties.UI.Tests.DataFreshnessIndicatorTests.Every_freshness_status_renders_a_decorative_dot_and_visible_text(status: Rebuilding, expectedText: \\\"Showing last known\\\")",
+      "Hexalith.Parties.UI.Tests.DataFreshnessIndicatorTests.Every_freshness_status_renders_a_decorative_dot_and_visible_text(status: Degraded, expectedText: \\\"Showing last known\\\")",
+      "Hexalith.Parties.UI.Tests.DataFreshnessIndicatorTests.Every_freshness_status_renders_a_decorative_dot_and_visible_text(status: Unavailable, expectedText: \\\"Showing last known\\\")",
+      "Hexalith.Parties.UI.Tests.DataFreshnessIndicatorTests.Every_freshness_status_renders_a_decorative_dot_and_visible_text(status: LocalOnly, expectedText: \\\"Showing last known\\\")",
+      "Hexalith.Parties.UI.Tests.DataFreshnessIndicatorTests.SelectedDependencyModeUsesOnlyAnAvailableRegisteredCapability",
+      "Hexalith.Parties.UI.Tests.DataFreshnessIndicatorTests.MissingSharedRegistrationRetainsLocalFreshnessMarkup",
+      "Hexalith.Parties.UI.Tests.StatusLiveRegionTests.RegisteredCapabilityRendersTheProducerLiveRegion",
+      "Hexalith.Parties.UI.Tests.StatusLiveRegionTests.MissingSharedRegistrationRetainsLocalLiveRegionSemantics(kind: AcceptedProcessing)",
+      "Hexalith.Parties.UI.Tests.StatusLiveRegionTests.MissingSharedRegistrationRetainsLocalLiveRegionSemantics(kind: TenantUnavailable)",
+      "Hexalith.Parties.UI.Tests.StatusLiveRegionTests.MissingSharedRegistrationRetainsLocalLiveRegionSemantics(kind: Gone)",
+      "Hexalith.Parties.UI.Tests.StatusLiveRegionTests.MissingSharedRegistrationRetainsLocalLiveRegionSemantics(kind: Degraded)",
+      "Hexalith.Parties.UI.Tests.StatusLiveRegionTests.MissingSharedRegistrationRetainsLocalLiveRegionSemantics(kind: Validation)",
+      "Hexalith.Parties.UI.Tests.StatusLiveRegionTests.MissingSharedRegistrationRetainsLocalLiveRegionSemantics(kind: Forbidden)",
+      "Hexalith.Parties.UI.Tests.StatusLiveRegionTests.MissingSharedRegistrationRetainsLocalLiveRegionSemantics(kind: TransientFailure)",
+      "Hexalith.Parties.UI.Tests.StatusLiveRegionTests.MissingSharedRegistrationRetainsLocalLiveRegionSemantics(kind: LoadFailure)",
+      "Hexalith.Parties.UI.Tests.StatusLiveRegionTests.AssertiveKinds_render_an_assertive_alert_region_with_the_message(kind: Validation)",
+      "Hexalith.Parties.UI.Tests.StatusLiveRegionTests.AssertiveKinds_render_an_assertive_alert_region_with_the_message(kind: Forbidden)",
+      "Hexalith.Parties.UI.Tests.StatusLiveRegionTests.AssertiveKinds_render_an_assertive_alert_region_with_the_message(kind: TransientFailure)",
+      "Hexalith.Parties.UI.Tests.StatusLiveRegionTests.AssertiveKinds_render_an_assertive_alert_region_with_the_message(kind: LoadFailure)",
+      "Hexalith.Parties.UI.Tests.StatusLiveRegionTests.PoliteKinds_render_a_polite_status_region_with_the_message(kind: AcceptedProcessing)",
+      "Hexalith.Parties.UI.Tests.StatusLiveRegionTests.PoliteKinds_render_a_polite_status_region_with_the_message(kind: TenantUnavailable)",
+      "Hexalith.Parties.UI.Tests.StatusLiveRegionTests.PoliteKinds_render_a_polite_status_region_with_the_message(kind: Gone)",
+      "Hexalith.Parties.UI.Tests.StatusLiveRegionTests.PoliteKinds_render_a_polite_status_region_with_the_message(kind: Degraded)",
+      "Hexalith.Parties.UI.Tests.StatusLiveRegionTests.SignInRequired_renders_no_live_region"
+    ],
+    "Export": [
+      "Hexalith.Parties.AdminPortal.Tests.Components.PartiesAdminPortalComponentTests.SharedDownloadCandidatePreservesAdminBytesAndSafeCallerFilename",
+      "Hexalith.Parties.ConsumerPortal.Tests.Components.MyPrivacyPageTests.SharedDownloadCandidatePreservesConsumerBytesFilenameAndRepeatedDownload",
+      "Hexalith.Parties.ConsumerPortal.Tests.Components.MyPrivacyPageTests.RegisteredSharedDownloadCancellationDrainsInteropWithoutLateFeedback",
+      "Hexalith.Parties.ConsumerPortal.Tests.Components.MyPrivacyPageTests.MyPrivacyPage_JsFailure_MapsToTransientAlertAndKeepsDownloadVisible",
+      "direct GDPR route for an erased party keeps export and records available without PII",
+      "bound Consumer exports own data through the self-scoped path",
+      "served shared download module cancels a pending read without late downloads or browser resources",
+      "bound Consumer sees retry guidance when the JSON download helper fails"
+    ],
+    "Typed confirmation": [
+      "Hexalith.Parties.AdminPortal.Tests.Components.PartiesAdminPortalComponentTests.SharedTypedConfirmationCandidateRetainsOrdinalDomainGuardAndOneSubmit",
+      "direct GDPR route opens operations destination without browser-visible command/query calls or overflow"
+    ],
+    "Reconciliation": [
+      "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.RegisteredFeedbackWaitsForReadinessAndAcceptanceWithEarlyConfirmation(cancel: False)",
+      "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.RegisteredFeedbackWaitsForReadinessAndAcceptanceWithEarlyConfirmation(cancel: True)"
+    ]
+  },
+  "inputs_sha256": {
+    "ui-full.xml": "8b493f90612a8d8f4c368d3e3cb403af59a4f4e9bad1023ac786b5d7f9ae5232",
+    "admin-full.xml": "398c2189bb24b83701d024cc348880cd02b32877b9a659033ebea865499876aa",
+    "consumer-full.xml": "679df2fb5e1ccdcddbef3363d35ca459d4872f3e20e0dc430dd036d30ca0d87a",
+    "browser-cases.json": "a69995c9bdf6f0d19785a7014e3f6e8bb3924f237a2269af47a1c0a0fa24f204"
+  },
+  "limitations": [
+    "Package qualification only; fixed shared-reconciler adoption and source launch remain open."
+  ]
+}

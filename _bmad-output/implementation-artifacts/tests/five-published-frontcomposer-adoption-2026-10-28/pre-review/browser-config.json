@@ -1,0 +1,17 @@
+{
+  "name": "browser-config",
+  "started_utc": "2026-10-28T11:42:39.435626+00:00",
+  "command": [
+    "npm",
+    "run",
+    "test:config"
+  ],
+  "cwd": "${WORKSPACE}/tests/e2e",
+  "environment_overrides": {
+    "PATH": "${NODE24_BIN}:${INHERITED_PATH}"
+  },
+  "exit_code": 0,
+  "log": "browser-config.txt",
+  "log_sha256": "9d42e9890963eaee09c8b80535671e1109c24c71a378dc4433f83923b157ce35",
+  "private_original_sha256": "9d42e9890963eaee09c8b80535671e1109c24c71a378dc4433f83923b157ce35"
+}

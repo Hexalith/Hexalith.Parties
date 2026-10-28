@@ -1,0 +1,22 @@
+{
+  "name": "primary-client-build",
+  "started_utc": "2026-10-28T11:42:35.411970+00:00",
+  "command": [
+    "dotnet",
+    "build",
+    "tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj",
+    "--configuration",
+    "Debug",
+    "-m:1",
+    "-p:UseHexalithProjectReferences=false",
+    "-p:UseNuGetDeps=true",
+    "-p:NuGetAudit=false",
+    "-p:MinVerVersionOverride=1.0.0"
+  ],
+  "cwd": "${WORKSPACE}",
+  "environment_overrides": {},
+  "exit_code": 0,
+  "log": "primary-client-build.txt",
+  "log_sha256": "86afaa653874a7e55f6f41342acc06d5e5e07a9aa7c4e248eb0ab23c6be0dd6d",
+  "private_original_sha256": "90c01e9bed27b9f5fea2c04d7fff46a04d1fb9f7d9a8ce5d279cdb5842540a17"
+}

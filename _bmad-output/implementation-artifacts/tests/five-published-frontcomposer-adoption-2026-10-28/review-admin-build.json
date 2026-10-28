@@ -1,0 +1,22 @@
+{
+  "name": "review-admin-build",
+  "started_utc": "2026-10-28T12:01:12.530473+00:00",
+  "command": [
+    "dotnet",
+    "build",
+    "tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj",
+    "--configuration",
+    "Debug",
+    "-m:1",
+    "-p:UseHexalithProjectReferences=false",
+    "-p:UseNuGetDeps=true",
+    "-p:NuGetAudit=false",
+    "-p:MinVerVersionOverride=1.0.0"
+  ],
+  "cwd": "${WORKSPACE}",
+  "environment_overrides": {},
+  "exit_code": 0,
+  "log": "review-admin-build.txt",
+  "log_sha256": "3624c59414bd02981298298a7fe261f86a0cfd13f6f42fe67c7bb38031cd2544",
+  "private_original_sha256": "5c28f452b01d342c0dd22950e8d0bf991087a186830cc2dcf1262cb5d9747be3"
+}

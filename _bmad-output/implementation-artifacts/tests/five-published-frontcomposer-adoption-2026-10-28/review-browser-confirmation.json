@@ -1,0 +1,21 @@
+{
+  "name": "review-browser-confirmation",
+  "started_utc": "2026-10-28T12:06:31.414737+00:00",
+  "command": [
+    "npx",
+    "playwright",
+    "test",
+    "specs/admin-parties-list.spec.ts",
+    "--grep",
+    "direct GDPR route opens operations",
+    "--project=chromium"
+  ],
+  "cwd": "${WORKSPACE}/tests/e2e",
+  "environment_overrides": {
+    "PATH": "${NODE24_BIN}:${INHERITED_PATH}"
+  },
+  "exit_code": 0,
+  "log": "review-browser-confirmation.txt",
+  "log_sha256": "79c2ff4d922326b5c1df03c48147db332bd42b0a5dee5a57db9e729ba3c5cdc1",
+  "private_original_sha256": "79c2ff4d922326b5c1df03c48147db332bd42b0a5dee5a57db9e729ba3c5cdc1"
+}

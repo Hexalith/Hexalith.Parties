@@ -1,0 +1,22 @@
+{
+  "name": "admin-build",
+  "started_utc": "2026-10-28T11:39:48.002253+00:00",
+  "command": [
+    "dotnet",
+    "build",
+    "tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj",
+    "--configuration",
+    "Debug",
+    "-m:1",
+    "-p:UseHexalithProjectReferences=false",
+    "-p:UseNuGetDeps=true",
+    "-p:NuGetAudit=false",
+    "-p:MinVerVersionOverride=1.0.0"
+  ],
+  "cwd": "${WORKSPACE}",
+  "environment_overrides": {},
+  "exit_code": 0,
+  "log": "admin-build.txt",
+  "log_sha256": "5442f4bdede18bfb7eede9136bd01aba8b76d65c7c98d80e14bfbbc8045c886e",
+  "private_original_sha256": "5cecfa3142c4f74e56e7a64058bbc3b7f70ddeca8dbe1add304056175439a078"
+}

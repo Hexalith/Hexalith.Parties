@@ -1,0 +1,25 @@
+{
+  "name": "review-rollback-focus",
+  "started_utc": "2026-10-28T12:01:44.062067+00:00",
+  "command": [
+    "dotnet",
+    "tests/Hexalith.Parties.AdminPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.Tests.dll",
+    "-method",
+    "Hexalith.Parties.AdminPortal.Tests.Components.PartiesAdminPortalComponentTests.PartiesAdminPortal_RequestErasure_RollbackCancellationRestoresTrigger",
+    "-method",
+    "Hexalith.Parties.AdminPortal.Tests.Components.PartiesAdminPortalComponentTests.PartiesAdminPortal_RequestErasure_CancelPartySwitchAndUnavailableStateClearTypedValue",
+    "-result-xml",
+    "_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/review-rollback-focus.xml"
+  ],
+  "cwd": "${WORKSPACE}",
+  "environment_overrides": {},
+  "exit_code": 0,
+  "log": "review-rollback-focus.txt",
+  "log_sha256": "057e72ace035e3d3444b4638b4ad5d807032bc88a4ba4c10fbfcb238c2651e53",
+  "private_original_sha256": "057e72ace035e3d3444b4638b4ad5d807032bc88a4ba4c10fbfcb238c2651e53",
+  "xunit_xml": {
+    "path": "review-rollback-focus.xml",
+    "sha256": "a0ea31780836c6d3f812b25d4c1f9018e563544ce5cfadd1374b02b81bb818c7",
+    "private_original_sha256": "9481d005e4160dbfe1cae0200e2dc0a221cd2571f16d064af461ef1d079ae728"
+  }
+}

@@ -1,3 +1,5 @@
+import { expectConsumerNavigationCancelsDownload } from '../helpers/consumer-download-cancellation.js';
+import { qualifyFrontComposerAssets } from '../helpers/frontcomposer-assets.js';
 import { readFile } from 'node:fs/promises';
 import { expectNoBlockingAxeViolations } from '../helpers/a11y.js';
 import { expectAccordionFocusClearance } from '../helpers/accordion-focus.js';
@@ -252,7 +254,8 @@ test.describe('Consumer portal route shells', () => {
     expect(browserVisibleDataRequests).toEqual([]);
   });
 
-  test('bound Consumer exports own data through the self-scoped path', async ({ context, page, request }) => {
+  test('bound Consumer exports own data through the self-scoped path', async ({ context, page, request }, testInfo) => {
+    await qualifyFrontComposerAssets(page, testInfo);
     await enableConsumerFixture(context);
     const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
 
@@ -268,17 +271,50 @@ test.describe('Consumer portal route shells', () => {
     await expect(page.getByText('Preparing your export - this can take a little while.')).toHaveCount(0);
     await expect(page.getByText('under one minute')).toHaveCount(0);
     await expect(page.getByText('party-bound-001')).toHaveCount(0);
-    const pendingDownload = page.waitForEvent('download');
-    await page.getByRole('button', { name: 'Download JSON' }).click();
-    const download = await pendingDownload;
-    expect(await download.failure()).toBeNull();
-    expect(download.suggestedFilename()).toMatch(/^my-data-export-[0-9TZ]+\.json$/);
-    const downloadedPath = await download.path();
-    expect(downloadedPath).not.toBeNull();
+    await page.evaluate(() => {
+      const urls: { url: string; revoked: boolean }[] = [];
+      (window as Window & { __consumerExportUrls?: typeof urls }).__consumerExportUrls = urls;
+      const create = URL.createObjectURL.bind(URL);
+      const revoke = URL.revokeObjectURL.bind(URL);
+      URL.createObjectURL = blob => {
+        const url = create(blob);
+        urls.push({ url, revoked: false });
+        return url;
+      };
+      URL.revokeObjectURL = url => {
+        revoke(url);
+        const transfer = urls.find(item => item.url === url);
+        if (transfer) transfer.revoked = true;
+      };
+      // The registered shared path must execute even though the retained helper is available.
+      window.HexalithPartiesConsumerPortal!.downloadJson = async () => { throw new Error('local fallback executed'); };
+    });
     const expectedExport = '{"partyId":"party-bound-001","tenantId":"test-tenant","status":"Erased","exportedAt":"2026-06-10T10:00:00Z","exportedBy":"consumer-e2e","correlationId":"corr-export-e2e","party":null,"processingRecords":[]}';
-    expect(await readFile(downloadedPath!)).toEqual(Buffer.from(expectedExport, 'utf8'));
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const pendingDownload = page.waitForEvent('download');
+      await page.getByRole('button', { name: 'Download JSON' }).click();
+      const download = await pendingDownload;
+      expect(await download.failure()).toBeNull();
+      expect(download.suggestedFilename()).toMatch(/^my-data-export-[0-9TZ]+\.json$/);
+      const downloadedPath = await download.path();
+      expect(downloadedPath).not.toBeNull();
+      expect(await readFile(downloadedPath!)).toEqual(Buffer.from(expectedExport, 'utf8'));
+    }
+    await expect.poll(() => page.evaluate(() => {
+      const urls = (window as Window & { __consumerExportUrls?: { revoked: boolean }[] }).__consumerExportUrls ?? [];
+      return { transfers: urls.length, revoked: urls.filter(item => item.revoked).length };
+    })).toEqual({ transfers: 2, revoked: 2 });
+    await expect(page.locator('a[download]')).toHaveCount(0);
+    await expect(page.getByRole('alert')).toHaveCount(0);
+    await expect.poll(async () => (await gdprRequestCounts(request)).exportData).toBe(1);
     expect(new URL(page.url()).pathname).toBe('/me/privacy');
     expect(browserVisibleDataRequests).toEqual([]);
+  });
+
+  test('bound Consumer navigation cancels an active shared download without late feedback or browser resources', async ({ context, page }, testInfo) => {
+    await qualifyFrontComposerAssets(page, testInfo);
+    await enableConsumerFixture(context);
+    await expectConsumerNavigationCancelsDownload(page);
   });
 
   test('bound Consumer sees processing summary through the self-scoped path', async ({ context, page, request }) => {

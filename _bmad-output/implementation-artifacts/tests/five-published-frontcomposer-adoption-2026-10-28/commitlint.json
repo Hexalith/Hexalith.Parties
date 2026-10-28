@@ -1,0 +1,18 @@
+{
+  "name": "commitlint",
+  "started_utc": "2026-10-28T12:14:06.111624+00:00",
+  "command": [
+    "node_modules/.bin/commitlint",
+    "--edit",
+    "${TMP}/parties-ui-commit-kwtlytfm.txt",
+    "--verbose"
+  ],
+  "cwd": "${WORKSPACE}",
+  "environment_overrides": {
+    "PATH": "${NODE24_BIN}:${INHERITED_PATH}"
+  },
+  "exit_code": 0,
+  "log": "commitlint.txt",
+  "log_sha256": "e4ac6c8a120dfd958e2406a024a3b8e7d6eeaca1ccf3aad2498c1e5edbb1beb3",
+  "private_original_sha256": "e4ac6c8a120dfd958e2406a024a3b8e7d6eeaca1ccf3aad2498c1e5edbb1beb3"
+}

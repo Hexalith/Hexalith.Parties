@@ -1,0 +1,52 @@
+  Determining projects to restore...
+  Restored ${WORKSPACE}/src/Hexalith.Parties.Picker/Hexalith.Parties.Picker.csproj (in 204 ms).
+  Restored ${WORKSPACE}/src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj (in 205 ms).
+  Restored ${WORKSPACE}/src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj (in 205 ms).
+  Restored ${WORKSPACE}/src/Hexalith.Parties.Authentication/Hexalith.Parties.Authentication.csproj (in 205 ms).
+  Restored ${WORKSPACE}/src/Hexalith.Parties.ConsumerPortal/Hexalith.Parties.ConsumerPortal.csproj (in 205 ms).
+${WORKSPACE}/src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj : error NU1109: Detected package downgrade: Hexalith.EventStore.Client from 3.128.4 to centrally defined 3.128.3. Update the centrally managed package version to a higher version.  [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj : error NU1109:  Hexalith.Parties.AdminPortal -> Hexalith.Tenants.Client 5.11.1 -> Hexalith.EventStore.Client (>= 3.128.4)  [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj : error NU1109:  Hexalith.Parties.AdminPortal -> Hexalith.EventStore.Client (>= 3.128.3) [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj : error NU1109: Detected package downgrade: Hexalith.EventStore.Contracts from 3.128.4 to centrally defined 3.128.3. Update the centrally managed package version to a higher version.  [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj : error NU1109:  Hexalith.Parties.AdminPortal -> Hexalith.Tenants.Client 5.11.1 -> Hexalith.EventStore.Contracts (>= 3.128.4)  [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj : error NU1109:  Hexalith.Parties.AdminPortal -> Hexalith.EventStore.Contracts (>= 3.128.3) [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj : error NU1109: Detected package downgrade: Hexalith.EventStore.Client from 3.128.4 to centrally defined 3.128.3. Update the centrally managed package version to a higher version.  [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj : error NU1109:  Hexalith.Parties.UI -> Hexalith.Tenants.Client 5.11.1 -> Hexalith.EventStore.Client (>= 3.128.4)  [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj : error NU1109:  Hexalith.Parties.UI -> Hexalith.EventStore.Client (>= 3.128.3) [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj : error NU1109: Detected package downgrade: Hexalith.EventStore.Contracts from 3.128.4 to centrally defined 3.128.3. Update the centrally managed package version to a higher version.  [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj : error NU1109:  Hexalith.Parties.UI -> Hexalith.Tenants.Client 5.11.1 -> Hexalith.EventStore.Contracts (>= 3.128.4)  [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj : error NU1109:  Hexalith.Parties.UI -> Hexalith.EventStore.Contracts (>= 3.128.3) [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj : error NU1109: Detected package downgrade: Hexalith.EventStore.Client from 3.128.4 to centrally defined 3.128.3. Update the centrally managed package version to a higher version. 
+${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj : error NU1109:  Hexalith.Parties.UI.Tests -> Hexalith.Tenants.Client 5.11.1 -> Hexalith.EventStore.Client (>= 3.128.4) 
+${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj : error NU1109:  Hexalith.Parties.UI.Tests -> Hexalith.EventStore.Client (>= 3.128.3)
+${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj : error NU1109: Detected package downgrade: Hexalith.EventStore.Contracts from 3.128.4 to centrally defined 3.128.3. Update the centrally managed package version to a higher version. 
+${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj : error NU1109:  Hexalith.Parties.UI.Tests -> Hexalith.Tenants.Client 5.11.1 -> Hexalith.EventStore.Contracts (>= 3.128.4) 
+${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj : error NU1109:  Hexalith.Parties.UI.Tests -> Hexalith.EventStore.Contracts (>= 3.128.3)
+  Failed to restore ${WORKSPACE}/src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj (in 806 ms).
+  Failed to restore ${WORKSPACE}/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj (in 810 ms).
+  Failed to restore ${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj (in 826 ms).
+
+Build FAILED.
+
+${WORKSPACE}/src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj : error NU1109: Detected package downgrade: Hexalith.EventStore.Client from 3.128.4 to centrally defined 3.128.3. Update the centrally managed package version to a higher version.  [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj : error NU1109:  Hexalith.Parties.AdminPortal -> Hexalith.Tenants.Client 5.11.1 -> Hexalith.EventStore.Client (>= 3.128.4)  [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj : error NU1109:  Hexalith.Parties.AdminPortal -> Hexalith.EventStore.Client (>= 3.128.3) [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj : error NU1109: Detected package downgrade: Hexalith.EventStore.Contracts from 3.128.4 to centrally defined 3.128.3. Update the centrally managed package version to a higher version.  [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj : error NU1109:  Hexalith.Parties.AdminPortal -> Hexalith.Tenants.Client 5.11.1 -> Hexalith.EventStore.Contracts (>= 3.128.4)  [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj : error NU1109:  Hexalith.Parties.AdminPortal -> Hexalith.EventStore.Contracts (>= 3.128.3) [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj : error NU1109: Detected package downgrade: Hexalith.EventStore.Client from 3.128.4 to centrally defined 3.128.3. Update the centrally managed package version to a higher version.  [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj : error NU1109:  Hexalith.Parties.UI -> Hexalith.Tenants.Client 5.11.1 -> Hexalith.EventStore.Client (>= 3.128.4)  [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj : error NU1109:  Hexalith.Parties.UI -> Hexalith.EventStore.Client (>= 3.128.3) [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj : error NU1109: Detected package downgrade: Hexalith.EventStore.Contracts from 3.128.4 to centrally defined 3.128.3. Update the centrally managed package version to a higher version.  [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj : error NU1109:  Hexalith.Parties.UI -> Hexalith.Tenants.Client 5.11.1 -> Hexalith.EventStore.Contracts (>= 3.128.4)  [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj : error NU1109:  Hexalith.Parties.UI -> Hexalith.EventStore.Contracts (>= 3.128.3) [${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj]
+${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj : error NU1109: Detected package downgrade: Hexalith.EventStore.Client from 3.128.4 to centrally defined 3.128.3. Update the centrally managed package version to a higher version. 
+${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj : error NU1109:  Hexalith.Parties.UI.Tests -> Hexalith.Tenants.Client 5.11.1 -> Hexalith.EventStore.Client (>= 3.128.4) 
+${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj : error NU1109:  Hexalith.Parties.UI.Tests -> Hexalith.EventStore.Client (>= 3.128.3)
+${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj : error NU1109: Detected package downgrade: Hexalith.EventStore.Contracts from 3.128.4 to centrally defined 3.128.3. Update the centrally managed package version to a higher version. 
+${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj : error NU1109:  Hexalith.Parties.UI.Tests -> Hexalith.Tenants.Client 5.11.1 -> Hexalith.EventStore.Contracts (>= 3.128.4) 
+${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj : error NU1109:  Hexalith.Parties.UI.Tests -> Hexalith.EventStore.Contracts (>= 3.128.3)
+    0 Warning(s)
+    6 Error(s)
+
+Time Elapsed 00:00:01.82

@@ -5,12 +5,12 @@ namespace Hexalith.Parties.UI.Components.Shared;
 /// <summary>Maps Parties freshness and copy onto an explicitly registered shared candidate.</summary>
 public partial class DataFreshnessIndicator
 {
-    // The shared-source compilation reads component services and parameters. The published
-    // compilation omits that branch, so the analyzer would otherwise treat these members as static.
+    // Unsupported dependency selections omit the shared capability branch. Keep the
+    // fallback compilation valid without changing component state or service access.
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
         "Performance",
         "CA1822:Mark members as static",
-        Justification = "The shared-source compilation reads component state.")]
+        Justification = "The shared-capability compilation reads component state.")]
     private Type? SharedFreshnessType
     {
         get
@@ -28,7 +28,7 @@ public partial class DataFreshnessIndicator
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
         "Performance",
         "CA1822:Mark members as static",
-        Justification = "The shared-source compilation reads component state.")]
+        Justification = "The shared-capability compilation reads component state.")]
     private IDictionary<string, object> SharedFreshnessParameters
     {
         get

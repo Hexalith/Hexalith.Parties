@@ -23,6 +23,17 @@ public sealed class MyProfilePageTests : BunitContext
     }
 
     [Fact]
+    public void MissingSharedRegistrationRetainsConsumerFreshnessCopy()
+    {
+        using var context = new BunitContext();
+        var cut = context.Render<FreshnessStatus>(p => p
+            .Add(c => c.Freshness, ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Stale)));
+        cut.FindAll("[data-fc-freshness]").ShouldBeEmpty();
+        cut.Find("[role='status'][aria-live='polite']").TextContent
+            .ShouldBe("Showing what we last knew - refreshing");
+    }
+
+    [Fact]
     public void MyProfilePage_Loading_RendersCalmSkeleton()
     {
         var pending = new TaskCompletionSource<PartyDetail>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -60,6 +71,9 @@ public sealed class MyProfilePageTests : BunitContext
             cut.Markup.ShouldContain("TAX-ADA-1");
             cut.Markup.ShouldContain("Jurisdiction");
             cut.Markup.ShouldContain("FR");
+#if HFC_SHARED_UI
+            cut.FindComponent<Hexalith.FrontComposer.Shell.Components.Feedback.FcFreshnessIndicator>();
+#endif
             cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldContain("Up to date");
             cut.Markup.ShouldNotContain("party-secret-123", Case.Sensitive);
             cut.Markup.ShouldNotContain("Lovelace, Ada", Case.Sensitive);

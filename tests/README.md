@@ -73,29 +73,37 @@ Windows/macOS; its separate semantic baseline test still runs there. The separat
 semantic JSON under `baselines/` is checked as well and is not rewritten by this
 image update command. See [the visual contract and exact build commands](../docs/accessibility.md).
 
-## Forward skip-link source qualification (DW-91)
+## Published FrontComposer UI qualification (DW-91/100/101/102/112)
 
-The normal `npm run test:a11y` gate retains the published-package skip-target
-coverage. FrontComposer 4.7.0 predates the route-heading focus fix, so two
-additional forward-Tab regressions are explicitly opt-in until a fixed package
-is published and adopted. They never detect support from the application under
-test: enabling them against an unfixed shell must fail.
+The selected Shell and Contracts.UI 4.7.1 packages publish the approved freshness,
+live-region, download, typed-confirmation and shell keyboard capabilities.
+`Parties:FrontComposer:UseSharedUiPrimitives=true` enables the shared components
+and download service; the option still defaults to false. Both paths retain
+Parties labels, status mappings, safe filenames and domain authorization guards.
+Package reconciliation stays on the corrected local orchestration because 4.7.1
+lacks the registration-readiness contract. DW-100 therefore stays open for adoption
+of a separately qualified fixed-reconciler package. G4 and Story 8.9 stay blocked.
 
-Serve a Debug UI whose keyboard asset is the selected FrontComposer candidate,
-then run from `tests/e2e` with its explicit URL:
+`npm run test:ui` owns its Debug server locally and runs forward Tab after cold,
+hydrated and client navigation, phone/tablet/desktop resize, typed confirmation,
+repeated exports and cancellation controls without capability skips or asset
+substitution. Each qualification compares served focus, keyboard, download and
+shell CSS bytes with the selected installed package. Build metadata supplies the
+restored package version and folders, including NuGet fallback folders.
 
-```bash
-BASE_URL=http://127.0.0.1:5073 PARTIES_E2E_FORWARD_SKIP_LINKS=1 PLAYWRIGHT_SKIP_WEBSERVER=1 npm run test:a11y
-```
+Mapped source selections use the same behavioral controls and require pinned-tool
+`source` mode, an absolute selected producer root and exact served/source bytes.
+Package success supplies no source qualification. The separate
+`npm run test:source-feedback` lane retains its source-only instrumented transfer
+control; it does not run in the package gate. Current source launch is blocked by
+HXR015 (Aspire CLI 13.6.4 versus the catalog-selected SDK 13.6.1); no mappings or
+source/dependency selections were changed to bypass that prerequisite.
 
-The flag enables assertions only; it never substitutes application assets or
-infers support. The default local Playwright server uses package dependencies,
-so it cannot satisfy these assertions yet. The DW-91 evidence records a local
-diagnostic host that substitutes only `fc-keyboard.js` through a temporary static
-asset manifest, alongside an unmodified package host. This proves candidate
-integration, not published-package adoption. Do not enable the flag in the
-Release/package CI lane until a fixed package is adopted. DW-91 stays open for
-publication/adoption and removal of the opt-in.
+See the [published-adoption receipt](../_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/README.md)
+for exact individual Debug build/test commands, package/source identities, served
+asset hashes, the initial restore refusal and the separately authorized one-line
+EventStore 3.128.4 alignment. Leave the runtime option false for local rollback;
+shell fixes remain supplied by the selected Shell package.
 
 ## Architecture
 
@@ -452,12 +460,11 @@ instant across platforms. The publisher additionally supplies its exact instant.
 The evidence packet includes an SDK-generated dual-platform archive label receipt;
 it does not establish adoption by the separately pinned release executor.
 
-FrontComposer's compact navigation change has producer component coverage.
-`PARTIES_E2E_COMPACT_SKIP_LINKS=1` enables the matching Parties component and
-browser resize checks explicitly. Leave it disabled in Release/package CI until
-a matching producer package is published and adopted. A forced package run must
-fail against the current older shell. The pinned tool's source Debug and focused
-consumer fallbacks remain subject to their recorded Platform/mapping blockers.
+The earlier compact-navigation receipt retained a package publication/adoption
+gate. Shell 4.7.1 now supplies that capability: the component and browser resize
+checks run unconditionally for the approved package, as documented in
+[the published qualification](#published-frontcomposer-ui-qualification-dw-91100101102112).
+Historical negative controls and source-mapping blockers retain their original scope.
 
 The optional actual Memories Production startup controls require real owned
 Redis/FalkorDB instances, the built selected producer, and the selected daprd:

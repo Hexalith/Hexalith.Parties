@@ -1,0 +1,15 @@
+{
+  "name": "review-evidence-helpers-optimized",
+  "started_utc": "2026-10-28T12:06:25.659969+00:00",
+  "command": [
+    "python3",
+    "-O",
+    "_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/test-evidence-helpers.py"
+  ],
+  "cwd": "${WORKSPACE}",
+  "environment_overrides": {},
+  "exit_code": 0,
+  "log": "review-evidence-helpers-optimized.txt",
+  "log_sha256": "3eddbe182422772db29ac091eba0081e235849420dfdb59f154ec7063e1608af",
+  "private_original_sha256": "3eddbe182422772db29ac091eba0081e235849420dfdb59f154ec7063e1608af"
+}

@@ -1,10 +1,14 @@
 <Project>
-  <!-- Candidate B–F APIs exist only in the mapped producer source. Runtime registration
-       remains opt-in until named owner acceptance and consumer parity are recorded. -->
-  <Target Name="ConfigureFrontComposerFeedbackCandidate" BeforeTargets="PrepareForBuild;CoreCompile"
-          Condition="'$(HexalithFrontComposerFromSource)' == 'true'">
-    <PropertyGroup>
+  <!-- Approved shared primitives are published in Shell/Contracts.UI 4.7.1.
+       Registration remains opt-in; the package reconciler lacks registration readiness. -->
+  <Target Name="ConfigureFrontComposerFeedbackCandidate" BeforeTargets="PrepareForBuild;CoreCompile">
+    <PropertyGroup Condition="'$(HexalithFrontComposerFromSource)' == 'true' or '$(HexalithFrontComposerVersion)' == '4.7.1'">
       <DefineConstants>$(DefineConstants);HFC_SHARED_UI</DefineConstants>
+    </PropertyGroup>
+    <!-- The selected producer source supplies the corrected readiness/acceptance contract.
+         Keep package orchestration local until a separately approved publication/adoption. -->
+    <PropertyGroup Condition="'$(HexalithFrontComposerFromSource)' == 'true'">
+      <DefineConstants>$(DefineConstants);HFC_SHARED_RECONCILE_READINESS</DefineConstants>
     </PropertyGroup>
   </Target>
   <Target Name="ConfigureMemoriesSourceCompilation" BeforeTargets="PrepareForBuild;GetAssemblyAttributes;GenerateCompileDependencyCache;CoreCompile"

@@ -1,0 +1,558 @@
+{
+  "commands": {
+    "pre-focus-fix-browser-ui.json": {
+      "name": "browser-ui",
+      "started_utc": "2026-10-28T11:36:08.991742+00:00",
+      "command": [
+        "npm",
+        "run",
+        "test:ui"
+      ],
+      "cwd": "${WORKSPACE}/tests/e2e",
+      "environment_overrides": {
+        "PATH": "${NODE24_BIN}:${INHERITED_PATH}"
+      },
+      "exit_code": 1,
+      "log": "pre-focus-fix-browser-ui.txt",
+      "log_sha256": "35fc8c658dfa19a9bb22bbd1e987f4af9f1c307704d27ceaad18df3115863d05",
+      "private_original_sha256": "cbd8ac00a457a17c0aeb5d7d21e896d5f5df365a8b203922e267999504474a54"
+    },
+    "effective-properties.json": {
+      "name": "effective-properties",
+      "started_utc": "2026-10-28T11:44:51.892778+00:00",
+      "command": [
+        "dotnet",
+        "msbuild",
+        "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+        "-getProperty:HexalithEventStoreVersion,HexalithFrontComposerVersion,HexalithTenantsVersion,HexalithFrontComposerFromSource,NuGetPackageFolders"
+      ],
+      "cwd": "${WORKSPACE}",
+      "environment_overrides": {},
+      "exit_code": 0,
+      "log": "effective-properties.txt",
+      "log_sha256": "5a63b585f10c37c38392679306fb096c374700b9a0e0fde6abc3ebae96a643dd",
+      "private_original_sha256": "47c60d14eb2f89afb5c3a5d6fb0bc918b53e2dcc58f056ce34f70bfd06f1b2d6"
+    },
+    "primary-client-build.json": {
+      "name": "primary-client-build",
+      "started_utc": "2026-10-28T11:42:35.411970+00:00",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj",
+        "--configuration",
+        "Debug",
+        "-m:1",
+        "-p:UseHexalithProjectReferences=false",
+        "-p:UseNuGetDeps=true",
+        "-p:NuGetAudit=false",
+        "-p:MinVerVersionOverride=1.0.0"
+      ],
+      "cwd": "${WORKSPACE}",
+      "environment_overrides": {},
+      "exit_code": 0,
+      "log": "primary-client-build.txt",
+      "log_sha256": "86afaa653874a7e55f6f41342acc06d5e5e07a9aa7c4e248eb0ab23c6be0dd6d",
+      "private_original_sha256": "90c01e9bed27b9f5fea2c04d7fff46a04d1fb9f7d9a8ce5d279cdb5842540a17"
+    },
+    "consumer-full.json": {
+      "name": "consumer-full",
+      "started_utc": "2026-10-28T11:39:51.435590+00:00",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.ConsumerPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.ConsumerPortal.Tests.dll",
+        "-result-xml",
+        "_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/consumer-full.xml"
+      ],
+      "cwd": "${WORKSPACE}",
+      "environment_overrides": {},
+      "exit_code": 0,
+      "log": "consumer-full.txt",
+      "log_sha256": "64fa3f8745bf8e840e035d83610127246ec46d71e3c0714bd3d4a2295b2edee4",
+      "private_original_sha256": "64fa3f8745bf8e840e035d83610127246ec46d71e3c0714bd3d4a2295b2edee4",
+      "xunit_xml": {
+        "path": "consumer-full.xml",
+        "sha256": "679df2fb5e1ccdcddbef3363d35ca459d4872f3e20e0dc430dd036d30ca0d87a",
+        "private_original_sha256": "cc78335cd9e662924756d4fb6dac25cb8fa2d5fb5a6c4f8067318c80ecbea4a3"
+      }
+    },
+    "admin-full.json": {
+      "name": "admin-full",
+      "started_utc": "2026-10-28T11:39:58.804657+00:00",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.AdminPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.Tests.dll",
+        "-result-xml",
+        "_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/admin-full.xml"
+      ],
+      "cwd": "${WORKSPACE}",
+      "environment_overrides": {},
+      "exit_code": 0,
+      "log": "admin-full.txt",
+      "log_sha256": "72e21199c97e603ea1e8c3f912b90a4c351becbfbc6c5d6a9b51422d63d0f346",
+      "private_original_sha256": "72e21199c97e603ea1e8c3f912b90a4c351becbfbc6c5d6a9b51422d63d0f346",
+      "xunit_xml": {
+        "path": "admin-full.xml",
+        "sha256": "398c2189bb24b83701d024cc348880cd02b32877b9a659033ebea865499876aa",
+        "private_original_sha256": "07d523e09cac7df2c0e7eb9eee895353f2988a8fe861314fc438884a49e5a852"
+      }
+    },
+    "browser-config.json": {
+      "name": "browser-config",
+      "started_utc": "2026-10-28T11:42:39.435626+00:00",
+      "command": [
+        "npm",
+        "run",
+        "test:config"
+      ],
+      "cwd": "${WORKSPACE}/tests/e2e",
+      "environment_overrides": {
+        "PATH": "${NODE24_BIN}:${INHERITED_PATH}"
+      },
+      "exit_code": 0,
+      "log": "browser-config.txt",
+      "log_sha256": "9d42e9890963eaee09c8b80535671e1109c24c71a378dc4433f83923b157ce35",
+      "private_original_sha256": "9d42e9890963eaee09c8b80535671e1109c24c71a378dc4433f83923b157ce35"
+    },
+    "source-launch-blocker.json": {
+      "name": "source-launch-blocker",
+      "started_utc": "2026-10-28T11:42:39.436057+00:00",
+      "command": [
+        "dotnet",
+        "tool",
+        "run",
+        "hexalith-module",
+        "--",
+        "debug",
+        "--manifest",
+        "module/hexalith.module-manifest.v2.json",
+        "--evidence",
+        "_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/source-mapping.json",
+        "--output",
+        "json"
+      ],
+      "cwd": "${WORKSPACE}",
+      "environment_overrides": {},
+      "exit_code": 2,
+      "log": "source-launch-blocker.txt",
+      "log_sha256": "8377e0ffe7bda1808b0075c577ff54750841228c5baa69e2b7907e0233c9986c",
+      "private_original_sha256": "8377e0ffe7bda1808b0075c577ff54750841228c5baa69e2b7907e0233c9986c"
+    },
+    "browser-confirmation.json": {
+      "name": "browser-confirmation",
+      "started_utc": "2026-10-28T11:38:28.192292+00:00",
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "specs/admin-parties-list.spec.ts",
+        "--grep",
+        "direct GDPR route opens operations",
+        "--project=chromium"
+      ],
+      "cwd": "${WORKSPACE}/tests/e2e",
+      "environment_overrides": {
+        "PATH": "${NODE24_BIN}:${INHERITED_PATH}"
+      },
+      "exit_code": 0,
+      "log": "browser-confirmation.txt",
+      "log_sha256": "6b1ee61ab6040e35903b175f186bf8b88fc7d15428769c367c15662c51382b82",
+      "private_original_sha256": "6b1ee61ab6040e35903b175f186bf8b88fc7d15428769c367c15662c51382b82"
+    },
+    "browser-ui.json": {
+      "name": "browser-ui",
+      "started_utc": "2026-10-28T11:40:23.849309+00:00",
+      "command": [
+        "npm",
+        "run",
+        "test:ui"
+      ],
+      "cwd": "${WORKSPACE}/tests/e2e",
+      "environment_overrides": {
+        "PATH": "${NODE24_BIN}:${INHERITED_PATH}"
+      },
+      "exit_code": 0,
+      "log": "browser-ui.txt",
+      "log_sha256": "7cfbe41411bb8dde52693ebb7665b3baf148e5f6061b1e78c531c534e5d36ff4",
+      "private_original_sha256": "7cfbe41411bb8dde52693ebb7665b3baf148e5f6061b1e78c531c534e5d36ff4"
+    },
+    "pre-final-consumer-focused.json": {
+      "name": "consumer-focused",
+      "started_utc": "2026-10-28T11:34:54.392383+00:00",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.ConsumerPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.ConsumerPortal.Tests.dll",
+        "-class",
+        "Hexalith.Parties.ConsumerPortal.Tests.Components.MyProfilePageTests",
+        "-class",
+        "Hexalith.Parties.ConsumerPortal.Tests.Components.MyPrivacyPageTests",
+        "-result-xml",
+        "_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/consumer-focused.xml"
+      ],
+      "cwd": "${WORKSPACE}",
+      "environment_overrides": {},
+      "exit_code": 0,
+      "log": "pre-final-consumer-focused.txt",
+      "log_sha256": "bdfb3448c459b2721aada892e2c847f7deeb708ba8811f2e54919b16f1d75e26",
+      "private_original_sha256": "bdfb3448c459b2721aada892e2c847f7deeb708ba8811f2e54919b16f1d75e26",
+      "xunit_xml": {
+        "path": "pre-final-consumer-focused.xml",
+        "sha256": "d6d54b863c8e3be6cea797db9aa6883e933cdff2edec6ade05b3aa9450878275",
+        "private_original_sha256": "461b066ca8243f88e71c63894c32015afe19dcc0d318337c86a84fbc68868aa0"
+      }
+    },
+    "admin-focused.json": {
+      "name": "admin-focused",
+      "started_utc": "2026-10-28T11:36:08.991804+00:00",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.AdminPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.Tests.dll",
+        "-class",
+        "Hexalith.Parties.AdminPortal.Tests.Components.PartiesAdminPortalComponentTests",
+        "-result-xml",
+        "_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/admin-focused.xml"
+      ],
+      "cwd": "${WORKSPACE}",
+      "environment_overrides": {},
+      "exit_code": 0,
+      "log": "admin-focused.txt",
+      "log_sha256": "fed4f4306e03e6018ced9421f0cc645b5802efa5eb97445def453fede615957f",
+      "private_original_sha256": "fed4f4306e03e6018ced9421f0cc645b5802efa5eb97445def453fede615957f",
+      "xunit_xml": {
+        "path": "admin-focused.xml",
+        "sha256": "f03efa89236fda2724bc5eaca35936a1f5307c4d56d399560909ccff739b3894",
+        "private_original_sha256": "dd15f5ecabf99091426e5ae990c20ef0769775ae4b7100d11db3f1ed30f40b04"
+      }
+    },
+    "pre-final-consumer-full.json": {
+      "name": "consumer-full",
+      "started_utc": "2026-10-28T11:35:19.343341+00:00",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.ConsumerPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.ConsumerPortal.Tests.dll",
+        "-result-xml",
+        "_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/consumer-full.xml"
+      ],
+      "cwd": "${WORKSPACE}",
+      "environment_overrides": {},
+      "exit_code": 0,
+      "log": "pre-final-consumer-full.txt",
+      "log_sha256": "3c95cda72e5a4fd99f0131e18ffe4a44d9fd154613127effefdb14cf384fe074",
+      "private_original_sha256": "3c95cda72e5a4fd99f0131e18ffe4a44d9fd154613127effefdb14cf384fe074",
+      "xunit_xml": {
+        "path": "pre-final-consumer-full.xml",
+        "sha256": "9da9e28370fd821fc620f08fe4ca47df57368d1f019a8685851dc5601a693b05",
+        "private_original_sha256": "8ca5ecbb3d5e60b6cea8932cc18658cb693c951884eaee4c07171bccbde4cf7a"
+      }
+    },
+    "consumer-focused.json": {
+      "name": "consumer-focused",
+      "started_utc": "2026-10-28T11:36:54.670171+00:00",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.ConsumerPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.ConsumerPortal.Tests.dll",
+        "-class",
+        "Hexalith.Parties.ConsumerPortal.Tests.Components.MyProfilePageTests",
+        "-class",
+        "Hexalith.Parties.ConsumerPortal.Tests.Components.MyPrivacyPageTests",
+        "-result-xml",
+        "_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/consumer-focused.xml"
+      ],
+      "cwd": "${WORKSPACE}",
+      "environment_overrides": {},
+      "exit_code": 0,
+      "log": "consumer-focused.txt",
+      "log_sha256": "e94c3963425703cbf6782a32ae8df53592b857b8167ad24794172e5990b16962",
+      "private_original_sha256": "e94c3963425703cbf6782a32ae8df53592b857b8167ad24794172e5990b16962",
+      "xunit_xml": {
+        "path": "consumer-focused.xml",
+        "sha256": "4d8ce2af40522717b56f7d4bde7f6197fe451c3a8f802a668731449e5d7d0ed6",
+        "private_original_sha256": "f55f52ceb5078f7fe22219dcd9db8ef8010bfc47bde7d9863278491e80f57149"
+      }
+    },
+    "warning-guard.json": {
+      "name": "warning-guard",
+      "started_utc": "2026-10-28T11:42:39.437738+00:00",
+      "command": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "cwd": "${WORKSPACE}",
+      "environment_overrides": {},
+      "exit_code": 0,
+      "log": "warning-guard.txt",
+      "log_sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604",
+      "private_original_sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604"
+    },
+    "admin-build.json": {
+      "name": "admin-build",
+      "started_utc": "2026-10-28T11:39:48.002253+00:00",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj",
+        "--configuration",
+        "Debug",
+        "-m:1",
+        "-p:UseHexalithProjectReferences=false",
+        "-p:UseNuGetDeps=true",
+        "-p:NuGetAudit=false",
+        "-p:MinVerVersionOverride=1.0.0"
+      ],
+      "cwd": "${WORKSPACE}",
+      "environment_overrides": {},
+      "exit_code": 0,
+      "log": "admin-build.txt",
+      "log_sha256": "5442f4bdede18bfb7eede9136bd01aba8b76d65c7c98d80e14bfbbc8045c886e",
+      "private_original_sha256": "5cecfa3142c4f74e56e7a64058bbc3b7f70ddeca8dbe1add304056175439a078"
+    },
+    "whitespace.json": {
+      "name": "whitespace",
+      "started_utc": "2026-10-28T11:44:51.892157+00:00",
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "cwd": "${WORKSPACE}",
+      "environment_overrides": {},
+      "exit_code": 0,
+      "log": "whitespace.txt",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "consumer-build.json": {
+      "name": "consumer-build",
+      "started_utc": "2026-10-28T11:36:38.560735+00:00",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj",
+        "--configuration",
+        "Debug",
+        "-m:1",
+        "-p:UseHexalithProjectReferences=false",
+        "-p:UseNuGetDeps=true",
+        "-p:NuGetAudit=false",
+        "-p:MinVerVersionOverride=1.0.0"
+      ],
+      "cwd": "${WORKSPACE}",
+      "environment_overrides": {},
+      "exit_code": 0,
+      "log": "consumer-build.txt",
+      "log_sha256": "c44158893d1832871006fc01f9d795be1d2936a7164820f9e74d921f53bd642f",
+      "private_original_sha256": "5b737702816564c52ffca00da74922812bc62e30af2dcbe25bf36438059a367c"
+    },
+    "primary-client-tests.json": {
+      "name": "primary-client-tests",
+      "started_utc": "2026-10-28T11:42:47.044480+00:00",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Client.Tests/bin/Debug/net10.0/Hexalith.Parties.Client.Tests.dll",
+        "-result-xml",
+        "_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/primary-client-tests.xml"
+      ],
+      "cwd": "${WORKSPACE}",
+      "environment_overrides": {},
+      "exit_code": 0,
+      "log": "primary-client-tests.txt",
+      "log_sha256": "6077c23e711640a1a6a5200a0df574c03c37b81fbf17c4524bf6205688037984",
+      "private_original_sha256": "6077c23e711640a1a6a5200a0df574c03c37b81fbf17c4524bf6205688037984",
+      "xunit_xml": {
+        "path": "primary-client-tests.xml",
+        "sha256": "a732d4ab77efabffbd9f1a4ee7bcb19ba3125acbe7038f9a1cf7ddce1d27fa9f",
+        "private_original_sha256": "0558f5e0c2d4a826d2927e4a6c41f5ac43ac869cda075d9a79ccaca9e0b96e4f"
+      }
+    },
+    "browser-typecheck.json": {
+      "name": "browser-typecheck",
+      "started_utc": "2026-10-28T11:42:15.780102+00:00",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "cwd": "${WORKSPACE}/tests/e2e",
+      "environment_overrides": {
+        "PATH": "${NODE24_BIN}:${INHERITED_PATH}"
+      },
+      "exit_code": 0,
+      "log": "browser-typecheck.txt",
+      "log_sha256": "9b5e7f499d4a7b0ba86c88c063ef897e384db99bc9cd1385f318d1a77104bbf5",
+      "private_original_sha256": "9b5e7f499d4a7b0ba86c88c063ef897e384db99bc9cd1385f318d1a77104bbf5"
+    },
+    "ui-full.json": {
+      "name": "ui-full",
+      "started_utc": "2026-10-28T11:39:53.507420+00:00",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll",
+        "-result-xml",
+        "_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/ui-full.xml"
+      ],
+      "cwd": "${WORKSPACE}",
+      "environment_overrides": {},
+      "exit_code": 0,
+      "log": "ui-full.txt",
+      "log_sha256": "d2997471550770602d55a58adcd06f231e05e8f702b50307b84d415ecf973b86",
+      "private_original_sha256": "d032d590182dc0786de84bc582c0bb7d7a43461704951d529df363ecf398769c",
+      "xunit_xml": {
+        "path": "ui-full.xml",
+        "sha256": "8b493f90612a8d8f4c368d3e3cb403af59a4f4e9bad1023ac786b5d7f9ae5232",
+        "private_original_sha256": "698adb66e63adfe39cd3408ca67b5a590c8963eef006be5954350dd91ded5837"
+      }
+    },
+    "pre-final-consumer-build.json": {
+      "name": "consumer-build",
+      "started_utc": "2026-10-28T11:36:08.991661+00:00",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj",
+        "--configuration",
+        "Debug",
+        "-m:1",
+        "-p:UseHexalithProjectReferences=false",
+        "-p:UseNuGetDeps=true",
+        "-p:NuGetAudit=false",
+        "-p:MinVerVersionOverride=1.0.0"
+      ],
+      "cwd": "${WORKSPACE}",
+      "environment_overrides": {},
+      "exit_code": 1,
+      "log": "pre-final-consumer-build.txt",
+      "log_sha256": "d8a5a1e5ef02aeb70a34b87a45caa3bad65720bf41febda82f8b3b6bdc1be696",
+      "private_original_sha256": "33e2080d4cd4223cf64b83803f27b23045de266883784953d70dc0297edcf03f"
+    },
+    "ui-focused.json": {
+      "name": "ui-focused",
+      "started_utc": "2026-10-28T11:35:34.077988+00:00",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll",
+        "-class",
+        "Hexalith.Parties.UI.Tests.DataFreshnessIndicatorTests",
+        "-class",
+        "Hexalith.Parties.UI.Tests.StatusLiveRegionTests",
+        "-class",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests",
+        "-class",
+        "Hexalith.Parties.UI.Tests.MainLayoutAccessibilityTests",
+        "-class",
+        "Hexalith.Parties.UI.Tests.PartiesUiHostCompositionTests",
+        "-result-xml",
+        "_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/ui-focused.xml"
+      ],
+      "cwd": "${WORKSPACE}",
+      "environment_overrides": {},
+      "exit_code": 0,
+      "log": "ui-focused.txt",
+      "log_sha256": "ec752aae5d3f1cc1271b42881c8ad5bb962687f232f0d1c6f216ea982d38cfef",
+      "private_original_sha256": "ecae63f718a9d31ef7f9b1a715719840f263608f6249cb9e03dd2ec3dd95cb46",
+      "xunit_xml": {
+        "path": "ui-focused.xml",
+        "sha256": "5c78518efaacc46e76ed864be7a1264d8c38ee4b39fc30f4c58b3dd8c8aab499",
+        "private_original_sha256": "872b464c614dddad002a67864a45ac29a461bfdfe15fce0c18bed1308c4d0fe1"
+      }
+    },
+    "ui-build.json": {
+      "name": "ui-build",
+      "started_utc": "2026-10-28T11:39:43.130945+00:00",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+        "--configuration",
+        "Debug",
+        "-m:1",
+        "-p:UseHexalithProjectReferences=false",
+        "-p:UseNuGetDeps=true",
+        "-p:NuGetAudit=false",
+        "-p:MinVerVersionOverride=1.0.0"
+      ],
+      "cwd": "${WORKSPACE}",
+      "environment_overrides": {},
+      "exit_code": 0,
+      "log": "ui-build.txt",
+      "log_sha256": "9d934b90cec4c04336356bdffa31f46847a1a730852bcb93f636f112fc0d96ba",
+      "private_original_sha256": "a7c2eadbb95f9ad6f852ae0feb03bc0ccaae9442b84d8f39c1d3c090c5fb35ac"
+    }
+  },
+  "browser_stats": {
+    "total": 68,
+    "expected": 68,
+    "unexpected": 0,
+    "flaky": 0,
+    "skipped": 0,
+    "ok": true
+  },
+  "final_suites": {
+    "ui": {
+      "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+      "id": "04fe685c-a6e3-45ed-926e-96e37baf1314",
+      "name": "${WORKSPACE}/tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll",
+      "run-date": "2026-10-28",
+      "run-time": "11:39:53",
+      "start-rtf": "2026-10-28T11:39:53.7607697+00:00",
+      "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+      "target-framework": ".NETCoreApp,Version=v10.0",
+      "errors": "0",
+      "failed": "0",
+      "finish-rtf": "2026-10-28T11:39:58.7104466+00:00",
+      "not-run": "0",
+      "passed": "445",
+      "skipped": "0",
+      "time": "4.950",
+      "time-rtf": "00:00:04.9500000",
+      "total": "445"
+    },
+    "admin": {
+      "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+      "id": "b5edffd9-76a9-4e9c-91ba-cea19258eb66",
+      "name": "${WORKSPACE}/tests/Hexalith.Parties.AdminPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.Tests.dll",
+      "run-date": "2026-10-28",
+      "run-time": "11:39:58",
+      "start-rtf": "2026-10-28T11:39:58.9888636+00:00",
+      "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+      "target-framework": ".NETCoreApp,Version=v10.0",
+      "errors": "0",
+      "failed": "0",
+      "finish-rtf": "2026-10-28T11:40:12.1183923+00:00",
+      "not-run": "0",
+      "passed": "325",
+      "skipped": "0",
+      "time": "13.131",
+      "time-rtf": "00:00:13.1310000",
+      "total": "325"
+    },
+    "consumer": {
+      "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+      "id": "1a4e73b0-5f3c-4200-9d5f-e2ff3561fec2",
+      "name": "${WORKSPACE}/tests/Hexalith.Parties.ConsumerPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.ConsumerPortal.Tests.dll",
+      "run-date": "2026-10-28",
+      "run-time": "11:39:51",
+      "start-rtf": "2026-10-28T11:39:51.6737687+00:00",
+      "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+      "target-framework": ".NETCoreApp,Version=v10.0",
+      "errors": "0",
+      "failed": "0",
+      "finish-rtf": "2026-10-28T11:39:53.4274527+00:00",
+      "not-run": "0",
+      "passed": "85",
+      "skipped": "0",
+      "time": "1.754",
+      "time-rtf": "00:00:01.7540000",
+      "total": "85"
+    }
+  },
+  "source_qualification": "blocked: HXR015; no mapped source build/browser pass is claimed",
+  "remaining_gates": [
+    "DW-100 fixed-reconciler package publication/adoption",
+    "whole G4",
+    "G4-A picker",
+    "Story 8.9",
+    "fresh source launch prerequisite"
+  ]
+}

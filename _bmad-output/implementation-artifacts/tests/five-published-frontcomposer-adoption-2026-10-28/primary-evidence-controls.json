@@ -1,0 +1,14 @@
+{
+  "name": "primary-evidence-controls",
+  "started_utc": "2026-10-28T12:13:45.168204+00:00",
+  "command": [
+    "python3",
+    "_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/test-evidence-helpers.py"
+  ],
+  "cwd": "${WORKSPACE}",
+  "environment_overrides": {},
+  "exit_code": 0,
+  "log": "primary-evidence-controls.txt",
+  "log_sha256": "7042229933854606d5d7ccf1afad7bff8abf2a96cb2a9c61107a029e0b465429",
+  "private_original_sha256": "7042229933854606d5d7ccf1afad7bff8abf2a96cb2a9c61107a029e0b465429"
+}

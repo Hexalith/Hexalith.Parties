@@ -1,0 +1,9 @@
+{
+  "Properties": {
+    "HexalithEventStoreVersion": "3.128.4",
+    "HexalithFrontComposerVersion": "4.7.1",
+    "HexalithTenantsVersion": "5.11.1",
+    "HexalithFrontComposerFromSource": "",
+    "NuGetPackageFolders": "${HOME}/.nuget/packages/"
+  }
+}

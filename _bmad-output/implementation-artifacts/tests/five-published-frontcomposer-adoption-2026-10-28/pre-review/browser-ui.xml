@@ -1,0 +1,166 @@
+<testsuites id="" name="" tests="68" failures="0" skipped="0" errors="0" time="72.31885199999999">
+<testsuite name="admin-parties-list.spec.ts" timestamp="2026-10-28T11:40:28.539Z" hostname="chromium" tests="23" failures="0" skipped="0" time="27.19" errors="0">
+<testcase name="Admin parties list › debounced display-name search combines with type and active filters" classname="admin-parties-list.spec.ts" time="1.6">
+</testcase>
+<testcase name="Admin parties list › normalized display-name search matches diacritics and keeps local fallback status polite" classname="admin-parties-list.spec.ts" time="1.235">
+</testcase>
+<testcase name="Admin parties list › normalized display-name search keeps deterministic row ordering" classname="admin-parties-list.spec.ts" time="0.992">
+</testcase>
+<testcase name="Admin parties list › next page preserves the current search criteria" classname="admin-parties-list.spec.ts" time="1.277">
+</testcase>
+<testcase name="Admin parties list › degraded search preserves last-known rows and announces stale data" classname="admin-parties-list.spec.ts" time="0.932">
+</testcase>
+<testcase name="Admin parties list › empty search has a clear-filters recovery path" classname="admin-parties-list.spec.ts" time="1.008">
+</testcase>
+<testcase name="Admin parties list › keyboard navigation opens a row and type-ahead focuses search" classname="admin-parties-list.spec.ts" time="1.036">
+</testcase>
+<testcase name="Admin parties list › GDPR operation focus rings clear nested accordion edges with forced colors none" classname="admin-parties-list.spec.ts" time="0.849">
+</testcase>
+<testcase name="Admin parties list › GDPR operation focus rings clear nested accordion edges with forced colors active" classname="admin-parties-list.spec.ts" time="0.871">
+</testcase>
+<testcase name="Admin parties list › desktop row click and direct route render the existing party detail surface" classname="admin-parties-list.spec.ts" time="2.908">
+</testcase>
+<testcase name="Admin parties list › direct GDPR route opens operations destination without browser-visible command/query calls or overflow" classname="admin-parties-list.spec.ts" time="3.273">
+</testcase>
+<testcase name="Admin parties list › direct GDPR route for a missing party renders bounded state with no mutation controls" classname="admin-parties-list.spec.ts" time="0.621">
+</testcase>
+<testcase name="Admin parties list › direct GDPR route for an erased party keeps export and records available without PII" classname="admin-parties-list.spec.ts" time="1.234">
+</testcase>
+<testcase name="Admin parties list › direct GDPR route rejects unsafe scoped ids before fetching party data" classname="admin-parties-list.spec.ts" time="0.595">
+</testcase>
+<testcase name="Admin parties list › detail GDPR action navigates to the party-scoped operations route" classname="admin-parties-list.spec.ts" time="2.641">
+</testcase>
+<testcase name="Admin parties list › create form submits and navigates with optimistic status" classname="admin-parties-list.spec.ts" time="1.053">
+</testcase>
+<testcase name="Admin parties list › edit form uses detail edit action and submits route-authoritative update" classname="admin-parties-list.spec.ts" time="0.923">
+</testcase>
+<testcase name="Admin parties list › validation alert is assertive and preserves entered values" classname="admin-parties-list.spec.ts" time="0.665">
+</testcase>
+<testcase name="Admin parties list › gateway validation rejection is announced without losing entered values" classname="admin-parties-list.spec.ts" time="0.656">
+</testcase>
+<testcase name="Admin parties list › phone and zoom form layout avoids horizontal overflow" classname="admin-parties-list.spec.ts" time="0.56">
+</testcase>
+<testcase name="Admin parties list › phone detail behaves as a full-screen sheet and restores row focus on close" classname="admin-parties-list.spec.ts" time="0.833">
+</testcase>
+<testcase name="Admin parties list › phone detail remains readable under zoom-equivalent narrow emulation" classname="admin-parties-list.spec.ts" time="0.727">
+</testcase>
+<testcase name="Admin parties list › phone direct route opens detail without an originating row and closes to search focus" classname="admin-parties-list.spec.ts" time="0.701">
+</testcase>
+</testsuite>
+<testsuite name="consumer-portal-routes.spec.ts" timestamp="2026-10-28T11:40:28.539Z" hostname="chromium" tests="25" failures="0" skipped="0" time="17.119" errors="0">
+<testcase name="Consumer portal route shells › section accordions preserve primary content and keyboard focus at narrow width with forced colors none" classname="consumer-portal-routes.spec.ts" time="1.443">
+</testcase>
+<testcase name="Consumer portal route shells › section accordions preserve primary content and keyboard focus at narrow width with forced colors active" classname="consumer-portal-routes.spec.ts" time="1.394">
+</testcase>
+<testcase name="Consumer portal route shells › bound Consumer can open /me without browser-visible gateway calls" classname="consumer-portal-routes.spec.ts" time="1.037">
+</testcase>
+<testcase name="Consumer portal route shells › bound Consumer can open /me/edit without browser-visible gateway calls" classname="consumer-portal-routes.spec.ts" time="1.116">
+</testcase>
+<testcase name="Consumer portal route shells › bound Consumer can open /me/consent without browser-visible gateway calls" classname="consumer-portal-routes.spec.ts" time="1.068">
+</testcase>
+<testcase name="Consumer portal route shells › bound Consumer can open /me/privacy without browser-visible gateway calls" classname="consumer-portal-routes.spec.ts" time="1.101">
+</testcase>
+<testcase name="Consumer portal route shells › unauthenticated /me challenges sign-in with the return URL preserved" classname="consumer-portal-routes.spec.ts" time="0.163">
+</testcase>
+<testcase name="Consumer portal route shells › unauthenticated /me/edit challenges sign-in with the return URL preserved" classname="consumer-portal-routes.spec.ts" time="0.157">
+</testcase>
+<testcase name="Consumer portal route shells › unauthenticated /me/consent challenges sign-in with the return URL preserved" classname="consumer-portal-routes.spec.ts" time="0.154">
+</testcase>
+<testcase name="Consumer portal route shells › unauthenticated /me/privacy challenges sign-in with the return URL preserved" classname="consumer-portal-routes.spec.ts" time="0.159">
+</testcase>
+<testcase name="Consumer portal route shells › Admin-only user cannot open /me/consent or see Consumer consent data" classname="consumer-portal-routes.spec.ts" time="0.453">
+</testcase>
+<testcase name="Consumer portal route shells › Admin-only user cannot open /me/privacy or see Consumer export data" classname="consumer-portal-routes.spec.ts" time="0.455">
+</testcase>
+<testcase name="Consumer portal route shells › bound Consumer saves editable profile details through the self-scoped command path" classname="consumer-portal-routes.spec.ts" time="0.682">
+</testcase>
+<testcase name="Consumer portal route shells › bound Consumer validation preserves typed values and does not issue a command" classname="consumer-portal-routes.spec.ts" time="0.66">
+</testcase>
+<testcase name="Consumer portal route shells › bound Consumer consent surface exposes semantic switches and honest lawful-basis split" classname="consumer-portal-routes.spec.ts" time="0.556">
+</testcase>
+<testcase name="Consumer portal route shells › bound Consumer grants and withdraws consent through the self-scoped command path" classname="consumer-portal-routes.spec.ts" time="0.605">
+</testcase>
+<testcase name="Consumer portal route shells › bound Consumer exports own data through the self-scoped path" classname="consumer-portal-routes.spec.ts" time="0.824">
+</testcase>
+<testcase name="Consumer portal route shells › served shared download module cancels a pending read without late downloads or browser resources" classname="consumer-portal-routes.spec.ts" time="0.526">
+</testcase>
+<testcase name="Consumer portal route shells › bound Consumer sees processing summary through the self-scoped path" classname="consumer-portal-routes.spec.ts" time="0.649">
+</testcase>
+<testcase name="Consumer portal route shells › bound Consumer sees bounded empty processing state with privacy actions still usable" classname="consumer-portal-routes.spec.ts" time="0.644">
+</testcase>
+<testcase name="Consumer portal route shells › bound Consumer sees bounded processing retry guidance after transient load failure" classname="consumer-portal-routes.spec.ts" time="0.624">
+</testcase>
+<testcase name="Consumer portal route shells › bound Consumer requests and cancels erasure through the self-scoped path" classname="consumer-portal-routes.spec.ts" time="0.775">
+</testcase>
+<testcase name="Consumer portal route shells › bound Consumer cannot cancel erasure once deletion has begun" classname="consumer-portal-routes.spec.ts" time="0.568">
+</testcase>
+<testcase name="Consumer portal route shells › bound Consumer sees permanent erasure copy without a cancel action after deletion completes" classname="consumer-portal-routes.spec.ts" time="0.546">
+</testcase>
+<testcase name="Consumer portal route shells › bound Consumer sees retry guidance when the JSON download helper fails" classname="consumer-portal-routes.spec.ts" time="0.76">
+</testcase>
+</testsuite>
+<testsuite name="parties-accessibility.spec.ts" timestamp="2026-10-28T11:40:28.539Z" hostname="chromium" tests="17" failures="0" skipped="0" time="20.717" errors="0">
+<testcase name="Parties UI accessibility specimen › specimen is nonblank and passes the blocking axe gate" classname="parties-accessibility.spec.ts" time="2.465">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|parties-accessibility-Part-bd9a1-asses-the-blocking-axe-gate-chromium/attachments/browser-identity-json-fecad98f68e23983174c1ff097503b179077dda1.json]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Parties UI accessibility specimen › blocking axe gate rejects an inaccessible navigation outside main content" classname="parties-accessibility.spec.ts" time="1.156">
+</testcase>
+<testcase name="Parties UI accessibility specimen › blocking axe gate rejects an inaccessible skip link outside main content" classname="parties-accessibility.spec.ts" time="1.176">
+</testcase>
+<testcase name="Parties UI accessibility specimen › skip links are the first two focusable elements in the shell and focus their targets" classname="parties-accessibility.spec.ts" time="0.865">
+</testcase>
+<testcase name="Parties UI accessibility specimen › compact and resized layouts expose only mounted skip targets and preserve keyboard content access" classname="parties-accessibility.spec.ts" time="2.466">
+</testcase>
+<testcase name="Parties UI accessibility specimen › route-heading announcement leaves skip links forward reachable and focuses their targets" classname="parties-accessibility.spec.ts" time="1.458">
+</testcase>
+<testcase name="Parties UI accessibility specimen › client-side route focus restores forward skip access" classname="parties-accessibility.spec.ts" time="1.49">
+</testcase>
+<testcase name="Parties UI accessibility specimen › keyboard flow reaches representative controls without trapping focus" classname="parties-accessibility.spec.ts" time="1.312">
+</testcase>
+<testcase name="Parties UI accessibility specimen › accordion focus check rejects suppressed actual focus paint" classname="parties-accessibility.spec.ts" time="0.971">
+</testcase>
+<testcase name="Parties UI accessibility specimen › accordion focus check rejects an intermediate clipping wrapper" classname="parties-accessibility.spec.ts" time="0.943">
+</testcase>
+<testcase name="Parties UI accessibility specimen › disabled irreversible confirmation retains the Fluent disabled appearance" classname="parties-accessibility.spec.ts" time="1.041">
+</testcase>
+<testcase name="Parties UI accessibility specimen › content controls have visible keyboard focus with forced colors none" classname="parties-accessibility.spec.ts" time="1.224">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|parties-accessibility-Part-17dc9-cus-with-forced-colors-none-chromium/attachments/content-focus-json-6731334d2343a105c6d83defcff107b6930c4e19.json]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Parties UI accessibility specimen › content controls have visible keyboard focus with forced colors active" classname="parties-accessibility.spec.ts" time="1.076">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|parties-accessibility-Part-2a690-s-with-forced-colors-active-chromium/attachments/content-focus-json-2381af61ca8a8b3703d8283522f4a8766d7a3c55.json]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Parties UI accessibility specimen › content reduced-motion rules suppress nonzero animation and transition settings" classname="parties-accessibility.spec.ts" time="0.789">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|parties-accessibility-Part-2aa2e-ion-and-transition-settings-chromium/attachments/content-motion-json-d5223623fd5eda305111c2dbd0da0a1005b1844b.json]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Parties UI accessibility specimen › filled primary button does not compute to raw teal" classname="parties-accessibility.spec.ts" time="0.624">
+</testcase>
+<testcase name="Parties UI accessibility specimen › semantic visual baseline for deterministic shell specimen" classname="parties-accessibility.spec.ts" time="0.698">
+</testcase>
+<testcase name="Parties UI accessibility specimen › visual baseline for deterministic shell specimen" classname="parties-accessibility.spec.ts" time="0.963">
+</testcase>
+</testsuite>
+<testsuite name="party-picker.spec.ts" timestamp="2026-10-28T11:40:28.539Z" hostname="chromium" tests="3" failures="0" skipped="0" time="1.874" errors="0">
+<testcase name="Party picker combobox › keyboard selection keeps focus on the input and emits a bounded event" classname="party-picker.spec.ts" time="0.596">
+</testcase>
+<testcase name="Party picker combobox › escape closes degraded results without changing durable selection" classname="party-picker.spec.ts" time="0.576">
+</testcase>
+<testcase name="Party picker combobox › admin form bridge receives the bounded party-selected event" classname="party-picker.spec.ts" time="0.702">
+</testcase>
+</testsuite>
+</testsuites>

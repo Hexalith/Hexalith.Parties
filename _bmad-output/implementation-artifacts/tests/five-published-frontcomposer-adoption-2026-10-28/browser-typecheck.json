@@ -1,0 +1,17 @@
+{
+  "name": "browser-typecheck",
+  "started_utc": "2026-10-28T12:09:08.993042+00:00",
+  "command": [
+    "npm",
+    "run",
+    "typecheck"
+  ],
+  "cwd": "${WORKSPACE}/tests/e2e",
+  "environment_overrides": {
+    "PATH": "${NODE24_BIN}:${INHERITED_PATH}"
+  },
+  "exit_code": 0,
+  "log": "browser-typecheck.txt",
+  "log_sha256": "9b5e7f499d4a7b0ba86c88c063ef897e384db99bc9cd1385f318d1a77104bbf5",
+  "private_original_sha256": "9b5e7f499d4a7b0ba86c88c063ef897e384db99bc9cd1385f318d1a77104bbf5"
+}

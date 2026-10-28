@@ -25,6 +25,34 @@ public sealed class StatusLiveRegionTests : BunitContext
 #endif
     }
 
+    [Fact]
+    public void RegisteredCapabilityRendersTheProducerLiveRegion()
+    {
+        var cut = Render<StatusLiveRegion>(p => p
+            .Add(c => c.Kind, StatusKind.AcceptedProcessing)
+            .Add(c => c.Message, "Saving…"));
+#if HFC_SHARED_UI
+        cut.FindComponent<Hexalith.FrontComposer.Shell.Components.Feedback.FcLiveRegion>();
+#endif
+        cut.Find("[role='status']").TextContent.ShouldBe("Saving…");
+    }
+
+    [Theory]
+    [MemberData(nameof(PoliteKinds))]
+    [MemberData(nameof(AssertiveKinds))]
+    public void MissingSharedRegistrationRetainsLocalLiveRegionSemantics(StatusKind kind)
+    {
+        using var context = new BunitContext();
+        var cut = context.Render<StatusLiveRegion>(p => p
+            .Add(c => c.Kind, kind)
+            .Add(c => c.Message, "Local feedback"));
+        var expected = StatusPresentation.LiveRegionAttributes(StatusPresentation.PolitenessFor(kind));
+        IElement status = cut.Find("div");
+        status.GetAttribute("role").ShouldBe(expected.Role);
+        status.GetAttribute("aria-live").ShouldBe(expected.AriaLive);
+        status.TextContent.ShouldBe("Local feedback");
+    }
+
     [Theory]
     [MemberData(nameof(PoliteKinds))]
     public void PoliteKinds_render_a_polite_status_region_with_the_message(StatusKind kind)
@@ -33,6 +61,9 @@ public sealed class StatusLiveRegionTests : BunitContext
             .Add(c => c.Kind, kind)
             .Add(c => c.Message, "msg"));
 
+#if HFC_SHARED_UI
+        cut.FindComponent<Hexalith.FrontComposer.Shell.Components.Feedback.FcLiveRegion>();
+#endif
         IElement element = cut.Find("div");
         element.GetAttribute("role").ShouldBe("status");
         element.GetAttribute("aria-live").ShouldBe("polite");
@@ -47,6 +78,9 @@ public sealed class StatusLiveRegionTests : BunitContext
             .Add(c => c.Kind, kind)
             .Add(c => c.Message, "msg"));
 
+#if HFC_SHARED_UI
+        cut.FindComponent<Hexalith.FrontComposer.Shell.Components.Feedback.FcLiveRegion>();
+#endif
         IElement element = cut.Find("div");
         element.GetAttribute("role").ShouldBe("alert");
         element.GetAttribute("aria-live").ShouldBe("assertive");
@@ -83,6 +117,9 @@ public sealed class StatusLiveRegionTests : BunitContext
             .Add(c => c.Kind, StatusKind.AcceptedProcessing)
             .Add(c => c.ChildContent, "<span>processing</span>"));
 
+#if HFC_SHARED_UI
+        cut.FindComponent<Hexalith.FrontComposer.Shell.Components.Feedback.FcLiveRegion>();
+#endif
         IElement element = cut.Find("div");
         element.GetAttribute("role").ShouldBe("status");
         element.GetAttribute("aria-live").ShouldBe("polite");
@@ -98,6 +135,9 @@ public sealed class StatusLiveRegionTests : BunitContext
             .Add(c => c.Message, "msg")
             .Add(c => c.ChildContent, "<span>child</span>"));
 
+#if HFC_SHARED_UI
+        cut.FindComponent<Hexalith.FrontComposer.Shell.Components.Feedback.FcLiveRegion>();
+#endif
         IElement element = cut.Find("div");
         element.GetAttribute("role").ShouldBe("alert");
         element.GetAttribute("aria-live").ShouldBe("assertive");

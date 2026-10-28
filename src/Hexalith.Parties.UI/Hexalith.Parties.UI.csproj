@@ -97,5 +97,8 @@
     <WriteLinesToFile File="$(TargetDir)Hexalith.Parties.UI.source-metadata.txt"
                       Lines="$(HexalithFrontComposerFromSource);$(HexalithSourceMappingMode);$(HexalithFrontComposerRoot)"
                       Overwrite="true" />
+    <WriteLinesToFile File="$(TargetDir)Hexalith.Parties.UI.package-metadata.txt"
+                      Lines="$(HexalithFrontComposerVersion);$(NuGetPackageFolders)"
+                      Overwrite="true" />
   </Target>
 </Project>

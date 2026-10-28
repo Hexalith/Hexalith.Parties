@@ -2818,6 +2818,41 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         });
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task PartiesAdminPortal_RequestErasure_RollbackCancellationRestoresTrigger(bool escape)
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-rollback-cancel", "Rollback Cancel", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-rollback-cancel", "Rollback Cancel", PartyType.Person, isActive: true));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        var cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Rollback Cancel"));
+        ClickFluentButton(cut, "Rollback Cancel");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeFalse());
+        ClickFluentButton(cut, "Request erasure");
+        SetTextInput(cut, "Type the selected party display name", "rollback-secret");
+        if (escape)
+        {
+            await cut.Find("fluent-dialog").KeyDownAsync(new KeyboardEventArgs { Key = "Escape" });
+        }
+        else
+        {
+            ClickFluentButton(cut, "Cancel");
+        }
+        cut.WaitForAssertion(() =>
+        {
+            cut.FindAll("fluent-dialog").ShouldBeEmpty();
+            cut.Markup.ShouldNotContain("rollback-secret");
+            FluentButton trigger = cut.FindComponents<FluentButton>()
+                .Single(button => button.Markup.Contains("Request erasure", StringComparison.Ordinal)).Instance;
+            JSInterop.Invocations.Last(invocation => invocation.Identifier == "Blazor._internal.domWrapper.focus")
+                .Arguments[0].ShouldBe(trigger.Element);
+            api.ErasureRequests.ShouldBeEmpty();
+        });
+    }
+
     [Fact]
     public void PartiesAdminPortal_RequestErasure_CancelPartySwitchAndUnavailableStateClearTypedValue()
     {

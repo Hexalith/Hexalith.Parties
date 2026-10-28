@@ -1,0 +1,16 @@
+{
+  "name": "effective-properties",
+  "started_utc": "2026-10-28T11:44:51.892778+00:00",
+  "command": [
+    "dotnet",
+    "msbuild",
+    "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+    "-getProperty:HexalithEventStoreVersion,HexalithFrontComposerVersion,HexalithTenantsVersion,HexalithFrontComposerFromSource,NuGetPackageFolders"
+  ],
+  "cwd": "${WORKSPACE}",
+  "environment_overrides": {},
+  "exit_code": 0,
+  "log": "effective-properties.txt",
+  "log_sha256": "5a63b585f10c37c38392679306fb096c374700b9a0e0fde6abc3ebae96a643dd",
+  "private_original_sha256": "47c60d14eb2f89afb5c3a5d6fb0bc918b53e2dcc58f056ce34f70bfd06f1b2d6"
+}

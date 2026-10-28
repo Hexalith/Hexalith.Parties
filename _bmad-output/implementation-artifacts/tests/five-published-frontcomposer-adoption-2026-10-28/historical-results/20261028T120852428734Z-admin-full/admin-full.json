@@ -1,0 +1,21 @@
+{
+  "name": "admin-full",
+  "started_utc": "2026-10-28T11:39:58.804657+00:00",
+  "command": [
+    "dotnet",
+    "tests/Hexalith.Parties.AdminPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.Tests.dll",
+    "-result-xml",
+    "_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/admin-full.xml"
+  ],
+  "cwd": "${WORKSPACE}",
+  "environment_overrides": {},
+  "exit_code": 0,
+  "log": "admin-full.txt",
+  "log_sha256": "72e21199c97e603ea1e8c3f912b90a4c351becbfbc6c5d6a9b51422d63d0f346",
+  "private_original_sha256": "72e21199c97e603ea1e8c3f912b90a4c351becbfbc6c5d6a9b51422d63d0f346",
+  "xunit_xml": {
+    "path": "admin-full.xml",
+    "sha256": "398c2189bb24b83701d024cc348880cd02b32877b9a659033ebea865499876aa",
+    "private_original_sha256": "07d523e09cac7df2c0e7eb9eee895353f2988a8fe861314fc438884a49e5a852"
+  }
+}

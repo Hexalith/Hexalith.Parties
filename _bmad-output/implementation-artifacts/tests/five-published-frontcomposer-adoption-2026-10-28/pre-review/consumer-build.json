@@ -1,0 +1,22 @@
+{
+  "name": "consumer-build",
+  "started_utc": "2026-10-28T11:36:38.560735+00:00",
+  "command": [
+    "dotnet",
+    "build",
+    "tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj",
+    "--configuration",
+    "Debug",
+    "-m:1",
+    "-p:UseHexalithProjectReferences=false",
+    "-p:UseNuGetDeps=true",
+    "-p:NuGetAudit=false",
+    "-p:MinVerVersionOverride=1.0.0"
+  ],
+  "cwd": "${WORKSPACE}",
+  "environment_overrides": {},
+  "exit_code": 0,
+  "log": "consumer-build.txt",
+  "log_sha256": "c44158893d1832871006fc01f9d795be1d2936a7164820f9e74d921f53bd642f",
+  "private_original_sha256": "5b737702816564c52ffca00da74922812bc62e30af2dcbe25bf36438059a367c"
+}

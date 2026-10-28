@@ -1,0 +1,21 @@
+{
+  "name": "review-browser-cancellation",
+  "started_utc": "2026-10-28T12:04:52.926824+00:00",
+  "command": [
+    "npx",
+    "playwright",
+    "test",
+    "specs/consumer-portal-routes.spec.ts",
+    "--grep",
+    "bound Consumer navigation cancels",
+    "--project=chromium"
+  ],
+  "cwd": "${WORKSPACE}/tests/e2e",
+  "environment_overrides": {
+    "PATH": "${NODE24_BIN}:${INHERITED_PATH}"
+  },
+  "exit_code": 0,
+  "log": "review-browser-cancellation.txt",
+  "log_sha256": "dfb5b61df3cc75737d8ff02c0cc64441408905f4fff4ae4a51b9ad1211b59d42",
+  "private_original_sha256": "dfb5b61df3cc75737d8ff02c0cc64441408905f4fff4ae4a51b9ad1211b59d42"
+}

@@ -1,0 +1,46 @@
+{
+  "attempts": [
+    {
+      "name": "initial-strict-package-restore",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+        "--configuration",
+        "Debug",
+        "-m:1",
+        "-p:UseHexalithProjectReferences=false",
+        "-p:UseNuGetDeps=true",
+        "-p:NuGetAudit=false",
+        "-p:MinVerVersionOverride=1.0.0"
+      ],
+      "cwd": "${WORKSPACE}",
+      "exit_code": 1,
+      "log": "ui-initial-build.txt",
+      "log_sha256": "e1c179ffeb06139fe6dbe984a816c3298c24bbce7227ab00ac8341a834fbb709",
+      "disposition": "historical NU1109 refusal before separately authorized root EventStore3.128.4 alignment"
+    },
+    {
+      "name": "initial-source-launch",
+      "command": [
+        "dotnet",
+        "tool",
+        "run",
+        "hexalith-module",
+        "--",
+        "debug",
+        "--manifest",
+        "module/hexalith.module-manifest.v2.json",
+        "--evidence",
+        "${TMP}/five-published-frontcomposer-source-20261028",
+        "--output",
+        "json"
+      ],
+      "cwd": "${WORKSPACE}",
+      "exit_code": 2,
+      "log": "source-mapping-attempt.txt",
+      "log_sha256": "504cc1ee55ad82931d41ef841a9cb2633c10b40f557bd82d57f05dffb2e69076",
+      "disposition": "historical HXR015 plus HXE160 invalid evidence destination; canonical source-launch-blocker receipt isolates HXR015"
+    }
+  ]
+}

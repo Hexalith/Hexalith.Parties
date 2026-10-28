@@ -1,0 +1,20 @@
+
+> hexalith-parties-e2e@0.0.0 test:config
+> node --experimental-strip-types --test config-tests/server-ownership.test.mjs
+
+✔ managed server: CI=false, parent=Test (248.387586ms)
+✔ managed server: CI=false, parent=Development (255.832376ms)
+✔ explicit external server: CI=false (256.504ms)
+✔ managed server: CI=true, parent=Test (253.736844ms)
+✔ managed server: CI=true, parent=Development (257.833314ms)
+✔ explicit external server: CI=true (246.457069ms)
+✔ Playwright rejects an unrelated listener (377.425889ms)
+✔ Playwright starts and cleans up its managed fixture (806.95891ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2766.001457

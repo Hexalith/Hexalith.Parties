@@ -1334,3 +1334,31 @@ reference identities during implementation; a HEAD alone is not a substitute for
 its recorded source checksums. The narrow FrontComposer/Tenants metadata
 conditions defer to the pinned mapper while retaining legacy selection outside
 mapped mode. They do not bypass its validation guards.
+
+## Published FrontComposer adoption — 2026-10-28
+
+This amendment supersedes the 2026-10-27 publication/adoption gates only for
+DW-91/100/101/102/112. The approved Shell and Contracts.UI packages are 4.7.1,
+with nuspec producer revision `5688c3eba98567133285b0f51843d9daa8f24f0b`.
+`Parties:FrontComposer:UseSharedUiPrimitives` remains default false. Approval
+covers the named primitives and their proven package exits; it does not certify
+readiness-capable reconciliation, G4-A, the whole G4 set or Story 8.9.
+
+| Item | Qualified package disposition | Remaining boundary / rollback |
+| --- | --- | --- |
+| DW-91 | Closed: cold/hydrated and client-route forward Tab, heading announcement and target/onward keyboard flow pass without capability skips. | Shell package supplies the fix; source qualification remains independent. |
+| DW-100 | Partial: shared record freshness and polite/assertive/none live regions preserve Parties text and mappings; real registration selects them. | Open: 4.7.1 lacks registration readiness. Registered package feedback still uses corrected local orchestration; fixed-reconciler publication/adoption needs its own approval/parity. Disable registration for local component rollback. |
+| DW-101 | Closed: actual Admin/Consumer package transfers preserve bytes and safe caller names; repeated download, cancellation, ephemeral resource cleanup and existing error feedback pass. | Disable registration to retain the local helpers. No producer asset is substituted in package qualification. |
+| DW-102 | Closed: actual shared ordinal typed-name dialog preserves guarded one-submit authorization, warning/ARIA, safe Cancel focus and Cancel/Escape return focus. | Disable registration to retain the local dialog. Parties owns restoring its recreated initiating control. |
+| DW-112 | Closed: one mounted navigation target and matching bypass link across desktop/phone/tablet/resize; content bypass and announcement remain available. | Published Shell owns the responsive behavior; no aggregate readiness promotion. |
+
+The [bounded receipt](tests/five-published-frontcomposer-adoption-2026-10-28/README.md)
+records individual Debug builds with zero warnings/errors, 445 UI, 327 Admin,
+85 Consumer and 68 browser passes without skips/retries, exact installed package
+and copied assembly hashes, source identities and actually served asset hashes.
+Initial strict restore refused NU1109 because the root EventStore 3.128.3 override
+was below Tenants 5.11.1's 3.128.4 floor. The human separately approved the exact
+one-line root alignment to 3.128.4; no other selection or Builds catalog edit was
+made for this task. Fresh pinned-tool source launch refuses HXR015 (installed
+Aspire CLI 13.6.4 versus catalog SDK 13.6.1). No mapping/dependency change bypasses
+that prerequisite, and package parity supplies no source-mode qualification.

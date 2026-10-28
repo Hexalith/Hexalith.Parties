@@ -5,6 +5,7 @@ using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.UI.Services;
 using Hexalith.Parties.UI.Status;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -323,6 +324,57 @@ public sealed class OptimisticReconcileTests
         warning.GetArguments()[3].ShouldBeNull();
 #endif
     }
+
+#if HFC_SHARED_UI
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task RegisteredFeedbackWaitsForReadinessAndAcceptanceWithEarlyConfirmation(bool cancel)
+    {
+        var registrations = new ServiceCollection();
+        Hexalith.FrontComposer.Shell.Extensions.FrontComposerFeedbackServiceExtensions.AddFrontComposerFeedback(registrations);
+        using ServiceProvider provider = registrations.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+        using IServiceScope scope = provider.CreateScope();
+        scope.ServiceProvider.GetRequiredService<Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler>()
+            .ShouldNotBeNull();
+        var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var issued = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var acceptance = new TaskCompletionSource<CommandAcceptance>(TaskCreationOptions.RunContinuationsAsynchronously);
+        FakeProjectionStream stream = NewStream(connected: true);
+        stream.RegistrationDelay = ready.Task;
+        var time = new ManualTimeProvider();
+        var recorder = new Recorder();
+        using var cancellation = new CancellationTokenSource();
+        var subscription = new PartiesProjectionSubscription(stream, NullLogger<PartiesProjectionSubscription>.Instance);
+        var fallback = new ProjectionFreshnessFallback(stream, time,
+            Options.Create(new ProjectionFreshnessOptions { PollingIntervalSeconds = 30 }));
+        var primitive = new OptimisticReconcile(subscription, fallback, NullLogger<OptimisticReconcile>.Instance, scope.ServiceProvider);
+        Task run = primitive.ExecuteAsync(recorder.BuildRequest(async token =>
+        {
+            stream.RaiseChanged(ProjectionType, Tenant);
+            issued.SetResult();
+            return await acceptance.Task.WaitAsync(token).ConfigureAwait(false);
+        }, _ => Task.FromResult(ProjectionFreshnessStatus.Current)), cancellation.Token);
+        recorder.IssueCommandCalls.ShouldBe(0);
+        ready.SetResult();
+        await issued.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        run.IsCompleted.ShouldBeFalse();
+        recorder.ReconcileCalls.ShouldBe(0);
+        if (cancel)
+        {
+            await cancellation.CancelAsync();
+        }
+        acceptance.SetResult(CommandAcceptance.Accepted);
+        await run.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        recorder.ReconcileCalls.ShouldBe(cancel ? 0 : 1);
+        recorder.Announcements.Count.ShouldBe(cancel ? 1 : 2);
+        recorder.Reverted.ShouldBeFalse();
+        stream.RaiseChanged(ProjectionType, Tenant);
+        recorder.ReconcileCalls.ShouldBe(cancel ? 0 : 1);
+        stream.Subscriptions.ShouldBeEmpty();
+        time.ActiveTimers.ShouldBe(0);
+    }
+#endif
 
     [Fact]
     public async Task DelayedRegistration_RecoversOnlyEarlyConfirmation_AndDrainsTeardown()

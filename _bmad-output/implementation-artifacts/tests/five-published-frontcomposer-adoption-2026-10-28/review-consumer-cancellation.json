@@ -1,0 +1,23 @@
+{
+  "name": "review-consumer-cancellation",
+  "started_utc": "2026-10-28T12:03:12.904998+00:00",
+  "command": [
+    "dotnet",
+    "tests/Hexalith.Parties.ConsumerPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.ConsumerPortal.Tests.dll",
+    "-method",
+    "Hexalith.Parties.ConsumerPortal.Tests.Components.MyPrivacyPageTests.RegisteredSharedDownloadCancellationDrainsInteropWithoutLateFeedback",
+    "-result-xml",
+    "_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/review-consumer-cancellation.xml"
+  ],
+  "cwd": "${WORKSPACE}",
+  "environment_overrides": {},
+  "exit_code": 0,
+  "log": "review-consumer-cancellation.txt",
+  "log_sha256": "43b747d8e76fad98ef027b692d858277b17cead245d2d172c24dba264046c019",
+  "private_original_sha256": "43b747d8e76fad98ef027b692d858277b17cead245d2d172c24dba264046c019",
+  "xunit_xml": {
+    "path": "review-consumer-cancellation.xml",
+    "sha256": "30ce654a64befe1b79cbf9d8242806c4372118c8c099544c9da0825b20c50365",
+    "private_original_sha256": "1a8281c72d1bd08e928aa86a635eb01c1e808a4ccdaef0aaa7b58321c955114c"
+  }
+}

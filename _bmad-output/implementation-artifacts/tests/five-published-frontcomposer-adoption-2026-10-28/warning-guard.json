@@ -1,0 +1,14 @@
+{
+  "name": "warning-guard",
+  "started_utc": "2026-10-28T12:10:20.787348+00:00",
+  "command": [
+    "bash",
+    "scripts/check-no-warning-override.sh"
+  ],
+  "cwd": "${WORKSPACE}",
+  "environment_overrides": {},
+  "exit_code": 0,
+  "log": "warning-guard.txt",
+  "log_sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604",
+  "private_original_sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604"
+}

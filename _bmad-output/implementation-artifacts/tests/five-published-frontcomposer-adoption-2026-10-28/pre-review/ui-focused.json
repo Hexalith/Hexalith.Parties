@@ -1,0 +1,31 @@
+{
+  "name": "ui-focused",
+  "started_utc": "2026-10-28T11:35:34.077988+00:00",
+  "command": [
+    "dotnet",
+    "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll",
+    "-class",
+    "Hexalith.Parties.UI.Tests.DataFreshnessIndicatorTests",
+    "-class",
+    "Hexalith.Parties.UI.Tests.StatusLiveRegionTests",
+    "-class",
+    "Hexalith.Parties.UI.Tests.OptimisticReconcileTests",
+    "-class",
+    "Hexalith.Parties.UI.Tests.MainLayoutAccessibilityTests",
+    "-class",
+    "Hexalith.Parties.UI.Tests.PartiesUiHostCompositionTests",
+    "-result-xml",
+    "_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/ui-focused.xml"
+  ],
+  "cwd": "${WORKSPACE}",
+  "environment_overrides": {},
+  "exit_code": 0,
+  "log": "ui-focused.txt",
+  "log_sha256": "ec752aae5d3f1cc1271b42881c8ad5bb962687f232f0d1c6f216ea982d38cfef",
+  "private_original_sha256": "ecae63f718a9d31ef7f9b1a715719840f263608f6249cb9e03dd2ec3dd95cb46",
+  "xunit_xml": {
+    "path": "ui-focused.xml",
+    "sha256": "5c78518efaacc46e76ed864be7a1264d8c38ee4b39fc30f4c58b3dd8c8aab499",
+    "private_original_sha256": "872b464c614dddad002a67864a45ac29a461bfdfe15fce0c18bed1308c4d0fe1"
+  }
+}

@@ -1,0 +1,54 @@
+
+Running 1 test using 1 worker
+
+(node:1642363) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [chromium] › specs/consumer-portal-routes.spec.ts:314:3 › Consumer portal route shells › bound Consumer navigation cancels an active shared download without late feedback or browser resources (10.9s)
+
+
+  1) [chromium] › specs/consumer-portal-routes.spec.ts:314:3 › Consumer portal route shells › bound Consumer navigation cancels an active shared download without late feedback or browser resources 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('button', { name: 'Download JSON' })
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('button', { name: 'Download JSON' }) with timeout 10000ms
+      - waiting for getByRole('button', { name: 'Download JSON' })
+
+
+       at ../helpers/consumer-download-cancellation.ts:12
+
+      10 |   await page.goto('/me/privacy');
+      11 |   await portalAction(page, 'Export my data').click();
+    > 12 |   await expect(page.getByRole('button', { name: 'Download JSON' })).toBeVisible();
+         |                                                                     ^
+      13 |   await page.evaluate(() => {
+      14 |     const probe = { entered: false, finished: false, pending: 0, clicks: 0, urls: 0,
+      15 |       operationId: '', cancelledId: '', deletes: 0, release: () => {}, restore: () => {} };
+        at expectConsumerNavigationCancelsDownload (${WORKSPACE}/tests/e2e/helpers/consumer-download-cancellation.ts:12:69)
+        at ${WORKSPACE}/tests/e2e/specs/consumer-portal-routes.spec.ts:317:5
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/consumer-portal-routes-Con-0b9e7-edback-or-browser-resources-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/consumer-portal-routes-Con-0b9e7-edback-or-browser-resources-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/consumer-portal-routes-Con-0b9e7-edback-or-browser-resources-chromium/error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/consumer-portal-routes-Con-0b9e7-edback-or-browser-resources-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/consumer-portal-routes-Con-0b9e7-edback-or-browser-resources-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › specs/consumer-portal-routes.spec.ts:314:3 › Consumer portal route shells › bound Consumer navigation cancels an active shared download without late feedback or browser resources 
