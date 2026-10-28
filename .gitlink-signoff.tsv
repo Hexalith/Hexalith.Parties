@@ -367,3 +367,16 @@ references/Hexalith.McpCli|8a860ee409d0c6f87a82bfdb87d9a84a15c49018|validated-ad
 references/Hexalith.Memories|c9d07c7cdbb93f4c0999b85bfca11a2ffc5d0cbe|validated-advance|v3.0.0-2-gc9d07c7c|jpiquot|2026-10-28
 references/Hexalith.Platform|c8acfe4ee08737ec0beca735083f7e08cd8885d0|validated-advance|v1.0.0-2-gc8acfe4|jpiquot|2026-10-28
 references/Hexalith.Tenants|3d13880bceb43fbbb686ad5089170f9ce5f97eb3|validated-advance|v5.10.1-93-g3d13880b|jpiquot|2026-10-28
+
+# --- 2026-10-28 operator-invoked /pushall synchronization.
+#     Select these exact upstream main tips after the dedicated submodule syncs.
+#     This records the requested source selection; CI and release proof remain
+#     separate from branch synchronization.
+references/Hexalith.EventStore|903174461632e7bcabd6111092aa059f16e1b1c7|validated-advance|origin/main@90317446|jpiquot|2026-10-28
+references/Hexalith.Memories|86011d4dc1e16d0d8222e07e6a492faf8e2347c0|validated-advance|origin/main@86011d4d|jpiquot|2026-10-28
+references/Hexalith.FrontComposer|1ccb4afc47ec8f1bb5379fd98452242546bbd06c|validated-advance|origin/main@1ccb4afc|jpiquot|2026-10-28
+references/Hexalith.Tenants|750bdc2e8de77595a55bf595c335094cce0d580c|validated-advance|origin/main@750bdc2e|jpiquot|2026-10-28
+references/Hexalith.Commons|3edfbdafc7d4fa915286dce8a37dc4cc7c06085a|validated-advance|origin/main@3edfbdaf|jpiquot|2026-10-28
+references/Hexalith.Builds|abc0e1be8069d1c7a567515a13bb015adc407536|validated-advance|origin/main@abc0e1be|jpiquot|2026-10-28
+references/Hexalith.McpCli|3a8fbf215d52a5573ea509f09bccf20a58c97993|validated-advance|origin/main@3a8fbf21|jpiquot|2026-10-28
+references/Hexalith.Platform|eee6ce27965b7c7108bbfcc02d447038e0553751|validated-advance|origin/main@eee6ce27|jpiquot|2026-10-28
