@@ -195,6 +195,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             _builder = await _createBuilder(Session, cts.Token).ConfigureAwait(false);
 
             PartiesMtlsProfile.ConfigureInternalGrpcEndpoints(_builder, Session);
+            PartiesMtlsProfile.ConfigureAdminServerSidecarEndpoint(_builder);
             _redis = PartiesTestRedis.Configure(_builder);
             if (_completeMtlsProfile)
             {
@@ -898,16 +899,22 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
 
     /// <summary>Reads a live process's immutable start identity, or null after exit.</summary>
     /// <param name="processId">The PID in an owned resource snapshot.</param>
-    /// <param name="readProcStat">Optional Linux proc reader for deterministic OS-error controls.</param>
     /// <returns>Kernel start-clock ticks on Linux; process start-time ticks elsewhere.</returns>
-    internal static long? ReadWorkerStartIdentity(int processId, Func<string, string>? readProcStat = null)
+    internal static long? ReadWorkerStartIdentity(int processId) => ReadWorkerStartIdentity(processId, File.ReadAllText);
+
+    /// <summary>Reads a process lifetime with a controlled stat reader for exit-race regression tests.</summary>
+    /// <param name="processId">The PID in an owned resource snapshot.</param>
+    /// <param name="readStat">Reads the Linux process stat file.</param>
+    /// <returns>The unchanged start identity, or null only after process exit.</returns>
+    internal static long? ReadWorkerStartIdentity(int processId, Func<string, string> readStat)
     {
+        ArgumentNullException.ThrowIfNull(readStat);
         if (processId <= 0) { return null; }
         try
         {
             if (OperatingSystem.IsLinux())
             {
-                string stat = (readProcStat ?? File.ReadAllText)($"/proc/{processId}/stat");
+                string stat = readStat($"/proc/{processId}/stat");
                 // comm is parenthesized and may itself contain spaces or parentheses.
                 string[] fields = stat[(stat.LastIndexOf(')') + 2)..].Split(' ', StringSplitOptions.RemoveEmptyEntries);
                 return fields[0] is "Z" or "X" ? null
@@ -918,11 +925,23 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         }
         catch (FileNotFoundException) { return null; }
         catch (DirectoryNotFoundException) { return null; }
-        // Linux can report ESRCH when the process exits after its proc file is opened.
-        catch (IOException exception) when (OperatingSystem.IsLinux() && exception.HResult == 3) { return null; }
+        catch (IOException) when (OperatingSystem.IsLinux() && HasWorkerExited(processId)) { return null; }
         catch (ArgumentException) { return null; }
         catch (InvalidOperationException) { return null; }
         catch (System.ComponentModel.Win32Exception exception) when (exception.NativeErrorCode == 3) { return null; }
+    }
+
+    private static bool HasWorkerExited(int processId)
+    {
+        try
+        {
+            // Process.HasExited can retain a cached wait state for a reused PID.
+            // A second kernel observation must prove this PID is gone or a zombie.
+            string stat = File.ReadAllText($"/proc/{processId}/stat");
+            return stat[stat.LastIndexOf(')') + 2] is 'Z' or 'X';
+        }
+        catch (FileNotFoundException) { return true; }
+        catch (DirectoryNotFoundException) { return true; }
     }
 
     internal static string CreateAdministratorToken()

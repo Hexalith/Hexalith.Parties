@@ -3,6 +3,8 @@ using System.Net.Sockets;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 
+using CommunityToolkit.Aspire.Hosting.Dapr;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
@@ -29,6 +31,23 @@ internal static class PartiesMtlsProfile
             _ = builder.CreateResourceBuilder(project).WithEndpoint(
                 port: port, targetPort: port, scheme: "tcp", name: "fixture-dapr-internal", isProxied: false);
         }
+    }
+
+    /// <summary>Follows the gateway sidecar's actual listener after Aspire randomizes test ports.</summary>
+    /// <param name="builder">The owned application model.</param>
+    internal static void ConfigureAdminServerSidecarEndpoint(IDistributedApplicationBuilder builder)
+    {
+        ProjectResource gateway = builder.Resources.OfType<ProjectResource>().Single(resource => resource.Name == "eventstore");
+        DaprSidecarAnnotation annotation = gateway.Annotations.OfType<DaprSidecarAnnotation>().Single();
+        string cliName = annotation.Sidecar.Name + "-cli";
+        _ = builder.CreateResourceBuilder<ProjectResource>("eventstore-admin").WithEnvironment(context =>
+        {
+            // The toolkit creates its CLI resource during BeforeStart. Resolve it only
+            // when child environments are evaluated, then follow the listener passed to daprd.
+            ExecutableResource cli = builder.Resources.OfType<ExecutableResource>().Single(resource => resource.Name == cliName);
+            context.EnvironmentVariables["AdminServer__EventStoreDaprHttpEndpoint"] = ReferenceExpression.Create(
+                $"http://127.0.0.1:{cli.GetEndpoint("http").Property(EndpointProperty.TargetPort)}");
+        });
     }
 
     /// <summary>Routes Memories' direct connections to session-owned databases without persistent volumes.</summary>

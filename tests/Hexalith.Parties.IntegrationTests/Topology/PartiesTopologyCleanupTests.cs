@@ -65,6 +65,64 @@ public sealed class PartiesTopologyCleanupTests
     }
 
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task WorkerStartReadFailure_RequiresProvenExitBeforeReturningNoIdentity(bool exited)
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            bool statRead = false;
+            long? ReadIdentity(int id) => PartiesAspireTopologyFixture.ReadWorkerStartIdentity(id, _ =>
+            {
+                statRead = true;
+                throw new IOException("Linux stat must not be read on this platform.");
+            });
+            if (exited)
+            {
+                var start = new ProcessStartInfo(OperatingSystem.IsWindows() ? "cmd.exe" : "/bin/sh") { UseShellExecute = false };
+                start.ArgumentList.Add(OperatingSystem.IsWindows() ? "/c" : "-c");
+                start.ArgumentList.Add("exit 0");
+                using Process child = Process.Start(start) ?? throw new InvalidOperationException("The exit control could not start.");
+                int id = child.Id;
+                await child.WaitForExitAsync(TestContext.Current.CancellationToken).ConfigureAwait(true);
+                ReadIdentity(id).ShouldBeNull();
+            }
+            else
+            {
+                using Process current = Process.GetCurrentProcess();
+                long started = PartiesAspireTopologyFixture.ReadWorkerStartIdentity(current.Id)!.Value;
+                ReadIdentity(current.Id).ShouldBe(started);
+                PartiesAspireTopologyFixture.IsWorkerRunning(current.Id, started + 1).ShouldBeFalse();
+            }
+            statRead.ShouldBeFalse();
+            return;
+        }
+        await WithControlledWorkerAsync(async child =>
+        {
+            int workerId = int.Parse((await child.StandardError.ReadLineAsync(TestContext.Current.CancellationToken).ConfigureAwait(true))!, CultureInfo.InvariantCulture);
+            long started = PartiesAspireTopologyFixture.ReadWorkerStartIdentity(workerId)!.Value;
+            if (exited)
+            {
+                child.StandardInput.Close();
+                await child.WaitForExitAsync(TestContext.Current.CancellationToken).ConfigureAwait(true);
+            }
+            var readFailure = new IOException("A process stat read failed during observation.");
+            long? Read() => PartiesAspireTopologyFixture.ReadWorkerStartIdentity(workerId, _ => throw readFailure);
+            if (exited)
+            {
+                Read().ShouldBeNull();
+                PartiesAspireTopologyFixture.IsWorkerRunning(workerId, started).ShouldBeFalse();
+            }
+            else
+            {
+                Should.Throw<IOException>(() => Read()).ShouldBeSameAs(readFailure);
+                PartiesAspireTopologyFixture.ReadWorkerStartIdentity(workerId).ShouldBe(started);
+                PartiesAspireTopologyFixture.IsWorkerRunning(workerId, started + 1).ShouldBeFalse();
+            }
+        }).ConfigureAwait(true);
+    }
+
+    [Theory]
     [InlineData("")]
     [InlineData("stop")]
     [InlineData("application")]
@@ -165,11 +223,12 @@ public sealed class PartiesTopologyCleanupTests
     }
 
     [Fact]
-    public void WorkerObservation_ToleratesDisappearanceDuringProcReadAndPreservesOtherFailures()
+    public void WorkerObservation_RejectsUnprovenDisappearanceAndPreservesOtherFailures()
     {
         if (!OperatingSystem.IsLinux()) { Assert.Skip("Linux proc read error controls."); }
         var disappeared = new IOException("Process exited during proc read", 3);
-        PartiesAspireTopologyFixture.ReadWorkerStartIdentity(Environment.ProcessId, _ => throw disappeared).ShouldBeNull();
+        Should.Throw<IOException>(() => PartiesAspireTopologyFixture.ReadWorkerStartIdentity(Environment.ProcessId, _ => throw disappeared))
+            .ShouldBeSameAs(disappeared);
 
         var ioFailure = new IOException("Unrelated proc I/O failure", 5);
         Should.Throw<IOException>(() => PartiesAspireTopologyFixture.ReadWorkerStartIdentity(Environment.ProcessId, _ => throw ioFailure))

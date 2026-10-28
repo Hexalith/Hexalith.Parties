@@ -5,6 +5,8 @@ using System.Text;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 
+using CommunityToolkit.Aspire.Hosting.Dapr;
+
 using Hexalith.Parties.IntegrationTests.HealthChecks;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -42,6 +44,33 @@ public sealed class PartiesMtlsProfileTests
             endpoint.IsProxied.ShouldBeFalse();
             endpoint.UriScheme.ShouldBe("tcp");
         }
+    }
+
+    [Fact]
+    public async Task AdminServerSidecarEndpoint_FollowsDeferredTargetInsteadOfFixedOrProxyPort()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+        IResourceBuilder<ProjectResource> gateway = builder.AddResource(new ProjectResource("eventstore")).WithDaprSidecar();
+        IResourceBuilder<ProjectResource> admin = builder.AddResource(new ProjectResource("eventstore-admin"))
+            .WithEnvironment("AdminServer__EventStoreDaprHttpEndpoint", "http://localhost:44209");
+        PartiesMtlsProfile.ConfigureAdminServerSidecarEndpoint(builder);
+        // The generated CLI does not exist at configuration time, matching toolkit lifecycle order.
+        string cliName = gateway.Resource.Annotations.OfType<DaprSidecarAnnotation>().Single().Sidecar.Name + "-cli";
+        IResourceBuilder<ExecutableResource> cli = builder.AddExecutable(cliName, "unused", ".").WithHttpEndpoint(port: 44209, targetPort: 18695);
+        EndpointAnnotation endpoint = cli.Resource.Annotations.OfType<EndpointAnnotation>().Single();
+        endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, "localhost", 44825, targetPortExpression: "18695");
+        var context = new EnvironmentCallbackContext(builder.ExecutionContext, admin.Resource,
+            new Dictionary<string, object>(), TestContext.Current.CancellationToken);
+        foreach (EnvironmentCallbackAnnotation callback in admin.Resource.Annotations.OfType<EnvironmentCallbackAnnotation>())
+        {
+            await callback.Callback(context).ConfigureAwait(true);
+        }
+        var selected = context.EnvironmentVariables["AdminServer__EventStoreDaprHttpEndpoint"].ShouldBeAssignableTo<ReferenceExpression>();
+        (await selected.GetValueAsync(TestContext.Current.CancellationToken).ConfigureAwait(true)).ShouldBe("http://127.0.0.1:18695");
+        endpoint.TargetPort = 18795;
+        endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, "localhost", 44925, targetPortExpression: "18795");
+        (await selected.GetValueAsync(TestContext.Current.CancellationToken).ConfigureAwait(true)).ShouldBe("http://127.0.0.1:18795");
+        endpoint.IsProxied.ShouldBeTrue();
     }
 
     [Theory]
