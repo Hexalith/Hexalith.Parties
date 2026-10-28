@@ -1,0 +1,35 @@
+  Determining projects to restore...
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj (in 266 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj (in 266 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.ConsumerPortal/Hexalith.Parties.ConsumerPortal.csproj (in 266 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Testing/Hexalith.Parties.Testing.csproj (in 266 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj (in 266 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Authentication/Hexalith.Parties.Authentication.csproj (in 266 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj (in 266 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj (in 266 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj (in 280 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Picker/Hexalith.Parties.Picker.csproj (in 266 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj (in 266 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Hexalith.Parties.csproj (in 268 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj (in 266 ms).
+  Restored /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj (in 280 ms).
+  Hexalith.Parties.Contracts -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/bin/Debug/net10.0/Hexalith.Parties.Contracts.dll
+  Hexalith.Parties.Authentication -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Authentication/bin/Debug/net10.0/Hexalith.Parties.Authentication.dll
+  Hexalith.Parties.Projections -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Projections/bin/Debug/net10.0/Hexalith.Parties.Projections.dll
+  Hexalith.Parties.Security -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Security/bin/Debug/net10.0/Hexalith.Parties.Security.dll
+  Hexalith.Parties -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Parties.dll
+  Hexalith.Parties.Testing -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Testing/bin/Debug/net10.0/Hexalith.Parties.Testing.dll
+  Hexalith.Parties.Client -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Client/bin/Debug/net10.0/Hexalith.Parties.Client.dll
+  Hexalith.Parties.Mcp -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Mcp/bin/Debug/net10.0/Hexalith.Parties.Mcp.dll
+  Hexalith.Parties.AdminPortal -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AdminPortal/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.dll
+  Hexalith.Parties.ConsumerPortal -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.ConsumerPortal/bin/Debug/net10.0/Hexalith.Parties.ConsumerPortal.dll
+  Hexalith.Parties.Picker -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Picker/bin/Debug/net10.0/Hexalith.Parties.Picker.dll
+  Hexalith.Parties.UI -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.UI/bin/Debug/net10.0/Hexalith.Parties.UI.dll
+  Hexalith.Parties.AppHost -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AppHost/bin/Debug/net10.0/Hexalith.Parties.AppHost.dll
+  Hexalith.Parties.IntegrationTests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.31

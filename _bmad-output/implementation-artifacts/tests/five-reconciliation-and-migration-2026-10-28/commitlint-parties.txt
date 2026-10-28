@@ -1,0 +1,7 @@
+⧗   --- input ---
+fix: reconcile projection readiness and rebuilds
+
+Resolve two reconciliation races and qualify actor backfill.
+Reconcile obsolete tooling and corrected identity-helper reports.
+Keep deployment and dependency adoption gates explicit.
+✔   found 0 problems, 0 warnings

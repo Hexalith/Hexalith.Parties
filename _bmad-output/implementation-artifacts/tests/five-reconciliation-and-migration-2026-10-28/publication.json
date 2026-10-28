@@ -1,0 +1,18 @@
+{
+  "producer_commit": "5af87f9e5cc8db16896fc97d19b6a828b2ed0d0d",
+  "producer_remote_main": "5af87f9e5cc8db16896fc97d19b6a828b2ed0d0d",
+  "producer_push_verified": true,
+  "root_parent_before_task_commit": "9239c531f3b0cbb4a998c419e537463b597ff14b",
+  "root_gitlinks_staged": [],
+  "preserved_root_deltas": {
+    "references/Hexalith.Builds": "3d7f49a5430294da5bcd437cbdace85c62c42027",
+    "references/Hexalith.EventStore": "36c78f3435d2d492a73f1b0707cf865c8735d740",
+    "references/Hexalith.FrontComposer": "5af87f9e5cc8db16896fc97d19b6a828b2ed0d0d",
+    "references/Hexalith.McpCli": "2d7311cbbcc592c0ea0348463037389251d1cb4b",
+    "references/Hexalith.Memories": "72c36c7113c750c8b809f9d72b945a2a8c2d4555",
+    "references/Hexalith.Platform": "8de90958bc41b7fd01b7ed22b8ab364447a800e4",
+    "references/Hexalith.Tenants": "7ddb864cda5e942925b056391617eae4895c1253"
+  },
+  "builds_worktree_sha256": "f9c97805fe540f17277f0d96f16a92b5f595f24c0f059c7a2c864abe8a6c1fb5",
+  "scope": "Separate task-only producer commit pushed first. Root gitlink adoption and existing Builds modifications remain outside the root commit; archived catalog bytes are evidence only."
+}

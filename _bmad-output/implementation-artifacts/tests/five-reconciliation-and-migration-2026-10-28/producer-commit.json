@@ -1,0 +1,32 @@
+{
+  "producer_commit": "5af87f9e5cc8db16896fc97d19b6a828b2ed0d0d",
+  "producer_parent": "28d2c7f47849bcfba19501f7c18cd9f67f0fc61c",
+  "original_producer_baseline": "5f665c4d38afb2255a7dde4620330e09824a40a1",
+  "upstream_paths": [
+    "_bmad-output/implementation-artifacts/spec-13-6-qualify-full-topology-readiness.md",
+    "eng/verify-isolated-readiness.py",
+    "references/Hexalith.Builds",
+    "references/Hexalith.EventStore",
+    "references/Hexalith.Memories",
+    "references/Hexalith.Parties",
+    "references/Hexalith.Tenants",
+    "src/Hexalith.FrontComposer.AppHost/DaprComponents/accesscontrol.frontcomposer-ui.yaml",
+    "src/Hexalith.FrontComposer.AppHost/DaprComponents/accesscontrol.tenants-api.yaml",
+    "src/Hexalith.FrontComposer.AppHost/DaprComponents/accesscontrol.tenants-ui.yaml",
+    "src/Hexalith.FrontComposer.AppHost/Hexalith.FrontComposer.AppHost.csproj",
+    "src/Hexalith.FrontComposer.AppHost/HexalithTenantsApi.cs",
+    "src/Hexalith.FrontComposer.AppHost/LocalReadinessConfiguration.cs",
+    "src/Hexalith.FrontComposer.AppHost/LocalReadinessTopology.cs",
+    "src/Hexalith.FrontComposer.AppHost/Program.cs",
+    "tests/Hexalith.FrontComposer.Shell.Tests/Integration/FrontComposerUiAppHostTests.cs",
+    "tests/e2e/scripts/verify-isolated-readiness.test.py"
+  ],
+  "task_paths": [
+    "src/Hexalith.FrontComposer.Contracts.UI/Freshness/FcOptimisticReconcileRequest.cs",
+    "src/Hexalith.FrontComposer.Shell/Services/Feedback/FcOptimisticReconciler.cs",
+    "tests/Hexalith.FrontComposer.Shell.Tests/Services/DelayedReconcileSubscription.cs",
+    "tests/Hexalith.FrontComposer.Shell.Tests/Services/FcOptimisticReconcilerTests.cs"
+  ],
+  "nested_submodule_operations": "none; rebase used submodule.recurse=false",
+  "root_gitlink_adoption": "not staged; existing root deltas preserved"
+}

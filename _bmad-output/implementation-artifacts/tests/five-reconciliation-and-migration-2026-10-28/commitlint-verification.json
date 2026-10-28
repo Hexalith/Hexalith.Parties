@@ -1,0 +1,40 @@
+[
+  {
+    "repository": "/home/administrator/projects/hexalith/parties",
+    "node": "v24.22.1",
+    "locked_cli": "21.2.2",
+    "installed_cli": "21.2.2",
+    "message_file": "/tmp/five-reconciliation-parties-message-tsrceoig",
+    "message": "fix: reconcile projection readiness and rebuilds\n\nResolve two reconciliation races and qualify actor backfill.\nReconcile obsolete tooling and corrected identity-helper reports.\nKeep deployment and dependency adoption gates explicit.\n",
+    "message_sha256": "ef1eac0bf403e6f5b7e2a61693429b171c2dd5f8fd5fb9a5a27f8931071d0ffb",
+    "command": [
+      "/tmp/five-frontcomposer-node24/node-v24.22.1-linux-x64/bin/node",
+      "/home/administrator/projects/hexalith/parties/node_modules/@commitlint/cli/cli.js",
+      "--edit",
+      "/tmp/five-reconciliation-parties-message-tsrceoig",
+      "--verbose"
+    ],
+    "exit_code": 0,
+    "log": "commitlint-parties.txt",
+    "log_sha256": "341a9044351678f8f3a7406dc0bb79d7b13ae2bdf2a1649031eeed7c07d4d573"
+  },
+  {
+    "repository": "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer",
+    "node": "v24.22.1",
+    "locked_cli": "21.2.2",
+    "installed_cli": "21.2.2",
+    "message_file": "/tmp/five-reconciliation-frontcomposer-message-001pd1f5",
+    "message": "fix: await projection readiness before reconciliation\n\nBuffer early confirmations until command acceptance.\nKeep fallback reads gated by connectivity and drain cleanup.\n",
+    "message_sha256": "c7dc24862725343cf84d2844521fced8fda432aa6472864a0b092c85ea4d8a8c",
+    "command": [
+      "/tmp/five-frontcomposer-node24/node-v24.22.1-linux-x64/bin/node",
+      "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/node_modules/@commitlint/cli/cli.js",
+      "--edit",
+      "/tmp/five-reconciliation-frontcomposer-message-001pd1f5",
+      "--verbose"
+    ],
+    "exit_code": 0,
+    "log": "commitlint-frontcomposer.txt",
+    "log_sha256": "42e1615fbe996ec7e5c5edf79e699de0f9c98fc74051fd6f88532b1488bac990"
+  }
+]

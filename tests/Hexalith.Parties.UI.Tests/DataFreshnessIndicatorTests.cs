@@ -28,8 +28,9 @@ public sealed class DataFreshnessIndicatorTests : BunitContext
         cut.Find("[data-fc-freshness='degraded']").TextContent.ShouldBe("Showing last known");
 #else
         cut.FindAll("[data-fc-freshness]").ShouldBeEmpty();
-        typeof(Hexalith.FrontComposer.Shell.Components.Layout.FrontComposerShell).Assembly
-            .GetType("Hexalith.FrontComposer.Shell.Components.Feedback.FcFreshnessIndicator").ShouldBeNull();
+        IElement localStatus = cut.Find(".data-freshness-indicator [role='status']");
+        localStatus.TextContent.ShouldBe("Showing last known");
+        localStatus.GetAttribute("aria-live").ShouldBe("polite");
 #endif
     }
 

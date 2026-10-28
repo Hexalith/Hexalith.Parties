@@ -1,0 +1,10 @@
+{
+  "baseline": "9239c531f3b0cbb4a998c419e537463b597ff14b",
+  "unchanged_test_sha256": {
+    "tests/Hexalith.Parties.UI.Tests/PartiesUiHostCompositionTests.cs": "11416ab1e4ae1b0628e853f92c1292bea55468b5091436c9788ee65a0eeb762d",
+    "tests/Hexalith.Parties.UI.Tests/DataFreshnessIndicatorTests.cs": "2ed16fc6054649de2958ada09ec654ad86026906f2aafe4d2c15e7df260baf6c"
+  },
+  "selected_package": "Hexalith.FrontComposer.Shell 4.7.1",
+  "package_and_built_output_sha256": "5347247d64f9a348dd0a0418711fb785370100133cd56f06dc5959e97756e80c",
+  "failure": "Four unchanged test assertions require shared types to be absent; actual selected package contains them. Built UI test/host DLL bytes match the selected package. Production shared registration remains gated; assertions will test that behavior instead."
+}

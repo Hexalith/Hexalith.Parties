@@ -1,0 +1,37 @@
+[
+  {
+    "name": "primary-retained-ui-build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+      "-c",
+      "Debug",
+      "-m:1"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exit_code": 0,
+    "log": "pre-catalog-assertion-primary-retained-ui-build.txt",
+    "log_sha256": "959ced0f3c3e9e422d8a7168e555e5b246c1c839fdc0553d80a75fcb420faa76"
+  },
+  {
+    "name": "primary-retained-ui-tests",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll",
+      "-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-reconciliation-and-migration-2026-10-28/primary-retained-ui-tests.xml"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exit_code": 1,
+    "log": "pre-catalog-assertion-primary-retained-ui-tests.txt",
+    "log_sha256": "5ebe9ed7d0c5aaa85b4de5c0323881c43266d69ffc2059da30b8d664bbf8afc0",
+    "xml": "pre-catalog-assertion-primary-retained-ui-tests.xml",
+    "xml_sha256": "fb03ed378c52ecc38b85351debc1cc40188052102faadf86d266724d66858ab8",
+    "results": {
+      "Pass": 428,
+      "Skip": 1,
+      "Fail": 4
+    }
+  }
+]

@@ -324,6 +324,249 @@ public sealed class OptimisticReconcileTests
 #endif
     }
 
+    [Fact]
+    public async Task DelayedRegistration_RecoversOnlyEarlyConfirmation_AndDrainsTeardown()
+    {
+        var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        FakeProjectionStream stream = NewStream(connected: true);
+        stream.RegistrationDelay = ready.Task;
+        var time = new ManualTimeProvider();
+        var recorder = new Recorder();
+
+        OptimisticReconcileRequest request = recorder.BuildRequest(
+            issueCommand: _ =>
+            {
+                stream.RaiseChanged(ProjectionType, Tenant); // only signal, while the command is pending
+                return Task.FromResult(CommandAcceptance.Accepted);
+            },
+            reconcile: _ => Task.FromResult(ProjectionFreshnessStatus.Current));
+        Task run = NewPrimitive(stream, time: time).ExecuteAsync(request, TestContext.Current.CancellationToken);
+        recorder.IssueCommandCalls.ShouldBe(0);
+        recorder.ReconcileCalls.ShouldBe(0);
+        ready.SetResult();
+        await run.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        recorder.ReconcileCalls.ShouldBe(1);
+        recorder.Announcements.Count(item => item == (StatusKind.AcceptedProcessing, (string?)null)).ShouldBe(1);
+        stream.Subscriptions.ShouldBeEmpty();
+        time.ActiveTimers.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task RepeatedDisconnects_ResumePolling_AndCompletionReleasesAllWork()
+    {
+        var time = new ManualTimeProvider();
+        FakeProjectionStream stream = NewStream(connected: true);
+        var recorder = new Recorder();
+        bool current = false;
+        Task run = NewPrimitive(stream, time: time).ExecuteAsync(recorder.BuildRequest(
+            _ => Task.FromResult(CommandAcceptance.Accepted),
+            _ => Task.FromResult(current ? ProjectionFreshnessStatus.Current : ProjectionFreshnessStatus.Stale)),
+            TestContext.Current.CancellationToken);
+        recorder.ReconcileCalls.ShouldBe(0);
+        stream.IsConnected = false;
+        time.Advance(TimeSpan.FromSeconds(30));
+        recorder.ReconcileCalls.ShouldBe(1);
+        stream.IsConnected = true;
+        time.Advance(TimeSpan.FromSeconds(30));
+        recorder.ReconcileCalls.ShouldBe(1);
+        stream.IsConnected = false;
+        current = true;
+        time.Advance(TimeSpan.FromSeconds(30));
+        await run.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        recorder.ReconcileCalls.ShouldBe(2);
+        stream.Subscriptions.ShouldBeEmpty();
+        time.ActiveTimers.ShouldBe(0);
+        time.Advance(TimeSpan.FromMinutes(1));
+        recorder.ReconcileCalls.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task CancellationDuringDelayedRegistration_DrainsLateRegistrationWithoutFeedback()
+    {
+        var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        FakeProjectionStream stream = NewStream(connected: true);
+        stream.RegistrationDelay = ready.Task;
+        var time = new ManualTimeProvider();
+        var recorder = new Recorder();
+        using var cancellation = new CancellationTokenSource();
+        Task run = NewPrimitive(stream, time: time).ExecuteAsync(recorder.BuildRequest(
+            _ => Task.FromResult(CommandAcceptance.Accepted),
+            _ => Task.FromResult(ProjectionFreshnessStatus.Stale)), cancellation.Token);
+        await cancellation.CancelAsync();
+        ready.SetResult();
+        await run.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        recorder.IssueCommandCalls.ShouldBe(0);
+        recorder.ReconcileCalls.ShouldBe(0);
+        recorder.Reverted.ShouldBeFalse();
+        stream.Subscriptions.ShouldBeEmpty();
+        time.ActiveTimers.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task ConnectedOldCurrentWithoutConfirmation_DoesNotReconcileQueuedCommand()
+    {
+        var stream = NewStream(connected: true);
+        var time = new ManualTimeProvider();
+        var recorder = new Recorder();
+        using var cancellation = new CancellationTokenSource();
+        Task run = NewPrimitive(stream, time: time).ExecuteAsync(recorder.BuildRequest(
+            _ => Task.FromResult(CommandAcceptance.Accepted),
+            _ => Task.FromResult(ProjectionFreshnessStatus.Current)), cancellation.Token);
+        time.Advance(TimeSpan.FromMinutes(2));
+        run.IsCompleted.ShouldBeFalse();
+        recorder.ReconcileCalls.ShouldBe(0);
+        recorder.Announcements.ShouldHaveSingleItem();
+        stream.RaiseChanged(ProjectionType, Tenant);
+        await run.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        recorder.ReconcileCalls.ShouldBe(1);
+        stream.Subscriptions.ShouldBeEmpty();
+        time.ActiveTimers.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task ConcurrentConfirmations_SerializeReads_AndIgnoreLateCurrentAfterCancellation()
+    {
+        var stream = NewStream(connected: true);
+        var recorder = new Recorder();
+        var read = new TaskCompletionSource<ProjectionFreshnessStatus>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var cancellation = new CancellationTokenSource();
+        Task run = NewPrimitive(stream).ExecuteAsync(recorder.BuildRequest(
+            _ => Task.FromResult(CommandAcceptance.Accepted), _ => read.Task), cancellation.Token);
+        Action confirm = stream.Subscriptions.ShouldHaveSingleItem().OnChanged;
+        confirm();
+        confirm();
+        recorder.ReconcileCalls.ShouldBe(1);
+        await cancellation.CancelAsync();
+        read.SetResult(ProjectionFreshnessStatus.Current);
+        await run.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        confirm();
+        recorder.ReconcileCalls.ShouldBe(1);
+        recorder.Announcements.ShouldHaveSingleItem();
+        stream.Subscriptions.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task EarlyConfirmationCannotReconcileRejectedOrCancelledCommand(bool cancel)
+    {
+        var stream = NewStream(connected: true);
+        var recorder = new Recorder();
+        using var cancellation = new CancellationTokenSource();
+        await NewPrimitive(stream).ExecuteAsync(recorder.BuildRequest(
+            token =>
+            {
+                stream.RaiseChanged(ProjectionType, Tenant);
+                if (cancel)
+                {
+                    cancellation.Cancel();
+                    token.ThrowIfCancellationRequested();
+                }
+                return Task.FromResult(CommandAcceptance.Rejected(StatusKind.Validation, "synthetic rejection"));
+            }, _ => Task.FromResult(ProjectionFreshnessStatus.Current)), cancellation.Token)
+            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        recorder.ReconcileCalls.ShouldBe(0);
+        recorder.Reverted.ShouldBe(!cancel);
+        recorder.Announcements.Count.ShouldBe(cancel ? 1 : 2);
+        stream.Subscriptions.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task OfflineConnectionFailure_RetainsAcceptedCommandPollingFallback(bool transportTimeout)
+    {
+        var stream = NewStream(connected: false);
+        stream.StartFailure = transportTimeout
+            ? new OperationCanceledException("synthetic transport timeout")
+            : new IOException("synthetic offline connection");
+        var recorder = new Recorder();
+        await NewPrimitive(stream).ExecuteAsync(recorder.BuildRequest(
+            _ => Task.FromResult(CommandAcceptance.Accepted),
+            _ => Task.FromResult(ProjectionFreshnessStatus.Current)), TestContext.Current.CancellationToken)
+            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        recorder.IssueCommandCalls.ShouldBe(1);
+        recorder.ReconcileCalls.ShouldBe(1);
+        recorder.Reverted.ShouldBeFalse();
+        stream.Subscriptions.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task SubscriptionAcquisitionFailure_RevertsOnceOrSilentlyAbandonsBeforeDispatch(bool cancel)
+    {
+        var stream = NewStream(connected: true);
+        var wrapper = new PartiesProjectionSubscription(stream, NullLogger<PartiesProjectionSubscription>.Instance);
+        await wrapper.DisposeAsync();
+        var recorder = new Recorder();
+        using var cancellation = new CancellationTokenSource();
+        OptimisticReconcileRequest request = recorder.BuildRequest(
+            _ => Task.FromResult(CommandAcceptance.Accepted), _ => Task.FromResult(ProjectionFreshnessStatus.Current));
+        if (cancel)
+        {
+            request = request with { ApplyOptimistic = cancellation.Cancel };
+        }
+        await NewPrimitive(stream, subscriptionOverride: wrapper).ExecuteAsync(request, cancellation.Token)
+            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        recorder.IssueCommandCalls.ShouldBe(0);
+        recorder.ReconcileCalls.ShouldBe(0);
+        recorder.RevertCalls.ShouldBe(cancel ? 0 : 1);
+        recorder.Announcements.Count.ShouldBe(cancel ? 1 : 2);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ExecuteWaitsForDelayedUnsubscription(bool cancel)
+    {
+        var stream = NewStream(connected: true);
+        var removal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        stream.UnsubscriptionDelay = removal.Task;
+        var recorder = new Recorder();
+        using var cancellation = new CancellationTokenSource();
+        Task run = NewPrimitive(stream).ExecuteAsync(recorder.BuildRequest(
+            _ => Task.FromResult(CommandAcceptance.Accepted), _ => Task.FromResult(ProjectionFreshnessStatus.Current)), cancellation.Token);
+        if (cancel)
+        {
+            await cancellation.CancelAsync();
+        }
+        else
+        {
+            stream.RaiseChanged(ProjectionType, Tenant);
+        }
+        await stream.UnsubscriptionStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        run.IsCompleted.ShouldBeFalse();
+        stream.Subscriptions.ShouldHaveSingleItem();
+        removal.SetResult();
+        await run.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        stream.Unsubscribed.ShouldHaveSingleItem();
+        stream.Subscriptions.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task CleanupCancellationFailureStillAwaitsUnsubscription()
+    {
+        var stream = NewStream(connected: true);
+        var removal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        stream.UnsubscriptionDelay = removal.Task;
+        var recorder = new Recorder();
+        CancellationTokenRegistration faulting = default;
+        Task run = NewPrimitive(stream).ExecuteAsync(recorder.BuildRequest(
+            _ => Task.FromResult(CommandAcceptance.Accepted), token =>
+            {
+                faulting = token.Register(() => throw new InvalidOperationException("synthetic cancellation callback"));
+                return Task.FromResult(ProjectionFreshnessStatus.Current);
+            }), TestContext.Current.CancellationToken);
+        stream.RaiseChanged(ProjectionType, Tenant);
+        await stream.UnsubscriptionStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        run.IsCompleted.ShouldBeFalse();
+        removal.SetResult();
+        await Should.ThrowAsync<AggregateException>(() => run.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+        faulting.Dispose();
+        stream.Subscriptions.ShouldBeEmpty();
+    }
+
     private static CommandAcceptance MapGdpr(AdminPortalGdprCommandResult result)
         => result.Outcome == AdminPortalGdprOutcome.Accepted
             ? CommandAcceptance.Accepted
@@ -331,11 +574,11 @@ public sealed class OptimisticReconcileTests
 
     private static FakeProjectionStream NewStream(bool connected) => new() { IsConnected = connected };
 
-    private static OptimisticReconcile NewPrimitive(FakeProjectionStream stream, ILogger<OptimisticReconcile>? logger = null)
+    private static OptimisticReconcile NewPrimitive(FakeProjectionStream stream, ILogger<OptimisticReconcile>? logger = null, ManualTimeProvider? time = null, PartiesProjectionSubscription? subscriptionOverride = null)
     {
-        var subscription = new PartiesProjectionSubscription(stream, NullLogger<PartiesProjectionSubscription>.Instance);
+        var subscription = subscriptionOverride ?? new PartiesProjectionSubscription(stream, NullLogger<PartiesProjectionSubscription>.Instance);
         var options = Options.Create(new ProjectionFreshnessOptions { PollingIntervalSeconds = 30 });
-        var fallback = new ProjectionFreshnessFallback(stream, new ManualTimeProvider(), options);
+        var fallback = new ProjectionFreshnessFallback(stream, time ?? new ManualTimeProvider(), options);
 #if HFC_SHARED_UI
         var provider = Substitute.For<IServiceProvider>();
         provider.GetService(typeof(Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler))
@@ -351,6 +594,8 @@ public sealed class OptimisticReconcileTests
         public bool OptimisticApplied { get; private set; }
 
         public bool Reverted { get; private set; }
+
+        public int RevertCalls { get; private set; }
 
         public int IssueCommandCalls { get; private set; }
 
@@ -374,7 +619,7 @@ public sealed class OptimisticReconcileTests
                     ReconcileCalls++;
                     return reconcile(ct);
                 },
-                Revert = () => Reverted = true,
+                Revert = () => { Reverted = true; RevertCalls++; },
                 ProjectionKey = (ProjectionType, Tenant),
                 Announce = (kind, message) => Announcements.Add((kind, message)),
             };

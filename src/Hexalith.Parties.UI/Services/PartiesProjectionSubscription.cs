@@ -30,8 +30,10 @@ public sealed class PartiesProjectionSubscription : IAsyncDisposable
 {
     private readonly IProjectionStream _stream;
     private readonly ILogger<PartiesProjectionSubscription> _logger;
-    private readonly ConcurrentDictionary<Guid, Registration> _registrations = new();
+    private readonly ConcurrentDictionary<Guid, PartiesProjectionRegistration> _registrations = new();
+    private readonly object _gate = new();
     private bool _disposed;
+    private Task? _disposal;
 
     public PartiesProjectionSubscription(IProjectionStream stream, ILogger<PartiesProjectionSubscription> logger)
     {
@@ -59,83 +61,40 @@ public sealed class PartiesProjectionSubscription : IAsyncDisposable
         ArgumentException.ThrowIfNullOrWhiteSpace(projectionType);
         ArgumentException.ThrowIfNullOrWhiteSpace(tenant);
         ArgumentNullException.ThrowIfNull(onConfirmed);
-        ObjectDisposedException.ThrowIf(_disposed, this);
-
-        var registration = new Registration(this, projectionType, tenant, onConfirmed);
-        _registrations[registration.Id] = registration;
-        _ = RegisterCoreAsync(registration);
-        return registration;
+        lock (_gate)
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            var registration = new PartiesProjectionRegistration(_stream, _logger, projectionType, tenant, onConfirmed,
+                id => _registrations.TryRemove(id, out _));
+            _registrations[registration.Id] = registration;
+            registration.Start();
+            return registration;
+        }
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        if (_disposed)
-        {
-            return;
-        }
+    /// <summary>Waits for this transport registration before its command can emit a confirmation.</summary>
+    /// <param name="handle">A lifetime handle returned by <see cref="Subscribe"/>.</param>
+    /// <param name="cancellationToken">The operation lifetime.</param>
+    /// <returns>The asynchronous registration readiness.</returns>
+    public static Task WaitUntilReadyAsync(IDisposable handle, CancellationToken cancellationToken)
+        => handle is PartiesProjectionRegistration registration
+            ? registration.WaitUntilReadyAsync(cancellationToken)
+            : throw new ArgumentException("The handle is not a Parties projection registration.", nameof(handle));
 
+    public ValueTask DisposeAsync()
+    {
+        lock (_gate)
+        {
+            return new ValueTask(_disposal ??= DisposeCoreAsync());
+        }
+    }
+
+    private async Task DisposeCoreAsync()
+    {
         _disposed = true;
-        foreach (Registration registration in _registrations.Values)
+        foreach (PartiesProjectionRegistration registration in _registrations.Values)
         {
-            await RemoveAsync(registration).ConfigureAwait(false);
-        }
-    }
-
-    private async Task RegisterCoreAsync(Registration registration)
-    {
-        try
-        {
-            await _stream.EnsureStartedAsync().ConfigureAwait(false); // lazy connect on first Subscribe
-            await _stream.SubscribeAsync(registration.ProjectionType, registration.Tenant, registration.Callback)
-                .ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            // Coarse only — PII hygiene forbids logging projectionType/tenant. The registration is kept so
-            // it auto-joins on a later connect; the polling fallback owns refresh meanwhile.
-            _logger.LogWarning(ex, "Projection subscription registration deferred (stream unavailable).");
-        }
-    }
-
-    private async Task RemoveAsync(Registration registration)
-    {
-        if (!_registrations.TryRemove(registration.Id, out _))
-        {
-            return;
-        }
-
-        try
-        {
-            await _stream.UnsubscribeAsync(registration.ProjectionType, registration.Tenant, registration.Callback)
-                .ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Projection unsubscribe deferred (stream unavailable).");
-        }
-    }
-
-    private sealed class Registration(PartiesProjectionSubscription owner, string projectionType, string tenant, Action callback)
-        : IDisposable
-    {
-        private int _disposed;
-
-        public Guid Id { get; } = Guid.NewGuid();
-
-        public string ProjectionType { get; } = projectionType;
-
-        public string Tenant { get; } = tenant;
-
-        public Action Callback { get; } = callback;
-
-        public void Dispose()
-        {
-            if (Interlocked.Exchange(ref _disposed, 1) == 1)
-            {
-                return;
-            }
-
-            _ = owner.RemoveAsync(this);
+            await registration.DisposeAsync().ConfigureAwait(false);
         }
     }
 }

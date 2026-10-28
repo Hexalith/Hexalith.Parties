@@ -1,0 +1,280 @@
+{
+  "matrix": {
+    "Early confirmation": {
+      "result": "Pass",
+      "executed_cases": [
+        {
+          "lane": "final-retained-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ConnectedOldCurrentWithoutConfirmation_DoesNotReconcileQueuedCommand"
+        },
+        {
+          "lane": "final-retained-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.DelayedRegistration_RecoversOnlyEarlyConfirmation_AndDrainsTeardown"
+        },
+        {
+          "lane": "final-retained-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.EarlyConfirmationCannotReconcileRejectedOrCancelledCommand(cancel: False)"
+        },
+        {
+          "lane": "final-retained-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.EarlyConfirmationCannotReconcileRejectedOrCancelledCommand(cancel: True)"
+        },
+        {
+          "lane": "final-retained-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.SubscriptionAcquisitionFailure_RevertsOnceOrSilentlyAbandonsBeforeDispatch(cancel: False)"
+        },
+        {
+          "lane": "final-retained-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.SubscriptionAcquisitionFailure_RevertsOnceOrSilentlyAbandonsBeforeDispatch(cancel: True)"
+        },
+        {
+          "lane": "final-mapped-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ConnectedOldCurrentWithoutConfirmation_DoesNotReconcileQueuedCommand"
+        },
+        {
+          "lane": "final-mapped-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.DelayedRegistration_RecoversOnlyEarlyConfirmation_AndDrainsTeardown"
+        },
+        {
+          "lane": "final-mapped-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.EarlyConfirmationCannotReconcileRejectedOrCancelledCommand(cancel: False)"
+        },
+        {
+          "lane": "final-mapped-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.EarlyConfirmationCannotReconcileRejectedOrCancelledCommand(cancel: True)"
+        },
+        {
+          "lane": "final-mapped-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.SubscriptionAcquisitionFailure_RevertsOnceOrSilentlyAbandonsBeforeDispatch(cancel: False)"
+        },
+        {
+          "lane": "final-mapped-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.SubscriptionAcquisitionFailure_RevertsOnceOrSilentlyAbandonsBeforeDispatch(cancel: True)"
+        },
+        {
+          "lane": "final-producer-tests",
+          "test": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.BufferedConfirmationCannotReconcileRejectedOrCancelledCommand(cancel: False)"
+        },
+        {
+          "lane": "final-producer-tests",
+          "test": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.BufferedConfirmationCannotReconcileRejectedOrCancelledCommand(cancel: True)"
+        },
+        {
+          "lane": "final-producer-tests",
+          "test": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.ConfirmationDuringCommandIsRecoveredByInitialRead"
+        },
+        {
+          "lane": "final-producer-tests",
+          "test": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.ConnectedDirectPollFallbackCannotReadOldCurrent"
+        },
+        {
+          "lane": "final-producer-tests",
+          "test": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.DelayedTransportReadinessRecoversWithoutAnotherConfirmation"
+        },
+        {
+          "lane": "final-producer-tests",
+          "test": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.SubscriptionAcquisitionFailureRevertsOnceOrSilentlyAbandonsBeforeDispatch(cancel: False)"
+        },
+        {
+          "lane": "final-producer-tests",
+          "test": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.SubscriptionAcquisitionFailureRevertsOnceOrSilentlyAbandonsBeforeDispatch(cancel: True)"
+        }
+      ]
+    },
+    "Repeated disconnect": {
+      "result": "Pass",
+      "executed_cases": [
+        {
+          "lane": "final-retained-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.CancellationDuringDelayedRegistration_DrainsLateRegistrationWithoutFeedback"
+        },
+        {
+          "lane": "final-retained-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.CleanupCancellationFailureStillAwaitsUnsubscription"
+        },
+        {
+          "lane": "final-retained-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ConcurrentConfirmations_SerializeReads_AndIgnoreLateCurrentAfterCancellation"
+        },
+        {
+          "lane": "final-retained-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.DuplicateOrLateConfirm_RunsReconcileExactlyOnce"
+        },
+        {
+          "lane": "final-retained-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ExecuteWaitsForDelayedUnsubscription(cancel: False)"
+        },
+        {
+          "lane": "final-retained-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ExecuteWaitsForDelayedUnsubscription(cancel: True)"
+        },
+        {
+          "lane": "final-retained-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.OfflineConnectionFailure_RetainsAcceptedCommandPollingFallback(transportTimeout: False)"
+        },
+        {
+          "lane": "final-retained-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.OfflineConnectionFailure_RetainsAcceptedCommandPollingFallback(transportTimeout: True)"
+        },
+        {
+          "lane": "final-retained-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ReconcileReadThrowsTransiently_IsRetriedOnTheNextConfirm_NoRevert"
+        },
+        {
+          "lane": "final-retained-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.RepeatedDisconnects_ResumePolling_AndCompletionReleasesAllWork"
+        },
+        {
+          "lane": "final-retained-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.ProjectionFreshnessFallbackTests.PollsWhileDisconnected_ObservesReconnectAndResumesAfterAnotherDisconnect"
+        },
+        {
+          "lane": "final-mapped-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.CancellationDuringDelayedRegistration_DrainsLateRegistrationWithoutFeedback"
+        },
+        {
+          "lane": "final-mapped-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.CleanupCancellationFailureStillAwaitsUnsubscription"
+        },
+        {
+          "lane": "final-mapped-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ConcurrentConfirmations_SerializeReads_AndIgnoreLateCurrentAfterCancellation"
+        },
+        {
+          "lane": "final-mapped-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.DuplicateOrLateConfirm_RunsReconcileExactlyOnce"
+        },
+        {
+          "lane": "final-mapped-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ExecuteWaitsForDelayedUnsubscription(cancel: False)"
+        },
+        {
+          "lane": "final-mapped-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ExecuteWaitsForDelayedUnsubscription(cancel: True)"
+        },
+        {
+          "lane": "final-mapped-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.OfflineConnectionFailure_RetainsAcceptedCommandPollingFallback(transportTimeout: False)"
+        },
+        {
+          "lane": "final-mapped-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.OfflineConnectionFailure_RetainsAcceptedCommandPollingFallback(transportTimeout: True)"
+        },
+        {
+          "lane": "final-mapped-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ReconcileReadThrowsTransiently_IsRetriedOnTheNextConfirm_NoRevert"
+        },
+        {
+          "lane": "final-mapped-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.RepeatedDisconnects_ResumePolling_AndCompletionReleasesAllWork"
+        },
+        {
+          "lane": "final-mapped-ui-tests",
+          "test": "Hexalith.Parties.UI.Tests.ProjectionFreshnessFallbackTests.PollsWhileDisconnected_ObservesReconnectAndResumesAfterAnotherDisconnect"
+        },
+        {
+          "lane": "final-producer-tests",
+          "test": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.AsynchronousSubscriptionDisposalIsAwaitedExactlyOnce(cancel: False)"
+        },
+        {
+          "lane": "final-producer-tests",
+          "test": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.AsynchronousSubscriptionDisposalIsAwaitedExactlyOnce(cancel: True)"
+        },
+        {
+          "lane": "final-producer-tests",
+          "test": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.CancellationCallbackFailureStillAwaitsRemovalAndFallback"
+        },
+        {
+          "lane": "final-producer-tests",
+          "test": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.CancellationDuringReadSuppressesLateFeedbackAndDisposes"
+        },
+        {
+          "lane": "final-producer-tests",
+          "test": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.FallbackObservesRepeatedDisconnectionsAndIsDrainedAtCompletion"
+        },
+        {
+          "lane": "final-producer-tests",
+          "test": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.SimultaneousAndLateConfirmationsCannotApplyTwice"
+        },
+        {
+          "lane": "final-producer-tests",
+          "test": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.ThrowingDisposalStillDrainsFallbackAndActiveRead"
+        }
+      ]
+    },
+    "Backfill": {
+      "result": "Pass",
+      "executed_cases": [
+        {
+          "lane": "final-backfill-recovery-tests",
+          "test": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillTests.ActorOnlyHistoryBackfillSurvivesRestartAndPreservesRollbackAndForeignTenantBytes"
+        },
+        {
+          "lane": "final-backfill-recovery-tests",
+          "test": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillTests.ExistingIndexConditionalPolicySurvivesCommitAndFreshVerification"
+        }
+      ]
+    },
+    "Unsafe backfill": {
+      "result": "Pass",
+      "executed_cases": [
+        {
+          "lane": "final-backfill-recovery-tests",
+          "test": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillTests.CompetingCanonicalWriterAfterPreparationRefusesBackfillWithoutOverwritingAuthority(shared: False)"
+        },
+        {
+          "lane": "final-backfill-recovery-tests",
+          "test": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillTests.CompetingCanonicalWriterAfterPreparationRefusesBackfillWithoutOverwritingAuthority(shared: True)"
+        },
+        {
+          "lane": "final-backfill-recovery-tests",
+          "test": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillTests.IncompleteOrUnreadableHistoryRefusesPublicationAndPreservesActorAuthority(unreadable: False)"
+        },
+        {
+          "lane": "final-backfill-recovery-tests",
+          "test": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillTests.IncompleteOrUnreadableHistoryRefusesPublicationAndPreservesActorAuthority(unreadable: True)"
+        }
+      ]
+    },
+    "Stale reports": {
+      "result": "Pass",
+      "checks": {
+        "obsolete_validator_and_packet_not_tracked": "Pass",
+        "operative_files_do_not_reference_obsolete_validator_or_preview": "Pass",
+        "current_ci_and_pinned_module_tool_identified": "Pass",
+        "tracked_helper_has_no_incorrectly_cased_named_arguments": "Pass",
+        "historical_effective_package_properties_recorded": "Pass"
+      },
+      "helper_cases": 11,
+      "historical_catalog": {
+        "snapshot": "historical-inputs/f9c97805fe540f17277f0d96f16a92b5f595f24c0f059c7a2c864abe8a6c1fb5.catalog",
+        "sha256": "f9c97805fe540f17277f0d96f16a92b5f595f24c0f059c7a2c864abe8a6c1fb5",
+        "owner_repository": "references/Hexalith.Builds",
+        "owner_head": "3d7f49a5430294da5bcd437cbdace85c62c42027",
+        "owner_index_blob": "39a1ff74938c2ca51763f0301c42bda6c4f460f5",
+        "scope": "Exact observed dirty catalog used for the historical effective-property observation only. This snapshot does not qualify the current catalog or source resolver and does not adopt the Builds edit."
+      },
+      "qualification_limits": "Operative and helper inputs are checked against current bytes. Only the selected Builds catalog uses its explicitly bound historical snapshot. The snapshot records the preserved dirty catalog used for the original graph observation; it does not qualify the current catalog, source resolver, dependency approvals, packages, topology or deployment, and does not adopt the Builds edit."
+    }
+  },
+  "lane_results": {
+    "final-retained-ui-tests": {
+      "Pass": 35
+    },
+    "final-mapped-ui-tests": {
+      "Pass": 35
+    },
+    "final-producer-tests": {
+      "Pass": 27
+    },
+    "final-projection-tests": {
+      "Pass": 218,
+      "Skip": 1
+    },
+    "final-backfill-recovery-tests": {
+      "Pass": 47
+    }
+  },
+  "source_and_receipt_hashes": "Pass",
+  "limits": "Executed focused source/package/fallback controls. The named legacy-SDK skip does not cover a required row. No deployed migration or source-resolver acceptance."
+}

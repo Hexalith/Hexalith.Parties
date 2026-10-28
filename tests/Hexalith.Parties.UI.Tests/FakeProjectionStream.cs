@@ -13,6 +13,14 @@ internal sealed class FakeProjectionStream : IProjectionStream
 
     public bool IsConnected { get; set; }
 
+    public Exception? StartFailure { get; set; }
+
+    public Task RegistrationDelay { get; set; } = Task.CompletedTask;
+
+    public Task UnsubscriptionDelay { get; set; } = Task.CompletedTask;
+
+    public TaskCompletionSource UnsubscriptionStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
     public int EnsureStartedCalls { get; private set; }
 
     public IReadOnlyList<Registration> Subscriptions => _subscriptions;
@@ -22,21 +30,22 @@ internal sealed class FakeProjectionStream : IProjectionStream
     public Task EnsureStartedAsync(CancellationToken ct = default)
     {
         EnsureStartedCalls++;
-        return Task.CompletedTask;
+        return StartFailure is { } failure ? Task.FromException(failure) : Task.CompletedTask;
     }
 
-    public Task SubscribeAsync(string projectionType, string tenantId, Action onChanged)
+    public async Task SubscribeAsync(string projectionType, string tenantId, Action onChanged)
     {
+        await RegistrationDelay.ConfigureAwait(false);
         _subscriptions.Add(new Registration(projectionType, tenantId, onChanged));
-        return Task.CompletedTask;
     }
 
-    public Task UnsubscribeAsync(string projectionType, string tenantId, Action onChanged)
+    public async Task UnsubscribeAsync(string projectionType, string tenantId, Action onChanged)
     {
+        UnsubscriptionStarted.TrySetResult();
+        await UnsubscriptionDelay.ConfigureAwait(false);
         var registration = new Registration(projectionType, tenantId, onChanged);
         Unsubscribed.Add(registration);
         _ = _subscriptions.RemoveAll(s => s.ProjectionType == projectionType && s.Tenant == tenantId && s.OnChanged == onChanged);
-        return Task.CompletedTask;
     }
 
     /// <summary>Invokes every callback registered for <c>(projectionType, tenant)</c> (a SignalR confirm).</summary>

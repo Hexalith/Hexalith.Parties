@@ -16,7 +16,7 @@ public sealed class ProjectionFreshnessFallbackTests
     private static readonly TimeSpan Interval = TimeSpan.FromSeconds(30);
 
     [Fact]
-    public async Task PollsWhileDisconnected_StopsOnReconnect()
+    public async Task PollsWhileDisconnected_ObservesReconnectAndResumesAfterAnotherDisconnect()
     {
         var time = new ManualTimeProvider();
         var stream = new FakeProjectionStream { IsConnected = false };
@@ -26,7 +26,8 @@ public sealed class ProjectionFreshnessFallbackTests
             Options.Create(new ProjectionFreshnessOptions { PollingIntervalSeconds = 30 }));
 
         int polls = 0;
-        Task run = fallback.RunAsync(_ => { polls++; return Task.CompletedTask; }, () => false, CancellationToken.None);
+        using var cancellation = new CancellationTokenSource();
+        Task run = fallback.RunAsync(_ => { polls++; return Task.CompletedTask; }, () => false, cancellation.Token);
 
         polls.ShouldBe(1); // immediate tick
 
@@ -41,8 +42,19 @@ public sealed class ProjectionFreshnessFallbackTests
         time.Advance(Interval);
 
         polls.ShouldBe(3);
-        run.IsCompleted.ShouldBeTrue();
-        await run.ConfigureAwait(true);
+        run.IsCompleted.ShouldBeFalse();
+        stream.IsConnected = false;
+        time.Advance(Interval);
+        polls.ShouldBe(4);
+        stream.IsConnected = true;
+        time.Advance(Interval);
+        polls.ShouldBe(4);
+        stream.IsConnected = false;
+        time.Advance(Interval);
+        polls.ShouldBe(5);
+        await cancellation.CancelAsync();
+        await run.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        time.ActiveTimers.ShouldBe(0);
     }
 
     [Fact]
@@ -56,7 +68,12 @@ public sealed class ProjectionFreshnessFallbackTests
             Options.Create(new ProjectionFreshnessOptions { PollingIntervalSeconds = 30 }));
 
         int polls = 0;
-        await fallback.RunAsync(_ => { polls++; return Task.CompletedTask; }, () => false, CancellationToken.None);
+        using var cancellation = new CancellationTokenSource();
+        Task run = fallback.RunAsync(_ => { polls++; return Task.CompletedTask; }, () => false, cancellation.Token);
+        time.Advance(Interval);
+        await cancellation.CancelAsync();
+        await run.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        time.ActiveTimers.ShouldBe(0);
 
         polls.ShouldBe(0);
     }

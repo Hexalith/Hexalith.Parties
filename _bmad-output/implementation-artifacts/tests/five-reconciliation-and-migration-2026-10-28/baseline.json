@@ -1,0 +1,21 @@
+{
+  "baseline_commit": "9239c531f3b0cbb4a998c419e537463b597ff14b",
+  "start": {
+    "command": "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json --non-interactive",
+    "exit_code": 0
+  },
+  "describe": {
+    "command": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json --non-interactive",
+    "exit_code": 0,
+    "security": "Unhealthy; TLS health handshake unexpected EOF",
+    "eventstore": "Waiting",
+    "parties": "Waiting",
+    "tenants": "Waiting",
+    "parties-ui": "Waiting"
+  },
+  "stop": {
+    "command": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+    "exit_code": 0
+  },
+  "qualification": "runtime baseline only; no whole-topology health claim"
+}

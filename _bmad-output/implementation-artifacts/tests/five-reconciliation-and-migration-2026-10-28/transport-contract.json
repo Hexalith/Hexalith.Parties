@@ -1,0 +1,23 @@
+{
+  "inspection_command": [
+    "dnx",
+    "dotnet-inspect",
+    "-y",
+    "--",
+    "member",
+    "EventStoreSignalRClient",
+    "--package",
+    "Hexalith.EventStore.SignalR@3.128.3",
+    "-m",
+    "SubscribeAsync",
+    "-15"
+  ],
+  "exit_code": 0,
+  "verified_signature": "public System.Threading.Tasks.Task SubscribeAsync(string projectionType, string tenantId, System.Action onChanged)",
+  "source_sha256": {
+    "src/Hexalith.Parties.UI/Services/IProjectionStream.cs": "1332cf9d5b06e1edd84b6fba1c0188dd1d77ba30adf2d8c1ac6795a474174506",
+    "src/Hexalith.Parties.UI/Services/EventStoreSignalRProjectionStream.cs": "80b8edc61c81a2299a00b39d84a66cd9399126c17d951fad8729e22692f566ad",
+    "references/Hexalith.EventStore/src/Hexalith.EventStore.SignalR/EventStoreSignalRClient.cs": "0dae11bdd7cdeb41b4f9513b514dfd408d586a041f2393ee50c017de465b91b8"
+  },
+  "finding": "Existing adapter/client subscription and removal have no cancellation parameter; JoinGroup and LeaveGroup calls omit cancellation. This records upstream deferred capability, not bounded shutdown qualification."
+}

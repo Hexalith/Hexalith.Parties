@@ -14,6 +14,17 @@ internal sealed class ManualTimeProvider : TimeProvider
     private readonly List<ManualTimer> _timers = [];
     private DateTimeOffset _now = DateTimeOffset.UnixEpoch;
 
+    public int ActiveTimers
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _timers.Count;
+            }
+        }
+    }
+
     public override DateTimeOffset GetUtcNow()
     {
         lock (_gate)

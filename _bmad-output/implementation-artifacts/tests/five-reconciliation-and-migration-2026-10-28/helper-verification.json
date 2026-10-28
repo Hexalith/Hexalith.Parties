@@ -1,0 +1,32 @@
+[
+  {
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "--configuration",
+      "Debug",
+      "-m:1",
+      "-p:NuGetAudit=false",
+      "-p:MinVerVersionOverride=1.0.0"
+    ],
+    "exit_code": 0,
+    "log": "helper-build.txt",
+    "sha256": "2c58ac301c80781d306a5ea8fcc0c93477ca484060af03b156313cea5220cc13"
+  },
+  {
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Identity.PartyIdentityPersistedVerifierTests",
+      "-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-reconciliation-and-migration-2026-10-28/helper-tests.xml"
+    ],
+    "exit_code": 0,
+    "log": "helper-tests.txt",
+    "sha256": "6fbd355342653c01dc43b5d034960be5eed43b0ff19c043bc12890afeb6e9fcf",
+    "xml": "helper-tests.xml",
+    "xml_sha256": "895faddd01fe511d8580a27fc501c340a73dfec38ca3a6dcf876a102642a3dd8"
+  }
+]

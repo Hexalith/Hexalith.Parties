@@ -1,0 +1,155 @@
+[
+  {
+    "name": "primary-retained-ui-build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+      "-c",
+      "Debug",
+      "-m:1"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exit_code": 0,
+    "log": "primary-retained-ui-build.txt",
+    "log_sha256": "4761b49a88ff48edc2190402d4abf5067d5d89905693874179922e26ab916896"
+  },
+  {
+    "name": "primary-retained-ui-tests",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll",
+      "-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-reconciliation-and-migration-2026-10-28/primary-retained-ui-tests.xml"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exit_code": 0,
+    "log": "primary-retained-ui-tests.txt",
+    "log_sha256": "dd87fe3382c95a149d2dd3259b655a1bbf40bc86dc7bf44ff1d4137243abe257",
+    "xml": "primary-retained-ui-tests.xml",
+    "xml_sha256": "5f8291089c1827cbafe153b621105cdf45e8eb8ece5833f1be2dd1810b9ca28f",
+    "results": {
+      "Pass": 432,
+      "Skip": 1
+    }
+  },
+  {
+    "name": "primary-mapped-ui-build",
+    "command": [
+      "python3",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/build-source.py",
+      "--workspace",
+      "/tmp/five-reconciliation-retained-map-20261028",
+      "--",
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+      "-c",
+      "Debug",
+      "-m:1"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exit_code": 0,
+    "log": "primary-mapped-ui-build.txt",
+    "log_sha256": "0425da9c614c7233a075e48715f6431137c480c105f4d3870ec286be412f2179"
+  },
+  {
+    "name": "primary-mapped-ui-tests",
+    "command": [
+      "python3",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/build-source.py",
+      "--workspace",
+      "/tmp/five-reconciliation-retained-map-20261028",
+      "--",
+      "dotnet",
+      "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll",
+      "-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-reconciliation-and-migration-2026-10-28/primary-mapped-ui-tests.xml"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exit_code": 0,
+    "log": "primary-mapped-ui-tests.txt",
+    "log_sha256": "9ebcb247d8a6b4e76d9e05d63e1179fd5f743f3f77d56fed9effad0358f634f5",
+    "xml": "primary-mapped-ui-tests.xml",
+    "xml_sha256": "3232c1c3ec894f05595014143fbb2bff1a5a80143da59c65a1aa6911ab170364",
+    "results": {
+      "Pass": 433
+    }
+  },
+  {
+    "name": "primary-producer-build",
+    "command": [
+      "python3",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/build-source.py",
+      "--workspace",
+      "/tmp/five-reconciliation-retained-map-20261028",
+      "--cwd",
+      "references/Hexalith.FrontComposer",
+      "--",
+      "dotnet",
+      "build",
+      "tests/Hexalith.FrontComposer.Shell.Tests/Hexalith.FrontComposer.Shell.Tests.csproj",
+      "-c",
+      "Debug",
+      "-m:1"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exit_code": 0,
+    "log": "primary-producer-build.txt",
+    "log_sha256": "2c0cb09502b73314bca445b6d4805cc66c833572c143813e7fa12cceb899ca77"
+  },
+  {
+    "name": "primary-producer-tests",
+    "command": [
+      "dotnet",
+      "references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests/bin/Debug/net10.0/Hexalith.FrontComposer.Shell.Tests.dll",
+      "-class",
+      "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests",
+      "-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-reconciliation-and-migration-2026-10-28/primary-producer-tests.xml"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exit_code": 0,
+    "log": "primary-producer-tests.txt",
+    "log_sha256": "350f963d460aa0236d72c40a20f30325988f20a42b3e8bed18b7e3458cddb3ca",
+    "xml": "primary-producer-tests.xml",
+    "xml_sha256": "48b01649a8f069e276f428820f4c7590c34d629e4a78e306924afaa87d9a39a4",
+    "results": {
+      "Pass": 27
+    }
+  },
+  {
+    "name": "primary-audit-controls",
+    "command": [
+      "python3",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-reconciliation-and-migration-2026-10-28/test_audit_matrix.py"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exit_code": 0,
+    "log": "primary-audit-controls.txt",
+    "log_sha256": "37c63e4dd8aba9c7f257f46502dc467f1d1664054ee1b6e29cb886a69ce91bef"
+  },
+  {
+    "name": "primary-audit-controls-optimized",
+    "command": [
+      "python3",
+      "-O",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-reconciliation-and-migration-2026-10-28/test_audit_matrix.py"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exit_code": 0,
+    "log": "primary-audit-controls-optimized.txt",
+    "log_sha256": "0108751ac25e9789c6ed35e38a276fb0750e6a36053bd9eb022f6bcecc8acd5c"
+  },
+  {
+    "name": "primary-warning-guard",
+    "command": [
+      "bash",
+      "scripts/check-no-warning-override.sh"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exit_code": 0,
+    "log": "primary-warning-guard.txt",
+    "log_sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604"
+  }
+]

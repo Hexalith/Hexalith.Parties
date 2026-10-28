@@ -1,0 +1,23 @@
+{
+  "src/Hexalith.Parties.UI/Services/OptimisticReconcile.cs": "b5fe5be621eafe5ee316739374c51f685603731e69cb02090f6b5a3329561cab",
+  "src/Hexalith.Parties.UI/Services/PartiesProjectionSubscription.cs": "f17a24b0793eb7d16dd28c2e68dbae93de3bd68fbd47160392b61f1931388bb9",
+  "src/Hexalith.Parties.UI/Services/PartiesProjectionRegistration.cs": "b15dc112a78132d039e752c907ac759ad1210e5dafeac5f79b77e4f2fc4eafe0",
+  "src/Hexalith.Parties.UI/Services/ProjectionFreshnessFallback.cs": "2759b2084984c0477a9516fb0110f25793ef4bf3040f98a380484e6f66dc8d1c",
+  "src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs": "e8441de4577ab50c711539107734a6835232f00bf25e5943197a7f09ac922cc4",
+  "src/Hexalith.Parties.Projections/Handlers/PartyIndexRebuildCandidate.cs": "a1b876e6bc93f1e736f47162ca6044d1e6a54882c4f283db8685da489ad29678",
+  "tests/Hexalith.Parties.UI.Tests/OptimisticReconcileTests.cs": "b88da771a040c147c04c5c897a3cf546b6f821ea8824f840e997804e78aec608",
+  "tests/Hexalith.Parties.UI.Tests/FakeProjectionStream.cs": "80fd63c37398412fb061110d81d148d040abcc6455e57ba9889bf4fa822f3e71",
+  "tests/Hexalith.Parties.UI.Tests/ManualTimeProvider.cs": "44fe7a3adca42f4a791f381a6bafad176472246d62318efc24ab295fc1fd5bc2",
+  "tests/Hexalith.Parties.UI.Tests/ProjectionFreshnessFallbackTests.cs": "831d37bbf0f1be2e580ddac6dc5d22d28103c56fe0befd17702e55906082e695",
+  "tests/Hexalith.Parties.Tests/Projections/PartyLegacyBackfillFixture.cs": "caf41a5d51b1c6a65eddef498b90fd67fc86e4afd05664eea7908c78728ed1e4",
+  "tests/Hexalith.Parties.Tests/Projections/PartyLegacyReadModelBackfillTests.cs": "22d05681d572aef8ff47499a6be4865bcc1a88d217480387efb0d0f84728ff8a",
+  "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs": "cdc6b0835ca883a856582a20375e11a1adcc8c737f3df11f1601c7b2fd259436",
+  "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Services/Feedback/FcOptimisticReconciler.cs": "d0b8252afc44fac9813b36cba971a1ecc9f8e48bdc4844410df6493ec7897597",
+  "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts.UI/Freshness/FcOptimisticReconcileRequest.cs": "b2e523b3380f529458aa1f00793a9254803a162e21dde958944697754f8c35a4",
+  "references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests/Services/FcOptimisticReconcilerTests.cs": "0ea991972927350892314aafcaf6a42fa48b1b7cf1eca919f217f9b6319e6310",
+  "docs/read-model-migration.md": "204d78cccef3461185f6ced0705175dd8c7ae7dd1dc28b009fb565082d846cdb",
+  "docs/deployment-guide.md": "ca0a3a791f04357b0be9155de2864e65e71ef9d74ab025bacd064a32648ad9ab",
+  "references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests/Services/DelayedReconcileSubscription.cs": "b9ddfc6124ca2008e71f33c4443f966b9ed1bda3720fb850ad8d46327821ef27",
+  "tests/Hexalith.Parties.UI.Tests/PartiesUiHostCompositionTests.cs": "8aafd010252d432ee1d8b9a86af27885775f859c3cd58c6908778e666e9a3416",
+  "tests/Hexalith.Parties.UI.Tests/DataFreshnessIndicatorTests.cs": "88b44d6dff286e2bf3933bbc5e087ffb2b75c4259db0ca6e41319e55f78ef4f8"
+}

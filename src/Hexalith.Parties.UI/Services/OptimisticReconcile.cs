@@ -55,6 +55,10 @@ public sealed class OptimisticReconcile(
     public async Task ExecuteAsync(OptimisticReconcileRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
 #if HFC_SHARED_UI
         if (services?.GetService(typeof(Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler))
             is Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler shared)
@@ -91,6 +95,7 @@ public sealed class OptimisticReconcile(
                     state == Hexalith.FrontComposer.Contracts.Freshness.FcReconcileState.Degraded ? StatusKind.Degraded : StatusKind.AcceptedProcessing,
                     state == Hexalith.FrontComposer.Contracts.Freshness.FcReconcileState.Saving ? SavingMessage : null),
                 Subscribe = callback => subscription.Subscribe(request.ProjectionKey.ProjectionType, request.ProjectionKey.Tenant, callback),
+                WaitForSubscriptionAsync = PartiesProjectionSubscription.WaitUntilReadyAsync,
                 IsConnected = () => subscription.IsConnected,
                 RunFallback = fallback.RunAsync,
                 ReadFailed = () => OptimisticReconcileLog.ReadFailed(logger),
@@ -101,111 +106,220 @@ public sealed class OptimisticReconcile(
 
         _ = services;
         request.ApplyOptimistic();
-        request.Announce(StatusKind.AcceptedProcessing, SavingMessage); // polite, no focus steal
-
-        CommandAcceptance acceptance;
-        try
+        request.Announce(StatusKind.AcceptedProcessing, SavingMessage);
+        using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        CancellationToken token = lifetime.Token;
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        // Serializing asynchronous reads fences simultaneous confirmations and late responses.
+        // The gate remains reachable by a captured late callback, so it is intentionally not disposed.
+        var gate = new SemaphoreSlim(1, 1);
+        bool done = false;
+        bool accepted = false;
+        bool commandStarted = false;
+        int pendingConfirmation = 0;
+        async Task TryReconcileAsync(CancellationToken ignored)
         {
-            acceptance = await request.IssueCommand(cancellationToken).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            // User-initiated cancellation (navigated away / component disposed) — abandoned. Drop silently:
-            // no revert-announce, no UI failure state. (The Story 1.6 FromException user-cancel contract.)
-            return;
-        }
-        catch (PartiesClientException pce)
-        {
-            request.Revert();
-            request.Announce(StatusPresentation.FromClientException(pce), pce.Detail ?? pce.Title);
-            return;
-        }
-        catch (Exception ex)
-        {
-            // An un-requested cancellation/timeout reaches here → TransientFailure (assertive).
-            request.Revert();
-            request.Announce(StatusPresentation.FromException(ex), ex.Message);
-            return;
-        }
-
-        if (!acceptance.IsAccepted)
-        {
-            request.Revert();
-            request.Announce(acceptance.FailureStatus, acceptance.FailureReason);
-            return;
-        }
-
-        await ReconcileAsync(request, cancellationToken).ConfigureAwait(false);
-    }
-
-    private async Task ReconcileAsync(OptimisticReconcileRequest request, CancellationToken cancellationToken)
-    {
-        int reconciled = 0; // one-shot guard
-        var confirmed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        async Task TryReconcileAsync(CancellationToken ct)
-        {
-            if (Volatile.Read(ref reconciled) == 1)
-            {
-                return; // already reconciled — a duplicate/late confirm is a no-op (AC3)
-            }
-
-            ProjectionFreshnessStatus status;
-            try
-            {
-                status = await request.Reconcile(ct).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            if (!Volatile.Read(ref commandStarted))
             {
                 return;
             }
-            catch (Exception ex)
+            if (!Volatile.Read(ref accepted))
             {
-                logger.LogWarning(ex, "Reconcile re-read failed; will retry on the next confirm/poll.");
-                return;
-            }
-
-            if (status == ProjectionFreshnessStatus.Current)
-            {
-                if (Interlocked.CompareExchange(ref reconciled, 1, 0) == 0)
+                Interlocked.Exchange(ref pendingConfirmation, 1);
+                if (!Volatile.Read(ref accepted))
                 {
-                    request.Announce(StatusKind.AcceptedProcessing, null); // reconciled — polite
-                    _ = confirmed.TrySetResult();
+                    return;
                 }
             }
-            else
+            try
             {
-                request.Announce(StatusKind.Degraded, null); // freshness not Current — polite degraded indicator
+                await gate.WaitAsync(token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                return;
+            }
+
+            try
+            {
+                if (done || token.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                ProjectionFreshnessStatus freshness;
+                try
+                {
+                    freshness = await request.Reconcile(token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (token.IsCancellationRequested)
+                {
+                    return;
+                }
+                catch (Exception)
+                {
+                    if (!token.IsCancellationRequested)
+                    {
+                        OptimisticReconcileLog.ReadFailed(logger);
+                    }
+                    return;
+                }
+
+                if (token.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                if (freshness == ProjectionFreshnessStatus.Current)
+                {
+                    done = true;
+                    request.Announce(StatusKind.AcceptedProcessing, null);
+                    completion.TrySetResult();
+                }
+                else
+                {
+                    request.Announce(StatusKind.Degraded, null);
+                }
+            }
+            catch (Exception exception)
+            {
+                // Subscription callbacks are fire-and-forget; deliver callback faults to
+                // the operation owner so it can terminate and dispose the subscription.
+                done = true;
+                completion.TrySetException(exception);
+            }
+            finally
+            {
+                gate.Release();
             }
         }
 
-        using IDisposable handle = subscription.Subscribe(
-            request.ProjectionKey.ProjectionType,
-            request.ProjectionKey.Tenant,
-            () => _ = TryReconcileAsync(cancellationToken));
-
-        using CancellationTokenRegistration registration = cancellationToken.Register(
-            static state => ((TaskCompletionSource)state!).TrySetCanceled(),
-            confirmed);
-
+        IDisposable handle;
         try
         {
-            if (!subscription.IsConnected)
+            handle = subscription.Subscribe(request.ProjectionKey.ProjectionType, request.ProjectionKey.Tenant,
+                () => _ = TryReconcileAsync(token));
+        }
+        catch (Exception exception)
+        {
+            if (!token.IsCancellationRequested)
             {
-                // Disconnected: polling owns the re-read (immediate tick + interval ticks) until Current or reconnect.
-                await fallback.RunAsync(TryReconcileAsync, () => Volatile.Read(ref reconciled) == 1, cancellationToken)
-                    .ConfigureAwait(false);
+                request.Revert();
+                if (exception is PartiesClientException clientException)
+                {
+                    request.Announce(StatusPresentation.FromClientException(clientException), clientException.Detail ?? clientException.Title);
+                }
+                else
+                {
+                    request.Announce(StatusPresentation.FromException(exception), exception.Message);
+                }
             }
-
-            if (Volatile.Read(ref reconciled) == 0)
+            return;
+        }
+        using CancellationTokenRegistration registration = token.Register(() => completion.TrySetCanceled(token));
+        Task polling = Task.CompletedTask;
+        try
+        {
+            CommandAcceptance commandAcceptance;
+            try
             {
-                // Connected (await the SignalR confirm), or the fallback stopped on reconnect (now await the confirm).
-                await confirmed.Task.ConfigureAwait(false);
+                await PartiesProjectionSubscription.WaitUntilReadyAsync(handle, token).ConfigureAwait(false);
+                token.ThrowIfCancellationRequested();
+                Volatile.Write(ref commandStarted, true);
+                commandAcceptance = await request.IssueCommand(token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                return;
+            }
+            catch (Exception exception)
+            {
+                if (token.IsCancellationRequested)
+                {
+                    return;
+                }
+                request.Revert();
+                if (exception is PartiesClientException clientException)
+                {
+                    request.Announce(StatusPresentation.FromClientException(clientException), clientException.Detail ?? clientException.Title);
+                }
+                else
+                {
+                    request.Announce(StatusPresentation.FromException(exception), exception.Message);
+                }
+                return;
+            }
+            if (token.IsCancellationRequested)
+            {
+                return;
+            }
+            if (!commandAcceptance.IsAccepted)
+            {
+                request.Revert();
+                request.Announce(commandAcceptance.FailureStatus, commandAcceptance.FailureReason);
+                return;
+            }
+            Volatile.Write(ref accepted, true);
+            if (Interlocked.Exchange(ref pendingConfirmation, 0) == 1)
+            {
+                await TryReconcileAsync(token).ConfigureAwait(false);
+            }
+            polling = ObserveFallbackAsync();
+            await completion.Task.ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            // Caller abandonment has no failure announcement or focus effect.
+        }
+        finally
+        {
+            try
+            {
+                try
+                {
+                    await lifetime.CancelAsync().ConfigureAwait(false);
+                }
+                finally
+                {
+                    if (handle is IAsyncDisposable asynchronous)
+                    {
+                        await asynchronous.DisposeAsync().ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        handle.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                try
+                {
+                    await polling.ConfigureAwait(false);
+                }
+                finally
+                {
+                    // Even a cancellation or disposal fault must drain every serialized read.
+                    await gate.WaitAsync(CancellationToken.None).ConfigureAwait(false);
+                    gate.Release();
+                }
             }
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+
+        async Task ObserveFallbackAsync()
         {
-            // Circuit teardown / abandonment — stop awaiting reconcile silently.
+            try
+            {
+                // The caller's driver observes connectivity for the whole operation, including reconnects.
+                await fallback.RunAsync(TryReconcileAsync, () => Volatile.Read(ref done), token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+            }
+            catch (Exception exception)
+            {
+                completion.TrySetException(exception);
+            }
         }
     }
 }

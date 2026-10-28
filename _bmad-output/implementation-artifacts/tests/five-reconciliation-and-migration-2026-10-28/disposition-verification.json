@@ -1,0 +1,78 @@
+{
+  "head": "9239c531f3b0cbb4a998c419e537463b597ff14b",
+  "checks": {
+    "obsolete_validator_and_packet_not_tracked": "Pass",
+    "operative_files_do_not_reference_obsolete_validator_or_preview": "Pass",
+    "current_ci_and_pinned_module_tool_identified": "Pass",
+    "tracked_helper_has_no_incorrectly_cased_named_arguments": "Pass",
+    "historical_effective_package_properties_recorded": "Pass"
+  },
+  "helper_last_change": "17290ed694801d3537a62b04b47c10ebab6e775d",
+  "module_tool": {
+    "version": "4.34.0",
+    "commands": [
+      "hexalith-module"
+    ],
+    "rollForward": false
+  },
+  "graph_command": [
+    "dotnet",
+    "msbuild",
+    "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+    "-getProperty:HexalithAspireHostingDaprVersion,HexalithEventStoreVersion,HexalithFrontComposerVersion"
+  ],
+  "graph": {
+    "Properties": {
+      "HexalithAspireHostingDaprVersion": "13.6.2-beta.959",
+      "HexalithEventStoreVersion": "3.128.3",
+      "HexalithFrontComposerVersion": "4.7.1"
+    }
+  },
+  "input_sha256": {
+    ".config/dotnet-tools.json": "3ea51c6666d76ce2fb01f62b93f65aaccbc70689d460b4fea8b72a5cb29df535",
+    ".github/workflows/ci.yml": "bb663fad972e4004ec7365d3d5d9cc54817aad1ec3912ef85d1a1e63e50a80d9",
+    ".github/workflows/codeql.yml": "88f255bb454ff42f9ec10abd27c94767ad862e2cee9024318286fa0fb5d77149",
+    ".github/workflows/commitlint.yml": "e29c9d9593d5d085c7a9de8298f3379fe01fd484e9366391fcc44e93befe5061",
+    ".github/workflows/dependency-review.yml": "eba834c9902d4ac766e5685d66ba07963a8781018bb98d4bd49b5be67349cd6b",
+    ".github/workflows/rc-gate.yml": "88d4de2dbb61559fcd19e460e4c12e34d93c340ce02f646c8eb59d38420bc5a3",
+    ".github/workflows/release.yml": "a3ac1dacfcb245b787e92faf7b4473dd0cace616ed0509a8a54f7778f879b74a",
+    "Directory.Build.props": "bf62c34f8c128c9782cf04bc1e74cbcf60d792052cc41938e19472c2faf76ecb",
+    "Directory.Build.targets": "47c78eccee132867be6a3ea5f2f7adc4b60b36dd5c622fc2ac7e9a200e931fec",
+    "Directory.Packages.props": "0ba2bea0017e61b644f56e170604fe4e73a77fc6db7bec5e254dac4fa0ae6bd5",
+    "global.json": "4ec97d7c7e6bee864d2da2c965f18b94b0bd84e71058427f1f6fa69ee6824652",
+    "module/hexalith.module-manifest.v2.json": "0fd4457a1801fa13053ef8821eb16a0cfcc6a5edac94b6ce89e8f220e8a30511",
+    "scripts/aspire-start-mtls.sh": "5d83698c9707c37fbb9c25c3661ea5a13c1e90505957332587aad5fc32615f30",
+    "scripts/check-no-warning-override.sh": "b900928ff13a745607836cff10c06c34fa718303237f9600dc7dc9da9b556d6e",
+    "scripts/gitlink-rc-gate.sh": "0e4cf9b81b01ae5bd462d4832b234c3c64e48c32ab810a571530d54f91a21dfc",
+    "scripts/msbuild_properties.py": "988d9241f276c2dd80fd7d5dba7df7dfbf0af01ef4c1e021d79d70eaaf83528e",
+    "scripts/pack-release-packages.py": "7aacf6036fdd1f430b708a1b4b9bad53161aec206735f5f263a869552691cb10",
+    "scripts/prepare-aspire-https-trust.sh": "841cf3950c970f45006360c548b2fec18607903f1d5556c6383fc78f36bff1cd",
+    "scripts/prepare-aspire-runtime-hosts.sh": "e54e666da06da02d8c67d9f8c3cf22ce7beb7926594f06a82c0219d10393306b",
+    "scripts/prepare-aspire-tier.sh": "aeaca1af0f8c6df2f41564b702dd8ea7dfdaabc71ecc2490119076710d443246",
+    "scripts/publish-parties-containers.ps1": "62a54411630c864a08c9833728fd7a63faa6fbc1057c9f94155e94696daaa7bf",
+    "scripts/render-platform-declaration.py": "1e00654ef278bdeb19c239f5a4f273c54aa071d32f926df4bc009dc982b0c4f6",
+    "scripts/test.ps1": "97bc28e5f995ce192e67b141842911c055d912590b4c7a8ca724f4af52f5283f",
+    "scripts/test_platform_declaration.py": "4284cc6c075720c08969d96af89350cec2f67c344d23dac032b6b300fe77f904",
+    "scripts/test_verify_eventstore_publish.py": "a16a11e47b1a74a97e186bb2a07e0dcffbeb8492b0a8c0c2e32991efd7080226",
+    "scripts/validate-consumer-package-references.py": "760609d813260b478df4db87c9c6da764355f84f7e84c68d94f009d4b21c1104",
+    "scripts/validate-nuget-packages.py": "9bcbd131a7bf1d6844b61ac05dcbe793da8a460630d3d2d0175b1f6e0c50a5f5",
+    "scripts/validate-publication-preflight.sh": "775c0fcd30b99dc182f84ea3d13d46d58ed012d6c4438e9f283e4984345a07f9",
+    "scripts/validate-release-secrets.sh": "1e5fe1005ce24f29eaf633c1431dd54cb1a553115aa946638b54b96f63ed5418",
+    "scripts/verify-eventstore-publish.py": "40105cf7068c7af15dc40c71dd098e098d4cd172b4d859e089221fb6208cb434",
+    "scripts/verify-release-publication.py": "f307f9b7751c5efd0ed7db0d40062daa10b7c7abfdd26069ffbc8377423dd7a3",
+    "tests/Hexalith.Parties.IntegrationTests/Identity/TestOnlyIdentityHistoryCustody.cs": "d37af45150aa3b222491b25e256982037790bafc51f2a0aa8f3e9e57be6b7add",
+    "references/Hexalith.Builds/Props/Directory.Packages.props": "f9c97805fe540f17277f0d96f16a92b5f595f24c0f059c7a2c864abe8a6c1fb5"
+  },
+  "limits": "Operative and helper inputs are checked against current bytes. Only the selected Builds catalog uses its explicitly bound historical snapshot. The snapshot records the preserved dirty catalog used for the original graph observation; it does not qualify the current catalog, source resolver, dependency approvals, packages, topology or deployment, and does not adopt the Builds edit.",
+  "historical_inputs": {
+    "references/Hexalith.Builds/Props/Directory.Packages.props": {
+      "snapshot": "historical-inputs/f9c97805fe540f17277f0d96f16a92b5f595f24c0f059c7a2c864abe8a6c1fb5.catalog",
+      "sha256": "f9c97805fe540f17277f0d96f16a92b5f595f24c0f059c7a2c864abe8a6c1fb5",
+      "owner_repository": "references/Hexalith.Builds",
+      "owner_head": "3d7f49a5430294da5bcd437cbdace85c62c42027",
+      "owner_index_blob": "39a1ff74938c2ca51763f0301c42bda6c4f460f5",
+      "scope": "Exact observed dirty catalog used for the historical effective-property observation only. This snapshot does not qualify the current catalog or source resolver and does not adopt the Builds edit."
+    }
+  },
+  "graph_scope": "Historical observation bound to historical_inputs; not a new evaluation of the current catalog."
+}

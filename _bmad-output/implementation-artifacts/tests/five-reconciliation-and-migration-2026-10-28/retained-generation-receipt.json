@@ -1,0 +1,47 @@
+{
+  "command": [
+    "dotnet",
+    "run",
+    "--file",
+    "/tmp/five-reconciliation-retained-map-20261028/RegenerateSourceMapping.cs",
+    "--",
+    "/home/administrator/.nuget/packages/hexalith.builds.module.cli/4.34.0/tools/net10.0/any",
+    "/home/administrator/projects/hexalith/parties/module/hexalith.module-manifest.v2.json",
+    "/tmp/five-reconciliation-retained-map-20261028",
+    "/tmp/five-reconciliation-retained-map-20261028/retained-mapping-input.json"
+  ],
+  "selection": "retained producer input",
+  "tool_version": "4.34.0",
+  "tooling_sha256": "5909d7434096a3f01639ed4d0a4f88839d5b468a91f842ff901dfef4b5ca3433",
+  "configuration_sha256": "1b0728eb458f4c74cb0ec1992067dc4d191a337988af5d79811b27f192981018",
+  "generator_sha256": "493f3de7e6989fd72f18e19fc98c150192bba769c7338c7642ed598d25954b76",
+  "generated_sha256": {
+    "source-mapping/SourceMapping.final.targets": "ef5249bcf20892cf7d0fdb686612a7dff83a0ef14de00fb559218db01394f8b3",
+    "source-mapping/SourceMapping.before-targets.props": "cbc02e3b75a62511111d9b2759727c9423383bec5e83d765a0cba923df18e487",
+    "source-mapping/mapping.json": "d89c9cc9fab00c60071e5575e801d7f66e292676d05e7d9110a122d3625d448c",
+    "source-mapping/SourceMapping.values.props": "eba8cfad7314e11d77c3cb30b0422fb54e56272e0f045006cc7dc170a7442862",
+    "source-mapping/SourceMapping.late.props": "48783c8b4743a45e8969ec6ad89d1cc9a6aa96e837c669ee63cea446588663dd",
+    "source-mapping/catalog-versions.json": "5c3765c5c11207e58851cd6918ff204c5272d5ae779c5c1dd84dfdaac0ef74e9",
+    "source-mapping/SourceMapping.targets": "2003f8e38ea72f43549502cda1191d1272eea5a84bbebb534d84ee97c97618ff",
+    "source-mapping/SourceMapping.values.targets": "984d4e4befefd99d81347ab13d5ef85b02608bf67f2330bdcd2d9df68be8b341",
+    "source-mapping/__HXW_DefaultCatalog__.proj": "06977d8f9948491af15264c38207d626e35536767ba97ebf7b8308a1cbc3aaf9",
+    "source-mapping/Hexalith.Folders.Aspire.proj": "06977d8f9948491af15264c38207d626e35536767ba97ebf7b8308a1cbc3aaf9",
+    "source-mapping/SourceMapping.props": "0363694f252736cdfd0bcf6a567bb077940df16cc966e410153718a552769e82",
+    "source-mapping/pinned-tree/Props/Directory.Packages.props": "48b3abca2eb67bc09bde33f3f0203e10fbca810614d0582852be4ab54294dc9d"
+  },
+  "archived_inputs": {
+    "generator": {
+      "path": "retained-materializer/RegenerateSourceMapping.cs",
+      "sha256": "493f3de7e6989fd72f18e19fc98c150192bba769c7338c7642ed598d25954b76"
+    },
+    "mapping_input": {
+      "path": "retained-materializer/retained-mapping-input.json",
+      "sha256": "2932acdfef3ad780fef46b053d9dc4bc22b1b313da7cf2ddefbcd28f004f7165"
+    },
+    "environment": {
+      "path": "retained-source-environment.json",
+      "sha256": "32db8c01e26bc991e2cc1ff129a40ab35ce2619ef221f80bf4808fbcb3e04917"
+    }
+  },
+  "reconstruction_limits": "Exact bytes replay at recorded source roots using the pinned 4.34.0 materializer. Fresh resolver qualification remains blocked; relocating source roots requires a newly admitted producer mapping."
+}

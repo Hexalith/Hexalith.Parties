@@ -1,0 +1,42 @@
+[
+  {
+    "name": "post-rebase-producer-build",
+    "command": [
+      "python3",
+      "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/build-source.py",
+      "--workspace",
+      "/tmp/five-reconciliation-retained-map-20261028",
+      "--cwd",
+      "references/Hexalith.FrontComposer",
+      "--",
+      "dotnet",
+      "build",
+      "tests/Hexalith.FrontComposer.Shell.Tests/Hexalith.FrontComposer.Shell.Tests.csproj",
+      "-c",
+      "Debug",
+      "-m:1"
+    ],
+    "exit_code": 0,
+    "log": "post-rebase-producer-build.txt",
+    "log_sha256": "67b3167afe2b2436e8372907d00aa25ec88cce0623c704ada68d17bb18ce4536"
+  },
+  {
+    "name": "post-rebase-producer-tests",
+    "command": [
+      "dotnet",
+      "references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests/bin/Debug/net10.0/Hexalith.FrontComposer.Shell.Tests.dll",
+      "-class",
+      "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests",
+      "-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-reconciliation-and-migration-2026-10-28/post-rebase-producer-tests.xml"
+    ],
+    "exit_code": 0,
+    "log": "post-rebase-producer-tests.txt",
+    "log_sha256": "ac4b3cac8f08df31ffc36476bee79f008ac18c642fdb7602f163d12f976c46e6",
+    "xml": "post-rebase-producer-tests.xml",
+    "xml_sha256": "889b73fd5e7a18952e2ab44eb56994838bb703caeec0e75e3eaa755c4e3a6910",
+    "results": {
+      "Pass": 27
+    }
+  }
+]

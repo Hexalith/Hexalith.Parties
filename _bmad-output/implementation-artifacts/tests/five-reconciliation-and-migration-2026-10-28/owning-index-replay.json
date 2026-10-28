@@ -1,0 +1,13 @@
+{
+  "result": "Pass",
+  "input_count": 94,
+  "checkout_filters": "git cat-file --filters from each owning index",
+  "matrix": {
+    "Early confirmation": "Pass",
+    "Repeated disconnect": "Pass",
+    "Backfill": "Pass",
+    "Unsafe backfill": "Pass",
+    "Stale reports": "Pass"
+  },
+  "scope": "Live task source/operative inputs plus explicitly archived historical catalog; no dependency adoption or current resolver qualification."
+}

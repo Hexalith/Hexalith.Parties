@@ -413,6 +413,11 @@ source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk
 reason: Story File List deletes actor projection paths without an AppHost/deploy cutover that migrates existing actor state into SDK keys.
 status: open
 
+implementation_2026_10_28: Six synthetic actor-to-SDK rehearsal controls now execute the actual SDK detail/shared rebuild protocols, recreate stores/workloads, inspect persisted detail/processing/index and preserve actor/foreign-tenant bytes. Incomplete/unreadable history and competing canonical writes refuse publication. A discovered shared-index Commit/Verify identity conflict is fixed by retaining the admitted conditional write policy. The migration handoff documents source-head/key completeness, writer drain, erasure, verification and rollback.
+remaining_gate_2026_10_28: DW-58 remains open. In-memory persistence/source protocol evidence does not qualify a deployed provider, production capture, writer drain, runtime authorization or cutover.
+verification_2026_10_28: `tests/five-reconciliation-and-migration-2026-10-28/`; `docs/read-model-migration.md`.
+
+
 ### DW-59: Preserve mappings when unit ID and source URI match different rows
 
 status: done 2026-10-18
@@ -949,7 +954,10 @@ origin: Story 8.10 Round 6 ledger normalization (2026-10-04); preserved package-
 location: scripts/validate-runtime-toolchain-evidence.py and the runtime-toolchain evidence schema/baseline
 source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-dotnet-10-0-401-and-submodules.md`
 reason: The validator/schema/baseline expect 13.5.0-preview.1.260825-0345; the selected CommunityToolkit.Aspire.Hosting.Dapr is now 13.6.0-preview.1.261001-0243. Coordinated packet regeneration is required to qualify the current catalog.
-status: open
+status: done 2026-10-28
+resolution_2026_10_28: The specifically named validator/schema/baseline and obsolete preview references are absent from current tracked operative tooling. Current CI delegates to the shared domain workflow and validates declarations through the pinned module tool; the effective catalog is evaluated independently. This obsolete-packet report is inapplicable to the current repository. No retired validator was restored and no runtime/package qualification was inferred. The separate current source-map identity/catalog/tool-version blockers remain recorded.
+verification_2026_10_28: `tests/five-reconciliation-and-migration-2026-10-28/disposition-verification.json` and reproducible `verify-dispositions.py`.
+
 
 ### DW-127: Align ineligible identity resolver and client replies
 
@@ -1891,6 +1899,10 @@ review1_2026_10_25: Review-1 native TAG queries retain discovered obligations wi
   summary: Correct named-argument casing in the concurrent identity-history test helper (medium, external work).
   evidence: Review R3-E4; The untracked tests/Hexalith.Parties.IntegrationTests/Identity/TestOnlyIdentityHistoryCustody.cs uses pending/destroyed/acknowledged against UnitStatus Pending/Destroyed/Acknowledged. Excluded from this build and preserved for its active owner.
 
+  status: done 2026-10-28
+  resolution: Already corrected in tracked main at `17290ed694801d3537a62b04b47c10ebab6e775d`: UnitStatus construction uses positional arguments. A fresh actual IntegrationTests Debug build and the persisted identity verifier controls qualify this bounded compiler/helper report; no custody backend or Live acceptance is implied.
+  verification: `tests/five-reconciliation-and-migration-2026-10-28/`; `spec-five-reconciliation-and-migration-deferred-items.md`.
+
 - source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
   summary: Make corrupt retry pruning and backlog trimming conditional on the selected payload or score (medium, pre-existing).
   evidence: Review R4-B10; baseline cdd73d7 removes selected queue members/hash fields without checking the observed bytes or score, so a concurrently replaced valid payload can be deleted. Qualify interleaved replacement through both pruning and trim paths; atomic type preflight does not settle selection freshness.
@@ -1940,6 +1952,30 @@ verification_final: `tests/five-processing-and-memories-erasure-2026-10-25/`; sp
   summary: Reconciliation can miss a confirmation delivered before subscription registration.
   evidence: Both retained Parties ReconcileAsync and the extracted producer subscribe after IssueCommand; a fast projection confirmation then produces no read until another signal.
 
+  status: done 2026-10-28
+  resolution: Parties and FrontComposer now establish transport readiness before dispatch, buffer confirmations until acceptance and drain registration on rejection/cancellation. Delayed registration, an only-early confirmation, no-confirm old-Current, rejection and cancellation controls pass in retained/mapped/producer lanes. Source implementation is complete; matching FrontComposer package publication/adoption and G4 acceptance remain separate open gates.
+  verification: `tests/five-reconciliation-and-migration-2026-10-28/`; `spec-five-reconciliation-and-migration-deferred-items.md`.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-frontcomposer-ui-deferred-items.md`
   summary: Reconciliation does not re-enter polling after a connected subscription later disconnects.
   evidence: Both retained Parties ReconcileAsync and the extracted producer inspect connectivity once; later disconnect leaves completion waiting until cancellation or another confirmation.
+
+  status: done 2026-10-28
+  resolution: The operation keeps connectivity observation active through reconnects, serializes re-reads and drains polling/timers/subscriptions at completion or cancellation. Repeated disconnect/reconnect controls pass in retained, mapped and producer lanes. The producer callback contract and Parties driver now require observation for the full operation lifetime. Matching package publication/adoption and deployed qualification remain separate.
+  verification: `tests/five-reconciliation-and-migration-2026-10-28/`; `spec-five-reconciliation-and-migration-deferred-items.md`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-reconciliation-and-migration-deferred-items.md`
+  summary: Correlate projection confirmations and Current reads with the accepted command or aggregate checkpoint.
+  evidence: Review BH-01: existing tenant/projection-only notifications can originate from another party while a queried old model reports Current. Qualify a command/version witness through the transport and query callback before claiming per-command causal confirmation; the new readiness buffer preserves the existing signal semantics.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-reconciliation-and-migration-deferred-items.md`
+  summary: Observe brief disconnect/reconnect transitions and recover confirmations lost entirely between polling ticks.
+  evidence: Review BH-02/EC-01: existing IsConnected-only interval sampling sees neither edge when an outage fits between ticks. Add an owner-supported transition/catch-up seam and deterministic sub-interval outage proof; long recurring-disconnect sampling is qualified separately.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-reconciliation-and-migration-deferred-items.md`
+  summary: Retry a stale or failed reconciliation read after its sole observed confirmation while the transport stays connected.
+  evidence: Review BH-03: baseline and current connected paths retry only on another confirmation; a lone stale/error read can remain pending after the model catches up. Qualify bounded retry semantics without mistaking unrelated old Current data for the accepted command.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-reconciliation-and-migration-deferred-items.md`
+  summary: Provide cancellation-aware projection subscription and removal before claiming bounded teardown under stalled transport RPCs.
+  evidence: Review BH-08: the existing IProjectionStream/EventStoreSignalRClient SubscribeAsync and UnsubscribeAsync surfaces provide no cancellation token, and the producer JoinGroup/LeaveGroup invocations are uncancellable. Current owned draining waits for them; synthetic delayed tests release them explicitly. Require owner-supported cancellation with no late callback registration and an actual stalled-RPC control before claiming bounded operation/circuit shutdown.

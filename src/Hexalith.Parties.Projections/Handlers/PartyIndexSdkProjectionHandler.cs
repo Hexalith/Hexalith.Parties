@@ -340,14 +340,21 @@ public sealed partial class PartyIndexSdkProjectionHandler(
         return removed && !TryGetSearchEntry(latest, partyId, out _);
     }
 
-    public Task<DomainSharedProjectionRebuildCandidate> CreateEmptyCandidateAsync(
+    public async Task<DomainSharedProjectionRebuildCandidate> CreateEmptyCandidateAsync(
         DomainSharedProjectionRebuildIdentity identity,
         CancellationToken cancellationToken)
     {
         Validate(identity);
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(ToCandidate(new PartyIndexRebuildCandidate(
-            new PartyIndexSdkReadModel(), new PartyProjectionRebuildDiagnostics())));
+        ReadModelEntry<PartyIndexSdkReadModel> current = await readModelStore.GetAsync<PartyIndexSdkReadModel>(
+            RebuildStoreName, PartySdkReadModelAddresses.Index(identity.TenantId), cancellationToken).ConfigureAwait(false);
+        // The SDK reconstructs this plan for Stage, Commit and Verify. Its original concurrency
+        // must survive publication; rereading the committed ETag would change the batch identity.
+        ReadModelBatchConcurrency concurrency = current?.ETag is { Length: > 0 } etag
+            ? ReadModelBatchConcurrency.Match(etag)
+            : ReadModelBatchConcurrency.CreateOnly;
+        return ToCandidate(new PartyIndexRebuildCandidate(
+            new PartyIndexSdkReadModel(), new PartyProjectionRebuildDiagnostics(), concurrency));
     }
 
     public Task<DomainSharedProjectionRebuildCandidate> AccumulateAsync(
@@ -414,9 +421,11 @@ public sealed partial class PartyIndexSdkProjectionHandler(
         byte[] completionState = JsonSerializer.SerializeToUtf8Bytes(
             new PartyIndexSearchRebuildManifest(rebuiltEntries, removedPartyIds, rebuildState.Diagnostics),
             s_candidateJsonOptions);
-        ReadModelBatchConcurrency concurrency = current?.ETag is { Length: > 0 } etag
+        // Legacy staged candidates did not capture publication concurrency. Preserve their
+        // compatibility path; newly created sessions keep the admitted conditional policy.
+        ReadModelBatchConcurrency concurrency = rebuildState.Concurrency ?? (current?.ETag is { Length: > 0 } etag
             ? ReadModelBatchConcurrency.Match(etag)
-            : ReadModelBatchConcurrency.CreateOnly;
+            : ReadModelBatchConcurrency.CreateOnly);
         return new DomainProjectionRebuildPlan(
             RebuildStoreName,
             [ReadModelBatchOperation.Write(
@@ -750,6 +759,7 @@ public sealed partial class PartyIndexSdkProjectionHandler(
             PartyIndexRebuildCandidate? state = JsonSerializer
                 .Deserialize<PartyIndexRebuildCandidate>(candidate.State.Span, s_candidateJsonOptions);
             return state is { Model: not null, Diagnostics: not null } && HasValidDictionaries(state.Model)
+                && (state.Concurrency is null || state.Concurrency is { Mode: ReadModelBatchConcurrencyMode.ExpectedETag, ExpectedETag: not null })
                 ? state
                 : throw new InvalidOperationException("The shared Party index rebuild candidate is empty or malformed.");
         }

@@ -1,0 +1,60 @@
+{
+  "scope": "Evidence-only correction. No runtime/project builds, staging, commits, real Builds-file changes or dependency adoption.",
+  "commands": [
+    {
+      "command": [
+        "python3",
+        "_bmad-output/implementation-artifacts/tests/five-reconciliation-and-migration-2026-10-28/test_audit_matrix.py"
+      ],
+      "exit_code": 0,
+      "output": "catalog-snapshot-audit-tests.txt",
+      "sha256": "8844f38d9d07a38cecebd64a0b2dfe4ef4bbc630bad0b6b85726d7ddfc7977c9"
+    },
+    {
+      "command": [
+        "python3",
+        "-O",
+        "_bmad-output/implementation-artifacts/tests/five-reconciliation-and-migration-2026-10-28/test_audit_matrix.py"
+      ],
+      "exit_code": 0,
+      "output": "catalog-snapshot-audit-optimized-tests.txt",
+      "sha256": "6ecfa178d61c6e571876c7ee74dbe27f8d0affb007f424443cbbf2f5c250a982"
+    },
+    {
+      "command": [
+        "python3",
+        "_bmad-output/implementation-artifacts/tests/five-reconciliation-and-migration-2026-10-28/verify-dispositions.py"
+      ],
+      "exit_code": 0,
+      "output": "catalog-snapshot-dispositions-reproduction.json",
+      "sha256": "15ceab16d5d1bd189d68a5f975dd363b67e61bcd10ad2c5ab4a74a6aa7979336"
+    },
+    {
+      "command": [
+        "python3",
+        "_bmad-output/implementation-artifacts/tests/five-reconciliation-and-migration-2026-10-28/audit-matrix.py"
+      ],
+      "exit_code": 0,
+      "output": "matrix-audit.json",
+      "sha256": "815c0567ad257434044b71eada68402ff30bdba6679ddc8678b4393d5074e90d"
+    }
+  ],
+  "disposition_reproduction_identical": true,
+  "historical_catalog": {
+    "snapshot": "historical-inputs/f9c97805fe540f17277f0d96f16a92b5f595f24c0f059c7a2c864abe8a6c1fb5.catalog",
+    "sha256": "f9c97805fe540f17277f0d96f16a92b5f595f24c0f059c7a2c864abe8a6c1fb5",
+    "owner_repository": "references/Hexalith.Builds",
+    "owner_head": "3d7f49a5430294da5bcd437cbdace85c62c42027",
+    "owner_index_blob": "39a1ff74938c2ca51763f0301c42bda6c4f460f5",
+    "scope": "Exact observed dirty catalog used for the historical effective-property observation only. This snapshot does not qualify the current catalog or source resolver and does not adopt the Builds edit."
+  },
+  "owning_index_checkout_catalog_sha256": "d38ec29c6b793ccdac8a48a83d2523ef53e62fb6324b61d9f0f7f2803cbff6cc",
+  "real_builds_catalog_and_index_preserved": true,
+  "source_sha256": {
+    "verify-dispositions.py": "a8e4e54d47904ea4aea15caa5926a04e9052de53bf344dba37a3b7d5ccfb33ee",
+    "audit-matrix.py": "0ff51a7a5990af097ef9cff2611dd083f59518d569c9597fe3cd7e1887f9849d",
+    "test_audit_matrix.py": "2b35de4473c5c60462b5b1934e32436dc5087dfda8624e4a056755a6952d8fa0",
+    "disposition-verification.json": "2b582b2de4279f0f58c3a2e25f5b46c05fd4c50e4766cec828dcda430d3c7206",
+    "README.md": "aa384b9b3bc3e1f7ab94983c7e3b226ec2aee2b1edb8f889def24e554189448e"
+  }
+}

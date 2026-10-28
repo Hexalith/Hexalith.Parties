@@ -7,7 +7,7 @@ namespace Hexalith.Parties.UI.Services;
 /// per-screen polling"). The optimistic-reconcile primitive uses it while the SignalR stream is
 /// <strong>not</strong> connected: it invokes the supplied reconcile re-read on a configurable interval
 /// (<c>Parties:Freshness:PollingIntervalSeconds</c>, default 30&#160;s) and stops as soon as the operation
-/// completes, the stream reconnects, or the token cancels.
+/// completes or the token cancels. Connection observation continues across reconnects.
 /// </summary>
 /// <remarks>
 /// <strong>Testability.</strong> Time comes from the injected <see cref="TimeProvider"/> (a Singleton in the
@@ -21,8 +21,8 @@ public sealed class ProjectionFreshnessFallback(
 {
     /// <summary>
     /// Polls <paramref name="onPoll"/> every interval while the stream is disconnected, starting with an
-    /// <strong>immediate</strong> first poll. Returns when <paramref name="isDone"/> is satisfied, the
-    /// stream reports <see cref="IProjectionStream.IsConnected"/>, or <paramref name="ct"/> cancels.
+    /// <strong>immediate</strong> first poll. Returns when <paramref name="isDone"/> is satisfied or
+    /// <paramref name="ct"/> cancels. Connected intervals observe connectivity without reading.
     /// </summary>
     /// <param name="onPoll">The reconcile re-read to run each tick.</param>
     /// <param name="isDone">Returns <see langword="true"/> once the caller has reconciled (stop polling).</param>
@@ -34,11 +34,14 @@ public sealed class ProjectionFreshnessFallback(
 
         TimeSpan interval = TimeSpan.FromSeconds(Math.Max(1, options.Value.PollingIntervalSeconds));
 
-        while (!ct.IsCancellationRequested && !isDone() && !stream.IsConnected)
+        while (!ct.IsCancellationRequested && !isDone())
         {
-            await onPoll(ct).ConfigureAwait(false);
+            if (!stream.IsConnected)
+            {
+                await onPoll(ct).ConfigureAwait(false);
+            }
 
-            if (isDone() || stream.IsConnected)
+            if (isDone())
             {
                 return;
             }

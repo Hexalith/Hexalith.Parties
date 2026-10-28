@@ -57,6 +57,8 @@ This command and path describe the current compatibility topology. After the G8
 owner proof and consumer parity gate complete, use the approved platform AppHost
 entry point documented by its owner instead.
 
+Actor-to-SDK read-model cutovers require the [migration rehearsal and handoff](read-model-migration.md). DW-58 remains open until the deployment owner records deployed cutover and rollback proof.
+
 ## Runtime Requirements
 
 The external deployment orchestrator is responsible for:

@@ -3011,6 +3011,22 @@ public sealed class PartySdkProjectionHandlerTests
         result.LastSequenceNumber.ShouldBe(1);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task SharedIndexRebuild_RejectsUnconditionalOrDeletePublicationPolicyAsync(bool deletePolicy)
+    {
+        var store = new InMemoryReadModelBatchStore();
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options);
+        var value = new PartyIndexRebuildCandidate(new PartyIndexSdkReadModel(), new PartyProjectionRebuildDiagnostics(),
+            deletePolicy ? ReadModelBatchConcurrency.IdempotentAbsent : ReadModelBatchConcurrency.LastWrite);
+        var candidate = new DomainSharedProjectionRebuildCandidate(JsonSerializer.SerializeToUtf8Bytes(value, PartiesJsonOptions.Default));
+        await Should.ThrowAsync<InvalidOperationException>(() => handler.FinalizeAsync(
+            CreateSharedRebuildIdentity(), candidate, TestContext.Current.CancellationToken));
+        (await store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"),
+            TestContext.Current.CancellationToken)).Value.ShouldBeNull();
+    }
+
     [Fact]
     public void SharedIndex_IsDeclaredSharedAndAdvertisesOnlyDomainSharedRebuild()
     {
@@ -3225,11 +3241,12 @@ public sealed class PartySdkProjectionHandlerTests
     public async Task SharedIndexRebuild_CompletionReindexesCandidateAndRemovesStaleEntriesAsync()
     {
         IReadModelStore store = CreateStoreSubstitute();
-        // FinalizeAsync reads the pre-rebuild index (still has "stale-party"); by the time
+        // Capture and FinalizeAsync read the pre-rebuild index (still has "stale-party"); by the time
         // CompleteRebuildAsync runs, the rebuild plan's write has already applied and the
         // canonical store no longer has it — CompleteRebuildAsync re-reads fresh to confirm.
         store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>())
             .Returns(
+                new ReadModelEntry<PartyIndexSdkReadModel>(CreateIndex("stale-party"), "etag-1"),
                 new ReadModelEntry<PartyIndexSdkReadModel>(CreateIndex("stale-party"), "etag-1"),
                 new ReadModelEntry<PartyIndexSdkReadModel>(PartyIndexSdkProjectionHandler.Fold(CreateRequest(), current: null), "etag-2"));
         IPartyIndexSearchIndexer searchIndexer = Substitute.For<IPartyIndexSearchIndexer>();

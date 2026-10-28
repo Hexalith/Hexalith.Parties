@@ -1,0 +1,6 @@
+⧗   --- input ---
+fix: await projection readiness before reconciliation
+
+Buffer early confirmations until command acceptance.
+Keep fallback reads gated by connectivity and drain cleanup.
+✔   found 0 problems, 0 warnings

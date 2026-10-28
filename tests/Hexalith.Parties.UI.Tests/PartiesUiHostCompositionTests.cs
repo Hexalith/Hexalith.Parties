@@ -69,9 +69,20 @@ public sealed class PartiesUiHostCompositionTests
             download.ShouldBeNull();
         }
 #else
-        // Package mode cannot register APIs absent from the actually selected package.
-        typeof(Hexalith.FrontComposer.Shell.Components.Layout.FrontComposerShell).Assembly
-            .GetType("Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler").ShouldBeNull();
+        // Package mode retains the adoption fence when a selected package exposes shared APIs.
+        string[] sharedServiceNames =
+        [
+            "Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler, Hexalith.FrontComposer.Shell",
+            "Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService, Hexalith.FrontComposer.Contracts.UI",
+            "Hexalith.FrontComposer.Shell.Services.Downloads.FcBrowserDownloadService, Hexalith.FrontComposer.Shell",
+        ];
+        foreach (string name in sharedServiceNames)
+        {
+            if (Type.GetType(name, throwOnError: false) is { } serviceType)
+            {
+                scope.ServiceProvider.GetService(serviceType).ShouldBeNull();
+            }
+        }
 #endif
     }
 

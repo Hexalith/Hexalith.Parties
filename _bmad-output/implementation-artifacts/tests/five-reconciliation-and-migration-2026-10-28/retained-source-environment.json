@@ -1,0 +1,9 @@
+{
+  "CustomBeforeDirectoryBuildProps": "/tmp/five-reconciliation-retained-map-20261028/source-mapping/SourceMapping.targets",
+  "CustomAfterMicrosoftCommonProps": "/tmp/five-reconciliation-retained-map-20261028/source-mapping/SourceMapping.props",
+  "CustomBeforeDirectoryBuildTargets": "/tmp/five-reconciliation-retained-map-20261028/source-mapping/SourceMapping.before-targets.props",
+  "CustomAfterDirectoryBuildTargets": "/tmp/five-reconciliation-retained-map-20261028/source-mapping/SourceMapping.late.props",
+  "AfterMicrosoftNETSdkTargets": "/tmp/five-reconciliation-retained-map-20261028/source-mapping/SourceMapping.final.targets",
+  "HEXALITH_SOURCE_MAPPING_HASH": "f623f72993733202fb9611a108e00c366ef69c79693717daeb1f1fe090b64e99",
+  "Configuration": "Debug"
+}

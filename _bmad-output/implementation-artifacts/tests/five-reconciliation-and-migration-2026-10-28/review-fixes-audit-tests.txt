@@ -1,0 +1,9 @@
+test_checkout_shaped_audit_has_all_required_inputs_without_ignored_logs (__main__.MatrixAuditTests.test_checkout_shaped_audit_has_all_required_inputs_without_ignored_logs) ... ok
+test_missing_mapped_lane_is_rejected_even_with_retained_cases (__main__.MatrixAuditTests.test_missing_mapped_lane_is_rejected_even_with_retained_cases) ... ok
+test_missing_theory_variant_is_rejected_after_matching_receipt_and_xml (__main__.MatrixAuditTests.test_missing_theory_variant_is_rejected_after_matching_receipt_and_xml) ... ok
+test_mutated_disposition_input_is_rejected_despite_pass_values (__main__.MatrixAuditTests.test_mutated_disposition_input_is_rejected_despite_pass_values) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.056s
+
+OK

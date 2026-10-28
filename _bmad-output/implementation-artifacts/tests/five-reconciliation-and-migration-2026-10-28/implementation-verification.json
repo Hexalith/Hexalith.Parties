@@ -1,0 +1,1777 @@
+{
+  "created_utc": "2026-10-28T09:39:27.749443+00:00",
+  "scope": "Final implementation controls. Earlier logs are historical iterations. No commits, pushes, publication or deployment.",
+  "commands": [
+    {
+      "name": "final-retained-ui-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "log": "review-fixes-retained-ui-build.txt",
+      "exit_code": 0,
+      "log_sha256": "c16d8b4cb3c3ad68c48718ccb3dc6a3f5c036d8e176e8e150a7d0ce3507ae14d"
+    },
+    {
+      "name": "final-retained-ui-tests",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll",
+        "-class",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests",
+        "-class",
+        "Hexalith.Parties.UI.Tests.PartiesProjectionSubscriptionTests",
+        "-class",
+        "Hexalith.Parties.UI.Tests.ProjectionFreshnessFallbackTests",
+        "-xml",
+        "_bmad-output/implementation-artifacts/tests/five-reconciliation-and-migration-2026-10-28/review-fixes-retained-ui-tests.xml"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "log": "review-fixes-retained-ui-tests.txt",
+      "exit_code": 0,
+      "log_sha256": "7c385ba373d6e56b9797b8a7622455d90bcb2d1b41956a885f105157a8895ad2",
+      "xml": "review-fixes-retained-ui-tests.xml",
+      "xml_sha256": "9caebcde42de6f36088d7ae1554db8003c837b2149ea9918047212cde558e9b1",
+      "test_results": [
+        {
+          "name": "Hexalith.Parties.UI.Tests.PartiesProjectionSubscriptionTests.ReconnectReSubscribes_CallbackStillFires_NoDuplicateRegistration",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.PartiesProjectionSubscriptionTests.DisposingHandle_Unsubscribes",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.PartiesProjectionSubscriptionTests.InertWhenNoHubUrl_StillRegistersWithoutThrowing",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.PartiesProjectionSubscriptionTests.Subscribe_RegistersOnTheStream_AndEnsuresStartedOnce",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.PartiesProjectionSubscriptionTests.DisposingWrapper_TearsDownAllSubscriptions",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.DuplicateOrLateConfirm_RunsReconcileExactlyOnce",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ReconcileReadThrowsTransiently_IsRetriedOnTheNextConfirm_NoRevert",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.Rejection_GdprNonAcceptedOutcome_RevertsAndAnnouncesAssertively",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ConcurrentConfirmations_SerializeReads_AndIgnoreLateCurrentAfterCancellation",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.RepeatedDisconnects_ResumePolling_AndCompletionReleasesAllWork",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.SubscriptionAcquisitionFailure_RevertsOnceOrSilentlyAbandonsBeforeDispatch(cancel: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.SubscriptionAcquisitionFailure_RevertsOnceOrSilentlyAbandonsBeforeDispatch(cancel: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.AnnounceNotSteal_OptimisticSignalIsPolite_AndOnlyTheAnnounceDelegateIsUsed",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.Rejection_ClientValidationException_RevertsAndAnnouncesAssertively",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.CleanupCancellationFailureStillAwaitsUnsubscription",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.CancellationDuringDelayedRegistration_DrainsLateRegistrationWithoutFeedback",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.HappyPath_ViaSignalRConfirm_RunsReconcileOnceOnTheConfirm",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.UnrequestedCancellationOrTimeout_MapsToTransientFailureAssertively",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.UserInitiatedCancellation_IsDroppedSilently_NoRevertNoFailure",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.DelayedRegistration_RecoversOnlyEarlyConfirmation_AndDrainsTeardown",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ConnectedOldCurrentWithoutConfirmation_DoesNotReconcileQueuedCommand",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.Cancellation_WhileAwaitingTheSignalRConfirm_DropsSilently_NoRevertNoFailure",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ReconcileReturningNonCurrent_AnnouncesDegradedPolitely_KeepsWaiting_ThenReconcilesOnceWhenCurrent",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ExecuteWaitsForDelayedUnsubscription(cancel: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ExecuteWaitsForDelayedUnsubscription(cancel: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.HappyPath_ViaFreshnessCurrent_AppliesOptimistic_AnnouncesSaving_ThenReconcilesPolitely",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.OfflineConnectionFailure_RetainsAcceptedCommandPollingFallback(transportTimeout: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.OfflineConnectionFailure_RetainsAcceptedCommandPollingFallback(transportTimeout: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.EarlyConfirmationCannotReconcileRejectedOrCancelledCommand(cancel: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.EarlyConfirmationCannotReconcileRejectedOrCancelledCommand(cancel: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.Rejection_TenantWarmingUp403_RevertsAndAnnouncesTenantUnavailablePolitely",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.ProjectionFreshnessFallbackTests.StopsImmediately_WhenAlreadyDone",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.ProjectionFreshnessFallbackTests.PollsWhileDisconnected_ObservesReconnectAndResumesAfterAnotherDisconnect",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.ProjectionFreshnessFallbackTests.Cancellation_StopsThePollLoopCleanly",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.ProjectionFreshnessFallbackTests.DoesNotPoll_WhenAlreadyConnected",
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "name": "final-mapped-ui-build",
+      "command": [
+        "python3",
+        "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/build-source.py",
+        "--workspace",
+        "/tmp/five-reconciliation-retained-map-20261028",
+        "--",
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "log": "review-fixes-mapped-ui-final-build.txt",
+      "exit_code": 0,
+      "log_sha256": "7d14b3aaaa2d7331cd5bbfa9dfa6dd53af65bebf64c59d068d845c19cfbd79bc"
+    },
+    {
+      "name": "final-mapped-ui-tests",
+      "command": [
+        "python3",
+        "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/build-source.py",
+        "--workspace",
+        "/tmp/five-reconciliation-retained-map-20261028",
+        "--",
+        "dotnet",
+        "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll",
+        "-class",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests",
+        "-class",
+        "Hexalith.Parties.UI.Tests.PartiesProjectionSubscriptionTests",
+        "-class",
+        "Hexalith.Parties.UI.Tests.ProjectionFreshnessFallbackTests",
+        "-result-xml",
+        "_bmad-output/implementation-artifacts/tests/five-reconciliation-and-migration-2026-10-28/review-fixes-mapped-ui-tests.xml"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "log": "review-fixes-mapped-ui-tests.txt",
+      "exit_code": 0,
+      "log_sha256": "511419cc754f9019052d89acff5338b6806af99251da92c287cbbf5d50af7014",
+      "xml": "review-fixes-mapped-ui-tests.xml",
+      "xml_sha256": "c9b769bd0b8fd22cd8f275080ed022a2cc201e37496f2eac5c92064e76a26b8b",
+      "test_results": [
+        {
+          "name": "Hexalith.Parties.UI.Tests.PartiesProjectionSubscriptionTests.ReconnectReSubscribes_CallbackStillFires_NoDuplicateRegistration",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.PartiesProjectionSubscriptionTests.DisposingHandle_Unsubscribes",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.PartiesProjectionSubscriptionTests.InertWhenNoHubUrl_StillRegistersWithoutThrowing",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.PartiesProjectionSubscriptionTests.Subscribe_RegistersOnTheStream_AndEnsuresStartedOnce",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.PartiesProjectionSubscriptionTests.DisposingWrapper_TearsDownAllSubscriptions",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.DuplicateOrLateConfirm_RunsReconcileExactlyOnce",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ReconcileReadThrowsTransiently_IsRetriedOnTheNextConfirm_NoRevert",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.Rejection_GdprNonAcceptedOutcome_RevertsAndAnnouncesAssertively",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ConcurrentConfirmations_SerializeReads_AndIgnoreLateCurrentAfterCancellation",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.RepeatedDisconnects_ResumePolling_AndCompletionReleasesAllWork",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.SubscriptionAcquisitionFailure_RevertsOnceOrSilentlyAbandonsBeforeDispatch(cancel: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.SubscriptionAcquisitionFailure_RevertsOnceOrSilentlyAbandonsBeforeDispatch(cancel: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.AnnounceNotSteal_OptimisticSignalIsPolite_AndOnlyTheAnnounceDelegateIsUsed",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.Rejection_ClientValidationException_RevertsAndAnnouncesAssertively",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.CleanupCancellationFailureStillAwaitsUnsubscription",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.CancellationDuringDelayedRegistration_DrainsLateRegistrationWithoutFeedback",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.HappyPath_ViaSignalRConfirm_RunsReconcileOnceOnTheConfirm",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.UnrequestedCancellationOrTimeout_MapsToTransientFailureAssertively",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.UserInitiatedCancellation_IsDroppedSilently_NoRevertNoFailure",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.DelayedRegistration_RecoversOnlyEarlyConfirmation_AndDrainsTeardown",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ConnectedOldCurrentWithoutConfirmation_DoesNotReconcileQueuedCommand",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.Cancellation_WhileAwaitingTheSignalRConfirm_DropsSilently_NoRevertNoFailure",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ReconcileReturningNonCurrent_AnnouncesDegradedPolitely_KeepsWaiting_ThenReconcilesOnceWhenCurrent",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ExecuteWaitsForDelayedUnsubscription(cancel: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ExecuteWaitsForDelayedUnsubscription(cancel: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.HappyPath_ViaFreshnessCurrent_AppliesOptimistic_AnnouncesSaving_ThenReconcilesPolitely",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.OfflineConnectionFailure_RetainsAcceptedCommandPollingFallback(transportTimeout: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.OfflineConnectionFailure_RetainsAcceptedCommandPollingFallback(transportTimeout: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.EarlyConfirmationCannotReconcileRejectedOrCancelledCommand(cancel: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.EarlyConfirmationCannotReconcileRejectedOrCancelledCommand(cancel: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.Rejection_TenantWarmingUp403_RevertsAndAnnouncesTenantUnavailablePolitely",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.ProjectionFreshnessFallbackTests.StopsImmediately_WhenAlreadyDone",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.ProjectionFreshnessFallbackTests.PollsWhileDisconnected_ObservesReconnectAndResumesAfterAnotherDisconnect",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.ProjectionFreshnessFallbackTests.Cancellation_StopsThePollLoopCleanly",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.UI.Tests.ProjectionFreshnessFallbackTests.DoesNotPoll_WhenAlreadyConnected",
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "name": "final-producer-build",
+      "command": [
+        "python3",
+        "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/build-source.py",
+        "--workspace",
+        "/tmp/five-reconciliation-retained-map-20261028",
+        "--cwd",
+        "references/Hexalith.FrontComposer",
+        "--",
+        "dotnet",
+        "build",
+        "tests/Hexalith.FrontComposer.Shell.Tests/Hexalith.FrontComposer.Shell.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "log": "review-fixes-producer-build.txt",
+      "exit_code": 0,
+      "log_sha256": "a0f820c809fdf7fb1ebcafa963c14df60b3dfa1fff4f7f223416ab32f55cbf4b"
+    },
+    {
+      "name": "final-producer-tests",
+      "command": [
+        "dotnet",
+        "references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests/bin/Debug/net10.0/Hexalith.FrontComposer.Shell.Tests.dll",
+        "-class",
+        "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests",
+        "-result-xml",
+        "_bmad-output/implementation-artifacts/tests/five-reconciliation-and-migration-2026-10-28/review-fixes-producer-tests.xml"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "log": "review-fixes-producer-tests.txt",
+      "exit_code": 0,
+      "log_sha256": "be4ad0aabe650c7401a28eae4007174a60580413f0fcebdcd446cab65fbb7adf",
+      "xml": "review-fixes-producer-tests.xml",
+      "xml_sha256": "4b0a89b43d8963a003b8ffbd4773956fee15d08c5af0277efbfc0fc136374c62",
+      "test_results": [
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.ConnectedDirectPollFallbackCannotReadOldCurrent",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.BufferedConfirmationCannotReconcileRejectedOrCancelledCommand(cancel: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.BufferedConfirmationCannotReconcileRejectedOrCancelledCommand(cancel: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.CancellationDuringReadSuppressesLateFeedbackAndDisposes",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.RejectionCallbackFaultPropagatesWithoutSecondRollbackOrFailure(rollbackThrows: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.RejectionCallbackFaultPropagatesWithoutSecondRollbackOrFailure(rollbackThrows: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.ReconcileCallbackFaultTerminatesAndDisposes(callback: \\\"reconciled\\\", connected: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.ReconcileCallbackFaultTerminatesAndDisposes(callback: \\\"degraded\\\", connected: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.ReconcileCallbackFaultTerminatesAndDisposes(callback: \\\"read-failed\\\", connected: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.ReconcileCallbackFaultTerminatesAndDisposes(callback: \\\"reconciled\\\", connected: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.ReconcileCallbackFaultTerminatesAndDisposes(callback: \\\"read-failed\\\", connected: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.ThrowingDisposalStillDrainsFallbackAndActiveRead",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.SimultaneousAndLateConfirmationsCannotApplyTwice",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.RejectionAndCommandFailureRevertOnce(throws: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.RejectionAndCommandFailureRevertOnce(throws: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.DelayedTransportReadinessRecoversWithoutAnotherConfirmation",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.StaleAndRetryableFailureContinueUntilCurrent",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.CommandFaultAfterCallerCancellationAbandonsWithoutFailureFeedback",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.CancellationCallbackFailureStillAwaitsRemovalAndFallback",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.SubscriptionAcquisitionFailureRevertsOnceOrSilentlyAbandonsBeforeDispatch(cancel: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.SubscriptionAcquisitionFailureRevertsOnceOrSilentlyAbandonsBeforeDispatch(cancel: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.FallbackObservesRepeatedDisconnectionsAndIsDrainedAtCompletion",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.ConfirmationDuringCommandIsRecoveredByInitialRead",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.AcceptanceUsesConfirmOrFallbackAndDisposesSubscription(connected: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.AcceptanceUsesConfirmOrFallbackAndDisposesSubscription(connected: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.AsynchronousSubscriptionDisposalIsAwaitedExactlyOnce(cancel: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.FrontComposer.Shell.Tests.Services.FcOptimisticReconcilerTests.AsynchronousSubscriptionDisposalIsAwaitedExactlyOnce(cancel: True)",
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "name": "final-projection-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "log": "final-projection-build.txt",
+      "exit_code": 0,
+      "log_sha256": "d3a88936b0f89043e2f1d371c0f2bf730bcb251c2816e869c41eae9760555839"
+    },
+    {
+      "name": "final-projection-tests",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests",
+        "-xml",
+        "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-reconciliation-and-migration-2026-10-28/final-projection-tests.xml"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "log": "final-projection-tests.txt",
+      "exit_code": 0,
+      "log_sha256": "ec593eca3c0bf274de7b523dba67c4330295716903184ed4de0081cc35e7cd72",
+      "xml": "final-projection-tests.xml",
+      "xml_sha256": "935db28efc011962d84d433913db277959753ae3010b527d5182c2e79a76ad84",
+      "test_results": [
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.Eraser_IndeterminateBatchFailsWithoutIndependentWritesOrSearchSuccessAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.EraserRefusesMissingOrUnresolvedPreparedRecoveryBeforeCanonicalWritesAsync(unresolved: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.EraserRefusesMissingOrUnresolvedPreparedRecoveryBeforeCanonicalWritesAsync(unresolved: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailFold_PartyCreatedAfterErasurePreservesTombstone",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailHandler_DeclaresCanonicalDetailAndProcessingSlots",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_ErasureRemovesOnlyTargetAndPreservesUnrelatedEntryAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.WholePayloadRedaction_IncrementalPersistenceAndRebuildsAgreeAsync(eventTypeName: \\\"PartyDeactivated\\\", payload: \\\"{}\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.WholePayloadRedaction_IncrementalPersistenceAndRebuildsAgreeAsync(eventTypeName: \\\"Future.Events.UnknownEvent\\\", payload: \\\" \\\\r\\\\n{ \\\\t }\\\\n\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.WholePayloadRedaction_IncrementalPersistenceAndRebuildsAgreeAsync(eventTypeName: \\\"Future.Events.UnknownEvent\\\", payload: \\\"null\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.ProcessingActivityFold_AppendsAcrossDeliveries",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SharedIndexRebuild_CompletionReindexesCandidateAndRemovesStaleEntriesAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailRebuildPlan_NormalizesLegacyProcessingCategoryAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryRequiresRebuildWithoutChangingPersistedStateAsync(dictionary: \\\"Entries\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryRequiresRebuildWithoutChangingPersistedStateAsync(dictionary: \\\"LastIndexedEvents\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryRequiresRebuildWithoutChangingPersistedStateAsync(dictionary: \\\"LastSequenceNumbers\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryRequiresRebuildWithoutChangingPersistedStateAsync(dictionary: \\\"ErasureSequenceNumbers\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SharedIndexRebuild_RejectsUnconditionalOrDeletePublicationPolicyAsync(deletePolicy: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SharedIndexRebuild_RejectsUnconditionalOrDeletePublicationPolicyAsync(deletePolicy: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.MalformedEnvelopeCannotBecomeAnEmptyReplacementAsync(json: \\\"{\\\\\\\"model\\\\\\\":null}\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.MalformedEnvelopeCannotBecomeAnEmptyReplacementAsync(json: \\\"{\\\\\\\"model\\\\\\\":null,\\\\\\\"diagnostics\\\\\\\":null}\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.MalformedEnvelopeCannotBecomeAnEmptyReplacementAsync(json: \\\"{\\\\\\\"Model\\\\\\\":null,\\\\\\\"Diagnostics\\\\\\\":null}\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.MalformedEnvelopeCannotBecomeAnEmptyReplacementAsync(json: \\\"{\\\\\\\"model\\\\\\\":{},\\\\\\\"diagnostics\\\\\\\":null}\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailHandler_IdenticalDuplicateSequenceAppliesOnceAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailRebuildPlan_UnresolvedEventFailsWithoutProducingCandidateAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.Eraser_IncompleteBatchResumesWithExactSameAttemptIdentityAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.WholePayloadRedaction_ReplacesPersistedFailedProcessingRecordAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_ErasureNotifiesSearchIndexerRemovedAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.CleanAndEmptyRebuildsHaveNoDropSummaryAsync(empty: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.CleanAndEmptyRebuildsHaveNoDropSummaryAsync(empty: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DeserializeNew_RedactedTailDecodeFailure_LogsRedactedEventDroppedInformationDistinctFromCorrupt",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_DuplicateDeliveryReturnsAlreadyCompletedAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_OptimisticRetryWaitsForNewerCanonicalReplayAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_MixedKnownAndUnresolvedDeliveryLogsUnresolvedDiagnosticAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.ProcessingActivityFold_PreservesEstablishedOperationCategories",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SharedIndexRebuild_AccumulatesCompleteHistoriesIntoOneReplacementAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_RetryAfterSearchFailureReconcilesIdempotentCanonicalWriteAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_ErasureRemovesOnlyTargetProvenanceAndRetainsFenceAsync(sdkCleanup: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_ErasureRemovesOnlyTargetProvenanceAndRetainsFenceAsync(sdkCleanup: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexFold_DuplicateAndOutOfOrderBatchMatchesOrderedReplayWithoutFreshnessDrift",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SharedIndex_IsDeclaredSharedAndAdvertisesOnlyDomainSharedRebuild",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SharedIndexRebuild_SerializedCandidatePreservesLiveCanonicalProvenanceAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryCannotBeAcceptedAsAStagedCandidateAsync(dictionary: \\\"Entries\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryCannotBeAcceptedAsAStagedCandidateAsync(dictionary: \\\"LastIndexedEvents\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryCannotBeAcceptedAsAStagedCandidateAsync(dictionary: \\\"LastSequenceNumbers\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryCannotBeAcceptedAsAStagedCandidateAsync(dictionary: \\\"ErasureSequenceNumbers\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SharedIndexRebuild_ExistingIndexRequiresSnapshotEtagAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailHandler_IncrementalDispatchAcrossTwoDeliveriesMatchesSingleShotRebuildAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexFold_NoOpAfterErasureRetainsTombstoneAndAdvancesSafeCheckpoint",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.ProcessingActivityFold_DecodableRedactedEventKeepsMappedCategory",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.ProcessingActivityFold_ResolvedRedeliveryReplacesFailedRecordWithoutDuplication",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.EraserRejectsCorruptReloadAfterOptimisticConflictAsync(dictionary: \\\"Entries\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.EraserRejectsCorruptReloadAfterOptimisticConflictAsync(dictionary: \\\"LastIndexedEvents\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.EraserRejectsCorruptReloadAfterOptimisticConflictAsync(dictionary: \\\"LastSequenceNumbers\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.EraserRejectsCorruptReloadAfterOptimisticConflictAsync(dictionary: \\\"ErasureSequenceNumbers\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_RetrySnapshotGapStopsBeforeSecondPersistenceAttemptAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.ProcessingActivityFold_ProjectsBoundedMetadataWithoutPersonalPayloadText",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_HistoricalSerializedRowUsesSyntheticProvenanceWithoutRewriteAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailHandler_UnresolvedAuditWriteExhaustsRetryBudgetWithoutCrashingDispatchAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.ConsentRenewal_IncrementalPersistenceReplayAndRebuildConvergeAsync(revokeRenewal: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.ConsentRenewal_IncrementalPersistenceReplayAndRebuildConvergeAsync(revokeRenewal: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_NotifiesSearchIndexerWithLatestEntryAndEventAfterSuccessfulWriteAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailRebuildPlan_ExistingSlotsRequireSnapshotEtagsAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SharedIndexRebuild_CompletionSkipsManifestEntryErasedAfterCommitAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.WholePayloadRedaction_RebuildRepairsHistoricalInactiveReadModelsAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailAndProcessingTombstonesUsePayloadErasureInstantAsync(rebuild: False, offsetHours: 0, envelopeDelayMinutes: 15)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailAndProcessingTombstonesUsePayloadErasureInstantAsync(rebuild: False, offsetHours: 2, envelopeDelayMinutes: -15)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailAndProcessingTombstonesUsePayloadErasureInstantAsync(rebuild: False, offsetHours: -7, envelopeDelayMinutes: 15)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailAndProcessingTombstonesUsePayloadErasureInstantAsync(rebuild: True, offsetHours: 0, envelopeDelayMinutes: 15)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailAndProcessingTombstonesUsePayloadErasureInstantAsync(rebuild: True, offsetHours: 2, envelopeDelayMinutes: -15)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailAndProcessingTombstonesUsePayloadErasureInstantAsync(rebuild: True, offsetHours: -7, envelopeDelayMinutes: 15)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.ProcessingActivityFold_UncategorizedResolvedEventRetainsEventTypeAndOutcome",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_ErasureNotifiesRemovalWhenCanonicalEntryWasAlreadyAbsentAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.CleanupTombstonePreservesCommittedLifecycleAndReplayBackfillsHistoricalRowsAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DeserializeNew_ResolvedTypeDecodesToNullWithoutRedaction_LogsNullPayloadEventDroppedWarning",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryOnOptimisticRetryCannotProduceAnotherWriteAsync(dictionary: \\\"Entries\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryOnOptimisticRetryCannotProduceAnotherWriteAsync(dictionary: \\\"LastIndexedEvents\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryOnOptimisticRetryCannotProduceAnotherWriteAsync(dictionary: \\\"LastSequenceNumbers\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryOnOptimisticRetryCannotProduceAnotherWriteAsync(dictionary: \\\"ErasureSequenceNumbers\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandlerValidatesAggregateSegmentsWithoutBuildingADetailAddressAsync(aggregateId: \\\"\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandlerValidatesAggregateSegmentsWithoutBuildingADetailAddressAsync(aggregateId: \\\"bad:aggregate\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandlerValidatesAggregateSegmentsWithoutBuildingADetailAddressAsync(aggregateId: \\\"bad|aggregate\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandlerValidatesAggregateSegmentsWithoutBuildingADetailAddressAsync(aggregateId: \\\"bad\\\\0aggregate\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandlerValidatesAggregateSegmentsWithoutBuildingADetailAddressAsync(aggregateId: \\\"bad\\\\raggregate\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandlerValidatesAggregateSegmentsWithoutBuildingADetailAddressAsync(aggregateId: \\\"bad\\\\naggregate\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.LargeRebuildCountsOnceAcrossSerializedHandlersAndMatchesPersistedLiveIndexAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_SerializedRetryRetainsCanonicalSelectionAcrossNoOpsAsync(scenario: \\\"rejection\\\", incremental: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_SerializedRetryRetainsCanonicalSelectionAcrossNoOpsAsync(scenario: \\\"rejection\\\", incremental: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_SerializedRetryRetainsCanonicalSelectionAcrossNoOpsAsync(scenario: \\\"deactivation\\\", incremental: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_SerializedRetryRetainsCanonicalSelectionAcrossNoOpsAsync(scenario: \\\"deactivation\\\", incremental: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_SerializedRetryRetainsCanonicalSelectionAcrossNoOpsAsync(scenario: \\\"missing-channel\\\", incremental: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_SerializedRetryRetainsCanonicalSelectionAcrossNoOpsAsync(scenario: \\\"missing-channel\\\", incremental: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_SerializedRetryRetainsCanonicalSelectionAcrossNoOpsAsync(scenario: \\\"missing-identifier\\\", incremental: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_SerializedRetryRetainsCanonicalSelectionAcrossNoOpsAsync(scenario: \\\"missing-identifier\\\", incremental: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_SerializedRetryRetainsCanonicalSelectionAcrossNoOpsAsync(scenario: \\\"display-name\\\", incremental: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_SerializedRetryRetainsCanonicalSelectionAcrossNoOpsAsync(scenario: \\\"display-name\\\", incremental: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_SerializedRetryRetainsCanonicalSelectionAcrossNoOpsAsync(scenario: \\\"same-reference\\\", incremental: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_SerializedRetryRetainsCanonicalSelectionAcrossNoOpsAsync(scenario: \\\"same-reference\\\", incremental: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.PairedLiveReadsStartTogetherAndDoNotWriteUntilBothSucceedAsync(reload: False, outcome: \\\"success\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.PairedLiveReadsStartTogetherAndDoNotWriteUntilBothSucceedAsync(reload: True, outcome: \\\"success\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.PairedLiveReadsStartTogetherAndDoNotWriteUntilBothSucceedAsync(reload: False, outcome: \\\"fault\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.PairedLiveReadsStartTogetherAndDoNotWriteUntilBothSucceedAsync(reload: True, outcome: \\\"fault\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.PairedLiveReadsStartTogetherAndDoNotWriteUntilBothSucceedAsync(reload: False, outcome: \\\"processing-fault\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.PairedLiveReadsStartTogetherAndDoNotWriteUntilBothSucceedAsync(reload: True, outcome: \\\"processing-fault\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.PairedLiveReadsStartTogetherAndDoNotWriteUntilBothSucceedAsync(reload: False, outcome: \\\"cancel\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.PairedLiveReadsStartTogetherAndDoNotWriteUntilBothSucceedAsync(reload: True, outcome: \\\"cancel\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.Eraser_TransformsAreIdempotentAcrossCleanupRetries",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailHandler_DuplicateDeliveryReturnsAlreadyCompletedAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.FullRebuildRefusesUnknownCanonicalErasureEvidenceAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_ConcurrencyRetryRefoldsAndPreservesUnrelatedEntryAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.Eraser_SearchIndexerExceptionDoesNotFailAnAlreadyCommittedBatchAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.AdvancingLiveDeliveryWaitsForEachReadAndPersistsBothCoordinatedSlotsAsync(processingFirst: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.AdvancingLiveDeliveryWaitsForEachReadAndPersistsBothCoordinatedSlotsAsync(processingFirst: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_DecoderCheckpointOnlyRetainsSerializedProvenanceOnRetryAsync(format: \\\"json-redacted\\\", payload: \\\"{}\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_DecoderCheckpointOnlyRetainsSerializedProvenanceOnRetryAsync(format: \\\"json-redacted\\\", payload: \\\"null\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_DecoderCheckpointOnlyRetainsSerializedProvenanceOnRetryAsync(format: \\\"json\\\", payload: \\\"{ not valid json\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.LargeUnresolvedDeliveryRetainsEveryFactAndRejectsConflictingDuplicateAcrossChunksAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_CheckpointOnlyAndOlderRetryWaitForCompleteCanonicalReplayAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SharedIndexRebuild_AccumulateWithEmptyAggregateHistoryDoesNotThrowAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.Eraser_OptimisticConflictReloadsAllRowsWithFrozenTimestampAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SharedIndexRebuild_UnresolvedEventFailsWithoutUpdatingCandidateAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailHandler_ConflictingDuplicateSequenceIsRetryableWithoutWriteAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.EraserRejectsNullIndexDictionaryBeforeAnyCoordinatedWriteAsync(dictionary: \\\"Entries\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.EraserRejectsNullIndexDictionaryBeforeAnyCoordinatedWriteAsync(dictionary: \\\"LastIndexedEvents\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.EraserRejectsNullIndexDictionaryBeforeAnyCoordinatedWriteAsync(dictionary: \\\"LastSequenceNumbers\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.EraserRejectsNullIndexDictionaryBeforeAnyCoordinatedWriteAsync(dictionary: \\\"ErasureSequenceNumbers\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailHandler_UnresolvedOnlyDeliveryIsRetryableAndPersistsFailedAuditAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.RetainedProcessingHistoryUsesBoundedBucketsAndPureLargeRebuildAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailHandler_WritesCanonicalBatchAndMatchesRetainedFoldAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DeserializeNew_WholePayloadRedacted_LogsWholePayloadRedactedEventDroppedInformation",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailHandler_MixedKnownAndUnresolvedDeliveryIsRetryableAndRecordsAuditAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SharedIndexRebuild_CompletionDoesNotNotifyRemovalForAPartyStillPresentAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_EmptyEventsCompletesWithoutWriteAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailHandler_UnresolvedThenResolvableInSameBatchDoesNotAdvancePastUnresolvedAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.Eraser_SearchIndexerCancellationPropagatesAfterCommittedBatchAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.FullRebuildRetainsCleanupOnlyErasureEvidenceAsync(dictionary: \\\"Entries\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.FullRebuildRetainsCleanupOnlyErasureEvidenceAsync(dictionary: \\\"LastIndexedEvents\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.FullRebuildRetainsCleanupOnlyErasureEvidenceAsync(dictionary: \\\"LastSequenceNumbers\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.FullRebuildRetainsCleanupOnlyErasureEvidenceAsync(dictionary: \\\"none\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.CompleteHistoricalReplayPersistsSearchWitnessBeforeRestartAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DeserializeNew_UnknownEventType_LogsUnknownEventTypeDroppedWarning",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.CleanupThenDelayedOldEventsCannotRestoreAnyCanonicalReadModel",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.OmittedLegacyIndexDictionariesRetainDefaultsAndAcceptLiveDeliveryAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_DuplicateTerminalErasureReturnsAlreadyCompletedAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DeserializeNew_UnknownEventType_DoesNotAdvanceCheckpointAndYieldsNoPayload",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SharedIndexRebuild_EmptyInventoryProducesEmptyReplacementThatPrunesStaleEntriesAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.ProcessingActivityFold_AppendPreservesLegacyCategory",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.ProcessingActivityFold_UnresolvedEventIsRecordedAsFailedWithoutAdvancing(eventTypeName: \\\"TotallyUnknownEventType\\\", expectedEventType: \\\"TotallyUnknownEventType\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.ProcessingActivityFold_UnresolvedEventIsRecordedAsFailedWithoutAdvancing(eventTypeName: \\\"Future.Events.NewProcessingEvent\\\", expectedEventType: \\\"NewProcessingEvent\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.ProcessingActivityFold_UnresolvedEventIsRecordedAsFailedWithoutAdvancing(eventTypeName: \\\"AnotherUnknownEvent\\\", expectedEventType: \\\"AnotherUnknownEvent\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.FieldRedaction_PersistsUsefulSurvivingFieldsInDetailAndIndexAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_SeparateDeliveryGapIsRetryableWithoutPersistenceAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.FailedAccumulationEmitsOneValueFreeSummaryAndPreservesCandidateAsync(failure: \\\"non-json\\\", counter: \\\"NonJson\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.FailedAccumulationEmitsOneValueFreeSummaryAndPreservesCandidateAsync(failure: \\\"unknown\\\", counter: \\\"UnknownType\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.FailedAccumulationEmitsOneValueFreeSummaryAndPreservesCandidateAsync(failure: \\\"null\\\", counter: \\\"NullPayload\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.FailedAccumulationEmitsOneValueFreeSummaryAndPreservesCandidateAsync(failure: \\\"ambiguous\\\", counter: \\\"AmbiguousType\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_FirstPersistenceSkipAndAdvanceLogsDiagnosticOnceAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SearchRetryRestoresAllIgnoredContentAndRejectsChangedOrPartialReplayAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.Eraser_RedactDetail_ExistingRowRetainsSequenceWatermark",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.WholePayloadRedaction_AfterErasurePreservesPersistedTombstonesAsync(eventTypeName: \\\"PartyReactivated\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.WholePayloadRedaction_AfterErasurePreservesPersistedTombstonesAsync(eventTypeName: \\\"Future.Events.UnknownEvent\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SerializedEnvelopeCasingAndSaturatedCountsPreserveIndexAsync(pascalCase: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SerializedEnvelopeCasingAndSaturatedCountsPreserveIndexAsync(pascalCase: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.ValidFullRebuildReplacesCorruptIndexAndRetainsErasureFencesAsync(dictionary: \\\"Entries\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.ValidFullRebuildReplacesCorruptIndexAndRetainsErasureFencesAsync(dictionary: \\\"LastIndexedEvents\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.ValidFullRebuildReplacesCorruptIndexAndRetainsErasureFencesAsync(dictionary: \\\"LastSequenceNumbers\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SharedIndexRebuild_UnresolvedEventLogsUnresolvedDiagnosticAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SequenceValidationFailureStillProducesOneBoundedWarningAsync(conflict: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SequenceValidationFailureStillProducesOneBoundedWarningAsync(conflict: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.CommittedErasureLifecycleSurvivesRestartAndDuplicateDeliveryAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.Eraser_ResetProcessingCheckpoint_NoExistingRowReturnsEmptyModel",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_SearchCancellationPropagatesForWriteAndReconciliationAsync(reconciliation: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_SearchCancellationPropagatesForWriteAndReconciliationAsync(reconciliation: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailFold_DuplicateAndOutOfOrderBatchMatchesOrderedReplayWithoutFreshnessDrift",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.ProcessingActivityFold_CorruptLiveEventIsRecordedAsFailedNotSucceeded",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailHandler_ConverterFailurePersistsBothCheckpointsAndContinuesAsync(exceptionType: \\\"FormatException\\\", includeValidTail: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailHandler_ConverterFailurePersistsBothCheckpointsAndContinuesAsync(exceptionType: \\\"OverflowException\\\", includeValidTail: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailHandler_ConverterFailurePersistsBothCheckpointsAndContinuesAsync(exceptionType: \\\"FormatException\\\", includeValidTail: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailHandler_ConverterFailurePersistsBothCheckpointsAndContinuesAsync(exceptionType: \\\"OverflowException\\\", includeValidTail: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.Eraser_SearchIndexerNonConvergenceDoesNotFailAnAlreadyCommittedBatchAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.WholePayloadRedactionOnly_PersistsEmptyDetailAndIndexWithRedactedProcessingAsync(eventTypeName: \\\"PartyDeactivated\\\", payload: \\\"{}\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.WholePayloadRedactionOnly_PersistsEmptyDetailAndIndexWithRedactedProcessingAsync(eventTypeName: \\\"PartyCreated\\\", payload: \\\"{}\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.WholePayloadRedactionOnly_PersistsEmptyDetailAndIndexWithRedactedProcessingAsync(eventTypeName: \\\"Future.Events.UnknownEvent\\\", payload: \\\" \\\\r\\\\n{ \\\\t }\\\\n\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.WholePayloadRedactionOnly_PersistsEmptyDetailAndIndexWithRedactedProcessingAsync(eventTypeName: \\\"Future.Events.UnknownEvent\\\", payload: \\\"null\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.PublishedSdkPreservesLargeLegacyLiveAndRebuildCompatibilityAsync",
+          "result": "Skip"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SharedIndexRebuild_FinalizeOnlyReturnsPlanWithoutExternalSearchWritesAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DeserializeNew_NonJsonSerializationFormat_DoesNotAdvanceCheckpointAndYieldsNoPayload",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_ConfiguredDaprSerializerPreservesDescriptorsAndHistoricalRowsAsync(historical: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_ConfiguredDaprSerializerPreservesDescriptorsAndHistoricalRowsAsync(historical: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_LaterSameIdCreateAfterErasureCannotRestoreEntryAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DeserializeNew_CorruptLiveEvent_LogsPayloadDeserializationFailedWarningDistinctFromRedacted",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailHandler_PartyErasedRedactsPersonalDataUsingEventTimestampAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SearchRetryOrCancellationDefersSummaryUntilSuccessfulCompletionAsync(outcome: \\\"retry\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SearchRetryOrCancellationDefersSummaryUntilSuccessfulCompletionAsync(outcome: \\\"throw\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SearchRetryOrCancellationDefersSummaryUntilSuccessfulCompletionAsync(outcome: \\\"ignore-cancel\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.ProcessingActivityFold_WholePayloadRedactedEventIsRecordedAsRedactedNotSucceeded",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.LegacyRawCandidateResumesAndOperationsKeepIndependentCountsAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_SearchIndexerThrowReturnsRetryableAfterCanonicalWriteAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailHandler_ExactlyOneMissingCoordinatedSlotRequiresRebuildAsync(detailIsMissing: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailHandler_ExactlyOneMissingCoordinatedSlotRequiresRebuildAsync(detailIsMissing: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailHandler_SeparateDeliveryGapIsRetryableWithoutCoordinatedWriteAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.Eraser_RedactsAllCanonicalModelsInOneCoordinatedBatchAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SharedIndexRebuild_CompletionPublishesLatestCanonicalEntryAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DeserializeNew_NonJsonFormat_LogsNonJsonEventDroppedWarning",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.Eraser_RedactDetail_NoExistingRowReturnsEmptyModel",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_MixedKnownAndUnresolvedDeliveryFailsWithoutWriteAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IncompleteIgnoredContentMutationRetainsCheckpointAndWitnessUntilCompleteReplayAsync(mutation: \\\"ContactChannelAdded\\\", erasureFirst: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IncompleteIgnoredContentMutationRetainsCheckpointAndWitnessUntilCompleteReplayAsync(mutation: \\\"ContactChannelAdded\\\", erasureFirst: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IncompleteIgnoredContentMutationRetainsCheckpointAndWitnessUntilCompleteReplayAsync(mutation: \\\"ContactChannelUpdated\\\", erasureFirst: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IncompleteIgnoredContentMutationRetainsCheckpointAndWitnessUntilCompleteReplayAsync(mutation: \\\"ContactChannelUpdated\\\", erasureFirst: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IncompleteIgnoredContentMutationRetainsCheckpointAndWitnessUntilCompleteReplayAsync(mutation: \\\"ContactChannelRemoved\\\", erasureFirst: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IncompleteIgnoredContentMutationRetainsCheckpointAndWitnessUntilCompleteReplayAsync(mutation: \\\"ContactChannelRemoved\\\", erasureFirst: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IncompleteIgnoredContentMutationRetainsCheckpointAndWitnessUntilCompleteReplayAsync(mutation: \\\"IdentifierAdded\\\", erasureFirst: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IncompleteIgnoredContentMutationRetainsCheckpointAndWitnessUntilCompleteReplayAsync(mutation: \\\"IdentifierAdded\\\", erasureFirst: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IncompleteIgnoredContentMutationRetainsCheckpointAndWitnessUntilCompleteReplayAsync(mutation: \\\"IdentifierRemoved\\\", erasureFirst: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IncompleteIgnoredContentMutationRetainsCheckpointAndWitnessUntilCompleteReplayAsync(mutation: \\\"IdentifierRemoved\\\", erasureFirst: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.RebuildPreparationRefusesRetainedFailedAuditBoundaryWithoutWritingAsync(bucketed: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.RebuildPreparationRefusesRetainedFailedAuditBoundaryWithoutWritingAsync(bucketed: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailRebuildPlan_MatchesNormalReplayAfterTimestampNormalizationAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DeserializeNew_AmbiguousShortEventTypeName_LogsAmbiguousEventTypeDroppedWarning",
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "name": "final-backfill-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "log": "final-backfill-build.txt",
+      "exit_code": 0,
+      "log_sha256": "f7795ceb8016e328eeca53692a43291f97668f74774461bbae0165b3a96f4a72"
+    },
+    {
+      "name": "final-backfill-recovery-tests",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillTests",
+        "-class",
+        "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests",
+        "-class",
+        "Hexalith.Parties.Tests.Projections.PartyGuardedRebuildErasureTests",
+        "-xml",
+        "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-reconciliation-and-migration-2026-10-28/final-backfill-recovery-tests.xml"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "log": "final-backfill-recovery-tests.txt",
+      "exit_code": 0,
+      "log_sha256": "8a4e8683e8c5693d4d959e48b1452d52201716b17e09ba90d3a8a3cf47c80a92",
+      "xml": "final-backfill-recovery-tests.xml",
+      "xml_sha256": "95721cfdaf77c1f5606c53cacb82c9f309e0e11ba73fc458b5980595ccc260e5",
+      "test_results": [
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.RebuildCannotReplaceProcessingCheckpointWhenDetailLagsAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CompetingInlineAppendAtCutoverUsesNewSnapshotForStagingAndPromotionAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.UnresolvedAuditRetriesSameDispatchAndResolvesWithoutCheckpointDriftAsync(count: 40)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.UnresolvedAuditRetriesSameDispatchAndResolvesWithoutCheckpointDriftAsync(count: 96)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.InvalidInlineHistoryCannotStageOrSelectMigrationAsync(defect: \\\"hole\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.InvalidInlineHistoryCannotStageOrSelectMigrationAsync(defect: \\\"duplicate\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.InvalidInlineHistoryCannotStageOrSelectMigrationAsync(defect: \\\"scope\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CompetingSelectedBucketAppendRetriesSameDispatchAgainstItsNewSnapshotAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CompetingAppendOrErasureInvalidatesLargeMigrationOrDispatcherRebuildPromotionAsync(rebuild: False, erase: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CompetingAppendOrErasureInvalidatesLargeMigrationOrDispatcherRebuildPromotionAsync(rebuild: False, erase: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CompetingAppendOrErasureInvalidatesLargeMigrationOrDispatcherRebuildPromotionAsync(rebuild: True, erase: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CompetingAppendOrErasureInvalidatesLargeMigrationOrDispatcherRebuildPromotionAsync(rebuild: True, erase: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.TerminalAnchorCrashAfterManifestReclamationAllowsColdRedeliveryAndNewDeliveryAsync(crash: RecoveryManifestReclaimed)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.TerminalAnchorCrashAfterManifestReclamationAllowsColdRedeliveryAndNewDeliveryAsync(crash: RecoveryAnchorCompacted)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.InterruptedLegacyAuditErasureResumesItsPersistedGenerationAcrossEraserRecreationAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.UnqualifiedHistoricalRecoveryRefusesErasureWithEveryPersistedByteUnchangedAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.RebuildPreservesFailedAuditBeyondCheckpointAndRepairsOnlyWithCompleteUncontendedReplayAsync(bucketed: False, compete: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.RebuildPreservesFailedAuditBeyondCheckpointAndRepairsOnlyWithCompleteUncontendedReplayAsync(bucketed: False, compete: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.RebuildPreservesFailedAuditBeyondCheckpointAndRepairsOnlyWithCompleteUncontendedReplayAsync(bucketed: True, compete: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.RebuildPreservesFailedAuditBeyondCheckpointAndRepairsOnlyWithCompleteUncontendedReplayAsync(bucketed: True, compete: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.AcceptedLargeLegacyActorMetadataMigratesAndRebuildPreparationRemainsPureAsync(rebuild: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.AcceptedLargeLegacyActorMetadataMigratesAndRebuildPreparationRemainsPureAsync(rebuild: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CorruptTouchedBucketCannotAdvanceEitherCanonicalAuthorityAsync(defect: \\\"scope\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CorruptTouchedBucketCannotAdvanceEitherCanonicalAuthorityAsync(defect: \\\"capacity\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CorruptTouchedBucketCannotAdvanceEitherCanonicalAuthorityAsync(defect: \\\"order\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CorruptTouchedBucketCannotAdvanceEitherCanonicalAuthorityAsync(defect: \\\"duplicate\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CorruptTouchedBucketCannotAdvanceEitherCanonicalAuthorityAsync(defect: \\\"coverage\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CorruptTouchedBucketCannotAdvanceEitherCanonicalAuthorityAsync(defect: \\\"metadata\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.ErasureRetiresSdkPrivateCanonicalManifestAfterCrashBeforeFirstParticipantAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.InterruptedLargeMigrationOrDispatcherRebuildResumesPersistedBucketsBeforeAuthorityCutoverAsync(rebuild: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.InterruptedLargeMigrationOrDispatcherRebuildResumesPersistedBucketsBeforeAuthorityCutoverAsync(rebuild: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.LargeAuditRecoversPendingCanonicalEnvelopesAcrossHandlerRestartAsync(failurePhase: MarkerPrepared)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.LargeAuditRecoversPendingCanonicalEnvelopesAcrossHandlerRestartAsync(failurePhase: AfterInstallOperation)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.LargeAuditRecoversPendingCanonicalEnvelopesAcrossHandlerRestartAsync(failurePhase: BeforeCommit)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.LargeAuditRecoversPendingCanonicalEnvelopesAcrossHandlerRestartAsync(failurePhase: AfterCommit)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.LargeAuditRecoversPendingCanonicalEnvelopesAcrossHandlerRestartAsync(failurePhase: BeforeCompaction)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.RedeliveredValidPrefixRepairsLaggingDetailBeforeAcknowledgementAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.AcceptedLargeLegacyAuditMetadataSurvivesErasureConversionWithoutTruncationAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CommittedLiveRegistrationsSettleAcrossColdRestartsBeforeRedeliveryAndDifferentBucketAppendsAsync",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillTests.ExistingIndexConditionalPolicySurvivesCommitAndFreshVerification",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillTests.CompetingCanonicalWriterAfterPreparationRefusesBackfillWithoutOverwritingAuthority(shared: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillTests.CompetingCanonicalWriterAfterPreparationRefusesBackfillWithoutOverwritingAuthority(shared: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillTests.IncompleteOrUnreadableHistoryRefusesPublicationAndPreservesActorAuthority(unreadable: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillTests.IncompleteOrUnreadableHistoryRefusesPublicationAndPreservesActorAuthority(unreadable: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillTests.ActorOnlyHistoryBackfillSurvivesRestartAndPreservesRollbackAndForeignTenantBytes",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyGuardedRebuildErasureTests.GuardedPublicDispatcherPreparationIsDiscoverableAndFreshTerminalVerificationCannotBypassErasure(crashBeforeParticipant: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyGuardedRebuildErasureTests.GuardedPublicDispatcherPreparationIsDiscoverableAndFreshTerminalVerificationCannotBypassErasure(crashBeforeParticipant: True)",
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "name": "final-warning-guard",
+      "command": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "log": "final-warning-guard.txt",
+      "exit_code": 0,
+      "log_sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604"
+    },
+    {
+      "name": "final-whitespace",
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "log": "final-whitespace.txt",
+      "exit_code": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "final-producer-whitespace",
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer",
+      "log": "final-producer-whitespace.txt",
+      "exit_code": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "source_identities": {
+    ".": {
+      "head": "9239c531f3b0cbb4a998c419e537463b597ff14b",
+      "status": " M docs/deployment-guide.md\n M references/Hexalith.Builds\n M references/Hexalith.EventStore\n M references/Hexalith.FrontComposer\n M references/Hexalith.McpCli\n M references/Hexalith.Memories\n M references/Hexalith.Platform\n M references/Hexalith.Tenants\n M src/Hexalith.Parties.Projections/Handlers/PartyIndexRebuildCandidate.cs\n M src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs\n M src/Hexalith.Parties.UI/Services/OptimisticReconcile.cs\n M src/Hexalith.Parties.UI/Services/PartiesProjectionSubscription.cs\n M src/Hexalith.Parties.UI/Services/ProjectionFreshnessFallback.cs\n M tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs\n M tests/Hexalith.Parties.UI.Tests/FakeProjectionStream.cs\n M tests/Hexalith.Parties.UI.Tests/ManualTimeProvider.cs\n M tests/Hexalith.Parties.UI.Tests/OptimisticReconcileTests.cs\n M tests/Hexalith.Parties.UI.Tests/ProjectionFreshnessFallbackTests.cs\n?? _bmad-output/implementation-artifacts/spec-five-reconciliation-and-migration-deferred-items.md\n?? _bmad-output/implementation-artifacts/tests/five-reconciliation-and-migration-2026-10-28/\n?? docs/read-model-migration.md\n?? src/Hexalith.Parties.UI/Services/PartiesProjectionRegistration.cs\n?? tests/Hexalith.Parties.Tests/Projections/PartyLegacyBackfillFixture.cs\n?? tests/Hexalith.Parties.Tests/Projections/PartyLegacyReadModelBackfillTests.cs\n"
+    },
+    "references/Hexalith.FrontComposer": {
+      "head": "5f665c4d38afb2255a7dde4620330e09824a40a1",
+      "status": " M src/Hexalith.FrontComposer.Contracts.UI/Freshness/FcOptimisticReconcileRequest.cs\n M src/Hexalith.FrontComposer.Shell/Services/Feedback/FcOptimisticReconciler.cs\n M tests/Hexalith.FrontComposer.Shell.Tests/Services/FcOptimisticReconcilerTests.cs\n"
+    },
+    "references/Hexalith.EventStore": {
+      "head": "36c78f3435d2d492a73f1b0707cf865c8735d740",
+      "status": ""
+    },
+    "references/Hexalith.Builds": {
+      "head": "3d7f49a5430294da5bcd437cbdace85c62c42027",
+      "status": " M Props/Directory.Packages.props\n"
+    },
+    "references/Hexalith.Platform": {
+      "head": "8de90958bc41b7fd01b7ed22b8ab364447a800e4",
+      "status": ""
+    },
+    "references/Hexalith.Memories": {
+      "head": "72c36c7113c750c8b809f9d72b945a2a8c2d4555",
+      "status": ""
+    },
+    "references/Hexalith.McpCli": {
+      "head": "2d7311cbbcc592c0ea0348463037389251d1cb4b",
+      "status": ""
+    },
+    "references/Hexalith.Tenants": {
+      "head": "7ddb864cda5e942925b056391617eae4895c1253",
+      "status": ""
+    }
+  },
+  "source_sha256": {
+    "src/Hexalith.Parties.UI/Services/OptimisticReconcile.cs": "b5fe5be621eafe5ee316739374c51f685603731e69cb02090f6b5a3329561cab",
+    "src/Hexalith.Parties.UI/Services/PartiesProjectionSubscription.cs": "f17a24b0793eb7d16dd28c2e68dbae93de3bd68fbd47160392b61f1931388bb9",
+    "src/Hexalith.Parties.UI/Services/PartiesProjectionRegistration.cs": "b15dc112a78132d039e752c907ac759ad1210e5dafeac5f79b77e4f2fc4eafe0",
+    "src/Hexalith.Parties.UI/Services/ProjectionFreshnessFallback.cs": "2759b2084984c0477a9516fb0110f25793ef4bf3040f98a380484e6f66dc8d1c",
+    "src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs": "e8441de4577ab50c711539107734a6835232f00bf25e5943197a7f09ac922cc4",
+    "src/Hexalith.Parties.Projections/Handlers/PartyIndexRebuildCandidate.cs": "a1b876e6bc93f1e736f47162ca6044d1e6a54882c4f283db8685da489ad29678",
+    "tests/Hexalith.Parties.UI.Tests/OptimisticReconcileTests.cs": "b88da771a040c147c04c5c897a3cf546b6f821ea8824f840e997804e78aec608",
+    "tests/Hexalith.Parties.UI.Tests/FakeProjectionStream.cs": "80fd63c37398412fb061110d81d148d040abcc6455e57ba9889bf4fa822f3e71",
+    "tests/Hexalith.Parties.UI.Tests/ManualTimeProvider.cs": "44fe7a3adca42f4a791f381a6bafad176472246d62318efc24ab295fc1fd5bc2",
+    "tests/Hexalith.Parties.UI.Tests/ProjectionFreshnessFallbackTests.cs": "831d37bbf0f1be2e580ddac6dc5d22d28103c56fe0befd17702e55906082e695",
+    "tests/Hexalith.Parties.Tests/Projections/PartyLegacyBackfillFixture.cs": "caf41a5d51b1c6a65eddef498b90fd67fc86e4afd05664eea7908c78728ed1e4",
+    "tests/Hexalith.Parties.Tests/Projections/PartyLegacyReadModelBackfillTests.cs": "22d05681d572aef8ff47499a6be4865bcc1a88d217480387efb0d0f84728ff8a",
+    "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs": "cdc6b0835ca883a856582a20375e11a1adcc8c737f3df11f1601c7b2fd259436",
+    "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Services/Feedback/FcOptimisticReconciler.cs": "d0b8252afc44fac9813b36cba971a1ecc9f8e48bdc4844410df6493ec7897597",
+    "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts.UI/Freshness/FcOptimisticReconcileRequest.cs": "b2e523b3380f529458aa1f00793a9254803a162e21dde958944697754f8c35a4",
+    "references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests/Services/FcOptimisticReconcilerTests.cs": "0ea991972927350892314aafcaf6a42fa48b1b7cf1eca919f217f9b6319e6310",
+    "docs/read-model-migration.md": "204d78cccef3461185f6ced0705175dd8c7ae7dd1dc28b009fb565082d846cdb",
+    "docs/deployment-guide.md": "ca0a3a791f04357b0be9155de2864e65e71ef9d74ab025bacd064a32648ad9ab",
+    "references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests/Services/DelayedReconcileSubscription.cs": "b9ddfc6124ca2008e71f33c4443f966b9ed1bda3720fb850ad8d46327821ef27"
+  },
+  "mapping": {
+    "qualification": "Retained producer map fallback; fresh current-source resolution is blocked. See ui-source-debug-build.log.",
+    "path": "/tmp/five-reconciliation-retained-map-20261028",
+    "generation_receipt_sha256": "53f8394c2e0ed0ef408ba72bf208c40c881d001cbadd9c70a209f6b5a3107cc2"
+  },
+  "completed_utc": "2026-10-28T09:40:13.691754+00:00",
+  "source_resolver_blocker": {
+    "command": [
+      "python3",
+      "_bmad-output/implementation-artifacts/tests/five-legacy-recovery-and-evidence-2026-10-27/build-source.py",
+      "--workspace",
+      "/tmp/five-reconciliation-source-20261028",
+      "--regenerate",
+      "--",
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+      "-c",
+      "Debug",
+      "-m:1"
+    ],
+    "exit_code": 1,
+    "log": "ui-source-debug-build.txt",
+    "sha256": "35955144974f936f6372b158b435632b47497d7f8153dd8ee55f5985cd79c5cb"
+  },
+  "review_fix_scope": "Only retained/mapped UI and producer classes covering edited runtime/test files were rerun. Projection/backfill/helper evidence remains at unchanged source. Full verification belongs to the primary agent."
+}
