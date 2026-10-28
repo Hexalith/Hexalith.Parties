@@ -2,6 +2,7 @@ extern alias apphost;
 
 using System.Diagnostics;
 using System.Net;
+using System.Text.Json;
 
 using Aspire.Hosting;
 using Aspire.Hosting.Testing;
@@ -20,6 +21,25 @@ namespace Hexalith.Parties.IntegrationTests.Topology;
 [Collection("Non-parallel")]
 public sealed class PartiesAspireTopologyFixtureTests
 {
+    [Theory]
+    [InlineData("""{"actors":[{"type":"AggregateActor","count":0}]}""", true)]
+    [InlineData("""{"actorRuntime":{"hostReady":true,"runtimeStatus":"RUNNING"},"actors":[]}""", false)]
+    [InlineData("""{"actors":[{"type":"ProjectionActor","count":1}]}""", false)]
+    [InlineData("""{}""", false)]
+    public void GatewayReadiness_RequiresRegisteredAggregateActorWithoutRequiringActivation(string value, bool ready)
+    {
+        using JsonDocument metadata = JsonDocument.Parse(value);
+        if (ready)
+        {
+            PartiesAspireTopologyFixture.RequireGatewayActorRegistration(metadata.RootElement);
+        }
+        else
+        {
+            Should.Throw<InvalidOperationException>(() => PartiesAspireTopologyFixture.RequireGatewayActorRegistration(metadata.RootElement))
+                .Message.ShouldContain("AggregateActor");
+        }
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

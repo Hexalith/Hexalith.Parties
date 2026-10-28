@@ -197,6 +197,15 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             PartiesMtlsProfile.ConfigureInternalGrpcEndpoints(_builder, Session);
             PartiesMtlsProfile.ConfigureAdminServerSidecarEndpoint(_builder);
             _redis = PartiesTestRedis.Configure(_builder);
+            // Dapr reads actor configuration once. Its first callback must wait for
+            // Kestrel, rather than connect to a proxy before the gateway is listening.
+            _ = _builder.CreateResourceBuilder<ProjectResource>("eventstore")
+                .WithEndpoint("http", endpoint =>
+                {
+                    endpoint.IsProxied = false;
+                    endpoint.Port = null;
+                    endpoint.TargetPort = null;
+                }, createIfNotExists: false);
             if (_completeMtlsProfile)
             {
                 PartiesMtlsProfile.ConfigureOptionalDependencies(_builder);
@@ -342,6 +351,13 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 return;
             }
 
+            // Complete and Memories profiles already validated their gateway sidecar.
+            // The ordinary profile must also reject an empty command-actor registry.
+            if (!_completeMtlsProfile)
+            {
+                await WaitForSidecarsAsync(["eventstore"], cts.Token).ConfigureAwait(false);
+            }
+
             InitializationPhase = "parties-resource-health";
             // Wait for parties to be healthy. This includes the DAPR health checks
             // (sidecar, state store, pub/sub) becoming healthy after sidecar initialization.
@@ -476,6 +492,20 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         return (metadata, events.ToArray());
     }
 
+    /// <summary>Requires Dapr to have ingested the gateway actor configuration before commands run.</summary>
+    /// <param name="metadata">Metadata returned by the gateway's own Dapr sidecar.</param>
+    internal static void RequireGatewayActorRegistration(JsonElement metadata)
+    {
+        if (metadata.TryGetProperty("actors", out JsonElement actors) && actors.ValueKind == JsonValueKind.Array
+            && actors.EnumerateArray().Any(actor => actor.ValueKind == JsonValueKind.Object
+                && actor.TryGetProperty("type", out JsonElement type) && type.ValueKind == JsonValueKind.String
+                && type.GetString() == "AggregateActor"))
+        {
+            return;
+        }
+        throw new InvalidOperationException("Gateway sidecar has not registered required actor type 'AggregateActor'.");
+    }
+
     private async Task WaitForAllSidecarsAsync(CancellationToken cancellationToken)
     {
         string[] actual = App.Services.GetRequiredService<DistributedApplicationModel>().Resources.OfType<ProjectResource>()
@@ -508,6 +538,10 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             if (metadata.RootElement.GetProperty("id").GetString() != Session.AppId(appId))
             {
                 throw new InvalidOperationException($"Sidecar '{appId}' returned another application's metadata.");
+            }
+            if (appId == "eventstore")
+            {
+                RequireGatewayActorRegistration(metadata.RootElement);
             }
         }
     }
