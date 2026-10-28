@@ -380,3 +380,10 @@ references/Hexalith.Commons|3edfbdafc7d4fa915286dce8a37dc4cc7c06085a|validated-a
 references/Hexalith.Builds|abc0e1be8069d1c7a567515a13bb015adc407536|validated-advance|origin/main@abc0e1be|jpiquot|2026-10-28
 references/Hexalith.McpCli|3a8fbf215d52a5573ea509f09bccf20a58c97993|validated-advance|origin/main@3a8fbf21|jpiquot|2026-10-28
 references/Hexalith.Platform|eee6ce27965b7c7108bbfcc02d447038e0553751|validated-advance|origin/main@eee6ce27|jpiquot|2026-10-28
+
+# --- 2026-10-28 explicit fitness-repair and main-push task.
+#     Record only the requested source adoption of the reviewed Tenants graph
+#     correction, preserving upstream's 3.128.4 floor. This task authorization
+#     supplies no new API owner acceptance, parity recertification, custody,
+#     migration, deployment, rollback deletion or release approval.
+references/Hexalith.Tenants|6deb5d5dbaad4e26405910b347d45b82deae1057|validated-advance|v5.11.0-13-g6deb5d5d|jpiquot|2026-10-28
