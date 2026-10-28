@@ -44,7 +44,8 @@ internal sealed class PartiesTopologySession
                     {
                         throw new InvalidOperationException("Could not reserve topology listeners outside the OS ephemeral client port range.");
                     }
-                    int candidate = Random.Shared.Next(20_000, 65_536);
+                    // Avoid the IANA dynamic range on an external Docker host as well.
+                    int candidate = Random.Shared.Next(20_000, 30_000);
                     if ((candidate >= ephemeral[0] && candidate <= ephemeral[1]) || AllocatedPorts.Contains(candidate)) { continue; }
                     var listener = new TcpListener(Socket.OSSupportsIPv6 ? IPAddress.IPv6Any : IPAddress.Any, candidate);
                     try
