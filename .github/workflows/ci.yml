@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   ci:
-    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@332b2c144defba546fe0a09626a4a72f2340e22f
+    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@1745ea0f09df9e518aeea3eeb1a7df836f67e09d
     with:
       solution: Hexalith.Parties.Standalone.slnx
       dapr-version: '1.18.0'
@@ -46,6 +46,8 @@ jobs:
         tests/Hexalith.Parties.Ci.Tests
       aspire-test-project: tests/Hexalith.Parties.IntegrationTests
       aspire-timeout-minutes: 30
+      aspire-prepare-script: scripts/prepare-aspire-https-trust.sh
+      aspire-prepare-timeout-minutes: 2
       aspire-continue-on-error: false
 
   owner-publish:

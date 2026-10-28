@@ -4,16 +4,16 @@ Hexalith.Parties uses GitHub Actions with shared Hexalith.Builds workflows and a
 
 ## Workflows
 
-- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@332b2c144defba546fe0a09626a4a72f2340e22f`.
+- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@1745ea0f09df9e518aeea3eeb1a7df836f67e09d`.
 - `.github/workflows/release.yml` is a manual `workflow_dispatch` workflow with a protected, caller-owned release job. It uses `Hexalith/Hexalith.Builds/Github/prepare-domain-release@11a3a79cfac4bba9548c6364a17a01ee9b561370` and takes the nested publisher from that same immutable Builds checkout.
-- `.github/workflows/commitlint.yml` delegates Conventional Commit validation to the same immutable Builds validation revision as CI, for pull requests and main pushes.
+- `.github/workflows/commitlint.yml` delegates Conventional Commit validation to the retained immutable Builds revision `332b2c144defba546fe0a09626a4a72f2340e22f`, for pull requests and main pushes.
 - `.github/workflows/dependency-review.yml` delegates dependency review for pull requests.
 - `.github/workflows/codeql.yml` delegates C# CodeQL scanning to `Hexalith/Hexalith.Builds/.github/workflows/codeql.yml@332b2c144defba546fe0a09626a4a72f2340e22f`.
 - `.github/workflows/rc-gate.yml` validates root gitlink signoff on ordinary `main` pushes, release candidates and tags.
 
-Both validation callers pin their reusable workflow definitions to the existing
-Builds source selection. For a revision update, inspect the selected workflow
-and caller inputs, then update the caller SHA, `BuildsValidationSha` in
+The validation callers pin their reusable workflow definitions independently.
+For a revision update, inspect the selected workflow and caller inputs, then
+update the caller SHA and its matching `BuildsCiSha` or `BuildsValidationSha` in
 `tests/Hexalith.Parties.Ci.Tests/PartiesContainerPublishWorkflowTests.cs`, and the
 references in this document and `docs/architecture.md` together. The Builds
 checkout must contain the selected Git object: the compatibility check reads
@@ -407,3 +407,11 @@ The optional mapped shared-download cancellation qualification lives in
 `shared-feedback-source.spec.ts`. Run `npm run test:source-feedback` after a
 mapped source UI build; it fails if the required source capability is absent.
 The required package portal specs contain no skip or optional capability gate.
+
+Aspire CI runs `scripts/prepare-aspire-https-trust.sh` before its test process.
+It exports the SDK certificate trust directory while trusting the ephemeral
+runner's development certificate, then persists the same directory for later
+steps and checks that the certificate is trusted. Real UI redirects to HTTPS
+retain normal certificate and host validation; no certificate bypass is used.
+
+The trust-directory setup follows [Microsoft’s Linux OpenSSL guidance](https://learn.microsoft.com/aspnet/core/security/enforcing-ssl?view=aspnetcore-10.0#openssl-trust).

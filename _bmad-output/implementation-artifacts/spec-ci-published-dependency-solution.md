@@ -44,3 +44,7 @@ context: []
 
 - Clean-run follow-up: ClientPackageTests now packs only owned Contracts/Client artifacts and restores published external dependencies, removing latent dependencies on pre-existing external source output. Both package probes pass.
 - Immutable source proof still checks exact committed and checked-out SHAs. Receipt descriptions now constrain git describe to the tag captured by the observation; raw short-SHA observations use rev-parse. Fetching the new Memories v3.0.1 tag reproduced the previous failure while the anchored v3.0.0 description remained unchanged.
+
+- Full CI now passes 6,103 unit/integration tests (six existing optional skips). The final Aspire lane exposed one actual TLS UntrustedRoot error in concurrent-session UI routing. Adopt immutable Builds domain-ci 1745ea0f09df9e518aeea3eeb1a7df836f67e09d for its existing preparation hook, bounded at two minutes; trust the ephemeral SDK development certificate and propagate SSL_CERT_DIR before running unchanged mandatory topology assertions.
+
+- Trust follow-up verification: all 464 CI contract tests pass; shell syntax and exported/persisted environment probe pass; 15 prior clean TRX reports satisfy the updated workflow validator. Review found only stale same-revision wording, now corrected to independent CI and commitlint pins.
