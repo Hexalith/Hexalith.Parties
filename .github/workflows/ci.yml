@@ -46,8 +46,8 @@ jobs:
         tests/Hexalith.Parties.Ci.Tests
       aspire-test-project: tests/Hexalith.Parties.IntegrationTests
       aspire-timeout-minutes: 30
-      aspire-prepare-script: scripts/prepare-aspire-https-trust.sh
-      aspire-prepare-timeout-minutes: 2
+      aspire-prepare-script: scripts/prepare-aspire-tier.sh
+      aspire-prepare-timeout-minutes: 10
       aspire-continue-on-error: false
 
   owner-publish:

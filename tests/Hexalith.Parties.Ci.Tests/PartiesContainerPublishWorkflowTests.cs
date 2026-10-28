@@ -100,8 +100,8 @@ public sealed class PartiesContainerPublishWorkflowTests
         workflow.ShouldContain("tests/Hexalith.Parties.Ci.Tests");
         workflow.ShouldContain("aspire-test-project: tests/Hexalith.Parties.IntegrationTests");
         workflow.ShouldContain("aspire-continue-on-error: false");
-        workflow.ShouldContain("aspire-prepare-script: scripts/prepare-aspire-https-trust.sh");
-        workflow.ShouldContain("aspire-prepare-timeout-minutes: 2");
+        workflow.ShouldContain("aspire-prepare-script: scripts/prepare-aspire-tier.sh");
+        workflow.ShouldContain("aspire-prepare-timeout-minutes: 10");
         workflow.ShouldNotContain("submodules: recursive");
 
         string sharedWorkflow = ReadPinnedBuildsWorkflow("domain-ci.yml");

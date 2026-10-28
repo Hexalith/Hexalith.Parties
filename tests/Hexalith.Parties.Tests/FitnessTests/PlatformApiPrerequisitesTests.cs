@@ -906,6 +906,8 @@ public sealed class PlatformApiPrerequisitesTests
             "references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample.BlazorUI/Hexalith.EventStore.Sample.BlazorUI.csproj",
         ];
         actual.Order(StringComparer.Ordinal).ShouldBe(expected.Order(StringComparer.Ordinal));
+        string preparation = File.ReadAllText(Path.Combine(root, "scripts", "prepare-aspire-runtime-hosts.sh"));
+        foreach (string project in actual) { preparation.ShouldContain(project); }
     }
 
     /// <summary>Checks every selected external runtime dependency before starting a topology.</summary>

@@ -408,7 +408,14 @@ The optional mapped shared-download cancellation qualification lives in
 mapped source UI build; it fails if the required source capability is absent.
 The required package portal specs contain no skip or optional capability gate.
 
-Aspire CI runs `scripts/prepare-aspire-https-trust.sh` before its test process.
+Aspire CI runs `scripts/prepare-aspire-tier.sh` before its test process.
+The ten-minute preparation budget includes HTTPS trust and serial Release builds
+of all eight external runtime hosts. These use their native source graphs,
+independently of the package-only consumer solution. Preparing shared outputs
+before concurrent topology launches prevents cold `dotnet run` builds from
+colliding. The existing five-minute topology startup deadline remains unchanged.
+
+The HTTPS helper, `scripts/prepare-aspire-https-trust.sh`, runs first.
 It exports the SDK certificate trust directory while trusting the ephemeral
 runner's development certificate, then persists the same directory for later
 steps and checks that the certificate is trusted. Real UI redirects to HTTPS
