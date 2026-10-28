@@ -50,6 +50,37 @@ not the G5 runtime engine.
 
 ### Current source observation — 2026-10-28
 
+This observation reconciles the six fitness failures recorded in
+`tests/five-data-lifecycle-qualification-2026-10-28/parent-final-verification.json`.
+EventStore package `3.128.4` retains the previously approved root selection and
+Tenants 5.11.1 dependency floor described in the published-FrontComposer amendment.
+The source rows below identify committed root selections and matching clean
+checkouts; they record observed identities, not new owner approval.
+Selection does not revalidate historical parity receipts or grant production
+migration, data-custody, deployment or rollback qualification. Automated CI and
+exact-source registry verification remain separate required release evidence.
+The module tool remains the source-root and dependency-mode authority.
+Source descriptions are anchored to the observed tag; the EventStore source
+anchor `v3.128.3` is separate from the approved `3.128.4` package selection.
+
+| Root dependency | Current source identity | Release use |
+| --- | --- | --- |
+| EventStore | `36c78f3435d2d492a73f1b0707cf865c8735d740` (`v3.128.3-6-g36c78f34`) | Package `3.128.4`; consumer qualification belongs to current executed receipts. |
+| Memories | `72c36c7113c750c8b809f9d72b945a2a8c2d4555` (`v3.0.3-4-g72c36c71`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
+| FrontComposer | `5af87f9e5cc8db16896fc97d19b6a828b2ed0d0d` (`v4.7.1-7-g5af87f9e`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
+| Tenants | `6deb5d5dbaad4e26405910b347d45b82deae1057` (`v5.11.0-13-g6deb5d5d`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
+| AI.Tools | `3f194e17174994d308ec84af9ee2b5aa68674d0d` (`3f194e17`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
+| Commons | `3edfbdafc7d4fa915286dce8a37dc4cc7c06085a` (`v2.30.3-5-g3edfbdaf`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
+| Builds | `d1931b1e803144048d927fff16cb8119afde541e` (`v4.38.2-2-gd1931b1e`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
+| PolymorphicSerializations | `221ac4592ba908ae7661ba1fa9e2d1fcc23baee0` (`v1.19.5`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
+| McpCli | `2d7311cbbcc592c0ea0348463037389251d1cb4b` (`v1.1.0-5-g2d7311cb`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
+| Platform | `8de90958bc41b7fd01b7ed22b8ab364447a800e4` (`v1.0.1-8-g8de90958`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
+
+### Historical source observation — 2026-10-28 (initial synchronization)
+
+Observed at Parties `11113687277f49e9bb74d91d6db3c869a337bb40`.
+The following text and identities retain that observation's original scope.
+
 The operator requested synchronization of the root submodules and a release.
 These exact revisions are clean upstream main selections; the new Builds catalog
 aligns Aspire 13.6.4 with the AppHost SDK. EventStore package `3.128.3` matches

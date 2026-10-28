@@ -1,0 +1,884 @@
+{
+  "original_six_cases": [
+    {
+      "name": "Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests.MaintainedTechnologyTablesMatchCentralPackageCatalog",
+      "before": "Fail",
+      "after": "Pass"
+    },
+    {
+      "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimeGraphsMatchTheIndependentlyEvaluatedPartiesPackageSelection(configuration: \\\"Debug\\\")",
+      "before": "Fail",
+      "after": "Pass"
+    },
+    {
+      "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimeGraphsMatchTheIndependentlyEvaluatedPartiesPackageSelection(configuration: \\\"Release\\\")",
+      "before": "Fail",
+      "after": "Pass"
+    },
+    {
+      "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph",
+      "before": "Fail",
+      "after": "Pass"
+    },
+    {
+      "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceSelectionsMatchCurrentGitReceipts(dependency: \\\"McpCli\\\")",
+      "before": "Fail",
+      "after": "Pass"
+    },
+    {
+      "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceSelectionsMatchCurrentGitReceipts(dependency: \\\"Platform\\\")",
+      "before": "Fail",
+      "after": "Pass"
+    }
+  ],
+  "recorded_utc": "2026-10-28T15:29:49.135535+00:00",
+  "baseline_revision": "207aaf51f63448e51acf83b4c46fdb456df6526c",
+  "parent_verification_revision": "bcc791d180b7fdc7566c7b52452d53cd6626f5a0",
+  "owner_revision": "6deb5d5dbaad4e26405910b347d45b82deae1057",
+  "runs": {
+    "before": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -noColor -method '*ExternalRuntimeGraphsMatchTheIndependentlyEvaluatedPartiesPackageSelection' -method '*FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph' -method '*NonConsumedSourceSelectionsMatchCurrentGitReceipts' -method '*MaintainedTechnologyTablesMatchCentralPackageCatalog' -result-xml ${EXECUTION_RECEIPTS}/before.xml",
+      "working_directory": "${PARTIES_ROOT}",
+      "exit_code": 1,
+      "counts": {
+        "total": 6,
+        "passed": 0,
+        "failed": 6,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failure_counts_by_class": {
+        "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests": 5,
+        "Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests": 1
+      },
+      "representative_failures": [
+        {
+          "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimeGraphsMatchTheIndependentlyEvaluatedPartiesPackageSelection(configuration: \\\"Debug\\\")",
+          "message": "Shouldly.ShouldAssertException : graph.PackageMetadata[package][\\\"EffectiveVersion\\\"]\n    should be\n\\\"3.128.4\\\"\n    but was\n\\\"3.128.3\\\"\n    difference\nDifference     |                                |   \n               |                               \\\\|/  \nIndex          | 0    1    2    3    4    5    6    \nExpected Value | 3    .    1    2    8    .    4    \nActual Value   | 3    .    1    2    8    .    3    \nExpected Code  | 51   46   49   50   56   46   52   \nActual Code    | 51   46   49   50   56   46   51   \n\nAdditional Info:\n    ${PARTIES_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/Hexalith.Tenants.csproj: Hexalith.EventStore.Gateway must match the independently evaluated Parties EventStore package selection"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.ExternalRuntimeGraphsMatchTheIndependentlyEvaluatedPartiesPackageSelection(configuration: \\\"Release\\\")",
+          "message": "Shouldly.ShouldAssertException : graph.PackageMetadata[package][\\\"EffectiveVersion\\\"]\n    should be\n\\\"3.128.4\\\"\n    but was\n\\\"3.128.3\\\"\n    difference\nDifference     |                                |   \n               |                               \\\\|/  \nIndex          | 0    1    2    3    4    5    6    \nExpected Value | 3    .    1    2    8    .    4    \nActual Value   | 3    .    1    2    8    .    3    \nExpected Code  | 51   46   49   50   56   46   52   \nActual Code    | 51   46   49   50   56   46   51   \n\nAdditional Info:\n    ${PARTIES_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/Hexalith.Tenants.csproj: Hexalith.EventStore.Gateway must match the independently evaluated Parties EventStore package selection"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph",
+          "message": "Shouldly.ShouldAssertException : currentSelection\n    should contain (case insensitive comparison)\n\\\"EventStore package `3.128.4`\\\"\n    but was actually\n\\\"### Current source observation \u2014 2026-10-28\n\nThe operator requested synchronization of the root su...\\\""
+        },
+        {
+          "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceSelectionsMatchCurrentGitReceipts(dependency: \\\"McpCli\\\")",
+          "message": "Shouldly.ShouldAssertException : gitlink.Replace('\\\\t', ' ')\n    should be\n\\\"160000 commit 8a860ee409d0c6f87a82bfdb87d9a84a15c49018 references/Hexalith.McpCli\\\"\n    but was\n\\\"160000 commit 2d7311cbbcc592c0ea0348463037389251d1cb4b references/Hexalith.McpCli\\\"\n    difference\nDifference     |       |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |         |    |    |        \n               |      \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/       \\\\|/  \\\\|/  \\\\|/       \nIndex          | ...  14   15   16   17   18   19   20   21   22   23   24   25   26   27   28   29   30   31   32   33   34   ...  \nExpected Value | ...  8    a    8    6    0    e    e    4    0    9    d    0    c    6    f    8    7    "
+        },
+        {
+          "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceSelectionsMatchCurrentGitReceipts(dependency: \\\"Platform\\\")",
+          "message": "Shouldly.ShouldAssertException : gitlink.Replace('\\\\t', ' ')\n    should be\n\\\"160000 commit c8acfe4ee08737ec0beca735083f7e08cd8885d0 references/Hexalith.Platform\\\"\n    but was\n\\\"160000 commit 8de90958bc41b7fd01b7ed22b8ab364447a800e4 references/Hexalith.Platform\\\"\n    difference\nDifference     |       |    |    |    |    |    |    |    |    |    |    |    |    |         |    |         |    |    |    |        \n               |      \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/       \\\\|/  \\\\|/       \\\\|/  \\\\|/  \\\\|/  \\\\|/       \nIndex          | ...  14   15   16   17   18   19   20   21   22   23   24   25   26   27   28   29   30   31   32   33   34   ...  \nExpected Value | ...  c    8    a    c    f    e    4    e    e    0    8    7    3    7    e    c    0 "
+        },
+        {
+          "name": "Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests.MaintainedTechnologyTablesMatchCentralPackageCatalog",
+          "message": "Shouldly.ShouldAssertException : architecture\n    should contain (case insensitive comparison)\n\\\"| Actors & pub/sub | DAPR client/actors/AspNetCore | `1.19.0` |\\\"\n    but was actually\n\\\"# Architecture \u2014 Hexalith.Parties\n\n> Regenerated by BMAD *Document Project* (**full rescan**, deep, ...\\\""
+        }
+      ],
+      "skips": [],
+      "scope": "Initial existing assembly, hash matches original packet post-review test assembly; six recorded failures reproduced before edits.",
+      "xml": {
+        "path": "before.xml.gz",
+        "original_sha256": "1ac41ef9d05e18f2eb69a0a04ff81b50c6e024649e827d8892aaa06522d62c7c",
+        "sanitized_sha256": "70cbb21c4a73eeb3442268c33c50297a96a7d1112e10900b93de08b8cf8ff0d1",
+        "sha256": "ab2a0036fbb111df2234f1fe6df831012a5860b9240bfa1624149e5f5b86f87f",
+        "bytes": 3329
+      },
+      "log": {
+        "path": "before.txt.gz",
+        "original_sha256": "f0d82ac8edba057f0ac90a4ab9d81b4e418fff0685b12ad2562966715ef41a61",
+        "sanitized_sha256": "c44c988c7c0b24f64cecf966eb7bb7747a33d3bd998f92298e19552a1aa49cb6",
+        "sha256": "cec5b908f516359f02d2d5ae760e4b9c71b837efee7f83df95bdb2b701058ab9",
+        "bytes": 2433
+      }
+    },
+    "before-rebuilt": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -noColor -method '*ExternalRuntimeGraphsMatchTheIndependentlyEvaluatedPartiesPackageSelection' -method '*FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph' -method '*NonConsumedSourceSelectionsMatchCurrentGitReceipts' -method '*MaintainedTechnologyTablesMatchCentralPackageCatalog' -result-xml ${EXECUTION_RECEIPTS}/before-rebuilt.xml",
+      "working_directory": "${PARTIES_ROOT}",
+      "exit_code": 1,
+      "counts": {
+        "total": 6,
+        "passed": 2,
+        "failed": 4,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failure_counts_by_class": {
+        "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests": 3,
+        "Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests": 1
+      },
+      "representative_failures": [
+        {
+          "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph",
+          "message": "Shouldly.ShouldAssertException : cells[2]\n    should be\n\\\"`1745ea0f09df9e518aeea3eeb1a7df836f67e09d` (`v4.38.1-5-g1745ea0f`)\\\"\n    but was\n\\\"`d1931b1e803144048d927fff16cb8119afde541e` (`v4.38.2-2-gd1931b1e`)\\\"\n    difference\nDifference     |       |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |         |    |    |    |        \n               |      \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/       \\\\|/  \\\\|/  \\\\|/  \\\\|/       \nIndex          | ...  1    2    3    4    5    6    7    8    9    10   11   12   13   14   15   16   17   18   19   20   21   ...  \nExpected Value | ...  1    7    4    5    e    a    0    f    0    9    d    f    9    e    5    1    8    a    e    e    a    ...  \nActual Value   | ...  d"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceSelectionsMatchCurrentGitReceipts(dependency: \\\"McpCli\\\")",
+          "message": "Shouldly.ShouldAssertException : cells[2]\n    should be\n\\\"`8a860ee409d0c6f87a82bfdb87d9a84a15c49018` (`v1.1.0-1-g8a860ee4`)\\\"\n    but was\n\\\"`2d7311cbbcc592c0ea0348463037389251d1cb4b` (`v1.1.0-5-g2d7311cb`)\\\"\n    difference\nDifference     |       |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |         |    |    |        \n               |      \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/       \\\\|/  \\\\|/  \\\\|/       \nIndex          | ...  1    2    3    4    5    6    7    8    9    10   11   12   13   14   15   16   17   18   19   20   21   ...  \nExpected Value | ...  8    a    8    6    0    e    e    4    0    9    d    0    c    6    f    8    7    a    8    2    b    ...  \nActual Value   | ...  2  "
+        },
+        {
+          "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceSelectionsMatchCurrentGitReceipts(dependency: \\\"Platform\\\")",
+          "message": "Shouldly.ShouldAssertException : cells[2]\n    should be\n\\\"`c8acfe4ee08737ec0beca735083f7e08cd8885d0` (`v1.0.0-2-gc8acfe4e`)\\\"\n    but was\n\\\"`8de90958bc41b7fd01b7ed22b8ab364447a800e4` (`v1.0.1-8-g8de90958`)\\\"\n    difference\nDifference     |       |    |    |    |    |    |    |    |    |    |    |    |    |         |    |         |    |    |    |        \n               |      \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/       \\\\|/  \\\\|/       \\\\|/  \\\\|/  \\\\|/  \\\\|/       \nIndex          | ...  1    2    3    4    5    6    7    8    9    10   11   12   13   14   15   16   17   18   19   20   21   ...  \nExpected Value | ...  c    8    a    c    f    e    4    e    e    0    8    7    3    7    e    c    0    b    e    c    a    ...  \nActual Value   | ...  8   "
+        },
+        {
+          "name": "Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests.MaintainedTechnologyTablesMatchCentralPackageCatalog",
+          "message": "Shouldly.ShouldAssertException : architecture\n    should contain (case insensitive comparison)\n\\\"| Actors & pub/sub | DAPR client/actors/AspNetCore | `1.19.0` |\\\"\n    but was actually\n\\\"# Architecture \u2014 Hexalith.Parties\n\n> Regenerated by BMAD *Document Project* (**full rescan**, deep, ...\\\""
+        }
+      ],
+      "skips": [],
+      "scope": "Intermediate execution overlapped owner graph correction and document edits; four failures, not a pristine six-failure baseline.",
+      "xml": {
+        "path": "before-rebuilt.xml.gz",
+        "original_sha256": "7f03ad55566ad6cb54710785411b455149e72da10a7ad6f9005dc543197f3b0c",
+        "sanitized_sha256": "28b9b72bb97ab9e0feafae11e7492e3ed1725632fc430e6d1eef907bd7c64931",
+        "sha256": "bc229b6511f694af2829e2f92ed925698398ffb0f930e4aadf1943a254da1f36",
+        "bytes": 3529
+      },
+      "log": {
+        "path": "before-rebuilt.txt.gz",
+        "original_sha256": "c8becdab8b5b0f15fb2816b93d129694cab66616a41b7668ebee95870462d701",
+        "sanitized_sha256": "c8becdab8b5b0f15fb2816b93d129694cab66616a41b7668ebee95870462d701",
+        "sha256": "5d6e335f6d5850bb8afdde1c8bc42b1d402622420770f6b3e8753365ad8bc868",
+        "bytes": 2560
+      }
+    },
+    "focused-pre-owner-commit": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -noColor -class 'Hexalith.Parties.Tests.FitnessTests.*' -method- '*FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph' -result-xml ${EXECUTION_RECEIPTS}/focused-pre-owner-commit.xml",
+      "working_directory": "${PARTIES_ROOT}",
+      "exit_code": 1,
+      "counts": {
+        "total": 287,
+        "passed": 285,
+        "failed": 2,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failure_counts_by_class": {
+        "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests": 1,
+        "Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests": 1
+      },
+      "representative_failures": [
+        {
+          "name": "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.CurrentClosureIdentityCanBeDerivedWithoutClaimingQualification",
+          "message": "Shouldly.ShouldAssertException : RunGit(root, \\\"-C\\\", fullPath, \\\"status\\\", \\\"--porcelain\\\", \\\"--untracked-files=normal\\\", \\\"--ignore-submodules=all\\\")\n    should be empty but was\n\\\" M Directory.Build.props\n M tests/Hexalith.Tenants.Contracts.Tests/PackageGovernanceTests.cs\n\\\"\n\nAdditional Info:\n    Root checkout must be clean before qualification: references/Hexalith.Tenants"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests.MaintainedTechnologyTablesMatchCentralPackageCatalog",
+          "message": "Shouldly.ShouldAssertException : architecture\n    should contain (case insensitive comparison)\n\\\"| | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.6.2-beta.959` |\\\"\n    but was actually\n\\\"# Architecture \u2014 Hexalith.Parties\n\n> Regenerated by BMAD *Document Project* (**full rescan**, deep, ...\\\""
+        }
+      ],
+      "skips": [],
+      "scope": "Intermediate: dirty owner checkout and additional stale toolkit documentation exposed; no guard weakened.",
+      "xml": {
+        "path": "focused-pre-owner-commit.xml.gz",
+        "original_sha256": "d9bd1f75c0ec65834aa3f685db7f47eb7f1600c6e84ba2dd224fea129d528042",
+        "sanitized_sha256": "4272ddfd2ea60adb398b045ccc4ca72d03e7fe25803c2ce6a731828c90f3f5d3",
+        "sha256": "8fa72ffbb73d66a50d1797255e82ebc172ea0c5074ca307cd31f71e5eb8d5f14",
+        "bytes": 22845
+      },
+      "log": {
+        "path": "focused-pre-owner-commit.txt.gz",
+        "original_sha256": "7ded41d020f81ebe7215a6eedc71d0868b30babfc542086cb0db81fcb4cdd8b6",
+        "sanitized_sha256": "7ded41d020f81ebe7215a6eedc71d0868b30babfc542086cb0db81fcb4cdd8b6",
+        "sha256": "46ad40a661d3826ec3da428b0a3a29948ed12dd0f94c0af9baeedbc821ddaa9b",
+        "bytes": 1014
+      }
+    },
+    "docs-final": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -noColor -class Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests -result-xml ${EXECUTION_RECEIPTS}/docs-final.xml",
+      "working_directory": "${PARTIES_ROOT}",
+      "exit_code": 0,
+      "counts": {
+        "total": 10,
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failure_counts_by_class": {},
+      "representative_failures": [],
+      "skips": [],
+      "scope": "Final documentation-only focus.",
+      "xml": {
+        "path": "docs-final.xml.gz",
+        "original_sha256": "24fab9d4df46c47655ddbf80ac21f6e8bb2105f2c076cb181ca8454f170d1dab",
+        "sanitized_sha256": "617900a1792e3aaf45dc68039d2212b942ac31e53ec3a424e193959eb5694bf9",
+        "sha256": "8ff528c6457b9f77d9f0f88c0afe1d5ac6102fb94b59104d4da2b89e943c275f",
+        "bytes": 1629
+      },
+      "log": {
+        "path": "docs-final.txt.gz",
+        "original_sha256": "479bd220e8854251f3e5eb0cf718a3d210628ba9efa4cefbf56ceb25952cd38c",
+        "sanitized_sha256": "479bd220e8854251f3e5eb0cf718a3d210628ba9efa4cefbf56ceb25952cd38c",
+        "sha256": "001d12bb8e85af758f41889a5dad24c042f048512d5b52bb7bbd4e8f9e1f4eab",
+        "bytes": 282
+      }
+    },
+    "focused-final": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -noColor -class 'Hexalith.Parties.Tests.FitnessTests.*' -result-xml ${EXECUTION_RECEIPTS}/focused-final.xml",
+      "working_directory": "${PARTIES_ROOT}",
+      "exit_code": 0,
+      "counts": {
+        "total": 288,
+        "passed": 288,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failure_counts_by_class": {},
+      "representative_failures": [],
+      "skips": [],
+      "scope": "All service fitness classes after committed owner adoption.",
+      "xml": {
+        "path": "focused-final.xml.gz",
+        "original_sha256": "3f7e4fe38710a029d53edfd8166e5eb9c5e5aaf0ef290d1a8d287fb66fd9ae39",
+        "sanitized_sha256": "b72e30538dbc3fd481cc60de77a738e27401e105c187decd65d1b7051fa19425",
+        "sha256": "4f27644c72bb8397abc785497a78e5c1a433457bff5a50dbad9c5459062cae59",
+        "bytes": 22294
+      },
+      "log": {
+        "path": "focused-final.txt.gz",
+        "original_sha256": "4f1b3dbb48d91203ee615458b1f00ba4d2b72b5a3d8ebedb205b1f2633b221e9",
+        "sanitized_sha256": "4f1b3dbb48d91203ee615458b1f00ba4d2b72b5a3d8ebedb205b1f2633b221e9",
+        "sha256": "fb26c21024dfed3b7e1dd27ba8212aab2726e1e7ea10d497a54b22c03b82e9d2",
+        "bytes": 284
+      }
+    },
+    "service-full": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -noColor  -result-xml ${EXECUTION_RECEIPTS}/service-full.xml",
+      "working_directory": "${PARTIES_ROOT}",
+      "exit_code": 0,
+      "counts": {
+        "total": 2801,
+        "passed": 2797,
+        "failed": 0,
+        "skipped": 4,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failure_counts_by_class": {},
+      "representative_failures": [],
+      "skips": [
+        {
+          "name": "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests.ActualSdkRejectsTwoClientStaleEtagsAndCompetingAbsentKeyCreation",
+          "reason": "Set PARTIES_MEMORIES_STATE_RUNTIME_CONFIG to private owned Dapr endpoints and credentials."
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests.ActualSdkHealthDetectsInventoryPrefixAclDenialAndRepairInBothModes",
+          "reason": "Set PARTIES_MEMORIES_INVENTORY_ACL_CONFIG to an owned authenticated ACL runtime and loopback repair controller."
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests.ActualSdkPersistencePreservesLegacyListsEtagsProbeDeletionAndCanonicalReceipts",
+          "reason": "Set PARTIES_MEMORIES_STATE_RUNTIME_CONFIG to private owned Dapr endpoints and credentials."
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests.SelectedMemoriesIngestionAndCleanupPersistAcrossRestart",
+          "reason": "Set PARTIES_MEMORIES_RUNTIME_CONFIG to an owned local runtime's private JSON configuration."
+        }
+      ],
+      "scope": "Full affected service assembly after committed owner adoption.",
+      "xml": {
+        "path": "service-full.xml.gz",
+        "original_sha256": "6ddba9675aeacc34216394453ecbab539b372ad6011def1edf68b78960dadb83",
+        "sanitized_sha256": "ba0f8ed4d49ed6162c511a4a4bdd6b2d64c0b26b1746cb5b85c7fb96b028c2f7",
+        "sha256": "8f76f3f7335332b618bf7a05f15f0d8609280926b07b17cfa6555d4033304ab2",
+        "bytes": 183511
+      },
+      "log": {
+        "path": "service-full.txt.gz",
+        "original_sha256": "529c83a9a83952d011395f928c59f75bc35f06cbe2c380becae23f67cb397c0e",
+        "sanitized_sha256": "a2d52064d125b35fdc214ab563a2214a93a49e2c68f0c2bbfac94245205d3ed9",
+        "sha256": "7291e8535e5cd6ea58941c532d3c269bbb21e724f4d397929af41076119fe9eb",
+        "bytes": 50120
+      }
+    },
+    "projections-full": {
+      "command": "dotnet tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll -noColor  -result-xml ${EXECUTION_RECEIPTS}/projections-full.xml",
+      "working_directory": "${PARTIES_ROOT}",
+      "exit_code": 0,
+      "counts": {
+        "total": 467,
+        "passed": 466,
+        "failed": 0,
+        "skipped": 1,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failure_counts_by_class": {},
+      "representative_failures": [],
+      "skips": [
+        {
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.PublishedSdkPreservesLargeLegacyLiveAndRebuildCompatibilityAsync",
+          "reason": "Runs against the unchanged published SDK package; source generation behavior has its separate control."
+        }
+      ],
+      "scope": "Full affected projection assembly.",
+      "xml": {
+        "path": "projections-full.xml.gz",
+        "original_sha256": "7567dabd2fb8bc2efea8c316bf572417634b9edf70ecbd25d70302874b4c3541",
+        "sanitized_sha256": "01e6635d7671968cc43027f32d2e5013ea21c0a8decff8b4531c04abd75bddab",
+        "sha256": "c32bd367acef8f3c0a61a0949fa72d44031724492c2a0ddc5b55925dd9f37f5c",
+        "bytes": 31514
+      },
+      "log": {
+        "path": "projections-full.txt.gz",
+        "original_sha256": "ce6fa5dfcf92c5ee12b25649face66814c7183cbc1ce27c091651144bb4e1918",
+        "sanitized_sha256": "ce6fa5dfcf92c5ee12b25649face66814c7183cbc1ce27c091651144bb4e1918",
+        "sha256": "add4f734bfba9ab60c4d9e036775c6cbc09f4e1841ca0b81dbad718929e91387",
+        "bytes": 435
+      }
+    },
+    "owner-focused-metadata-final": {
+      "command": "dotnet tests/Hexalith.Tenants.Contracts.Tests/bin/Debug/net10.0/Hexalith.Tenants.Contracts.Tests.dll -noColor -method '*EventStore_package_floor*' -result-xml ${OWNER_RECEIPTS}/focused-metadata-final.xml",
+      "working_directory": "${PARTIES_ROOT}/references/Hexalith.Tenants",
+      "exit_code": 0,
+      "counts": {
+        "total": 23,
+        "passed": 23,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failure_counts_by_class": {},
+      "representative_failures": [],
+      "skips": [],
+      "scope": "Final floor, source-authority, SemVer and command-line override controls.",
+      "xml": {
+        "path": "owner-focused-metadata-final.xml.gz",
+        "original_sha256": "498f792882266b57ea5327ace9f0cb6a0d9203404d71acabd14b12a98be8509f",
+        "sanitized_sha256": "fccf6c0f242973c09640f37284c724210179f9ec13efc7a6897c0cbb35071953",
+        "sha256": "1721c6feb398c2d336109abcc15d2b2583bdce4c8ff293097fb269bd3bf3df2d",
+        "bytes": 2193
+      },
+      "log": {
+        "path": "owner-focused-metadata-final.txt.gz",
+        "original_sha256": "48c5b5cab1c7b8aad5303d87f309a619e7f197d75db3fbde5ba4226e40809870",
+        "sanitized_sha256": "48c5b5cab1c7b8aad5303d87f309a619e7f197d75db3fbde5ba4226e40809870",
+        "sha256": "913f9541402930318f8367848930bcbe550078d70e85d06de9406c5a2eaaa152",
+        "bytes": 290
+      }
+    },
+    "owner-contracts-full-metadata-final": {
+      "command": "dotnet tests/Hexalith.Tenants.Contracts.Tests/bin/Debug/net10.0/Hexalith.Tenants.Contracts.Tests.dll -noColor  -result-xml ${OWNER_RECEIPTS}/contracts-full-metadata-final.xml",
+      "working_directory": "${PARTIES_ROOT}/references/Hexalith.Tenants",
+      "exit_code": 1,
+      "counts": {
+        "total": 769,
+        "passed": 576,
+        "failed": 193,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failure_counts_by_class": {
+        "Hexalith.Tenants.Contracts.Tests.PartialReleasePublicationTests": 142,
+        "Hexalith.Tenants.Contracts.Tests.CiQualityGateScriptTests": 17,
+        "Hexalith.Tenants.Contracts.Tests.PartialReleaseRecoveryTests": 18,
+        "Hexalith.Tenants.Contracts.Tests.PartialReleaseVerificationTests": 13,
+        "Hexalith.Tenants.Contracts.Tests.PartialReleaseRecoveryWorkflowTests": 3
+      },
+      "representative_failures": [
+        {
+          "name": "Hexalith.Tenants.Contracts.Tests.PartialReleasePublicationTests.MainAdvancementDuringUnterminatedFinalHashRefusesPublication(inventory: \\\"package\\\")",
+          "message": "Shouldly.ShouldAssertException : setup.ExitCode\n    should be\n0\n    but was\n1\n\nAdditional Info:\n    Traceback (most recent call last):\n  File \\\"${PARTIES_ROOT}/references/Hexalith.Tenants/tests/scripts/recovery_execution_fixture.py\\\", line 88, in <module>\n    print(json.dumps(create(sys.argv[1])))\n                     ~~~~~~^^^^^^^^^^^^^\n  File \\\"${PARTIES_ROOT}/references/Hexalith.Tenants/tests/scripts/recovery_execution_fixture.py\\\", line 27, in create\n    shutil.copytree(ROOT / \\\"references/Hexalith.Builds\\\" / directory, builds / directory,\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                    ignore=shutil.ignore_patterns(\\\"__pycache__\\\", \\\"*.pyc\\\"))\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "
+        },
+        {
+          "name": "Hexalith.Tenants.Contracts.Tests.CiQualityGateScriptTests.AspireLaneRequiresBlockingBrowserAndSkipInputs",
+          "message": "System.IO.DirectoryNotFoundException : Could not find a part of the path '${PARTIES_ROOT}/references/Hexalith.Tenants/references/Hexalith.Builds/.github/workflows/domain-ci.yml'."
+        },
+        {
+          "name": "Hexalith.Tenants.Contracts.Tests.PartialReleaseRecoveryTests.ExistingEvidenceGuardsRemainFailClosed(scenario: \\\"invalid-source\\\", diagnostic: \\\"Source SHA must be an exact lowercase commit SHA.\\\")",
+          "message": "Shouldly.ShouldAssertException : setup.ExitCode\n    should be\n0\n    but was\n1\n\nAdditional Info:\n    Traceback (most recent call last):\n  File \\\"${PARTIES_ROOT}/references/Hexalith.Tenants/tests/scripts/recovery_execution_fixture.py\\\", line 88, in <module>\n    print(json.dumps(create(sys.argv[1])))\n                     ~~~~~~^^^^^^^^^^^^^\n  File \\\"${PARTIES_ROOT}/references/Hexalith.Tenants/tests/scripts/recovery_execution_fixture.py\\\", line 27, in create\n    shutil.copytree(ROOT / \\\"references/Hexalith.Builds\\\" / directory, builds / directory,\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                    ignore=shutil.ignore_patterns(\\\"__pycache__\\\", \\\"*.pyc\\\"))\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "
+        },
+        {
+          "name": "Hexalith.Tenants.Contracts.Tests.PartialReleaseVerificationTests.FinalVerificationRequiresMatchingClassification(version: \\\"1.2.3\\\", classification: \\\"false\\\", accepted: True)",
+          "message": "Shouldly.ShouldAssertException : setup.ExitCode\n    should be\n0\n    but was\n1\n\nAdditional Info:\n    Traceback (most recent call last):\n  File \\\"${PARTIES_ROOT}/references/Hexalith.Tenants/tests/scripts/recovery_execution_fixture.py\\\", line 88, in <module>\n    print(json.dumps(create(sys.argv[1])))\n                     ~~~~~~^^^^^^^^^^^^^\n  File \\\"${PARTIES_ROOT}/references/Hexalith.Tenants/tests/scripts/recovery_execution_fixture.py\\\", line 27, in create\n    shutil.copytree(ROOT / \\\"references/Hexalith.Builds\\\" / directory, builds / directory,\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                    ignore=shutil.ignore_patterns(\\\"__pycache__\\\", \\\"*.pyc\\\"))\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "
+        },
+        {
+          "name": "Hexalith.Tenants.Contracts.Tests.PartialReleaseRecoveryWorkflowTests.ShippedWorkflowAdmissionAndBootstrapPassExecutableControls",
+          "message": "Shouldly.ShouldAssertException : result.ExitCode\n    should be\n0\n    but was\n1\n\nAdditional Info:\n    Traceback (most recent call last):\n  File \\\"${PARTIES_ROOT}/references/Hexalith.Tenants/tests/scripts/test_release_workflow_governance.py\\\", line 15, in <module>\n    import execution_identity\nModuleNotFoundError: No module named 'execution_identity'\n"
+        }
+      ],
+      "skips": [],
+      "scope": "Full owner Contracts; same193 absent nested Builds failures independently reproduced in unchanged baseline classes.",
+      "xml": {
+        "path": "owner-contracts-full-metadata-final.xml.gz",
+        "original_sha256": "227dbc6b84b1fce67cf9f13559fb3bb8be39ae36a204250b8afce409f15696ef",
+        "sanitized_sha256": "8f96669ab9f695fec7ba7acdb9872ee1f5e4e937927aa6f02c1d56fc28917e0d",
+        "sha256": "ce4f5450af6605894aff2531313a0c91c50e7549bb6424d1aea1386324ab4318",
+        "bytes": 59881
+      },
+      "log": {
+        "path": "owner-contracts-full-metadata-final.txt.gz",
+        "original_sha256": "f3c1ac8959e6fcbc70b0211a9edc7e8d7b915544b390697eb2903868d7b29191",
+        "sanitized_sha256": "e9f05df45c93c29b345d9427e6760dd58f8e93d14fe84039b44571b1877ac68e",
+        "sha256": "dc47aee313a502518d12eba2cc2cc2745ffb267925fd9c32d3905fd2c2b593ab",
+        "bytes": 12338
+      }
+    },
+    "owner-server-full-metadata-final": {
+      "command": "dotnet tests/Hexalith.Tenants.Server.Tests/bin/Debug/net10.0/Hexalith.Tenants.Server.Tests.dll -noColor  -result-xml ${OWNER_RECEIPTS}/server-full-metadata-final.xml",
+      "working_directory": "${PARTIES_ROOT}/references/Hexalith.Tenants",
+      "exit_code": 0,
+      "counts": {
+        "total": 1560,
+        "passed": 1560,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failure_counts_by_class": {},
+      "representative_failures": [],
+      "skips": [],
+      "scope": "Full owner Server.",
+      "xml": {
+        "path": "owner-server-full-metadata-final.xml.gz",
+        "original_sha256": "ccbbb0a1d901abd46c7f13f87b8e4d0e217f88922a60daed94c9d0600050f79f",
+        "sanitized_sha256": "d5eb17a7ceba253f52b5beac7c6580a7ef636af943910ceb16a8c2813cdd6098",
+        "sha256": "6dcc452bad1b884b4eb5c8d730256cc323c8cfae17e7c48bde218f3166311765",
+        "bytes": 103379
+      },
+      "log": {
+        "path": "owner-server-full-metadata-final.txt.gz",
+        "original_sha256": "319317299b7c6cd0e024da9b3527bf225269ed3b85b5efea62ddca6a0e9b0c1f",
+        "sanitized_sha256": "319317299b7c6cd0e024da9b3527bf225269ed3b85b5efea62ddca6a0e9b0c1f",
+        "sha256": "a68d1c44a64e8cb3718422a7452ebff027f97851060502a4bb1a6e12d49e257f",
+        "bytes": 288
+      }
+    },
+    "owner-contracts-baseline-blockers": {
+      "command": "dotnet ${OWNER_RECEIPTS}/baseline-owner/tests/Hexalith.Tenants.Contracts.Tests/bin/Debug/net10.0/Hexalith.Tenants.Contracts.Tests.dll -noColor -class Hexalith.Tenants.Contracts.Tests.PartialReleasePublicationTests -class Hexalith.Tenants.Contracts.Tests.CiQualityGateScriptTests -class Hexalith.Tenants.Contracts.Tests.PartialReleaseRecoveryTests -class Hexalith.Tenants.Contracts.Tests.PartialReleaseVerificationTests -class Hexalith.Tenants.Contracts.Tests.PartialReleaseRecoveryWorkflowTests -result-xml ${OWNER_RECEIPTS}/contracts-baseline-blockers.xml",
+      "working_directory": "${OWNER_RECEIPTS}/baseline-owner",
+      "exit_code": 1,
+      "counts": {
+        "total": 280,
+        "passed": 87,
+        "failed": 193,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failure_counts_by_class": {
+        "Hexalith.Tenants.Contracts.Tests.PartialReleasePublicationTests": 142,
+        "Hexalith.Tenants.Contracts.Tests.CiQualityGateScriptTests": 17,
+        "Hexalith.Tenants.Contracts.Tests.PartialReleaseRecoveryWorkflowTests": 3,
+        "Hexalith.Tenants.Contracts.Tests.PartialReleaseVerificationTests": 13,
+        "Hexalith.Tenants.Contracts.Tests.PartialReleaseRecoveryTests": 18
+      },
+      "representative_failures": [
+        {
+          "name": "Hexalith.Tenants.Contracts.Tests.PartialReleasePublicationTests.UnusableExpectedHashesPreventEveryPublication(inventory: \\\"package-existing\\\", response: \\\"hash-file-empty\\\")",
+          "message": "Shouldly.ShouldAssertException : setup.ExitCode\n    should be\n0\n    but was\n1\n\nAdditional Info:\n    Traceback (most recent call last):\n  File \\\"${OWNER_RECEIPTS}/baseline-owner/tests/scripts/recovery_execution_fixture.py\\\", line 88, in <module>\n    print(json.dumps(create(sys.argv[1])))\n                     ~~~~~~^^^^^^^^^^^^^\n  File \\\"${OWNER_RECEIPTS}/baseline-owner/tests/scripts/recovery_execution_fixture.py\\\", line 27, in create\n    shutil.copytree(ROOT / \\\"references/Hexalith.Builds\\\" / directory, builds / directory,\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                    ignore=shutil.ignore_patterns(\\\"__pycache__\\\", \\\"*.pyc\\\"))\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \\\"/usr/lib/python3.14/"
+        },
+        {
+          "name": "Hexalith.Tenants.Contracts.Tests.CiQualityGateScriptTests.AspireResultGateRequiresPassingExecutedTests(executed: 1, skipped: 0, failed: 0, accepted: True)",
+          "message": "System.IO.DirectoryNotFoundException : Could not find a part of the path '${OWNER_RECEIPTS}/baseline-owner/references/Hexalith.Builds/.github/workflows/domain-ci.yml'."
+        },
+        {
+          "name": "Hexalith.Tenants.Contracts.Tests.PartialReleaseRecoveryWorkflowTests.RecoveryPipelinePassesOfflineDestinationControls",
+          "message": "Shouldly.ShouldAssertException : result.ExitCode\n    should be\n0\n    but was\n1\n\nAdditional Info:\n    EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE\n======================================================================\nERROR: test_changed_existing_oci_digest_refuses_before_publication (__main__.PartialReleaseRecoveryTests.test_changed_existing_oci_digest_refuses_before_publication)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \\\"${OWNER_RECEIPTS}/baseline-owner/tests/scripts/test_partial_release_recovery.py\\\", line 179, in setUp\n    execution = create_execution_fixture(self.root, actual_workflows=getattr(self, \\\"actual_workflows\\\", False))\n  File \\\"${OWNER_RECEIPTS}/baseline-owner/tests/scripts/recovery_execution_fixture.py\\\","
+        },
+        {
+          "name": "Hexalith.Tenants.Contracts.Tests.PartialReleaseVerificationTests.FinalVerificationRequiresMatchingClassification(version: \\\"1.2.3\\\", classification: \\\"false\\\", accepted: True)",
+          "message": "Shouldly.ShouldAssertException : setup.ExitCode\n    should be\n0\n    but was\n1\n\nAdditional Info:\n    Traceback (most recent call last):\n  File \\\"${OWNER_RECEIPTS}/baseline-owner/tests/scripts/recovery_execution_fixture.py\\\", line 88, in <module>\n    print(json.dumps(create(sys.argv[1])))\n                     ~~~~~~^^^^^^^^^^^^^\n  File \\\"${OWNER_RECEIPTS}/baseline-owner/tests/scripts/recovery_execution_fixture.py\\\", line 27, in create\n    shutil.copytree(ROOT / \\\"references/Hexalith.Builds\\\" / directory, builds / directory,\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                    ignore=shutil.ignore_patterns(\\\"__pycache__\\\", \\\"*.pyc\\\"))\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \\\"/usr/lib/python3.14/"
+        },
+        {
+          "name": "Hexalith.Tenants.Contracts.Tests.PartialReleaseRecoveryTests.ExistingEvidenceGuardsRemainFailClosed(scenario: \\\"invalid-source\\\", diagnostic: \\\"Source SHA must be an exact lowercase commit SHA.\\\")",
+          "message": "Shouldly.ShouldAssertException : setup.ExitCode\n    should be\n0\n    but was\n1\n\nAdditional Info:\n    Traceback (most recent call last):\n  File \\\"${OWNER_RECEIPTS}/baseline-owner/tests/scripts/recovery_execution_fixture.py\\\", line 88, in <module>\n    print(json.dumps(create(sys.argv[1])))\n                     ~~~~~~^^^^^^^^^^^^^\n  File \\\"${OWNER_RECEIPTS}/baseline-owner/tests/scripts/recovery_execution_fixture.py\\\", line 27, in create\n    shutil.copytree(ROOT / \\\"references/Hexalith.Builds\\\" / directory, builds / directory,\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                    ignore=shutil.ignore_patterns(\\\"__pycache__\\\", \\\"*.pyc\\\"))\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \\\"/usr/lib/python3.14/"
+        }
+      ],
+      "skips": [],
+      "scope": "Exact baseline source archive with copied current binary; failing class sources identical, not a historical binary rebuild.",
+      "xml": {
+        "path": "owner-contracts-baseline-blockers.xml.gz",
+        "original_sha256": "e874c250f4d6df467a18ad4f9afcf10e10f01e3096e2017d9bf5c4e2d4183a52",
+        "sanitized_sha256": "a7fdd04ed6b31e7ceb34f10ef1d16ae55720238d50f9af44bb16f0593db86baa",
+        "sha256": "01c3218cc95cfe4de2a1db871bf9c6222851d6fd3304c105f70f7e33b6bac2e6",
+        "bytes": 27933
+      },
+      "log": {
+        "path": "owner-contracts-baseline-blockers.txt.gz",
+        "original_sha256": "f9ef960cd2056ad34a5e5e10dad176ff18787ff77bb01ced53bb06f829bbccbd",
+        "sanitized_sha256": "f7bc3c400c729f49495d598fc28cfd1316f2d50641857dbd9a7f588c665d4cc1",
+        "sha256": "d5c8cb327170cce068494ddd6c9ca31066fd732930acd4b4fe3ec37ba7ba10af",
+        "bytes": 12130
+      }
+    },
+    "owner-focused-baseline": {
+      "command": "dotnet ${OWNER_RECEIPTS}/baseline-owner/tests/Hexalith.Tenants.Contracts.Tests/bin/Debug/net10.0/Hexalith.Tenants.Contracts.Tests.dll -noColor -method *EventStore_package_floor_preserves_newer_catalog_and_explicit_source_selections -result-xml ${OWNER_RECEIPTS}/focused-baseline.xml",
+      "working_directory": "${OWNER_RECEIPTS}/baseline-owner",
+      "exit_code": 1,
+      "counts": {
+        "total": 10,
+        "passed": 8,
+        "failed": 2,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failure_counts_by_class": {
+        "Hexalith.Tenants.Contracts.Tests.PackageGovernanceTests": 2
+      },
+      "representative_failures": [
+        {
+          "name": "Hexalith.Tenants.Contracts.Tests.PackageGovernanceTests.EventStore_package_floor_preserves_newer_catalog_and_explicit_source_selections(selectedVersion: \\\"3.128.4\\\", useSource: False, expectedVersion: \\\"3.128.4\\\")",
+          "message": "Shouldly.ShouldAssertException : properties.GetProperty(\\\"HexalithEventStoreVersion\\\").GetString()\n    should be\n\\\"3.128.4\\\"\n    but was\n\\\"3.128.3\\\"\n    difference\nDifference     |                                |   \n               |                               \\\\|/  \nIndex          | 0    1    2    3    4    5    6    \nExpected Value | 3    .    1    2    8    .    4    \nActual Value   | 3    .    1    2    8    .    3    \nExpected Code  | 51   46   49   50   56   46   52   \nActual Code    | 51   46   49   50   56   46   51   "
+        },
+        {
+          "name": "Hexalith.Tenants.Contracts.Tests.PackageGovernanceTests.EventStore_package_floor_preserves_newer_catalog_and_explicit_source_selections(selectedVersion: \\\"3.129.0-preview.1\\\", useSource: False, expectedVersion: \\\"3.129.0-preview.1\\\")",
+          "message": "Shouldly.ShouldAssertException : properties.GetProperty(\\\"HexalithEventStoreVersion\\\").GetString()\n    should be\n\\\"3.129.0-preview.1\\\"\n    but was\n\\\"3.128.3\\\"\n    difference\nDifference     |                      |         |    |    |    |    |    |    |    |    |    |    |   \n               |                     \\\\|/       \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \nIndex          | 0    1    2    3    4    5    6    7    8    9    10   11   12   13   14   15   16   \nExpected Value | 3    .    1    2    9    .    0    -    p    r    e    v    i    e    w    .    1    \nActual Value   | 3    .    1    2    8    .    3                                                      \nExpected Code  | 51   46   49   50   57   46   48   45   112  114  101  118  105  101  119  46   49"
+        }
+      ],
+      "skips": [],
+      "scope": "Initial10 new cases against archived baseline props: older implementation rejects newer selection; current final controls23pass.",
+      "xml": {
+        "path": "owner-focused-baseline.xml.gz",
+        "original_sha256": "edb7161c9d13e77406ca5dd59a50387d6988175559c05854a2257e74438ab402",
+        "sanitized_sha256": "043f4ff2052058b03940e1cb54a016702dad0ebdb69d10339305cb97e4680ba8",
+        "sha256": "5f48bb42f38bd3abb049d07e95ac3f486363899fc023437502088fca35bdcd6d",
+        "bytes": 1973
+      },
+      "log": {
+        "path": "owner-focused-baseline.txt.gz",
+        "original_sha256": "d7569e96c10feaf825ab42befa9a5a422631a0955a793276d8a4a783b07bcdde",
+        "sanitized_sha256": "d7569e96c10feaf825ab42befa9a5a422631a0955a793276d8a4a783b07bcdde",
+        "sha256": "2c7ee8e5741587726b148501b4913b249aab0039c94031cb1c723e711d710b7b",
+        "bytes": 921
+      }
+    },
+    "owner-focused-rebased-final": {
+      "command": "dotnet tests/Hexalith.Tenants.Contracts.Tests/bin/Debug/net10.0/Hexalith.Tenants.Contracts.Tests.dll -noColor -method *EventStore_package_floor* -result-xml ${OWNER_RECEIPTS}/focused-upstream-final.xml",
+      "working_directory": "${PARTIES_ROOT}/references/Hexalith.Tenants",
+      "exit_code": 0,
+      "counts": {
+        "total": 25,
+        "passed": 25,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failure_counts_by_class": {},
+      "representative_failures": [],
+      "skips": [],
+      "scope": "Final after preserving incoming upstream3.128.4 floor and work.",
+      "xml": {
+        "path": "owner-focused-rebased-final.xml.gz",
+        "original_sha256": "aee555c736122ef25cb54ff1b901d0886cb190d2429a056543ad2a4a016de64e",
+        "sanitized_sha256": "8b3898eb5d31a0ec2cbcd199a6b2f54668dfbe8e365420401a6c934c6625a6a8",
+        "sha256": "3b16ceb7442cbbce34ee4b540e4e89af3082ee28dd07e0e6205eef3781a429a7",
+        "bytes": 2269
+      },
+      "log": {
+        "path": "owner-focused-rebased-final.txt.gz",
+        "original_sha256": "efbfc8f1acec3ce6d25a36a77169bb3ec03049b4911d0fc8f78415ae2fa50215",
+        "sanitized_sha256": "efbfc8f1acec3ce6d25a36a77169bb3ec03049b4911d0fc8f78415ae2fa50215",
+        "sha256": "f8012ca8a212292245ee4fe5ed528ef9b79c6c2f35a4778e239aa13bb185398f",
+        "bytes": 290
+      }
+    },
+    "owner-contracts-full-rebased-final": {
+      "command": "dotnet tests/Hexalith.Tenants.Contracts.Tests/bin/Debug/net10.0/Hexalith.Tenants.Contracts.Tests.dll -noColor -result-xml ${OWNER_RECEIPTS}/contracts-full-upstream-final.xml",
+      "working_directory": "${PARTIES_ROOT}/references/Hexalith.Tenants",
+      "exit_code": 1,
+      "counts": {
+        "total": 771,
+        "passed": 578,
+        "failed": 193,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failure_counts_by_class": {
+        "Hexalith.Tenants.Contracts.Tests.CiQualityGateScriptTests": 17,
+        "Hexalith.Tenants.Contracts.Tests.PartialReleasePublicationTests": 142,
+        "Hexalith.Tenants.Contracts.Tests.PartialReleaseVerificationTests": 13,
+        "Hexalith.Tenants.Contracts.Tests.PartialReleaseRecoveryTests": 18,
+        "Hexalith.Tenants.Contracts.Tests.PartialReleaseRecoveryWorkflowTests": 3
+      },
+      "representative_failures": [
+        {
+          "name": "Hexalith.Tenants.Contracts.Tests.CiQualityGateScriptTests.AspireLaneRequiresBlockingBrowserAndSkipInputs",
+          "message": "System.IO.DirectoryNotFoundException : Could not find a part of the path '${PARTIES_ROOT}/references/Hexalith.Tenants/references/Hexalith.Builds/.github/workflows/domain-ci.yml'."
+        },
+        {
+          "name": "Hexalith.Tenants.Contracts.Tests.PartialReleasePublicationTests.MainAdvancementDuringUnterminatedFinalHashRefusesPublication(inventory: \\\"package\\\")",
+          "message": "Shouldly.ShouldAssertException : setup.ExitCode\n    should be\n0\n    but was\n1\n\nAdditional Info:\n    Traceback (most recent call last):\n  File \\\"${PARTIES_ROOT}/references/Hexalith.Tenants/tests/scripts/recovery_execution_fixture.py\\\", line 88, in <module>\n    print(json.dumps(create(sys.argv[1])))\n                     ~~~~~~^^^^^^^^^^^^^\n  File \\\"${PARTIES_ROOT}/references/Hexalith.Tenants/tests/scripts/recovery_execution_fixture.py\\\", line 27, in create\n    shutil.copytree(ROOT / \\\"references/Hexalith.Builds\\\" / directory, builds / directory,\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                    ignore=shutil.ignore_patterns(\\\"__pycache__\\\", \\\"*.pyc\\\"))\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "
+        },
+        {
+          "name": "Hexalith.Tenants.Contracts.Tests.PartialReleaseVerificationTests.FinalVerificationRequiresMatchingClassification(version: \\\"1.2.3\\\", classification: \\\"false\\\", accepted: True)",
+          "message": "Shouldly.ShouldAssertException : setup.ExitCode\n    should be\n0\n    but was\n1\n\nAdditional Info:\n    Traceback (most recent call last):\n  File \\\"${PARTIES_ROOT}/references/Hexalith.Tenants/tests/scripts/recovery_execution_fixture.py\\\", line 88, in <module>\n    print(json.dumps(create(sys.argv[1])))\n                     ~~~~~~^^^^^^^^^^^^^\n  File \\\"${PARTIES_ROOT}/references/Hexalith.Tenants/tests/scripts/recovery_execution_fixture.py\\\", line 27, in create\n    shutil.copytree(ROOT / \\\"references/Hexalith.Builds\\\" / directory, builds / directory,\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                    ignore=shutil.ignore_patterns(\\\"__pycache__\\\", \\\"*.pyc\\\"))\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "
+        },
+        {
+          "name": "Hexalith.Tenants.Contracts.Tests.PartialReleaseRecoveryTests.ExistingEvidenceGuardsRemainFailClosed(scenario: \\\"invalid-source\\\", diagnostic: \\\"Source SHA must be an exact lowercase commit SHA.\\\")",
+          "message": "Shouldly.ShouldAssertException : setup.ExitCode\n    should be\n0\n    but was\n1\n\nAdditional Info:\n    Traceback (most recent call last):\n  File \\\"${PARTIES_ROOT}/references/Hexalith.Tenants/tests/scripts/recovery_execution_fixture.py\\\", line 88, in <module>\n    print(json.dumps(create(sys.argv[1])))\n                     ~~~~~~^^^^^^^^^^^^^\n  File \\\"${PARTIES_ROOT}/references/Hexalith.Tenants/tests/scripts/recovery_execution_fixture.py\\\", line 27, in create\n    shutil.copytree(ROOT / \\\"references/Hexalith.Builds\\\" / directory, builds / directory,\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                    ignore=shutil.ignore_patterns(\\\"__pycache__\\\", \\\"*.pyc\\\"))\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "
+        },
+        {
+          "name": "Hexalith.Tenants.Contracts.Tests.PartialReleaseRecoveryWorkflowTests.ShippedWorkflowAdmissionAndBootstrapPassExecutableControls",
+          "message": "Shouldly.ShouldAssertException : result.ExitCode\n    should be\n0\n    but was\n1\n\nAdditional Info:\n    Traceback (most recent call last):\n  File \\\"${PARTIES_ROOT}/references/Hexalith.Tenants/tests/scripts/test_release_workflow_governance.py\\\", line 15, in <module>\n    import execution_identity\nModuleNotFoundError: No module named 'execution_identity'\n"
+        }
+      ],
+      "skips": [],
+      "scope": "Final after preserving incoming upstream3.128.4 floor and work.",
+      "xml": {
+        "path": "owner-contracts-full-rebased-final.xml.gz",
+        "original_sha256": "9ee3a75b00cc877c6a2c574005f95fccbe1ebdb4eb150fddd7b1e7ef1ed7749d",
+        "sanitized_sha256": "2e524a2b5391b1040dd792a868ddf53b27bb4754da61576453e446e4a306667c",
+        "sha256": "18ff25b8b984eeb31fd1f073067be7a770069dac045b5020e061ab16c84d1437",
+        "bytes": 59569
+      },
+      "log": {
+        "path": "owner-contracts-full-rebased-final.txt.gz",
+        "original_sha256": "92fd2cfe424309ce53d1105927459b6f767ee992543ecba855a49a9cefedfe02",
+        "sanitized_sha256": "dd36a59e35ebda873da5f867ee3901ed3f6638f0e35b3b8852d9f41cb5a4af1c",
+        "sha256": "1e19eb33df8f316d77ded2f1f748b8cc4e47751826063898f98096dc866b189c",
+        "bytes": 12453
+      }
+    },
+    "owner-server-full-rebased-final": {
+      "command": "dotnet tests/Hexalith.Tenants.Server.Tests/bin/Debug/net10.0/Hexalith.Tenants.Server.Tests.dll -noColor -result-xml ${OWNER_RECEIPTS}/server-full-upstream-final.xml",
+      "working_directory": "${PARTIES_ROOT}/references/Hexalith.Tenants",
+      "exit_code": 0,
+      "counts": {
+        "total": 1584,
+        "passed": 1584,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failure_counts_by_class": {},
+      "representative_failures": [],
+      "skips": [],
+      "scope": "Final after preserving incoming upstream3.128.4 floor and work.",
+      "xml": {
+        "path": "owner-server-full-rebased-final.xml.gz",
+        "original_sha256": "a994e69289e762394ccbc1d91861e3440cef61012bda9bd412ff20610cd75221",
+        "sanitized_sha256": "96c38993ff4eb45ce4d04759e6cd0c36eb61b459cb44105f3ec60045a7ee4108",
+        "sha256": "1361c0daddc07a671c4aa129c68112dc0d1cd47299e352e58167a4df5e6d6539",
+        "bytes": 104591
+      },
+      "log": {
+        "path": "owner-server-full-rebased-final.txt.gz",
+        "original_sha256": "fe6079d6a6e3ef063e45e84af0766a25267c4227c863a9d4d135dedbc1482527",
+        "sanitized_sha256": "fe6079d6a6e3ef063e45e84af0766a25267c4227c863a9d4d135dedbc1482527",
+        "sha256": "56f02e16b1ae6a6a25cf6edd278bf3fdaa6d9bc3a45e9e81e86bd53b81623c64",
+        "bytes": 289
+      }
+    }
+  },
+  "files": {
+    "build-before.txt": {
+      "path": "build-before.txt.gz",
+      "original_sha256": "f8d3b3c3e0b9e4a140559d3990c2b6200bcf1dcdc2eec7047be401c96910f25b",
+      "sanitized_sha256": "72e3c29e3e6fc1b8afc9507d4fe5fb6996fce5173c28c6419a1214bdb7fb974e",
+      "sha256": "25fe91962601bb1603b1352b4f40e79aaad62ba3ac1828c559ed7c60f8354b85",
+      "bytes": 345
+    },
+    "build-service-current.txt": {
+      "path": "build-service-current.txt.gz",
+      "original_sha256": "4e75f96223388a8fd9028108541c89d7a7dbbb5ee695f42c8281363f3890fc26",
+      "sanitized_sha256": "d9cbd82dbe7e5126586f35f22ba81b9014499b22ff0f894e2aa5da493c690a84",
+      "sha256": "add14e3c5e5ea211ab83d540435e4ab3b79fccdf3b2645151898f080f9dafb93",
+      "bytes": 343
+    },
+    "build-service-final.txt": {
+      "path": "build-service-final.txt.gz",
+      "original_sha256": "8a79e870f2bade8a6ff8abb160e6c4ea04adb98d46af7b43d93ae083d1f55c39",
+      "sanitized_sha256": "f636dc36904a02ed1b4fc83b070d8cce5fe126159a21e1939daa37ac38cd4e7b",
+      "sha256": "7d9ece95744cdd870fe0a5802b23bbd6b3287ea68edf03e3d6e6e8bb09832881",
+      "bytes": 345
+    },
+    "build-projections.txt": {
+      "path": "build-projections.txt.gz",
+      "original_sha256": "4348f9d4b607dc6f3624c872577d4888c9c140db70e5df12928e4f5393a38927",
+      "sanitized_sha256": "a25645215b34f2bfc75b9bbaf99d24123f4d807e06236df3d3fa69632f5a89b7",
+      "sha256": "809de2303e67c490af425be4884360ebf127fca8271c8915cbedb72fca42314b",
+      "bytes": 260
+    },
+    "aspire-wait.txt": {
+      "path": "aspire-wait.txt.gz",
+      "original_sha256": "4eaeff4c0372e60223652d79d459249b632f03efb78f64f71f1fa0e557ef5bb2",
+      "sanitized_sha256": "278b21df9a56f054c21347cb5bd4677a8e55f483751ef7257bf0f145ac741b0f",
+      "sha256": "7944e4b87c2c2d03f6642185815f60c691465559e44db217ee552b41442da45c",
+      "bytes": 227
+    },
+    "aspire-stop.txt": {
+      "path": "aspire-stop.txt.gz",
+      "original_sha256": "bf49d5e492f84354743815419a7c6859da4af309f2f95d997ab8887f2503257d",
+      "sanitized_sha256": "bf49d5e492f84354743815419a7c6859da4af309f2f95d997ab8887f2503257d",
+      "sha256": "b458a2add04b10f3da9ad469b5ef7a0781ab1af5856384e5599d6bd6897e8973",
+      "bytes": 161
+    },
+    "warning-gate.txt": {
+      "path": "warning-gate.txt.gz",
+      "original_sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604",
+      "sanitized_sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604",
+      "sha256": "315caa5fc9bf0ac255efb2d79aabdb0d6ca1be5539c23b95a077d0ecc6973a0b",
+      "bytes": 103
+    },
+    "gitlink-gate.txt": {
+      "path": "gitlink-gate.txt.gz",
+      "original_sha256": "f770ad887e1392c40145bdad353b6688697c413d9dc1e62e68d026b9d5da9d7f",
+      "sanitized_sha256": "f770ad887e1392c40145bdad353b6688697c413d9dc1e62e68d026b9d5da9d7f",
+      "sha256": "61e880b1796ad9cc9803a744ee8a44a352adba7e3682f50cf8c41e7ec7eafb3c",
+      "bytes": 154
+    },
+    "adoption-message.txt": {
+      "path": "adoption-message.txt.gz",
+      "original_sha256": "94742444d9adfce65613cd998a41848ed0dfe1faec089c9a7c9edaf59faaccbd",
+      "sanitized_sha256": "94742444d9adfce65613cd998a41848ed0dfe1faec089c9a7c9edaf59faaccbd",
+      "sha256": "210de4dbbdcb4b2e6f81e44611ecd0fab8abdf7b7078775845d4816e692e9bb6",
+      "bytes": 69
+    },
+    "adoption-commitlint.txt": {
+      "path": "adoption-commitlint.txt.gz",
+      "original_sha256": "2ef77fbcd81d0da178d771571e9f67115e1a8550f454305d857c78c404bf29b2",
+      "sanitized_sha256": "2ef77fbcd81d0da178d771571e9f67115e1a8550f454305d857c78c404bf29b2",
+      "sha256": "1d6eddd2e195dea0b9c181142c0b89db9a4a29443ccbcb37be89fe203d5ba58c",
+      "bytes": 115
+    },
+    "final-message.txt": {
+      "path": "final-message.txt.gz",
+      "original_sha256": "900774ff918fe83ace48fecc17cfd4f1dafbbdc56060cc5bf45ba69a238a7606",
+      "sanitized_sha256": "900774ff918fe83ace48fecc17cfd4f1dafbbdc56060cc5bf45ba69a238a7606",
+      "sha256": "0f92b0a05078c97ef32c620412058e73c18d98a7a70c00329ec3e2bbe88b7976",
+      "bytes": 150
+    },
+    "final-commitlint.txt": {
+      "path": "final-commitlint.txt.gz",
+      "original_sha256": "8fa8797d7d67d90ec3d8f7bd35e63f0c8f6a297d51cb873eab5a9793702dd285",
+      "sanitized_sha256": "8fa8797d7d67d90ec3d8f7bd35e63f0c8f6a297d51cb873eab5a9793702dd285",
+      "sha256": "86ff818d0bde6e43eef0d3182f312a91c96b184ffa0c3836fdf448339b55540e",
+      "bytes": 196
+    },
+    "owner-validation.json": {
+      "path": "owner-validation.json.gz",
+      "original_sha256": "1079bbff1f759a3681c39352d86b7d44cb884b098c8bbfda94ca944e3f895459",
+      "sanitized_sha256": "66762e4e2b421d03a8834e37a1b4c15edddaa7f94234f5f973c7edfa4f52a823",
+      "sha256": "bda60093541b6f10f906c2d8fa138ba48696524986c1424e53b6b50bf8db2ee9",
+      "bytes": 9193
+    },
+    "owner-validation-final.json": {
+      "path": "owner-validation-final.json.gz",
+      "original_sha256": "5eaad7e5ab96498c193113596ce8fa0ba962fffa61a823bd609697742c3c2b2a",
+      "sanitized_sha256": "b2dd1b473b2379f8beb0b34cc36d9d55783a64451caf91b1e970ac37b1b107e1",
+      "sha256": "bb2429ee3888ad2b04277180ed50a33ee8fbcdb3f6be87a14cbe082359b8aecb",
+      "bytes": 4971
+    },
+    "owner-validation-rebased-final.json": {
+      "path": "owner-validation-rebased-final.json.gz",
+      "original_sha256": "ed4da2ed16058e4325e095550a2c3fcd1b24c58901c9d8050f234649a4721f18",
+      "sanitized_sha256": "6dd97ded82d51f88e1eac0da205f5574a7e03722c90847399868175bdcd13dc7",
+      "sha256": "c583b1aac882e2cf5d403684e4eadc3a713b57594dac974eeb23bacf9b2d09f2",
+      "bytes": 4840
+    },
+    "owner-publication.json": {
+      "path": "owner-publication.json.gz",
+      "original_sha256": "803b7a2a6e18b70614f1b33b65b31e6c9a5a556af101480155d5e971c3a9d6c0",
+      "sanitized_sha256": "874d6d9b932bd8ed997a77879736cf75ddbb17510436000230e9c4133bf76d3a",
+      "sha256": "6257df60f46dd3e5eef730194188ad016ebac0a5f88130b5ab040adb822e375d",
+      "bytes": 1691
+    },
+    "owner-floor-seams.json": {
+      "path": "owner-floor-seams.json.gz",
+      "original_sha256": "4815264b69dd5f364e0677fafdab7ff0580e7053aa6e8c9c0f22af031aeb1f68",
+      "sanitized_sha256": "4815264b69dd5f364e0677fafdab7ff0580e7053aa6e8c9c0f22af031aeb1f68",
+      "sha256": "3eb28c2cf2997ce95207539a60b160ca45558ac8e8d55266b8001d52eb7aa2bc",
+      "bytes": 319
+    },
+    "owner-floor-seams-rebased-final.json": {
+      "path": "owner-floor-seams-rebased-final.json.gz",
+      "original_sha256": "04bd1b495459ea2dc2e7dad86153603f12139ec0f9ab303eeb84dc6c303e7f1f",
+      "sanitized_sha256": "04bd1b495459ea2dc2e7dad86153603f12139ec0f9ab303eeb84dc6c303e7f1f",
+      "sha256": "d391b00689e5187aeef62e99da2be11977ac16bdad6e7197d732e8b02058fe6f",
+      "bytes": 343
+    },
+    "owner-commitlint-rebased-final.txt": {
+      "path": "owner-commitlint-rebased-final.txt.gz",
+      "original_sha256": "41115166c2137dbdfa5e5f9ceec9d59ab5480f676ef70dbed6dbe2378af5d8af",
+      "sanitized_sha256": "41115166c2137dbdfa5e5f9ceec9d59ab5480f676ef70dbed6dbe2378af5d8af",
+      "sha256": "115753ea05c058c907566a04812fdec9669f60b3676851117872d65c16635cb0",
+      "bytes": 240
+    },
+    "owner-contracts-build-rebased-final.txt": {
+      "path": "owner-contracts-build-rebased-final.txt.gz",
+      "original_sha256": "84d2977c5eeff208e818dc3715461110230027b06d670b4f85384b316435ba5c",
+      "sanitized_sha256": "34d48c8b51a488bfecfa2f858dfc37c22f73927f247820107bac7ecd2b557ece",
+      "sha256": "438f448ea9185031c81959d7319c814d63cdd1e61e11123a458d938306d675ce",
+      "bytes": 272
+    },
+    "owner-server-build-rebased-final.txt": {
+      "path": "owner-server-build-rebased-final.txt.gz",
+      "original_sha256": "100c1d92c0a9a4b1a67497ac12faa7940adad973f889835951021052b776f975",
+      "sanitized_sha256": "74307d038980048c86f14b67e634b512d51db00cf98750149617fb426740d5ac",
+      "sha256": "e644fd686ff1d6dfe8c417627ac85c67da39f36d409304511d9eb759b9d4200a",
+      "bytes": 311
+    },
+    "owner-contracts-build-metadata-final.txt": {
+      "path": "owner-contracts-build-metadata-final.txt.gz",
+      "original_sha256": "8073b8bcb7d35ac2e39bb56168f11618b920995c5b9793e5e01ab69f9dccd76b",
+      "sanitized_sha256": "48cd785a2c1ccfaba39ad7696c36c20b119c5448c48cc1d00c2ac6a0525d222e",
+      "sha256": "6465c26a75ffed9d372c9fff5a182c3bcb05dbf996078de1ca00eb3e7a2c7a19",
+      "bytes": 272
+    },
+    "owner-server-build-metadata-final.txt": {
+      "path": "owner-server-build-metadata-final.txt.gz",
+      "original_sha256": "963115c361d866f6c9e1af7ba494b61c2c60d4022dff3913b8f16233933b8366",
+      "sanitized_sha256": "d46e5a10a12333619f5a119167c99cc73a45ec15331ac8a01182bbe017ea341e",
+      "sha256": "1abc8620ec696fd474edc29206717856ff050b92da3171ece8881ab7ff8c8598",
+      "bytes": 310
+    },
+    "owner-commitlint.txt": {
+      "path": "owner-commitlint.txt.gz",
+      "original_sha256": "e7c6a68fdbd52a2012d66e7bee2c748903865e8da378b5f5eb3c51ae9c4fbb17",
+      "sanitized_sha256": "e7c6a68fdbd52a2012d66e7bee2c748903865e8da378b5f5eb3c51ae9c4fbb17",
+      "sha256": "df20309529b566618e7b63bc39eda7a685aa0a6042bf34406809e636983b4e7d",
+      "bytes": 238
+    },
+    "owner-commit-message.txt": {
+      "path": "owner-commit-message.txt.gz",
+      "original_sha256": "904520517f4f3be81459e671ad0c939b155ab8dc5aeb2e10dee0058ca7a14280",
+      "sanitized_sha256": "904520517f4f3be81459e671ad0c939b155ab8dc5aeb2e10dee0058ca7a14280",
+      "sha256": "15d3de16198d9a6340e36bfe1cbbe6b10510db73736d62f2e1a0705cd8c86e41",
+      "bytes": 196
+    }
+  },
+  "final_test_assemblies": {
+    "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll": "48f61114f09f63ecab94f5f6b24a9a1c5a1a2fa6b86e934ca4b9053ff4d25b3f",
+    "tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll": "3e763bb14e992fb7cc8c9045ccf8e6498dd3e4ebb95699e13855a1f95344d5eb",
+    "references/Hexalith.Tenants/tests/Hexalith.Tenants.Contracts.Tests/bin/Debug/net10.0/Hexalith.Tenants.Contracts.Tests.dll": "2de033cf3428b9a492cf63bd5bd87c79dc4dffbd47cff8d70db8b411690f064f",
+    "references/Hexalith.Tenants/tests/Hexalith.Tenants.Server.Tests/bin/Debug/net10.0/Hexalith.Tenants.Server.Tests.dll": "576e321e6569353dfec303ecaa1511fe7aa3c280ef5897c708c866d3dd53f19d"
+  },
+  "verified_source_sha256": {
+    "tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs": "fdecd4138313eb191b80f7f6441e4b00427ba138120e677123bf778f61f483a1",
+    "tests/Hexalith.Parties.Tests/FitnessTests/DocumentationFitnessTests.cs": "9533240328ab2d982dee59b41d0d73bfe589d082e80f38f0a3996b7ee21829b1",
+    "_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md": "bb3b7c43687426a12a8dba31fee6fa86fe3f8b543278b40a17066f4d917b9c76",
+    "docs/architecture.md": "3944c704fbb13b97d2030485b5fc3735e89e69789624b9959cf9428e3e4c1cdd",
+    "docs/project-overview.md": "bced7c187c61d1e2fe47f8e3bf6047bd36b2bede7db226a5cc4a598560950a09",
+    "Directory.Packages.props": "82623837226f73db410456fea2f9ad17c449a458a31f7f25ca1179ff3b6f44f7",
+    ".gitlink-signoff.tsv": "2314cf8613436a0160d565abf2441ced5e430b0f9109cc99c237efc343df1706"
+  },
+  "preservation": {
+    "historical_packet_tracked_files": 36,
+    "all_blob_hashes_match_baseline": true,
+    "deferred_work_unchanged": true,
+    "root_package_selection_unchanged": true
+  },
+  "transformation": "UTF-8 path substitutions only: Parties root, owner receipts, execution receipts, workspace prefix -> documented placeholders; deterministic gzip mtime0. No original historical receipt modified.",
+  "remaining_blockers": [
+    "Owner Contracts193 unchanged baseline failures require forbidden nested Builds files; full suite not green.",
+    "DW-50/82/168 deployed drain and historical/terminal reconciliation evidence absent.",
+    "DW-130/149 accepted installed custody packet and complete authenticated persisted-state/expiry qualification absent.",
+    "Aspire baseline wait15seconds timed out with security Unhealthy; owned AppHost stopped; no integrated-topology qualification."
+  ]
+}

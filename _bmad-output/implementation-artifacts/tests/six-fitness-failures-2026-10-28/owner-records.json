@@ -1,0 +1,70 @@
+{
+  "observed_utc": "2026-10-28T15:13:53.561364+00:00",
+  "scope": "Read-only inspection of available sibling owner records and root-declared sources; no owner decision or installed/deployed qualification inferred.",
+  "sources": {
+    "dependency_register": {
+      "path": "${WORKSPACE}/agents/_bmad-output/planning-artifacts/external-dependency-register.md",
+      "sha256": "e29b7fc41cb404209e0abb5fb1e735f29cab253ce4012b142a2c8c30a9c19860",
+      "bytes": 75611
+    },
+    "custody_decision": {
+      "path": "${WORKSPACE}/platform/docs/implementation/ext-parties-1-custody-proposal-2026-10-25/decision-and-binding-ledger.json",
+      "sha256": "a8496d20f44b0c0511de4e17a988db4f3ec9dc7330b5e8e37380b5c2277e42ad",
+      "bytes": 64286
+    },
+    "custody_installation": {
+      "path": "${WORKSPACE}/platform/docs/implementation/story-5-4-owner-continuation-2026-10-26/installation-ledger.json",
+      "sha256": "3c2421b0420137a13fde0466d8a9febbe4f3fda5053fc9d01941d1bda5e4c79b",
+      "bytes": 33750
+    },
+    "pipeline_persistence": {
+      "path": "${WORKSPACE}/memories/docs/operations/pipeline-persistence.md",
+      "sha256": "c6b01d4f72cc3b70c5a148d91a732ddb244491d7ae5ed3a5c1b793d07484d7e6",
+      "bytes": 12594
+    },
+    "failure_recovery": {
+      "path": "${WORKSPACE}/memories/docs/operations/failure-recovery.md",
+      "sha256": "3d3ed6d0a83fa04554bba76f18ff35a68d8daf9c18c1f8a59f9b02d53774e596",
+      "bytes": 15557
+    },
+    "synthetic_inventory_endpoint": {
+      "path": "${WORKSPACE}/memories/src/Hexalith.Memories.Server/Endpoints/SourceInventoryQualificationEndpoints.cs",
+      "sha256": "7d07e1b3283bc03adab2b3dc3bae09046dbb604df97598d74c481e2ec4f29bc5",
+      "bytes": 9176
+    }
+  },
+  "custody_decision": {
+    "status": "ProposedNotApprovedNotInstalled",
+    "ownerAccepted": false,
+    "available": false,
+    "liveQualified": false,
+    "qualifyingInstallationEstablished": false,
+    "acceptedReplacementIntegrationDate": null
+  },
+  "custody_installation": {
+    "status": "Blocked",
+    "dependencyAvailable": false,
+    "completeReplacementPacket": false,
+    "installedHashes": {
+      "providerProfile": null,
+      "custodyConfiguration": null,
+      "authorityEnrollment": null,
+      "publicTrust": null,
+      "executorAnchor": null,
+      "observerAnchor": null,
+      "enrollmentAnchor": null,
+      "hostInstalledProfile": null,
+      "protectionInstalledProfile": null,
+      "installedImageInventory": null,
+      "physicalQualificationPlan": null,
+      "jointConfiguration": null
+    }
+  },
+  "disposition": {
+    "DW-50": "open: no deployed older-writer drain and historical processing migration/reconciliation receipt established",
+    "DW-82": "open: no accepted complete historical Memories inventory/reconciliation and writer/scheduler drain established",
+    "DW-168": "open: no accepted deployed terminal-ingestion/deletion reconciliation established",
+    "DW-130": "open: no accepted installed custody packet and complete authenticated persisted-state/expiry execution established",
+    "DW-149": "open: no accepted installed custody packet and complete ordinary-command-replay/expiry qualification established"
+  }
+}
