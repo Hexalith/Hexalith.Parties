@@ -51,6 +51,26 @@ public sealed class PartiesTopologyIsolationTests
     }
 
     [Fact]
+    public void SessionConfiguration_ReservesListenersOutsideTheLinuxEphemeralClientRange()
+    {
+        if (!OperatingSystem.IsLinux()) { Assert.Skip("Linux ephemeral client port controls."); }
+        int[] ephemeral = File.ReadAllText("/proc/sys/net/ipv4/ip_local_port_range")
+            .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
+            .Select(value => int.Parse(value, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
+        PartiesTopologySession session = PartiesTopologySession.Create(isolatedIdentities: true);
+        var bootstrap = new Dictionary<string, string?>();
+        session.ConfigureBootstrapEnvironment(bootstrap);
+        int[] ports = bootstrap.Where(pair => pair.Key.EndsWith("PORT", StringComparison.Ordinal))
+            .Select(pair => int.Parse(pair.Value!, System.Globalization.CultureInfo.InvariantCulture))
+            .Concat(session.InternalGrpcPorts.Values).Append(session.EventStoreHttpPort)
+            .Append(session.MemoriesDomainInternalGrpcPort).ToArray();
+
+        ports.Distinct().Count().ShouldBe(16);
+        ports.Where(port => port >= ephemeral[0] && port <= ephemeral[1]).ShouldBeEmpty(
+            "Released listener reservations must not be claimed by outbound client connections.");
+    }
+
+    [Fact]
     [Trait("Category", "E2E")]
     [Trait("Tier", "3")]
     public async Task ConcurrentSessions_IsolateStreamsRejectCrossCallsAndSurvivePeerDisposalAsync()

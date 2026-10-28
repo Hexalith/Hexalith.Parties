@@ -19,25 +19,51 @@ internal sealed class PartiesTopologySession
         Root = Path.Combine(Path.GetTempPath(), "hexalith-parties-topology-" + Id);
         CertificateDirectory = Path.Combine(Root, "certificates");
         ConfigurationDirectory = Path.Combine(Root, "configuration");
-        // Hold candidates together and exclude prior in-process sessions. The eventual bind
-        // still fails closed if an unrelated process acquires a selected listener meanwhile.
+        // Released listener probes must not be reused as automatic outbound client ports.
+        // Linux exposes its configured range; other supported hosts use the IANA dynamic range.
+        int[] ephemeral = OperatingSystem.IsLinux()
+            ? File.ReadAllText("/proc/sys/net/ipv4/ip_local_port_range")
+                .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
+                .Select(value => int.Parse(value, CultureInfo.InvariantCulture)).ToArray()
+            : [49_152, 65_535];
+        if (ephemeral.Length != 2 || ephemeral[0] < 1_024 || ephemeral[1] > 65_535 || ephemeral[0] > ephemeral[1])
+        {
+            throw new InvalidOperationException("The OS ephemeral client port range could not be validated.");
+        }
+        // Hold candidates together and exclude prior in-process sessions. Explicit binds can
+        // still race after release; readiness continues to fail closed on any such collision.
         lock (PortAllocationLock)
         {
             var listeners = new List<TcpListener>();
+            bool allocated = false;
             try
             {
-                while (listeners.Count < 8 + SidecarNames.Length)
+                for (int attempt = 0; listeners.Count < 8 + SidecarNames.Length; attempt++)
                 {
-                    var listener = new TcpListener(IPAddress.Loopback, 0);
-                    listener.Start();
-                    if (AllocatedPorts.Add(((IPEndPoint)listener.LocalEndpoint).Port))
+                    if (attempt >= 1_024)
                     {
-                        listeners.Add(listener);
+                        throw new InvalidOperationException("Could not reserve topology listeners outside the OS ephemeral client port range.");
                     }
-                    else
+                    int candidate = Random.Shared.Next(20_000, 65_536);
+                    if ((candidate >= ephemeral[0] && candidate <= ephemeral[1]) || AllocatedPorts.Contains(candidate)) { continue; }
+                    var listener = new TcpListener(Socket.OSSupportsIPv6 ? IPAddress.IPv6Any : IPAddress.Any, candidate);
+                    try
+                    {
+                        if (Socket.OSSupportsIPv6) { listener.Server.DualMode = true; }
+                        listener.Start();
+                    }
+                    catch (SocketException exception) when (exception.SocketErrorCode == SocketError.AddressAlreadyInUse)
                     {
                         listener.Stop();
+                        continue;
                     }
+                    catch
+                    {
+                        listener.Stop();
+                        throw;
+                    }
+                    AllocatedPorts.Add(candidate);
+                    listeners.Add(listener);
                 }
                 int[] ports = listeners.Select(listener => ((IPEndPoint)listener.LocalEndpoint).Port).ToArray();
                 SentryPort = ports[0]; SentryHealthPort = ports[1];
@@ -47,11 +73,13 @@ internal sealed class PartiesTopologySession
                 MemoriesDomainInternalGrpcPort = ports[^1];
                 InternalGrpcPorts = SidecarNames.Select((name, index) => new KeyValuePair<string, int>(name, ports[index + 7]))
                     .ToFrozenDictionary(StringComparer.Ordinal);
+                allocated = true;
             }
             finally
             {
                 foreach (TcpListener listener in listeners)
                 {
+                    if (!allocated) { AllocatedPorts.Remove(((IPEndPoint)listener.LocalEndpoint).Port); }
                     listener.Stop();
                 }
             }
