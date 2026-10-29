@@ -1,0 +1,424 @@
+{
+  "date": "2026-10-29",
+  "baseline_revision": "ce66f530f4d0e208fe5d6fe83ea277f7de2aa407",
+  "scope": "Reverification of previously completed DW-27 list/search paging in Debug with published package dependencies; actual gateway router and handlers with substituted Dapr transport.",
+  "qualification_limits": [
+    "No production code, test or dependency correction was needed.",
+    "Full-suite, source-mapped and live-topology qualification were not performed."
+  ],
+  "command_placeholders": {
+    "PRIVATE_RESULTS": "A private directory chosen by the runner for XML/log output; original paths are intentionally omitted. Sanitized per-test outcomes and original artifact checksums are retained here."
+  },
+  "build": {
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "--configuration",
+      "Debug",
+      "-m:1"
+    ],
+    "exit_code": 0,
+    "warnings": 0,
+    "errors": 0,
+    "sdk": "10.0.403",
+    "test_runtime": ".NET 10.0.14"
+  },
+  "resolved_packages": {
+    "Hexalith.EventStore.Contracts/3.128.4": "package",
+    "Hexalith.EventStore.Server/3.128.4": "package",
+    "Hexalith.EventStore.Testing/3.128.4": "package"
+  },
+  "source_sha256": {
+    "src/Hexalith.Parties/Queries/PartySdkQueryService.cs": "13e2e16d00877fb6122ca8a0f86bd0785af3058fa80336f14ca2ca93ba749484",
+    "tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs": "3d2a6142ab4e576e9982597ad194f63a3ef60b48887627721ca7a189e9c0d9d5",
+    "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs": "5324007d17b8a2fe7d323c449eccb47268d946e5ab5a1dd2e976d7cb97da5088"
+  },
+  "executed_assembly_sha256": {
+    "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll": "0bc2c43cd53f9a5472dd73be1d5ad33da0388e55daf9ab2a6734d76c7a0f5e9b",
+    "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.dll": "1fcd59d4260c95969ba1b27bb524de31aecfb01886c7457989daf85f8b5b74a9",
+    "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.EventStore.Contracts.dll": "1f30b66c42b66b44fb588cff339576ae118dda5627c71f87d0458de2bf10d286",
+    "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.EventStore.Server.dll": "0f301a04dc10cc409a6d10bf5b402e2c87ca9bf0deb965230d2522a8bdbff69b"
+  },
+  "test_lanes": [
+    {
+      "name": "handler-paging",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-method",
+        "*PartySdkQueryHandlerTests.Paging_*",
+        "-failSkips",
+        "-xml",
+        "${PRIVATE_RESULTS}/handler-paging.xml"
+      ],
+      "exit_code": 0,
+      "started_utc": "2026-10-29T09:08:30.6593559+00:00",
+      "counts": {
+        "total": 56,
+        "passed": 56,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "private_xml_sha256": "c32ac06e38772bc404583b23ec66001a0e7c5e011fa4cc0ccfb01a02109d693a",
+      "private_log_sha256": "405a7a93e0f65b58ee89b6af95f79ece96d8883cb7d3361d2fd4c57c6c6befd8",
+      "cases": [
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_CursorAndOffsetErrors_PreserveCursorCategoryAsync(queryType: \\\"PartyIndex\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_CursorAndOffsetErrors_PreserveCursorCategoryAsync(queryType: \\\"PartySearch\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_EnvelopeAndSearchModePrecedence_RemainsUnchangedAsync(queryType: \\\"PartyIndex\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_EnvelopeAndSearchModePrecedence_RemainsUnchangedAsync(queryType: \\\"PartySearch\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_ValidContinuation_ReturnsRemainingContentsAsync(queryType: \\\"PartyIndex\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_ValidContinuation_ReturnsRemainingContentsAsync(queryType: \\\"PartySearch\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: -2147483648, cursor: null, offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: -2147483648, cursor: \\\"protected.cursor.payload\\\", offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: -2147483648, cursor: null, offset: -1)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: -2147483648, cursor: \\\"protected.cursor.payload\\\", offset: 0)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: -1, cursor: null, offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: -1, cursor: \\\"protected.cursor.payload\\\", offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: -1, cursor: null, offset: -1)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: -1, cursor: \\\"protected.cursor.payload\\\", offset: 0)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: 0, cursor: null, offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: 0, cursor: \\\"protected.cursor.payload\\\", offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: 0, cursor: null, offset: -1)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: 0, cursor: \\\"protected.cursor.payload\\\", offset: 0)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: 101, cursor: null, offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: 101, cursor: \\\"protected.cursor.payload\\\", offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: 101, cursor: null, offset: -1)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: 101, cursor: \\\"protected.cursor.payload\\\", offset: 0)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: 200, cursor: null, offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: 200, cursor: \\\"protected.cursor.payload\\\", offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: 200, cursor: null, offset: -1)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: 200, cursor: \\\"protected.cursor.payload\\\", offset: 0)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: 2147483647, cursor: null, offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: 2147483647, cursor: \\\"protected.cursor.payload\\\", offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: 2147483647, cursor: null, offset: -1)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartyIndex\\\", pageSize: 2147483647, cursor: \\\"protected.cursor.payload\\\", offset: 0)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: -2147483648, cursor: null, offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: -2147483648, cursor: \\\"protected.cursor.payload\\\", offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: -2147483648, cursor: null, offset: -1)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: -2147483648, cursor: \\\"protected.cursor.payload\\\", offset: 0)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: -1, cursor: null, offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: -1, cursor: \\\"protected.cursor.payload\\\", offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: -1, cursor: null, offset: -1)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: -1, cursor: \\\"protected.cursor.payload\\\", offset: 0)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: 0, cursor: null, offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: 0, cursor: \\\"protected.cursor.payload\\\", offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: 0, cursor: null, offset: -1)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: 0, cursor: \\\"protected.cursor.payload\\\", offset: 0)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: 101, cursor: null, offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: 101, cursor: \\\"protected.cursor.payload\\\", offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: 101, cursor: null, offset: -1)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: 101, cursor: \\\"protected.cursor.payload\\\", offset: 0)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: 200, cursor: null, offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: 200, cursor: \\\"protected.cursor.payload\\\", offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: 200, cursor: null, offset: -1)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: 200, cursor: \\\"protected.cursor.payload\\\", offset: 0)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: 2147483647, cursor: null, offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: 2147483647, cursor: \\\"protected.cursor.payload\\\", offset: null)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: 2147483647, cursor: null, offset: -1)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(queryType: \\\"PartySearch\\\", pageSize: 2147483647, cursor: \\\"protected.cursor.payload\\\", offset: 0)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_AcceptedBoundariesDefaultsAndLegacyClamping_PreserveMetadataAsync(queryType: \\\"PartyIndex\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_AcceptedBoundariesDefaultsAndLegacyClamping_PreserveMetadataAsync(queryType: \\\"PartySearch\\\")",
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "name": "gateway-handler-failures",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-method",
+        "*EventStoreGatewayRoutingTests.PostQueries_ActualPagingHandlerFailure_MapsSafeProblemAsync",
+        "-failSkips",
+        "-result-xml",
+        "${PRIVATE_RESULTS}/gateway-handler-failures.xml"
+      ],
+      "exit_code": 0,
+      "started_utc": "2026-10-29T09:09:00.6182994+00:00",
+      "counts": {
+        "total": 10,
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "private_xml_sha256": "1c4fd2ef2b31d7e4fc311110bc51bef5b42f6a6e76224f2d80cb2d1fb875f9b4",
+      "private_log_sha256": "5bcfd3ff2d18b7ab5065cb36ebd217d32889fb50585c8377194626cf629a5177",
+      "cases": [
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests.PostQueries_ActualPagingHandlerFailure_MapsSafeProblemAsync(queryType: \\\"PartyIndex\\\", pageSize: 101, cursor: null, expectedReason: \\\"invalid-page\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests.PostQueries_ActualPagingHandlerFailure_MapsSafeProblemAsync(queryType: \\\"PartyIndex\\\", pageSize: 200, cursor: null, expectedReason: \\\"invalid-page\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests.PostQueries_ActualPagingHandlerFailure_MapsSafeProblemAsync(queryType: \\\"PartyIndex\\\", pageSize: 101, cursor: \\\"protected.cursor.payload\\\", expectedReason: \\\"invalid-page\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests.PostQueries_ActualPagingHandlerFailure_MapsSafeProblemAsync(queryType: \\\"PartyIndex\\\", pageSize: 200, cursor: \\\"protected.cursor.payload\\\", expectedReason: \\\"invalid-page\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests.PostQueries_ActualPagingHandlerFailure_MapsSafeProblemAsync(queryType: \\\"PartySearch\\\", pageSize: 101, cursor: null, expectedReason: \\\"invalid-page\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests.PostQueries_ActualPagingHandlerFailure_MapsSafeProblemAsync(queryType: \\\"PartySearch\\\", pageSize: 200, cursor: null, expectedReason: \\\"invalid-page\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests.PostQueries_ActualPagingHandlerFailure_MapsSafeProblemAsync(queryType: \\\"PartySearch\\\", pageSize: 101, cursor: \\\"protected.cursor.payload\\\", expectedReason: \\\"invalid-page\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests.PostQueries_ActualPagingHandlerFailure_MapsSafeProblemAsync(queryType: \\\"PartySearch\\\", pageSize: 200, cursor: \\\"protected.cursor.payload\\\", expectedReason: \\\"invalid-page\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests.PostQueries_ActualPagingHandlerFailure_MapsSafeProblemAsync(queryType: \\\"PartyIndex\\\", pageSize: 20, cursor: \\\"protected.cursor.payload\\\", expectedReason: \\\"invalid-cursor\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests.PostQueries_ActualPagingHandlerFailure_MapsSafeProblemAsync(queryType: \\\"PartySearch\\\", pageSize: 20, cursor: \\\"protected.cursor.payload\\\", expectedReason: \\\"invalid-cursor\\\")",
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "name": "gateway-public-maximum",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-method",
+        "*EventStoreGatewayRoutingTests.PostQueries_PageSizeAbovePublicMaximum_RejectsBeforeHandlerAsync",
+        "-failSkips",
+        "-result-xml",
+        "${PRIVATE_RESULTS}/gateway-public-maximum.xml"
+      ],
+      "exit_code": 0,
+      "started_utc": "2026-10-29T09:09:02.4142365+00:00",
+      "counts": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "private_xml_sha256": "506f2c425b3ca11d554c8177a2f44ea448a00f330ea94010bd8b00a8e1051ccc",
+      "private_log_sha256": "5e4adb97c1683b730aa7d2b7a4d18eafcbb26b0c40784920c64740ce7cfef22e",
+      "cases": [
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests.PostQueries_PageSizeAbovePublicMaximum_RejectsBeforeHandlerAsync(queryType: \\\"PartyIndex\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests.PostQueries_PageSizeAbovePublicMaximum_RejectsBeforeHandlerAsync(queryType: \\\"PartySearch\\\")",
+          "result": "Pass"
+        }
+      ]
+    }
+  ],
+  "unsuccessful_invocations": [
+    {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-method",
+        "*EventStoreGatewayRoutingTests.PostQueries_*Pag*",
+        "-failSkips",
+        "-xml",
+        "${PRIVATE_RESULTS}/gateway-paging.xml"
+      ],
+      "exit_code": 3,
+      "result": "No tests executed; xUnit rejects interior wildcards. Corrected with the explicit gateway method filters recorded above."
+    }
+  ],
+  "runner_notice": "The successful 56-case handler command used the accepted deprecated -xml switch; subsequent commands used -result-xml.",
+  "commitlint": {
+    "command": [
+      "node",
+      "node_modules/@commitlint/cli/cli.js",
+      "--edit",
+      "${PRIVATE_RESULTS}/commit-message.txt",
+      "--verbose"
+    ],
+    "cli_version": "21.2.2",
+    "message": "docs: verify completed DW-27 paging behavior\n",
+    "exit_code": 0,
+    "output": "\u29d7   --- input ---\ndocs: verify completed DW-27 paging behavior\n\u2714   found 0 problems, 0 warnings\n"
+  }
+}
