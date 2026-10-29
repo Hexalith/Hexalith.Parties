@@ -12,12 +12,34 @@ public sealed class ExtPartiesVerifierEvidenceTests(ITestOutputHelper output)
     private const string Harness = """
         param([string]$Script, [string]$Mode, [string]$EvidenceDirectory,
             [string]$DependencyRegisterPath, [string]$Fixture, [string]$Participant,
-            [switch]$Synchronize)
+            [switch]$Synchronize, [string]$LocalGraphCase)
         $ErrorActionPreference = 'Stop'
         $lookupLog = Join-Path $Fixture ($Participant + '.lookups')
         $writeLog = Join-Path $Fixture ($Participant + '.writes')
         function dotnet {
             [IO.File]::AppendAllText($lookupLog, "dotnet`n")
+            if ($LocalGraphCase) {
+                [IO.File]::AppendAllText((Join-Path $Fixture 'graph-commands.log'), ($args -join "`t") + "`n")
+                if ($args[0] -eq 'build') { throw 'synthetic build boundary' }
+                if ($args[0] -ne 'msbuild') { throw 'Unexpected source graph command.' }
+                $global:LASTEXITCODE = 0
+                if ($LocalGraphCase -eq 'malformed') { return '{' }
+                if ($LocalGraphCase -eq 'failed-evaluation') { $global:LASTEXITCODE = 1; return '{}' }
+                $root = ($args | Where-Object { $_ -like '-p:HexalithEventStoreRoot=*' }) -replace '^-p:HexalithEventStoreRoot=', ''
+                $packages = $LocalGraphCase -eq 'packages' -or ($LocalGraphCase -eq 'later-packages' -and $args[1] -like '*Contracts.Tests.csproj')
+                @{
+                    Properties = @{
+                        Configuration = $(if ($LocalGraphCase -eq 'release') { 'Release' } else { 'Debug' })
+                        HexalithSourceMappingMode = $(if ($packages) { '' } else { 'source' })
+                        HexalithEventStoreFromSource = $(if ($packages) { '' } else { 'true' })
+                        HexalithEventStoreRoot = $(if ($LocalGraphCase -eq 'wrong-root') { Join-Path $Fixture 'foreign-eventstore' } else { $root })
+                        HexalithEventStoreVersion = '3.128.4'
+                    }
+                    Items = @{ ProjectReference = @(@{ FullPath = $(if ($LocalGraphCase -eq 'missing-reference') { Join-Path $Fixture 'foreign.csproj' }
+                        else { Join-Path $root 'src/Hexalith.EventStore.DomainService/Hexalith.EventStore.DomainService.csproj' }) }) }
+                } | ConvertTo-Json -Depth 5
+                return
+            }
             throw 'Unexpected Local dependency lookup.'
         }
         function Test-Path {
@@ -31,7 +53,7 @@ public sealed class ExtPartiesVerifierEvidenceTests(ITestOutputHelper output)
         }
         function Set-Content {
             [CmdletBinding()]
-            param([string]$Path, [string]$LiteralPath, [object]$Value)
+            param([string]$Path, [string]$LiteralPath, [Parameter(ValueFromPipeline=$true)][object]$Value)
             [IO.File]::AppendAllText($writeLog, "evidence-write`n")
             Microsoft.PowerShell.Management\Set-Content @PSBoundParameters
         }
@@ -95,6 +117,39 @@ public sealed class ExtPartiesVerifierEvidenceTests(ITestOutputHelper output)
         Snapshot(evidence).ShouldBe(before);
         File.Exists(Path.Combine(fixture, "retry.lookups")).ShouldBeFalse();
         File.Exists(Path.Combine(fixture, "retry.writes")).ShouldBeFalse();
+    }
+
+    /// <summary>Local qualification inspects selected references before any build, including later owner lanes.</summary>
+    /// <param name="graphCase">The isolated intercepted MSBuild result; it is not source qualification.</param>
+    /// <param name="expectedError">The required safe refusal or accepted-control build boundary.</param>
+    [Theory]
+    [InlineData("packages", "Local source graph is not selected")]
+    [InlineData("wrong-root", "Local source graph is not selected")]
+    [InlineData("release", "Local source graph is not selected")]
+    [InlineData("missing-reference", "does not select the requested EventStore DomainService project")]
+    [InlineData("malformed", "Cannot inspect required Local source graph")]
+    [InlineData("failed-evaluation", "Cannot inspect required Local source graph")]
+    [InlineData("later-packages", "Local source graph is not selected")]
+    [InlineData("source", "synthetic build boundary")]
+    public async Task LocalSourceGraph_RefusesPackageOrForeignSelectionBeforeBuild(string graphCase, string expectedError)
+    {
+        string fixture = CreateFixture();
+        string evidence = Path.Combine(fixture, "evidence");
+        using Process attempt = Start(fixture, evidence, "graph", "Local", localGraphCase: graphCase);
+
+        (int exitCode, string error) = await CompleteAsync(attempt, fixture, "graph").ConfigureAwait(true);
+
+        exitCode.ShouldNotBe(0);
+        error.ShouldContain(expectedError);
+        string[] commands = File.ReadAllLines(Path.Combine(fixture, "graph-commands.log"));
+        commands.Count(command => command.StartsWith("build\t", StringComparison.Ordinal)).ShouldBe(graphCase == "source" ? 1 : 0);
+        File.Exists(Path.Combine(evidence, "local-evidence.json")).ShouldBeFalse();
+        File.Exists(Path.Combine(evidence, "Hexalith.Parties-source-graph.json")).ShouldBeTrue();
+        if (graphCase == "source" || graphCase == "later-packages")
+        {
+            File.Exists(Path.Combine(evidence, "Hexalith.EventStore.Contracts-source-graph.json")).ShouldBeTrue();
+            File.Exists(Path.Combine(evidence, "Hexalith.EventStore.Contracts.Tests-source-graph.json")).ShouldBeTrue();
+        }
     }
 
     /// <summary>Direct readiness rejects retained evidence before input validation or register lookup.</summary>
@@ -196,7 +251,7 @@ public sealed class ExtPartiesVerifierEvidenceTests(ITestOutputHelper output)
     }
 
     private static Process Start(string fixture, string evidence, string participant, string mode,
-        bool completeInputs = false, bool synchronize = false)
+        bool completeInputs = false, bool synchronize = false, string? localGraphCase = null)
     {
         string? configuredRoot = Environment.GetEnvironmentVariable("HEXALITH_PARTIES_SOURCE_ROOT");
         string repository = string.IsNullOrWhiteSpace(configuredRoot) ? CiTestPaths.RepositoryRoot : configuredRoot;
@@ -239,6 +294,11 @@ public sealed class ExtPartiesVerifierEvidenceTests(ITestOutputHelper output)
             start.ArgumentList.Add(argument);
         }
         if (synchronize) { start.ArgumentList.Add("-Synchronize"); }
+        if (localGraphCase is not null)
+        {
+            start.ArgumentList.Add("-LocalGraphCase");
+            start.ArgumentList.Add(localGraphCase);
+        }
         File.WriteAllText(Path.Combine(fixture, participant + ".command.json"), JsonSerializer.Serialize(new
         {
             executable = start.FileName, arguments = start.ArgumentList.ToArray(), environment = start.Environment,

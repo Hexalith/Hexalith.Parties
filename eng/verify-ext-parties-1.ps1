@@ -45,23 +45,55 @@ if ($Mode -eq 'Live') {
 }
 
 if ([string]::IsNullOrWhiteSpace($ArtifactsDirectory)) { $ArtifactsDirectory = Join-Path $EvidenceDirectory 'artifacts' }
-if ([string]::IsNullOrWhiteSpace($MemoriesRoot)) { $MemoriesRoot = Join-Path $EvidenceDirectory 'optional-memories-package-mode' }
 $ArtifactsDirectory = [System.IO.Path]::GetFullPath($ArtifactsDirectory, $callerDirectory)
-$flags = @('-c', 'Debug', '--artifacts-path', $ArtifactsDirectory, '-p:UseHexalithProjectReferences=true', '-p:UseNuGetDeps=false',
+$selectionFlags = @(
     "-p:HexalithEventStoreRoot=$EventStoreRoot", "-p:HexalithCommonsRoot=$PartiesRoot/references/Hexalith.Commons",
-    "-p:HexalithMemoriesRoot=$MemoriesRoot", '-p:NuGetAudit=false', '-m:1')
+    '-p:NuGetAudit=false')
+if (-not [string]::IsNullOrWhiteSpace($MemoriesRoot)) { $selectionFlags += "-p:HexalithMemoriesRoot=$MemoriesRoot" }
+$flags = @('-c', 'Debug', '--artifacts-path', $ArtifactsDirectory, '-m:1') + $selectionFlags
+
+function Get-LocalSourceGraph([string]$project, [string]$name, [switch]$RequireDomainService) {
+    # The pinned module tool owns source selection. Legacy mode flags alone now
+    # evaluate to package references; inspect the graph that will actually build.
+    $arguments = @('msbuild', $project, '-nologo', '-p:Configuration=Debug',
+        '-getProperty:Configuration,HexalithSourceMappingMode,HexalithEventStoreFromSource,HexalithEventStoreRoot,HexalithEventStoreVersion',
+        '-getItem:ProjectReference') + $selectionFlags
+    $raw = (& dotnet @arguments 2> (Join-Path $EvidenceDirectory "$name-source-graph.stderr.log") | Out-String).Trim()
+    $graphExit = $LASTEXITCODE
+    $raw | Set-Content -LiteralPath (Join-Path $EvidenceDirectory "$name-source-graph.json")
+    if ($graphExit -ne 0) { throw "Cannot inspect required Local source graph: $name" }
+    try { $graph = $raw | ConvertFrom-Json -ErrorAction Stop }
+    catch { throw "Cannot inspect required Local source graph: $name" }
+    $properties = $graph.Properties
+    $comparison = if ([OperatingSystem]::IsWindows()) { [StringComparison]::OrdinalIgnoreCase } else { [StringComparison]::Ordinal }
+    $selectedRoot = if (-not [string]::IsNullOrWhiteSpace($properties.HexalithEventStoreRoot)) {
+        [IO.Path]::TrimEndingDirectorySeparator([IO.Path]::GetFullPath($properties.HexalithEventStoreRoot, $callerDirectory))
+    } else { '' }
+    if ($properties.Configuration -cne 'Debug' -or $properties.HexalithSourceMappingMode -cne 'source' -or
+        $properties.HexalithEventStoreFromSource -cne 'true' -or
+        -not [string]::Equals($selectedRoot, [IO.Path]::TrimEndingDirectorySeparator($EventStoreRoot), $comparison)) {
+        throw "Local source graph is not selected for $name at the requested EventStore root. Use the pinned hexalith-module debug mapping; legacy mode flags do not select source references."
+    }
+    if ($RequireDomainService) {
+        $expected = Join-Path $EventStoreRoot 'src/Hexalith.EventStore.DomainService/Hexalith.EventStore.DomainService.csproj'
+        $sourceReferences = @($graph.Items.ProjectReference | Where-Object { [string]::Equals($_.FullPath, $expected, $comparison) })
+        if ($sourceReferences.Count -ne 1) { throw 'Local Parties source graph does not select the requested EventStore DomainService project.' }
+    }
+    return $properties
+}
+
+$null = Get-LocalSourceGraph (Join-Path $PartiesRoot 'src/Hexalith.Parties/Hexalith.Parties.csproj') 'Hexalith.Parties' -RequireDomainService
 # Resolve one source version for the entire Local graph. Tenants forwards its EventStore
 # package version on project references; differing root pins otherwise overwrite a shared
 # output assembly with a version that does not satisfy another just-built consumer.
 $eventStoreProject = Join-Path $EventStoreRoot 'src/Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj'
-$versionArguments = @('msbuild', $eventStoreProject, '-nologo', '-getProperty:HexalithEventStoreVersion',
-    '-p:Configuration=Debug', '-p:UseHexalithProjectReferences=true', '-p:NuGetAudit=false')
-$eventStoreVersion = (& dotnet @versionArguments 2> (Join-Path $EvidenceDirectory 'eventstore-version.stderr.log') | Out-String).Trim()
-if ($LASTEXITCODE -ne 0 -or $eventStoreVersion -notmatch '\A\d+\.\d+\.\d+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?\z') {
+$eventStoreVersion = (Get-LocalSourceGraph $eventStoreProject 'Hexalith.EventStore.Contracts').HexalithEventStoreVersion
+if ($eventStoreVersion -notmatch '\A\d+\.\d+\.\d+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?\z') {
     throw 'Cannot resolve the selected EventStore source version for a consistent Local build graph.'
 }
 $eventStoreVersion | Set-Content -LiteralPath (Join-Path $EvidenceDirectory 'eventstore-version.log')
 $flags += "-p:HexalithEventStoreVersion=$eventStoreVersion"
+$selectionFlags += "-p:HexalithEventStoreVersion=$eventStoreVersion"
 $lanes = @(
     @{ Root=$EventStoreRoot; Project='Hexalith.EventStore.Contracts.Tests'; Classes=@('*StreamReadPageValidatorTests', '*RetainedIdentityHistoryValidatorTests', '*RecoverableAnchoredStateTests'); Matrix='Shared source contract validation' },
     @{ Root=$EventStoreRoot; Project='Hexalith.EventStore.Client.Tests'; Classes=@('*AuthoritativeEventStreamReaderTests', '*EventStoreGatewayClientTests', '*EventStoreGatewayClientStreamTests', '*RetainedIdentityHistoryReaderTests', '*SourceNamespaceSnapshotReaderTests', '*SourcePublicationNamespaceTests', '*SourcePublicationFeedTests', '*SourcePublicationDispatcherTests', '*DaprSourcePublicationIndexStoreTests', '*DirectoryAtomicAppendTests'); Matrix='Shared complete source/isolation/discovery' },
@@ -83,6 +115,7 @@ foreach ($lane in $lanes) {
     try {
         $project = Join-Path $lane.Root "tests/$($lane.Project)/$($lane.Project).csproj"
         if (-not (Test-Path $project)) { throw "Missing required owner project: $project" }
+        $null = Get-LocalSourceGraph $project $lane.Project
         $buildLog = Join-Path $EvidenceDirectory "$($lane.Project)-build.log"
         Write-Host "Building $($lane.Project)"
         & dotnet build $project @flags *> $buildLog

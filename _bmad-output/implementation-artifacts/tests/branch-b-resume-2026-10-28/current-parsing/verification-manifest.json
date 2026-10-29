@@ -1,0 +1,569 @@
+{
+  "createdAtUtc": "2026-10-28T17:55:57.582968+00:00",
+  "sourceHead": "2c08ae879008381948761db90ced5cd7eac091db",
+  "originalSpecBaseline": "5388884eec84b16545fdc008b2fc04547b0ed5b6",
+  "frozenInnerBytesSha256": "97ea907a01a80dee171c29626af05353a4a8eb1b3e260dab5faa14488d53dc94",
+  "scope": "One current-query parsing deadline fix and actual-source verifier preflight. Selected affected lanes; no new complete Local/source gate or installed acceptance. Original two production execution tasks remain open.",
+  "sourceFilesSha256": {
+    "eng/verify-ext-parties-1.ps1": "7169d009a2799a0e4bfa33216ef774ce8057ddfa12ada610e11070b6da0b8012",
+    "src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs": "05ad78d05de516914f96c247a8d5419e54b52a0fbdd61d4bda9eccf2323f7c49",
+    "tests/Hexalith.Parties.Ci.Tests/ExtPartiesVerifierEvidenceTests.cs": "c18982513d4b3ddc36bd1e8f59e485aefce4d3d11bba9593eb789358473d5450",
+    "tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs": "75adfc16e575ad4f4c87f9b7a45b264aadd9fb108eaf6d690f09b19ecce7b71b"
+  },
+  "commands": [
+    {
+      "name": "pinned-source-debug",
+      "command": "dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json --evidence /tmp/ext-parties-1-20261028-current-parsing/source-debug.json --output json",
+      "exitCode": 2,
+      "scope": "Before launch: HXR015 installed Aspire 13.6.4 versus catalog-expected 13.6.1; HXE160 repository-relative evidence path required. No dependency/tool version was changed."
+    },
+    {
+      "name": "red-build",
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug --artifacts-path /tmp/ext-parties-1-20261028-current-parsing/artifacts -p:NuGetAudit=false -m:1",
+      "exitCode": 0
+    },
+    {
+      "name": "red-tests",
+      "command": "dotnet /tmp/ext-parties-1-20261028-current-parsing/artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll -method '*IdentityEnvelopeParsing_IsBoundedAndRecovers' -result-xml /tmp/ext-parties-1-20261028-current-parsing/red-tests.xml",
+      "exitCode": 1
+    },
+    {
+      "name": "first-green-build",
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug --artifacts-path /tmp/ext-parties-1-20261028-current-parsing/artifacts -p:NuGetAudit=false -m:1",
+      "exitCode": 0
+    },
+    {
+      "name": "first-green-tests",
+      "command": "HEXALITH_PARTIES_SOURCE_ROOT=/home/administrator/projects/hexalith/parties dotnet /tmp/ext-parties-1-20261028-current-parsing/artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll -class '*PartyIdentityAdmissionTests' -class '*PartyIdentityQueryHandlerTests' -class '*PartyIdentityRetentionConfigurationTests' -class '*PartyDomainProcessorValidationTests' -class '*PartySdkQueryHandlerTests' -class '*PartiesProcessEndpointTests' -class '*PartiesDomainServiceSecurityTests' -result-xml /tmp/ext-parties-1-20261028-current-parsing/green-tests.xml",
+      "exitCode": 1,
+      "scope": "Four added cross-surface saturation assertions incorrectly expected parsed historical tenant metadata; corrected to empty metadata. No production correction followed this run."
+    },
+    {
+      "name": "final-build",
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug --artifacts-path /tmp/ext-parties-1-20261028-current-parsing/artifacts -p:NuGetAudit=false -m:1",
+      "exitCode": 0
+    },
+    {
+      "name": "final-tests",
+      "command": "HEXALITH_PARTIES_SOURCE_ROOT=/home/administrator/projects/hexalith/parties dotnet /tmp/ext-parties-1-20261028-current-parsing/artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll -class '*PartyIdentityAdmissionTests' -class '*PartyIdentityQueryHandlerTests' -class '*PartyIdentityRetentionConfigurationTests' -class '*PartyDomainProcessorValidationTests' -class '*PartySdkQueryHandlerTests' -class '*PartiesProcessEndpointTests' -class '*PartiesDomainServiceSecurityTests' -result-xml /tmp/ext-parties-1-20261028-current-parsing/final-tests.xml",
+      "exitCode": 0
+    },
+    {
+      "name": "ci-final-build",
+      "command": "dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Debug --artifacts-path /tmp/ext-parties-1-20261028-current-parsing/artifacts -p:NuGetAudit=false -m:1",
+      "exitCode": 0
+    },
+    {
+      "name": "ci-final-tests",
+      "command": "HEXALITH_PARTIES_SOURCE_ROOT=/home/administrator/projects/hexalith/parties dotnet /tmp/ext-parties-1-20261028-current-parsing/artifacts/bin/Hexalith.Parties.Ci.Tests/debug/Hexalith.Parties.Ci.Tests.dll -class '*ExtPartiesVerifierEvidenceTests' -result-xml /tmp/ext-parties-1-20261028-current-parsing/ci-final-tests.xml",
+      "exitCode": 0
+    },
+    {
+      "name": "actual-unmapped-local",
+      "command": "pwsh -NoProfile -File eng/verify-ext-parties-1.ps1 -Mode Local -EvidenceDirectory /tmp/ext-parties-1-20261028-current-parsing/local-source-gate",
+      "exitCode": 1,
+      "scope": "Refused actual package graph before builds; no complete Local gate executed."
+    },
+    {
+      "name": "actual-ignored-legacy-flags",
+      "command": "dotnet msbuild src/Hexalith.Parties/Hexalith.Parties.csproj -nologo -p:Configuration=Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore -getProperty:Configuration,HexalithSourceMappingMode,HexalithEventStoreFromSource,HexalithEventStoreRoot -getItem:ProjectReference",
+      "exitCode": 0
+    },
+    {
+      "name": "actual-selected-source-preflight",
+      "command": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "/tmp/ext-parties-1-20261028-current-parsing/selected-preflight.ps1",
+        "-Script",
+        "/home/administrator/projects/hexalith/parties/eng/verify-ext-parties-1.ps1",
+        "-EvidenceDirectory",
+        "/tmp/ext-parties-1-20261028-current-parsing/selected-preflight",
+        "-EventStoreRoot",
+        "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+        "-PartiesRoot",
+        "/home/administrator/projects/hexalith/parties"
+      ],
+      "exitCode": 0,
+      "scope": "Current real evaluated graph through a pre-existing retained Oct 28 mapping. Evaluates exact source DomainService reference; no fresh tool or source-build qualification."
+    },
+    {
+      "name": "server-build",
+      "command": "dotnet build tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj -c Debug --artifacts-path /tmp/ext-parties-1-20261028-current-parsing/server-artifacts -p:NuGetAudit=false -m:1",
+      "exitCode": 0
+    },
+    {
+      "name": "server-tests",
+      "command": "dotnet /tmp/ext-parties-1-20261028-current-parsing/server-artifacts/bin/Hexalith.Parties.Server.Tests/debug/Hexalith.Parties.Server.Tests.dll -class '*AgentPartyProvisioningTests' -result-xml /tmp/ext-parties-1-20261028-current-parsing/server-tests.xml",
+      "exitCode": 0
+    },
+    {
+      "name": "client-build",
+      "command": "dotnet build tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj -c Debug --artifacts-path /tmp/ext-parties-1-20261028-current-parsing/client-artifacts -p:NuGetAudit=false -m:1",
+      "exitCode": 0
+    },
+    {
+      "name": "client-tests",
+      "command": "dotnet /tmp/ext-parties-1-20261028-current-parsing/client-artifacts/bin/Hexalith.Parties.Client.Tests/debug/Hexalith.Parties.Client.Tests.dll -class '*HttpPartiesIdentityClientTests' -result-xml /tmp/ext-parties-1-20261028-current-parsing/client-tests.xml",
+      "exitCode": 0
+    }
+  ],
+  "results": {
+    "red-tests.xml": {
+      "total": 8,
+      "outcomes": {
+        "Fail": 4,
+        "Pass": 4
+      },
+      "classes": {
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests": 8
+      }
+    },
+    "green-tests.xml": {
+      "total": 1474,
+      "outcomes": {
+        "Pass": 1470,
+        "Fail": 4
+      },
+      "classes": {
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests": 320,
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests": 875,
+        "Hexalith.Parties.Tests.Domain.PartyIdentityAdmissionTests": 50,
+        "Hexalith.Parties.Tests.Gateway.PartiesDomainServiceSecurityTests": 43,
+        "Hexalith.Parties.Tests.Gateway.PartiesProcessEndpointTests": 13,
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityRetentionConfigurationTests": 6,
+        "Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests": 167
+      }
+    },
+    "final-tests.xml": {
+      "total": 1474,
+      "outcomes": {
+        "Pass": 1474
+      },
+      "classes": {
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests": 320,
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests": 875,
+        "Hexalith.Parties.Tests.Domain.PartyIdentityAdmissionTests": 50,
+        "Hexalith.Parties.Tests.Gateway.PartiesDomainServiceSecurityTests": 43,
+        "Hexalith.Parties.Tests.Gateway.PartiesProcessEndpointTests": 13,
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityRetentionConfigurationTests": 6,
+        "Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests": 167
+      },
+      "parsingCases": [
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IdentityEnvelopeParsing_ConsumesTheRemainingConfiguredBudget(historical: False)",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IdentityEnvelopeParsing_ConsumesTheRemainingConfiguredBudget(historical: True)",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IdentityEnvelopeParsing_RejectsMalformedPayloadBeforeAdmission(historical: False, payload: \\\"null\\\", cancelCaller: False)",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IdentityEnvelopeParsing_RejectsMalformedPayloadBeforeAdmission(historical: False, payload: \\\"{\\\", cancelCaller: False)",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IdentityEnvelopeParsing_RejectsMalformedPayloadBeforeAdmission(historical: False, payload: \\\"[]\\\", cancelCaller: False)",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IdentityEnvelopeParsing_RejectsMalformedPayloadBeforeAdmission(historical: False, payload: \\\"{}\\\", cancelCaller: False)",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IdentityEnvelopeParsing_RejectsMalformedPayloadBeforeAdmission(historical: False, payload: \\\"{\\\", cancelCaller: True)",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IdentityEnvelopeParsing_RejectsMalformedPayloadBeforeAdmission(historical: True, payload: \\\"null\\\", cancelCaller: False)",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IdentityEnvelopeParsing_RejectsMalformedPayloadBeforeAdmission(historical: True, payload: \\\"{\\\", cancelCaller: False)",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IdentityEnvelopeParsing_RejectsMalformedPayloadBeforeAdmission(historical: True, payload: \\\"[]\\\", cancelCaller: False)",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IdentityEnvelopeParsing_RejectsMalformedPayloadBeforeAdmission(historical: True, payload: \\\"{}\\\", cancelCaller: False)",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IdentityEnvelopeParsing_RejectsMalformedPayloadBeforeAdmission(historical: True, payload: \\\"{\\\", cancelCaller: True)",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IdentityEnvelopeParsing_IsBoundedAndRecovers(historical: False, cancelCaller: False, lateFault: False)",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IdentityEnvelopeParsing_IsBoundedAndRecovers(historical: False, cancelCaller: False, lateFault: True)",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IdentityEnvelopeParsing_IsBoundedAndRecovers(historical: False, cancelCaller: True, lateFault: False)",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IdentityEnvelopeParsing_IsBoundedAndRecovers(historical: False, cancelCaller: True, lateFault: True)",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IdentityEnvelopeParsing_IsBoundedAndRecovers(historical: True, cancelCaller: False, lateFault: False)",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IdentityEnvelopeParsing_IsBoundedAndRecovers(historical: True, cancelCaller: False, lateFault: True)",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IdentityEnvelopeParsing_IsBoundedAndRecovers(historical: True, cancelCaller: True, lateFault: False)",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IdentityEnvelopeParsing_IsBoundedAndRecovers(historical: True, cancelCaller: True, lateFault: True)"
+      ]
+    },
+    "ci-tests.xml": {
+      "total": 17,
+      "outcomes": {
+        "Pass": 9,
+        "Fail": 8
+      },
+      "classes": {
+        "Hexalith.Parties.Ci.Tests.ExtPartiesVerifierEvidenceTests": 17
+      }
+    },
+    "ci-final-tests.xml": {
+      "total": 17,
+      "outcomes": {
+        "Pass": 17
+      },
+      "classes": {
+        "Hexalith.Parties.Ci.Tests.ExtPartiesVerifierEvidenceTests": 17
+      }
+    },
+    "server-tests.xml": {
+      "total": 3,
+      "outcomes": {
+        "Pass": 3
+      },
+      "classes": {
+        "Hexalith.Parties.Server.Tests.Aggregates.AgentPartyProvisioningTests": 3
+      }
+    },
+    "client-tests.xml": {
+      "total": 176,
+      "outcomes": {
+        "Pass": 176
+      },
+      "classes": {
+        "Hexalith.Parties.Client.Tests.HttpPartiesIdentityClientTests": 176
+      }
+    }
+  },
+  "finalSelectedTotal": 1670,
+  "buildMode": {
+    "Properties": {
+      "HexalithEventStoreVersion": "3.128.4",
+      "HexalithEventStoreFromSource": "",
+      "HexalithSourceMappingMode": "",
+      "HexalithCommonsVersion": "2.30.3",
+      "HexalithCommonsFromSource": "",
+      "UseHexalithProjectReferences": "",
+      "UseNuGetDeps": ""
+    }
+  },
+  "buildModeExplanation": "Own Parties source compiled in Debug against pinned package dependencies (EventStore 3.128.4, Commons 2.30.3), after the supported source workflow failed its prerequisite. No source-map override or dependency update.",
+  "redScope": "An observer immediately before the original synchronous current parser gates that operation; four actual response/caller-cancellation timeout failures. Retained red source records the observer placement. Four historical controls pass.",
+  "intermediateFailures": [
+    "First green: four incorrect new test expectations at the saturated cross-surface historical probe; corrected without changing production source.",
+    "First verifier CI run: eight cases exposed Set-Content test interceptor missing pipeline binding; final interceptor forwards native pipeline values.",
+    "An intermediate PowerShell multiline condition was syntax-invalid and repaired before actual source preflight; it established no gate result."
+  ],
+  "currentOwnerInspection": {
+    "filesSha256": {
+      "../platform/src/Hexalith.Platform.Custody/PlatformCustodyServiceCollectionExtensions.cs": "564f7715fa04df908c1b49d0598a3eb9ca374c37338bd13d6c22d56cb0bf09f8",
+      "../platform/src/Hexalith.Platform.Custody/IdentityHistoryCustodyOptions.cs": "93d3a6aa292090368f5e24d4f6790b3533e7bb99c6267696742679464271de2d",
+      "../platform/src/Hexalith.Platform.Custody/IdentityHistoryCleanup.cs": "459bf37506ff2c5a3de43ced6e93b93f64abc14e2736e3f462044a7f6ff3c79a",
+      "../agents/_bmad-output/planning-artifacts/external-dependency-register.md": "e29b7fc41cb404209e0abb5fb1e735f29cab253ce4012b142a2c8c30a9c19860",
+      "src/Hexalith.Parties/appsettings.json": "3974bb0107f9c6789f27a2c82ce84685febd2e9e1394b3875146b005a64ab063",
+      "tests/Hexalith.Parties.IntegrationTests/Identity/PartyIdentityPersistedVerifierTests.cs": "2435510cedf17c27b2c9c6ced3d78efd816f19ad94c133a1bc41ccae6d301900"
+    },
+    "currentAcceptedPartyRecord": "\n\n| Commitment field | Value |\n| --- | --- |\n| `Owner` | Project owner (user declaration 2026-10-07), acting as Parties Maintainer |\n| `Repository` | `Hexalith.Parties` |\n| `RequiredArtifact` | Selected V1 branch: **Branch B**. **Branch A:** a public AI Party type and an authorization contract permitting only the Agents Service Principal to create `hexa`'s deterministic provisioned Party under that type. **Branch B:** Parties Maintainer and Product formally accept the existing Organization-typed provisioned Party as the V1 launch contract, verified everywhere by its immutable deterministic id and never by type. Both branches require create-only AD-2 provisioning, idempotent exact retries, typed conflict for divergent identity/type requests, mandatory tenant scope, no tenant-role creation or replacement, and no Party PII in public results. The record must name the selected branch; absence of that decision is `Uncommitted`. Independently of the selected identity branch, Parties exposes a tenant-scoped authoritative resolution by `PartyId` returning stable Party classification (`Human`, `Organization`, or `AI`), active/liveness state, evidence position and observed instant, plus typed missing, ambiguous, stale, denied, and unavailable outcomes. For every human Party, the same seam also returns one stable non-PII `AuthenticatedHumanActorId`, `HumanActorBindingVersion`, validity interval, and queryable binding history sufficient to reproduce the identity in force at an action; it returns typed missing, ambiguous, stale, and overlapping-history outcomes. AD-8 uses both classification and binding at predefined-approver configuration and every runtime approver resolution; non-human Parties can never be Approvers, and a human command carrying a Party must bind to the same authenticated actor id. |\n| `TargetVersionOrCommit` | `56cb4401c4179d431385ad3d931fefa402e4fc5a` |\n| `TargetIntegrationDate` | `2026-10-08` |\n| `CompatibilityContractAndVerificationCommand` | Contract: for the selected branch, create and resolve exactly one deterministic tenant-scoped provisioned Party for `hexa` under the Agents Service Principal; verify immutable identity by id on every path and additionally verify AI type only for Branch A; reject tenant-role creation, cross-tenant access, divergent replay, and replacement; return typed safe outcomes without Party PII; resolve approver candidates to fresh authoritative human-type and active/liveness evidence; resolve each human Party to its stable `AuthenticatedHumanActorId` and binding version; reproduce the binding in force for a historical instant; and reject missing, stale, ambiguous, overlapping, or actor-mismatched bindings with typed fail-closed outcomes. Command: `test \"$(git -C ../parties rev-parse HEAD)\" = \"56cb4401c4179d431385ad3d931fefa402e4fc5a\" && test -z \"$(git -C ../parties status --porcelain)\" && pwsh -NoProfile -File ../parties/eng/verify-ext-parties-1.ps1 -Mode Live -EventStoreRoot ../eventstore -PlatformRoot ../platform -EvidenceDirectory /tmp/ext-parties-1-live`. |\n| `RequiredEvidenceLevel` | Levels 4 and 5 |\n| `AcceptedStatus` | `Committed` |\n| `ConsumingStories` | `RQ-1`; Stories 5.2, 5.4, 5.5, 6.1, 6.6, 7.1\u20137.5, 8.1\u20138.4, and 8.8 directly or conditionally consume identity or human Party/liveness/binding evidence. Story 6.1 directly verifies the caller and provisioned Agent Party and executes FR-8 membership step 10; Story 5.5's consumption remains conditional on the Product-selected recorder scope; Story 8.4 consumes the Release-Operator review branch. Branch-B-compatible identity-by-id portions may be developed where applicable, but no consumer may cite that work or any human actor-binding seam as launch evidence while this record is `Uncommitted` |\n",
+    "approvedMvpAmendment": "The owner instruction **apply recommended** adopts the [pragmatic MVP custody scope](sprint-change-proposal-2026-10-28-mvp-custody.md). For current work priority and milestone acceptance, separate ordinary identity/operational-security work from deferred Luna/independent-authority/immutable-archive provisioning. The full requirements below remain applicable to deferred features. This is a planning/development milestone: current Human/approver evidence still requires custody, and no protected-content, history, export, destruction, live readiness or release path gains an exception. Full dependency contracts, target/date/command/status pins, FR-34, existing retention and RQ-1 remain enforced. The amendment's scope matrix and acceptance criteria govern this bounded milestone; it supplies no reduced executable contract or availability claim.",
+    "observations": [
+      "Only optional IIdentityHistoryCustody resolution appears in inspected Platform src; no concrete backend or production registration.",
+      "Approved party-actor-retention-v1 policy remains 365 fixed days from binding-effective-at.",
+      "Current register pins target 56cb4401c4179d431385ad3d931fefa402e4fc5a and status Committed, not Available.",
+      "Current Live verifier remains an unconditional fail-closed complete-qualification gate; newer persisted integration lane explicitly supplies test-only custody. It is not installed P-01-P-10 qualification.",
+      "Oct 28 MVP amendment preserves current Human custody and full live/protected gates; it provides no reduced executable contract."
+    ],
+    "liveInputPresenceOnly": {
+      "EXT_PARTIES_GATEWAY_URL": false,
+      "EXT_PARTIES_TENANT_A": false,
+      "EXT_PARTIES_TENANT_B": false,
+      "EXT_PARTIES_PROVISIONER_CREDENTIAL": false,
+      "EXT_PARTIES_IDENTITY_WRITER_CREDENTIAL": false,
+      "EXT_PARTIES_READER_CREDENTIAL": false,
+      "EXT_PARTIES_POLICY_ID": false,
+      "EXT_PARTIES_RETENTION": false,
+      "EXT_PARTIES_EXPIRY_TRIGGER": false,
+      "EXT_PARTIES_CUSTODY_TARGET": false,
+      "EXT_PARTIES_RESTORE_TARGET": false,
+      "EXT_PARTIES_FAILURE_INJECTION_TARGET": false
+    },
+    "scope": "Read-only source/config/register inspection; no live verifier, endpoint, installation or production mutation."
+  },
+  "receipts": [
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/source-debug.log",
+      "path": "raw/source-debug.log.gz",
+      "uncompressedSha256": "504cc1ee55ad82931d41ef841a9cb2633c10b40f557bd82d57f05dffb2e69076",
+      "sha256": "8fddbca3f65bd517b2348b004a37ecb1c5f5282881f7450811c6c6f238f0e049",
+      "uncompressedBytes": 821
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/dependency-mode.json",
+      "path": "raw/dependency-mode.json.gz",
+      "uncompressedSha256": "b3bde7936c7fd3565812fbf68316686c2eeb5fea16d6c755cab30f349f6c50b9",
+      "sha256": "a3ef81db2f8687ff786c1ae7eb7654ec212e34b5b1565fee59caca750dca1492",
+      "uncompressedBytes": 287
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/ignored-legacy-flags-graph.json",
+      "path": "raw/ignored-legacy-flags-graph.json.gz",
+      "uncompressedSha256": "e9eb92bcaf99ce8f0f6164d397109c73653dd11d516c497df4a5fe7132e6a22a",
+      "sha256": "09cf8185de2decf5516cbc5251c3a16dd6d4d995b882cc278b9f9e953b656534",
+      "uncompressedBytes": 4761
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/red-build.log",
+      "path": "raw/red-build.log.gz",
+      "uncompressedSha256": "ab7b3e367fbd651ee98dc95dabe9aae56c59917544ec849d3603e07df97f1f28",
+      "sha256": "4ecbb0a27739d372d7bb0b32b8daa0b15b2a450b7c256752df661e06a8069dc6",
+      "uncompressedBytes": 2738
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/red-tests.xml",
+      "path": "raw/red-tests.xml.gz",
+      "uncompressedSha256": "afe859f1171ca0bc0be3c464418a4a34aa153b1c63f934667c2e226c559c381c",
+      "sha256": "6a693248e42fb09a8a79149567278684c22d77fd6e2256ba283dae28d4b3b946",
+      "uncompressedBytes": 11945
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/red-tests.log",
+      "path": "raw/red-tests.log.gz",
+      "uncompressedSha256": "ea06d05a9a19285b077c7c2045223d16a31600461dfba401f565b9a1396a86d0",
+      "sha256": "ed02bca9a191d8053dd7dca94a62f6fa15a90fa0cc43556f5bccef879777641b",
+      "uncompressedBytes": 6557
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/red-PartyIdentityQueryService.cs",
+      "path": "raw/red-PartyIdentityQueryService.cs.gz",
+      "uncompressedSha256": "955a0dd830e3599bd6ad3d9d9ddbf067432b71d0ab9cdbdbe40ef6effc35e678",
+      "sha256": "0e578ee164f4cb53b09fa87c15bc2c3b77716a90f26f33ce8f6bd0d2cb93f55f",
+      "uncompressedBytes": 20212
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/red-PartyIdentityQueryHandlerTests.cs",
+      "path": "raw/red-PartyIdentityQueryHandlerTests.cs.gz",
+      "uncompressedSha256": "04385a8697616ba1979d8b7ed5bf8ced18f8ff8b6bb273818ca3578a3ca5f5db",
+      "sha256": "e03eee6a5345882308b9c50a251234185856b3dec9bd19827cd9a366a069ff31",
+      "uncompressedBytes": 191734
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/red-sources.json",
+      "path": "raw/red-sources.json.gz",
+      "uncompressedSha256": "a3bf702e0d465283832816c11b9908124200f1e46292954286d39631515bf359",
+      "sha256": "f0f3cc4ad5afa1bed837e4170785bce2c6c708a5e9134d93e875b2cb8ad4b749",
+      "uncompressedBytes": 278
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/green-build.log",
+      "path": "raw/green-build.log.gz",
+      "uncompressedSha256": "02eb1d60baf1abdb5e46f440bd5b0696151bea0dd929dbad98b06faff272f052",
+      "sha256": "d2afec69b5b2d43b484f6599c1b7dbed30716148eca6eb906cb6a7a42e6cabdc",
+      "uncompressedBytes": 1554
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/green-tests.xml",
+      "path": "raw/green-tests.xml.gz",
+      "uncompressedSha256": "a260b23875d8b3561f9dfb644118a3cdd6681218bbb80cd1fe7c9ae10cdfa8e5",
+      "sha256": "6efd4fc9453a03336a466c1f2e776990ed37f33187b7911567e3cbe69d4a92ac",
+      "uncompressedBytes": 1070828
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/green-tests.log",
+      "path": "raw/green-tests.log.gz",
+      "uncompressedSha256": "8625afcc7e43980e7c1356ea04031bd51c083e02468383021c24c7f9ed34a450",
+      "sha256": "fa0ba84ea390382021d239bc59e8e6501ee341d5505941b850f8799a72f2e3b4",
+      "uncompressedBytes": 385828
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/final-build.log",
+      "path": "raw/final-build.log.gz",
+      "uncompressedSha256": "26a63da9a03c9cdadeeeb6ad061802adc67c5a0a8db9d171d16350fe4cc5eaf6",
+      "sha256": "f5808b86d0e3c3dfba8fcb1b101e4362291494bb4f35be339c5169d1c3103007",
+      "uncompressedBytes": 1554
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/final-tests.xml",
+      "path": "raw/final-tests.xml.gz",
+      "uncompressedSha256": "3ac72c56d7d19b55bb42307493e19d44f13fd0a835871e2b1345d9c53854ecef",
+      "sha256": "a834da4b4283cb9f7ff670896b01dca568b8b2654405e36a02821c926777b6ca",
+      "uncompressedBytes": 1062293
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/final-tests.log",
+      "path": "raw/final-tests.log.gz",
+      "uncompressedSha256": "422df80bd67f86f7dbd203b6f1f0c8fc1f99f7840de86ef35829ab8e3a19f0b1",
+      "sha256": "a68b8b37784d2f635aa3027a9a171d16bc6e9b45daaa9bbaa67037ea22d343fa",
+      "uncompressedBytes": 376740
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/ci-build.log",
+      "path": "raw/ci-build.log.gz",
+      "uncompressedSha256": "a36f6cf132d1171abb11de64d643fc2ac0d2edc2857f4f0bdad67faab3fc1023",
+      "sha256": "6ea411287451ffc73d624872796f3e0d03233f40fac6dea5298dd055e395c4a3",
+      "uncompressedBytes": 399
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/ci-tests.xml",
+      "path": "raw/ci-tests.xml.gz",
+      "uncompressedSha256": "97af93752cf7d733fc8162e70a45f223a0d66259c93f1ccbc349420d07cc8243",
+      "sha256": "9bee36e33fca9f426ccaae4252a91de93f819d46448c978be02266db35bb3e93",
+      "uncompressedBytes": 24676
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/ci-tests.log",
+      "path": "raw/ci-tests.log.gz",
+      "uncompressedSha256": "b96cb57de4564485baaa342f92d44df48db489613913e2b93230e13a05b4ce5a",
+      "sha256": "d9609d5d77b775d5dae7b13f0a70f817baf2dd4fe936576ce901c40fc1c71f45",
+      "uncompressedBytes": 12863
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/ci-final-build.log",
+      "path": "raw/ci-final-build.log.gz",
+      "uncompressedSha256": "13182603f7a41ed0edc97a9b0700d60e4eb404fc421860b93861bdb175bf2334",
+      "sha256": "f803455e7de542ef232a4702a4204f964b0ddadc3b09cc66eb5a66568259da46",
+      "uncompressedBytes": 307
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/ci-final-tests.xml",
+      "path": "raw/ci-final-tests.xml.gz",
+      "uncompressedSha256": "a3e9825ea9c8e10b84297ac884a29bb2c435463b606cd60464013f9f26e28955",
+      "sha256": "516b43be08eb8839ec47d1083519decf0005c4ba20c274f0fe599a18d7b7450b",
+      "uncompressedBytes": 14492
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/ci-final-tests.log",
+      "path": "raw/ci-final-tests.log.gz",
+      "uncompressedSha256": "603e9daebe8a8caac2c20f7987f60d99f62fe876007754006cb74514484aa3cb",
+      "sha256": "79b25637fd05356b95b9176fd221be71682012997d3db617930bd8945592ae7d",
+      "uncompressedBytes": 441
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/local-source-gate.log",
+      "path": "raw/local-source-gate.log.gz",
+      "uncompressedSha256": "aeed220f377fe90c781d5ae55baf22039d4fe9610750304df545ce003cdc1ba8",
+      "sha256": "39cf2bd72db7ccf4861ffa0f9d963aadec327512eff1c858f55860153d46be79",
+      "uncompressedBytes": 464
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/local-source-gate/Hexalith.Parties-source-graph.json",
+      "path": "raw/local-source-gate--Hexalith.Parties-source-graph.json.gz",
+      "uncompressedSha256": "2401b6edab243fbc8e9914cf6aabcea4a8cbbe20d591f0db152ca513fe2069d3",
+      "sha256": "74a293e230d43ae4ffcec1e81087697a18d303a6c32faa18ab2d8dd5724b6444",
+      "uncompressedBytes": 4805
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/local-source-gate/Hexalith.Parties-source-graph.stderr.log",
+      "path": "raw/local-source-gate--Hexalith.Parties-source-graph.stderr.log.gz",
+      "uncompressedSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "uncompressedBytes": 0
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/selected-preflight.ps1",
+      "path": "raw/selected-preflight.ps1.gz",
+      "uncompressedSha256": "07c43cc4c5842ab0ee2a92d234c847c31a8a0fc07e4d276b55fb68b42b0b13f5",
+      "sha256": "2ce6b77cb6af8e9d89cbdc3319ac94e2ce9b1b55f66bcc7b3910a637b0c49aae",
+      "uncompressedBytes": 995
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/selected-preflight.log",
+      "path": "raw/selected-preflight.log.gz",
+      "uncompressedSha256": "5ec70e414ff5768700cd4c62bcea5b751a4ff563451364af1bb92d803161889d",
+      "sha256": "a97d22fcbad0d50f4e83b0a0d508a9473dfbc0f36440f87d5bdb38903ecc7a3c",
+      "uncompressedBytes": 264
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/selected-preflight-command.json",
+      "path": "raw/selected-preflight-command.json.gz",
+      "uncompressedSha256": "e0910788bc30d96e97cfcf612f05cd9dd20be6c1722e67c0ab9f7f9bed7ff4d3",
+      "sha256": "ac961239d6f7b2d0ed6ffd4152ceb89e3a88b8b0cf960bf9b600bf1c1af5ace1",
+      "uncompressedBytes": 1635
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/selected-preflight/selected-Parties-source-graph.json",
+      "path": "raw/selected-preflight--selected-Parties-source-graph.json.gz",
+      "uncompressedSha256": "acd6b4eb17a2ce274562ac83a1a8a462824d1116f09b026e6a4a424922349153",
+      "sha256": "2350164ef7377ef1ef7b0890d437bb2e71f0847dc8c678e11169bbd3558080b8",
+      "uncompressedBytes": 13301
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/selected-preflight/selected-Parties-source-graph.stderr.log",
+      "path": "raw/selected-preflight--selected-Parties-source-graph.stderr.log.gz",
+      "uncompressedSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "uncompressedBytes": 0
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/server-build.log",
+      "path": "raw/server-build.log.gz",
+      "uncompressedSha256": "469ac8f25f8e322bfa65c62bcde9a25eb4982ed81c07bc1d0b0af1d9c6bce56e",
+      "sha256": "2eea31b2a5631c2e9b8e0dc60a3d3a9da4b9f40b47ad6d7069f29556ec0d62fb",
+      "uncompressedBytes": 2172
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/server-tests.log",
+      "path": "raw/server-tests.log.gz",
+      "uncompressedSha256": "d6385fa8fce1da25df91ad6641c181fa945cfb747c1d1c3f9a3ded407f09a7bb",
+      "sha256": "b269fbd96b5e420691111d387964ec58739f48f602f30d21acdb041177d98428",
+      "uncompressedBytes": 459
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/server-tests.xml",
+      "path": "raw/server-tests.xml.gz",
+      "uncompressedSha256": "aa594fb26f854b89242c1d8603ed7b9c6707c0bd6d3d803f6dc4b5d030c1ba7f",
+      "sha256": "8d2f43306c7927fe2551e1a477ab6601c02e09b20cc63c23767de79096515c5e",
+      "uncompressedBytes": 3165
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/client-build.log",
+      "path": "raw/client-build.log.gz",
+      "uncompressedSha256": "7dcdc0f28c4758373885764da774b66ed0f57961315255d25995d68efbd8ff8a",
+      "sha256": "60474e13d5418a716a4ef81bd8967c514f134d354fc1d4eb31a09c13830fc06b",
+      "uncompressedBytes": 1595
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/client-tests.log",
+      "path": "raw/client-tests.log.gz",
+      "uncompressedSha256": "5ff9d49a544bbb25ef35e645cdad9aa05b63fa290785f68458b7c442b9561012",
+      "sha256": "babd79bd8cd6cf2fdf371bbdfa8606f017b8fdee932d78d98407d47cacd8e67b",
+      "uncompressedBytes": 461
+    },
+    {
+      "originalPath": "/tmp/ext-parties-1-20261028-current-parsing/client-tests.xml",
+      "path": "raw/client-tests.xml.gz",
+      "uncompressedSha256": "8204933421a1d541a0acf96f4b198e60385464ca717a707864d9d94c45988383",
+      "sha256": "3253388123a578716c972c1433b7f710dc6b79be30d44122af18289fb1a373cb",
+      "uncompressedBytes": 121181
+    }
+  ],
+  "frozenMatrix": [
+    {
+      "scenario": "Provision",
+      "receipt": "server-tests.xml",
+      "actualPassingTests": [
+        "Hexalith.Parties.Server.Tests.Aggregates.AgentPartyProvisioningTests.RejectionOnlyStream_AllowsCreationWhileUnmarkedOrganizationConflicts",
+        "Hexalith.Parties.Server.Tests.Aggregates.AgentPartyProvisioningTests.ExactLostAckRetry_ReturnsOriginalWithoutAnotherCreationAndRejectsChangedIntent"
+      ]
+    },
+    {
+      "scenario": "Current identity",
+      "receipt": "final-tests.xml",
+      "actualPassingTests": [
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentHuman_RequiresCompleteSourceAndCurrentExactActor",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Person, admittedActor: null)",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Person, admittedActor: \\\"01HX0000000000000000000002\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Organization, admittedActor: null)",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Organization, admittedActor: \\\"01HX0000000000000000000002\\\")"
+      ]
+    },
+    {
+      "scenario": "History",
+      "receipt": "final-tests.xml",
+      "actualPassingTests": [
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.HistoricalReplay_BeforeBoundaryReturnsOriginalAndAtBoundaryReturnsSuccessor",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.SerializedRetainedSource_ReconstructsBothIntervalsWithoutProfileOrCurrentBinding"
+      ]
+    },
+    {
+      "scenario": "Isolation",
+      "receipt": "client-tests.xml",
+      "actualPassingTests": [
+        "Hexalith.Parties.Client.Tests.HttpPartiesIdentityClientTests.ConcurrentTenantCalls_KeepEveryRequestAndEvidenceInItsExplicitScope"
+      ]
+    }
+  ],
+  "matrixSourceFilesSha256": {
+    "tests/Hexalith.Parties.Server.Tests/Aggregates/AgentPartyProvisioningTests.cs": "104c3e9976f8777bde23ccf5b6503ace796785254efdcc5a7aa4c25d72a2eda3",
+    "tests/Hexalith.Parties.Client.Tests/HttpPartiesIdentityClientTests.cs": "59b5455a79772a3d0821ff0606cea6373643337b959582b4ef72c599a6c9f542",
+    "src/Hexalith.Parties/Domain/PartyAggregate.Identity.cs": "44b3131afff03a7b19c2ed38ab7dd89a105bf3b63fe2bcc4c002fcf682902dae",
+    "src/Hexalith.Parties.Client/HttpPartiesIdentityClient.cs": "22b0461bd1373c451575a950ed91e50b35c64ed84e3b033da1b81a8442697e27"
+  },
+  "executedArtifactFilesSha256": {
+    "/tmp/ext-parties-1-20261028-current-parsing/artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll": "e4a8fb2f6374bc3496af0b515545c87441edf204924a346e0b80cf9d5978acd4",
+    "/tmp/ext-parties-1-20261028-current-parsing/artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.pdb": "96dd8b027fb49d597ac778124bd3759f63f17ec39ebef44ccdafea89e8cd6877",
+    "/tmp/ext-parties-1-20261028-current-parsing/artifacts/bin/Hexalith.Parties/debug/Hexalith.Parties.dll": "96a9bc4ddd33ade768801785601d7a09ffde525a67f5968e74230e0fa83ced02",
+    "/tmp/ext-parties-1-20261028-current-parsing/artifacts/bin/Hexalith.Parties/debug/Hexalith.Parties.pdb": "430c9ba2724cda96b1e5fdd3000a5aa9bde61b2c5ec9f28f8fbf56fa679563d0",
+    "/tmp/ext-parties-1-20261028-current-parsing/artifacts/bin/Hexalith.Parties.Ci.Tests/debug/Hexalith.Parties.Ci.Tests.dll": "4d1bbc938a1f1864e9573ef85a81795e33e13d7c96fd185e4867a50a5595191a",
+    "/tmp/ext-parties-1-20261028-current-parsing/artifacts/bin/Hexalith.Parties.Ci.Tests/debug/Hexalith.Parties.Ci.Tests.pdb": "aadf516c8fe6319681213790b96a4d1aa680b5d32bc0cef110861cabc23c5da8",
+    "/tmp/ext-parties-1-20261028-current-parsing/server-artifacts/bin/Hexalith.Parties.Server.Tests/debug/Hexalith.Parties.Server.Tests.dll": "46a1d443fc1f65d5b89fed67dbb972237050064fd018a2fee0a43a84715339f9",
+    "/tmp/ext-parties-1-20261028-current-parsing/server-artifacts/bin/Hexalith.Parties.Server.Tests/debug/Hexalith.Parties.Server.Tests.pdb": "5399de297c5f2522c4aacc709aa8e4dcdbe0904eeca681f3d8b1680d5308618b",
+    "/tmp/ext-parties-1-20261028-current-parsing/client-artifacts/bin/Hexalith.Parties.Client.Tests/debug/Hexalith.Parties.Client.Tests.dll": "81aaf5d9874d9d0687cb9be67418e810d6e13f4329bb78c2969c2ab1ae77b379",
+    "/tmp/ext-parties-1-20261028-current-parsing/client-artifacts/bin/Hexalith.Parties.Client.Tests/debug/Hexalith.Parties.Client.Tests.pdb": "370674642dcc5df76c2e95e4d950754f43354803147597b73950b798df5ea0c8"
+  },
+  "frozenInnerBytesExtraction": "Exact original file bytes after the closing > of the opening <frozen-after-approval ...> tag and before the opening < of </frozen-after-approval>; preserve all whitespace and CRLF bytes. Tags and opening-tag attributes are excluded."
+}

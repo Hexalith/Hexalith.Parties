@@ -260,8 +260,8 @@ retain that logger's category.
 
 ## Platform reference qualification
 
-Use accepted tool 4.34.0 from an independent Parties checkout. Initialize only its
-direct references, including Platform, Memories and McpCli. The tool selects the
+Use pinned module tool 4.38.3 with Aspire CLI 13.6.4 from an independent Parties
+checkout. Initialize only its direct references, including Platform, Memories and McpCli. The tool selects the
 seven-server dependency closure and emits a run ID, mapping and diagnostics.
 Break in `MvpComplianceWarningMiddleware.InvokeAsync` on `/ready`; a disposable
 edit to `MvpComplianceWarning.Message` must change the existing warning header.

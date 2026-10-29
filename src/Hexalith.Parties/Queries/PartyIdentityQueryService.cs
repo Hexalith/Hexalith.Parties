@@ -33,6 +33,9 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
     /// <summary>Gets an internal observer invoked within bounded historical envelope parsing.</summary>
     internal Action? BeforeHistoricalParsing { get; init; }
 
+    /// <summary>Gets an internal observer invoked within bounded current envelope parsing.</summary>
+    internal Action? BeforeCurrentParsing { get; init; }
+
     /// <summary>Resolves current classification and eligibility from complete source and actor evidence.</summary>
     public async Task<PartyIdentityResult> ResolveAsync(QueryEnvelope envelope, CancellationToken cancellationToken)
     {
@@ -46,7 +49,11 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
             deadline.ApplyTimeout(options?.QueryTimeout ?? TimeSpan.FromSeconds(30));
             deadline.ThrowIfCancellationRequested();
             IdentityHistoryPolicy? policy = options?.Policy;
-            ResolvePartyIdentity? query = JsonSerializer.Deserialize<ResolvePartyIdentity>(envelope.Payload, PartiesJsonOptions.Default);
+            ResolvePartyIdentity? query = await deadline.RunAsync(_ =>
+            {
+                BeforeCurrentParsing?.Invoke();
+                return JsonSerializer.Deserialize<ResolvePartyIdentity>(envelope.Payload, PartiesJsonOptions.Default);
+            }).ConfigureAwait(false);
             if (query is null || !Matches(envelope, query.TenantId, query.PartyId))
             {
                 deadline.ThrowIfCancellationRequested();

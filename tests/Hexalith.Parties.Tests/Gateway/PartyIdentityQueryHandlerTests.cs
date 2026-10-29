@@ -2777,13 +2777,17 @@ public sealed class PartyIdentityQueryHandlerTests
         PartyIdentityBindingSelection.SelectAt(new[] { original[0], original[0] }, item => item.Evidence, Start, TestContext.Current.CancellationToken).Length.ShouldBe(2);
     }
 
-    /// <summary>Historical parsing shares the configured budget and retains capacity until abandoned work finishes.</summary>
+    /// <summary>Identity parsing shares the configured budget and retains capacity until abandoned work finishes.</summary>
     [Theory]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public async Task HistoricalEnvelopeParsing_IsBoundedAndRecovers(bool cancelCaller, bool lateFault)
+    [InlineData(false, false, false)]
+    [InlineData(false, false, true)]
+    [InlineData(false, true, false)]
+    [InlineData(false, true, true)]
+    [InlineData(true, false, false)]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, false)]
+    [InlineData(true, true, true)]
+    public async Task IdentityEnvelopeParsing_IsBoundedAndRecovers(bool historical, bool cancelCaller, bool lateFault)
     {
         var fixture = Service(Events());
         var (clock, advance) = DeadlineClock();
@@ -2798,23 +2802,25 @@ public sealed class PartyIdentityQueryHandlerTests
         var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var returned = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         int parses = 0;
+        Action beforeParsing = () =>
+        {
+            if (Interlocked.Increment(ref parses) == 1)
+            {
+                entered.TrySetResult();
+                release.Wait(TestContext.Current.CancellationToken);
+                returned.TrySetResult();
+                if (lateFault) { throw new InvalidOperationException("synthetic late parse fault"); }
+            }
+        };
         var service = new PartyIdentityQueryService(fixture.Authority, clock, fixture.Reader,
             fixture.Custody, fixture.HistoryReader, fixture.Options)
         {
             WorkLimiter = limiter,
-            BeforeHistoricalParsing = () =>
-            {
-                if (Interlocked.Increment(ref parses) == 1)
-                {
-                    entered.TrySetResult();
-                    release.Wait(TestContext.Current.CancellationToken);
-                    returned.TrySetResult();
-                    if (lateFault) { throw new InvalidOperationException("synthetic late parse fault"); }
-                }
-            },
+            BeforeHistoricalParsing = historical ? beforeParsing : null,
+            BeforeCurrentParsing = historical ? null : beforeParsing,
         };
-        Task result = cancelCaller ? InvokeIdentityAsync(service, historical: true, caller.Token)
-            : AssertUnavailableAsync(service, historical: true, queryParsed: false);
+        Task result = cancelCaller ? InvokeIdentityAsync(service, historical, caller.Token)
+            : AssertUnavailableAsync(service, historical, queryParsed: false);
         try
         {
             await entered.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
@@ -2829,10 +2835,12 @@ public sealed class PartyIdentityQueryHandlerTests
             else { await result.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken); }
             returned.Task.IsCompleted.ShouldBeFalse();
             limiter.TryAcquire().ShouldBeFalse();
-            for (int i = 0; i < 10; i++) { await AssertUnavailableAsync(service, historical: true, queryParsed: false); }
-            await AssertUnavailableAsync(service, historical: false);
+            for (int i = 0; i < 10; i++) { await AssertUnavailableAsync(service, historical, queryParsed: false); }
+            await AssertUnavailableAsync(service, !historical, queryParsed: false);
             Volatile.Read(ref parses).ShouldBe(1);
             fixture.Authority.DidNotReceive().Admit(Arg.Any<QueryEnvelope>());
+            await fixture.Reader.DidNotReceive().ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(),
+                Arg.Any<CancellationToken>());
             await fixture.HistoryReader.DidNotReceive().ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(),
                 Arg.Any<string>(), Arg.Any<CancellationToken>());
         }
@@ -2851,17 +2859,29 @@ public sealed class PartyIdentityQueryHandlerTests
             }
             await Task.Yield();
         }
-        HumanActorBindingResult recovered = await service.ResolveAtAsync(
-            Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", Start, Actor, 1)), TestContext.Current.CancellationToken);
-        recovered.Outcome.ShouldBe(HumanActorBindingOutcome.Resolved);
-        recovered.Evidence.ShouldNotBeNull();
-        recovered.BindingSourcePosition.ShouldBe(2);
+        if (historical)
+        {
+            HumanActorBindingResult recovered = await service.ResolveAtAsync(
+                Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", Start, Actor, 1)), TestContext.Current.CancellationToken);
+            recovered.Outcome.ShouldBe(HumanActorBindingOutcome.Resolved);
+            recovered.Evidence.ShouldNotBeNull();
+            recovered.BindingSourcePosition.ShouldBe(2);
+        }
+        else
+        {
+            PartyIdentityResult recovered = await service.ResolveAsync(
+                Envelope(new ResolvePartyIdentity("tenant-a", "party-1", Actor)), TestContext.Current.CancellationToken);
+            recovered.Outcome.ShouldBe(PartyIdentityOutcome.Resolved);
+            recovered.Evidence.ShouldNotBeNull();
+        }
         Volatile.Read(ref parses).ShouldBe(2);
     }
 
     /// <summary>Elapsed setup and parsing consume one total budget even before the timer callback runs.</summary>
-    [Fact]
-    public async Task HistoricalEnvelopeParsing_ConsumesTheRemainingConfiguredBudget()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task IdentityEnvelopeParsing_ConsumesTheRemainingConfiguredBudget(bool historical)
     {
         var fixture = Service(Events());
         var (clock, advance) = DeadlineClock();
@@ -2876,26 +2896,34 @@ public sealed class PartyIdentityQueryHandlerTests
         var service = new PartyIdentityQueryService(fixture.Authority, clock, fixture.Reader,
             fixture.Custody, fixture.HistoryReader, fixture.Options)
         {
-            BeforeHistoricalParsing = () => advance(TimeSpan.FromSeconds(3), false),
+            BeforeHistoricalParsing = historical ? () => advance(TimeSpan.FromSeconds(3), false) : null,
+            BeforeCurrentParsing = historical ? null : () => advance(TimeSpan.FromSeconds(3), false),
         };
 
-        await AssertUnavailableAsync(service, historical: true, queryParsed: false);
+        await AssertUnavailableAsync(service, historical, queryParsed: false);
 
         fixture.Authority.DidNotReceive().Admit(Arg.Any<QueryEnvelope>());
     }
 
-    /// <summary>Malformed historical payloads fail closed before admission, with caller cancellation taking precedence.</summary>
+    /// <summary>Malformed identity payloads fail closed before admission, with caller cancellation taking precedence.</summary>
     [Theory]
-    [InlineData("null", false)]
-    [InlineData("{", false)]
-    [InlineData("[]", false)]
-    [InlineData("{}", false)]
-    [InlineData("{", true)]
-    public async Task HistoricalEnvelopeParsing_RejectsMalformedPayloadBeforeAdmission(string payload, bool cancelCaller)
+    [InlineData(false, "null", false)]
+    [InlineData(false, "{", false)]
+    [InlineData(false, "[]", false)]
+    [InlineData(false, "{}", false)]
+    [InlineData(false, "{", true)]
+    [InlineData(true, "null", false)]
+    [InlineData(true, "{", false)]
+    [InlineData(true, "[]", false)]
+    [InlineData(true, "{}", false)]
+    [InlineData(true, "{", true)]
+    public async Task IdentityEnvelopeParsing_RejectsMalformedPayloadBeforeAdmission(bool historical, string payload, bool cancelCaller)
     {
         var fixture = Service(Events());
         fixture.Authority.ClearReceivedCalls();
-        QueryEnvelope envelope = Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", Start, Actor, 1))
+        QueryEnvelope envelope = (historical
+            ? Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", Start, Actor, 1))
+            : Envelope(new ResolvePartyIdentity("tenant-a", "party-1", Actor)))
             with { Payload = System.Text.Encoding.UTF8.GetBytes(payload) };
         using var caller = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         if (cancelCaller) { caller.Cancel(); }
@@ -2903,16 +2931,23 @@ public sealed class PartyIdentityQueryHandlerTests
         if (cancelCaller)
         {
             OperationCanceledException exception = await Should.ThrowAsync<OperationCanceledException>(() =>
-                fixture.Service.ResolveAtAsync(envelope, caller.Token));
+                historical ? fixture.Service.ResolveAtAsync(envelope, caller.Token)
+                    : fixture.Service.ResolveAsync(envelope, caller.Token));
             exception.CancellationToken.ShouldBe(caller.Token);
         }
-        else
+        else if (historical)
         {
             HumanActorBindingResult result = await fixture.Service.ResolveAtAsync(envelope, caller.Token);
             result.Outcome.ShouldBe(HumanActorBindingOutcome.Unavailable);
             result.Evidence.ShouldBeNull();
             result.SourcePosition.ShouldBe(0);
             result.BindingSourcePosition.ShouldBe(0);
+        }
+        else
+        {
+            PartyIdentityResult result = await fixture.Service.ResolveAsync(envelope, caller.Token);
+            result.Outcome.ShouldBe(PartyIdentityOutcome.Unavailable);
+            result.Evidence.ShouldBeNull();
         }
         fixture.Authority.DidNotReceive().Admit(Arg.Any<QueryEnvelope>());
     }

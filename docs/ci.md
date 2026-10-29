@@ -375,12 +375,12 @@ change also requires an approved parser-invariant and test update. Edit
 `TEMPLATE` for non-ACL changes, then regenerate. Missing, duplicate, unsafe or
 stale input fails without rewriting in `--check` mode.
 
-The accepted local module tool is pinned to 4.34.0 alongside aspirate; package CI
-continues to restore packages and build Release. Source mode is selected only
+The local module tool is pinned to 4.38.3 with Aspire CLI 13.6.4 alongside
+aspirate; package CI continues to restore packages and build Release. Source mode is selected only
 by the tool's persisted mapping, with no file-existence fallback. Legacy hosting
 projects and package publication gates remain in their existing scope.
 
-The five-item review-loop proof keeps its previous source/package/browser results as historical evidence. Review-loop source checks use the unchanged five imports produced by pinned module tool 4.34.0. Regenerating them in the current environment must still pass the module-tool prerequisites: absent isolated Dapr configuration produces HXR011, and the available CLI 1.18.2/runtime 1.18.7 home fails HXR012 against the selected CLI 1.18.0/runtime 1.18.2 tuple. These diagnostics do not qualify the broad Platform topology and do not authorize a tuple, package or gate change. The separate owned component runtime retains its declared tool environment and authenticated three-host boundary.
+The five-item review-loop proof keeps its previous source/package/browser results as historical evidence, including the five imports produced by module tool 4.34.0. That run recorded HXR011 for absent isolated Dapr configuration and HXR012 for the available CLI 1.18.2/runtime 1.18.7 home against the older catalog tuple. Fresh mappings must use the current pinned tool and pass its prerequisites. Historical receipts do not qualify the broad Platform topology. The separate owned component runtime retains its declared tool environment and authenticated three-host boundary.
 
 The five-item review-loop 2 receipt separates executed source, package, owned-runtime and browser controls. SDK inventory byte/cursor/entry/timeout controls and actual semantic/NL TopK caller tests qualify the selected source. Enabling `EnableMemoriesDomainService=true` independently selects its host and all three existing EventStore domain routes. Neither that model test nor the optional local host changes production deployment or release gates; matching owner publication/adoption and deployed trust configuration remain separate. Historical receipts remain historical after the second lifecycle correction.
 

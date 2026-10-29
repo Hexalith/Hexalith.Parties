@@ -288,7 +288,7 @@ public sealed class AppHostTenantsTopologyTests
             string document = File.ReadAllText(Path.Combine(root, relative));
             document.ShouldContain("dotnet tool restore");
             document.ShouldContain("dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json");
-            document.ShouldContain("4.34.0");
+            document.ShouldContain("4.38.3");
             document.ShouldContain("Legacy");
             document.ShouldNotContain("git submodule update --init --recursive");
             document.ShouldNotContain("git submodule update --recursive");

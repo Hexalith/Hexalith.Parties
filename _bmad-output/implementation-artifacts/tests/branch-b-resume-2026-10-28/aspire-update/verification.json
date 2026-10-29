@@ -1,0 +1,205 @@
+{
+  "createdAtUtc": "2026-10-28T19:45:54.225990+00:00",
+  "sourceHead": "2c08ae879008381948761db90ced5cd7eac091db",
+  "latestStableAspireVersion": "13.6.4",
+  "releaseSource": "https://github.com/microsoft/aspire/releases/tag/v13.6.4",
+  "cliUpdate": {
+    "command": "aspire update --self --channel stable --yes --non-interactive",
+    "exitCode": 0,
+    "observedVersion": "13.6.4+c89352703f78ae46de90fbf751ed8b52b77b89bf"
+  },
+  "moduleToolUpdate": {
+    "command": "dotnet tool update hexalith.builds.module.cli --local --version 4.38.3",
+    "exitCode": 0,
+    "previousVersion": "4.34.0",
+    "selectedVersion": "4.38.3"
+  },
+  "moduleCatalogs": [
+    {
+      "file": "/home/administrator/.nuget/packages/hexalith.builds.module.cli/4.38.3/tools/net10.0/any/Hexalith.Builds.Tooling.dll",
+      "sha256": "4e307577ae4fb02104914951a9905a1c9dd453447a80735443d24fbc83496823",
+      "catalog": {
+        "schemaVersion": "1",
+        "eventStoreVersion": "3.128.4",
+        "frontComposerVersion": "4.7.1",
+        "daprSdkVersion": "1.19.0",
+        "aspireHostingVersion": "13.6.4",
+        "aspireHostingDaprVersion": "13.6.2-beta.959",
+        "aspireAppHostSdkVersion": "13.6.4",
+        "daprRuntimeVersion": "1.18.7",
+        "daprCliVersion": "1.18.2",
+        "redisImage": "docker.io/library/redis",
+        "redisImageTag": "7.4-alpine",
+        "redisImageDigest": "sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf",
+        "eventStoreHostingDaprRange": "13.6.2-beta.959"
+      }
+    },
+    {
+      "file": "/home/administrator/.nuget/packages/hexalith.builds.module.cli/4.38.3/tools/net10.0/any/g4-host/Hexalith.Builds.Tooling.dll",
+      "sha256": "4e307577ae4fb02104914951a9905a1c9dd453447a80735443d24fbc83496823",
+      "catalog": {
+        "schemaVersion": "1",
+        "eventStoreVersion": "3.128.4",
+        "frontComposerVersion": "4.7.1",
+        "daprSdkVersion": "1.19.0",
+        "aspireHostingVersion": "13.6.4",
+        "aspireHostingDaprVersion": "13.6.2-beta.959",
+        "aspireAppHostSdkVersion": "13.6.4",
+        "daprRuntimeVersion": "1.18.7",
+        "daprCliVersion": "1.18.2",
+        "redisImage": "docker.io/library/redis",
+        "redisImageTag": "7.4-alpine",
+        "redisImageDigest": "sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf",
+        "eventStoreHostingDaprRange": "13.6.2-beta.959"
+      }
+    }
+  ],
+  "validation": [
+    {
+      "command": "dotnet tool restore",
+      "exitCode": 0
+    },
+    {
+      "command": "dotnet tool run hexalith-module -- validate --manifest module/hexalith.module-manifest.v2.json --output json",
+      "exitCode": 0,
+      "status": "validated"
+    },
+    {
+      "command": "dotnet tool run hexalith-module -- prepare-build --manifest module/hexalith.module-manifest.v2.json --mode source --workspace /tmp/parties-aspire-update-20261028-6q_5usnj/source --output json",
+      "exitCode": 2,
+      "result": {
+        "status": "failed",
+        "outcome": {
+          "exitCode": "PrerequisiteUnavailable",
+          "phase": "Prerequisite",
+          "category": "PrerequisiteUnavailable",
+          "ruleId": "HXW004"
+        },
+        "diagnostics": [
+          {
+            "ruleId": "HXW004",
+            "phase": "Prerequisite",
+            "category": "PrerequisiteUnavailable",
+            "message": "Required source 'Hexalith.AI.Tools' at '/home/administrator/projects/hexalith/parties/references/Hexalith.AI.Tools' is unavailable: Checkout HEAD '5be77fcbd96546e722b30a117516b1e03e6e4975' does not match the root's staged gitlink '3f194e17174994d308ec84af9ee2b5aa68674d0d'.",
+            "field": "/home/administrator/projects/hexalith/parties/references/Hexalith.AI.Tools",
+            "hint": "Stage the checked-out commit with git -C '/home/administrator/projects/hexalith/parties' add -- ':(literal)references/Hexalith.AI.Tools', move the checkout to the staged gitlink with git -C '/home/administrator/projects/hexalith/parties' submodule update --checkout -- ':(literal)references/Hexalith.AI.Tools', or deinitialize a broken checkout before retrying.",
+            "source": null,
+            "location": null,
+            "row": null
+          },
+          {
+            "ruleId": "HXW008",
+            "phase": "Prerequisite",
+            "category": "None",
+            "message": "Platform checkout '/home/administrator/projects/hexalith/parties/references/Hexalith.Platform' is 242b4d7297820495b91c5d7719dd6b1c892c978a; staged composition gitlink is 8de90958bc41b7fd01b7ed22b8ab364447a800e4.",
+            "field": "/home/administrator/projects/hexalith/parties/references/Hexalith.Platform",
+            "hint": null,
+            "source": null,
+            "location": null,
+            "row": null
+          },
+          {
+            "ruleId": "HXW011",
+            "phase": "Prerequisite",
+            "category": "None",
+            "message": "Platform identity 8de90958bc41b7fd01b7ed22b8ab364447a800e4 has no local v<SemVer> release tag.",
+            "field": "/home/administrator/projects/hexalith/parties/references/Hexalith.Platform",
+            "hint": "Fetch Platform tags, then retry.",
+            "source": null,
+            "location": null,
+            "row": null
+          },
+          {
+            "ruleId": "HXW009",
+            "phase": "Prerequisite",
+            "category": "None",
+            "message": "Builds catalog '/home/administrator/projects/hexalith/parties/references/Hexalith.Builds' is staged d1931b1e803144048d927fff16cb8119afde541e, checked out e909ffd9fe9a6097e36d932010b983d029396968; Platform 8de90958bc41b7fd01b7ed22b8ab364447a800e4 pins 9f85d8e66e5c16675cee8c224f1fd88430d96007.",
+            "field": "/home/administrator/projects/hexalith/parties/references/Hexalith.Builds",
+            "hint": null,
+            "source": null,
+            "location": null,
+            "row": null
+          }
+        ]
+      }
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug --artifacts-path /home/administrator/projects/hexalith/parties/artifacts/parties-aspire-update-20261028-6q_5usnj -p:NuGetAudit=false -m:1",
+      "exitCode": 0,
+      "warnings": 0,
+      "errors": 0,
+      "scope": "Parties source with pinned package dependencies; source preparation remains unavailable."
+    },
+    {
+      "command": "dotnet /home/administrator/projects/hexalith/parties/artifacts/parties-aspire-update-20261028-6q_5usnj/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll -class *AppHostTenantsTopologyTests -result-xml /tmp/parties-aspire-update-20261028-6q_5usnj/final-topology-tests.xml",
+      "exitCode": 0,
+      "tests": 16,
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0,
+      "notRun": 0
+    }
+  ],
+  "initialTestInvocation": "An initial build/output rooted under /tmp could not satisfy the fixture that discovers the repository from AppContext.BaseDirectory. Rebuilt in the ignored repository artifacts directory; no test/production behavior changed to work around it. Initial failure receipts are preserved.",
+  "changedFilesSha256": {
+    ".config/dotnet-tools.json": "d4434a4fa5b19576c26c21f185d28c6195bb90fc421372cd8ef006056dcb0ca1",
+    "README.md": "aef4e2fad346f17b518db1c7c7c7d79dd661c6d752969b7283361b3a13287eb5",
+    "docs/getting-started.md": "11c71b39f3a6fd2d3c0a19950845f7fe68236c21f70b36bf715f2eb90fe34b1e",
+    "docs/development-guide.md": "8364ff4ad219457b0b97ac1b9e945a80d42242df15a02c0f5fff9b04aebdce16",
+    "docs/ci.md": "63e72e633f7a7444c943669d90f8587e65bad9a0ec620545ec931046dc64373c",
+    "docs/component-inventory.md": "72c47220d88ffac66716d3043bd4fb1034937587103f522ff7d50a86895850c3",
+    "tests/README.md": "c14a5abee0821deebbbf4cdf175d4e05babed235d13b89c061163be3a0e97d29",
+    "tests/Hexalith.Parties.Tests/FitnessTests/AppHostTenantsTopologyTests.cs": "75efaaa53e158ab9bc0ebc6bbdbe0b422594b4f8e404215b336f89f04df2af13"
+  },
+  "receipts": [
+    {
+      "file": "prepare-build.json.gz",
+      "originalPath": "/tmp/parties-aspire-update-20261028-6q_5usnj/prepare-build.json",
+      "sha256": "4bb9081ee2c49da22df67f59266ca0cf8329a1c9f1aa5a23fe21049690b732a2",
+      "uncompressedSha256": "d1171a76f35a285d9f4998714de17ca124f976781966243b9c25a8bd78667b19"
+    },
+    {
+      "file": "prepare-build.stderr.log.gz",
+      "originalPath": "/tmp/parties-aspire-update-20261028-6q_5usnj/prepare-build.stderr.log",
+      "sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "uncompressedSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "build.log.gz",
+      "originalPath": "/tmp/parties-aspire-update-20261028-6q_5usnj/build.log",
+      "sha256": "619893675dbbe56a93b4796c7a7eef72a72df658d39e0b9bbf63d47050869ca4",
+      "uncompressedSha256": "0f8c6cd38d70d3fda986d3e094b4b31f2dce0300bfe513248587cd2a981f46a0"
+    },
+    {
+      "file": "topology-tests.log.gz",
+      "originalPath": "/tmp/parties-aspire-update-20261028-6q_5usnj/topology-tests.log",
+      "sha256": "7c51384507fdfa758010408a0540edcb04b9296ba6b2474c1af13db59969fe0f",
+      "uncompressedSha256": "4816ef401148f91c1b4f29c470ee301b226a063cf060c16b963e2fa1cddc2fb7"
+    },
+    {
+      "file": "topology-tests.xml.gz",
+      "originalPath": "/tmp/parties-aspire-update-20261028-6q_5usnj/topology-tests.xml",
+      "sha256": "a3cb7da972e0e2ec662cda99cba2e96d154aabcffb07652a20f750bd1fea0ef6",
+      "uncompressedSha256": "830ccdc878b7e0d276aa38dfe180940c07f22f0eef415fc0f05e4892346dd523"
+    },
+    {
+      "file": "final-build.log.gz",
+      "originalPath": "/tmp/parties-aspire-update-20261028-6q_5usnj/final-build.log",
+      "sha256": "78b24e8db2a22e8fcddb53c61b00b4d83e096ef5329f22922656436f30eb1938",
+      "uncompressedSha256": "1d421a61cc46deb727f4ed0b7fa364132d312c7d17559c262a0670dda562dc69"
+    },
+    {
+      "file": "final-topology-tests.log.gz",
+      "originalPath": "/tmp/parties-aspire-update-20261028-6q_5usnj/final-topology-tests.log",
+      "sha256": "e8626ce0991aef436dbec2561f5594b04f58f9363f740bb4fdb108a01fb458c1",
+      "uncompressedSha256": "465764d654190a8f1523fff7fd4cca2dbce7839207fea36880871520c42b7f20"
+    },
+    {
+      "file": "final-topology-tests.xml.gz",
+      "originalPath": "/tmp/parties-aspire-update-20261028-6q_5usnj/final-topology-tests.xml",
+      "sha256": "95124bd361e0a67bbd96fa620d92cffa1116cda7f82936b0c549183d866242b9",
+      "uncompressedSha256": "ab26a45ec0af1ce0f174675df56f3e62e63b6b4735f01c6082fb0235d6f9ad7a"
+    }
+  ],
+  "scope": "Align current Aspire/module versions and setup guidance. Prior identity changes and historical evidence preserved. Source preparation blocked by existing root gitlink/checkout identity mismatches; no staging or submodule updates performed."
+}

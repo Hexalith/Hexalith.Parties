@@ -1,0 +1,47 @@
+{
+  "appHost": "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+  "commands": [
+    {
+      "command": "aspire describe --apphost /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json --non-interactive",
+      "result": "No AppHost was running before baseline."
+    },
+    {
+      "command": "aspire start --apphost /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --isolated --format Json --non-interactive",
+      "exitCode": 0
+    },
+    {
+      "command": "aspire wait parties --status healthy --timeout 30 --apphost /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "exitCode": 0,
+      "output": "Waiting for resource 'parties' to be healthy...\n\n\u2705 Resource 'parties' is healthy. (13.4s)\n"
+    },
+    {
+      "command": "aspire describe --apphost /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json --non-interactive",
+      "exitCode": 0,
+      "scope": "Resource inspection occurred before the successful readiness wait; resources were Waiting behind security."
+    },
+    {
+      "command": "aspire stop --apphost /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "exitCode": 0,
+      "output": "Scanning for running AppHosts...\n\ud83d\udce6 Found running AppHost: src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj\n\ud83d\uded1 Sending stop signal to src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj...\nStopping src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj...\n\n\u2705 src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj stopped successfully.\n"
+    }
+  ],
+  "originalLogDigests": {
+    "start.log": {
+      "originalPath": "/tmp/ext-parties-1-20261028-aspire-start.log",
+      "sha256": "119ac97921e92db900e0d2cb33236d7b7991395c56d2e9e8ef11065d0d631572"
+    },
+    "wait.log": {
+      "originalPath": "/tmp/ext-parties-1-20261028-aspire-wait.log",
+      "sha256": "7df49ea1e97178f00932f16cc1a0dbc61cc8b707d28ffce510e7983cee7306e9"
+    },
+    "describe.json": {
+      "originalPath": "/tmp/ext-parties-1-20261028-aspire-describe.json",
+      "sha256": "34b640d7d066d0c20a34172b9c4ae336594f0e5c2c31b8ab97d788502881275f"
+    },
+    "stop.log": {
+      "originalPath": "/tmp/ext-parties-1-20261028-aspire-stop.log",
+      "sha256": "bf49d5e492f84354743815419a7c6859da4af309f2f95d997ab8887f2503257d"
+    }
+  },
+  "qualificationScope": "Local runtime baseline only; no installed identity qualification."
+}

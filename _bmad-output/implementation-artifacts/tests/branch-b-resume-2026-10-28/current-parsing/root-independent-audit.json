@@ -1,0 +1,32 @@
+{
+  "sourceHead": "2c08ae879008381948761db90ced5cd7eac091db",
+  "verificationManifestSha256": "ea4eee8bfbbd0b982920637db4f959a8a2321a81ec68944b5e3450fc8fc91126",
+  "receiptCountVerified": 35,
+  "passingTestCounts": {
+    "final-tests.xml": 1474,
+    "ci-final-tests.xml": 17,
+    "server-tests.xml": 3,
+    "client-tests.xml": 176
+  },
+  "selectedPassingTotal": 1670,
+  "allFrozenMatrixRowsCoveredByActualPassingTests": true,
+  "selectedSourceArtifactOwnerAndReceiptHashesMatch": true,
+  "frozenIntentUnchangedFromRunEntry": true,
+  "originalBaselinePreserved": true,
+  "specStatus": "in-progress",
+  "openProductionTasks": 2,
+  "reviewScope": "Inspected continuation source/test/note changes and independently audited receipts. Original-baseline diff captured including untracked files; historical 4,545-path span not fully re-read or re-reviewed. Complete Local/source gate, installed acceptance and workflow review/completion are not established.",
+  "diffs": {
+    "original-baseline": {
+      "path": "/tmp/ext-parties-1-root-diff-ona5gw_a/original-baseline.patch",
+      "bytes": 95107950,
+      "sha256": "b1f2bfcd0cc914401ae324faa9f9090116f1d088454840eb940b9b7209efa3b4"
+    },
+    "continuation": {
+      "path": "/tmp/ext-parties-1-root-diff-ona5gw_a/continuation.patch",
+      "bytes": 397287,
+      "sha256": "50c1fb8c8e868319b2231d0b148c36c735ffd64f71fb72238b1142d1139a3df5"
+    }
+  },
+  "diffCaptureNote": "Default submodule log rendering failed on absent historical submodule commit 6ca1b4cb9d422017138541036b3c23397265de98; explicit --submodule=short captured both diffs without fetching or modifying any repository."
+}
