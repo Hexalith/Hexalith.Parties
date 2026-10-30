@@ -57,37 +57,37 @@ public sealed class PlatformApiPrerequisitesTests
         "AdditionalProperties", "Properties", "GlobalPropertiesToRemove", "SetConfiguration", "SetTargetFramework", "SetPlatform",
     ];
 
-    // Release selection is separate from the historical migration/parity receipt constants.
-    private const string CurrentReleaseEventStoreSha = "36c78f3435d2d492a73f1b0707cf865c8735d740";
-    private const string CurrentReleaseEventStoreDescribe = "v3.128.3-6-g36c78f34";
-    private const string CurrentSourceEventStoreDescribe = "v3.128.3-6-g36c78f34";
-    private const string CurrentReleaseEventStoreTag = "v3.128.3";
-    private static readonly IReadOnlyDictionary<string, string> CurrentReleaseGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
+    // Committed source observations are separate from historical migration/parity approvals.
+    private const string CurrentSelectedEventStoreSha = "be4aba873d09736abb4caacf1fae8ad870f0b3b6";
+    private const string CurrentSelectedEventStoreDescribe = "v3.128.4-5-gbe4aba87";
+    private const string CurrentSelectedEventStoreTag = "v3.128.4";
+    // Current committed selections are observations, separate from historical owner approvals.
+    private static readonly IReadOnlyDictionary<string, string> CurrentSelectedGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        ["references/Hexalith.AI.Tools"] = AiToolsSha,
-        ["references/Hexalith.Builds"] = "d1931b1e803144048d927fff16cb8119afde541e",
+        ["references/Hexalith.AI.Tools"] = "5be77fcbd96546e722b30a117516b1e03e6e4975",
+        ["references/Hexalith.Builds"] = "0b17f8022cdc23b8b242b000f5b2aa15580184ac",
         ["references/Hexalith.Commons"] = "3edfbdafc7d4fa915286dce8a37dc4cc7c06085a",
-        [EventStoreRelativePath] = CurrentReleaseEventStoreSha,
-        ["references/Hexalith.FrontComposer"] = "5af87f9e5cc8db16896fc97d19b6a828b2ed0d0d",
-        ["references/Hexalith.Memories"] = "72c36c7113c750c8b809f9d72b945a2a8c2d4555",
+        ["references/Hexalith.EventStore"] = "be4aba873d09736abb4caacf1fae8ad870f0b3b6",
+        ["references/Hexalith.FrontComposer"] = "c3f217ee7216f998875b23a4d6b8175280e8a86a",
+        ["references/Hexalith.McpCli"] = "e6ddf3f2784f4b8c7d347fc21d046ee3011d4082",
+        ["references/Hexalith.Memories"] = "28a2beeb7e9baa1785b9cb70f2a8b750f071cfd7",
+        ["references/Hexalith.Platform"] = "242b4d7297820495b91c5d7719dd6b1c892c978a",
         ["references/Hexalith.PolymorphicSerializations"] = "221ac4592ba908ae7661ba1fa9e2d1fcc23baee0",
-        ["references/Hexalith.Tenants"] = "6deb5d5dbaad4e26405910b347d45b82deae1057",
-        ["references/Hexalith.McpCli"] = "2d7311cbbcc592c0ea0348463037389251d1cb4b",
-        ["references/Hexalith.Platform"] = "8de90958bc41b7fd01b7ed22b8ab364447a800e4",
+        ["references/Hexalith.Tenants"] = "8127cb3b47dcfcf4086d07e4af0730c2f4920f9e",
     };
 
-    private static readonly IReadOnlyDictionary<string, string> CurrentSourceDescribes = new Dictionary<string, string>(StringComparer.Ordinal)
+    private static readonly IReadOnlyDictionary<string, string> CurrentSelectedSourceDescribes = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        ["references/Hexalith.Builds"] = "v4.38.2-2-gd1931b1e",
-        [EventStoreRelativePath] = CurrentSourceEventStoreDescribe,
-        ["references/Hexalith.FrontComposer"] = "v4.7.1-7-g5af87f9e",
-        ["references/Hexalith.Memories"] = "v3.0.3-4-g72c36c71",
-        ["references/Hexalith.Tenants"] = "v5.11.0-13-g6deb5d5d",
-        ["references/Hexalith.AI.Tools"] = "3f194e17",
+        ["references/Hexalith.AI.Tools"] = "5be77fcb",
+        ["references/Hexalith.Builds"] = "v4.38.3-37-g0b17f802",
         ["references/Hexalith.Commons"] = "v2.30.3-5-g3edfbdaf",
-        ["references/Hexalith.McpCli"] = "v1.1.0-5-g2d7311cb",
-        ["references/Hexalith.Platform"] = "v1.0.1-8-g8de90958",
+        ["references/Hexalith.EventStore"] = "v3.128.4-5-gbe4aba87",
+        ["references/Hexalith.FrontComposer"] = "v4.7.1-11-gc3f217ee",
+        ["references/Hexalith.McpCli"] = "v1.1.0-15-ge6ddf3f2",
+        ["references/Hexalith.Memories"] = "v3.0.10-3-g28a2beeb",
+        ["references/Hexalith.Platform"] = "v1.0.1-17-g242b4d72",
         ["references/Hexalith.PolymorphicSerializations"] = "v1.19.5",
+        ["references/Hexalith.Tenants"] = "v5.11.1-5-g8127cb3b",
     };
 
     private static readonly string[] RequiredAbsentPayloadProtectionPaths =
@@ -572,7 +572,7 @@ public sealed class PlatformApiPrerequisitesTests
 
             foreach (string evidencePath in evidencePaths)
             {
-                string fullPath = Path.Combine(normalizedRoot, evidencePath);
+                string fullPath = RepositoryDependencyPaths.Resolve(normalizedRoot, evidencePath);
                 (File.Exists(fullPath) || Directory.Exists(fullPath)).ShouldBeTrue(evidencePath);
             }
 
@@ -724,8 +724,8 @@ public sealed class PlatformApiPrerequisitesTests
     public void NonConsumedSourceRowsRequireUniqueExactIdentityReceipts(string dependency, string scenario)
     {
         string path = $"references/Hexalith.{dependency}";
-        string identity = CurrentReleaseGitlinks[path];
-        string describe = CurrentSourceDescribes[path];
+        string identity = CurrentSelectedGitlinks[path];
+        string describe = CurrentSelectedSourceDescribes[path];
         string valid = $"| {dependency} | `{identity}` (`{describe}`) | Source selection only. |";
         string selection = scenario switch
         {
@@ -756,20 +756,20 @@ public sealed class PlatformApiPrerequisitesTests
     [Theory]
     [InlineData("McpCli")]
     [InlineData("Platform")]
-    public void NonConsumedSourceSelectionsMatchCurrentGitReceipts(string dependency)
+    public void CommittedSourceSelections_RecordOverridesAndRefuseInvalidImmutableConsumption(string dependency)
     {
         string root = RepositoryRoot.Locate();
         string path = $"references/Hexalith.{dependency}";
-        string identity = CurrentReleaseGitlinks[path];
-        string describe = CurrentSourceDescribes[path];
+        string identity = CurrentSelectedGitlinks[path];
+        string describe = CurrentSelectedSourceDescribes[path];
 
         AssertCurrentSourceRow(ReadCurrentSourceSelection(ReadMatrix()), path, identity, describe);
-        AssertGitlinkAndCheckout(root, path, identity);
-        DescribeObservedSource(root, path, describe).ShouldBe(describe, path);
+        AssertSelectedSourceObservation(root, path, identity);
+        DescribeObservedSource(root, path, describe, identity).ShouldBe(describe, path);
     }
 
     [Fact]
-    public void FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph()
+    public void CommittedSelectionObservations_PreservePackageGraphAndImmutableConsumptionRefusals()
     {
         string root = RepositoryRoot.Locate();
         string matrix = ReadMatrix();
@@ -779,30 +779,30 @@ public sealed class PlatformApiPrerequisitesTests
         string currentSelection = ReadCurrentSourceSelection(matrix);
         currentSelection.ShouldContain($"EventStore package `{currentEventStoreVersion}`");
         currentSelection.ShouldContain("Selection does not revalidate historical parity receipts");
-        foreach ((string path, string identity) in CurrentReleaseGitlinks)
+        foreach ((string path, string identity) in CurrentSelectedGitlinks)
         {
-            string describe = CurrentSourceDescribes[path];
+            string describe = CurrentSelectedSourceDescribes[path];
             AssertCurrentSourceRow(currentSelection, path, identity, describe);
-            AssertGitlinkAndCheckout(root, path, identity);
-            DescribeObservedSource(root, path, describe).ShouldBe(describe, path);
+            AssertSelectedSourceObservation(root, path, identity);
+            DescribeObservedSource(root, path, describe, identity).ShouldBe(describe, path);
         }
 
-        RunGit(root, "-C", EventStoreRelativePath, "describe", "--tags", "--match", CurrentReleaseEventStoreTag, "--abbrev=8", "HEAD")
+        RunGit(root, "-C", EventStoreRelativePath, "describe", "--tags", "--match", CurrentSelectedEventStoreTag, "--abbrev=8", CurrentSelectedEventStoreSha)
             .Trim()
-            .ShouldBe(CurrentReleaseEventStoreDescribe);
+            .ShouldBe(CurrentSelectedEventStoreDescribe);
 
         // Keep historical shell/a11y receipts bound to the identity at which they ran.
         matrix.ShouldContain(FrontComposerSha);
         matrix.ShouldContain("4.5.0");
 
-        // Any present-tense HEAD receipt must match current release selection. Historical
+        // Any present-tense HEAD observation must match current committed selection. Historical
         // receipts remain attached to their dated Parties revision and original evidence.
         foreach (Match receipt in Regex.Matches(
                      matrix,
                      @"git ls-tree HEAD (?<path>references/[A-Za-z.]+)`\s*->\s*`160000 commit (?<sha>[0-9a-f]{40})",
                      RegexOptions.CultureInvariant))
         {
-            if (CurrentReleaseGitlinks.TryGetValue(receipt.Groups["path"].Value, out string? expectedSha))
+            if (CurrentSelectedGitlinks.TryGetValue(receipt.Groups["path"].Value, out string? expectedSha))
             {
                 receipt.Groups["sha"].Value.ShouldBe(
                     expectedSha,
@@ -823,12 +823,13 @@ public sealed class PlatformApiPrerequisitesTests
             File.ReadAllText(Path.Combine(root, "Directory.Build.targets")));
         rootBuildTargets.ShouldNotContain("Hexalith.Build.props");
         rootBuildTargets.ShouldNotContain("Hexalith.Package.props");
-        string catalog = File.ReadAllText(Path.Combine(root, "references/Hexalith.Builds/Props/Directory.Packages.props"));
+        string catalog = RunGit(root, "-C", "references/Hexalith.Builds", "show",
+            CurrentSelectedGitlinks["references/Hexalith.Builds"] + ":Props/Directory.Packages.props");
         effectivePackages["Hexalith.EventStore.Contracts"].ShouldBe(currentEventStoreVersion);
         catalog.ShouldContain("<PackageVersion Include=\"Hexalith.EventStore.Contracts\" Version=\"$(HexalithEventStoreVersion)\" Condition=\"'$(UseHexalithProjectReferences)' != 'true' or !$(MSBuildProjectName.StartsWith('Hexalith.Works'))\" />");
         catalog.ShouldContain("<HexalithCommonsVersion Condition=\"'$(HexalithCommonsVersion)' == ''\">2.30.3</HexalithCommonsVersion>");
         catalog.ShouldContain("<HexalithFrontComposerVersion Condition=\"'$(HexalithFrontComposerVersion)' == ''\">4.7.1</HexalithFrontComposerVersion>");
-        catalog.ShouldContain("<HexalithMemoriesVersion Condition=\"'$(HexalithMemoriesVersion)' == ''\">3.0.3</HexalithMemoriesVersion>");
+        catalog.ShouldContain("<HexalithMemoriesVersion Condition=\"'$(HexalithMemoriesVersion)' == ''\">3.0.10</HexalithMemoriesVersion>");
         catalog.ShouldContain("<HexalithTenantsVersion Condition=\"'$(HexalithTenantsVersion)' == ''\">5.11.1</HexalithTenantsVersion>");
         catalog.ShouldContain("<HexalithPartiesVersion Condition=\"'$(HexalithPartiesVersion)' == ''\">2.0.0</HexalithPartiesVersion>");
         // The selected Builds catalog routes this version through a property whose unconditional value applies to
@@ -880,10 +881,10 @@ public sealed class PlatformApiPrerequisitesTests
                     root,
                     projectFile,
                     useSource: true,
-                    $"-p:{rootProperty}={Path.Combine(root, relativeRoot)}",
+                    $"-p:{rootProperty}={RepositoryDependencyPaths.Resolve(root, relativeRoot)}",
                     $"-p:{selector}=true");
                 sourceGraph.Properties[selector].ShouldBe("true", projectFile);
-                AssertSourceConsumer(sourceGraph, projectFile, dependency, version, Path.Combine(root, relativeRoot));
+                AssertSourceConsumer(sourceGraph, projectFile, dependency, version, RepositoryDependencyPaths.Resolve(root, relativeRoot));
             }
         }
     }
@@ -1210,7 +1211,7 @@ public sealed class PlatformApiPrerequisitesTests
             string[] segments = Regex.Matches(declaration.Groups["segments"].Value, "\"(?<segment>[^\"]+)\"")
                 .Select(static match => match.Groups["segment"].Value).ToArray();
             string project = moduleRoot + "/" + string.Join('/', segments);
-            File.Exists(Path.Combine(root, project)).ShouldBeTrue($"AppHost external runtime project is missing: {project}");
+            File.Exists(RepositoryDependencyPaths.Resolve(root, project)).ShouldBeTrue($"AppHost external runtime project is missing: {project}");
             declarations.Add(declaration.Groups["variable"].Value, project);
         }
 
@@ -1227,7 +1228,7 @@ public sealed class PlatformApiPrerequisitesTests
         string root, IEnumerable<string> runtimeProjects, string expectedEventStoreVersion, string configuration = "Release")
     {
         Dictionary<string, EvaluatedProjectGraph> graphs = new(StringComparer.Ordinal);
-        Queue<string> pending = new(runtimeProjects.Select(path => Path.GetFullPath(Path.Combine(root, path))));
+        Queue<string> pending = new(runtimeProjects.Select(path => RepositoryDependencyPaths.Resolve(root, path)));
         while (pending.TryDequeue(out string? project))
         {
             if (graphs.ContainsKey(project))
@@ -1266,7 +1267,7 @@ public sealed class PlatformApiPrerequisitesTests
 
             foreach (string module in RuntimeDependencyModules)
             {
-                string moduleRoot = Path.GetFullPath(Path.Combine(root, "references", module)) + Path.DirectorySeparatorChar;
+                string moduleRoot = RepositoryDependencyPaths.Resolve(root, "references/" + module) + Path.DirectorySeparatorChar;
                 if (!project.StartsWith(moduleRoot, StringComparison.Ordinal))
                 {
                     graph.ProjectReferences.Any(reference => IsDependencyIdentity(Path.GetFileNameWithoutExtension(reference), module))
@@ -2371,7 +2372,7 @@ public sealed class PlatformApiPrerequisitesTests
         foreach (string path in paths)
         {
             string normalizedPath = NormalizeEvidencePath(normalizedRoot, path);
-            string fullPath = Path.Combine(normalizedRoot, normalizedPath);
+            string fullPath = RepositoryDependencyPaths.Resolve(normalizedRoot, normalizedPath);
             (File.Exists(fullPath) || Directory.Exists(fullPath)).ShouldBeTrue(path);
 
             IEnumerable<string> files = File.Exists(fullPath)
@@ -2410,10 +2411,10 @@ public sealed class PlatformApiPrerequisitesTests
             File.Exists(Path.Combine(root, path)).ShouldBeFalse(path);
         }
 
-        File.ReadAllText(Path.Combine(root, "references/Hexalith.Builds/Props/Directory.Packages.props"))
+        File.ReadAllText(RepositoryDependencyPaths.Resolve(root, "references/Hexalith.Builds/Props/Directory.Packages.props"))
             .ShouldNotContain("Hexalith.EventStore.PayloadProtection", Case.Sensitive,
                 "G5 is not enrolled in the selected package catalog.");
-        File.ReadAllText(Path.Combine(root, "references/Hexalith.EventStore/tools/release-packages.json"))
+        File.ReadAllText(RepositoryDependencyPaths.Resolve(root, "references/Hexalith.EventStore/tools/release-packages.json"))
             .ShouldNotContain("Hexalith.EventStore.PayloadProtection", Case.Sensitive,
                 "G5 is not enrolled in the owner release inventory.");
 
@@ -2429,7 +2430,7 @@ public sealed class PlatformApiPrerequisitesTests
                 .ShouldBeTrue(token);
         }
 
-        string ownerSpec = File.ReadAllText(Path.Combine(root, EventStorePayloadProtectionSpecRelativePath));
+        string ownerSpec = File.ReadAllText(RepositoryDependencyPaths.Resolve(root, EventStorePayloadProtectionSpecRelativePath));
         ExtractFrontMatterValue(ownerSpec, "status").ShouldBe("approved-authorized");
         ExtractFrontMatterValue(ownerSpec, "decision").ShouldBe("adopted-amendment");
         ExtractFrontMatterValue(ownerSpec, "story_8_2_authorized").ShouldBe("true");
@@ -2443,7 +2444,7 @@ public sealed class PlatformApiPrerequisitesTests
         exactPackageCodeSpans.Contains("Hexalith.EventStore.PayloadProtection.AzureKeyVault").ShouldBeTrue();
 
         const string authorityLine = "| Content- and identity-bound G5 decision | 8.11 G5 Evidence And Approval Closure | `backlog` | 8.10 complete plus all named approvals; only this story can record `available` and unblock Parties Story 8.7. |";
-        File.ReadAllLines(Path.Combine(root, EventStoreStoryMigrationRelativePath))
+        File.ReadAllLines(RepositoryDependencyPaths.Resolve(root, EventStoreStoryMigrationRelativePath))
             .Contains(authorityLine, StringComparer.Ordinal)
             .ShouldBeTrue(authorityLine);
 
@@ -2585,20 +2586,20 @@ public sealed class PlatformApiPrerequisitesTests
             && !Path.GetRelativePath(root, path).Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Reproduces an observed descriptor without adopting tags published after the receipt.</summary>
-    private static string DescribeObservedSource(string root, string path, string observedDescribe)
+    private static string DescribeObservedSource(string root, string path, string observedDescribe, string revision = "HEAD")
     {
         if (Regex.IsMatch(observedDescribe, "^[0-9a-f]{8}$", RegexOptions.CultureInvariant))
         {
-            return RunGit(root, "-C", path, "rev-parse", "--short=8", "HEAD").Trim();
+            return RunGit(root, "-C", path, "rev-parse", "--short=8", revision).Trim();
         }
 
         string observedTag = Regex.Replace(observedDescribe, @"-\d+-g[0-9a-f]+$", string.Empty, RegexOptions.CultureInvariant);
-        return RunGit(root, "-C", path, "describe", "--tags", "--match", observedTag, "--abbrev=8", "HEAD").Trim();
+        return RunGit(root, "-C", path, "describe", "--tags", "--match", observedTag, "--abbrev=8", revision).Trim();
     }
 
     private static string ReadCurrentSourceSelection(string matrix)
     {
-        const string currentHeading = "### Current source observation — 2026-10-28";
+        const string currentHeading = "### Current source observation — 2026-10-30";
         int currentStart = matrix.IndexOf(currentHeading, StringComparison.Ordinal);
         currentStart.ShouldBeGreaterThanOrEqualTo(0, currentHeading);
         int historicalStart = matrix.IndexOf("### Historical source observation", currentStart, StringComparison.Ordinal);
@@ -2619,6 +2620,31 @@ public sealed class PlatformApiPrerequisitesTests
         string[] cells = rows[0];
         cells.Length.ShouldBe(5, $"{path} must have dependency, identity and release-use columns.");
         cells[2].ShouldBe($"`{identity}` (`{describe}`)", path);
+    }
+
+    /// <summary>Separates the committed selection from a tool-selected source override.</summary>
+    private static void AssertSelectedSourceObservation(string root, string relativePath, string expectedIdentity)
+    {
+        string selected = RunGit(root, "ls-tree", "HEAD", relativePath).Trim();
+        selected.Replace('\t', ' ').ShouldBe($"160000 commit {expectedIdentity} {relativePath}");
+        if (!RepositoryDependencyPaths.IsMappedDependency(root, relativePath))
+        {
+            AssertGitlinkAndCheckout(root, relativePath, expectedIdentity);
+            return;
+        }
+
+        string actual = RunGit(root, "-C", relativePath, "rev-parse", "HEAD").Trim();
+        Regex.IsMatch(actual, @"\A[0-9a-f]{40}\z", RegexOptions.CultureInvariant).ShouldBeTrue(relativePath);
+        bool dirty = !string.IsNullOrWhiteSpace(RunGit(root, "-C", relativePath, "status", "--porcelain", "--ignore-submodules=all"));
+        // Observe source context without granting consumption proof. The unchanged strict
+        // gate must reject these actual mismatched or dirty mapped checkouts.
+        if (actual != expectedIdentity || dirty)
+        {
+            Should.Throw<ShouldAssertException>(() => AssertGitlinkAndCheckout(root, relativePath, expectedIdentity));
+        }
+        string state = actual == expectedIdentity ? "mapped-source-match" : "mapped-source-override";
+        TestContext.Current.TestOutputHelper?.WriteLine(
+            $"{relativePath}: selected={expectedIdentity} actual={actual} state={state} dirty={dirty} immutable_consumption=false");
     }
 
     private static void AssertGitlinkAndCheckout(string root, string relativePath, string expectedIdentity)

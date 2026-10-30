@@ -16,7 +16,7 @@ internal static class CiTestPaths
         }
     }
 
-    public static string RepoFile(string relativePath) => Path.Combine(RepositoryRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
+    public static string RepoFile(string relativePath) => Hexalith.Parties.PackageTests.RepositoryDependencyPaths.Resolve(RepositoryRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
 
     public static string ReadRepoFile(string relativePath) => File.ReadAllText(RepoFile(relativePath));
 }

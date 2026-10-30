@@ -28,7 +28,8 @@ public class PartiesServerCompositionTests
     public void CompositionSharesPlatformComponentsAndForwardsSidecarSettings()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
-        IResourceBuilder<ProjectResource> gateway = builder.AddHexalithEventStoreGatewayProject();
+        IResourceBuilder<ProjectResource> gateway = builder.AddProject("eventstore", Hexalith.Parties.PackageTests.RepositoryDependencyPaths.Resolve(
+                RepositoryProjectPaths.GetRepositoryRoot(), "references/Hexalith.EventStore/src/Hexalith.EventStore/Hexalith.EventStore.csproj"));
         HexalithEventStoreResources topology = builder.AddHexalithEventStore(gateway, null);
         IResourceBuilder<ProjectResource> parties = builder.AddHexalithPartiesServer(topology,
             "/test/parties-access.yaml", "parties-smoke", "localhost:6050", "localhost:6060");
@@ -62,7 +63,8 @@ public class PartiesServerCompositionTests
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
         HexalithEventStoreResources topology = builder.AddHexalithEventStore(
-            builder.AddHexalithEventStoreGatewayProject(), null);
+            builder.AddProject("eventstore", Hexalith.Parties.PackageTests.RepositoryDependencyPaths.Resolve(
+                RepositoryProjectPaths.GetRepositoryRoot(), "references/Hexalith.EventStore/src/Hexalith.EventStore/Hexalith.EventStore.csproj")), null);
         IResource[] before = builder.Resources.ToArray();
         Should.Throw<ArgumentException>(() => builder.AddHexalithPartiesServer(topology, config!, appId!));
         builder.Resources.ShouldBe(before);

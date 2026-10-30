@@ -12,7 +12,7 @@ public sealed class ExtPartiesVerifierEvidenceTests(ITestOutputHelper output)
     private const string Harness = """
         param([string]$Script, [string]$Mode, [string]$EvidenceDirectory,
             [string]$DependencyRegisterPath, [string]$Fixture, [string]$Participant,
-            [switch]$Synchronize, [string]$LocalGraphCase)
+            [switch]$Synchronize, [string]$LocalGraphCase, [string]$EventStoreRoot)
         $ErrorActionPreference = 'Stop'
         $lookupLog = Join-Path $Fixture ($Participant + '.lookups')
         $writeLog = Join-Path $Fixture ($Participant + '.writes')
@@ -81,7 +81,7 @@ public sealed class ExtPartiesVerifierEvidenceTests(ITestOutputHelper output)
                 & $Script -EvidenceDirectory $EvidenceDirectory -DependencyRegisterPath $DependencyRegisterPath
             }
             else {
-                & $Script -Mode $Mode -EvidenceDirectory $EvidenceDirectory -DependencyRegisterPath $DependencyRegisterPath
+                & $Script -Mode $Mode -EvidenceDirectory $EvidenceDirectory -DependencyRegisterPath $DependencyRegisterPath -EventStoreRoot $EventStoreRoot
             }
             if ($null -ne $LASTEXITCODE) { exit $LASTEXITCODE }
         }
@@ -289,7 +289,8 @@ public sealed class ExtPartiesVerifierEvidenceTests(ITestOutputHelper output)
         }
         foreach (string argument in new[] { "-NoLogo", "-NoProfile", "-NonInteractive", "-File", Path.Combine(fixture, "harness.ps1"),
             "-Script", script, "-Mode", mode, "-EvidenceDirectory", evidence, "-DependencyRegisterPath",
-            Path.Combine(fixture, "absent-synthetic-register.md"), "-Fixture", fixture, "-Participant", participant })
+            Path.Combine(fixture, "absent-synthetic-register.md"), "-Fixture", fixture, "-Participant", participant,
+            "-EventStoreRoot", CiTestPaths.RepoFile("references/Hexalith.EventStore") })
         {
             start.ArgumentList.Add(argument);
         }

@@ -72,3 +72,7 @@ Single cohesive solution. **Adopter-facing** packages (`Client`, `Contracts`, `P
 - Integrating (client/MCP/HTTP) → [api-contracts.md](api-contracts.md)
 - Consuming events → [event-subscribing.md](event-subscribing.md) + [event-handler-patterns.md](event-handler-patterns.md)
 - Deploying → [deployment-guide.md](deployment-guide.md)
+
+The runner-owned `Hexalith.Parties.Platform.IntegrationTests` project adds a separate
+Platform lane. Run it through `hexalith-module test`; it requires the validated
+environment descriptor and private credential channel and never starts topology.

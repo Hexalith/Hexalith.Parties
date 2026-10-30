@@ -401,3 +401,7 @@ Protected profile reads validate the complete personal-data policy before any pr
 A detached preview removes encrypted markers and restores modeled state; the existing writer
 inspector rejects personal values left in plaintext, including collection values and natural-person
 organization strings. A ciphertext marker elsewhere cannot authorize an unencrypted sensitive leaf.
+
+The runner-owned `Hexalith.Parties.Platform.IntegrationTests` project adds a separate
+Platform lane. Run it through `hexalith-module test`; it requires the validated
+environment descriptor and private credential channel and never starts topology.

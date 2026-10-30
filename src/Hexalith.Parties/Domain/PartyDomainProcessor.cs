@@ -39,12 +39,48 @@ internal sealed partial class PartyDomainProcessor(
     IPartyIdentityAuthority? identityAuthority = null,
     IIdentityHistoryCustody? identityHistoryCustody = null,
     IOptionsMonitor<PartyIdentityOptions>? identityOptions = null) : IDomainProcessor, IAsyncDomainProcessor, IAggregateReplay
+#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
+    , IDomainCommandPayloadInventory
+#endif
 {
     private const string PartyDomain = "party";
 
     // Allowlist anchor - only types from this assembly may be resolved as command payload types.
     // Prevents Type.GetType from loading arbitrary assemblies via assembly-qualified wire data.
     private static readonly Assembly ContractsAssembly = typeof(CreateParty).Assembly;
+
+    /// <summary>The finite payload inventory enforced by the actual custom processor, including its retry route.</summary>
+    public IReadOnlyList<Type> CommandPayloadTypes => AllowedCommandPayloadTypes;
+
+    private static readonly IReadOnlyList<Type> AllowedCommandPayloadTypes = Array.AsReadOnly<Type>([
+        typeof(AddContactChannel),
+        typeof(AddIdentifier),
+        typeof(CancelPartyErasure),
+        typeof(CompletePartyErasure),
+        typeof(CreateParty),
+        typeof(CreatePartyComposite),
+        typeof(DeactivateParty),
+        typeof(EraseParty),
+        typeof(EstablishHumanActorBinding),
+        typeof(LiftRestriction),
+        typeof(MarkErasureVerified),
+        typeof(MarkPartyEncryptionKeyDeleted),
+        typeof(ProvisionAgentParty),
+        typeof(ReactivateParty),
+        typeof(RebindHumanActorBinding),
+        typeof(RecordConsent),
+        typeof(RemoveContactChannel),
+        typeof(RemoveIdentifier),
+        typeof(RestrictProcessing),
+        typeof(RetryErasureVerification),
+        typeof(RevokeConsent),
+        typeof(RevokeHumanActorBinding),
+        typeof(RotatePartyKey),
+        typeof(SetIsNaturalPerson),
+        typeof(UpdateContactChannel),
+        typeof(UpdateOrganizationDetails),
+        typeof(UpdatePartyComposite),
+        typeof(UpdatePersonDetails)]);
 
     // Symmetric to envelope payload serialization. Deserializing with anything else risks
     // silently dropping required fields, which would yield false-pass / false-fail validation.
@@ -604,15 +640,14 @@ internal sealed partial class PartyDomainProcessor(
         // input, which would happily load arbitrary assemblies from the probing path given an
         // assembly-qualified attacker-controlled name like "Foo, EvilAssembly".
         Type? exact = ContractsAssembly.GetType(typeName, throwOnError: false);
-        if (exact is not null)
+        if (exact is not null && AllowedCommandPayloadTypes.Contains(exact))
         {
             return exact;
         }
 
         // Short-name fallback only succeeds when exactly one type in the contracts assembly
         // matches by Name. Multiple matches resolve to null so command-type ambiguity fails-closed.
-        Type[] candidates = [.. ContractsAssembly
-            .GetTypes()
+        Type[] candidates = [.. AllowedCommandPayloadTypes
             .Where(type => string.Equals(type.Name, typeName, StringComparison.Ordinal))
             .Take(2)];
         return candidates.Length == 1 ? candidates[0] : null;

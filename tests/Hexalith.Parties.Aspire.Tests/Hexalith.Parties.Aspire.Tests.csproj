@@ -9,6 +9,7 @@
     <PackageReference Include="Shouldly" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="../PackageTests.Shared/RepositoryDependencyPaths.cs" Link="Shared/RepositoryDependencyPaths.cs" />
     <Using Include="Xunit" />
     <Using Include="Shouldly" />
   </ItemGroup>

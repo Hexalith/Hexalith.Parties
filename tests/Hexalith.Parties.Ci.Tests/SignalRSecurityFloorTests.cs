@@ -36,6 +36,9 @@ public sealed class SignalRSecurityFloorTests
     public async Task UiGeneratedAndPublishedRuntimeConfigurations_RequireFixedSharedFrameworks()
     {
         string ui = CiTestPaths.RepoFile("src/Hexalith.Parties.UI");
+        string configuration = typeof(SignalRSecurityFloorTests).Assembly
+            .GetCustomAttributes(typeof(System.Reflection.AssemblyConfigurationAttribute), false)
+            .Cast<System.Reflection.AssemblyConfigurationAttribute>().Single().Configuration;
         using (JsonDocument assets = JsonDocument.Parse(File.ReadAllText(Path.Combine(ui, "obj", "project.assets.json"))))
         {
             assets.RootElement.GetProperty("project").GetProperty("frameworks").GetProperty("net10.0")
@@ -51,7 +54,7 @@ public sealed class SignalRSecurityFloorTests
             }
         }
 
-        AssertRuntimeMinimums(Path.Combine(ui, "bin", "Release", "net10.0", "Hexalith.Parties.UI.runtimeconfig.json"));
+        AssertRuntimeMinimums(Path.Combine(ui, "bin", configuration, "net10.0", "Hexalith.Parties.UI.runtimeconfig.json"));
         string publish = Path.Combine(Path.GetTempPath(), $"parties-ui-runtime-floor-{Guid.NewGuid():N}");
         try
         {
@@ -64,7 +67,7 @@ public sealed class SignalRSecurityFloorTests
             };
             foreach (string argument in new[]
             {
-                "publish", Path.Combine(ui, "Hexalith.Parties.UI.csproj"), "--configuration", "Release",
+                "publish", Path.Combine(ui, "Hexalith.Parties.UI.csproj"), "--configuration", configuration,
                 "--no-restore", "--no-build", "-m:1", "-nr:false", "--output", publish,
             })
             {

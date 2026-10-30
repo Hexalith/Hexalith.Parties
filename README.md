@@ -314,3 +314,8 @@ remain a frozen compatibility lane. Unit and isolated integration projects retai
 doubles and run without Platform/domain servers. `scripts/test.ps1` inventories the new project but
 leaves its environment-owning execution to the declared runner suite. Attached execution, expiry
 enforcement and termination qualification remain open follow-up work.
+
+Isolated package probes use their test build configuration: Debug during local source work and
+Release in the CI package lane. Each probe removes inherited source-mapping imports before it
+restores an independent package consumer. Debug probes check package structure and APIs only;
+the Release counterpart and authoritative publications remain required for package acceptance.

@@ -119,3 +119,7 @@ The `parties-ui` host registers scoped adapters for those ports and delegates to
 
 - **Root submodules** (repository-level, checked out under `references/`, never initialized recursively): `references/Hexalith.AI.Tools` (tooling and documentation support; not a runtime dependency), `references/Hexalith.Builds` (shared build props/packages), `references/Hexalith.Commons` (shared service defaults and unique IDs), `references/Hexalith.EventStore` (gateway, persistence, publishing, `AggregateActor`, `EventStoreAggregate<TState>`), `references/Hexalith.FrontComposer` (AdminPortal shell host), `references/Hexalith.McpCli` (shared Contracts-based MCP and CLI tooling), `references/Hexalith.Platform` (platform-owned Aspire composition), `references/Hexalith.PolymorphicSerializations` (serialization/source-generator projects in the solution), and `references/Hexalith.Tenants` (tenant authority + client subscription/projection). `references/Hexalith.Memories` is optional for rich search.
 - **NuGet** (key): Aspire/AppHost SDK 13.6.4, DAPR 1.18.10, FluentValidation 12.1.1, MediatR 14.2.0, FluentUI 5.0.0, ModelContextProtocol 2.2.0, `Hexalith.Memories.Client.Rest` 2.27.1. Full list with versions in [architecture.md §3](architecture.md).
+
+The runner-owned `Hexalith.Parties.Platform.IntegrationTests` project adds a separate
+Platform lane. Run it through `hexalith-module test`; it requires the validated
+environment descriptor and private credential channel and never starts topology.

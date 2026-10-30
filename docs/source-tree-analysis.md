@@ -152,3 +152,7 @@ git submodule update --init references/Hexalith.Builds references/Hexalith.Commo
 | GDPR encryption/erasure | `src/Hexalith.Parties.Security/` |
 | Current local topology / DAPR rollback wiring | `src/Hexalith.Parties.AppHost/` (retire only after approved platform AppHost parity) |
 | Container publication | `.github/workflows/release.yml`, `scripts/publish-parties-containers.ps1` |
+
+The runner-owned `Hexalith.Parties.Platform.IntegrationTests` project adds a separate
+Platform lane. Run it through `hexalith-module test`; it requires the validated
+environment descriptor and private credential channel and never starts topology.

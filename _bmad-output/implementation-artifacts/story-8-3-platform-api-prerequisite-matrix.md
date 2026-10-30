@@ -48,7 +48,33 @@ retention action, and does not change Story 8.7's `blocked` status: the
 release adds Story 8.6's shared-projection rebuild completion mechanics only,
 not the G5 runtime engine.
 
-### Current source observation — 2026-10-28
+### Current source observation — 2026-10-30
+
+Observed from committed Parties `a8e24f6e74ef55befddc4e1a04629e5db2d8b513` selections.
+EventStore package `3.128.4` remains unchanged. These Git objects describe selected
+gitlinks; they do not assert that the mapped source checkout equals that selection
+or is clean. The module tool remains the source-root and dependency-mode authority.
+Source-mode tests independently record each mapped checkout's actual HEAD, dirty
+state and whether it overrides the selection, with `immutable_consumption=false`.
+Unmapped immutable-consumption checks still require exact selected identities and
+clean checkouts. Selection does not revalidate historical parity receipts or grant
+owner approval, package, deployment, data-custody or rollback qualification.
+Descriptions below are anchored to the observed tag for the selected Git object.
+
+| Root dependency | Current source identity | Release use |
+| --- | --- | --- |
+| AI.Tools | `5be77fcbd96546e722b30a117516b1e03e6e4975` (`5be77fcb`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
+| Builds | `0b17f8022cdc23b8b242b000f5b2aa15580184ac` (`v4.38.3-37-g0b17f802`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
+| Commons | `3edfbdafc7d4fa915286dce8a37dc4cc7c06085a` (`v2.30.3-5-g3edfbdaf`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
+| EventStore | `be4aba873d09736abb4caacf1fae8ad870f0b3b6` (`v3.128.4-5-gbe4aba87`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
+| FrontComposer | `c3f217ee7216f998875b23a4d6b8175280e8a86a` (`v4.7.1-11-gc3f217ee`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
+| McpCli | `e6ddf3f2784f4b8c7d347fc21d046ee3011d4082` (`v1.1.0-15-ge6ddf3f2`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
+| Memories | `28a2beeb7e9baa1785b9cb70f2a8b750f071cfd7` (`v3.0.10-3-g28a2beeb`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
+| Platform | `242b4d7297820495b91c5d7719dd6b1c892c978a` (`v1.0.1-17-g242b4d72`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
+| PolymorphicSerializations | `221ac4592ba908ae7661ba1fa9e2d1fcc23baee0` (`v1.19.5`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
+| Tenants | `8127cb3b47dcfcf4086d07e4af0730c2f4920f9e` (`v5.11.1-5-g8127cb3b`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
+
+### Historical source observation — 2026-10-28 (before descriptor fixture mapping)
 
 This observation reconciles the six fitness failures recorded in
 `tests/five-data-lifecycle-qualification-2026-10-28/parent-final-verification.json`.

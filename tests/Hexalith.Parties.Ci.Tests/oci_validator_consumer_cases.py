@@ -2,6 +2,7 @@
 import importlib.util
 import json
 import os
+import sys
 from pathlib import Path
 import shutil
 from types import SimpleNamespace
@@ -11,7 +12,7 @@ from unittest import mock
 from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[2]
-BUILDS = ROOT / 'references/Hexalith.Builds/Github/publish-containers'
+BUILDS = (Path(sys.argv.pop(1)) if len(sys.argv) > 1 else ROOT / 'references/Hexalith.Builds') / 'Github/publish-containers'
 
 
 def load(name, path):

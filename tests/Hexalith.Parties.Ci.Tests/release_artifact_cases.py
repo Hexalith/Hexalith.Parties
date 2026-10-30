@@ -52,7 +52,7 @@ def stored_zip(entries):
     return bytes(local) + bytes(central) + eocd
 
 
-def run(repository, scenario):
+def run(repository, scenario, builds_root):
     repository = repository.resolve()
     catalog = json.loads(subprocess.check_output([
         "dotnet", "msbuild", str(repository / "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj"),
@@ -245,7 +245,7 @@ def run(repository, scenario):
     with tempfile.TemporaryDirectory(prefix="parties-publication-") as temporary:
         root = Path(temporary)
         validator = root / "oci_registry_validator.py"
-        validator.write_bytes(subprocess.check_output(["git", "-C", str(repository / "references/Hexalith.Builds"),
+        validator.write_bytes(subprocess.check_output(["git", "-C", str(builds_root),
                                                        "show", f"{BUILDS}:Github/publish-containers/oci_registry_validator.py"]))
         if scenario == "unpinned-validator":
             validator.write_bytes(validator.read_bytes() + b"\n# modified\n")
@@ -664,4 +664,4 @@ if __name__ == "__main__":
     if sys.argv[2].startswith("download-"):
         exercise_download(Path(sys.argv[1]), sys.argv[2])
     else:
-        run(Path(sys.argv[1]), sys.argv[2])
+        run(Path(sys.argv[1]), sys.argv[2], Path(sys.argv[3]) if len(sys.argv) > 3 else Path(sys.argv[1]) / "references/Hexalith.Builds")

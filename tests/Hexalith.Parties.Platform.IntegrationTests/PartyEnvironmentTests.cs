@@ -31,7 +31,7 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture) : 
         CancellationToken token = bound.Token;
         string tenant = fixture.Environment.SyntheticTenantId;
         // The declared Tenants API owns system-scope routing; fixtures never infer its internal query bindings.
-        using HttpResponseMessage tenantResponse = await fixture.Tenants.GetAsync($"/api/v1/tenants/{Uri.EscapeDataString(tenant)}", token).ConfigureAwait(true);
+        using HttpResponseMessage tenantResponse = await fixture.Tenants.GetAsync($"/api/tenants/{Uri.EscapeDataString(tenant)}", token).ConfigureAwait(true);
         tenantResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
         using JsonDocument tenantDocument = JsonDocument.Parse(await tenantResponse.Content.ReadAsStringAsync(token).ConfigureAwait(true));
         tenantDocument.RootElement.GetProperty("tenantId").GetString().ShouldBe(tenant);

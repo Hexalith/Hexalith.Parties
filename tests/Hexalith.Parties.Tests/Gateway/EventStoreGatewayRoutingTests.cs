@@ -68,7 +68,7 @@ public sealed class EventStoreGatewayRoutingTests
     public async Task OpenApiDocument_InDocumentationMode_DescribesGatewayContractsAndComplianceWarningAsync()
     {
         using var factory = new EventStoreGatewayTestFactory(openApiEnabled: true);
-        using HttpClient client = factory.CreateClient();
+        using HttpClient client = factory.CreateAuthenticatedClient();
 
         using HttpResponseMessage response = await client.GetAsync("/openapi/v1.json");
 
@@ -124,7 +124,7 @@ public sealed class EventStoreGatewayRoutingTests
     public async Task ErrorCatalog_InDocumentationMode_ListsStableProblemTypesAndGuidanceAsync()
     {
         using var factory = new EventStoreGatewayTestFactory(openApiEnabled: true);
-        using HttpClient client = factory.CreateClient();
+        using HttpClient client = factory.CreateAuthenticatedClient();
 
         using HttpResponseMessage response = await client.GetAsync("/problems/catalog.json");
 
@@ -145,7 +145,7 @@ public sealed class EventStoreGatewayRoutingTests
         string expectedCorrectiveAction)
     {
         using var factory = new EventStoreGatewayTestFactory(openApiEnabled: true);
-        using HttpClient client = factory.CreateClient();
+        using HttpClient client = factory.CreateAuthenticatedClient();
 
         using HttpResponseMessage response = await client.GetAsync($"/problems/domain-rejections/{reasonCode}.json");
 
@@ -185,7 +185,7 @@ public sealed class EventStoreGatewayRoutingTests
     public async Task PostUnsupportedApiVersion_ReturnsDocumentedProblemBeforePartyInvocationAsync()
     {
         using var factory = new EventStoreGatewayTestFactory();
-        using HttpClient client = factory.CreateClient();
+        using HttpClient client = factory.CreateAuthenticatedClient();
 
         var request = CreateCommandRequest(
             messageId: "cmd-3-3-unsupported-version",
@@ -693,7 +693,7 @@ public sealed class EventStoreGatewayRoutingTests
         {
             HttpEndpoint = "http://dapr-transport.test",
             UseJsonSerialization = true,
-        }, transport), NullLogger<QueryRouter>.Instance, PartyPagingCatalog.Create(queryType));
+        }, transport), NullLogger<QueryRouter>.Instance);
         using var factory = new EventStoreGatewayTestFactory(customQueryRouter: router);
         using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["query:read"]);
 
@@ -1287,6 +1287,28 @@ public sealed class EventStoreGatewayRoutingTests
                     services.Remove(descriptor);
                 }
 
+#if HEXALITH_EVENTSTORE_SOURCE_CATALOG
+                // Preserve the explicit friend-only protocol seam: these tests supply in-memory
+                // routing and stores, while the Platform lane verifies the real catalog owner.
+                services.AddControllers().AddControllersAsServices();
+                services.AddTransient<Hexalith.EventStore.Controllers.QueriesController>(provider =>
+                    new Hexalith.EventStore.Controllers.QueriesController(
+                        provider.GetRequiredService<MediatR.IMediator>(), provider.GetRequiredService<IETagService>(),
+                        provider.GetRequiredService<Hexalith.EventStore.Authorization.ITenantValidator>(),
+                        provider.GetRequiredService<Hexalith.EventStore.Authorization.IRbacValidator>(),
+                        provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Hexalith.EventStore.Controllers.QueriesController>>()));
+                services.AddSingleton<IDomainServiceResolver>(provider => new DomainServiceResolver(
+                    provider.GetRequiredService<Dapr.Client.DaprClient>(), provider.GetRequiredService<IOptions<DomainServiceOptions>>(),
+                    provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<DomainServiceResolver>>()));
+                services.RemoveAll<MediatR.IRequestHandler<SubmitCommand, Hexalith.EventStore.Server.Pipeline.Commands.SubmitCommandResult>>();
+                services.AddTransient<MediatR.IRequestHandler<SubmitCommand, Hexalith.EventStore.Server.Pipeline.Commands.SubmitCommandResult>>(provider =>
+                    new Hexalith.EventStore.Server.Pipeline.SubmitCommandHandler(
+                        provider.GetRequiredService<ICommandStatusStore>(),
+                        provider.GetRequiredService<ICommandArchiveStore>(),
+                        provider.GetRequiredService<ICommandRouter>(),
+                        null, null, provider.GetRequiredService<IProjectionUpdateOrchestrator>(),
+                        provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Hexalith.EventStore.Server.Pipeline.SubmitCommandHandler>>()));
+#endif
                 services.RemoveAll<ICommandActivityTracker>();
                 services.RemoveAll<IStreamActivityTracker>();
                 services.RemoveAll<ICommandCorrelationIndex>();

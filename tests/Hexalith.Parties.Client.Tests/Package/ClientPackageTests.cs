@@ -145,7 +145,7 @@ public sealed class ClientPackageTests : IDisposable
             _ = provider.GetRequiredService<IPartiesQueryClient>();
             """);
 
-        RunDotnet("build", $"\"{projectPath}\" --configuration Release", consumerDirectory);
+        RunDotnet("build", $"\"{projectPath}\" --configuration {PackageTestProcess.ProbeConfiguration}", consumerDirectory);
         string listOutput = RunDotnet(
             "package",
             $"list --project \"{projectPath}\" --include-transitive",
@@ -187,11 +187,11 @@ public sealed class ClientPackageTests : IDisposable
         // catalog. Only the two packages under test belong in this local feed.
         RunDotnet(
             "pack",
-            $"\"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Contracts", "Hexalith.Parties.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {LocalPackVersionProperties}",
+            $"\"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Contracts", "Hexalith.Parties.Contracts.csproj")}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} {LocalPackVersionProperties}",
             repoRoot);
         RunDotnet(
             "pack",
-            $"\"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Client", "Hexalith.Parties.Client.csproj")}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {LocalPackVersionProperties}",
+            $"\"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Client", "Hexalith.Parties.Client.csproj")}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} {LocalPackVersionProperties}",
             repoRoot);
 
         string clientPackagePath = Directory

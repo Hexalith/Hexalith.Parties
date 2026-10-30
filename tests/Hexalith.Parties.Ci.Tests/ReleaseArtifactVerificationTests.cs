@@ -104,6 +104,7 @@ public sealed class ReleaseArtifactVerificationTests
         start.ArgumentList.Add(Path.Combine(CiTestPaths.RepositoryRoot, "tests/Hexalith.Parties.Ci.Tests/release_artifact_cases.py"));
         start.ArgumentList.Add(CiTestPaths.RepositoryRoot);
         start.ArgumentList.Add(scenario);
+        start.ArgumentList.Add(CiTestPaths.RepoFile("references/Hexalith.Builds"));
         using Process process = Process.Start(start)!;
         Task<string> output = process.StandardOutput.ReadToEndAsync(TestContext.Current.CancellationToken);
         Task<string> error = process.StandardError.ReadToEndAsync(TestContext.Current.CancellationToken);

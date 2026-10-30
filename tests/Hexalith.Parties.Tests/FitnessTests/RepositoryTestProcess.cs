@@ -32,5 +32,18 @@ internal static class RepositoryTestProcess
 
     /// <summary>Uses the shared runner with a literal argument vector and the fitness-test deadline.</summary>
     private static PackageTestProcessResult Run(string root, string fileName, string[] arguments)
-        => PackageTestProcess.Run(fileName, arguments, root, ProcessTimeoutMilliseconds);
+    {
+        string[] selected = arguments.ToArray();
+        if (fileName == "git")
+        {
+            for (int index = 0; index < selected.Length - 1; index++)
+            {
+                if (selected[index] == "-C")
+                {
+                    selected[index + 1] = RepositoryDependencyPaths.Resolve(root, selected[index + 1]);
+                }
+            }
+        }
+        return PackageTestProcess.Run(fileName, selected, root, ProcessTimeoutMilliseconds);
+    }
 }

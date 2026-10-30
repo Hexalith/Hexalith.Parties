@@ -92,3 +92,7 @@ Then follow [getting-started.md](./getting-started.md) for auth + first command/
 ---
 
 *Brownfield PRD note: point the PRD workflow at this `index.md`. For API-only features reference [api-contracts.md](./api-contracts.md); for domain/event work reference [data-models.md](./data-models.md) + [event-handler-patterns.md](./event-handler-patterns.md); for full-stack reference [architecture.md](./architecture.md).*
+
+The runner-owned `Hexalith.Parties.Platform.IntegrationTests` project adds a separate
+Platform lane. Run it through `hexalith-module test`; it requires the validated
+environment descriptor and private credential channel and never starts topology.

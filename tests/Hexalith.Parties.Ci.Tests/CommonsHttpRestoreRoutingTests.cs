@@ -1151,6 +1151,13 @@ def fake_pack(command, **kwargs):
 
 with tempfile.TemporaryDirectory() as temporary_root:
     temporary_root = Path(temporary_root)
+    # Packing is mocked; construct the corresponding private source tree as well.
+    module.REPO_ROOT = temporary_root / "repository"
+    for relative, _ in module.support_package_projects(
+            commons_version, event_store_version, front_composer_version, tenants_version):
+        project = module.REPO_ROOT / relative
+        project.parent.mkdir(parents=True, exist_ok=True)
+        project.write_text("<Project />")
     with patch.object(module.subprocess, "run", side_effect=fake_pack):
         module.pack_support_packages(
             temporary_root / "exact", commons_version, event_store_version, front_composer_version, tenants_version

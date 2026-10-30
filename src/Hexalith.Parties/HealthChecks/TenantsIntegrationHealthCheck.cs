@@ -26,6 +26,14 @@ internal sealed class DaprTenantsReadinessProbe(
         string daprHttpPort = _configuration["DAPR_HTTP_PORT"] ?? "3500";
         string escapedServiceName = Uri.EscapeDataString(serviceName);
         var uri = new Uri($"http://127.0.0.1:{daprHttpPort}/v1.0/invoke/{escapedServiceName}/method/ready");
+        if (_configuration["Tenants:ReadinessBaseAddress"] is { } binding)
+        {
+            if (!Uri.TryCreate(binding, UriKind.Absolute, out var endpoint) || endpoint.Scheme is not ("http" or "https")
+                || !string.IsNullOrEmpty(endpoint.UserInfo) || endpoint.AbsolutePath != "/" || !string.IsNullOrEmpty(endpoint.Query)
+                || !string.IsNullOrEmpty(endpoint.Fragment))
+                throw new InvalidOperationException("The explicitly supplied Tenants readiness endpoint is invalid.");
+            uri = new Uri(endpoint, "ready");
+        }
 
         HttpClient httpClient = _httpClientFactory.CreateClient(HttpClientName);
         using HttpResponseMessage response = await httpClient

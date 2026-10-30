@@ -377,6 +377,15 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
 
             builder.ConfigureTestServices(services =>
             {
+#if HEXALITH_EVENTSTORE_SOURCE_CATALOG
+                // This fixture supplies local health dependencies; activation itself is covered
+                // by the descriptor-only Platform suite and EventStore owner tests.
+                var catalog = Substitute.For<Hexalith.EventStore.ServiceDefaults.Routing.IRouteCatalogAuthority>();
+                catalog.ReadbackAsync(Arg.Any<CancellationToken>()).Returns(
+                    new Hexalith.EventStore.Contracts.Routing.RouteCatalogGenerationReadback(
+                        1, 1, "isolated", "isolated", "isolated", "Development", [], true));
+                services.AddSingleton(catalog);
+#endif
                 services.RemoveAll<DaprClient>();
                 services.AddSingleton(DaprClient);
                 if (CleanupHandler is not null)

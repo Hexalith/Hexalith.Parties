@@ -740,7 +740,7 @@ public sealed class EpicEightClosureFitnessTests
             const string path = "references/Hexalith.EventStore";
             string checkout = Path.Combine(root, path);
             RunGit(fixture.FullName, "clone", "--shared", "--no-checkout", "--", sourceRoot, root);
-            RunGit(fixture.FullName, "clone", "--shared", "--no-checkout", "--", Path.Combine(sourceRoot, path), checkout);
+            RunGit(fixture.FullName, "clone", "--shared", "--no-checkout", "--", RepositoryDependencyPaths.Resolve(sourceRoot, path), checkout);
             RunGit(checkout, "sparse-checkout", "set", "--no-cone", "/README.md");
             string selected = ReadSelectedRootGitlinkSha(root, path);
             RunGit(checkout, "checkout", "--detach", selected);
@@ -766,11 +766,11 @@ public sealed class EpicEightClosureFitnessTests
     [Fact]
     public void CurrentClosureIdentityCanBeDerivedWithoutClaimingQualification()
     {
-        (string snapshot, string dependencies) = ReadCurrentClosureIdentity(RepositoryRoot.Locate());
+        (string snapshot, string dependencies) = ReadCurrentClosureIdentity(RepositoryRoot.Locate(), requireImmutableConsumption: false);
 
         Regex.IsMatch(snapshot, @"\A[0-9a-f]{64}\z", RegexOptions.CultureInvariant).ShouldBeTrue();
         Regex.IsMatch(dependencies, @"\A[0-9a-f]{64}\z", RegexOptions.CultureInvariant).ShouldBeTrue();
-        TestContext.Current.TestOutputHelper?.WriteLine($"parties_snapshot={snapshot} dependency_set={dependencies}");
+        TestContext.Current.TestOutputHelper?.WriteLine($"diagnostic_parties_snapshot={snapshot} diagnostic_dependency_set={dependencies} immutable_consumption=false");
     }
 
     private static string CreateStampedValidationSummary(string changedCheck, string status, string evidence, string validEvidence)
@@ -1077,7 +1077,7 @@ public sealed class EpicEightClosureFitnessTests
     /// root gitlinks. Receipt payload and three closure status values are normalized as bookkeeping.
     /// No index or repository object is written; these SHA256 digests are not Git tree object IDs.
     /// </summary>
-    private static (string Snapshot, string Dependencies) ReadCurrentClosureIdentity(string root)
+    private static (string Snapshot, string Dependencies) ReadCurrentClosureIdentity(string root, bool requireImmutableConsumption = true)
     {
         Dictionary<string, string> trackedModes = ReadTrackedModes(root);
         List<(string Path, string Mode, string Digest)> gitlinks = [];
@@ -1086,7 +1086,9 @@ public sealed class EpicEightClosureFitnessTests
         {
             string path = declaration[(declaration.IndexOf(' ') + 1)..];
             rootGitlinkPaths.Add(path).ShouldBeTrue("Root submodule paths must be unique.");
-            gitlinks.Add(ReadValidatedRootGitlinkEntry(root, path));
+            gitlinks.Add(requireImmutableConsumption
+                ? ReadValidatedRootGitlinkEntry(root, path)
+                : ReadObservedRootGitlinkEntry(root, path));
         }
 
         List<(string Path, string Mode, string Digest)> files = ReadRootWorktreeManifest(root, trackedModes, rootGitlinkPaths);
@@ -1096,7 +1098,16 @@ public sealed class EpicEightClosureFitnessTests
                      .Select(Path.GetFileName).OfType<string>()
                      .Concat([".gitmodules", "global.json", "references/Hexalith.Builds/Props/Directory.Packages.props"]))
         {
-            dependencyInputs.Add(ReadWorktreeManifestEntry(root, path, trackedModes.GetValueOrDefault(path, "100644")));
+            if (!requireImmutableConsumption && path.StartsWith("references/", StringComparison.Ordinal))
+            {
+                string observedPath = RepositoryDependencyPaths.Resolve(root, path);
+                dependencyInputs.Add((path, File.Exists(observedPath) ? "observed-file" : "missing",
+                    File.Exists(observedPath) ? Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(observedPath))) : "missing"));
+            }
+            else
+            {
+                dependencyInputs.Add(ReadWorktreeManifestEntry(root, path, trackedModes.GetValueOrDefault(path, "100644")));
+            }
         }
 
         foreach ((string package, string version) in EffectivePackageVersions.ReadPackages(root))
@@ -1104,7 +1115,8 @@ public sealed class EpicEightClosureFitnessTests
             dependencyInputs.Add(CreateManifestEntry($"evaluated-package/{package}", "version", Encoding.UTF8.GetBytes(version)));
         }
 
-        return (HashManifest("parties-snapshot-v1", [.. files, .. gitlinks]), HashManifest("parties-dependency-set-v1", dependencyInputs));
+        return (HashManifest(requireImmutableConsumption ? "parties-snapshot-v1" : "parties-diagnostic-snapshot-v1", [.. files, .. gitlinks]),
+            HashManifest(requireImmutableConsumption ? "parties-dependency-set-v1" : "parties-diagnostic-dependency-set-v1", dependencyInputs));
     }
 
     private static Dictionary<string, string> ReadTrackedModes(string root)
@@ -1142,10 +1154,38 @@ public sealed class EpicEightClosureFitnessTests
     private static string ReadFixtureSnapshot(string root)
         => HashManifest("parties-snapshot-v1", ReadRootWorktreeManifest(root, ReadTrackedModes(root), new HashSet<string>(StringComparer.Ordinal)));
 
+    /// <summary>Hashes diagnostic source observations without producing immutable-consumption evidence.</summary>
+    private static (string Path, string Mode, string Digest) ReadObservedRootGitlinkEntry(string root, string path)
+    {
+        string selected = ReadSelectedRootGitlinkSha(root, path);
+        string actualRoot = RepositoryDependencyPaths.Resolve(root, path);
+        bool mapped = RepositoryDependencyPaths.IsMappedDependency(root, path);
+        bool present = File.Exists(Path.Combine(actualRoot, ".git")) || Directory.Exists(Path.Combine(actualRoot, ".git"));
+        string checkout = present ? RunGit(root, "-C", actualRoot, "rev-parse", "HEAD").Trim() : "missing";
+        string status = present ? RunGit(root, "-C", actualRoot, "status", "--porcelain", "--ignore-submodules=all") : "missing";
+        string state = !present ? "missing" : mapped ? "mapped-source" : "checkout";
+        string changes = present ? RunGit(root, "-C", actualRoot, "diff", "--binary", "HEAD", "--") : "missing";
+        List<string> untracked = [];
+        if (present)
+        {
+            foreach (string file in RunGit(root, "-C", actualRoot, "ls-files", "--others", "--exclude-standard", "-z")
+                         .Split('\0', StringSplitOptions.RemoveEmptyEntries).Order(StringComparer.Ordinal))
+            {
+                string fullPath = Path.Combine(actualRoot, file);
+                if (File.Exists(fullPath)) untracked.Add(file + "=" + Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(fullPath))));
+            }
+        }
+        TestContext.Current.TestOutputHelper?.WriteLine(
+            $"{path}: selected={selected} actual={checkout} state={state} dirty={!string.IsNullOrWhiteSpace(status)} immutable_consumption=false");
+        return CreateManifestEntry(path, "observed-gitlink",
+            Encoding.UTF8.GetBytes($"selected={selected}\nactual={checkout}\nstate={state}\nstatus={status}\nchanges={changes}\nuntracked={string.Join('\n', untracked)}"));
+    }
+
     private static (string Path, string Mode, string Digest) ReadValidatedRootGitlinkEntry(string root, string path)
     {
-        string fullPath = Path.GetFullPath(Path.Combine(root, path));
-        fullPath.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.Ordinal).ShouldBeTrue(path);
+        string fullPath = RepositoryDependencyPaths.Resolve(root, path);
+        (fullPath.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.Ordinal)
+            || RepositoryDependencyPaths.IsMappedDependency(root, path)).ShouldBeTrue(path);
         (File.Exists(Path.Combine(fullPath, ".git")) || Directory.Exists(Path.Combine(fullPath, ".git")))
             .ShouldBeTrue($"Initialize only the declared root submodule before qualification: {path}");
         string selected = ReadSelectedRootGitlinkSha(root, path);

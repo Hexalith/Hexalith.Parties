@@ -454,7 +454,11 @@ public sealed class PartiesContainerPublishWorkflowTests
         containerTargets.ShouldContain("AfterTargets=\"_ParseItemsForPublishingSingleContainer\"");
         containerTargets.ShouldContain("https://github.com/Hexalith/Hexalith.Parties");
         containerTargets.ShouldContain("<ContainerGenerateLabelsImageSource>false</ContainerGenerateLabelsImageSource>");
-        containerTargets.ShouldNotContain("Hexalith.EventStore");
+        // Dependency-selection metadata for isolated tests is unrelated to image branding.
+        // Check every container property/item, so EventStore defaults still cannot leak.
+        string containerConfiguration = string.Join("\n", System.Xml.Linq.XDocument.Parse(containerTargets).Descendants()
+            .Where(element => element.Name.LocalName.StartsWith("Container", StringComparison.Ordinal)));
+        containerConfiguration.ShouldNotContain("Hexalith.EventStore");
 
         publicationPreflight.ShouldContain("readonly expected_package_count=10");
         publicationPreflight.ShouldContain(
@@ -479,7 +483,7 @@ public sealed class PartiesContainerPublishWorkflowTests
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
-            ArgumentList = { CiTestPaths.RepoFile("tests/Hexalith.Parties.Ci.Tests/oci_validator_consumer_cases.py") },
+            ArgumentList = { CiTestPaths.RepoFile("tests/Hexalith.Parties.Ci.Tests/oci_validator_consumer_cases.py"), CiTestPaths.RepoFile("references/Hexalith.Builds") },
         };
         using Process process = Process.Start(start).ShouldNotBeNull();
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);

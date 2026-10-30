@@ -23,7 +23,7 @@ internal static class RepositoryRoot
 
     /// <summary>Reads a repository file without altering its text.</summary>
     internal static string Read(string root, string relativePath)
-        => File.ReadAllText(Path.Combine(root, relativePath));
+        => File.ReadAllText(Hexalith.Parties.PackageTests.RepositoryDependencyPaths.Resolve(root, relativePath));
 
     public static string ProjectFile(string projectName)
         => Path.Combine(Locate(), "src", projectName, projectName + ".csproj");

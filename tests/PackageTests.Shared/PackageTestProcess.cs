@@ -1,9 +1,19 @@
 using System.Diagnostics;
+using System.Reflection;
 
 namespace Hexalith.Parties.PackageTests;
 
 internal static class PackageTestProcess
 {
+    /// <summary>Preserves Debug local probes and the Release package probe when built by CI.</summary>
+    internal static string ProbeConfiguration => typeof(PackageTestProcess).Assembly
+        .GetCustomAttribute<AssemblyConfigurationAttribute>()?.Configuration switch
+        {
+            "Release" => "Release",
+            "Debug" => "Debug",
+            _ => throw new InvalidOperationException("Package probes require an explicit Debug or Release test build."),
+        };
+
     private const int DefaultOutputCaptureTimeoutMilliseconds = 5_000;
     private const int DefaultProcessTimeoutMilliseconds = 120_000;
 
@@ -75,6 +85,17 @@ internal static class PackageTestProcess
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(postKillExitTimeoutMilliseconds);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(outputCaptureTimeoutMilliseconds);
 
+        // Package probes build independent consumers and packages. A parent source mapping
+        // must not rewrite those PackageReferences or force its Debug graph into the probe.
+        if (string.Equals(startInfo.FileName, "dotnet", StringComparison.Ordinal))
+        {
+            foreach (string key in new[] { "CustomBeforeDirectoryBuildProps", "CustomAfterMicrosoftCommonProps",
+                "CustomBeforeDirectoryBuildTargets", "CustomAfterDirectoryBuildTargets", "AfterMicrosoftNETSdkTargets",
+                "HEXALITH_SOURCE_MAPPING_HASH", "Configuration" })
+            {
+                startInfo.Environment.Remove(key);
+            }
+        }
         startInfo.WorkingDirectory = workingDirectory;
         startInfo.RedirectStandardError = true;
         startInfo.RedirectStandardOutput = true;

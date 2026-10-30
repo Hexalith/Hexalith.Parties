@@ -1,4 +1,19 @@
 <Project>
+  <PropertyGroup Condition="'$(HexalithEventStoreFromSource)' == 'true'"><DefineConstants>$(DefineConstants);HEXALITH_DEVELOPMENT_CATALOG_SOURCE</DefineConstants></PropertyGroup>
+  <ItemGroup Condition="'$(HexalithSourceMappingMode)' == 'source' and $(MSBuildProjectName.EndsWith('.Tests'))">
+    <!-- Test utilities consume the same exact roots selected by prepare-build. -->
+    <AssemblyMetadata Include="HexalithTestRepositoryRoot" Value="$(MSBuildThisFileDirectory)" />
+    <AssemblyMetadata Include="HexalithTestRoot:Hexalith.AI.Tools" Value="$(HexalithAIToolsRoot)" />
+    <AssemblyMetadata Include="HexalithTestRoot:Hexalith.Platform" Value="$(HexalithSourceMappingRoot)" />
+    <AssemblyMetadata Include="HexalithTestRoot:Hexalith.PolymorphicSerializations" Value="$(HexalithPolymorphicSerializationsRoot)" />
+    <AssemblyMetadata Include="HexalithTestRoot:Hexalith.Builds" Value="$(HexalithBuildsRoot)" />
+    <AssemblyMetadata Include="HexalithTestRoot:Hexalith.Commons" Value="$(HexalithCommonsRoot)" />
+    <AssemblyMetadata Include="HexalithTestRoot:Hexalith.EventStore" Value="$(HexalithEventStoreRoot)" />
+    <AssemblyMetadata Include="HexalithTestRoot:Hexalith.FrontComposer" Value="$(HexalithFrontComposerRoot)" />
+    <AssemblyMetadata Include="HexalithTestRoot:Hexalith.McpCli" Value="$(HexalithMcpCliRoot)" />
+    <AssemblyMetadata Include="HexalithTestRoot:Hexalith.Memories" Value="$(HexalithMemoriesRoot)" />
+    <AssemblyMetadata Include="HexalithTestRoot:Hexalith.Tenants" Value="$(HexalithTenantsRoot)" />
+  </ItemGroup>
   <!-- Approved shared primitives are published in Shell/Contracts.UI 4.7.1.
        Registration remains opt-in; the package reconciler lacks registration readiness. -->
   <Target Name="ConfigureFrontComposerFeedbackCandidate" BeforeTargets="PrepareForBuild;CoreCompile">
@@ -13,6 +28,9 @@
   </Target>
   <Target Name="ConfigureMemoriesSourceCompilation" BeforeTargets="PrepareForBuild;GetAssemblyAttributes;GenerateCompileDependencyCache;CoreCompile"
           Condition="'$(MSBuildProjectName)' == 'Hexalith.Parties' or '$(MSBuildProjectName)' == 'Hexalith.Parties.Tests'">
+    <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Hexalith.Parties.Tests' and '$(HexalithEventStoreFromSource)' == 'true'">
+      <DefineConstants>$(DefineConstants);HEXALITH_EVENTSTORE_SOURCE_CATALOG</DefineConstants>
+    </PropertyGroup>
     <!-- Evaluate after the generated final source imports, before compile inputs and assembly metadata are captured. -->
     <PropertyGroup>
       <MemoriesSourceRefreshSupported>false</MemoriesSourceRefreshSupported>
