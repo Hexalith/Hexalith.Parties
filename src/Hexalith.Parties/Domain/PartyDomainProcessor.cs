@@ -12,6 +12,7 @@ using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Replay;
 using Hexalith.EventStore.Contracts.Results;
 using Hexalith.EventStore.Contracts.Security;
+using Hexalith.EventStore.DomainService;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Authorization;
 using Hexalith.Parties.Contracts.Models;
@@ -39,9 +40,7 @@ internal sealed partial class PartyDomainProcessor(
     IPartyIdentityAuthority? identityAuthority = null,
     IIdentityHistoryCustody? identityHistoryCustody = null,
     IOptionsMonitor<PartyIdentityOptions>? identityOptions = null) : IDomainProcessor, IAsyncDomainProcessor, IAggregateReplay
-#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
     , IDomainCommandPayloadInventory
-#endif
 {
     private const string PartyDomain = "party";
 
