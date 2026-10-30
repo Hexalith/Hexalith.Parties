@@ -155,7 +155,7 @@ Hexalith.Parties manages **party records** -- people and organizations with cont
 
 ## Prerequisites
 
-- [.NET 10 SDK](https://dot.net) (10.0.402)
+- [.NET 10 SDK](https://dot.net) (10.0.403)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - Git
 

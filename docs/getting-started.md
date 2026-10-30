@@ -15,7 +15,7 @@ authentication setup; those hosts are outside the reference environment.
 
 | Tool | Version | Download |
 |------|---------|----------|
-| .NET SDK | 10.0.402 (pinned in `global.json`) | [dot.net](https://dot.net) |
+| .NET SDK | 10.0.403 (pinned in `global.json`) | [dot.net](https://dot.net) |
 | Docker Desktop | Latest | [docker.com](https://www.docker.com/) |
 | Git | Any recent version | [git-scm.com](https://git-scm.com) |
 | `jq` | Latest, optional for Bash examples | [jqlang.org](https://jqlang.org) |
