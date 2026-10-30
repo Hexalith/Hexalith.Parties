@@ -43,11 +43,23 @@ public sealed class PlatformEnvironmentFixture : AspireTopologyFixtureBase
         Uri endpoint = Environment.GetEndpoint("redis", "parties", "tcp");
         using var bound = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, Environment.RequestCancellation);
         bound.CancelAfter(TimeSpan.FromSeconds(30));
-        using IConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync(new ConfigurationOptions
+        bound.Token.ThrowIfCancellationRequested();
+        Task<ConnectionMultiplexer> connecting = ConnectionMultiplexer.ConnectAsync(new ConfigurationOptions
         {
             EndPoints = { { endpoint.Host, endpoint.Port } },
             ConnectTimeout = 5000, SyncTimeout = 5000, AsyncTimeout = 5000, AbortOnConnectFail = true, AllowAdmin = false,
-        }).WaitAsync(bound.Token).ConfigureAwait(false);
+        });
+        ConnectionMultiplexer connection;
+        try
+        {
+            connection = await connecting.WaitAsync(bound.Token).ConfigureAwait(false);
+        }
+        catch
+        {
+            _ = DisposeLateConnectionAsync(connecting);
+            throw;
+        }
+        using IConnectionMultiplexer redis = connection;
         IDatabase database = redis.GetDatabase();
         // The descriptor does not invent an app-id binding. Observe the one exact actor suffix in this owned store.
         string suffix = $"||AggregateActor||{identity.ActorId}||{identity.MetadataKey}";
@@ -77,5 +89,18 @@ public sealed class PlatformEnvironmentFixture : AspireTopologyFixtureBase
                 ?? throw new InvalidOperationException("A persisted event envelope is unreadable."));
         }
         return (metadata, events.ToArray());
+    }
+
+    private static async Task DisposeLateConnectionAsync(Task<ConnectionMultiplexer> connecting)
+    {
+        try
+        {
+            ConnectionMultiplexer connection = await connecting.ConfigureAwait(false);
+            await connection.DisposeAsync().ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            // The caller retains its original cancellation/failure; abandoned connection cleanup owns no credentials or CTS.
+        }
     }
 }

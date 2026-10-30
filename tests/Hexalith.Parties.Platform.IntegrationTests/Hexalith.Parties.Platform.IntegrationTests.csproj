@@ -3,6 +3,7 @@
     <IsPackable>false</IsPackable>
     <IsPublishable>false</IsPublishable>
     <IsTestProject>true</IsTestProject>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj" />

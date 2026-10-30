@@ -53,7 +53,7 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture) : 
         {
             messageId = commandId, correlationId = commandId, tenant, domain = identity.Domain,
             aggregateId = partyId, commandType = typeof(CreatePartyComposite).FullName, payload = command,
-        }, token).ConfigureAwait(true);
+        }, SerializerOptions, token).ConfigureAwait(true);
         submit.StatusCode.ShouldBe(HttpStatusCode.Accepted);
         using JsonDocument status = await PollStatusAsync(commandId, token).ConfigureAwait(true);
         status.RootElement.GetProperty("status").GetString().ShouldBe("Completed");
@@ -110,7 +110,7 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture) : 
                 tenant = fixture.Environment.SyntheticTenantId, domain = "party", aggregateId = partyId,
                 queryType = "PartyDetail", projectionType = "party-detail", entityId = partyId,
                 payload = new GetParty { PartyId = partyId },
-            }, token).ConfigureAwait(true);
+            }, SerializerOptions, token).ConfigureAwait(true);
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 using JsonDocument document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(token).ConfigureAwait(true));
