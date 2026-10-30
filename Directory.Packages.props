@@ -13,8 +13,9 @@
   <Import Project="$(Hexalith1BuildPackageProps)" Condition="Exists('$(Hexalith1BuildPackageProps)') And '$(HexalithVersionsLoaded)' != 'true'" />
   <Import Project="$(Hexalith2BuildPackageProps)" Condition="Exists('$(Hexalith2BuildPackageProps)') And '$(HexalithVersionsLoaded)' != 'true'" />
   <Import Project="$(Hexalith3BuildPackageProps)" Condition="'$(HexalithVersionsLoaded)' != 'true'" />
-  <!-- Retain the FrontComposer family version when the catalog supplies Contracts.UI. -->
+  <!-- Older catalogs omit Contracts.UI; keep one family-pinned fallback only when needed. -->
   <ItemGroup>
-    <PackageVersion Update="Hexalith.FrontComposer.Contracts.UI" Version="$(HexalithFrontComposerVersion)" />
+    <_PartiesContractsUiCatalogVersion Include="@(PackageVersion->WithMetadataValue('Identity', 'Hexalith.FrontComposer.Contracts.UI'))" />
+    <PackageVersion Include="Hexalith.FrontComposer.Contracts.UI" Version="$(HexalithFrontComposerVersion)" Condition="'@(_PartiesContractsUiCatalogVersion)' == ''" />
   </ItemGroup>
 </Project>
