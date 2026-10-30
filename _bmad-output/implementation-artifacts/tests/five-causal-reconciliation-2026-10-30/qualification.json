@@ -54,7 +54,7 @@
     "tests/Hexalith.Parties.UI.Tests/ProjectionFreshnessFallbackTests.cs": "d8a817d4b4328e18868ad1f76ffe4d5c226bb175605e8c460d544095978e696f"
   },
   "artifacts": {
-    "README.md": "c2074c33ca6d593a41d6b9da8b35c7ef2d148e5c5eadb4e1f050527a02c25b49",
+    "README.md": "0aa9db9a8aa61b9b75c24ab1269e7e535e0f61642f797e97f83a3ec474d42146",
     "accepted-eventstore-build.json": "5f81d4f7fc6dbb31b6fa3b2dc5ce5a9e6a59b88c962c1cc329460a256deb932a",
     "accepted-eventstore-build.txt": "9cee151cd00713611bb2c6756fcbba2a2f32dbe0852e38c33ee9e3f504fdf393",
     "accepted-eventstore-tests.json": "71d058e0584055fdbe293a6036450db3eed67070b3f21a86d5beed094e8a6356",
@@ -103,6 +103,9 @@
     "commitlint-frontcomposer.txt": "ab61d21420a166999b3ef2b6edf1c016257196f3708d29887fd52f697974726b",
     "commitlint-parties.json": "0ddeb310a77f84816f75de52065dbede1c52796179e5ed6a6dcbfb15aae0d48e",
     "commitlint-parties.txt": "65746f866a613032eb32efe9360f2221dca2425bcb50953431fa9b69ce52d083",
+    "completion-commitlint.json": "851bd118ae18091c2142e90a9ded572caa350b7d147380e512524534e71aba65",
+    "completion-commitlint.txt": "5e68509c476b34ea4e7bf6e2aaa11f4ff219cf144eafa39159d78bca514dca9b",
+    "completion-message.txt": "787c35890ac0bc1b3f9b5003eed8bd1690c8939182ac9d58aaa3c181e56016bf",
     "create-focused-harness.py": "55fc03bfe814d08f2130b71426a9afbc0842ddfb6c14c9da91bcfed8039e7bf4",
     "current-source-map.json": "66939f419ae5df70d228e0d9da35e30a33c24ec017cca6c14f307b683f87d9a4",
     "current-source-map.txt": "8cfd7959d669aa11dbb8adf5942a69ae01e31e4afc2eee30bfdf1388baba091f",
@@ -150,6 +153,22 @@
     "historical-mapped-parties-build.txt": "6a87ff96a72ba38626798ce224577bb8f2244cee113cafc7d0557d92076dffc3",
     "historical-parties-build.txt": "4dab13fb13c1b6c40c60a36983fe485d2ea317b0907ff09b007e6108665bdab6",
     "historical-retained-map.txt": "34cb99a11102d07ba7d0e850fb0712bb96670179e9f5ca9e4225dd1f192c9863",
+    "integrated-eventstore-build.json": "26ddcb4024280f0355e1adc05bf15260a7c1bcfc84355e9a601b9633b08aa332",
+    "integrated-eventstore-build.txt": "de3bf134267520a32243b4ebbc051023109f78e076a3dffa04c3ba6e339c7ecc",
+    "integrated-eventstore-tests.json": "2fbad8a0b84da201d7d322b5a1b58ecf2df2cfa8a014c246ac563f07d882b022",
+    "integrated-eventstore-tests.txt": "9b8198291520ae740a9bc6a14deff47a315a69a837938a117defb361934836ab",
+    "integrated-eventstore-tests.xml.gz": "f100462d9d5f22db71dedf22cbd3847cc6cb8d20f2bc458df5830c99e00c7fa2",
+    "integrated-frontcomposer-build.json": "32ea270b2fce3b9b9f9c4f0853b558416d073e3a1aa98b30a7597aa08c0d2b2a",
+    "integrated-frontcomposer-build.txt": "3c25fb95da23f2e885e6ae05706d366571435763ee46e409dd205b2b35ceeb85",
+    "integrated-frontcomposer-tests.json": "b2d7ee8a7d22a7d0d72f0bfcb74f56e0248e46981d5f43eac15b98c9115add23",
+    "integrated-frontcomposer-tests.txt": "6bd07aa1492d81f0723dc2922db0b931862c11733219917b02e09d8694a97943",
+    "integrated-frontcomposer-tests.xml.gz": "6d66381bd7544ddc66682342bb12fee20ed5e2fc2c2b8102974e54b316981409",
+    "integrated-harness-tests.json": "8a1bf261e02c6ce8d7e0f707fbe50412c98492298db65181b7d2ce45905e59c9",
+    "integrated-harness-tests.txt": "089d0839d954b9a44fdc2dd1b8565fcc1fa1a84d3c547561f4019d04b6674324",
+    "integrated-parties-ui-build.json": "b2d9d9cda2e793c6b94c272f2eb18b35621ac364ebbcddbe0f001afc16c990dc",
+    "integrated-parties-ui-build.txt": "6af9f72b9eb8ded0190a35f7988b3e402c78b08b6c6501964ac47b1a2a85139e",
+    "integrated-source-map.json": "459e6f336dce6fe1f0baa315571023bf47e268bcb9d7022f49eb85672881110e",
+    "integrated-source-map.txt": "e4e95ab60ba767c35e5524aa5afafaea85436d8a0e55a872cd4d21d622d2dc5d",
     "parity-retained-build.json": "8c13905894e8554d8d8c420f0866d66fcf9c3ddef8c1115a9daf3de389cdf834",
     "parity-retained-build.txt": "892c0ef9f0e057df0ac12735fbbef85f4f3159a1e39ce47e4b385d7b37d1eee4",
     "parity-retained-tests.json": "60a27e16306209d7e1e9234fdf0e8bdd26ec288d7b7928ed3ee807e277ed9286",
@@ -162,6 +181,16 @@
     "parity-shared-tests.xml.gz": "097c05aa08f35d2b4af2051ed2562f037c4dd1e51086f5911b99fdbafca6565d",
     "parties-ui-build.json": "727e0ff45584e56d5aa03e179b33dc2e1f331ce78e0f5e2273110d6209a7ed86",
     "parties-ui-build.txt": "f8a33d2e471eda947c1dbb2cf0d51e5119d1687834e8fe5236a9a69e5be1bd20",
+    "publication.json": "7ee3032e33f0831270bbcb9e8a99ebd1126fc17538bddc137b9678d455bc2ae0",
+    "published-eventstore-message.txt": "e54845a921254bbf2a18b8b6a659a1644439a85f6507a6f5dae64ad39c2e8348",
+    "published-frontcomposer-message.txt": "e54845a921254bbf2a18b8b6a659a1644439a85f6507a6f5dae64ad39c2e8348",
+    "published-message-eventstore.json": "dec70e57134b850b9deefa6a60cc39de127c2f447f87399eb7889025bd851aa1",
+    "published-message-eventstore.txt": "6ffb54063c2b518f0d28135eb89d9dbe1a12c2f5ba2666b7ce77083b17f9a5b1",
+    "published-message-frontcomposer.json": "3efa7078a339418a616051aa07f15d443008ff0818be6f4e84a109604d974e17",
+    "published-message-frontcomposer.txt": "6ffb54063c2b518f0d28135eb89d9dbe1a12c2f5ba2666b7ce77083b17f9a5b1",
+    "published-message-parties.json": "c39b70ed5eed71d1f679b4388b6075b6a91a3ff3d085e3ac39851b6bb4c63532",
+    "published-message-parties.txt": "23e4e15191431cfdd7ef3063f21bee0d59c4d8c60caa5baee20848f34259ee57",
+    "published-parties-message.txt": "95e9c941f3de0cd28f0a8de518a26ca700f7599c5ad8e9cd63acf1e1a2de80f2",
     "retained-cancellable-transport.Focused.csproj": "6d0ea63532900542fabcc18b859faf988ebd88f695d155f6a76265e6ca36a87f",
     "retained.Focused.csproj": "25ce89bf17726dda8325d577137e609353890268809e83abf38687a56674c78e",
     "review-findings.json": "a10e7a07f70a77afec4ad0dd8555926041c2ef4aa1169082fa86cc3981375ed1",
@@ -243,12 +272,19 @@
     "accepted-shared-tests.xml.gz": "d5050c3b9b7c6fa2c98db2f2ce16e33b6af550a834be1b0a23b9732c78fad52d",
     "accepted-shared-legacy-transport-tests.xml.gz": "2c9dc8c24cffe916e6f39b40ec65ee3a429a17eba359cbc9bf5caec4ec286f0d",
     "accepted-retained-tests.xml.gz": "65780bb36581b638deb8a85d0db7f68268c5c3b269eb32218cd942e80859a748",
-    "callback-mutation-tests-clean.xml.gz": "3cd36a7a37b07cb618880b6a9ea7b8618de18855a10721abe0335353feeeff6d"
+    "callback-mutation-tests-clean.xml.gz": "3cd36a7a37b07cb618880b6a9ea7b8618de18855a10721abe0335353feeeff6d",
+    "integrated-frontcomposer-tests.xml.gz": "873ee5cf97142c10b25187973300a1be8038d1f2539ac50aa61ccde3910ec6ce",
+    "integrated-eventstore-tests.xml.gz": "dc83494623ee3c148f95a59c3208d3a72ce1d69d9f4c369e96dad901ab72b541"
   },
   "final_lanes": [
     "retained",
     "shared",
     "shared-legacy-transport",
     "retained-cancellable-transport"
-  ]
+  ],
+  "qualified_source_commits": {
+    "parties": "7fc1f026853ab5f73340d3deeae599c8c65446ac",
+    "eventstore": "e014af6c3f1c67732485f24012cdbe528a12b0f6",
+    "frontcomposer": "61a8afbb85c7e25b2eb97acb1cac262ef3e1e33d"
+  }
 }

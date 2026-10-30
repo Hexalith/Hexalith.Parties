@@ -1,0 +1,3 @@
+build: sync local changes via /pushall
+
+Co-authored-by: Cursor <cursoragent@cursor.com>

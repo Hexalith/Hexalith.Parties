@@ -1,0 +1,15 @@
+{
+  "command": [
+    "dotnet",
+    "build",
+    "tests/Hexalith.FrontComposer.Shell.Tests/Hexalith.FrontComposer.Shell.Tests.csproj",
+    "-c",
+    "Debug",
+    "-m:1"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer",
+  "exit_code": 0,
+  "elapsed_seconds": 29.9,
+  "log": "integrated-frontcomposer-build.txt",
+  "sha256": "3c25fb95da23f2e885e6ae05706d366571435763ee46e409dd205b2b35ceeb85"
+}

@@ -1,0 +1,15 @@
+{
+  "command": [
+    "dotnet",
+    "build",
+    "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+    "-c",
+    "Debug",
+    "-m:1"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "exit_code": 1,
+  "elapsed_seconds": 4.45,
+  "log": "integrated-parties-ui-build.txt",
+  "sha256": "6af9f72b9eb8ded0190a35f7988b3e402c78b08b6c6501964ac47b1a2a85139e"
+}

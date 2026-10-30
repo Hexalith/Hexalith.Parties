@@ -1,0 +1,14 @@
+{
+  "command": [
+    "node",
+    "node_modules/@commitlint/cli/cli.js",
+    "--edit",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-causal-reconciliation-2026-10-30/published-parties-message.txt",
+    "--verbose"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "exit_code": 0,
+  "elapsed_seconds": 0.6,
+  "log": "published-message-parties.txt",
+  "sha256": "23e4e15191431cfdd7ef3063f21bee0d59c4d8c60caa5baee20848f34259ee57"
+}

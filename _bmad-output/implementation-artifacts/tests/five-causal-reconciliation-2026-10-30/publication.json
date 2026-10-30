@@ -1,0 +1,18 @@
+{
+  "source_commits": {
+    "parties": "7fc1f026853ab5f73340d3deeae599c8c65446ac",
+    "eventstore": "e014af6c3f1c67732485f24012cdbe528a12b0f6",
+    "frontcomposer": "61a8afbb85c7e25b2eb97acb1cac262ef3e1e33d"
+  },
+  "observed_parties_main_before_completion": "a7a99fd92d57f8df2300ff0d8394f1e42402e4b3",
+  "note": "A concurrent Cursor /pushall run committed and published the reviewed source and additional user-owned gitlink updates. This run preserves those commits; normalized source hashes match the qualified source snapshot. Post-integration owning checks pass.",
+  "eventstore_post_integration_passes": 55,
+  "frontcomposer_post_integration_reconciler_passes": 30,
+  "package_adoption_accepted": false,
+  "deployment_qualified": false,
+  "remaining_current_blockers": [
+    "Parties UI Debug build: RouteCatalogDeclarationSourceAttribute / RouteOperationContract CS0246",
+    "Pinned source mapping: HXW009 for Builds 69701dfcf54cb9c69fc6cb0c51b031af8d218142"
+  ],
+  "verification_review_closure": "Independent VG-01 recheck found no remaining material gap; normal and optimized evidence audits pass, and the revocation mutant fails both intended cases."
+}

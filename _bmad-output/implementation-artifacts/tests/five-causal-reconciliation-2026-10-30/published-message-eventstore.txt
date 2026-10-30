@@ -1,0 +1,5 @@
+⧗   --- input ---
+build: sync local changes via /pushall
+
+Co-authored-by: Cursor <cursoragent@cursor.com>
+✔   found 0 problems, 0 warnings

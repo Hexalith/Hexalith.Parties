@@ -2,7 +2,7 @@
 title: 'Five deferred items for reliable optimistic reconciliation'
 type: 'bugfix'
 created: '2026-10-30'
-status: 'in-review'
+status: 'done'
 route: 'dispatch'
 baseline_commit: 'f9757d94a9e3f144d250b21f295b903c00d5f412'
 review_loop_iteration: 0
@@ -104,3 +104,5 @@ Paths below are rooted at Parties unless explicitly prefixed with a root submodu
 - Run `bash scripts/check-no-warning-override.sh` and `git diff --check`. Validate each full commit message with its owning repository's pinned commitlint and retain evidence. Fetch and inspect divergence; push dependency task commits before parent gitlink commits to main.
 
 - All patch findings were corrected and verified. Three pre-existing owner-protocol gaps were appended to the ledger; no stronger raw in-flight callback or physical server-membership claim is made.
+
+- Final source publication was performed concurrently by Cursor /pushall: Parties `7fc1f026853ab5f73340d3deeae599c8c65446ac`, EventStore `e014af6c3f1c67732485f24012cdbe528a12b0f6`, FrontComposer `61a8afbb85c7e25b2eb97acb1cac262ef3e1e33d`. Preserve the external additional gitlink/SDK changes. Source hashes still match qualification; post-integration owning Debug checks pass 55 EventStore and 30 reconciler tests. Current Parties UI/source-map blockers and DW-100 remain open. Independent verification-gap recheck accepts the remediation.

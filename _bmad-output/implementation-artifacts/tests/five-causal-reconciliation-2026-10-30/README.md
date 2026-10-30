@@ -13,7 +13,7 @@ The four final reconciliation findings from `spec-five-reconciliation-and-migrat
 | Owning EventStore SignalR Debug build/suite | Zero warnings/errors; 55 passed |
 | Owning FrontComposer Shell Debug build | Zero warnings/errors |
 | Owning FrontComposer reconciler class | 30 passed, zero failed/skipped |
-| Broad FrontComposer Shell suite | 3,885 passed, 12 failed, one named Live skip |
+| Historical pre-integration broad Shell suite | 3,885 passed, 12 failed, one named Live skip |
 | Current pinned source mapping | Refused HXW009; missing pinned Builds object |
 | Actual Parties UI test-project build / Aspire baseline | Refused missing catalog APIs |
 
@@ -47,3 +47,5 @@ XML receipts are archived as deterministic `.xml.gz` files. `qualification.json`
 Review boundaries remain explicit: raw synchronous delegates already executing may finish after removal; an older remote leave can race with a replacement join; and an uncertain join may finish on the server after local rollback. These pre-existing owner-protocol gaps are recorded separately in the deferred ledger. Captured registrations not yet entering invocation and Parties-owned cancellation-aware read effects have their own qualified boundaries. Client invocation cancellation does not attest physical server group absence.
 
 Review remediation qualifies a fresh five-second leave deadline, caller startup cancellation, captured-snapshot signal/detail revocation, real hub survivor delivery and preserved legacy signatures. The isolated callback mutation builds cleanly but intentionally fails both captured-snapshot cases, demonstrating that the new tests require the revocation guard. `test-run-check.py` proves ordinary process-group timeout cleanup and stable receipt bytes; escaped sessions remain outside that claim. Final receipts are named `accepted-*`; earlier parity and review-fix receipts remain historical.
+
+Post-integration checks retain clean owning Debug builds, EventStore 55/55 and FrontComposer reconciler 30/30. Normalized tested source hashes are unchanged. A concurrent Cursor `/pushall` run published the source commits recorded in `publication.json`; its additional root gitlink and SDK updates were preserved. The latest Parties UI build still has four catalog CS0246 errors; current pinned source mapping refuses HXW009 for Builds `69701dfcf54cb9c69fc6cb0c51b031af8d218142`. Earlier mapping refusals remain historical. Independent VG-01 recheck accepts the captured-snapshot remediation and both audit modes.

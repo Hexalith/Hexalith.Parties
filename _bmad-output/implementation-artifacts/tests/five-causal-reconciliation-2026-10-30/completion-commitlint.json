@@ -1,0 +1,14 @@
+{
+  "command": [
+    "node",
+    "node_modules/@commitlint/cli/cli.js",
+    "--edit",
+    "/tmp/causal-completion-commit-message.txt",
+    "--verbose"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "exit_code": 0,
+  "elapsed_seconds": 0.32,
+  "log": "completion-commitlint.txt",
+  "sha256": "5e68509c476b34ea4e7bf6e2aaa11f4ff219cf144eafa39159d78bca514dca9b"
+}
