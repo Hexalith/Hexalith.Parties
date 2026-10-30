@@ -72,6 +72,16 @@ public static class PartiesCatalogDeclarations
             operation = operation with { ResultSchema = System.Text.Json.JsonSerializer.SerializeToElement(schema) };
             operation = operation with { Digest = RouteCatalogCodec.ComputeOperationContractDigest(operation) };
         }
+        if (request == typeof(GetProcessingRecords))
+        {
+            var unpaged = RouteOperationSchema.Create(route, request, typeof(IReadOnlyList<Models.ProcessingActivityRecord>), "public", eligibility, PartiesJsonOptions.Default);
+            operation = operation with { ResultSchema = System.Text.Json.JsonSerializer.SerializeToElement(new System.Text.Json.Nodes.JsonObject
+            {
+                ["oneOf"] = new System.Text.Json.Nodes.JsonArray(System.Text.Json.Nodes.JsonNode.Parse(operation.ResultSchema.GetRawText()),
+                    System.Text.Json.Nodes.JsonNode.Parse(unpaged.ResultSchema.GetRawText())),
+            }) };
+            operation = operation with { Digest = RouteCatalogCodec.ComputeOperationContractDigest(operation) };
+        }
         return operation;
     }
     /// <summary>Explicit local Mutation/24-hour policies; payload values and keys never enter the catalog.</summary>
