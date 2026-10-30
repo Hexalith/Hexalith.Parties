@@ -1,0 +1,80 @@
+{
+  "recordedAtUtc": "2026-10-30T09:36:03.543698+00:00",
+  "cutoffUtc": "2026-10-30T08:02:38.269873+00:00",
+  "reason": "Select new public owner-return/evidence candidates since previous completed validation. No repeated content discovery.",
+  "method": "Bounded root/immediate-child filenames and stats only; no recursion into historical source trees. Relevant repository path histories only, maximum 20 commits per repository.",
+  "rootsAndEligiblePublicFiles": {
+    "/home/administrator/hexalith-secrets-evidence/ext-secrets-1": 962,
+    "/home/administrator/hexalith-upgrade-evidence/access": 4,
+    "/home/administrator/hexalith-recovery-evidence": 38,
+    "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1": 84
+  },
+  "newerImmediateDirectories": [],
+  "newerFilenameCandidates": [],
+  "repositoryChangesSinceCutoff": [
+    {
+      "repository": "/home/administrator/projects/hexalith/platform",
+      "argv": [
+        "git",
+        "-C",
+        "/home/administrator/projects/hexalith/platform",
+        "log",
+        "-20",
+        "--since=2026-10-30T08:02:38.269873+00:00",
+        "--format=%H %cI %s",
+        "--name-only",
+        "--",
+        "docs/implementation/story-5-4-coupled-delivery-2026-10-25",
+        "docs/implementation/*ext-secrets*",
+        "docs/implementation/*ext-parties*",
+        "_bmad-output/implementation-artifacts/sprint-status.yaml"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "repository": "/home/administrator/projects/hexalith/memories",
+      "argv": [
+        "git",
+        "-C",
+        "/home/administrator/projects/hexalith/memories",
+        "log",
+        "-20",
+        "--since=2026-10-30T08:02:38.269873+00:00",
+        "--format=%H %cI %s",
+        "--name-only",
+        "--",
+        "docs/operations",
+        "docs/implementation/*2026-10-30*"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "repository": "/home/administrator/projects/hexalith/agents",
+      "argv": [
+        "git",
+        "-C",
+        "/home/administrator/projects/hexalith/agents",
+        "log",
+        "-20",
+        "--since=2026-10-30T08:02:38.269873+00:00",
+        "--format=%H %cI %s",
+        "--name-only",
+        "--",
+        "_bmad-output/planning-artifacts/external-dependency-register.md"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "supersededAttempt": {
+    "method": "Recursive public filename walk",
+    "result": "Interrupted locally with SIGINT after exceeding useful scope; no discovery result persisted and no absence conclusion drawn.",
+    "exitCode": 130
+  },
+  "limit": "Bounded filename/mtime/commit-time selection only, not complete search, attestation, history completeness or grant evidence. No credential/private-key/snapshot payloads read."
+}

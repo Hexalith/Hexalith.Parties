@@ -1,0 +1,69 @@
+{
+  "verifiedAtUtc": "2026-10-30T09:39:59.792577+00:00",
+  "passed": true,
+  "checksPassed": 959,
+  "historicalFilesPreserved": 539,
+  "earlierDocumentPrefixPreserved": true,
+  "earlierPacketManifestCounts": {
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30": 16,
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30": 11
+  },
+  "originalSourceManifestCounts": {
+    "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-scope-20261029T165350Z-final/evidence-manifest.json": 10,
+    "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/evidence-manifest.json": 128,
+    "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/evidence-manifest.json": 47,
+    "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/evidence-manifest.json": 37
+  },
+  "canonicalOwnerFormUnchanged": true,
+  "agentsRegisterUnchanged": true,
+  "historicalRegisterMismatchReconciled": false,
+  "allInheritedBlockersRetained": true,
+  "noNewOwnerAttestationAuthenticated": true,
+  "exclusiveDeadlineUtc": "2026-10-30T16:53:50+00:00",
+  "windowStatusAtValidation": "WithinFixedWindow",
+  "existingScopeExpiredAndIneligibleAtValidation": false,
+  "admissionAllowed": false,
+  "executionAllowed": false,
+  "windowExtendedOrRebased": false,
+  "effects": {
+    "kubernetesMetadataGetCommands": 1,
+    "providerCalls": 0,
+    "sshCalls": 0,
+    "podExecs": 0,
+    "credentialIssuanceOrRenewals": 0,
+    "runtimeRecoveryExecutions": 0,
+    "runtimeOrPolicyWrites": 0,
+    "backupChanges": 0,
+    "infrastructureProvisioned": 0,
+    "productionBackendChanges": 0,
+    "qualificationRuns": 0,
+    "registerWrites": 0,
+    "messagesSent": 0
+  },
+  "mutableTracker": {
+    "retainedSnapshot": {
+      "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-return-continuation-2026-10-30/source-snapshots/sprint-status.yaml",
+      "sha256": "900784c84c667fa9969124d50545d2ceda2e7a0f9595a4223252b00b3e247497"
+    },
+    "currentSha256AtValidation": "900784c84c667fa9969124d50545d2ceda2e7a0f9595a4223252b00b3e247497",
+    "treatment": "Snapshot integrity checked; current equality of a concurrently editable tracker is not an acceptance condition."
+  },
+  "whitespaceCommand": {
+    "argv": [
+      "git",
+      "-c",
+      "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+      "diff",
+      "--check",
+      "--",
+      "docs/implementation/ext-parties-1-operational-continuation-2026-10-30.md"
+    ],
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": "",
+    "interpretation": "Recognize the CRLF line endings required by tracked .editorconfig, matching the earlier retained whitespace checks. No repository configuration changed."
+  },
+  "earlierFailedAttemptReference": "validation-attempts.json",
+  "command": "python3 -B _bmad-output/implementation-artifacts/tests/ext-parties-1-owner-return-continuation-2026-10-30/verify_continuation.py",
+  "limit": "Offline integrity/consistency plus retained receipt of one selected UID/RV GET only. No owner attestation, complete historical write evidence, current grant, independent currentness, copy disposal, recovery or qualification established. Prior receipts are unchanged."
+}

@@ -1,0 +1,154 @@
+{
+  "recordedAtUtc": "2026-10-30T09:37:16.299818+00:00",
+  "status": "BlockedNoConcreteOwnerReturnLocatedInBoundedDelta",
+  "proposal": {
+    "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-return-continuation-2026-10-30/recovery-proposal-continuation.json",
+    "sha256": "9be051020c4d46f0c86d2e748a5bb811d465ceb62b0197556b3cd94d0c79d676"
+  },
+  "verifiedFindings": [
+    {
+      "topic": "Owner return authentication",
+      "finding": "The latest request contains placeholders, no actual named appointment or concrete record reference. Current canonical owner fields remain null and byte-identical to the previous observation. No supplied record admitted.",
+      "source": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-return-continuation-2026-10-30/source-observations.json",
+        "sha256": "b6441755eff6c37a7cd99c10e01a3563bfc8b75d62ff9535033363b866002fea"
+      },
+      "limit": "Hashes establish byte continuity only; sole ownership/delegation is not a Human appointment or historical proof."
+    },
+    {
+      "topic": "Relevant new sources",
+      "finding": "No newer public file candidates in the bounded direct owner-evidence roots or relevant committed path histories since previous validation. Connected date-filtered searches returned no matches; Teams reports query_too_restrictive.",
+      "sources": [
+        {
+          "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-return-continuation-2026-10-30/local-delta-discovery.json",
+          "sha256": "b6625b102575b09c85ec419d13148e70e1106ccca6ee5d916aa1a8b439fdab3d"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-return-continuation-2026-10-30/connected-source-delta.json",
+          "sha256": "6141fd50914e487a4bcd9764298d5595a45f3d523e3a569e4f4f4143e3b701ce"
+        }
+      ],
+      "limit": "No universal absence or exhaustive renewed discovery claimed. Interrupted recursive filename selection is recorded separately and supplies no conclusion."
+    },
+    {
+      "topic": "Secret history",
+      "finding": "One selected-field authenticated existing Kubernetes GET retains UID a97fa037-798b-46b6-9232-76e600480142 and RV 38120141 at 2026-10-30T09:34:19.150343+00:00. All three separate historical transitions remain unresolved; extend through the actual current revision at admission.",
+      "source": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-return-continuation-2026-10-30/system-secret-metadata-read-only.json",
+        "sha256": "dd0364b56bcdfcbe2d5e58719f611f80fa92825b1be463abfad8aedfd0537f22"
+      },
+      "segments": [
+        {
+          "fromResourceVersion": "36774577",
+          "throughResourceVersion": "37223806",
+          "authenticWriteSource": null,
+          "authenticatedDisposition": null,
+          "completeIntervalCovered": null
+        },
+        {
+          "fromResourceVersion": "37223806",
+          "throughResourceVersion": "37671992",
+          "authenticWriteSource": null,
+          "authenticatedDisposition": null,
+          "completeIntervalCovered": null
+        },
+        {
+          "fromResourceVersion": "37671992",
+          "throughResourceVersion": "38120141",
+          "authenticWriteSource": null,
+          "authenticatedDisposition": null,
+          "completeIntervalCovered": null
+        }
+      ],
+      "limit": "No Secret values read/output, write history reconstructed or equality of Secret values inferred. This is not an admission observation."
+    },
+    {
+      "topic": "Memories and Agents-register dispositions",
+      "finding": "All three exact inherited Memories differences and the original register mismatch remain unresolved. Register bytes match the retained e29b7fc4\u2026 fingerprint; this does not reconcile 5bf35ac2\u2026 \u2192 e29b7fc4\u2026. Separate authenticated dispositions remain null.",
+      "source": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-return-continuation-2026-10-30/source-observations.json",
+        "sha256": "b6441755eff6c37a7cd99c10e01a3563bfc8b75d62ff9535033363b866002fea"
+      }
+    },
+    {
+      "topic": "Metadata-only credential and historical reads",
+      "finding": "No current intended credential record or authenticated successor provenance supplied or found in the delta. Historical original expiry/absent-accessor evidence and the four October 29 HTTP 200 reads remain dated. The reversed grant was not reapplied; no provider call made.",
+      "inheritedFrom": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/recovery-proposal-continuation.json",
+        "sha256": "d528800abdcee2aca4b6f975cac7003858c5853910aa96065896af2f9a0648df"
+      }
+    },
+    {
+      "topic": "Appointments and mutable tracker",
+      "finding": "Assessment implementer/accountable Human recovery lead and different qualified Human deputy remain unappointed on available evidence. Sprint tracker has changed since earlier snapshots; both deputy entries remain backlog. A new dated snapshot preserves that distinction.",
+      "source": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-return-continuation-2026-10-30/source-observations.json",
+        "sha256": "b6441755eff6c37a7cd99c10e01a3563bfc8b75d62ff9535033363b866002fea"
+      }
+    },
+    {
+      "topic": "Snapshot/key-copy inventory and full custody",
+      "finding": "No newer current copy inventory, existing read-only transport, disposal record or qualified independently operated authority/time source established. Prior missing-key and completed-pod observations remain dated, not rechecked. Full custody, backup correction and capacity continuation remain stopped, including 31-day/30-day mismatch and all-copy destruction uncertainty.",
+      "inheritedFrom": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/recovery-proposal-continuation.json",
+        "sha256": "d528800abdcee2aca4b6f975cac7003858c5853910aa96065896af2f9a0648df"
+      }
+    }
+  ],
+  "allInheritedBlockersRetained": true,
+  "remainingOwnerFactsOnly": {
+    "scope": "One response with the unresolvable appointments/factual references only; collection of accessible files remains delegated.",
+    "appointments": "Appoint the assessment implementer/accountable Human recovery lead (may be one person) and a different qualified Human deputy from existing allocation, with appointment/access references.",
+    "existingRecordsOrUnavailable": "Identify the existing historical write archive and node/copy-inventory transport or owner-produced records, and the intended current metadata-only credential record (reference only, never token), or state which do not exist/are unavailable. Any preservation disposition must bind actual evidence and authenticated owner provenance; ownership alone supplies no historical proof.",
+    "independentAuthority": "No owner action needed to keep full custody stopped. Only an existing qualifying service reference with operating evidence can reopen its assessment.",
+    "repeatScopeApprovalRequested": false,
+    "credentialsRequested": false
+  },
+  "nextAction": "The remaining dependency is a concrete existing owner source return: role appointments; an authentic historical write source for every retained Secret interval through the actual admission revision; separate evidence-bound Secret, Memories and Agents-register dispositions; an owner-produced snapshot/key-copy inventory or valid existing read-only transport; and intended current metadata-only credential reference with authenticated provenance (never token). Authenticate and assemble an additive admission assessment only after these records exist. No provider refresh uses reversed grants or expired originals. Before any later assessment recheck the unchanged exclusive deadline; if expired mark this scope ineligible, without extension, rebase or execution. Recovery execution is prohibited by this task.",
+  "window": {
+    "source": {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-scope-20261029T165350Z-final/recovery-scope.json",
+      "sha256": "f32c1128b54f30682a22734986258a1882483d5d80bb2c253c4769bfb1e7d947"
+    },
+    "proposedWindow": {
+      "automaticRebaseOrExtensionAllowed": false,
+      "exclusiveDeadline": "2026-10-30T16:53:50+00:00",
+      "executionNotBefore": "2026-10-29T16:53:50+00:00",
+      "maximumSeconds": 86400,
+      "recordNotBeforeValuesPreserved": true
+    },
+    "checkedAtUtc": "2026-10-30T09:37:16.299818+00:00",
+    "checkClock": "Session host UTC for deadline comparison only; not an independent authority/time qualification.",
+    "statusAtCheck": "WithinFixedWindow",
+    "secondsUntilExclusiveDeadlineAtCheck": 26193.700182,
+    "automaticRebaseOrExtensionAllowed": false,
+    "admissionAllowed": false,
+    "afterExpiry": "This scope is ineligible for any effects at or after its fixed exclusive deadline. A separately concrete later scope would be required; no replacement is prepared or authorized here.",
+    "expiredAtCheck": false,
+    "scopeIneligibleForEffects": true,
+    "ineligibilityReason": "Admission blockers unresolved and execution expressly prohibited by current task",
+    "expiryRule": "At or after 2026-10-30T16:53:50Z this exact scope is ineligible. Never extend, rebase or execute it. No replacement scope is prepared here."
+  },
+  "constraints": {
+    "capEngineerDays": 2,
+    "newInfrastructureSpend": 0,
+    "newCapOrEffortAllocationInferred": false,
+    "spentEffortInferred": false
+  },
+  "effects": {
+    "kubernetesMetadataGetCommands": 1,
+    "providerCalls": 0,
+    "sshCalls": 0,
+    "podExecs": 0,
+    "credentialIssuanceOrRenewals": 0,
+    "runtimeRecoveryExecutions": 0,
+    "runtimeOrPolicyWrites": 0,
+    "backupChanges": 0,
+    "infrastructureProvisioned": 0,
+    "productionBackendChanges": 0,
+    "qualificationRuns": 0,
+    "registerWrites": 0,
+    "messagesSent": 0
+  },
+  "limit": "Offline evidence consistency and one current UID/RV observation. No attestation authenticity, historical completeness, active grant, independent currentness, disposal, recovery or qualification is established."
+}
