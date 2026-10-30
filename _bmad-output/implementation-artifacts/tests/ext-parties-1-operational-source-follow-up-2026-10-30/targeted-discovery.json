@@ -1,0 +1,97 @@
+{
+  "recordedAtUtc": "2026-10-30T07:21:38.363673+00:00",
+  "searches": [
+    {
+      "topic": "exactMemoriesDisposition",
+      "pattern": "37605927|747db81b-04e5-4d22-b747-89d4c6d4d1f4|memoriesPreservationDispositionReference",
+      "roots": [
+        "/home/administrator/projects/hexalith/memories/docs",
+        "/home/administrator/projects/hexalith/memories/_bmad-output",
+        "/home/administrator/projects/hexalith/platform/docs",
+        "/home/administrator/projects/hexalith/platform/eng"
+      ],
+      "argv": [
+        "rg",
+        "-l",
+        "-i",
+        "37605927|747db81b-04e5-4d22-b747-89d4c6d4d1f4|memoriesPreservationDispositionReference",
+        "/home/administrator/projects/hexalith/memories/docs",
+        "/home/administrator/projects/hexalith/memories/_bmad-output",
+        "/home/administrator/projects/hexalith/platform/docs",
+        "/home/administrator/projects/hexalith/platform/eng",
+        "-g",
+        "*.md",
+        "-g",
+        "*.json",
+        "-g",
+        "*.yaml",
+        "-g",
+        "!**/references/**",
+        "-g",
+        "!**/bin/**",
+        "-g",
+        "!**/obj/**",
+        "-g",
+        "!**/source/**",
+        "-g",
+        "!**/snapshots/**"
+      ],
+      "exitCode": 0,
+      "matchingPaths": [
+        "/home/administrator/projects/hexalith/platform/docs/implementation/story-5-4-coupled-delivery-2026-10-25/installation-evidence/operational-priority-2026-10-29/owner-decisions.validation-observation.json",
+        "/home/administrator/projects/hexalith/platform/docs/implementation/story-5-4-coupled-delivery-2026-10-25/installation-evidence/operational-priority-2026-10-29/verification.json",
+        "/home/administrator/projects/hexalith/platform/docs/implementation/story-5-4-coupled-delivery-2026-10-25/installation-evidence/operational-priority-2026-10-29/prior-owner-decisions.json",
+        "/home/administrator/projects/hexalith/platform/docs/implementation/story-5-4-coupled-delivery-2026-10-25/installation-evidence/operational-priority-2026-10-29/decision.json",
+        "/home/administrator/projects/hexalith/platform/docs/implementation/story-5-4-coupled-delivery-2026-10-25/owner-decisions.json",
+        "/home/administrator/projects/hexalith/platform/docs/implementation/story-5-4-coupled-delivery-2026-10-25/installation-evidence/infrastructure-observation.json",
+        "/home/administrator/projects/hexalith/platform/docs/implementation/story-5-4-coupled-delivery-2026-10-25/installation-evidence/metadata-transport-reconciliation-2026-10-29/verification.json",
+        "/home/administrator/projects/hexalith/platform/docs/implementation/story-5-4-coupled-delivery-2026-10-25/installation-evidence/metadata-transport-reconciliation-2026-10-29/verification.workspace-2026-10-29.json",
+        "/home/administrator/projects/hexalith/platform/docs/implementation/story-5-4-coupled-delivery-2026-10-25/installation-evidence/metadata-transport-reconciliation-2026-10-29/correction/preservation-decision.template.json",
+        "/home/administrator/projects/hexalith/platform/docs/implementation/story-5-4-coupled-delivery-2026-10-25/installation-evidence/metadata-transport-reconciliation-2026-10-29/prior-owner-decisions.json",
+        "/home/administrator/projects/hexalith/platform/docs/implementation/ext-parties-1-platform-prerequisites-2026-10-18/native-metadata.json"
+      ],
+      "stderr": ""
+    },
+    {
+      "topic": "existingAlternateTransportReference",
+      "pattern": "hexalith-kube-c1|hexalith-memories-c1|node1-existing-id_rsa|audit-log-path|audit-policy-file",
+      "roots": [
+        "/home/administrator/projects/hexalith/memories/docs",
+        "/home/administrator/projects/hexalith/platform/docs",
+        "/home/administrator/projects/hexalith/platform/eng"
+      ],
+      "argv": [
+        "rg",
+        "-l",
+        "-i",
+        "hexalith-kube-c1|hexalith-memories-c1|node1-existing-id_rsa|audit-log-path|audit-policy-file",
+        "/home/administrator/projects/hexalith/memories/docs",
+        "/home/administrator/projects/hexalith/platform/docs",
+        "/home/administrator/projects/hexalith/platform/eng",
+        "-g",
+        "*.md",
+        "-g",
+        "*.json",
+        "-g",
+        "*.yaml",
+        "-g",
+        "!**/references/**",
+        "-g",
+        "!**/bin/**",
+        "-g",
+        "!**/obj/**",
+        "-g",
+        "!**/source/**",
+        "-g",
+        "!**/snapshots/**"
+      ],
+      "exitCode": 0,
+      "matchingPaths": [
+        "/home/administrator/projects/hexalith/platform/eng/kubernetes-upgrade/recovery-20261015t140709z/PROCEDURE.md",
+        "/home/administrator/projects/hexalith/platform/eng/kubernetes-upgrade/GUARDED-RECOVERY-PREPARATION.md"
+      ],
+      "stderr": ""
+    }
+  ],
+  "limit": "Path matches only. Names and current objects cannot supply exact authenticated historical dispositions."
+}

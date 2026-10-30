@@ -1,0 +1,63 @@
+{
+  "verifiedAtUtc": "2026-10-30T08:02:38.269873+00:00",
+  "passed": true,
+  "checksPassed": 881,
+  "historicalFilesPreserved": 522,
+  "earlierDocumentPrefixPreserved": true,
+  "originalManifestCounts": {
+    "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-scope-20261029T165350Z-final/evidence-manifest.json": 10,
+    "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/evidence-manifest.json": 128,
+    "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/evidence-manifest.json": 47,
+    "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/evidence-manifest.json": 37
+  },
+  "canonicalOwnerFormUnchanged": true,
+  "agentsRegisterUnchanged": true,
+  "existingIndexEditUnchanged": true,
+  "allInheritedBlockersRetained": true,
+  "windowStatusAtRecordedCheck": "WithinFixedWindow",
+  "windowStatusAtValidation": "WithinFixedWindow",
+  "exclusiveDeadlineUtc": "2026-10-30T16:53:50+00:00",
+  "windowExtended": false,
+  "effects": {
+    "kubernetesMetadataGetCommands": 3,
+    "providerCalls": 0,
+    "sshCalls": 0,
+    "podExecs": 0,
+    "credentialIssuanceOrRenewals": 0,
+    "runtimeRecoveryExecutions": 0,
+    "runtimeOrPolicyWrites": 0,
+    "backupChanges": 0,
+    "infrastructureProvisioned": 0,
+    "productionBackendChanges": 0,
+    "qualificationRuns": 0,
+    "registerWrites": 0,
+    "messagesSent": 0
+  },
+  "command": "python3 -B _bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/verify_continuation.py",
+  "limit": "Offline integrity and evidence consistency only. No attestation authenticity, complete historical coverage, current grant, independent currentness, all-copy disposal, recovery execution or qualification is established. Earlier validation receipt is unchanged; earlier mutable sprint-source drift is separately recorded.",
+  "mutableSourceDrift": [
+    {
+      "path": "/home/administrator/projects/hexalith/platform/_bmad-output/implementation-artifacts/sprint-status.yaml",
+      "earlierObservationSha256": "c60b472033a1118afd0822db46b7cbdfdc9dd48cbee62168369d3fcd83ecb0ad",
+      "recapturedAtUtc": "2026-10-30T07:29:30.836690+00:00",
+      "recapturedSha256": "f8edb2f1aade10af5baadee5f86db468aea3d856540689552d21c9add7bd6f4d",
+      "retainedSnapshot": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/source-snapshots/sprint-status.yaml",
+        "sha256": "f8edb2f1aade10af5baadee5f86db468aea3d856540689552d21c9add7bd6f4d"
+      },
+      "relevantLinesAtRecapture": [
+        {
+          "line": 137,
+          "text": "  6-3-name-the-recovery-deputy: backlog"
+        },
+        {
+          "line": 186,
+          "text": "  8-14-prove-the-deputy-s-recovery-capability: backlog"
+        }
+      ],
+      "treatment": "Earlier observed reference retained, not restamped. Validate retained snapshot rather than asserting current equality of a concurrently edited external tracker."
+    }
+  ],
+  "retainedMutableSourceSnapshotsVerified": 1,
+  "earlierFailedAttemptReference": "validation-attempts.json"
+}

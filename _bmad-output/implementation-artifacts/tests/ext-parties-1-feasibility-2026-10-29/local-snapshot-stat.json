@@ -1,0 +1,19 @@
+{
+  "observedAt": "2026-10-29T16:48:13.825249+00:00",
+  "argv": [
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "StrictHostKeyChecking=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "-i",
+    "/home/administrator/hexalith-upgrade-evidence/access/node1-existing-id_rsa",
+    "root@192.168.1.30",
+    "find /var/openebs/local/pvc-da142de4-dec5-4519-880d-b7ede4000283 -maxdepth 1 -type f -printf '%f\\t%s\\t%TY-%Tm-%TdT%TH:%TM:%TS%Tz\\n'"
+  ],
+  "exitCode": 255,
+  "stdout": "",
+  "stderr": "Warning: Identity file /home/administrator/hexalith-upgrade-evidence/access/node1-existing-id_rsa not accessible: No such file or directory.\nroot@192.168.1.30: Permission denied (publickey,password).\n"
+}

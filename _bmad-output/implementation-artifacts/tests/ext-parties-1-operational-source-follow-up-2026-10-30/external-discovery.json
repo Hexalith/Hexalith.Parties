@@ -1,0 +1,1966 @@
+{
+  "recordedAtUtc": "2026-10-30T07:18:40.802396+00:00",
+  "cutoffUtc": "2026-10-30T06:01:52Z",
+  "method": "Filename/stat discovery only; public candidate records selected separately; no credentials, key or snapshot bytes read. mtime is discovery only.",
+  "roots": [
+    {
+      "root": "/home/administrator/hexalith-management-evidence",
+      "eligibleFiles": 1648
+    },
+    {
+      "root": "/home/administrator/hexalith-admin-exposure-local-evidence",
+      "eligibleFiles": 57
+    },
+    {
+      "root": "/home/administrator/hexalith-architecture",
+      "eligibleFiles": 4010
+    },
+    {
+      "root": "/home/administrator/hexalith-protection-evidence",
+      "eligibleFiles": 2294
+    },
+    {
+      "root": "/home/administrator/hexalith-conversations-evidence",
+      "eligibleFiles": 263
+    },
+    {
+      "root": "/home/administrator/hexalith-upgrade-evidence",
+      "eligibleFiles": 212
+    },
+    {
+      "root": "/home/administrator/hexalith-runner-relocation-evidence",
+      "eligibleFiles": 12
+    },
+    {
+      "root": "/home/administrator/hexalith-host-evidence",
+      "eligibleFiles": 2
+    },
+    {
+      "root": "/home/administrator/hexalith-retirement-preparation-evidence",
+      "eligibleFiles": 20
+    },
+    {
+      "root": "/home/administrator/hexalith-admin-exposure-evidence",
+      "eligibleFiles": 180
+    },
+    {
+      "root": "/home/administrator/hexalith-secrets-evidence",
+      "eligibleFiles": 2178282
+    },
+    {
+      "root": "/home/administrator/hexalith-evidence",
+      "eligibleFiles": 158
+    },
+    {
+      "root": "/home/administrator/hexalith-retirement-investigation-evidence",
+      "eligibleFiles": 590
+    },
+    {
+      "root": "/home/administrator/evidence",
+      "eligibleFiles": 4176
+    },
+    {
+      "root": "/home/administrator/hexalith-recovery-evidence",
+      "eligibleFiles": 575
+    }
+  ],
+  "newerCandidates": [
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/replacement-acceptance-packet.blocked.NotSubmitted.json",
+      "size": 1939,
+      "modifiedAtUtc": "2026-10-30T06:07:21.216492+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/authorization-scope.json",
+      "size": 3886,
+      "modifiedAtUtc": "2026-10-30T06:05:26.309359+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/installed-input-paths.json",
+      "size": 726,
+      "modifiedAtUtc": "2026-10-30T06:05:28.389421+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/checksum-verification.json",
+      "size": 4625,
+      "modifiedAtUtc": "2026-10-30T06:08:14.862599+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/searched-source-inventory.json",
+      "size": 839062,
+      "modifiedAtUtc": "2026-10-30T06:05:28.385421+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/dependency-status.json",
+      "size": 1740,
+      "modifiedAtUtc": "2026-10-30T06:07:21.216492+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/bundle-validation.json",
+      "size": 715,
+      "modifiedAtUtc": "2026-10-30T06:08:14.850599+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/prerequisite-status.json",
+      "size": 8685,
+      "modifiedAtUtc": "2026-10-30T06:07:21.216492+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/repository-observations.json",
+      "size": 26171,
+      "modifiedAtUtc": "2026-10-30T06:05:26.301358+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/remaining-owner-actions.md",
+      "size": 9220,
+      "modifiedAtUtc": "2026-10-30T06:08:14.746595+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/application-deployment-input-map.json",
+      "size": 4080,
+      "modifiedAtUtc": "2026-10-30T06:08:14.746595+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/preservation-verification.json",
+      "size": 2584,
+      "modifiedAtUtc": "2026-10-30T06:08:14.778596+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/historical-gap-disposition.json",
+      "size": 2530,
+      "modifiedAtUtc": "2026-10-30T06:07:21.216492+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/cluster-inventory.json",
+      "size": 673,
+      "modifiedAtUtc": "2026-10-30T06:05:28.389421+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/preexisting-changes/docs/implementation/ext-conv-ai-1-runtime-qualification.md",
+      "size": 28236,
+      "modifiedAtUtc": "2026-10-30T06:05:25.377331+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/preexisting-changes/docs/implementation/ext-conv-ai-1-deletion-conformance-receiver.md",
+      "size": 9751,
+      "modifiedAtUtc": "2026-10-30T06:05:25.377331+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/preexisting-changes/_bmad-output/implementation-artifacts/story-16-3-entry-investigation-2026-10-29.md",
+      "size": 10513,
+      "modifiedAtUtc": "2026-10-30T06:05:25.377331+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/preexisting-changes/_bmad-output/implementation-artifacts/spec-16-3-diagnose-apphost-preflight-failures-and-prove-terminal-reconciliation-live.md",
+      "size": 6206,
+      "modifiedAtUtc": "2026-10-30T06:05:25.377331+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/preexisting-changes/_bmad-output/implementation-artifacts/spec-5-4-ext-conv-ai-1-owner-qualification.md",
+      "size": 21390,
+      "modifiedAtUtc": "2026-10-30T06:05:25.377331+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/snapshots/agents-external-dependency-register.committed.md",
+      "size": 75611,
+      "modifiedAtUtc": "2026-10-30T06:05:26.305359+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/snapshots/platform-owner-decisions.snapshot.json",
+      "size": 103222,
+      "modifiedAtUtc": "2026-10-30T06:05:26.309359+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/snapshots/agents-external-dependency-register.working.md",
+      "size": 75611,
+      "modifiedAtUtc": "2026-10-30T06:05:26.305359+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/snapshots/updated-documentation/docs/implementation/ext-conv-ai-1-runtime-qualification.md",
+      "size": 32429,
+      "modifiedAtUtc": "2026-10-30T06:08:14.746595+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/snapshots/updated-documentation/_bmad-output/implementation-artifacts/spec-5-4-ext-conv-ai-1-owner-qualification.md",
+      "size": 25583,
+      "modifiedAtUtc": "2026-10-30T06:08:14.746595+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/accepted-owner-command-refusal.json",
+      "size": 1060,
+      "modifiedAtUtc": "2026-10-30T06:05:26.305359+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/conversations-head.json",
+      "size": 371,
+      "modifiedAtUtc": "2026-10-30T06:05:25.129323+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/agents-head.json",
+      "size": 364,
+      "modifiedAtUtc": "2026-10-30T06:05:25.957348+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/conversations-status.json",
+      "size": 868,
+      "modifiedAtUtc": "2026-10-30T06:05:25.377331+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/platform-status.json",
+      "size": 23645,
+      "modifiedAtUtc": "2026-10-30T06:05:25.709341+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/agents-register-committed.json",
+      "size": 76593,
+      "modifiedAtUtc": "2026-10-30T06:05:26.305359+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/agents-status.json",
+      "size": 977,
+      "modifiedAtUtc": "2026-10-30T06:05:26.225356+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/application-deployment-config-discovery.json",
+      "size": 1289,
+      "modifiedAtUtc": "2026-10-30T06:08:14.510586+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/platform-head.json",
+      "size": 366,
+      "modifiedAtUtc": "2026-10-30T06:05:25.377331+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/eventstore-status.json",
+      "size": 426,
+      "modifiedAtUtc": "2026-10-30T06:05:25.829344+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/authority-source-discovery.json",
+      "size": 7808,
+      "modifiedAtUtc": "2026-10-30T06:05:28.313419+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/kube-namespaces.json",
+      "size": 2238,
+      "modifiedAtUtc": "2026-10-30T06:05:26.793373+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/kube-service-accounts.json",
+      "size": 13030,
+      "modifiedAtUtc": "2026-10-30T06:05:27.649399+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/kube-dapr-components.json",
+      "size": 2342,
+      "modifiedAtUtc": "2026-10-30T06:05:28.101413+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/kube-configmap-names.json",
+      "size": 9365,
+      "modifiedAtUtc": "2026-10-30T06:05:27.897407+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/eventstore-head.json",
+      "size": 368,
+      "modifiedAtUtc": "2026-10-30T06:05:25.713341+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/kube-public-target.json",
+      "size": 590,
+      "modifiedAtUtc": "2026-10-30T06:05:26.541366+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/default-kube-public-target.json",
+      "size": 564,
+      "modifiedAtUtc": "2026-10-30T06:08:14.746595+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/kube-nodes.json",
+      "size": 756,
+      "modifiedAtUtc": "2026-10-30T06:05:28.293418+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/conversations-whitespace-check.json",
+      "size": 325,
+      "modifiedAtUtc": "2026-10-30T06:08:14.850599+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/parties-status.json",
+      "size": 1195,
+      "modifiedAtUtc": "2026-10-30T06:05:25.953348+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/parties-head.json",
+      "size": 365,
+      "modifiedAtUtc": "2026-10-30T06:05:25.829344+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/conversations-diff-before.json",
+      "size": 28643,
+      "modifiedAtUtc": "2026-10-30T06:05:26.301358+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/kube-pod-images.json",
+      "size": 29551,
+      "modifiedAtUtc": "2026-10-30T06:05:27.421392+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/receipts/kube-workloads.json",
+      "size": 12452,
+      "modifiedAtUtc": "2026-10-30T06:05:27.093382+00:00"
+    }
+  ],
+  "targetedFilenameCandidates": [
+    {
+      "path": "/home/administrator/hexalith-architecture/ext-secrets-1-erasure-20261020/eng/ext-secrets-1/preservation-baseline.json",
+      "size": 1540,
+      "modifiedAtUtc": "2026-10-20T02:26:31.155438+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-architecture/ext-secrets-1-erasure-20261020/docs/implementation/ext-parties-1-platform-prerequisites-2026-10-18/preservation.json",
+      "size": 19866,
+      "modifiedAtUtc": "2026-10-20T02:26:31.147438+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-architecture/ext-secrets-1-erasure-20261020/docs/implementation/story-1-17-readiness-qualification-2026-10-17/preservation-audit.txt",
+      "size": 4637,
+      "modifiedAtUtc": "2026-10-20T02:26:31.147438+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-architecture/ext-secrets-1-erasure-20261020/_bmad-output/implementation-artifacts/evidence/epic-4/4-0/20261016t103632z-native-enrollment-execution-bindings/concurrent-preservation-drift-v1.json",
+      "size": 517,
+      "modifiedAtUtc": "2026-10-20T02:26:31.007433+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-architecture/ext-secrets-1-erasure-20261020/_bmad-output/implementation-artifacts/evidence/epic-4/4-0/20261016t103632z-native-enrollment-execution-bindings/preparation-preservation-after.json",
+      "size": 250,
+      "modifiedAtUtc": "2026-10-20T02:26:31.007433+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-architecture/ext-secrets-1-erasure-20261020/_bmad-output/implementation-artifacts/evidence/epic-4/4-0/20261016t103632z-native-enrollment-execution-bindings/completion-preservation.json",
+      "size": 1115,
+      "modifiedAtUtc": "2026-10-20T02:26:31.007433+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-architecture/ext-secrets-1-erasure-20261020/_bmad-output/implementation-artifacts/evidence/epic-4/4-0/20261015t162756z-offline-preparation/reviewed-v4/v3-source-preservation.json",
+      "size": 890,
+      "modifiedAtUtc": "2026-10-20T02:26:31.003433+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-architecture/ext-secrets-1-erasure-20261020/_bmad-output/implementation-artifacts/evidence/epic-4/4-0/20261015t162756z-offline-preparation/reviewed-v3/v2-source-preservation.json",
+      "size": 485,
+      "modifiedAtUtc": "2026-10-20T02:26:31.003433+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-protection-evidence/ext-protection-1/resume-20261029T172443Z-b32cba74/prepublication-preservation.json",
+      "size": 1481,
+      "modifiedAtUtc": "2026-10-29T17:32:40.121847+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-protection-evidence/ext-protection-1/option-a-feasibility-20261018T113800Z-1dbe62f55af0434684a9602a3824bfe9/artifact-audit.log",
+      "size": 179,
+      "modifiedAtUtc": "2026-10-18T12:06:15.774310+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-protection-evidence/ext-protection-1/source-20261018T084014Z-fba1f8c8c91e44cebafbe26128fa52f2/authority-preservation.json",
+      "size": 928,
+      "modifiedAtUtc": "2026-10-18T09:06:35.460290+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-protection-evidence/ext-protection-1/source-20261018T084014Z-fba1f8c8c91e44cebafbe26128fa52f2/authority-preservation-post-review.json",
+      "size": 750,
+      "modifiedAtUtc": "2026-10-18T09:16:53.088990+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-protection-evidence/ext-protection-1/delivery-20261029T170427Z-f2b93ebf/parent-final-audit.log",
+      "size": 213,
+      "modifiedAtUtc": "2026-10-29T17:15:12.534483+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-protection-evidence/ext-protection-1/resume-20261025T111935Z-7229ca34/final-audit.log",
+      "size": 460,
+      "modifiedAtUtc": "2026-10-25T11:35:55.136037+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-protection-evidence/ext-protection-1/resume-20261025T111935Z-7229ca34/preservation-before.json",
+      "size": 59082,
+      "modifiedAtUtc": "2026-10-25T11:19:35.272883+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-protection-evidence/ext-protection-1/source-recovery/loop5-source-final-128c1a47fba249ccb9dc6eda4564b161/platform/eng/ext-secrets-1/preservation-baseline.json",
+      "size": 1540,
+      "modifiedAtUtc": "2026-10-30T01:20:44.508060+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-protection-evidence/ext-protection-1/source-recovery/loop4-source-final-6fad29c84fb849aaa241c87d464e15e8/platform/eng/ext-secrets-1/preservation-baseline.json",
+      "size": 1540,
+      "modifiedAtUtc": "2026-10-29T23:23:47.618807+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-protection-evidence/ext-protection-1/source-recovery/loop4-source-final-061e3a8540254b6f98dc257f93f7a8b3/platform/eng/ext-secrets-1/preservation-baseline.json",
+      "size": 1540,
+      "modifiedAtUtc": "2026-10-29T23:23:47.618807+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-protection-evidence/ext-protection-1/source-recovery/loop5-qualification-source-final-0575988428ee47cfa3da369cd2fae1e4/platform/eng/ext-secrets-1/preservation-baseline.json",
+      "size": 1540,
+      "modifiedAtUtc": "2026-10-30T01:20:44.508060+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-protection-evidence/ext-protection-1/source-recovery/loop4-source-final-3f1acbb174654f7dadb6bfe9bcbc6a2f/platform/eng/ext-secrets-1/preservation-baseline.json",
+      "size": 1540,
+      "modifiedAtUtc": "2026-10-29T23:23:47.618807+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-protection-evidence/ext-protection-1/source-recovery/loop5-source-final-b81469fc1c26432fafe199619b8335f1/platform/eng/ext-secrets-1/preservation-baseline.json",
+      "size": 1540,
+      "modifiedAtUtc": "2026-10-30T01:20:44.508060+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-protection-evidence/ext-protection-1/source-recovery/loop4-source-final-44a1e06ef11242e6a10eb35f94ff7e61/platform/eng/ext-secrets-1/preservation-baseline.json",
+      "size": 1540,
+      "modifiedAtUtc": "2026-10-29T23:23:47.618807+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-protection-evidence/ext-protection-1/source-recovery/loop5-implementation-delivery-final-bc922a276b174f6e940aa77ea5f3be9d/packet/verification/native-v7-persistent-preservation.json",
+      "size": 1272,
+      "modifiedAtUtc": "2026-10-30T04:06:48.270604+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-protection-evidence/ext-protection-1/source-recovery/loop5-implementation-delivery-final-bc922a276b174f6e940aa77ea5f3be9d/packet/verification/qualification-v8-persistent-preservation.json",
+      "size": 1307,
+      "modifiedAtUtc": "2026-10-30T04:41:24.998211+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-protection-evidence/ext-protection-1/owner-audit-20261029T201418Z-41ecac07/parent-final-audit.log",
+      "size": 815,
+      "modifiedAtUtc": "2026-10-29T20:26:41.601003+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/preservation-verification.json",
+      "size": 2584,
+      "modifiedAtUtc": "2026-10-30T06:08:14.778596+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-upgrade-evidence/access/story41-node-access-inventory-085552.json",
+      "size": 989,
+      "modifiedAtUtc": "2026-10-01T08:55:57.513505+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-execution-a-audit.log",
+      "size": 7402,
+      "modifiedAtUtc": "2026-10-29T12:17:22.204467+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/authority-installation-20261027T173655237972Z/preservation.json",
+      "size": 323,
+      "modifiedAtUtc": "2026-10-27T17:37:53.793323+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/native-registry-inventory-20261017T082852516535Z/openbao-preservation-before.json",
+      "size": 1882,
+      "modifiedAtUtc": "2026-10-17T08:29:02.900062+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/native-registry-inventory-20261017T082852516535Z/openbao-preservation-after.json",
+      "size": 2097,
+      "modifiedAtUtc": "2026-10-17T09:49:27.556874+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/native-registry-inventory-20261017T082852516535Z/preservation-result.json",
+      "size": 1583,
+      "modifiedAtUtc": "2026-10-17T09:49:27.556874+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/native-registry-inventory-20261017T082852516535Z/preservation-after.json",
+      "size": 175569,
+      "modifiedAtUtc": "2026-10-17T09:49:19.332467+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/native-registry-inventory-20261017T082852516535Z/preservation-before.json",
+      "size": 164124,
+      "modifiedAtUtc": "2026-10-17T08:28:55.959585+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-reconciliation-20261029TJ6KL9LyH/preservation-result.json",
+      "size": 2669,
+      "modifiedAtUtc": "2026-10-29T13:13:13.302302+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-reconciliation-20261029TJ6KL9LyH/preservation-after.json",
+      "size": 180615,
+      "modifiedAtUtc": "2026-10-29T13:13:13.286302+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-reconciliation-20261029TJ6KL9LyH/preservation-before.json",
+      "size": 180615,
+      "modifiedAtUtc": "2026-10-29T13:13:07.770103+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/continuation-20261023-hmr4aw3v/original-preservation-before-review15.json",
+      "size": 861,
+      "modifiedAtUtc": "2026-10-24T02:09:12.620053+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/continuation-20261023-hmr4aw3v/original-preservation-review15-campaign08.json",
+      "size": 861,
+      "modifiedAtUtc": "2026-10-24T03:51:26.582431+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/continuation-20261023-hmr4aw3v/original-preservation-review14.json",
+      "size": 861,
+      "modifiedAtUtc": "2026-10-23T22:39:39.529614+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/continuation-20261023-hmr4aw3v/original-preservation-before.json",
+      "size": 861,
+      "modifiedAtUtc": "2026-10-23T08:30:54.619863+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/continuation-20261023-hmr4aw3v/original-preservation-review12.json",
+      "size": 861,
+      "modifiedAtUtc": "2026-10-23T16:40:48.398237+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/continuation-20261023-hmr4aw3v/original-preservation-review11.json",
+      "size": 861,
+      "modifiedAtUtc": "2026-10-23T14:13:38.247830+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/continuation-20261023-hmr4aw3v/original-preservation-after-review16-triage.json",
+      "size": 861,
+      "modifiedAtUtc": "2026-10-24T05:49:11.954251+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/continuation-20261023-hmr4aw3v/original-preservation-after-review15-triage.json",
+      "size": 861,
+      "modifiedAtUtc": "2026-10-24T02:45:00.828697+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/continuation-20261023-hmr4aw3v/original-preservation-review8.json",
+      "size": 861,
+      "modifiedAtUtc": "2026-10-23T10:42:55.648844+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/continuation-20261023-hmr4aw3v/original-preservation-before-review16.json",
+      "size": 861,
+      "modifiedAtUtc": "2026-10-24T05:30:43.199134+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/continuation-20261023-hmr4aw3v/original-preservation-before-review17-completion.json",
+      "size": 861,
+      "modifiedAtUtc": "2026-10-24T09:16:59.047077+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/continuation-20261023-hmr4aw3v/review-pass-15/implementation-01/final-readback-stages/source-native-index-audit.log",
+      "size": 273,
+      "modifiedAtUtc": "2026-10-24T05:23:35.092561+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/preservation-decision.template.json",
+      "size": 2547,
+      "modifiedAtUtc": "2026-10-29T17:26:16.280647+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/custody-inventory-20261016/refresh-20261027T170637456955Z/openbao-preservation-before.json",
+      "size": 2201,
+      "modifiedAtUtc": "2026-10-27T17:06:56.212853+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/custody-inventory-20261016/refresh-20261027T170637456955Z/openbao-preservation-after.json",
+      "size": 2201,
+      "modifiedAtUtc": "2026-10-27T17:07:03.117319+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/custody-inventory-20261016/refresh-20261027T170637456955Z/preservation-after.json",
+      "size": 175926,
+      "modifiedAtUtc": "2026-10-27T17:07:05.245393+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/custody-inventory-20261016/refresh-20261027T170637456955Z/preservation-before.json",
+      "size": 175926,
+      "modifiedAtUtc": "2026-10-27T17:06:38.660223+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/custody-inventory-20261016/refresh-20261027T170600312731Z/preservation-before.json",
+      "size": 175926,
+      "modifiedAtUtc": "2026-10-27T17:06:01.506540+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/custody-binding-20261027T182648692778Z/metadata-credential-issuance.json",
+      "size": 702,
+      "modifiedAtUtc": "2026-10-27T18:45:12.443132+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/custody-binding-20261027T182648692778Z/preservation.json",
+      "size": 710,
+      "modifiedAtUtc": "2026-10-27T18:45:25.803736+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/custody-binding-20261027T182648692778Z/preservation-prior-210d06f599e247a7a0a9da59e01522ff.json",
+      "size": 710,
+      "modifiedAtUtc": "2026-10-27T18:45:25.799736+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-platform/eng/ext-secrets-1/preservation-baseline.json",
+      "size": 1540,
+      "modifiedAtUtc": "2026-10-14T19:15:22.128619+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-platform/docs/implementation/ext-parties-1-platform-prerequisites-2026-10-18/preservation.json",
+      "size": 19866,
+      "modifiedAtUtc": "2026-10-29T12:13:49.452827+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-platform/docs/implementation/story-1-17-readiness-qualification-2026-10-17/preservation-audit.txt",
+      "size": 4637,
+      "modifiedAtUtc": "2026-10-29T12:13:49.456827+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-platform/_bmad-output/implementation-artifacts/evidence/epic-4/4-0/20261016t103632z-native-enrollment-execution-bindings/concurrent-preservation-drift-v1.json",
+      "size": 517,
+      "modifiedAtUtc": "2026-10-29T12:13:49.228820+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-platform/_bmad-output/implementation-artifacts/evidence/epic-4/4-0/20261016t103632z-native-enrollment-execution-bindings/preparation-preservation-after.json",
+      "size": 250,
+      "modifiedAtUtc": "2026-10-29T12:13:49.228820+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-platform/_bmad-output/implementation-artifacts/evidence/epic-4/4-0/20261016t103632z-native-enrollment-execution-bindings/completion-preservation.json",
+      "size": 1115,
+      "modifiedAtUtc": "2026-10-29T12:13:49.228820+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-platform/_bmad-output/implementation-artifacts/evidence/epic-4/4-0/20261015t162756z-offline-preparation/reviewed-v4/v3-source-preservation.json",
+      "size": 890,
+      "modifiedAtUtc": "2026-10-29T12:13:49.224820+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-platform/_bmad-output/implementation-artifacts/evidence/epic-4/4-0/20261015t162756z-offline-preparation/reviewed-v3/v2-source-preservation.json",
+      "size": 485,
+      "modifiedAtUtc": "2026-10-29T12:13:49.224820+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/owner-evidence-followup-20261028T113903884042Z/agents-register-preservation-blocker.json",
+      "size": 793,
+      "modifiedAtUtc": "2026-10-28T11:40:40.572454+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/owner-evidence-followup-20261028T113903884042Z/completed-export-journal-preservation.json",
+      "size": 1783,
+      "modifiedAtUtc": "2026-10-28T11:40:40.528452+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/eng/ext-secrets-1/preservation-baseline.json",
+      "size": 1540,
+      "modifiedAtUtc": "2026-10-28T19:29:18.107636+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/docs/implementation/story-5-4-coupled-delivery-2026-10-25/installation-evidence/preservation-observation.json",
+      "size": 5214,
+      "modifiedAtUtc": "2026-10-28T19:29:17.919629+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/docs/implementation/story-5-4-shared-target-completion-2026-10-25/source-prior-body-preservation-pass-21.json",
+      "size": 1716421,
+      "modifiedAtUtc": "2026-10-28T19:29:18.075635+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/docs/implementation/story-5-4-shared-target-completion-2026-10-25/source-prior-artifact-preservation-pass-21.json",
+      "size": 383,
+      "modifiedAtUtc": "2026-10-28T19:29:18.071635+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/docs/implementation/story-5-4-shared-target-completion-2026-10-25/closed-scope-preservation.json",
+      "size": 889,
+      "modifiedAtUtc": "2026-10-28T19:29:17.935629+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/docs/implementation/story-5-4-shared-target-completion-2026-10-25/source-prior-artifact-preservation-pass-20.json",
+      "size": 8374,
+      "modifiedAtUtc": "2026-10-28T19:29:18.071635+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/docs/implementation/story-5-4-shared-target-completion-2026-10-25/source-root-prior-preservation-pass-22.json",
+      "size": 1318,
+      "modifiedAtUtc": "2026-10-28T19:29:18.079635+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/docs/implementation/story-5-4-shared-target-completion-2026-10-25/source-prior-artifact-preservation-pass-19.json",
+      "size": 1345,
+      "modifiedAtUtc": "2026-10-28T19:29:18.071635+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/docs/implementation/story-5-4-shared-target-completion-2026-10-25/source-prior-bytecode-preservation-pass-19.json",
+      "size": 2203,
+      "modifiedAtUtc": "2026-10-28T19:29:18.075635+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/docs/implementation/story-5-4-shared-target-completion-2026-10-25/source-prior-bytecode-preservation-pass-20.json",
+      "size": 1337,
+      "modifiedAtUtc": "2026-10-28T19:29:18.075635+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/docs/implementation/story-5-4-shared-target-completion-2026-10-25/preservation-verification.json",
+      "size": 3616,
+      "modifiedAtUtc": "2026-10-28T19:29:17.971631+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/docs/implementation/ext-parties-1-custody-proposal-2026-10-25/preservation-after.json",
+      "size": 137381,
+      "modifiedAtUtc": "2026-10-28T19:29:17.863626+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/docs/implementation/ext-parties-1-custody-proposal-2026-10-25/preservation-before.json",
+      "size": 86669,
+      "modifiedAtUtc": "2026-10-28T19:29:17.863626+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/docs/implementation/ext-parties-1-platform-prerequisites-2026-10-18/preservation.json",
+      "size": 19866,
+      "modifiedAtUtc": "2026-10-28T19:29:17.903628+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/docs/implementation/story-1-17-readiness-qualification-2026-10-17/preservation-audit.txt",
+      "size": 4637,
+      "modifiedAtUtc": "2026-10-28T19:29:17.919629+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/epic-4/4-27/native-client-certificate-delivery/preservation.json",
+      "size": 1374,
+      "modifiedAtUtc": "2026-10-28T19:29:17.647617+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/epic-4/4-27/native-client-certificate-delivery/review-5/connector-audit.log",
+      "size": 5410,
+      "modifiedAtUtc": "2026-10-28T19:29:17.675618+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/epic-4/4-27/native-client-certificate-delivery/review-1/preservation.json",
+      "size": 3309,
+      "modifiedAtUtc": "2026-10-28T19:29:17.647617+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/epic-4/4-27/native-client-certificate-delivery/review-1/preservation.log",
+      "size": 3309,
+      "modifiedAtUtc": "2026-10-28T19:29:17.647617+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/epic-4/4-27/native-client-certificate-delivery/review-5-first-candidate/connector-audit.log",
+      "size": 5410,
+      "modifiedAtUtc": "2026-10-28T19:29:17.663618+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/epic-4/4-27/native-client-certificate-delivery/review-3/connector-audit.log",
+      "size": 4716,
+      "modifiedAtUtc": "2026-10-28T19:29:17.655618+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/epic-4/4-27/native-client-certificate-delivery/review-4/connector-audit.log",
+      "size": 4998,
+      "modifiedAtUtc": "2026-10-28T19:29:17.655618+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/epic-4/4-27/20261023-immutable-provider-transport/preservation.json",
+      "size": 6935,
+      "modifiedAtUtc": "2026-10-28T19:29:17.643617+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/epic-4/4-27/20261023-immutable-provider-transport/review-1/preservation.json",
+      "size": 900,
+      "modifiedAtUtc": "2026-10-28T19:29:17.643617+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/epic-4/4-0/20261016t103632z-native-enrollment-execution-bindings/concurrent-preservation-drift-v1.json",
+      "size": 517,
+      "modifiedAtUtc": "2026-10-28T19:29:17.475610+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/epic-4/4-0/20261016t103632z-native-enrollment-execution-bindings/preparation-preservation-after.json",
+      "size": 250,
+      "modifiedAtUtc": "2026-10-28T19:29:17.475610+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/epic-4/4-0/20261016t103632z-native-enrollment-execution-bindings/completion-preservation.json",
+      "size": 1115,
+      "modifiedAtUtc": "2026-10-28T19:29:17.475610+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/epic-4/4-0/20261015t162756z-offline-preparation/reviewed-v4/v3-source-preservation.json",
+      "size": 890,
+      "modifiedAtUtc": "2026-10-28T19:29:17.471610+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/epic-4/4-0/20261015t162756z-offline-preparation/reviewed-v3/v2-source-preservation.json",
+      "size": 485,
+      "modifiedAtUtc": "2026-10-28T19:29:17.471610+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/2-5/final-workflow-review-20261025/final-audit.log",
+      "size": 266,
+      "modifiedAtUtc": "2026-10-28T19:29:17.207599+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/2-5/live-requalification-20261028/retained-audit.log",
+      "size": 155,
+      "modifiedAtUtc": "2026-10-28T19:29:17.299603+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/2-5/live-requalification-20261028/runtime-audit.log",
+      "size": 541,
+      "modifiedAtUtc": "2026-10-28T19:29:17.303603+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/2-5/live-requalification-20261028/final-retained-audit.log",
+      "size": 155,
+      "modifiedAtUtc": "2026-10-28T19:29:17.251601+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/2-5/live-requalification-20261028/final-runtime-audit.log",
+      "size": 154,
+      "modifiedAtUtc": "2026-10-28T19:29:17.255601+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/2-5/full-story-patches-20261025/intent-preservation.json",
+      "size": 234,
+      "modifiedAtUtc": "2026-10-28T19:29:17.239600+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/2-5/committed-review-fixes-20261025/final-pdb-source-audit.log",
+      "size": 429,
+      "modifiedAtUtc": "2026-10-28T19:29:17.159597+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/2-5/committed-review-fixes-20261025/verification-audit.log",
+      "size": 1497,
+      "modifiedAtUtc": "2026-10-28T19:29:17.171597+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/2-5/committed-review-fixes-20261025/retained-evidence-audit.log",
+      "size": 98,
+      "modifiedAtUtc": "2026-10-28T19:29:17.163597+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/2-5/committed-review-fixes-20261025/final-verification-audit.log",
+      "size": 308,
+      "modifiedAtUtc": "2026-10-28T19:29:17.159597+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/2-5/committed-review-fixes-20261025/pdb-stale-runtime-audit.log",
+      "size": 760,
+      "modifiedAtUtc": "2026-10-28T19:29:17.163597+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/2-5/committed-review-fixes-20261025/final-retained-evidence-audit.log",
+      "size": 98,
+      "modifiedAtUtc": "2026-10-28T19:29:17.159597+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z/clean-observed-source/_bmad-output/implementation-artifacts/evidence/2-5/local-lifecycle-20261024/pre-cause-audit.log",
+      "size": 313,
+      "modifiedAtUtc": "2026-10-28T19:29:17.327604+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/preservation-audit-review4-after-source-verification.json",
+      "size": 41258,
+      "modifiedAtUtc": "2026-10-22T23:35:54.382698+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/preservation-audit-review1.json",
+      "size": 31924,
+      "modifiedAtUtc": "2026-10-22T19:16:05.126717+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/preservation-audit-review2.json",
+      "size": 41963,
+      "modifiedAtUtc": "2026-10-22T19:59:24.274966+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/preservation-audit-review5-20261023-0054.json",
+      "size": 41258,
+      "modifiedAtUtc": "2026-10-23T00:54:18.025614+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/preservation-audit-review5-20261023-0142.json",
+      "size": 41258,
+      "modifiedAtUtc": "2026-10-23T01:42:08.107432+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/preservation-audit-review4.json",
+      "size": 25815,
+      "modifiedAtUtc": "2026-10-22T21:29:06.170231+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/custody-preservation-summary.json",
+      "size": 224,
+      "modifiedAtUtc": "2026-10-22T19:17:35.393576+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/preservation-audit-review4-pre-review5.json",
+      "size": 41258,
+      "modifiedAtUtc": "2026-10-22T23:16:08.449551+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/preservation-audit-review5-20261023-0244.json",
+      "size": 41258,
+      "modifiedAtUtc": "2026-10-23T02:44:18.074688+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/review-pass-6/final-preservation-audit.json",
+      "size": 41258,
+      "modifiedAtUtc": "2026-10-23T03:33:11.922487+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/review-loop-6/root-preservation-audit-01.json",
+      "size": 41258,
+      "modifiedAtUtc": "2026-10-23T05:25:57.441924+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/6-5d-simplification/current-preservation-cases.json",
+      "size": 504,
+      "modifiedAtUtc": "2026-10-22T21:14:00.029833+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-4-prerequisite-p1r-source-readiness-20261017/cleanup-and-preservation.json",
+      "size": 2328,
+      "modifiedAtUtc": "2026-10-22T21:14:12.605395+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31150-published-run/execution-b944559fd0f3413696db48bcfc585f52/archive-preservation.json",
+      "size": 13885,
+      "modifiedAtUtc": "2026-10-22T21:14:01.309912+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31150-published-run/execution-325e3c9327df4810941981b5882e3a70/archive-preservation.json",
+      "size": 13963,
+      "modifiedAtUtc": "2026-10-22T21:14:00.653872+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31150-published-run/natural-reminder-smoke-safe/smoke-cases/tenant-preservation.json",
+      "size": 313740,
+      "modifiedAtUtc": "2026-10-22T21:14:02.880789+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31150-published-run/correction-smokes-safe/p1r-operational-complete-smoke-04/smoke-cases/tenant-preservation.json",
+      "size": 315287,
+      "modifiedAtUtc": "2026-10-22T21:14:00.365854+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31150-published-run/execution-c497b88cb2e5436ebddb37e33f1fcb64/archive-preservation.json",
+      "size": 13885,
+      "modifiedAtUtc": "2026-10-22T21:14:01.837945+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-published-run/final-attempt/spec-frozen-preservation-v4.json",
+      "size": 133,
+      "modifiedAtUtc": "2026-10-22T21:14:11.509327+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-published-run/final-attempt/spec-final-notes-preservation-v4.json",
+      "size": 242,
+      "modifiedAtUtc": "2026-10-22T21:14:11.509327+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-published-run/completed-v3-rejected-import/reminder-smoke-v3-d158cf87ed27489d9025b04c8e13f4f7/case-tenant-preservation.json",
+      "size": 535334,
+      "modifiedAtUtc": "2026-10-22T21:14:10.621271+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-published-run/completed-v3-rejected-import/reminder-smoke-92a4e8ab7103441597fa053337ab0b2a/case-tenant-preservation.json",
+      "size": 531579,
+      "modifiedAtUtc": "2026-10-22T21:14:10.613271+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-published-run/reconciliation/shared-preservation-after-application-85c980788dbb4ff388ba040e95e1087b.json",
+      "size": 1395,
+      "modifiedAtUtc": "2026-10-22T21:14:12.033359+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-published-run/canonical-resume-20261018T210839Z-b3f330/preservation-after.json",
+      "size": 5012,
+      "modifiedAtUtc": "2026-10-22T21:14:08.697151+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-published-run/canonical-resume-20261018T210839Z-b3f330/preservation-before.json",
+      "size": 5652832,
+      "modifiedAtUtc": "2026-10-22T21:14:08.709152+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-published-run/canonical-resume-20261018T210839Z-b3f330/retained-canonical/reminder-smoke-v3-d158cf87ed27489d9025b04c8e13f4f7/case-tenant-preservation.json",
+      "size": 535334,
+      "modifiedAtUtc": "2026-10-22T21:14:09.489200+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-published-run/canonical-resume-20261018T210839Z-b3f330/retained-canonical/reminder-smoke-92a4e8ab7103441597fa053337ab0b2a/case-tenant-preservation.json",
+      "size": 531579,
+      "modifiedAtUtc": "2026-10-22T21:14:09.477200+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/latest-packages-2026-10-08/authoritative-audit.log",
+      "size": 2563,
+      "modifiedAtUtc": "2026-10-22T21:14:16.125615+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/folders-12-2-current-source-20261022T134028Z/preservation-final.json",
+      "size": 4728,
+      "modifiedAtUtc": "2026-10-22T21:14:13.285438+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/folders-12-2-current-source-20261022T134028Z/preservation-command.json",
+      "size": 445,
+      "modifiedAtUtc": "2026-10-22T21:14:13.285438+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-tooling-hardening-20261016/final-preservation.json",
+      "size": 5090027,
+      "modifiedAtUtc": "2026-10-22T21:14:12.561392+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-canonical-reconciliation-20261016/refreshed-evidence-ingestion-audit.log",
+      "size": 1224,
+      "modifiedAtUtc": "2026-10-22T21:14:12.065361+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-canonical-reconciliation-20261016/starting-preservation.json",
+      "size": 62661647,
+      "modifiedAtUtc": "2026-10-22T21:14:12.173368+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-canonical-reconciliation-20261016/new-evidence-ingestion-audit.log",
+      "size": 770,
+      "modifiedAtUtc": "2026-10-22T21:14:12.057361+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-canonical-reconciliation-20261016/final-preservation.json",
+      "size": 275,
+      "modifiedAtUtc": "2026-10-22T21:14:12.049360+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-2-13/runs-2026-10-21-concurrency-retirement/final-source-preservation.json",
+      "size": 1504,
+      "modifiedAtUtc": "2026-10-22T21:14:16.737653+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-2-13/runs-2026-10-21-restart-trace/historical-preservation-corrected.json",
+      "size": 789,
+      "modifiedAtUtc": "2026-10-22T21:14:17.021671+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-2-13/runs-2026-10-21-restart-trace/historical-preservation.json",
+      "size": 1544,
+      "modifiedAtUtc": "2026-10-22T21:14:17.021671+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-2-13/runs-2026-10-21-concurrency-safety/start-preservation.json",
+      "size": 2979871,
+      "modifiedAtUtc": "2026-10-22T21:14:17.017671+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-2-13/concurrency-closing-2026-10-21/preservation.json",
+      "size": 14599,
+      "modifiedAtUtc": "2026-10-22T21:14:16.285625+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-2-13/runs-2026-10-21-runtime-recovery/historical-preservation.json",
+      "size": 890,
+      "modifiedAtUtc": "2026-10-22T21:14:17.373693+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-6-4/oq8-correction-20261017/parent-arrival-preservation-audit.json",
+      "size": 50223,
+      "modifiedAtUtc": "2026-10-22T21:14:17.869725+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-6-4/oq8-correction-20261017/implementation-final-preservation.json",
+      "size": 62863,
+      "modifiedAtUtc": "2026-10-22T21:14:17.853724+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-6-4/runtime-corrections-20261017/parent-preservation-audit.json",
+      "size": 623,
+      "modifiedAtUtc": "2026-10-22T21:14:18.613771+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-6-4/runtime-corrections-20261017/parent-final-preservation-audit.json",
+      "size": 2223,
+      "modifiedAtUtc": "2026-10-22T21:14:18.605771+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-6-4/qualification-20261017-parent/preservation-after.json",
+      "size": 4052,
+      "modifiedAtUtc": "2026-10-22T21:14:18.113740+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-6-4/qualification-20261017-parent/preservation-before.json",
+      "size": 3362419,
+      "modifiedAtUtc": "2026-10-22T21:14:18.121740+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-recovery-20261015/final-preservation-index-controls-v3.json",
+      "size": 936,
+      "modifiedAtUtc": "2026-10-22T21:14:12.269374+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-recovery-20261015/review-fix-preservation-controls-v2.json",
+      "size": 1032,
+      "modifiedAtUtc": "2026-10-22T21:14:12.285375+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-recovery-20261015/final-preservation-command.json",
+      "size": 387,
+      "modifiedAtUtc": "2026-10-22T21:14:12.269374+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-recovery-20261015/final-preservation-v3.json",
+      "size": 3645,
+      "modifiedAtUtc": "2026-10-22T21:14:12.269374+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-recovery-20261015/final-preservation-v2.json",
+      "size": 3645,
+      "modifiedAtUtc": "2026-10-22T21:14:12.269374+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-recovery-20261015/final-preservation.json",
+      "size": 2982,
+      "modifiedAtUtc": "2026-10-22T21:14:12.269374+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-recovery-20261015/final-preservation-index-controls-v2.json",
+      "size": 936,
+      "modifiedAtUtc": "2026-10-22T21:14:12.269374+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-recovery-20261015/parent-verification/preservation-v2.log",
+      "size": 3645,
+      "modifiedAtUtc": "2026-10-22T21:14:12.269374+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-recovery-20261015/parent-verification/preservation-v2-command.json",
+      "size": 537,
+      "modifiedAtUtc": "2026-10-22T21:14:12.269374+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-recovery-20261015/parent-verification/preservation-v3-command.json",
+      "size": 537,
+      "modifiedAtUtc": "2026-10-22T21:14:12.269374+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-recovery-20261015/parent-verification/preservation-v3.log",
+      "size": 3645,
+      "modifiedAtUtc": "2026-10-22T21:14:12.269374+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-12-2-sdk-expiry-scratch/qualification-review3/qualification-audit.log",
+      "size": 1210,
+      "modifiedAtUtc": "2026-10-22T21:14:16.245623+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-12-2-sdk-expiry-scratch/qualification-review5/preservation-verification.json",
+      "size": 334,
+      "modifiedAtUtc": "2026-10-22T21:14:16.277625+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-12-2-sdk-expiry-scratch/qualification-review5/diagnostics/story12-2-review5-boundary-audit.log",
+      "size": 279,
+      "modifiedAtUtc": "2026-10-22T21:14:16.273625+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-successor-enrollment-20261014/preservation-result-v3.json",
+      "size": 8693,
+      "modifiedAtUtc": "2026-10-22T21:14:12.437385+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-successor-enrollment-20261014/preservation-result.json",
+      "size": 8693,
+      "modifiedAtUtc": "2026-10-22T21:14:12.437385+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-successor-enrollment-20261014/preservation-result-v1.json",
+      "size": 8455,
+      "modifiedAtUtc": "2026-10-22T21:14:12.437385+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-4-prerequisite-secrets-protection-20261018/preservation-final.json",
+      "size": 182316,
+      "modifiedAtUtc": "2026-10-22T21:14:12.617396+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/folders-12-2-gates-20261022T151209Z/preservation-interim-result.json",
+      "size": 1693,
+      "modifiedAtUtc": "2026-10-22T21:14:13.829472+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/folders-12-2-gates-20261022T151209Z/preservation-interim.json",
+      "size": 476,
+      "modifiedAtUtc": "2026-10-22T21:14:13.829472+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31210-published-run/historical-preservation.json",
+      "size": 472,
+      "modifiedAtUtc": "2026-10-22T21:14:08.261124+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31210-published-run/review-round-1/prior-attempts-preservation-baseline.json",
+      "size": 10592343,
+      "modifiedAtUtc": "2026-10-22T21:14:08.293126+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31210-published-run/review-round-1/workspace-history-preservation-verification.json",
+      "size": 474,
+      "modifiedAtUtc": "2026-10-22T21:14:08.309127+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31210-published-run/review-round-1/prior-attempts-preservation-verification.json",
+      "size": 278,
+      "modifiedAtUtc": "2026-10-22T21:14:08.293126+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-4-historical-retirement-20261018/verification/preservation-final.json",
+      "size": 882,
+      "modifiedAtUtc": "2026-10-22T21:14:12.597395+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-3-21/qualification-2026-10-20/workspace-preservation.json",
+      "size": 146833,
+      "modifiedAtUtc": "2026-10-22T21:14:17.693713+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31210-blocker-repair-20261014/preservation-result.json",
+      "size": 5546,
+      "modifiedAtUtc": "2026-10-22T21:14:07.085051+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-followup-20261020/verifier-corrections-v1/concurrent-artifact-version-preservation.json",
+      "size": 1466,
+      "modifiedAtUtc": "2026-10-22T21:14:08.537141+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-followup-20261020/verifier-corrections-v1/frozen-intent-preservation.json",
+      "size": 276,
+      "modifiedAtUtc": "2026-10-22T21:14:08.549142+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-followup-20261020/verifier-corrections-v1/final-verifier-source-preservation.json",
+      "size": 8232,
+      "modifiedAtUtc": "2026-10-22T21:14:08.545141+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-followup-20261020/verifier-corrections-v1/preservation.json",
+      "size": 5348,
+      "modifiedAtUtc": "2026-10-22T21:14:08.557142+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-followup-20261020/verifier-corrections-v1/published-archive-preservation.json",
+      "size": 2357,
+      "modifiedAtUtc": "2026-10-22T21:14:08.557142+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-4-p1r-31251-enrollment/preservation-result.json",
+      "size": 4115,
+      "modifiedAtUtc": "2026-10-22T21:14:12.601395+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-4-p1r-31251-enrollment/preservation-before.json",
+      "size": 5569633,
+      "modifiedAtUtc": "2026-10-22T21:14:12.601395+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-4-p1r-31251-enrollment/review-0/preservation-result.json",
+      "size": 1556,
+      "modifiedAtUtc": "2026-10-22T21:14:12.601395+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-4-p1r-31251-enrollment/review-fixes/preservation-command.json",
+      "size": 876,
+      "modifiedAtUtc": "2026-10-22T21:14:12.601395+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-4-p1r-31251-enrollment/review-fixes/primary-preservation-command.json",
+      "size": 881,
+      "modifiedAtUtc": "2026-10-22T21:14:12.601395+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-4-p1r-31251-enrollment/review-fixes/primary-preservation-result.json",
+      "size": 4115,
+      "modifiedAtUtc": "2026-10-22T21:14:12.601395+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/internal-actor-admission-20261022/preservation-final.json",
+      "size": 160,
+      "modifiedAtUtc": "2026-10-22T21:14:16.093613+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/semantic-provider-source-20261022-5e5zvfzj/pinned-dependencies/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/internal-actor-admission-20261022/preservation-check.json",
+      "size": 160,
+      "modifiedAtUtc": "2026-10-22T21:14:16.093613+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/prior-evidence-preservation.json",
+      "size": 497,
+      "modifiedAtUtc": "2026-10-29T18:00:53.637052+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/preservation-after.json",
+      "size": 162660,
+      "modifiedAtUtc": "2026-10-29T17:59:45.750127+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/preservation-before.json",
+      "size": 35874,
+      "modifiedAtUtc": "2026-10-29T17:57:13.723859+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/preservation-decision.template.json",
+      "size": 2547,
+      "modifiedAtUtc": "2026-10-29T18:00:53.633052+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/owner-metadata-credential.template.json",
+      "size": 521,
+      "modifiedAtUtc": "2026-10-29T18:00:53.633052+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/metadata-transport-correction-20261029-f7Z2ajmP/preservation-decision.template.json",
+      "size": 2547,
+      "modifiedAtUtc": "2026-10-29T17:38:10.186434+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/metadata-transport-correction-20261029-f7Z2ajmP/owner-metadata-credential.template.json",
+      "size": 521,
+      "modifiedAtUtc": "2026-10-29T17:38:10.186434+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-key-installation-20261017T100804405564Z/openbao-preservation-before.json",
+      "size": 1943,
+      "modifiedAtUtc": "2026-10-17T10:08:15.655828+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-key-installation-20261017T100804405564Z/openbao-preservation-after.json",
+      "size": 2201,
+      "modifiedAtUtc": "2026-10-17T10:39:30.397588+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-key-installation-20261017T100804405564Z/preservation-result.json",
+      "size": 1874,
+      "modifiedAtUtc": "2026-10-17T10:39:31.449645+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-key-installation-20261017T100804405564Z/preservation-after.json",
+      "size": 175926,
+      "modifiedAtUtc": "2026-10-17T10:39:23.325203+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-key-installation-20261017T100804405564Z/preservation-before.json",
+      "size": 158012,
+      "modifiedAtUtc": "2026-10-17T10:08:06.320574+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/continuation-20261020/validation/correction2/focused-audit.log",
+      "size": 65,
+      "modifiedAtUtc": "2026-10-20T08:18:37.913557+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261020-a/published-packet-audit.log",
+      "size": 0,
+      "modifiedAtUtc": "2026-10-20T15:15:24.100952+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/custody-maintenance-20261027T234210095124Z/operations/preservation.json",
+      "size": 683,
+      "modifiedAtUtc": "2026-10-27T23:57:27.201568+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/owner-acquisition-20261028T131310446398Z/agents-register-preservation-blocker.json",
+      "size": 665,
+      "modifiedAtUtc": "2026-10-28T13:13:19.790227+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/owner-acquisition-20261028T131310446398Z/completed-export-journal-preservation.json",
+      "size": 1783,
+      "modifiedAtUtc": "2026-10-28T13:13:30.843144+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/6-5d-simplification/current-preservation-cases.json",
+      "size": 504,
+      "modifiedAtUtc": "2026-10-29T12:05:07.657221+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-4-prerequisite-p1r-source-readiness-20261017/cleanup-and-preservation.json",
+      "size": 2328,
+      "modifiedAtUtc": "2026-10-29T12:05:19.002118+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31150-published-run/execution-b944559fd0f3413696db48bcfc585f52/archive-preservation.json",
+      "size": 13885,
+      "modifiedAtUtc": "2026-10-29T12:05:08.537252+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31150-published-run/execution-325e3c9327df4810941981b5882e3a70/archive-preservation.json",
+      "size": 13963,
+      "modifiedAtUtc": "2026-10-29T12:05:08.173240+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31150-published-run/natural-reminder-smoke-safe/smoke-cases/tenant-preservation.json",
+      "size": 313740,
+      "modifiedAtUtc": "2026-10-29T12:05:09.545288+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31150-published-run/correction-smokes-safe/p1r-operational-complete-smoke-04/smoke-cases/tenant-preservation.json",
+      "size": 315287,
+      "modifiedAtUtc": "2026-10-29T12:05:08.049235+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31150-published-run/execution-c497b88cb2e5436ebddb37e33f1fcb64/archive-preservation.json",
+      "size": 13885,
+      "modifiedAtUtc": "2026-10-29T12:05:08.913266+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-published-run/final-attempt/spec-frozen-preservation-v4.json",
+      "size": 133,
+      "modifiedAtUtc": "2026-10-29T12:05:17.421567+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-published-run/final-attempt/spec-final-notes-preservation-v4.json",
+      "size": 242,
+      "modifiedAtUtc": "2026-10-29T12:05:17.417567+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-published-run/completed-v3-rejected-import/reminder-smoke-v3-d158cf87ed27489d9025b04c8e13f4f7/case-tenant-preservation.json",
+      "size": 535334,
+      "modifiedAtUtc": "2026-10-29T12:05:16.237525+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-published-run/completed-v3-rejected-import/reminder-smoke-92a4e8ab7103441597fa053337ab0b2a/case-tenant-preservation.json",
+      "size": 531579,
+      "modifiedAtUtc": "2026-10-29T12:05:16.205524+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-published-run/reconciliation/shared-preservation-after-application-85c980788dbb4ff388ba040e95e1087b.json",
+      "size": 1395,
+      "modifiedAtUtc": "2026-10-29T12:05:18.009587+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-published-run/canonical-resume-20261018T210839Z-b3f330/preservation-after.json",
+      "size": 5012,
+      "modifiedAtUtc": "2026-10-29T12:05:13.305422+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-published-run/canonical-resume-20261018T210839Z-b3f330/preservation-before.json",
+      "size": 5652832,
+      "modifiedAtUtc": "2026-10-29T12:05:13.325423+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-published-run/canonical-resume-20261018T210839Z-b3f330/retained-canonical/reminder-smoke-v3-d158cf87ed27489d9025b04c8e13f4f7/case-tenant-preservation.json",
+      "size": 535334,
+      "modifiedAtUtc": "2026-10-29T12:05:14.501464+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31251-published-run/canonical-resume-20261018T210839Z-b3f330/retained-canonical/reminder-smoke-92a4e8ab7103441597fa053337ab0b2a/case-tenant-preservation.json",
+      "size": 531579,
+      "modifiedAtUtc": "2026-10-29T12:05:14.469463+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/latest-packages-2026-10-08/authoritative-audit.log",
+      "size": 2563,
+      "modifiedAtUtc": "2026-10-29T12:05:19.082121+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-tooling-hardening-20261016/final-preservation.json",
+      "size": 5090027,
+      "modifiedAtUtc": "2026-10-29T12:05:18.890114+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-canonical-reconciliation-20261016/refreshed-evidence-ingestion-audit.log",
+      "size": 1224,
+      "modifiedAtUtc": "2026-10-29T12:05:18.097590+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-canonical-reconciliation-20261016/starting-preservation.json",
+      "size": 62661647,
+      "modifiedAtUtc": "2026-10-29T12:05:18.265596+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-canonical-reconciliation-20261016/new-evidence-ingestion-audit.log",
+      "size": 770,
+      "modifiedAtUtc": "2026-10-29T12:05:18.069589+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-canonical-reconciliation-20261016/final-preservation.json",
+      "size": 275,
+      "modifiedAtUtc": "2026-10-29T12:05:18.053589+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-6-4/oq8-correction-20261017/parent-arrival-preservation-audit.json",
+      "size": 50223,
+      "modifiedAtUtc": "2026-10-29T12:05:19.826147+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-6-4/oq8-correction-20261017/implementation-final-preservation.json",
+      "size": 62863,
+      "modifiedAtUtc": "2026-10-29T12:05:19.818147+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-6-4/runtime-corrections-20261017/parent-preservation-audit.json",
+      "size": 623,
+      "modifiedAtUtc": "2026-10-29T12:05:20.870184+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-6-4/runtime-corrections-20261017/parent-final-preservation-audit.json",
+      "size": 2223,
+      "modifiedAtUtc": "2026-10-29T12:05:20.862184+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-6-4/qualification-20261017-parent/preservation-after.json",
+      "size": 4052,
+      "modifiedAtUtc": "2026-10-29T12:05:20.210160+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-6-4/qualification-20261017-parent/preservation-before.json",
+      "size": 3362419,
+      "modifiedAtUtc": "2026-10-29T12:05:20.214161+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-recovery-20261015/final-preservation-index-controls-v3.json",
+      "size": 936,
+      "modifiedAtUtc": "2026-10-29T12:05:18.381600+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-recovery-20261015/review-fix-preservation-controls-v2.json",
+      "size": 1032,
+      "modifiedAtUtc": "2026-10-29T12:05:18.413601+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-recovery-20261015/final-preservation-command.json",
+      "size": 387,
+      "modifiedAtUtc": "2026-10-29T12:05:18.381600+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-recovery-20261015/final-preservation-v3.json",
+      "size": 3645,
+      "modifiedAtUtc": "2026-10-29T12:05:18.381600+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-recovery-20261015/final-preservation-v2.json",
+      "size": 3645,
+      "modifiedAtUtc": "2026-10-29T12:05:18.381600+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-recovery-20261015/final-preservation.json",
+      "size": 2982,
+      "modifiedAtUtc": "2026-10-29T12:05:18.381600+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-recovery-20261015/final-preservation-index-controls-v2.json",
+      "size": 936,
+      "modifiedAtUtc": "2026-10-29T12:05:18.381600+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-recovery-20261015/parent-verification/preservation-v2.log",
+      "size": 3645,
+      "modifiedAtUtc": "2026-10-29T12:05:18.385600+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-recovery-20261015/parent-verification/preservation-v2-command.json",
+      "size": 537,
+      "modifiedAtUtc": "2026-10-29T12:05:18.385600+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-recovery-20261015/parent-verification/preservation-v3-command.json",
+      "size": 537,
+      "modifiedAtUtc": "2026-10-29T12:05:18.385600+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-recovery-20261015/parent-verification/preservation-v3.log",
+      "size": 3645,
+      "modifiedAtUtc": "2026-10-29T12:05:18.385600+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-successor-enrollment-20261014/preservation-result-v3.json",
+      "size": 8693,
+      "modifiedAtUtc": "2026-10-29T12:05:18.718108+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-successor-enrollment-20261014/preservation-result.json",
+      "size": 8693,
+      "modifiedAtUtc": "2026-10-29T12:05:18.718108+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-successor-enrollment-20261014/preservation-result-v1.json",
+      "size": 8455,
+      "modifiedAtUtc": "2026-10-29T12:05:18.718108+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-4-prerequisite-secrets-protection-20261018/preservation-final.json",
+      "size": 182316,
+      "modifiedAtUtc": "2026-10-29T12:05:19.018119+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31210-published-run/historical-preservation.json",
+      "size": 472,
+      "modifiedAtUtc": "2026-10-29T12:05:12.809404+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31210-published-run/review-round-1/prior-attempts-preservation-baseline.json",
+      "size": 10592343,
+      "modifiedAtUtc": "2026-10-29T12:05:12.973410+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31210-published-run/review-round-1/workspace-history-preservation-verification.json",
+      "size": 474,
+      "modifiedAtUtc": "2026-10-29T12:05:12.981410+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31210-published-run/review-round-1/prior-attempts-preservation-verification.json",
+      "size": 278,
+      "modifiedAtUtc": "2026-10-29T12:05:12.973410+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-4-historical-retirement-20261018/verification/preservation-final.json",
+      "size": 882,
+      "modifiedAtUtc": "2026-10-29T12:05:18.974117+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-1-p1r-31210-blocker-repair-20261014/preservation-result.json",
+      "size": 5546,
+      "modifiedAtUtc": "2026-10-29T12:05:12.061378+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-4-p1r-31251-enrollment/preservation-result.json",
+      "size": 4115,
+      "modifiedAtUtc": "2026-10-29T12:05:18.994118+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-4-p1r-31251-enrollment/preservation-before.json",
+      "size": 5569633,
+      "modifiedAtUtc": "2026-10-29T12:05:18.994118+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-4-p1r-31251-enrollment/review-0/preservation-result.json",
+      "size": 1556,
+      "modifiedAtUtc": "2026-10-29T12:05:18.998118+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-4-p1r-31251-enrollment/review-fixes/preservation-command.json",
+      "size": 876,
+      "modifiedAtUtc": "2026-10-29T12:05:18.998118+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-4-p1r-31251-enrollment/review-fixes/primary-preservation-command.json",
+      "size": 881,
+      "modifiedAtUtc": "2026-10-29T12:05:18.998118+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/f1-local-20261029-inputs/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/6-4-p1r-31251-enrollment/review-fixes/primary-preservation-result.json",
+      "size": 4115,
+      "modifiedAtUtc": "2026-10-29T12:05:18.998118+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/next-baseline-reconciliation-20261028T070042156838Z/original-evidence-preservation.json",
+      "size": 241,
+      "modifiedAtUtc": "2026-10-28T07:00:48.999081+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/next-baseline-reconciliation-20261028T070042156838Z/key-and-provider-preservation-retained.json",
+      "size": 8229,
+      "modifiedAtUtc": "2026-10-28T07:00:49.011082+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/provider-preservation-after.json",
+      "size": 6068,
+      "modifiedAtUtc": "2026-10-29T19:58:04.009837+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/preservation-result.json",
+      "size": 2048,
+      "modifiedAtUtc": "2026-10-29T19:58:04.009837+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/preservation-after.json",
+      "size": 180615,
+      "modifiedAtUtc": "2026-10-29T19:58:04.009837+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/preservation-before.json",
+      "size": 180615,
+      "modifiedAtUtc": "2026-10-29T19:58:04.009837+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/preservation-decision.template.json",
+      "size": 2547,
+      "modifiedAtUtc": "2026-10-29T19:58:04.009837+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/owner-metadata-credential.template.json",
+      "size": 521,
+      "modifiedAtUtc": "2026-10-29T19:58:04.009837+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/next-baseline-followup-20261028T095507027119Z/completed-export-journal-preservation.json",
+      "size": 1783,
+      "modifiedAtUtc": "2026-10-28T09:58:08.398497+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/runtime-foundations-final-20261017-_bv3fzwb/openbao-preservation-before.json",
+      "size": 1943,
+      "modifiedAtUtc": "2026-10-17T10:08:15.655828+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/runtime-foundations-final-20261017-_bv3fzwb/openbao-preservation-after.json",
+      "size": 2201,
+      "modifiedAtUtc": "2026-10-17T10:41:28.970620+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/runtime-foundations-final-20261017-_bv3fzwb/preservation-result.json",
+      "size": 1874,
+      "modifiedAtUtc": "2026-10-17T10:41:30.002675+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/runtime-foundations-final-20261017-_bv3fzwb/preservation-after.json",
+      "size": 175926,
+      "modifiedAtUtc": "2026-10-17T10:41:21.846239+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/runtime-foundations-final-20261017-_bv3fzwb/preservation-before.json",
+      "size": 158012,
+      "modifiedAtUtc": "2026-10-17T10:08:06.320574+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-evidence/folders-story117-platform-qualification-20261016T063132Z/current-candidate-preservation.json",
+      "size": 303,
+      "modifiedAtUtc": "2026-10-16T06:46:39.870113+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-evidence/folders-story117-platform-qualification-20261016T063132Z/historical-preservation.json",
+      "size": 132,
+      "modifiedAtUtc": "2026-10-16T06:59:35.783296+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-evidence/folders-story117-platform-qualification-20261016T063132Z/final-packet-preservation-verify.log",
+      "size": 142,
+      "modifiedAtUtc": "2026-10-16T06:59:35.871299+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-evidence/folders-story117-platform-qualification-20261016T063132Z/final-packet-preservation-verify.command.json",
+      "size": 417,
+      "modifiedAtUtc": "2026-10-16T06:59:35.875299+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261014t125138z-s427-approved-recovery-run/preservation-before.json",
+      "size": 11604,
+      "modifiedAtUtc": "2026-10-14T12:59:40.805139+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261023t085529z-s427-recovery-command-preparation/preservation-before.json",
+      "size": 18433,
+      "modifiedAtUtc": "2026-10-23T08:59:33.819623+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261023t085529z-s427-recovery-command-preparation/revision-4/preservation-audit.json",
+      "size": 9899,
+      "modifiedAtUtc": "2026-10-23T12:29:10.443619+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261023t085529z-s427-recovery-command-preparation/revision-2/preservation-audit.json",
+      "size": 9536,
+      "modifiedAtUtc": "2026-10-23T10:24:24.964752+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261023t085529z-s427-recovery-command-preparation/revision-3/preservation-audit.json",
+      "size": 9861,
+      "modifiedAtUtc": "2026-10-23T12:24:17.753370+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261015t140709z-s427-expired-recovery-preparation/historical-preservation-before.json",
+      "size": 36420,
+      "modifiedAtUtc": "2026-10-15T14:10:44.379670+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261015t140709z-s427-expired-recovery-preparation/closeout-20261015t143451z-4fbeb896/root-historical-preservation-before.json",
+      "size": 36420,
+      "modifiedAtUtc": "2026-10-15T14:37:55.712857+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261014-prerequisite-readonly/preservation-baseline.json",
+      "size": 11293,
+      "modifiedAtUtc": "2026-10-14T11:16:54.377747+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261014-prerequisite-readonly/first-prerequisite-packet-preservation.json",
+      "size": 2486,
+      "modifiedAtUtc": "2026-10-14T11:45:48.345651+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261015t112105z-s427-timesheets-signed-records-reconcile/preservation-after.json",
+      "size": 2471,
+      "modifiedAtUtc": "2026-10-15T11:25:50.428685+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261015t112105z-s427-timesheets-signed-records-reconcile/preservation-before.json",
+      "size": 4875,
+      "modifiedAtUtc": "2026-10-15T11:23:40.205874+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261015t084001z-s427-signed-cleanup-continuation/preservation-before.json",
+      "size": 17702,
+      "modifiedAtUtc": "2026-10-15T08:41:27.500677+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261015t084001z-s427-signed-cleanup-continuation/historical-checkpoint-preservation.json",
+      "size": 21924,
+      "modifiedAtUtc": "2026-10-15T08:52:52.318823+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261014t144239z-s427-accepted-oidc-continuation/preservation-after.json",
+      "size": 30660,
+      "modifiedAtUtc": "2026-10-14T15:40:28.871864+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261014t144239z-s427-accepted-oidc-continuation/preservation-before.json",
+      "size": 29388,
+      "modifiedAtUtc": "2026-10-14T14:45:52.210345+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261015t084153z-s427-signed-cleanup-resume/preservation-after.json",
+      "size": 3152,
+      "modifiedAtUtc": "2026-10-15T08:53:53.629434+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261015t084153z-s427-signed-cleanup-resume/initial-preservation.json",
+      "size": 2888,
+      "modifiedAtUtc": "2026-10-15T08:41:53.597578+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261015t110948z-s427-signed-gate-final-validation/before-final-checkpoint-preservation.json",
+      "size": 1264,
+      "modifiedAtUtc": "2026-10-15T11:29:55.566320+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261022t195505z-s427-prerequisite-reconciliation/initial-preservation.json",
+      "size": 31306,
+      "modifiedAtUtc": "2026-10-22T19:55:47.633337+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261015t101936z-s427-timesheets-readonly-resume/preservation-after.json",
+      "size": 5666,
+      "modifiedAtUtc": "2026-10-15T10:23:40.867924+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261015t101936z-s427-timesheets-readonly-resume/preservation-before.json",
+      "size": 9890,
+      "modifiedAtUtc": "2026-10-15T10:19:37.005009+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261015t101936z-s427-timesheets-readonly-resume/final-preservation.json",
+      "size": 5085,
+      "modifiedAtUtc": "2026-10-15T10:25:02.026251+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261014t120527z-s427-approved-recovery-signing/preservation-before.json",
+      "size": 9020,
+      "modifiedAtUtc": "2026-10-14T12:08:18.952634+00:00"
+    },
+    {
+      "path": "/home/administrator/evidence/hexalith-memories/C1.16/20261006T125948Z-dbbe89368caa/capture-state-20261006T144023Z-a6a1f4b8/full-archive-snapshot-inventory.json",
+      "size": 278025,
+      "modifiedAtUtc": "2026-10-06T14:50:12.110036+00:00"
+    },
+    {
+      "path": "/home/administrator/evidence/hexalith-memories/C1.16/20261006T125948Z-dbbe89368caa/capture-pool-20261006T150600Z-3c2f874a/full-archive-snapshot-inventory.json",
+      "size": 355974,
+      "modifiedAtUtc": "2026-10-06T15:18:04.091283+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-recovery-evidence/ext-secrets-1-delivery-20261014/preservation-baseline.json",
+      "size": 1540,
+      "modifiedAtUtc": "2026-10-14T13:02:58.815842+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-recovery-evidence/ext-secrets-1-delivery-20261014/preservation-observations-after-review.json",
+      "size": 2388,
+      "modifiedAtUtc": "2026-10-14T13:35:06.924296+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261016t063900z-native-measurement-supplement/preservation-after.json",
+      "size": 291,
+      "modifiedAtUtc": "2026-10-16T06:55:47.160523+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261016t063900z-native-measurement-supplement/preservation-before.json",
+      "size": 139661,
+      "modifiedAtUtc": "2026-10-16T06:31:23.165268+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261016t103632z-native-enrollment-execution-revision-sealed/git-preservation-before.json",
+      "size": 3681,
+      "modifiedAtUtc": "2026-10-16T11:08:15.738858+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261016t103632z-native-enrollment-execution-revision-sealed/concurrent-preservation-drift-v1.json",
+      "size": 517,
+      "modifiedAtUtc": "2026-10-16T11:08:15.734857+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261016t103632z-native-enrollment-execution-revision-sealed/preservation-interim.json",
+      "size": 128,
+      "modifiedAtUtc": "2026-10-16T11:08:15.738858+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261016t103632z-native-enrollment-execution-revision-sealed/preparation-preservation-after.json",
+      "size": 250,
+      "modifiedAtUtc": "2026-10-16T11:08:47.504331+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261016t103632z-native-enrollment-execution-revision-sealed/preservation-after.json",
+      "size": 158420,
+      "modifiedAtUtc": "2026-10-16T11:08:15.738858+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261016t103632z-native-enrollment-execution-revision-sealed/CONCURRENT-PRESERVATION-v1.md",
+      "size": 1774,
+      "modifiedAtUtc": "2026-10-16T11:08:15.734857+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261016t103632z-native-enrollment-execution-revision-sealed/preservation-before.json",
+      "size": 158153,
+      "modifiedAtUtc": "2026-10-16T11:08:15.738858+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261015t162756z/preservation-inventory.json",
+      "size": 81855,
+      "modifiedAtUtc": "2026-10-15T16:37:35.955789+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261016t103632z-native-enrollment-execution-revision/git-preservation-before.json",
+      "size": 3681,
+      "modifiedAtUtc": "2026-10-16T10:39:36.877972+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261016t103632z-native-enrollment-execution-revision/concurrent-preservation-drift-v1.json",
+      "size": 517,
+      "modifiedAtUtc": "2026-10-16T10:57:43.010947+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261016t103632z-native-enrollment-execution-revision/preservation-interim.json",
+      "size": 128,
+      "modifiedAtUtc": "2026-10-16T10:42:50.589362+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261016t103632z-native-enrollment-execution-revision/preservation-after.json",
+      "size": 158420,
+      "modifiedAtUtc": "2026-10-16T11:00:19.082218+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261016t103632z-native-enrollment-execution-revision/CONCURRENT-PRESERVATION-v1.md",
+      "size": 1774,
+      "modifiedAtUtc": "2026-10-16T10:59:15.019160+00:00"
+    },
+    {
+      "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261016t103632z-native-enrollment-execution-revision/preservation-before.json",
+      "size": 158153,
+      "modifiedAtUtc": "2026-10-16T10:36:32.238884+00:00"
+    }
+  ]
+}

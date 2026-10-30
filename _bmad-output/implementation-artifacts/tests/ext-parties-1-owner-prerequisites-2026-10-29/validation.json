@@ -1,0 +1,123 @@
+{
+  "verifiedAtUtc": "2026-10-29T12:39:11.601794+00:00",
+  "allPassed": true,
+  "checks": [
+    {
+      "name": "protected byte preservation",
+      "passed": true,
+      "detail": {
+        "checkedFiles": 374,
+        "drift": []
+      }
+    },
+    {
+      "name": "approved clause hash",
+      "passed": true,
+      "detail": "bd43978bdba457642c05b48b6bf56a3a38c044ff189a797d4ceba1c5a465aa46"
+    },
+    {
+      "name": "handoff local links",
+      "passed": true,
+      "detail": {
+        "links": 17,
+        "missing": []
+      }
+    },
+    {
+      "name": "table 1",
+      "passed": true,
+      "detail": {
+        "rows": 9,
+        "columnCounts": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      }
+    },
+    {
+      "name": "table 2",
+      "passed": true,
+      "detail": {
+        "rows": 7,
+        "columnCounts": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "name": "evidence JSON parsing",
+      "passed": true,
+      "detail": {
+        "files": 8
+      }
+    },
+    {
+      "name": "public read query exits",
+      "passed": true,
+      "detail": {
+        "count": 8,
+        "exitCodes": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "public query pinning",
+      "passed": true,
+      "detail": "Explicit target/context/timeouts and GET only"
+    },
+    {
+      "name": "exact design input bytes",
+      "passed": true,
+      "detail": {
+        "files": 5
+      }
+    },
+    {
+      "name": "qualification remains stopped",
+      "passed": true,
+      "detail": "No acceptance, dates, installed history hashes or availability supplied"
+    },
+    {
+      "name": "Live static refusal",
+      "passed": true,
+      "detail": "Source inspected only; no verifier mode invoked"
+    },
+    {
+      "name": "new file whitespace",
+      "passed": true,
+      "detail": "CRLF, terminal newline and no trailing whitespace"
+    },
+    {
+      "name": "git diff --check",
+      "passed": true,
+      "detail": {
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    }
+  ],
+  "meaning": "Document/evidence/preservation validation only; no tests or installed qualification run",
+  "qualificationExecuted": false
+}

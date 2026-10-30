@@ -1,0 +1,715 @@
+{
+  "recordedAtUtc": "2026-10-30T05:58:53.991915+00:00",
+  "cutoffUtc": "2026-10-29T17:37:08Z",
+  "method": "Public-document filename/stat discovery only; no credential, snapshot or key payload reads. Excludes build/test/source trees. mtime selects candidates, not proof observation time.",
+  "counts": {
+    "/home/administrator/hexalith-secrets-evidence/ext-secrets-1": 161842,
+    "/home/administrator/hexalith-recovery-evidence": 444,
+    "/home/administrator/hexalith-evidence": 3,
+    "/home/administrator/hexalith-management-evidence": 71,
+    "/home/administrator/hexalith-admin-exposure-evidence": 43,
+    "/home/administrator/evidence": 65
+  },
+  "candidates": [
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/evidence-manifest.json",
+      "modifiedAtUtc": "2026-10-29T20:03:09.092555+00:00",
+      "size": 4141
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/completion-verification.json",
+      "modifiedAtUtc": "2026-10-29T20:03:09.088555+00:00",
+      "size": 1412
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/external-source-reconciliation.json",
+      "modifiedAtUtc": "2026-10-29T20:02:24.911041+00:00",
+      "size": 1969
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/root-inspection.json",
+      "modifiedAtUtc": "2026-10-29T20:02:16.759362+00:00",
+      "size": 929
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/commands.json",
+      "modifiedAtUtc": "2026-10-29T20:01:07.878571+00:00",
+      "size": 2951
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/blockers.json",
+      "modifiedAtUtc": "2026-10-29T20:01:07.878571+00:00",
+      "size": 5479
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/artifact-sha256.json",
+      "modifiedAtUtc": "2026-10-29T19:59:58.848148+00:00",
+      "size": 18063
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/final-artifact-check.json",
+      "modifiedAtUtc": "2026-10-29T19:59:58.844147+00:00",
+      "size": 393
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/HANDOFF.md",
+      "modifiedAtUtc": "2026-10-29T19:59:27.666651+00:00",
+      "size": 3452
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/forward-cleanup.json",
+      "modifiedAtUtc": "2026-10-29T19:59:27.666651+00:00",
+      "size": 169
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/installation-evidence.json",
+      "modifiedAtUtc": "2026-10-29T19:59:27.658650+00:00",
+      "size": 1225
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/commands.json",
+      "modifiedAtUtc": "2026-10-29T19:59:27.658650+00:00",
+      "size": 1666
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/discovery.json",
+      "modifiedAtUtc": "2026-10-29T19:59:27.658650+00:00",
+      "size": 3944
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/credential-exposure-check.json",
+      "modifiedAtUtc": "2026-10-29T19:58:04.017838+00:00",
+      "size": 191
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/verification.json",
+      "modifiedAtUtc": "2026-10-29T19:58:04.017838+00:00",
+      "size": 2258
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/remaining-inputs.json",
+      "modifiedAtUtc": "2026-10-29T19:58:04.013837+00:00",
+      "size": 23885
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/installation-references.json",
+      "modifiedAtUtc": "2026-10-29T19:58:04.009837+00:00",
+      "size": 3551
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/requested-spec.md",
+      "modifiedAtUtc": "2026-10-29T19:58:04.009837+00:00",
+      "size": 62524
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/provider-preservation-after.json",
+      "modifiedAtUtc": "2026-10-29T19:58:04.009837+00:00",
+      "size": 6068
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/preservation-result.json",
+      "modifiedAtUtc": "2026-10-29T19:58:04.009837+00:00",
+      "size": 2048
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/source-provenance.json",
+      "modifiedAtUtc": "2026-10-29T19:58:04.009837+00:00",
+      "size": 761
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/preservation-after.json",
+      "modifiedAtUtc": "2026-10-29T19:58:04.009837+00:00",
+      "size": 180615
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/preservation-before.json",
+      "modifiedAtUtc": "2026-10-29T19:58:04.009837+00:00",
+      "size": 180615
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/preservation-decision.template.json",
+      "modifiedAtUtc": "2026-10-29T19:58:04.009837+00:00",
+      "size": 2547
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/health.json",
+      "modifiedAtUtc": "2026-10-29T19:58:04.009837+00:00",
+      "size": 6272
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/blockers.json",
+      "modifiedAtUtc": "2026-10-29T19:58:04.009837+00:00",
+      "size": 3001
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/owner-metadata-credential.template.json",
+      "modifiedAtUtc": "2026-10-29T19:58:04.009837+00:00",
+      "size": 521
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/runtime-reference.json",
+      "modifiedAtUtc": "2026-10-29T19:57:49.773177+00:00",
+      "size": 3294
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/public-metadata-verification.json",
+      "modifiedAtUtc": "2026-10-29T19:57:23.605026+00:00",
+      "size": 15221
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/transaction.json",
+      "modifiedAtUtc": "2026-10-29T19:55:34.743695+00:00",
+      "size": 12080
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/native-configuration.after.json",
+      "modifiedAtUtc": "2026-10-29T19:55:34.731695+00:00",
+      "size": 2201
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/reversal-capabilities.public.json",
+      "modifiedAtUtc": "2026-10-29T19:55:27.867314+00:00",
+      "size": 2083
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/reversal-readback-policy.public.json",
+      "modifiedAtUtc": "2026-10-29T19:55:27.843313+00:00",
+      "size": 2043
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/reversal-write.public.json",
+      "modifiedAtUtc": "2026-10-29T19:55:27.823311+00:00",
+      "size": 3
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/pre-reversal-policy.public.json",
+      "modifiedAtUtc": "2026-10-29T19:55:27.779309+00:00",
+      "size": 2603
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/metadata-verification-command.json",
+      "modifiedAtUtc": "2026-10-29T19:55:26.635246+00:00",
+      "size": 778
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/grant-readback-policy.public.json",
+      "modifiedAtUtc": "2026-10-29T19:55:26.627245+00:00",
+      "size": 2603
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/grant-write.public.json",
+      "modifiedAtUtc": "2026-10-29T19:55:26.599244+00:00",
+      "size": 3
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/immediate-prewrite-policy.public.json",
+      "modifiedAtUtc": "2026-10-29T19:55:26.555241+00:00",
+      "size": 2043
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/native-configuration.before.json",
+      "modifiedAtUtc": "2026-10-29T19:55:26.535240+00:00",
+      "size": 2201
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/preflight-capabilities.public.json",
+      "modifiedAtUtc": "2026-10-29T19:55:18.720716+00:00",
+      "size": 2083
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/preflight-policy.public.json",
+      "modifiedAtUtc": "2026-10-29T19:55:18.696715+00:00",
+      "size": 2043
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/preflight-provider-health.public.json",
+      "modifiedAtUtc": "2026-10-29T19:55:18.672714+00:00",
+      "size": 302
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/preflight-operator.public.json",
+      "modifiedAtUtc": "2026-10-29T19:55:18.652713+00:00",
+      "size": 480
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/approval.json",
+      "modifiedAtUtc": "2026-10-29T19:54:59.839663+00:00",
+      "size": 1317
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/before/owner-decisions.json",
+      "modifiedAtUtc": "2026-10-29T19:54:59.839663+00:00",
+      "size": 93445
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/observations/observation-2092c56ff424462898fb5354c09d94e0.json",
+      "modifiedAtUtc": "2026-10-29T19:54:39.808465+00:00",
+      "size": 190679
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/observations/inventory-restricted-registry-observation.json",
+      "modifiedAtUtc": "2026-10-29T19:54:38.648399+00:00",
+      "size": 1132
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/observations/native-enrollment-receipts.json",
+      "modifiedAtUtc": "2026-10-29T19:54:37.196316+00:00",
+      "size": 1656
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/observations/run.json",
+      "modifiedAtUtc": "2026-10-29T19:54:26.203688+00:00",
+      "size": 345
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/observations/native-helper-pins.json",
+      "modifiedAtUtc": "2026-10-29T19:54:26.155686+00:00",
+      "size": 11107
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/observations/execution-source-22e646a342504df59c5da7aeec7b80bb.json",
+      "modifiedAtUtc": "2026-10-29T19:54:25.963675+00:00",
+      "size": 740
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/observation-command.json",
+      "modifiedAtUtc": "2026-10-29T19:54:25.911672+00:00",
+      "size": 754
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/final-evidence-sha256.json",
+      "modifiedAtUtc": "2026-10-29T18:19:44.751949+00:00",
+      "size": 20777
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/HANDOFF.md",
+      "modifiedAtUtc": "2026-10-29T18:19:44.747949+00:00",
+      "size": 3827
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/local-candidate-commit.json",
+      "modifiedAtUtc": "2026-10-29T18:19:44.747949+00:00",
+      "size": 519
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/root-final-verification.json",
+      "modifiedAtUtc": "2026-10-29T18:18:52.282815+00:00",
+      "size": 2194
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/evidence-manifest.json",
+      "modifiedAtUtc": "2026-10-29T18:10:15.311589+00:00",
+      "size": 5365
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/local-verification.json",
+      "modifiedAtUtc": "2026-10-29T18:10:15.311589+00:00",
+      "size": 6887
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/canonical-verification.json",
+      "modifiedAtUtc": "2026-10-29T18:10:15.307589+00:00",
+      "size": 1060
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/later-source-records.json",
+      "modifiedAtUtc": "2026-10-29T18:07:41.733364+00:00",
+      "size": 2373
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/blockers.json",
+      "modifiedAtUtc": "2026-10-29T18:07:41.733364+00:00",
+      "size": 6561
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/hexalith-keys-operator.proposed.hcl",
+      "modifiedAtUtc": "2026-10-29T18:07:41.725364+00:00",
+      "size": 1899
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/access-correction.json",
+      "modifiedAtUtc": "2026-10-29T18:07:41.725364+00:00",
+      "size": 10628
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/commands.json",
+      "modifiedAtUtc": "2026-10-29T18:07:41.725364+00:00",
+      "size": 8067
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/before/owner-decisions.pre-update.json",
+      "modifiedAtUtc": "2026-10-29T18:07:41.725364+00:00",
+      "size": 85126
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/source-records.json",
+      "modifiedAtUtc": "2026-10-29T18:04:01.163611+00:00",
+      "size": 3505
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/hexalith-keys-operator.before.hcl",
+      "modifiedAtUtc": "2026-10-29T18:04:01.159611+00:00",
+      "size": 1371
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/evidence-manifest.json",
+      "modifiedAtUtc": "2026-10-29T18:01:47.146437+00:00",
+      "size": 19923
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/forward-cleanup.json",
+      "modifiedAtUtc": "2026-10-29T18:01:47.142437+00:00",
+      "size": 124
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/public-evidence-scan.json",
+      "modifiedAtUtc": "2026-10-29T18:01:47.118436+00:00",
+      "size": 336
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/owner-return-required.json",
+      "modifiedAtUtc": "2026-10-29T18:01:47.110435+00:00",
+      "size": 2703
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/tested-source-pins.json",
+      "modifiedAtUtc": "2026-10-29T18:00:53.641052+00:00",
+      "size": 491
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/prior-evidence-preservation.json",
+      "modifiedAtUtc": "2026-10-29T18:00:53.637052+00:00",
+      "size": 497
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/remaining-inputs.json",
+      "modifiedAtUtc": "2026-10-29T18:00:53.633052+00:00",
+      "size": 27382
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/commands.json",
+      "modifiedAtUtc": "2026-10-29T18:00:53.633052+00:00",
+      "size": 2834
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/preservation-decision.template.json",
+      "modifiedAtUtc": "2026-10-29T18:00:53.633052+00:00",
+      "size": 2547
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/blockers.json",
+      "modifiedAtUtc": "2026-10-29T18:00:53.633052+00:00",
+      "size": 2517
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/owner-metadata-credential.template.json",
+      "modifiedAtUtc": "2026-10-29T18:00:53.633052+00:00",
+      "size": 521
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/authenticated-principal-observations.json",
+      "modifiedAtUtc": "2026-10-29T18:00:04.647182+00:00",
+      "size": 2743
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/operator-effective-capabilities.public.json",
+      "modifiedAtUtc": "2026-10-29T18:00:04.643181+00:00",
+      "size": 2083
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/operator-accessor-identity.public.json",
+      "modifiedAtUtc": "2026-10-29T18:00:04.627181+00:00",
+      "size": 569
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/verification.json",
+      "modifiedAtUtc": "2026-10-29T17:59:47.874215+00:00",
+      "size": 1513
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/installation-references.json",
+      "modifiedAtUtc": "2026-10-29T17:59:47.870214+00:00",
+      "size": 2794
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/health.json",
+      "modifiedAtUtc": "2026-10-29T17:59:47.866215+00:00",
+      "size": 3753
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/preservation-after.json",
+      "modifiedAtUtc": "2026-10-29T17:59:45.750127+00:00",
+      "size": 162660
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/runtime-reference.json",
+      "modifiedAtUtc": "2026-10-29T17:59:44.606080+00:00",
+      "size": 2758
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/ext-secrets-1-custody-runtime-29a4ace57e04.runtime-reference.json",
+      "modifiedAtUtc": "2026-10-29T17:59:44.606080+00:00",
+      "size": 2905
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/ext-secrets-1-inventory-runtime.runtime-reference.json",
+      "modifiedAtUtc": "2026-10-29T17:59:44.402071+00:00",
+      "size": 2905
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/operator-public-field-names.json",
+      "modifiedAtUtc": "2026-10-29T17:59:33.625628+00:00",
+      "size": 694
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/authenticated-access-observations.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.952485+00:00",
+      "size": 15371
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/kubernetes-role-openbao-snapshot.public.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.948485+00:00",
+      "size": 782
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/kubernetes-role-ext-secrets-1-registry-pki.public.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.932485+00:00",
+      "size": 858
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/kubernetes-role-deployment-seal-provisioner.public.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.912484+00:00",
+      "size": 763
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/kubernetes-role-cert-manager-internal-pki.public.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.896483+00:00",
+      "size": 809
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/kubernetes-role-list.public.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.880482+00:00",
+      "size": 349
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/policy-openbao-snapshot.public.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.864482+00:00",
+      "size": 512
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/policy-hexalith-memories-runtime.public.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.848481+00:00",
+      "size": 535
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/policy-hexalith-memories-access-telemetry.public.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.832480+00:00",
+      "size": 553
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/policy-hexalith-keys-operator.public.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.816480+00:00",
+      "size": 2043
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/policy-ext-secrets-1-registry-pki.public.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.800479+00:00",
+      "size": 530
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/policy-ext-secrets-1-inventory-metadata-read.public.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.784478+00:00",
+      "size": 876
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/policy-ext-secrets-1-hmac-data-read.public.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.768478+00:00",
+      "size": 1230
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/policy-deployment-seal-tache-ai-staging-k8s.public.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.752477+00:00",
+      "size": 780
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/policy-deployment-seal-provisioner.public.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.736476+00:00",
+      "size": 1440
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/policy-deployment-seal-blazefast-staging-k8s.public.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.716476+00:00",
+      "size": 783
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/policy-default.public.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.700475+00:00",
+      "size": 2861
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/policy-cert-manager-internal-pki.public.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.684474+00:00",
+      "size": 903
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/policy-list.public.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.668474+00:00",
+      "size": 669
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/auth-mounts.public.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.652473+00:00",
+      "size": 2459
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/mounts.public.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.636472+00:00",
+      "size": 9211
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/provider-health.public.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.616472+00:00",
+      "size": 302
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/operator-identity.public.json",
+      "modifiedAtUtc": "2026-10-29T17:58:26.600471+00:00",
+      "size": 417
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/before/HANDOFF.md",
+      "modifiedAtUtc": "2026-10-29T17:58:19.300170+00:00",
+      "size": 4175
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/before/evidence-manifest.json",
+      "modifiedAtUtc": "2026-10-29T17:58:19.300170+00:00",
+      "size": 17553
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/before/fingerprints.json",
+      "modifiedAtUtc": "2026-10-29T17:58:19.300170+00:00",
+      "size": 1238
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/before/owner-decisions.json",
+      "modifiedAtUtc": "2026-10-29T17:58:19.300170+00:00",
+      "size": 74177
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/before/verification.json",
+      "modifiedAtUtc": "2026-10-29T17:58:19.300170+00:00",
+      "size": 4597
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/before/blockers.json",
+      "modifiedAtUtc": "2026-10-29T17:58:19.300170+00:00",
+      "size": 4464
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/observation-exit.json",
+      "modifiedAtUtc": "2026-10-29T17:58:09.533144+00:00",
+      "size": 18
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/observations/observation-677a090bcb2548eb90aeccf82f35d982.json",
+      "modifiedAtUtc": "2026-10-29T17:58:09.517143+00:00",
+      "size": 190679
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/observations/inventory-restricted-registry-observation.json",
+      "modifiedAtUtc": "2026-10-29T17:58:08.453098+00:00",
+      "size": 1132
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/observations/native-enrollment-receipts.json",
+      "modifiedAtUtc": "2026-10-29T17:58:06.985037+00:00",
+      "size": 1656
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/observations/run.json",
+      "modifiedAtUtc": "2026-10-29T17:57:56.448591+00:00",
+      "size": 345
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/observations/native-helper-pins.json",
+      "modifiedAtUtc": "2026-10-29T17:57:56.416590+00:00",
+      "size": 11107
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/observations/execution-source-733b708b20c047ea82233791ddbf56bb.json",
+      "modifiedAtUtc": "2026-10-29T17:57:56.248583+00:00",
+      "size": 734
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/observation-command.json",
+      "modifiedAtUtc": "2026-10-29T17:57:56.192581+00:00",
+      "size": 621
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/test-command.json",
+      "modifiedAtUtc": "2026-10-29T17:57:48.792199+00:00",
+      "size": 292
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/preservation-before.json",
+      "modifiedAtUtc": "2026-10-29T17:57:13.723859+00:00",
+      "size": 35874
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/preserved-source/_bmad-output/implementation-artifacts/spec-ext-secrets-1-isolated-provider-inventory-installation.md",
+      "modifiedAtUtc": "2026-10-29T17:57:13.719858+00:00",
+      "size": 76446
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/metadata-transport-correction-20261029-f7Z2ajmP/evidence-manifest.json",
+      "modifiedAtUtc": "2026-10-29T17:38:10.194434+00:00",
+      "size": 1903
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/metadata-transport-correction-20261029-f7Z2ajmP/HANDOFF.md",
+      "modifiedAtUtc": "2026-10-29T17:38:10.186434+00:00",
+      "size": 2951
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/metadata-transport-correction-20261029-f7Z2ajmP/owner-return-required.json",
+      "modifiedAtUtc": "2026-10-29T17:38:10.186434+00:00",
+      "size": 2038
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/metadata-transport-correction-20261029-f7Z2ajmP/commands.json",
+      "modifiedAtUtc": "2026-10-29T17:38:10.186434+00:00",
+      "size": 2495
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/metadata-transport-correction-20261029-f7Z2ajmP/test-commands.json",
+      "modifiedAtUtc": "2026-10-29T17:38:10.186434+00:00",
+      "size": 842
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/metadata-transport-correction-20261029-f7Z2ajmP/verification.json",
+      "modifiedAtUtc": "2026-10-29T17:38:10.186434+00:00",
+      "size": 1165
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/metadata-transport-correction-20261029-f7Z2ajmP/invocation-spec.md",
+      "modifiedAtUtc": "2026-10-29T17:38:10.186434+00:00",
+      "size": 74479
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/metadata-transport-correction-20261029-f7Z2ajmP/spec-provenance.json",
+      "modifiedAtUtc": "2026-10-29T17:38:10.186434+00:00",
+      "size": 263
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/metadata-transport-correction-20261029-f7Z2ajmP/preservation-decision.template.json",
+      "modifiedAtUtc": "2026-10-29T17:38:10.186434+00:00",
+      "size": 2547
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/metadata-transport-correction-20261029-f7Z2ajmP/owner-metadata-credential.template.json",
+      "modifiedAtUtc": "2026-10-29T17:38:10.186434+00:00",
+      "size": 521
+    }
+  ]
+}

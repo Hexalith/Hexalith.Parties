@@ -1,0 +1,136 @@
+{
+  "status": "PreparedNotAuthorizedForExecution",
+  "preparedAt": "2026-10-29T16:50:37.191383+00:00",
+  "canonicalReturn": "/home/administrator/projects/hexalith/platform/docs/implementation/story-5-4-coupled-delivery-2026-10-25/owner-decisions.json#/mvpOperationalInputs/currentOperationalProfile",
+  "scope": "Recover existing operational custody/inventory/HMAC profile only; no actor-history backend, backup mutation or qualification",
+  "owner": null,
+  "authorizationReference": null,
+  "executionAllowed": false,
+  "cluster": {
+    "context": "jpiquot@local",
+    "api": "https://192.168.1.30:6443",
+    "namespace": "ext-secrets-1-isolated",
+    "namespaceUid": "afc280af-983f-4803-8a56-4e7382895d86"
+  },
+  "observedResourcesAt1313Utc": [
+    {
+      "credentialReferences": [
+        "ext-secrets-1-custody-app-29a4ace57e04#token",
+        "ext-secrets-1-custody-dapr-29a4ace57e04#token"
+      ],
+      "desired": 1,
+      "images": {
+        "custody": "registry.hexalith.com/ext-secrets-1-custody@sha256:864428d5dc8405b7b1f1f450102ebe6ecd311a27ab9fd0b57e386c7391ddfc64",
+        "daprd": "ghcr.io/dapr/daprd:1.18.1"
+      },
+      "kind": "Deployment",
+      "name": "ext-secrets-1-custody",
+      "namespace": "ext-secrets-1-isolated",
+      "ready": 1,
+      "resourceVersion": "37222845",
+      "serviceAccount": "ext-secrets-1-custody",
+      "uid": "8e5c263d-1374-48d5-b0ee-1c68566fde7e"
+    },
+    {
+      "credentialReferences": [
+        "ext-secrets-1-inventory-app-token#token",
+        "ext-secrets-1-inventory-dapr-token#token"
+      ],
+      "desired": 1,
+      "images": {
+        "daprd": "ghcr.io/dapr/daprd:1.18.1",
+        "inventory": "registry.hexalith.com/ext-secrets-1-inventory@sha256:ee870e6be7b043268e8452a9fa65aa16424146d33cb34f4dc39c052a1cc34b8e"
+      },
+      "kind": "Deployment",
+      "name": "inventory",
+      "namespace": "ext-secrets-1-isolated",
+      "ready": 1,
+      "resourceVersion": "37222775",
+      "serviceAccount": "ext-secrets-1-inventory",
+      "uid": "7595cf20-8e7b-46cc-9a2d-5a612d97d1a1"
+    },
+    {
+      "credentialReferences": [
+        "ext-secrets-1-hmac-authority-app-token#token",
+        "ext-secrets-1-hmac-authority-dapr-token#token"
+      ],
+      "desired": 1,
+      "images": {
+        "authority": "registry.hexalith.com/ext-secrets-1-hmac-authority@sha256:ea2017a757192bb4e6bafe59b2a558a9a9e9671dc3f9f844fd243a6718bc8bfa",
+        "daprd": "ghcr.io/dapr/daprd:1.18.1"
+      },
+      "kind": "StatefulSet",
+      "name": "ext-secrets-1-hmac-authority",
+      "namespace": "ext-secrets-1-isolated",
+      "ready": 1,
+      "resourceVersion": "37139283",
+      "serviceAccount": "ext-secrets-1-hmac-authority",
+      "uid": "25443a1b-bc71-4f79-bf6e-4d5834834d84"
+    }
+  ],
+  "expectedAuthorityRevision": "e19e68c9537246148141ec9d3841cfe4:19",
+  "revisionRule": "Re-read through owner-authorized transport before any future action; changed revision/UID or unknown outcome aborts. Never reset authority or replay original PublishProfile/SetCaller/maintenance operations.",
+  "originalEvidence": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-reconciliation-20261029TJ6KL9LyH",
+  "originalMaintenance": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/custody-maintenance-20261027T234210095124Z",
+  "originalProfileVersion": "owner-ba457c222fcb483ebd114ca34157b7df",
+  "originalProfileDeadline": "2026-10-28T23:51:51.830725+00:00",
+  "credentialReferences": {
+    "data": "ext-secrets-1-isolated/Secret/ext-secrets-1-custody-data-29a4ace57e04#token",
+    "metadata": "ext-secrets-1-isolated/Secret/ext-secrets-1-custody-metadata-29a4ace57e04#token"
+  },
+  "steps": [
+    {
+      "order": 1,
+      "action": "Reconcile preservation before export or mutation",
+      "requirements": [
+        "Cluster owner authenticates original Secret UID a97fa037-798b-46b6-9232-76e600480142 RV 36774577 -> 37223806 historical only-label write proof and acceptance under README schema. Preserve later drift separately.",
+        "Retain separate Agents-register historical mismatch for its responsible owner; no register edit or retroactive baseline replacement.",
+        "Compare original receipts, key metadata, policies, all public preservation files and resource identities; missing evidence keeps blocker."
+      ]
+    },
+    {
+      "order": 2,
+      "action": "Provider owner performs existing public observation plan",
+      "planReference": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-reconciliation-20261029TJ6KL9LyH/provider-observation-plan.json",
+      "requirements": [
+        "Use existing authenticated owner-controlled transport, role-specific credential references, no coordinator credential acquisition.",
+        "Observe both original accessors, four exact metadata paths, effective allow/deny capabilities, complete mount/auth/ACL configuration. No data reads, renewal or issuance.",
+        "Bind response times, provider/cluster identity and public hashes; current grant/expiry cannot be inferred from retained deadlines."
+      ]
+    },
+    {
+      "order": 3,
+      "action": "Classify currentness without executing recovery",
+      "requirements": [
+        "If accepted current evidence exists, return exact profile/enrollment, two hosts/two callers/four key versions, credential grants/revocation and readiness.",
+        "Otherwise owner prepares separate successor-credential/profile operation intents with new operation IDs, exact scoped policies and Secret names, expected revisions, immutable target images, technical windows and authenticated approval. Preserve original versions and receipts; never renew expired credentials.",
+        "Bind exact dual runtime ConfigMap/file updates and UID/RV guarded consumer cutover before approval; names/hashes/deadlines remain unset until owner facts support them. This plan authorizes none of those writes."
+      ]
+    },
+    {
+      "order": 4,
+      "action": "Future authorized recovery abort and reconciliation",
+      "requirements": [
+        "After any uncertain provider operation, stop and look up the original operation/result; do not repeat issuance/publication or adopt unknown material.",
+        "On mismatch, revoked grant, missing receipt, changed UID/RV, uncertain cleanup or failed readiness, leave affected consumers fail-closed; retain diagnostic evidence and escalate to recovery owner. Do not roll back to expired profile or restore an old authority ledger.",
+        "After an independently approved cutover only, verify all nine health/alive/ready endpoints, identical accepted runtime copies, four exact versions, issuer/audience and strict UTC-Z compatibility, unchanged unrelated resources and original journals. Public proof remains operational only."
+      ]
+    }
+  ],
+  "remainingOwnerInputs": [
+    "Authenticated responsible owner and appointed recovery lead/deputy",
+    "Authentic historical scope acceptance and separate register mismatch reconciliation",
+    "Fresh provider facts or legitimate current accepted profile; otherwise exact successor operation/target/revision/credential policy and approval"
+  ],
+  "noImplicitActions": [
+    "renew",
+    "mint",
+    "publish",
+    "install",
+    "restart",
+    "restore",
+    "delete",
+    "qualify",
+    "change Agents register"
+  ]
+}

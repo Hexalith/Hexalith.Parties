@@ -1,0 +1,109 @@
+[
+  {
+    "argv": [
+      "kubectl",
+      "--kubeconfig",
+      "/home/administrator/.kube/hexalith-production",
+      "--context",
+      "jpiquot@local",
+      "--request-timeout=10s",
+      "get",
+      "namespace",
+      "ext-secrets-1-isolated",
+      "-o",
+      "jsonpath={.metadata.name}{\"\\t\"}{.metadata.uid}{\"\\t\"}{.metadata.resourceVersion}"
+    ],
+    "startedAtUtc": "2026-10-30T05:58:50.604076+00:00",
+    "completedAtUtc": "2026-10-30T05:58:50.916413+00:00",
+    "exitCode": 0,
+    "stdout": "ext-secrets-1-isolated\tafc280af-983f-4803-8a56-4e7382895d86\t32429907",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "kubectl",
+      "--kubeconfig",
+      "/home/administrator/.kube/hexalith-production",
+      "--context",
+      "jpiquot@local",
+      "--request-timeout=10s",
+      "get",
+      "deployment,statefulset,configmap",
+      "-n",
+      "ext-secrets-1-isolated",
+      "-o",
+      "jsonpath={range .items[*]}{.kind}{\"\\t\"}{.metadata.name}{\"\\t\"}{.metadata.uid}{\"\\t\"}{.metadata.resourceVersion}{\"\\n\"}{end}"
+    ],
+    "startedAtUtc": "2026-10-30T05:58:50.916436+00:00",
+    "completedAtUtc": "2026-10-30T05:58:51.236080+00:00",
+    "exitCode": 0,
+    "stdout": "Deployment\teventstore\t9a84f25b-bed1-482c-bd1b-fadb51fce523\t32474566\nDeployment\text-secrets-1-custody\t8e5c263d-1374-48d5-b0ee-1c68566fde7e\t37222845\nDeployment\tinventory\t7595cf20-8e7b-46cc-9a2d-5a612d97d1a1\t37222775\nDeployment\tregistry-idp\ta5bafb56-5b86-4acb-941c-66d899f0ecf4\t32450328\nDeployment\ttenants\t9a3f527c-ee39-4cbd-aeee-96c2d47ad998\t32474495\nStatefulSet\text-secrets-1-hmac-authority\t25443a1b-bc71-4f79-bf6e-4d5834834d84\t37139283\nStatefulSet\tregistry-idp-db\t852239d4-1d9b-4201-9fdd-9c91023c12b5\t32449243\nStatefulSet\tregistry-state\ted605da8-44f3-4b8d-b890-a0be2e8389c5\t32474358\nConfigMap\text-secrets-1-custody-runtime-29a4ace57e04\tc8c661f8-a198-4df7-8cf8-0697d9320a04\t37222674\nConfigMap\text-secrets-1-hmac-authority-trust\tfbc20da1-51ce-47e1-b93b-78be3fa02064\t37103575\nConfigMap\text-secrets-1-inventory-permitted-references\t31b25a5f-841e-4399-9b5b-f033d340ea95\t32485076\nConfigMap\text-secrets-1-inventory-runtime\t29759d02-6dd6-4a6f-8cc1-3b1b0c3c18b5\t37222666\nConfigMap\text-secrets-1-openbao-ca\ta1f07c18-da85-471c-9e26-51499d6e583a\t32429922\nConfigMap\text-secrets-1-registry-idp-ca\t27e9d6c1-64e3-435d-aefa-1cff33d4b67a\t32450683\nConfigMap\text-secrets-1-registry-redis\tf5aaeae8-1402-426a-8e63-b54d51ec9ab4\t32448636\nConfigMap\tkube-root-ca.crt\t990ae1d4-dfb4-4456-af3d-5be907b65eff\t32429908\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "kubectl",
+      "--kubeconfig",
+      "/home/administrator/.kube/hexalith-production",
+      "--context",
+      "jpiquot@local",
+      "--request-timeout=10s",
+      "get",
+      "secret",
+      "kubesphere-sa-token",
+      "-n",
+      "kubesphere-system",
+      "-o",
+      "jsonpath={.metadata.name}{\"\\t\"}{.metadata.uid}{\"\\t\"}{.metadata.resourceVersion}"
+    ],
+    "startedAtUtc": "2026-10-30T05:58:51.236106+00:00",
+    "completedAtUtc": "2026-10-30T05:58:51.542110+00:00",
+    "exitCode": 0,
+    "stdout": "kubesphere-sa-token\ta97fa037-798b-46b6-9232-76e600480142\t38120141",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "kubectl",
+      "--kubeconfig",
+      "/home/administrator/.kube/hexalith-production",
+      "--context",
+      "jpiquot@local",
+      "--request-timeout=10s",
+      "get",
+      "secret",
+      "ext-secrets-1-custody-data-29a4ace57e04",
+      "ext-secrets-1-custody-metadata-29a4ace57e04",
+      "-n",
+      "ext-secrets-1-isolated",
+      "-o",
+      "jsonpath={range .items[*]}{.metadata.name}{\"\\t\"}{.metadata.uid}{\"\\t\"}{.metadata.resourceVersion}{\"\\n\"}{end}"
+    ],
+    "startedAtUtc": "2026-10-30T05:58:51.542131+00:00",
+    "completedAtUtc": "2026-10-30T05:58:51.843359+00:00",
+    "exitCode": 0,
+    "stdout": "ext-secrets-1-custody-data-29a4ace57e04\tdbb612b9-03ef-4cfe-947a-d7ef669af76f\t37119952\next-secrets-1-custody-metadata-29a4ace57e04\tb4a8d7e3-56e2-4be2-8c6a-12f14d3f79d0\t37119984\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "kubectl",
+      "--kubeconfig",
+      "/home/administrator/.kube/hexalith-production",
+      "--context",
+      "jpiquot@local",
+      "--request-timeout=10s",
+      "get",
+      "pods",
+      "-n",
+      "openbao",
+      "-o",
+      "jsonpath={range .items[*]}{.metadata.name}{\"\\t\"}{.metadata.uid}{\"\\t\"}{.status.phase}{\"\\t\"}{range .spec.volumes[*]}{.persistentVolumeClaim.claimName}{\",\"}{end}{\"\\n\"}{end}"
+    ],
+    "startedAtUtc": "2026-10-30T05:58:51.843379+00:00",
+    "completedAtUtc": "2026-10-30T05:58:52.121105+00:00",
+    "exitCode": 0,
+    "stdout": "hexalith-keys-0\t01cae80b-4142-4d85-b8ba-e6295371b832\tRunning\tdata-hexalith-keys-0,audit-hexalith-keys-0,,,,,,,\nhexalith-keys-1\tf89ff29e-0a36-4e46-bff0-6e545bfb4001\tRunning\tdata-hexalith-keys-1,audit-hexalith-keys-1,,,,,,,\nhexalith-keys-2\t3ef0013e-6a88-433c-ba88-974b9a3047c2\tRunning\tdata-hexalith-keys-2,audit-hexalith-keys-2,,,,,,,\nopenbao-raft-snapshot-29887230-7kgmb\t890c9aec-b16e-4aac-ba11-8ea5eae4dda3\tSucceeded\topenbao-snapshots,,,,\nopenbao-raft-snapshot-29888670-7dc5b\t1ae203d9-4162-443c-9367-7ed95a83fc23\tSucceeded\topenbao-snapshots,,,,\n",
+    "stderr": ""
+  }
+]

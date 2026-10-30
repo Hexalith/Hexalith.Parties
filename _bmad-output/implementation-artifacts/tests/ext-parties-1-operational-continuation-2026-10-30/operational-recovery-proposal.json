@@ -1,0 +1,1222 @@
+{
+  "schema": "EXT-PARTIES-1.operational-recovery-continuation.v1",
+  "preparedAtUtc": "2026-10-30T06:01:52.704326+00:00",
+  "status": "PreparedEvidenceReconciliationOnlyBlocked",
+  "executionAllowed": false,
+  "liveStopped": true,
+  "fullCustodyStopped": true,
+  "approval": {
+    "direction": {
+      "path": "/home/administrator/projects/hexalith/parties/docs/implementation/ext-parties-1-pragmatic-direction-2026-10-29.md",
+      "sha256": "9af08473ee838792d9e663bf92481ae05b51f7739e4151e858dc2b603628f033"
+    },
+    "existingRecoveryScope": {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-scope-20261029T165350Z-final/recovery-scope.json",
+      "sha256": "f32c1128b54f30682a22734986258a1882483d5d80bb2c253c4769bfb1e7d947"
+    },
+    "scopeSha256": "ef4a6896ed192137c4394cf5ef177ace1ce43ddf27a632731cf891f1c80cfbe3",
+    "existingApproval": {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/approval-record.json",
+      "sha256": "2d25f7ff360b32688b2bc555e6442ad9a9e1f2cf0ee90c2f709d80e84146970e"
+    },
+    "furtherSameScopeOwnershipApprovalRequested": false,
+    "currentTurnLimit": "Read-only evidence and proposal preparation. No issuance, renewal, policy/backup write, recovery application, restart, provisioning, production backend or qualification."
+  },
+  "appointments": {
+    "soleOwner": {
+      "owner": "Current user",
+      "ownerCount": 1,
+      "sourceKind": "Direct user message in this conversation",
+      "exactInstruction": "I am the only Owner",
+      "recordedAtUtc": "2026-10-29T17:33:20.621956+00:00",
+      "scope": "The current user is the sole Owner responsible for every owner return in this handoff. Operational role labels identify evidence functions and do not appoint additional Owners.",
+      "historicalAcceptanceInferred": false,
+      "implementerOrRecoveryAppointmentInferred": false,
+      "independentAdministrationOrRestoreSurvivalInferred": false,
+      "deputyRule": "A distinct Human recovery deputy is an appointed operational role and need not be an Owner. No deputy or appointment is inferred from sole ownership.",
+      "existingDocumentaryPolicyReference": {
+        "path": "/home/administrator/projects/hexalith/platform/_bmad-output/implementation-artifacts/evidence/epic-4/4-27/20261017t093206z-sole-owner-documentary-policy/sole-owner-policy.json",
+        "sha256": "d3c654d2e9c9f91a236fde5751f28a29ff02b8580dbb029cfc4fdd2e7b0bcbd7"
+      },
+      "documentaryPolicyScope": "Owner-declared/self-reviewed project documentation needs no invented additional Owner, independent Human reviewer, external authority registry, personal certificate or new signing key. Runtime/source facts, current grants, historical completeness and actual recovery safeguards still need their factual evidence. The existing policy changes no deployed authorization or acceptance rule."
+    },
+    "evidenceCollectionDelegation": {
+      "sourceKind": "Direct user reply in this conversation",
+      "exactInstruction": "I dont know, I dont want to manage this. Do it yourself.",
+      "recordedAtUtc": "2026-10-29T17:37:08.282707+00:00",
+      "assignedTo": "Codex assistant in this session",
+      "scope": "Discover, verify and reconcile available evidence autonomously. Do not require the sole Owner to find files or manage the collection. This is an evidence-work assignment, not a Human recovery appointment or a factual preservation attestation.",
+      "originalOperationalExclusionsPreserved": true
+    },
+    "assessmentImplementer": null,
+    "accountableRecoveryLead": null,
+    "differentHumanDeputy": null,
+    "allocationReference": null,
+    "humanAppointmentEvidence": {
+      "owner": "Project owner with independent recovery/access owners",
+      "primaryHumanSubjectAndIssuer": null,
+      "differentDeputyHumanSubjectAndIssuer": null,
+      "appointmentAndTwoPersonChangeAuthorityReference": null,
+      "independentMfaRecoveryAccessAndEscalationReference": null,
+      "delegatedRoleArnsAndFencingReadBackEvidenceReference": null
+    },
+    "note": "Sole ownership and authority to approve recovery are established. Neither appoints a task-specific Human lead/deputy or a named assessment implementer."
+  },
+  "cluster": {
+    "context": "jpiquot@local",
+    "api": "https://192.168.1.30:6443",
+    "namespace": "ext-secrets-1-isolated",
+    "namespaceUid": "afc280af-983f-4803-8a56-4e7382895d86",
+    "kubeconfigReference": "/home/administrator/.kube/hexalith-production"
+  },
+  "window": {
+    "automaticRebaseOrExtensionAllowed": false,
+    "exclusiveDeadline": "2026-10-30T16:53:50+00:00",
+    "executionNotBefore": "2026-10-29T16:53:50+00:00",
+    "maximumSeconds": 86400,
+    "recordNotBeforeValuesPreserved": true
+  },
+  "runId": "9deb3d3afbbf42d39686abc30be4f64b",
+  "resources": [
+    {
+      "reference": "Component/ext-secrets-1-isolated/ext-secrets-1-hmac",
+      "scopePrecondition": {
+        "specSha256": "40984f6f54df54afc4d7e76fd6e144001cd3ed0d5ca19ad6089572b395f109ce",
+        "uid": "eae48df5-3ab3-42d6-93f4-4a894d068716"
+      },
+      "observedIdentity": null,
+      "observationReference": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/kubernetes-metadata-read-only.json",
+        "sha256": "0a3ea136b5dd8f195a3e4fac945763f681614623a5daca94c11700ac1f9d3bf2"
+      },
+      "effect": "Preserve"
+    },
+    {
+      "reference": "ConfigMap/ext-secrets-1-isolated/ext-secrets-1-custody-runtime-29a4ace57e04",
+      "scopePrecondition": {
+        "specSha256": "1bb6b3931e45bae2db3dc5af71d6c1da131292437062e1192faaec26a8bf976d",
+        "uid": "c8c661f8-a198-4df7-8cf8-0697d9320a04"
+      },
+      "observedIdentity": {
+        "uid": "c8c661f8-a198-4df7-8cf8-0697d9320a04",
+        "resourceVersion": "37222674"
+      },
+      "observationReference": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/kubernetes-metadata-read-only.json",
+        "sha256": "0a3ea136b5dd8f195a3e4fac945763f681614623a5daca94c11700ac1f9d3bf2"
+      },
+      "effect": "Stage only the approved public runtime or selected Secret-volume references with immediate UID/resourceVersion guards"
+    },
+    {
+      "reference": "ConfigMap/ext-secrets-1-isolated/ext-secrets-1-inventory-runtime",
+      "scopePrecondition": {
+        "specSha256": "a99d310577ddd1971bffce86e7e359e18401d034d5bef32a80c2a8f3b3a7158a",
+        "uid": "29759d02-6dd6-4a6f-8cc1-3b1b0c3c18b5"
+      },
+      "observedIdentity": {
+        "uid": "29759d02-6dd6-4a6f-8cc1-3b1b0c3c18b5",
+        "resourceVersion": "37222666"
+      },
+      "observationReference": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/kubernetes-metadata-read-only.json",
+        "sha256": "0a3ea136b5dd8f195a3e4fac945763f681614623a5daca94c11700ac1f9d3bf2"
+      },
+      "effect": "Stage only the approved public runtime or selected Secret-volume references with immediate UID/resourceVersion guards"
+    },
+    {
+      "reference": "Deployment/ext-secrets-1-isolated/ext-secrets-1-custody",
+      "scopePrecondition": {
+        "specSha256": "802b954809ed2dc77844309e9747abdfbd2b18447fd9989bf872f90ca45ebab3",
+        "uid": "8e5c263d-1374-48d5-b0ee-1c68566fde7e"
+      },
+      "observedIdentity": {
+        "uid": "8e5c263d-1374-48d5-b0ee-1c68566fde7e",
+        "resourceVersion": "37222845"
+      },
+      "observationReference": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/kubernetes-metadata-read-only.json",
+        "sha256": "0a3ea136b5dd8f195a3e4fac945763f681614623a5daca94c11700ac1f9d3bf2"
+      },
+      "effect": "Stage only the approved public runtime or selected Secret-volume references with immediate UID/resourceVersion guards"
+    },
+    {
+      "reference": "Deployment/ext-secrets-1-isolated/inventory",
+      "scopePrecondition": {
+        "specSha256": "7f697fc90ae9a1d0f389dec56aadaab8177192e900e166c5df7dd3005392137f",
+        "uid": "7595cf20-8e7b-46cc-9a2d-5a612d97d1a1"
+      },
+      "observedIdentity": {
+        "uid": "7595cf20-8e7b-46cc-9a2d-5a612d97d1a1",
+        "resourceVersion": "37222775"
+      },
+      "observationReference": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/kubernetes-metadata-read-only.json",
+        "sha256": "0a3ea136b5dd8f195a3e4fac945763f681614623a5daca94c11700ac1f9d3bf2"
+      },
+      "effect": "Stage only the approved public runtime or selected Secret-volume references with immediate UID/resourceVersion guards"
+    },
+    {
+      "reference": "Secret/ext-secrets-1-isolated/ext-secrets-1-custody-data-29a4ace57e04",
+      "scopePrecondition": {
+        "resourceVersion": "37119952",
+        "uid": "dbb612b9-03ef-4cfe-947a-d7ef669af76f"
+      },
+      "observedIdentity": {
+        "uid": "dbb612b9-03ef-4cfe-947a-d7ef669af76f",
+        "resourceVersion": "37119952"
+      },
+      "observationReference": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/kubernetes-metadata-read-only.json",
+        "sha256": "0a3ea136b5dd8f195a3e4fac945763f681614623a5daca94c11700ac1f9d3bf2"
+      },
+      "effect": "Preserve"
+    },
+    {
+      "reference": "Secret/ext-secrets-1-isolated/ext-secrets-1-custody-metadata-29a4ace57e04",
+      "scopePrecondition": {
+        "resourceVersion": "37119984",
+        "uid": "b4a8d7e3-56e2-4be2-8c6a-12f14d3f79d0"
+      },
+      "observedIdentity": {
+        "uid": "b4a8d7e3-56e2-4be2-8c6a-12f14d3f79d0",
+        "resourceVersion": "37119984"
+      },
+      "observationReference": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/kubernetes-metadata-read-only.json",
+        "sha256": "0a3ea136b5dd8f195a3e4fac945763f681614623a5daca94c11700ac1f9d3bf2"
+      },
+      "effect": "Preserve"
+    },
+    {
+      "reference": "StatefulSet/ext-secrets-1-isolated/ext-secrets-1-hmac-authority",
+      "scopePrecondition": {
+        "specSha256": "1d0bc070565826e3fb2b7c48448ea5c8ffbf5469ac28b0f5c075fa2790d006be",
+        "uid": "25443a1b-bc71-4f79-bf6e-4d5834834d84"
+      },
+      "observedIdentity": {
+        "uid": "25443a1b-bc71-4f79-bf6e-4d5834834d84",
+        "resourceVersion": "37139283"
+      },
+      "observationReference": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/kubernetes-metadata-read-only.json",
+        "sha256": "0a3ea136b5dd8f195a3e4fac945763f681614623a5daca94c11700ac1f9d3bf2"
+      },
+      "effect": "Preserve"
+    }
+  ],
+  "installedWorkloadImages": {
+    "ext-secrets-1-custody": {
+      "custody": "registry.hexalith.com/ext-secrets-1-custody@sha256:864428d5dc8405b7b1f1f450102ebe6ecd311a27ab9fd0b57e386c7391ddfc64",
+      "daprd": "ghcr.io/dapr/daprd:1.18.1"
+    },
+    "ext-secrets-1-hmac-authority": {
+      "authority": "registry.hexalith.com/ext-secrets-1-hmac-authority@sha256:ea2017a757192bb4e6bafe59b2a558a9a9e9671dc3f9f844fd243a6718bc8bfa",
+      "daprd": "ghcr.io/dapr/daprd:1.18.1"
+    },
+    "inventory": {
+      "daprd": "ghcr.io/dapr/daprd:1.18.1",
+      "inventory": "registry.hexalith.com/ext-secrets-1-inventory@sha256:ee870e6be7b043268e8452a9fa65aa16424146d33cb34f4dc39c052a1cc34b8e"
+    }
+  },
+  "authority": {
+    "readAndApplyIntents": {
+      "apply": {
+        "method": "POST",
+        "path": "/admin/operations"
+      },
+      "originalRecovery": "GET exact durable state/audit; only identical administrator, operationId, body and expectedRevision may use native exact-original idempotency. A RevisionConflict is durable: stop; never change its payload or revision.",
+      "read": {
+        "method": "GET",
+        "path": "/admin/state"
+      },
+      "transport": "Existing authenticated owner administrative channel; HTTPS issuer, exact administrator JWT audience/azp/hmac:administer and separate authority-admin-token required."
+    },
+    "originalRevision": "e19e68c9537246148141ec9d3841cfe4:19",
+    "originalStateSha256": "dfde8806a12facdd52cc93e390cd5ecbb1fb2b9b8b3ded727bd67ce539d86493",
+    "originalReceiptCount": 19,
+    "operations": [
+      {
+        "caller": null,
+        "expectedRevision": "e19e68c9537246148141ec9d3841cfe4:19",
+        "host": {
+          "callerId": "ext-secrets-1-hmac-inventory",
+          "enrolled": true,
+          "inventoryAuthorityReference": "ext-secrets-1-inventory",
+          "notBefore": "2026-10-27T17:37:33.663741+00:00",
+          "validUntil": "2026-10-30T16:53:50+00:00",
+          "workloadReference": "ext-secrets-1-isolated/Deployment/inventory@uid:7595cf20-8e7b-46cc-9a2d-5a612d97d1a1"
+        },
+        "keyStatus": null,
+        "kind": "SetInventoryHost",
+        "operationId": "246d860f1f135016b2325ec718311220",
+        "profile": null
+      },
+      {
+        "caller": null,
+        "expectedRevision": "e19e68c9537246148141ec9d3841cfe4:20",
+        "host": {
+          "callerId": "ext-secrets-1-hmac-custody",
+          "enrolled": true,
+          "inventoryAuthorityReference": "ext-secrets-1-custody",
+          "notBefore": "2026-10-27T17:37:33.663741+00:00",
+          "validUntil": "2026-10-30T16:53:50+00:00",
+          "workloadReference": "ext-secrets-1-isolated/Deployment/ext-secrets-1-custody@uid:8e5c263d-1374-48d5-b0ee-1c68566fde7e"
+        },
+        "keyStatus": null,
+        "kind": "SetInventoryHost",
+        "operationId": "bd55b8bcfc245c4791092cf38bc2d801",
+        "profile": null
+      },
+      {
+        "caller": {
+          "callerId": "ext-secrets-1-hmac-inventory",
+          "enabled": true,
+          "notBefore": "2026-10-27T17:37:33.663741+00:00",
+          "validUntil": "2026-10-30T16:53:50+00:00"
+        },
+        "expectedRevision": "e19e68c9537246148141ec9d3841cfe4:21",
+        "host": null,
+        "keyStatus": null,
+        "kind": "SetCaller",
+        "operationId": "1a7df2b122c0520e94a050e2bdee29e2",
+        "profile": null
+      },
+      {
+        "caller": {
+          "callerId": "ext-secrets-1-hmac-custody",
+          "enabled": true,
+          "notBefore": "2026-10-27T17:37:33.663741+00:00",
+          "validUntil": "2026-10-30T16:53:50+00:00"
+        },
+        "expectedRevision": "e19e68c9537246148141ec9d3841cfe4:22",
+        "host": null,
+        "keyStatus": null,
+        "kind": "SetCaller",
+        "operationId": "765adc37d81f5673a7951a18ab95647b",
+        "profile": null
+      },
+      {
+        "caller": null,
+        "expectedRevision": "e19e68c9537246148141ec9d3841cfe4:23",
+        "host": null,
+        "keyStatus": {
+          "notBefore": "2026-10-27T18:29:26.7351788+00:00",
+          "profileVersion": "owner-ba457c222fcb483ebd114ca34157b7df",
+          "purpose": "TrustedEnvelope",
+          "revoked": false,
+          "tenantId": "01M54GTX47NH1PRB00T2YS5048",
+          "validUntil": "2026-10-30T16:53:50+00:00",
+          "version": "hmac-6b7b27b5-6c53-42b7-8924-15f5a8c5f564"
+        },
+        "kind": "SetKeyStatus",
+        "operationId": "af7ae558262c5f77b557f8e65fa2dd7f",
+        "profile": null
+      },
+      {
+        "caller": null,
+        "expectedRevision": "e19e68c9537246148141ec9d3841cfe4:24",
+        "host": null,
+        "keyStatus": {
+          "notBefore": "2026-10-27T18:29:29.4783138+00:00",
+          "profileVersion": "owner-ba457c222fcb483ebd114ca34157b7df",
+          "purpose": "ContentDigest",
+          "revoked": false,
+          "tenantId": "01M54GTX47NH1PRB00T2YS5048",
+          "validUntil": "2026-10-30T16:53:50+00:00",
+          "version": "hmac-3867729b-972d-449a-b445-373ee7e6ca12"
+        },
+        "kind": "SetKeyStatus",
+        "operationId": "cbd38805f716530b93e8479853742da6",
+        "profile": null
+      },
+      {
+        "caller": null,
+        "expectedRevision": "e19e68c9537246148141ec9d3841cfe4:25",
+        "host": null,
+        "keyStatus": {
+          "notBefore": "2026-10-27T18:29:32.2867905+00:00",
+          "profileVersion": "owner-ba457c222fcb483ebd114ca34157b7df",
+          "purpose": "TrustedEnvelope",
+          "revoked": false,
+          "tenantId": "01M54GTX479F4Y9A3MRW578C4R",
+          "validUntil": "2026-10-30T16:53:50+00:00",
+          "version": "hmac-eba15f8a-21b5-45f2-bb32-1c9e578e3912"
+        },
+        "kind": "SetKeyStatus",
+        "operationId": "48e18b59d504530888af937c54467ab0",
+        "profile": null
+      },
+      {
+        "caller": null,
+        "expectedRevision": "e19e68c9537246148141ec9d3841cfe4:26",
+        "host": null,
+        "keyStatus": {
+          "notBefore": "2026-10-27T18:29:35.1567833+00:00",
+          "profileVersion": "owner-ba457c222fcb483ebd114ca34157b7df",
+          "purpose": "ContentDigest",
+          "revoked": false,
+          "tenantId": "01M54GTX479F4Y9A3MRW578C4R",
+          "validUntil": "2026-10-30T16:53:50+00:00",
+          "version": "hmac-5e9ed87e-6430-48ec-9849-d231fde10e10"
+        },
+        "kind": "SetKeyStatus",
+        "operationId": "d87bed561a325331a06fd6cb17058c12",
+        "profile": null
+      },
+      {
+        "caller": null,
+        "expectedRevision": "e19e68c9537246148141ec9d3841cfe4:27",
+        "host": null,
+        "keyStatus": null,
+        "kind": "PublishProfile",
+        "operationId": "7c0ce3871b745494a912b094dcc53f6d",
+        "profile": {
+          "audience": "ext-secrets-1-custody",
+          "issuer": "https://registry-idp.ext-secrets-1-isolated.svc.cluster.local:8443/realms/ext-secrets-1-hmac-authority",
+          "notBefore": "2026-10-27T17:37:33.663741+00:00",
+          "profileReference": "ext-secrets-1-hmac-authority",
+          "publicTrustReference": "ext-secrets-1-isolated/ConfigMap/ext-secrets-1-hmac-authority-trust@uid:fbc20da1-51ce-47e1-b93b-78be3fa02064",
+          "revoked": false,
+          "validUntil": "2026-10-30T16:53:50+00:00",
+          "version": "owner-ba457c222fcb483ebd114ca34157b7df"
+        }
+      }
+    ],
+    "expectedFinalRevision": "e19e68c9537246148141ec9d3841cfe4:28",
+    "currentAtExecution": null,
+    "source": {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-scope-20261029T165350Z-final/recovery-scope.json",
+      "sha256": "f32c1128b54f30682a22734986258a1882483d5d80bb2c253c4769bfb1e7d947",
+      "jsonPointer": "/nativeOwnerOperations"
+    }
+  },
+  "credentialProposal": {
+    "legacyBranchesReference": {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-scope-20261029T165350Z-final/recovery-scope.json",
+      "sha256": "f32c1128b54f30682a22734986258a1882483d5d80bb2c253c4769bfb1e7d947",
+      "jsonPointer": "/credentialBranches"
+    },
+    "newContinuationPermitsRenewal": false,
+    "selectedDataCredential": null,
+    "selectedMetadataCredential": null,
+    "roles": {
+      "data": {
+        "original": {
+          "accessor": "BKrxty00nSc9kK8fCVZU6beS",
+          "creationTime": 1793125752,
+          "credentialReference": "ext-secrets-1-isolated/Secret/ext-secrets-1-custody-data-29a4ace57e04#token",
+          "explicitMaximumTtlSeconds": 604800,
+          "issueTime": "2026-10-27T18:29:12.505509882Z",
+          "policy": "ext-secrets-1-hmac-data-read",
+          "secretIdentity": {
+            "resourceVersion": "37119952",
+            "uid": "dbb612b9-03ef-4cfe-947a-d7ef669af76f"
+          },
+          "secretName": "ext-secrets-1-custody-data-29a4ace57e04"
+        },
+        "replacementIntent": {
+          "condition": "Fresh original is absent/expired/revoked/nonrenewable/capped, or separately approved replacement is selected; exact create-orphan and revoke-accessor capabilities verified.",
+          "cutover": "Conditionally update only exact inventoried Secret volume references. Restart existing inventory/custody consumers at pinned Deployment UID/resourceVersion with unchanged images; custody Dapr must reload its data-token mount. Inventory never receives data token.",
+          "destination": "Require name absent, create intended Secret via stdin, retain UID/resourceVersion from creation response; never overwrite old Secret.",
+          "failure": "Before cutover, revoke only a demonstrably issued successor and conditionally delete only its exact creation UID/resourceVersion. After cutover, deny callers and preserve exact originals; never roll back to an expired/revoked credential.",
+          "issuanceRecovery": "Persist IssuanceStarted before POST. Lost response freezes this original; authenticated provider audit recovers only its exact accessor. Never issue a second credential for an uncertain original.",
+          "nativeRequest": {
+            "body": {
+              "display_name": "ext-secrets-1-recovery-9deb3d3afbbf42d39686abc30be4f64b-data",
+              "explicit_max_ttl": "168h",
+              "no_default_policy": true,
+              "policies": [
+                "ext-secrets-1-hmac-data-read"
+              ],
+              "renewable": true,
+              "ttl": "24h"
+            },
+            "method": "POST",
+            "path": "/v1/auth/token/create-orphan"
+          },
+          "newCredentialReference": "ext-secrets-1-isolated/Secret/ext-secrets-1-recovery-data-9deb3d3afbbf#token",
+          "newSecretName": "ext-secrets-1-recovery-data-9deb3d3afbbf",
+          "revokeOriginal": {
+            "body": {
+              "accessor": "BKrxty00nSc9kK8fCVZU6beS"
+            },
+            "condition": "All selected successor consumers and metadata-only readiness independently verified; preserve original Secret and public receipt unless separate cleanup is approved.",
+            "method": "POST",
+            "path": "/v1/auth/token/revoke-accessor"
+          }
+        },
+        "selectedBranch": null,
+        "candidateBasedOnDatedAbsence": "replace",
+        "freshProviderRevalidationRequired": true
+      },
+      "metadata": {
+        "original": {
+          "accessor": "cPFiajr3bgeHu8huC99p0JoM",
+          "creationTime": 1793125758,
+          "credentialReference": "ext-secrets-1-isolated/Secret/ext-secrets-1-custody-metadata-29a4ace57e04#token",
+          "explicitMaximumTtlSeconds": 604800,
+          "issueTime": "2026-10-27T18:29:18.226954447Z",
+          "policy": "ext-secrets-1-inventory-metadata-read",
+          "secretIdentity": {
+            "resourceVersion": "37119984",
+            "uid": "b4a8d7e3-56e2-4be2-8c6a-12f14d3f79d0"
+          },
+          "secretName": "ext-secrets-1-custody-metadata-29a4ace57e04"
+        },
+        "replacementIntent": {
+          "condition": "Fresh original is absent/expired/revoked/nonrenewable/capped, or separately approved replacement is selected; exact create-orphan and revoke-accessor capabilities verified.",
+          "cutover": "Conditionally update only exact inventoried Secret volume references. Restart existing inventory/custody consumers at pinned Deployment UID/resourceVersion with unchanged images; custody Dapr must reload its data-token mount. Inventory never receives data token.",
+          "destination": "Require name absent, create intended Secret via stdin, retain UID/resourceVersion from creation response; never overwrite old Secret.",
+          "failure": "Before cutover, revoke only a demonstrably issued successor and conditionally delete only its exact creation UID/resourceVersion. After cutover, deny callers and preserve exact originals; never roll back to an expired/revoked credential.",
+          "issuanceRecovery": "Persist IssuanceStarted before POST. Lost response freezes this original; authenticated provider audit recovers only its exact accessor. Never issue a second credential for an uncertain original.",
+          "nativeRequest": {
+            "body": {
+              "display_name": "ext-secrets-1-recovery-9deb3d3afbbf42d39686abc30be4f64b-metadata",
+              "explicit_max_ttl": "168h",
+              "no_default_policy": true,
+              "policies": [
+                "ext-secrets-1-inventory-metadata-read"
+              ],
+              "renewable": true,
+              "ttl": "24h"
+            },
+            "method": "POST",
+            "path": "/v1/auth/token/create-orphan"
+          },
+          "newCredentialReference": "ext-secrets-1-isolated/Secret/ext-secrets-1-recovery-metadata-9deb3d3afbbf#token",
+          "newSecretName": "ext-secrets-1-recovery-metadata-9deb3d3afbbf",
+          "revokeOriginal": {
+            "body": {
+              "accessor": "cPFiajr3bgeHu8huC99p0JoM"
+            },
+            "condition": "All selected successor consumers and metadata-only readiness independently verified; preserve original Secret and public receipt unless separate cleanup is approved.",
+            "method": "POST",
+            "path": "/v1/auth/token/revoke-accessor"
+          }
+        },
+        "selectedBranch": null,
+        "candidateBasedOnDatedAbsence": "replace",
+        "freshProviderRevalidationRequired": true
+      }
+    },
+    "currentAccessorStateObservedAt": "2026-10-29T19:54:29.321227+00:00",
+    "datedLeaseObservations": {
+      "data": {
+        "classification": "Absent",
+        "lease": null,
+        "nativeErrorClassification": "CanonicalInvalidAccessor",
+        "status": 400
+      },
+      "metadata": {
+        "classification": "Absent",
+        "lease": null,
+        "nativeErrorClassification": "CanonicalInvalidAccessor",
+        "status": 400
+      }
+    },
+    "intendedMetadataReadCredential": null,
+    "publicOwnerRecordTemplate": {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/owner-metadata-credential.template.json",
+      "sha256": "3c48b3f341257caddbe1ec2c7364a912b97a2be480dbb42d34f2f30924b3b788"
+    },
+    "temporaryGrantActive": false,
+    "temporaryGrantMayBeReappliedByThisPlan": false
+  },
+  "runtimeProposal": {
+    "source": {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-scope-20261029T165350Z-final/recovery-scope.json",
+      "sha256": "f32c1128b54f30682a22734986258a1882483d5d80bb2c253c4769bfb1e7d947",
+      "jsonPointer": "/proposedRuntimeForReuseOrRenew"
+    },
+    "exactPublicDocument": {
+      "qualification": {
+        "daprApiCredentialReference": null,
+        "daprEndpoint": "http://127.0.0.1:3500",
+        "enrollment": {
+          "appChannelCredentialReference": null,
+          "appId": null,
+          "callerAuthenticatorReference": null,
+          "callerScopeAuthorityReference": null,
+          "identity": null,
+          "publicAnchorFile": null,
+          "version": null
+        },
+        "enrollmentCredentialReference": null,
+        "executor": {
+          "appChannelCredentialReference": null,
+          "appId": null,
+          "callerAuthenticatorReference": null,
+          "callerScopeAuthorityReference": null,
+          "identity": null,
+          "publicAnchorFile": null,
+          "version": null
+        },
+        "isolatedTargetId": null,
+        "observer": {
+          "appChannelCredentialReference": null,
+          "appId": null,
+          "callerAuthenticatorReference": null,
+          "callerScopeAuthorityReference": null,
+          "identity": null,
+          "publicAnchorFile": null,
+          "version": null
+        },
+        "requestTimeoutSeconds": 30
+      },
+      "runtime": {
+        "acceptedReplacementCommit": null,
+        "actorRoleAuthorityReference": null,
+        "allCopyInventoryReference": null,
+        "allCopyLifecycleAuthorityReference": null,
+        "audience": "ext-secrets-1-custody",
+        "authenticatedRequesterTransport": null,
+        "callTimeout": 30,
+        "compromiseGuardMirrorReference": null,
+        "compromisePublisherReference": null,
+        "compromiseSubscriberCredentialReference": null,
+        "compromiseSubscriptionReference": null,
+        "currentInventoryAuthorityReference": "ext-secrets-1-inventory",
+        "currentRevocationReference": "ext-secrets-1-hmac-authority",
+        "decisionKeysOutsideCustody": true,
+        "hmacCredentialReference": "ext-secrets-1-isolated/Secret/ext-secrets-1-custody-data-29a4ace57e04#token",
+        "host": "192.168.1.30",
+        "independentSignerAccount": null,
+        "independentSignerCredentialReference": null,
+        "issuer": "https://registry-idp.ext-secrets-1-isolated.svc.cluster.local:8443/realms/ext-secrets-1-hmac-authority",
+        "kubernetesApi": "https://192.168.1.30:6443",
+        "migrationAuthorityReference": null,
+        "nonrollbackJournalReference": null,
+        "overlappingExportDisposition": "Open",
+        "profileNotBefore": "2026-10-27T17:37:33.663741+00:00",
+        "profileReference": "ext-secrets-1-hmac-authority",
+        "profileValidUntil": "2026-10-30T16:53:50+00:00",
+        "profileVersion": "owner-ba457c222fcb483ebd114ca34157b7df",
+        "protectionOwnerReference": null,
+        "providerBinding": "ext-secrets-1-hmac",
+        "providerServiceReference": "https://hexalith-keys-active.openbao.svc:8200",
+        "publicAnchorRetentionReference": null,
+        "publicTrustReference": "ext-secrets-1-isolated/ConfigMap/ext-secrets-1-hmac-authority-trust@uid:fbc20da1-51ce-47e1-b93b-78be3fa02064",
+        "replayExactScope": null,
+        "replayRegistrarCredentialReference": null,
+        "restoreTarget": null,
+        "tenantA": "01M54GTX47NH1PRB00T2YS5048",
+        "tenantB": "01M54GTX479F4Y9A3MRW578C4R",
+        "tenantInventoryReference": "ext-secrets-1-isolated/Deployment/tenants@uid:9a3f527c-ee39-4cbd-aeee-96c2d47ad998",
+        "timing": {
+          "H": 86400,
+          "L": 300,
+          "O": 600,
+          "R": 604800,
+          "S": 30
+        },
+        "verifiedProviderResource": "openbao/StatefulSet/hexalith-keys"
+      },
+      "schema": "EXT-SECRETS-1.qualification.v1"
+    },
+    "allowedChanges": [
+      "runtime.profileValidUntil exactly as pinned in the approved proposed document",
+      "runtime.hmacCredentialReference only for a selected data successor"
+    ],
+    "nullInputsPreserved": true,
+    "configMapDataKey": "runtime-reference.json",
+    "staging": "Record exact current UID/resourceVersion before each conditional replacement; retain Started/Committed journal and exact intended public object; change only selected Secret volume references and approved recovery annotation on existing Deployments; immutable images preserved.",
+    "newSecretIdentities": null,
+    "immediateWriteResourceVersions": null
+  },
+  "keyPlan": [
+    {
+      "afterMetadata": {
+        "cas_required": false,
+        "created_time": "2026-10-17T10:14:45.797681328Z",
+        "current_metadata_version": 2,
+        "current_version": 2,
+        "custom_metadata": {
+          "ext-secrets-1.purpose": "TrustedEnvelope",
+          "ext-secrets-1.secretField": "hmacKey",
+          "ext-secrets-1.tenantId": "01M54GTX47NH1PRB00T2YS5048",
+          "ext-secrets-1.versionMappings": "{\"hmac-6b7b27b5-6c53-42b7-8924-15f5a8c5f564\":{\"notBefore\":\"2026-10-27T18:29:26.735178868Z\",\"retiredAt\":null,\"secretVersion\":\"2\",\"state\":\"Active\",\"verifyUntil\":\"2026-11-03T18:29:26.735178+00:00\"},\"hmac-83ede9ca-e916-4c5a-8aeb-667945049890\":{\"notBefore\":\"2026-10-17T10:14:45.797681328Z\",\"retiredAt\":null,\"secretVersion\":\"1\",\"state\":\"Active\",\"verifyUntil\":\"2026-10-24T10:14:45.797681+00:00\"}}"
+        },
+        "delete_version_after": "0s",
+        "max_versions": 0,
+        "metadata_cas_required": false,
+        "oldest_version": 0,
+        "updated_time": "2026-10-27T18:29:27.621466572Z",
+        "versions": {
+          "1": {
+            "created_time": "2026-10-17T10:14:45.797681328Z",
+            "deletion_time": "",
+            "destroyed": false
+          },
+          "2": {
+            "created_time": "2026-10-27T18:29:26.735178868Z",
+            "deletion_time": "",
+            "destroyed": false
+          }
+        }
+      },
+      "beforeMetadata": {
+        "cas_required": false,
+        "created_time": "2026-10-17T10:14:45.797681328Z",
+        "current_metadata_version": 1,
+        "current_version": 1,
+        "custom_metadata": {
+          "ext-secrets-1.purpose": "TrustedEnvelope",
+          "ext-secrets-1.secretField": "hmacKey",
+          "ext-secrets-1.tenantId": "01M54GTX47NH1PRB00T2YS5048",
+          "ext-secrets-1.versionMappings": "{\"hmac-83ede9ca-e916-4c5a-8aeb-667945049890\":{\"notBefore\":\"2026-10-17T10:14:45.797681328Z\",\"retiredAt\":null,\"secretVersion\":\"1\",\"state\":\"Active\",\"verifyUntil\":\"2026-10-24T10:14:45.797681+00:00\"}}"
+        },
+        "delete_version_after": "0s",
+        "max_versions": 0,
+        "metadata_cas_required": false,
+        "oldest_version": 0,
+        "updated_time": "2026-10-17T10:19:45.960531502Z",
+        "versions": {
+          "1": {
+            "created_time": "2026-10-17T10:14:45.797681328Z",
+            "deletion_time": "",
+            "destroyed": false
+          }
+        }
+      },
+      "expectedCurrentVersion": 1,
+      "mapping": {
+        "notBefore": "2026-10-27T18:29:26.735178868Z",
+        "retiredAt": null,
+        "secretVersion": "2",
+        "state": "Active",
+        "verifyUntil": "2026-11-03T18:29:26.735178+00:00"
+      },
+      "nativeWriteReceipt": {
+        "data": {
+          "created_time": "2026-10-27T18:29:26.735178868Z",
+          "deletion_time": "",
+          "destroyed": false,
+          "version": 2
+        },
+        "requestId": "87b8a03b-1c6c-600e-f370-04fbbc39ff67"
+      },
+      "opaqueVersion": "hmac-6b7b27b5-6c53-42b7-8924-15f5a8c5f564",
+      "original": {
+        "mapping": {
+          "hmac-83ede9ca-e916-4c5a-8aeb-667945049890": {
+            "notBefore": "2026-10-17T10:14:45.797681328Z",
+            "retiredAt": null,
+            "secretVersion": "1",
+            "state": "Active",
+            "verifyUntil": "2026-10-24T10:14:45.797681+00:00"
+          }
+        },
+        "notBefore": "2026-10-17T10:14:45.797681328Z",
+        "opaqueVersion": "hmac-83ede9ca-e916-4c5a-8aeb-667945049890",
+        "phase": "MetadataVerified",
+        "providerMetadataSha256": "02a28bfb92bd4e954b67293a89df6eeb992a44d538ae094ff459de27f199d2b5",
+        "providerReference": "ext-secrets-1-isolated/tenants/01M54GTX47NH1PRB00T2YS5048/TrustedEnvelope/operational",
+        "purpose": "TrustedEnvelope",
+        "secretField": "hmacKey",
+        "secretReference": "tenants/01M54GTX47NH1PRB00T2YS5048/TrustedEnvelope/operational",
+        "secretVersion": "1",
+        "tenantId": "01M54GTX47NH1PRB00T2YS5048",
+        "verifyUntil": "2026-10-24T10:14:45.797681+00:00",
+        "writeReceipt": {
+          "created_time": "2026-10-17T10:14:45.797681328Z",
+          "deletion_time": "",
+          "destroyed": false,
+          "version": 1
+        }
+      },
+      "originalMaterialAndValidityPreserved": true,
+      "phase": "MetadataVerified",
+      "retentionVerification": {
+        "automaticDeletionDisabled": true,
+        "effectiveMaximumVersions": 10
+      },
+      "secretVersion": "2",
+      "startedAt": "2026-10-27T18:29:27.536790+00:00",
+      "verifiedAt": "2026-10-27T18:35:11.242613+00:00"
+    },
+    {
+      "afterMetadata": {
+        "cas_required": false,
+        "created_time": "2026-10-17T10:19:48.100941764Z",
+        "current_metadata_version": 2,
+        "current_version": 2,
+        "custom_metadata": {
+          "ext-secrets-1.purpose": "ContentDigest",
+          "ext-secrets-1.secretField": "hmacKey",
+          "ext-secrets-1.tenantId": "01M54GTX47NH1PRB00T2YS5048",
+          "ext-secrets-1.versionMappings": "{\"hmac-3867729b-972d-449a-b445-373ee7e6ca12\":{\"notBefore\":\"2026-10-27T18:29:29.478313849Z\",\"retiredAt\":null,\"secretVersion\":\"2\",\"state\":\"Active\",\"verifyUntil\":\"2026-11-03T18:29:29.478313+00:00\"},\"hmac-f1026de1-089a-4080-80a1-047df2ec5f2c\":{\"notBefore\":\"2026-10-17T10:19:48.100941764Z\",\"retiredAt\":null,\"secretVersion\":\"1\",\"state\":\"Active\",\"verifyUntil\":\"2026-10-24T10:19:48.100941+00:00\"}}"
+        },
+        "delete_version_after": "0s",
+        "max_versions": 0,
+        "metadata_cas_required": false,
+        "oldest_version": 0,
+        "updated_time": "2026-10-27T18:29:30.438577769Z",
+        "versions": {
+          "1": {
+            "created_time": "2026-10-17T10:19:48.100941764Z",
+            "deletion_time": "",
+            "destroyed": false
+          },
+          "2": {
+            "created_time": "2026-10-27T18:29:29.478313849Z",
+            "deletion_time": "",
+            "destroyed": false
+          }
+        }
+      },
+      "beforeMetadata": {
+        "cas_required": false,
+        "created_time": "2026-10-17T10:19:48.100941764Z",
+        "current_metadata_version": 1,
+        "current_version": 1,
+        "custom_metadata": {
+          "ext-secrets-1.purpose": "ContentDigest",
+          "ext-secrets-1.secretField": "hmacKey",
+          "ext-secrets-1.tenantId": "01M54GTX47NH1PRB00T2YS5048",
+          "ext-secrets-1.versionMappings": "{\"hmac-f1026de1-089a-4080-80a1-047df2ec5f2c\":{\"notBefore\":\"2026-10-17T10:19:48.100941764Z\",\"retiredAt\":null,\"secretVersion\":\"1\",\"state\":\"Active\",\"verifyUntil\":\"2026-10-24T10:19:48.100941+00:00\"}}"
+        },
+        "delete_version_after": "0s",
+        "max_versions": 0,
+        "metadata_cas_required": false,
+        "oldest_version": 0,
+        "updated_time": "2026-10-17T10:19:49.053877995Z",
+        "versions": {
+          "1": {
+            "created_time": "2026-10-17T10:19:48.100941764Z",
+            "deletion_time": "",
+            "destroyed": false
+          }
+        }
+      },
+      "expectedCurrentVersion": 1,
+      "mapping": {
+        "notBefore": "2026-10-27T18:29:29.478313849Z",
+        "retiredAt": null,
+        "secretVersion": "2",
+        "state": "Active",
+        "verifyUntil": "2026-11-03T18:29:29.478313+00:00"
+      },
+      "nativeWriteReceipt": {
+        "data": {
+          "created_time": "2026-10-27T18:29:29.478313849Z",
+          "deletion_time": "",
+          "destroyed": false,
+          "version": 2
+        },
+        "requestId": "8ffec25e-c3bb-d1e0-6578-70dd13ca2471"
+      },
+      "opaqueVersion": "hmac-3867729b-972d-449a-b445-373ee7e6ca12",
+      "original": {
+        "mapping": {
+          "hmac-f1026de1-089a-4080-80a1-047df2ec5f2c": {
+            "notBefore": "2026-10-17T10:19:48.100941764Z",
+            "retiredAt": null,
+            "secretVersion": "1",
+            "state": "Active",
+            "verifyUntil": "2026-10-24T10:19:48.100941+00:00"
+          }
+        },
+        "notBefore": "2026-10-17T10:19:48.100941764Z",
+        "opaqueVersion": "hmac-f1026de1-089a-4080-80a1-047df2ec5f2c",
+        "phase": "MetadataVerified",
+        "providerMetadataSha256": "ab7e8a83beadbcc5acfc3f2c99bbeac5c623e8b86c8e834901a0a0b94389b1bd",
+        "providerReference": "ext-secrets-1-isolated/tenants/01M54GTX47NH1PRB00T2YS5048/ContentDigest/operational",
+        "purpose": "ContentDigest",
+        "secretField": "hmacKey",
+        "secretReference": "tenants/01M54GTX47NH1PRB00T2YS5048/ContentDigest/operational",
+        "secretVersion": "1",
+        "tenantId": "01M54GTX47NH1PRB00T2YS5048",
+        "verifyUntil": "2026-10-24T10:19:48.100941+00:00",
+        "writeReceipt": {
+          "created_time": "2026-10-17T10:19:48.100941764Z",
+          "deletion_time": "",
+          "destroyed": false,
+          "version": 1
+        }
+      },
+      "originalMaterialAndValidityPreserved": true,
+      "phase": "MetadataVerified",
+      "retentionVerification": {
+        "automaticDeletionDisabled": true,
+        "effectiveMaximumVersions": 10
+      },
+      "secretVersion": "2",
+      "startedAt": "2026-10-27T18:29:30.261570+00:00",
+      "verifiedAt": "2026-10-27T18:35:12.630433+00:00"
+    },
+    {
+      "afterMetadata": {
+        "cas_required": false,
+        "created_time": "2026-10-17T10:19:49.932485021Z",
+        "current_metadata_version": 2,
+        "current_version": 2,
+        "custom_metadata": {
+          "ext-secrets-1.purpose": "TrustedEnvelope",
+          "ext-secrets-1.secretField": "hmacKey",
+          "ext-secrets-1.tenantId": "01M54GTX479F4Y9A3MRW578C4R",
+          "ext-secrets-1.versionMappings": "{\"hmac-28fa3bd8-6c82-4e0b-bd18-b057e009b7cf\":{\"notBefore\":\"2026-10-17T10:19:49.932485021Z\",\"retiredAt\":null,\"secretVersion\":\"1\",\"state\":\"Active\",\"verifyUntil\":\"2026-10-24T10:19:49.932485+00:00\"},\"hmac-eba15f8a-21b5-45f2-bb32-1c9e578e3912\":{\"notBefore\":\"2026-10-27T18:29:32.286790576Z\",\"retiredAt\":null,\"secretVersion\":\"2\",\"state\":\"Active\",\"verifyUntil\":\"2026-11-03T18:29:32.286790+00:00\"}}"
+        },
+        "delete_version_after": "0s",
+        "max_versions": 0,
+        "metadata_cas_required": false,
+        "oldest_version": 0,
+        "updated_time": "2026-10-27T18:29:33.166744443Z",
+        "versions": {
+          "1": {
+            "created_time": "2026-10-17T10:19:49.932485021Z",
+            "deletion_time": "",
+            "destroyed": false
+          },
+          "2": {
+            "created_time": "2026-10-27T18:29:32.286790576Z",
+            "deletion_time": "",
+            "destroyed": false
+          }
+        }
+      },
+      "beforeMetadata": {
+        "cas_required": false,
+        "created_time": "2026-10-17T10:19:49.932485021Z",
+        "current_metadata_version": 1,
+        "current_version": 1,
+        "custom_metadata": {
+          "ext-secrets-1.purpose": "TrustedEnvelope",
+          "ext-secrets-1.secretField": "hmacKey",
+          "ext-secrets-1.tenantId": "01M54GTX479F4Y9A3MRW578C4R",
+          "ext-secrets-1.versionMappings": "{\"hmac-28fa3bd8-6c82-4e0b-bd18-b057e009b7cf\":{\"notBefore\":\"2026-10-17T10:19:49.932485021Z\",\"retiredAt\":null,\"secretVersion\":\"1\",\"state\":\"Active\",\"verifyUntil\":\"2026-10-24T10:19:49.932485+00:00\"}}"
+        },
+        "delete_version_after": "0s",
+        "max_versions": 0,
+        "metadata_cas_required": false,
+        "oldest_version": 0,
+        "updated_time": "2026-10-17T10:19:50.975601438Z",
+        "versions": {
+          "1": {
+            "created_time": "2026-10-17T10:19:49.932485021Z",
+            "deletion_time": "",
+            "destroyed": false
+          }
+        }
+      },
+      "expectedCurrentVersion": 1,
+      "mapping": {
+        "notBefore": "2026-10-27T18:29:32.286790576Z",
+        "retiredAt": null,
+        "secretVersion": "2",
+        "state": "Active",
+        "verifyUntil": "2026-11-03T18:29:32.286790+00:00"
+      },
+      "nativeWriteReceipt": {
+        "data": {
+          "created_time": "2026-10-27T18:29:32.286790576Z",
+          "deletion_time": "",
+          "destroyed": false,
+          "version": 2
+        },
+        "requestId": "9f9213b6-8652-2f3f-bf8b-cfe9c135585d"
+      },
+      "opaqueVersion": "hmac-eba15f8a-21b5-45f2-bb32-1c9e578e3912",
+      "original": {
+        "mapping": {
+          "hmac-28fa3bd8-6c82-4e0b-bd18-b057e009b7cf": {
+            "notBefore": "2026-10-17T10:19:49.932485021Z",
+            "retiredAt": null,
+            "secretVersion": "1",
+            "state": "Active",
+            "verifyUntil": "2026-10-24T10:19:49.932485+00:00"
+          }
+        },
+        "notBefore": "2026-10-17T10:19:49.932485021Z",
+        "opaqueVersion": "hmac-28fa3bd8-6c82-4e0b-bd18-b057e009b7cf",
+        "phase": "MetadataVerified",
+        "providerMetadataSha256": "0c484d5afd682e1b9b0dbfd618892ff9081fff13fd11587001547369a29270b2",
+        "providerReference": "ext-secrets-1-isolated/tenants/01M54GTX479F4Y9A3MRW578C4R/TrustedEnvelope/operational",
+        "purpose": "TrustedEnvelope",
+        "secretField": "hmacKey",
+        "secretReference": "tenants/01M54GTX479F4Y9A3MRW578C4R/TrustedEnvelope/operational",
+        "secretVersion": "1",
+        "tenantId": "01M54GTX479F4Y9A3MRW578C4R",
+        "verifyUntil": "2026-10-24T10:19:49.932485+00:00",
+        "writeReceipt": {
+          "created_time": "2026-10-17T10:19:49.932485021Z",
+          "deletion_time": "",
+          "destroyed": false,
+          "version": 1
+        }
+      },
+      "originalMaterialAndValidityPreserved": true,
+      "phase": "MetadataVerified",
+      "retentionVerification": {
+        "automaticDeletionDisabled": true,
+        "effectiveMaximumVersions": 10
+      },
+      "secretVersion": "2",
+      "startedAt": "2026-10-27T18:29:33.089952+00:00",
+      "verifiedAt": "2026-10-27T18:35:14.029375+00:00"
+    },
+    {
+      "afterMetadata": {
+        "cas_required": false,
+        "created_time": "2026-10-17T10:19:52.278667673Z",
+        "current_metadata_version": 2,
+        "current_version": 2,
+        "custom_metadata": {
+          "ext-secrets-1.purpose": "ContentDigest",
+          "ext-secrets-1.secretField": "hmacKey",
+          "ext-secrets-1.tenantId": "01M54GTX479F4Y9A3MRW578C4R",
+          "ext-secrets-1.versionMappings": "{\"hmac-5e9ed87e-6430-48ec-9849-d231fde10e10\":{\"notBefore\":\"2026-10-27T18:29:35.156783337Z\",\"retiredAt\":null,\"secretVersion\":\"2\",\"state\":\"Active\",\"verifyUntil\":\"2026-11-03T18:29:35.156783+00:00\"},\"hmac-ff2df17a-fa11-4cd9-8342-0246ed47225a\":{\"notBefore\":\"2026-10-17T10:19:52.278667673Z\",\"retiredAt\":null,\"secretVersion\":\"1\",\"state\":\"Active\",\"verifyUntil\":\"2026-10-24T10:19:52.278667+00:00\"}}"
+        },
+        "delete_version_after": "0s",
+        "max_versions": 0,
+        "metadata_cas_required": false,
+        "oldest_version": 0,
+        "updated_time": "2026-10-27T18:29:35.974702437Z",
+        "versions": {
+          "1": {
+            "created_time": "2026-10-17T10:19:52.278667673Z",
+            "deletion_time": "",
+            "destroyed": false
+          },
+          "2": {
+            "created_time": "2026-10-27T18:29:35.156783337Z",
+            "deletion_time": "",
+            "destroyed": false
+          }
+        }
+      },
+      "beforeMetadata": {
+        "cas_required": false,
+        "created_time": "2026-10-17T10:19:52.278667673Z",
+        "current_metadata_version": 1,
+        "current_version": 1,
+        "custom_metadata": {
+          "ext-secrets-1.purpose": "ContentDigest",
+          "ext-secrets-1.secretField": "hmacKey",
+          "ext-secrets-1.tenantId": "01M54GTX479F4Y9A3MRW578C4R",
+          "ext-secrets-1.versionMappings": "{\"hmac-ff2df17a-fa11-4cd9-8342-0246ed47225a\":{\"notBefore\":\"2026-10-17T10:19:52.278667673Z\",\"retiredAt\":null,\"secretVersion\":\"1\",\"state\":\"Active\",\"verifyUntil\":\"2026-10-24T10:19:52.278667+00:00\"}}"
+        },
+        "delete_version_after": "0s",
+        "max_versions": 0,
+        "metadata_cas_required": false,
+        "oldest_version": 0,
+        "updated_time": "2026-10-17T10:19:53.121615754Z",
+        "versions": {
+          "1": {
+            "created_time": "2026-10-17T10:19:52.278667673Z",
+            "deletion_time": "",
+            "destroyed": false
+          }
+        }
+      },
+      "expectedCurrentVersion": 1,
+      "mapping": {
+        "notBefore": "2026-10-27T18:29:35.156783337Z",
+        "retiredAt": null,
+        "secretVersion": "2",
+        "state": "Active",
+        "verifyUntil": "2026-11-03T18:29:35.156783+00:00"
+      },
+      "nativeWriteReceipt": {
+        "data": {
+          "created_time": "2026-10-27T18:29:35.156783337Z",
+          "deletion_time": "",
+          "destroyed": false,
+          "version": 2
+        },
+        "requestId": "e5f0f397-a026-dc73-2b00-536fefdeafb1"
+      },
+      "opaqueVersion": "hmac-5e9ed87e-6430-48ec-9849-d231fde10e10",
+      "original": {
+        "mapping": {
+          "hmac-ff2df17a-fa11-4cd9-8342-0246ed47225a": {
+            "notBefore": "2026-10-17T10:19:52.278667673Z",
+            "retiredAt": null,
+            "secretVersion": "1",
+            "state": "Active",
+            "verifyUntil": "2026-10-24T10:19:52.278667+00:00"
+          }
+        },
+        "notBefore": "2026-10-17T10:19:52.278667673Z",
+        "opaqueVersion": "hmac-ff2df17a-fa11-4cd9-8342-0246ed47225a",
+        "phase": "MetadataVerified",
+        "providerMetadataSha256": "bf3d16b767b0272ed8a6becaa5b4bff9ee205612ec7661954e6461382dab7176",
+        "providerReference": "ext-secrets-1-isolated/tenants/01M54GTX479F4Y9A3MRW578C4R/ContentDigest/operational",
+        "purpose": "ContentDigest",
+        "secretField": "hmacKey",
+        "secretReference": "tenants/01M54GTX479F4Y9A3MRW578C4R/ContentDigest/operational",
+        "secretVersion": "1",
+        "tenantId": "01M54GTX479F4Y9A3MRW578C4R",
+        "verifyUntil": "2026-10-24T10:19:52.278667+00:00",
+        "writeReceipt": {
+          "created_time": "2026-10-17T10:19:52.278667673Z",
+          "deletion_time": "",
+          "destroyed": false,
+          "version": 1
+        }
+      },
+      "originalMaterialAndValidityPreserved": true,
+      "phase": "MetadataVerified",
+      "retentionVerification": {
+        "automaticDeletionDisabled": true,
+        "effectiveMaximumVersions": 10
+      },
+      "secretVersion": "2",
+      "startedAt": "2026-10-27T18:29:35.867680+00:00",
+      "verifiedAt": "2026-10-27T18:35:15.455422+00:00"
+    }
+  ],
+  "activationOrdering": [
+    "Verify complete fresh provider/native tenant facts, authentic preservation dispositions, actual workload UIDs/specs, source pins and exact scope approval; retain all 19 old receipts.",
+    "Resolve and pin one credential branch per role. Stage approved successors if necessary while old profile remains expired; no policy, key, mapping or key-window changes.",
+    "Stage both runtime ConfigMaps with only proposed profileValidUntil and, for data replacement only, hmacCredentialReference; retain every null input and settled value.",
+    "Perform approved exact consumer Secret-reference cutover/restart with image/UID/resourceVersion preconditions; verify liveness and intended mounted references. Readiness stays denied while profile is expired.",
+    "Apply eight exact revision-checked host/caller/key-status operations; publish profile last as the ninth activation gate. Retain each durable native receipt before the next operation.",
+    "Verify metadata-only current enrollment/profile/allowlist/permissions and all required health; only then revoke a replaced original accessor. No key-value read or EXT-SECRETS-1 contract case is authorized."
+  ],
+  "failureContainment": {
+    "afterFinalProfile": "When live state exactly equals the planned final generation 28, the separately approved two deny operations may disable the existing callers at revisions 28/29. Foreign/unknown revisions stop for exact original reconciliation.",
+    "automaticRollbackToOldProfileOrCredential": false,
+    "beforeFinalProfile": "Stop with old profile still expired; retain journals, uncertain originals and staged resources. Do not publish profile or roll back retained records.",
+    "proposedDenyOperations": [
+      {
+        "caller": {
+          "callerId": "ext-secrets-1-hmac-inventory",
+          "enabled": false,
+          "notBefore": "2026-10-27T17:37:33.663741+00:00",
+          "validUntil": "2026-10-28T23:51:51.830725+00:00"
+        },
+        "expectedRevision": "e19e68c9537246148141ec9d3841cfe4:28",
+        "host": null,
+        "keyStatus": null,
+        "kind": "SetCaller",
+        "operationId": "fef261529a725566a57a4535911df641",
+        "profile": null
+      },
+      {
+        "caller": {
+          "callerId": "ext-secrets-1-hmac-custody",
+          "enabled": false,
+          "notBefore": "2026-10-27T17:37:33.663741+00:00",
+          "validUntil": "2026-10-28T23:51:51.830725+00:00"
+        },
+        "expectedRevision": "e19e68c9537246148141ec9d3841cfe4:29",
+        "host": null,
+        "keyStatus": null,
+        "kind": "SetCaller",
+        "operationId": "159bda5f58c155029b4f7b0ce3eb036d",
+        "profile": null
+      }
+    ]
+  },
+  "preservation": {
+    "historicalBoundedTransition": {
+      "uid": "a97fa037-798b-46b6-9232-76e600480142",
+      "fromResourceVersion": "36774577",
+      "toResourceVersion": "37223806",
+      "proofAndOwnerAcceptance": null
+    },
+    "laterRecordedTransition": "37223806 -> 37671992",
+    "freshObservedSecretIdentity": {
+      "uid": "a97fa037-798b-46b6-9232-76e600480142",
+      "resourceVersion": "38120141",
+      "observedAtUtc": "2026-10-30T05:58:51.542110+00:00"
+    },
+    "newUnreconciledTransition": "37671992 -> 38120141",
+    "fullHistoricalCoverageRequired": "36774577 through the actual current RV at admission, preserving the bounded earlier transition separately",
+    "retainedUnacceptedDifferences": {
+      "ConfigMap/hexalith-memories/postgresql-tls-reload-state": {
+        "after": {
+          "specSha256": "5d83fb7053bb4372b216426e62d2ea2b9acf1797149da29460922987dac3d33a",
+          "uid": "c034e795-80c5-4fbf-82ef-6c43457aab62"
+        },
+        "before": {
+          "specSha256": "f5cb67af5ca30334c8ebbb4d9750b5cf329395f4ff83bae6122559671d475da2",
+          "uid": "c034e795-80c5-4fbf-82ef-6c43457aab62"
+        }
+      },
+      "Secret/hexalith-memories/access-telemetry-postgresql-tls": {
+        "after": {
+          "resourceVersion": "37605927",
+          "uid": "4c5d9289-f147-46c3-bad8-99d65641c26f"
+        },
+        "before": {
+          "resourceVersion": "28632435",
+          "uid": "4c5d9289-f147-46c3-bad8-99d65641c26f"
+        }
+      },
+      "Secret/kubesphere-system/kubesphere-sa-token": {
+        "after": {
+          "resourceVersion": "37671992",
+          "uid": "a97fa037-798b-46b6-9232-76e600480142"
+        },
+        "before": {
+          "resourceVersion": "37223806",
+          "uid": "a97fa037-798b-46b6-9232-76e600480142"
+        }
+      },
+      "StatefulSet/hexalith-memories/access-telemetry-postgresql": {
+        "after": {
+          "specSha256": "d23b2d7b62b6d5dd73926be1da051717b80093abb74b8cec38f4fb44490bf25f",
+          "uid": "747db81b-04e5-4d22-b747-89d4c6d4d1f4"
+        },
+        "before": {
+          "specSha256": "9cb16a6f958c9d2cdcceafeabb435d2aa888c2b0b334238c22f4e08c2c08fdd0",
+          "uid": "747db81b-04e5-4d22-b747-89d4c6d4d1f4"
+        }
+      }
+    },
+    "retainedUnacceptedRegisterDifference": {
+      "path": "/home/administrator/projects/hexalith/agents/_bmad-output/planning-artifacts/external-dependency-register.md",
+      "sha256": "e29b7fc41cb404209e0abb5fb1e735f29cab253ce4012b142a2c8c30a9c19860"
+    },
+    "ownerDecisionTemplate": {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/preservation-decision.template.json",
+      "sha256": "aef349e44c674fccc5aad9ec50eaaa222813e69c21973723a9fc7829d15688dd"
+    },
+    "freshAcceptedSnapshotSha256": null,
+    "authenticatedDecision": null,
+    "newRevisionHandling": "The old unaccepted template and old snapshot fingerprint do not cover RV 38120141. Stop before apply; collect authentic complete history and exact current dispositions. Never edit the old scope/template/baseline, ignore drift, or describe this metadata read as historical evidence."
+  },
+  "abortRules": [
+    "No mutation in this continuation; all operation descriptions are inherited proposal intents.",
+    "Re-read original authority state, provider leases/scopes/configuration/key metadata, tenant enrollment and preservation before any separately admitted operation. Missing evidence or foreign UID/revision/spec/window denies admission.",
+    "The approved exclusive deadline is fixed at 2026-10-30T16:53:50Z; do not rebase. If it elapses, retain the stop and prepare a later concrete scope; do not extend credentials/profile implicitly.",
+    "Unknown issuance or publication freezes the exact original. Recover its provider/authority outcome from authenticated audit; never repeat issuance, renew, alter operation ID/body/revision, or adopt unknown material.",
+    "Before publication, leave the old expired profile as denial gate. After any consumer cutover, preserve staged successors and originals; no rollback to expired credentials or old authority ledger.",
+    "After exact final revision 28 only, the inherited separately authorized deny intents at revisions 28/29 describe containment for a future approved run; this continuation executes neither. Foreign revisions stop for reconciliation.",
+    "On failed readiness, cleanup uncertainty or missing receipt, retain evidence and fail closed; do not claim operational recovery or availability."
+  ],
+  "postRecoveryChecksProposal": [
+    "All nine /alive,/health,/ready endpoints return intended current results",
+    "Both runtime ConfigMap public documents equal the exact accepted document; strict UTC-Z qualification-format gate remains separate",
+    "Current two hosts, two callers, four exact key versions and issuer/audience/trust verified",
+    "All original receipts, old Secret identities, key generations/windows, unrelated resources and Agents register preserved",
+    "Current selected role grants, expiry and revocation checked without provider data reads; original absent accessors not renewed"
+  ],
+  "pendingInputs": [
+    "Named assessment implementer/recovery lead and different Human deputy appointments",
+    "Authentic complete Secret write coverage and authenticated exact Secret/Memories/register dispositions including new RV 38120141",
+    "Admitted existing intended metadata-only Secret UID/RV/accessor/policy/provenance and current effective read scopes; temporary grant is reversed",
+    "Fresh admitted provider/profile/enrollment/preservation observations and selected successor identities/leases/conditional write RVs; no current accepted profile found"
+  ],
+  "backupCorrectionAllowed": false,
+  "qualificationAllowed": false,
+  "productionBackendAllowed": false,
+  "transportCredentialReferences": {
+    "source": {
+      "path": "/home/administrator/projects/hexalith/platform-ext-secrets-1-runtime-foundations-20261017/eng/ext-secrets-1/recover_expired_hmac.py",
+      "sha256": "11f8343a1626f1f5383aec9afc6016189cbb89244f2b7375dfa29d76f43c1f5d"
+    },
+    "scope": "References recovered from the later tested existing executor; no values read, access grant acquired or privileged transport executed in this continuation. Current identities/grants require separate admitted verification.",
+    "authorityAdminOidc": "ext-secrets-1-isolated/Secret/ext-secrets-1-hmac-authority-owner-identity#client-secret",
+    "authorityAdministratorClientId": "ext-secrets-1-hmac-owner",
+    "authorityAdministratorChannel": "ext-secrets-1-isolated/Secret/ext-secrets-1-hmac-authority-administrator-channel-token#token",
+    "providerOperator": "openbao/Secret/openbao-operator-credentials#operator-token",
+    "inventoryOidcClientId": "ext-secrets-1-isolated/Secret/ext-secrets-1-registry-oidc-inventory#client-id",
+    "inventoryOidcClientSecret": "ext-secrets-1-isolated/Secret/ext-secrets-1-registry-oidc-inventory#client-secret",
+    "inventoryDapr": "ext-secrets-1-isolated/Secret/ext-secrets-1-inventory-dapr-token#token",
+    "adminAndOperatorCurrentSecretIdentities": null,
+    "activeMetadataReadTransport": null,
+    "rule": "Do not substitute admin/operator possession for historical proof or a workload metadata-only credential. Existing recorded command uses the exact current authority token and JWT through native helpers; no new transport is commissioned."
+  }
+}

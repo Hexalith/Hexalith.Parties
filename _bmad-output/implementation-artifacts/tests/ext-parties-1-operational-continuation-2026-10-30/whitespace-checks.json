@@ -1,0 +1,198 @@
+{
+  "initialNoIndexCheck": {
+    "command": "git diff --no-index --check /dev/null docs/implementation/ext-parties-1-operational-continuation-2026-10-30.md",
+    "exitCode": 3,
+    "result": "Git treated the configured CRLF terminators as trailing whitespace in every added line. Final checks explicitly recognize CRLF while retaining blank-at-eol, blank-at-eof and space-before-tab checks."
+  },
+  "passed": true,
+  "checks": [
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "docs/implementation/ext-parties-1-operational-continuation-2026-10-30.md"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/connected-source-search.json"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/evidence-findings.json"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/executor-source-observation.json"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/kubernetes-metadata-read-only.json"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/local-source-discovery.json"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/operational-recovery-proposal.json"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/preservation-before.json"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/source-references.json"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/validation.json"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/verify_continuation.py"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "",
+      "passed": true
+    }
+  ],
+  "noIndexExitConvention": "For --no-index, exit 1 with no diagnostics means the new file differs from /dev/null and has no whitespace errors; whitespace-error bit 2 produced initial exit 3."
+}

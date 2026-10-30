@@ -1,0 +1,60 @@
+{
+  "schema": "ext-parties-1-owner-prerequisite-handoff.v1",
+  "preparedAtUtc": "2026-10-29T12:38:31.761405+00:00",
+  "recommendation": "Existing Kubernetes/Dapr/OpenBao operational recovery and contract-only V2 assessment; no complete qualifying existing-resource installation established",
+  "ownerApprovalRecorded": false,
+  "assessment": {
+    "proposedEngineerDaysMaximum": 2,
+    "proposedNewInfrastructureSpend": 0,
+    "currency": "No new spend proposed; existing allocation requires owner confirmation",
+    "implementer": null,
+    "recoveryDeputy": null,
+    "productionImplementationAuthorized": false,
+    "recoveryExecutionAuthorized": false
+  },
+  "newAcceptedTarget": null,
+  "newAcceptedIntegrationDate": null,
+  "installedHistoryHashes": null,
+  "liveExecuted": false,
+  "liveAuthorized": false,
+  "qualificationExecuted": false,
+  "dependencyAvailable": false,
+  "historicalRegister": {
+    "path": "../agents/_bmad-output/planning-artifacts/external-dependency-register.md",
+    "status": "Committed",
+    "available": false,
+    "target": "56cb4401c4179d431385ad3d931fefa402e4fc5a",
+    "missedIntegrationDate": "2026-10-08",
+    "modifiedByThisWork": false
+  },
+  "remainingDecisions": [
+    "R1",
+    "R2",
+    "R3",
+    "R4",
+    "R5",
+    "R6",
+    "R7",
+    "R8",
+    "R9",
+    "R10"
+  ],
+  "originalLedgerCounts": {
+    "decisionNullPaths": 661,
+    "bindingNullPaths": 165
+  },
+  "queryScope": "One explicitly pinned Kubernetes context; selected public metadata only; not provider validity or external resource discovery",
+  "kubernetesReadRequests": 8,
+  "providerApiRequests": 0,
+  "secretValuesRequested": false,
+  "futureFullDeliveryGates": [
+    "Affected-owner design and scope ratification",
+    "Operational/privacy approval and real scoped appointments",
+    "Existing independent time/fence resources and complete C01-C16 coverage verified",
+    "Exact reviewed and accepted installation and qualification scope",
+    "Coordinated immutable canonical source/package/image/profile/config/plan/trust targets accepted",
+    "Actual installed history artifacts and hashes verified",
+    "Supportable explicit owner integration date accepted",
+    "Real full B15 pass path and exact D03/D04 permissions"
+  ]
+}

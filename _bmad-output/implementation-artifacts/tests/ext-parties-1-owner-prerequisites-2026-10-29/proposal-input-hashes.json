@@ -1,0 +1,12 @@
+{
+  "scope": "Proposed contract-only V2 direction; no acceptance or operational policy inferred",
+  "observedAtUtc": "2026-10-29T12:38:31.744116+00:00",
+  "files": {
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/compatibility-contract.md": "64a3dbf1027a1057a01d2a9df6e190bdcf7399bffca0d8d7201eaec8ce842da8",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/api-schemas.md": "88368dada2e038e702093bb0012c0ea735e00d2798a7ec9905f4f76475d8d9d5",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/implementation-plan.md": "356df1b4661ca3cea85a2e993560986c5854c45795d464237f70806cfc293fad",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/acceptance-tests.md": "9bf036dc7b3217e26855dcd3da7f6229b136831988551a9907928d1c9439a34c",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/readiness-decisions.md": "37daa86263423c47e1a1635ff948fc975efd699faae4b8781d0582a527039e25"
+  },
+  "ownerApproved": false
+}

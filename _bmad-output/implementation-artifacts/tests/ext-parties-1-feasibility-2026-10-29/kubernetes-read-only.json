@@ -1,0 +1,529 @@
+[
+  {
+    "argv": [
+      "kubectl",
+      "--kubeconfig",
+      "/home/administrator/.kube/hexalith-production",
+      "--context",
+      "jpiquot@local",
+      "--request-timeout=10s",
+      "get",
+      "cronjob",
+      "openbao-raft-snapshot",
+      "-n",
+      "openbao",
+      "-o",
+      "json"
+    ],
+    "observedAt": "2026-10-29T16:47:18.439455+00:00",
+    "exitCode": 0,
+    "output": {
+      "uid": "c10e477c-0f4b-49f1-bd8f-d36ed29d4e91",
+      "schedule": "30 0 * * *",
+      "status": {
+        "lastScheduleTime": "2026-10-29T00:30:00Z",
+        "lastSuccessfulTime": "2026-10-29T00:30:05Z"
+      },
+      "containers": [
+        {
+          "name": "snapshot",
+          "image": "quay.io/openbao/openbao:2.6.2@sha256:11fd73a2102cda9c55d5d881a8c3210303146a7ec1e8ac76f526e175c6d24641",
+          "command": [
+            "/bin/sh",
+            "-ec"
+          ],
+          "args": [
+            "umask 077\nbao login -no-store=false -method=kubernetes \\\n  role=openbao-snapshot \\\n  jwt=@/var/run/secrets/openbao/token >/dev/null\ntimestamp=\"$(date -u +%Y%m%dT%H%M%SZ)\"\nsnapshot=\"openbao-${timestamp}.snap\"\ntrap 'rm -f /home/openbao/.bao-token /home/openbao/.vault-token /snapshots/*.new' EXIT\nbao operator raft snapshot save \"/snapshots/${snapshot}.new\"\nmv \"/snapshots/${snapshot}.new\" \"/snapshots/${snapshot}\"\ncd /snapshots\nsha256sum \"${snapshot}\" > \"${snapshot}.sha256\"\nsha256sum -c \"${snapshot}.sha256\"\n# Publish latest atomically; preserve dated generations for 14 days.\ncp \"${snapshot}\" openbao.snap.new\nmv openbao.snap.new openbao.snap\nfind /snapshots -type f -name 'openbao-*.snap' -mtime +14 -delete\nfind /snapshots -type f -name 'openbao-*.snap.sha256' -mtime +14 -delete\n"
+          ],
+          "volumeMounts": [
+            {
+              "mountPath": "/snapshots",
+              "name": "snapshots"
+            },
+            {
+              "mountPath": "/var/run/openbao-tls",
+              "name": "openbao-tls",
+              "readOnly": true
+            },
+            {
+              "mountPath": "/var/run/secrets/openbao",
+              "name": "service-account-token",
+              "readOnly": true
+            },
+            {
+              "mountPath": "/home/openbao",
+              "name": "home"
+            }
+          ]
+        }
+      ],
+      "volumes": [
+        {
+          "name": "snapshots",
+          "persistentVolumeClaim": {
+            "claimName": "openbao-snapshots"
+          }
+        },
+        {
+          "name": "openbao-tls",
+          "secret": {
+            "defaultMode": 420,
+            "items": [
+              {
+                "key": "ca.crt",
+                "path": "ca.crt"
+              }
+            ],
+            "secretName": "openbao-server-tls"
+          }
+        },
+        {
+          "name": "service-account-token",
+          "projected": {
+            "defaultMode": 420,
+            "sources": [
+              {
+                "serviceAccountToken": {
+                  "audience": "openbao-snapshot",
+                  "expirationSeconds": 600,
+                  "path": "token"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "emptyDir": {
+            "medium": "Memory",
+            "sizeLimit": "16Mi"
+          },
+          "name": "home"
+        }
+      ]
+    },
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "kubectl",
+      "--kubeconfig",
+      "/home/administrator/.kube/hexalith-production",
+      "--context",
+      "jpiquot@local",
+      "--request-timeout=10s",
+      "get",
+      "pods",
+      "-n",
+      "openbao",
+      "-o",
+      "json"
+    ],
+    "observedAt": "2026-10-29T16:47:18.673617+00:00",
+    "exitCode": 0,
+    "output": [
+      {
+        "name": "hexalith-keys-0",
+        "uid": "01cae80b-4142-4d85-b8ba-e6295371b832",
+        "node": "node1",
+        "phase": "Running",
+        "volumes": [
+          {
+            "name": "data",
+            "persistentVolumeClaim": {
+              "claimName": "data-hexalith-keys-0"
+            }
+          },
+          {
+            "name": "audit",
+            "persistentVolumeClaim": {
+              "claimName": "audit-hexalith-keys-0"
+            }
+          },
+          {
+            "configMap": {
+              "defaultMode": 420,
+              "name": "hexalith-keys-config"
+            },
+            "name": "config"
+          },
+          {
+            "name": "openbao-server-tls",
+            "secret": {
+              "defaultMode": 288,
+              "secretName": "openbao-server-tls"
+            }
+          },
+          {
+            "name": "openbao-seal",
+            "secret": {
+              "defaultMode": 288,
+              "secretName": "openbao-seal"
+            }
+          },
+          {
+            "emptyDir": {
+              "medium": "Memory",
+              "sizeLimit": "64Mi"
+            },
+            "name": "tmp"
+          },
+          {
+            "emptyDir": {},
+            "name": "home"
+          },
+          {
+            "name": "kube-api-access-b49k2",
+            "projected": {
+              "defaultMode": 420,
+              "sources": [
+                {
+                  "serviceAccountToken": {
+                    "expirationSeconds": 3607,
+                    "path": "token"
+                  }
+                },
+                {
+                  "configMap": {
+                    "items": [
+                      {
+                        "key": "ca.crt",
+                        "path": "ca.crt"
+                      }
+                    ],
+                    "name": "kube-root-ca.crt"
+                  }
+                },
+                {
+                  "downwardAPI": {
+                    "items": [
+                      {
+                        "fieldRef": {
+                          "apiVersion": "v1",
+                          "fieldPath": "metadata.namespace"
+                        },
+                        "path": "namespace"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "hexalith-keys-1",
+        "uid": "f89ff29e-0a36-4e46-bff0-6e545bfb4001",
+        "node": "node1",
+        "phase": "Running",
+        "volumes": [
+          {
+            "name": "data",
+            "persistentVolumeClaim": {
+              "claimName": "data-hexalith-keys-1"
+            }
+          },
+          {
+            "name": "audit",
+            "persistentVolumeClaim": {
+              "claimName": "audit-hexalith-keys-1"
+            }
+          },
+          {
+            "configMap": {
+              "defaultMode": 420,
+              "name": "hexalith-keys-config"
+            },
+            "name": "config"
+          },
+          {
+            "name": "openbao-server-tls",
+            "secret": {
+              "defaultMode": 288,
+              "secretName": "openbao-server-tls"
+            }
+          },
+          {
+            "name": "openbao-seal",
+            "secret": {
+              "defaultMode": 288,
+              "secretName": "openbao-seal"
+            }
+          },
+          {
+            "emptyDir": {
+              "medium": "Memory",
+              "sizeLimit": "64Mi"
+            },
+            "name": "tmp"
+          },
+          {
+            "emptyDir": {},
+            "name": "home"
+          },
+          {
+            "name": "kube-api-access-p6425",
+            "projected": {
+              "defaultMode": 420,
+              "sources": [
+                {
+                  "serviceAccountToken": {
+                    "expirationSeconds": 3607,
+                    "path": "token"
+                  }
+                },
+                {
+                  "configMap": {
+                    "items": [
+                      {
+                        "key": "ca.crt",
+                        "path": "ca.crt"
+                      }
+                    ],
+                    "name": "kube-root-ca.crt"
+                  }
+                },
+                {
+                  "downwardAPI": {
+                    "items": [
+                      {
+                        "fieldRef": {
+                          "apiVersion": "v1",
+                          "fieldPath": "metadata.namespace"
+                        },
+                        "path": "namespace"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "hexalith-keys-2",
+        "uid": "3ef0013e-6a88-433c-ba88-974b9a3047c2",
+        "node": "node1",
+        "phase": "Running",
+        "volumes": [
+          {
+            "name": "data",
+            "persistentVolumeClaim": {
+              "claimName": "data-hexalith-keys-2"
+            }
+          },
+          {
+            "name": "audit",
+            "persistentVolumeClaim": {
+              "claimName": "audit-hexalith-keys-2"
+            }
+          },
+          {
+            "configMap": {
+              "defaultMode": 420,
+              "name": "hexalith-keys-config"
+            },
+            "name": "config"
+          },
+          {
+            "name": "openbao-server-tls",
+            "secret": {
+              "defaultMode": 288,
+              "secretName": "openbao-server-tls"
+            }
+          },
+          {
+            "name": "openbao-seal",
+            "secret": {
+              "defaultMode": 288,
+              "secretName": "openbao-seal"
+            }
+          },
+          {
+            "emptyDir": {
+              "medium": "Memory",
+              "sizeLimit": "64Mi"
+            },
+            "name": "tmp"
+          },
+          {
+            "emptyDir": {},
+            "name": "home"
+          },
+          {
+            "name": "kube-api-access-zlh6z",
+            "projected": {
+              "defaultMode": 420,
+              "sources": [
+                {
+                  "serviceAccountToken": {
+                    "expirationSeconds": 3607,
+                    "path": "token"
+                  }
+                },
+                {
+                  "configMap": {
+                    "items": [
+                      {
+                        "key": "ca.crt",
+                        "path": "ca.crt"
+                      }
+                    ],
+                    "name": "kube-root-ca.crt"
+                  }
+                },
+                {
+                  "downwardAPI": {
+                    "items": [
+                      {
+                        "fieldRef": {
+                          "apiVersion": "v1",
+                          "fieldPath": "metadata.namespace"
+                        },
+                        "path": "namespace"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "openbao-raft-snapshot-29885790-4fc8j",
+        "uid": "cbc74d73-f304-4d0a-9398-872a1d239b69",
+        "node": "node1",
+        "phase": "Succeeded",
+        "volumes": [
+          {
+            "name": "snapshots",
+            "persistentVolumeClaim": {
+              "claimName": "openbao-snapshots"
+            }
+          },
+          {
+            "name": "openbao-tls",
+            "secret": {
+              "defaultMode": 420,
+              "items": [
+                {
+                  "key": "ca.crt",
+                  "path": "ca.crt"
+                }
+              ],
+              "secretName": "openbao-server-tls"
+            }
+          },
+          {
+            "name": "service-account-token",
+            "projected": {
+              "defaultMode": 420,
+              "sources": [
+                {
+                  "serviceAccountToken": {
+                    "audience": "openbao-snapshot",
+                    "expirationSeconds": 600,
+                    "path": "token"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "emptyDir": {
+              "medium": "Memory",
+              "sizeLimit": "16Mi"
+            },
+            "name": "home"
+          }
+        ]
+      },
+      {
+        "name": "openbao-raft-snapshot-29887230-7kgmb",
+        "uid": "890c9aec-b16e-4aac-ba11-8ea5eae4dda3",
+        "node": "node1",
+        "phase": "Succeeded",
+        "volumes": [
+          {
+            "name": "snapshots",
+            "persistentVolumeClaim": {
+              "claimName": "openbao-snapshots"
+            }
+          },
+          {
+            "name": "openbao-tls",
+            "secret": {
+              "defaultMode": 420,
+              "items": [
+                {
+                  "key": "ca.crt",
+                  "path": "ca.crt"
+                }
+              ],
+              "secretName": "openbao-server-tls"
+            }
+          },
+          {
+            "name": "service-account-token",
+            "projected": {
+              "defaultMode": 420,
+              "sources": [
+                {
+                  "serviceAccountToken": {
+                    "audience": "openbao-snapshot",
+                    "expirationSeconds": 600,
+                    "path": "token"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "emptyDir": {
+              "medium": "Memory",
+              "sizeLimit": "16Mi"
+            },
+            "name": "home"
+          }
+        ]
+      }
+    ],
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "kubectl",
+      "--kubeconfig",
+      "/home/administrator/.kube/hexalith-production",
+      "--context",
+      "jpiquot@local",
+      "--request-timeout=10s",
+      "top",
+      "pods",
+      "-n",
+      "openbao"
+    ],
+    "observedAt": "2026-10-29T16:47:18.928194+00:00",
+    "exitCode": 0,
+    "output": "NAME              CPU(cores)   MEMORY(bytes)   \nhexalith-keys-0   46m          76Mi            \nhexalith-keys-1   61m          164Mi           \nhexalith-keys-2   40m          74Mi            \n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "kubectl",
+      "--kubeconfig",
+      "/home/administrator/.kube/hexalith-production",
+      "--context",
+      "jpiquot@local",
+      "--request-timeout=10s",
+      "top",
+      "nodes"
+    ],
+    "observedAt": "2026-10-29T16:47:19.161106+00:00",
+    "exitCode": 0,
+    "output": "NAME    CPU(cores)   CPU(%)   MEMORY(bytes)   MEMORY(%)   \nnode1   1175m        3%       17684Mi         14%         \n",
+    "stderr": ""
+  }
+]

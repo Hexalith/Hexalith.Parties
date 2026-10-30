@@ -1,0 +1,23 @@
+{
+  "observedAtUtc": "2026-10-29T12:33:30.758032+00:00",
+  "liveInputPresence": {
+    "EXT_PARTIES_GATEWAY_URL": false,
+    "EXT_PARTIES_TENANT_A": false,
+    "EXT_PARTIES_TENANT_B": false,
+    "EXT_PARTIES_PROVISIONER_CREDENTIAL": false,
+    "EXT_PARTIES_IDENTITY_WRITER_CREDENTIAL": false,
+    "EXT_PARTIES_READER_CREDENTIAL": false,
+    "EXT_PARTIES_POLICY_ID": false,
+    "EXT_PARTIES_RETENTION": false,
+    "EXT_PARTIES_EXPIRY_TRIGGER": false,
+    "EXT_PARTIES_CUSTODY_TARGET": false,
+    "EXT_PARTIES_RESTORE_TARGET": false,
+    "EXT_PARTIES_FAILURE_INJECTION_TARGET": false
+  },
+  "valuesReadIntoEvidence": false,
+  "ownerEvidenceDirectoryExists": false,
+  "liveHasUnconditionalRefusal": true,
+  "installedHistoryHashes": null,
+  "newAcceptedTarget": null,
+  "newAcceptedIntegrationDate": null
+}

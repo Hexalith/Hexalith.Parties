@@ -1,0 +1,97 @@
+{
+  "recordedAtUtc": "2026-10-30 05:58:33 UTC",
+  "searches": [
+    {
+      "status": "fulfilled",
+      "value": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Action completed."
+          }
+        ],
+        "structuredContent": {
+          "issues": [
+            {
+              "url": "https://github.com/Hexalith/Hexalith.Parties/issues/54",
+              "title": "EXT-PARTIES-1: decide A or B and commit actor binding",
+              "issue_number": 54,
+              "body": "Hexalith.Agents Story 5.4 and later identity/review consumers are blocked on the Parties-owned `EXT-PARTIES-1` record. See [the complete register contract](https://github.com/Hexalith/Hexalith.Agents/blob/main/_bmad-output/planning-artifacts/external-dependency-register.md#ext-parties-1--agent-party-identity-contract). Current Parties detail exposes type and active state, but the public query has no stable `AuthenticatedHumanActorId`, binding version, validity interval, or historical binding lookup.\n\n**Product and Parties decision required:** formally select Branch A (new AI Party type and Agents-only create authority) or Branch B (approve the existing Organization-typed provisioned Party for V1). Neither branch is selected by current code. Both require immutable deterministic identity-by-id, tenant-scoped create-only provisioning under the Agents Service Principal, exact idempotent retries, typed divergent conflict, no tenant-role replacement, and no Party PII in public results. AI type verification is additional only for Branch A.\n\nIndependent of the branch, the same accepted target must expose tenant-scoped authoritative Party-by-id classification, current active/liveness, evidence position/observed instant, and typed missing/ambiguous/stale/denied/unavailable. Human Parties also need stable non-PII actor ID, binding version and validity interval, plus queryable history that reproduces the binding at an action instant. Typed missing, overlapping, ambiguous, stale, and actor-mismatch cases must fail closed; non-human Parties cannot be Approvers.\n\nFor register acceptance, please reply with:\n- explicit Product and Parties Maintainer acceptance of A or B, plus the final public members and typed outcomes;\n- one immutable package version or full commit for the **complete** identity and actor-binding target;\n- an accepted target integration date;\n- the exact executable clean-checkout compatibility command and live Level 4 evidence covering current/historical binding, cross-tenant denial, and provisioning conflict, with Level 5 requirements acknowledged.\n\nBranch-B-compatible Agents development is permitted by the register but does not establish launch evidence or make this record Available.\n",
+              "state": null,
+              "user": null,
+              "assignees": null,
+              "labels": null,
+              "milestone": null,
+              "state_reason": null,
+              "comments": null,
+              "created_at": null,
+              "updated_at": null,
+              "closed_at": null,
+              "display_url": "https://github.com/Hexalith/Hexalith.Parties/issues/54",
+              "display_title": "EXT-PARTIES-1: decide A or B and commit actor binding"
+            }
+          ]
+        },
+        "isError": false
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Action completed."
+          }
+        ],
+        "structuredContent": {
+          "results": [],
+          "has_more": false,
+          "next_from_index": null
+        },
+        "isError": false
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Action completed."
+          }
+        ],
+        "structuredContent": {
+          "results": [],
+          "reason": "query_too_restrictive",
+          "applied_filters": {
+            "team_id": null,
+            "channel_id": null,
+            "chat_id": null,
+            "sender_name": [],
+            "recipient_name": [],
+            "sent_after": "2026-10-29T00:00:00+00:00",
+            "include_channel_threads": true
+          }
+        },
+        "isError": false
+      }
+    },
+    {
+      "content": [
+        {
+          "type": "text",
+          "text": "Action completed."
+        }
+      ],
+      "structuredContent": {
+        "comments": [],
+        "url": "https://github.com/Hexalith/Hexalith.Parties/issues/54",
+        "title": "Hexalith/Hexalith.Parties Issue #54 comments",
+        "display_url": "https://github.com/Hexalith/Hexalith.Parties/issues/54",
+        "display_title": "Hexalith/Hexalith.Parties Issue #54 comments"
+      },
+      "isError": false
+    }
+  ]
+}

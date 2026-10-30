@@ -1,0 +1,450 @@
+{
+  "checkedAtUtc": "2026-10-30T08:02:38.217497+00:00",
+  "passed": true,
+  "interpretation": "--no-index implies --exit-code. Exit 1 without diagnostics means the file differs from /dev/null; whitespace diagnostics or execution errors fail.",
+  "commands": [
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "docs/implementation/ext-parties-1-operational-continuation-2026-10-30.md"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/connected-source-search.json"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/evidence-findings.json"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/external-discovery.json"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/kubernetes-read-only.json"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/preservation-before.json"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/recovery-proposal-continuation.json"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/repository-discovery.json"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/source-drift-at-validation.json"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/source-observations.json"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/source-references.json"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/source-snapshots/sprint-status.yaml"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/targeted-discovery.json"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/validation-attempts.json"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/validation.json"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/verify_continuation.py"
+      ],
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "earlierEvaluation": {
+    "checkedAtUtc": "2026-10-30T07:27:29.330792+00:00",
+    "passed": true,
+    "commands": [
+      {
+        "argv": [
+          "git",
+          "-c",
+          "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "docs/implementation/ext-parties-1-operational-continuation-2026-10-30.md"
+        ],
+        "exitCode": 1,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "argv": [
+          "git",
+          "-c",
+          "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/connected-source-search.json"
+        ],
+        "exitCode": 1,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "argv": [
+          "git",
+          "-c",
+          "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/evidence-findings.json"
+        ],
+        "exitCode": 1,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "argv": [
+          "git",
+          "-c",
+          "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/external-discovery.json"
+        ],
+        "exitCode": 1,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "argv": [
+          "git",
+          "-c",
+          "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/kubernetes-read-only.json"
+        ],
+        "exitCode": 1,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "argv": [
+          "git",
+          "-c",
+          "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/preservation-before.json"
+        ],
+        "exitCode": 1,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "argv": [
+          "git",
+          "-c",
+          "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/recovery-proposal-continuation.json"
+        ],
+        "exitCode": 1,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "argv": [
+          "git",
+          "-c",
+          "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/repository-discovery.json"
+        ],
+        "exitCode": 1,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "argv": [
+          "git",
+          "-c",
+          "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/source-observations.json"
+        ],
+        "exitCode": 1,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "argv": [
+          "git",
+          "-c",
+          "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/source-references.json"
+        ],
+        "exitCode": 1,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "argv": [
+          "git",
+          "-c",
+          "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/targeted-discovery.json"
+        ],
+        "exitCode": 1,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "argv": [
+          "git",
+          "-c",
+          "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/validation.json"
+        ],
+        "exitCode": 1,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "argv": [
+          "git",
+          "-c",
+          "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/verify_continuation.py"
+        ],
+        "exitCode": 1,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "initialEvaluation": "Exit 1 was initially classified as failure; --no-index implies --exit-code, so these additions differ from /dev/null. All raw command results remain preserved below.",
+    "interpretation": "For git diff --no-index --check, exit 1 with no stdout/stderr is an expected file difference; whitespace diagnostics or execution errors fail. Independent trailing-whitespace checks also run in verify_continuation.py."
+  }
+}
