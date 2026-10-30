@@ -9,6 +9,7 @@ using Hexalith.EventStore.Server.Events;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Queries;
 using Hexalith.Parties.Contracts.ValueObjects;
 
 using Shouldly;
@@ -107,7 +108,8 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture) : 
             using HttpResponseMessage response = await fixture.Gateway.PostAsJsonAsync("/api/v1/queries", new
             {
                 tenant = fixture.Environment.SyntheticTenantId, domain = "party", aggregateId = partyId,
-                queryType = "PartyDetail", projectionType = "party-detail", projectionActorType = "PartyDetailProjectionQueryActor", entityId = partyId,
+                queryType = "PartyDetail", projectionType = "party-detail", entityId = partyId,
+                payload = new GetParty { PartyId = partyId },
             }, token).ConfigureAwait(true);
             if (response.StatusCode == HttpStatusCode.OK)
             {
