@@ -1288,6 +1288,15 @@ public sealed class EventStoreGatewayRoutingTests
                 }
 
 #if HEXALITH_EVENTSTORE_SOURCE_CATALOG
+                // This protocol-only fixture already replaces catalog-enforced entry points
+                // through their friend seam. Exclude only the corresponding new pipeline gate;
+                // tenant/RBAC and HTTP security validation continue to run. The Platform suite
+                // qualifies real catalog admission independently.
+                ServiceDescriptor[] eligibility = [.. services.Where(descriptor =>
+                    descriptor.ServiceType == typeof(MediatR.IPipelineBehavior<,>)
+                    && descriptor.ImplementationType == typeof(Hexalith.EventStore.Pipeline.RouteCatalogEligibilityBehavior<,>))];
+                eligibility.Length.ShouldBe(1);
+                services.Remove(eligibility[0]);
                 // Preserve the explicit friend-only protocol seam: these tests supply in-memory
                 // routing and stores, while the Platform lane verifies the real catalog owner.
                 services.AddControllers().AddControllersAsServices();

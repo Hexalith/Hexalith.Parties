@@ -39,7 +39,7 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, IT
         using HttpResponseMessage memoriesResponse = await fixture.Memories.GetAsync($"tenants/{Uri.EscapeDataString(tenant)}", token).ConfigureAwait(true);
         memoriesResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
         using JsonDocument memoriesDocument = JsonDocument.Parse(await memoriesResponse.Content.ReadAsStringAsync(token).ConfigureAwait(true));
-        memoriesDocument.RootElement.GetProperty("id").GetString().ShouldBe(tenant);
+        AssertActiveMemoriesTenant(memoriesDocument.RootElement, tenant);
 
         string partyId = UniqueIdHelper.GenerateSortableUniqueStringId();
         string commandId = UniqueIdHelper.GenerateSortableUniqueStringId();
@@ -85,6 +85,62 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, IT
         created.CreatedAt.ShouldBeLessThanOrEqualTo(createdEnvelope.Timestamp);
         detail.CreatedAt.ShouldBe(createdEnvelope.Timestamp);
         output.WriteLine($"Persisted synthetic stream: {events.Length} exact event envelopes; tenant={tenant}; domain={identity.Domain}; aggregate={partyId}; command={commandId}; metadataSequence={metadata.CurrentSequence}; createdEnvelopeTimestamp={createdEnvelope.Timestamp:O}; Tenants and Memories returned the run tenant.");
+        await WritePersistenceObservationsAsync(new
+        {
+            runId = fixture.Environment.RunId,
+            status = "functional-observations-passed",
+            qualificationCredit = false,
+            observedAtUtc = DateTimeOffset.UtcNow,
+            aggregate = new { identity.TenantId, identity.Domain, identity.AggregateId },
+            commandId,
+            metadataSequence = metadata.CurrentSequence,
+            eventCount = events.Length,
+            projection = new { detail.Id, detail.CreatedAt, freshness = detail.Freshness.Status },
+            events = events.Select(envelope => new
+            {
+                envelope.Identity, envelope.SequenceNumber, envelope.EventTypeName, envelope.Timestamp,
+                envelope.CorrelationId, envelope.CausationId, envelope.UserId, envelope.SerializationFormat,
+            }).ToArray(),
+            tenantsNativeQueryObserved = tenantDocument.RootElement.GetProperty("tenantId").GetString() == tenant,
+            memoriesRegistryObserved = memoriesDocument.RootElement.GetProperty("id").GetString() == tenant
+                && memoriesDocument.RootElement.GetProperty("status").GetString() == "active",
+        }, token).ConfigureAwait(true);
+    }
+
+    /// <summary>Requires the currently observed registry tenant to be the active run tenant.</summary>
+    /// <param name="tenant">The actual Memories response.</param>
+    /// <param name="expectedId">The runner-supplied synthetic tenant.</param>
+    internal static void AssertActiveMemoriesTenant(JsonElement tenant, string expectedId)
+    {
+        tenant.GetProperty("id").GetString().ShouldBe(expectedId);
+        tenant.GetProperty("status").GetString().ShouldBe("active");
+    }
+
+    private static async Task WritePersistenceObservationsAsync<T>(T observation, CancellationToken token)
+    {
+        string? descriptor = System.Environment.GetEnvironmentVariable("HEXALITH_TEST_ENVIRONMENT_PATH");
+        string? report = System.Environment.GetEnvironmentVariable("HEXALITH_G4_TEST_REPORT_PATH");
+        if (string.IsNullOrWhiteSpace(descriptor) || string.IsNullOrWhiteSpace(report)
+            || !Path.IsPathFullyQualified(descriptor) || !Path.IsPathFullyQualified(report))
+            throw new InvalidOperationException("The explicit owning native observation binding is unavailable.");
+        string workspace = Path.GetDirectoryName(Path.GetFullPath(descriptor))!;
+        string directory = Path.Combine(workspace, "native-tests");
+        if (Path.GetDirectoryName(Path.GetFullPath(report)) != directory || Path.GetFileName(report) != "native.trx"
+            || !Directory.Exists(directory))
+            throw new InvalidOperationException("The native report differs from the descriptor-owned output directory.");
+        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(observation, SerializerOptions);
+        if (bytes.Length > 65536) throw new InvalidOperationException("The native observation exceeds its bounded output contract.");
+        var options = new FileStreamOptions
+        {
+            Mode = FileMode.CreateNew, Access = FileAccess.Write, Share = FileShare.None, Options = FileOptions.Asynchronous,
+        };
+        if (!OperatingSystem.IsWindows()) options.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+        FileStream stream = new(Path.Combine(directory, "functional-observations.json"), options);
+        await using (stream.ConfigureAwait(false))
+        {
+            await stream.WriteAsync(bytes, token).ConfigureAwait(false);
+            await stream.FlushAsync(token).ConfigureAwait(false);
+        }
     }
 
     private async Task<JsonDocument> PollStatusAsync(string commandId, CancellationToken token)

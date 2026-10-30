@@ -16,7 +16,7 @@ public sealed class SignalRSecurityFloorTests
     [InlineData("Hexalith.Parties.UI.Tests")]
     public void RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(string project)
     {
-        string assetsPath = CiTestPaths.RepoFile($"tests/{project}/obj/project.assets.json");
+        string assetsPath = CiTestPaths.ProjectAssetsFile($"tests/{project}");
         File.Exists(assetsPath).ShouldBeTrue("CI must restore the configured solution before executing its verification lane.");
         using JsonDocument assets = JsonDocument.Parse(File.ReadAllText(assetsPath));
         foreach (string packageId in new[]
@@ -39,7 +39,7 @@ public sealed class SignalRSecurityFloorTests
         string configuration = typeof(SignalRSecurityFloorTests).Assembly
             .GetCustomAttributes(typeof(System.Reflection.AssemblyConfigurationAttribute), false)
             .Cast<System.Reflection.AssemblyConfigurationAttribute>().Single().Configuration;
-        using (JsonDocument assets = JsonDocument.Parse(File.ReadAllText(Path.Combine(ui, "obj", "project.assets.json"))))
+        using (JsonDocument assets = JsonDocument.Parse(File.ReadAllText(CiTestPaths.ProjectAssetsFile("src/Hexalith.Parties.UI"))))
         {
             assets.RootElement.GetProperty("project").GetProperty("frameworks").GetProperty("net10.0")
                 .GetProperty("frameworkReferences").TryGetProperty("Microsoft.AspNetCore.App", out _).ShouldBeTrue();
@@ -54,7 +54,7 @@ public sealed class SignalRSecurityFloorTests
             }
         }
 
-        AssertRuntimeMinimums(Path.Combine(ui, "bin", configuration, "net10.0", "Hexalith.Parties.UI.runtimeconfig.json"));
+        AssertRuntimeMinimums(CiTestPaths.ProjectOutputFile("src/Hexalith.Parties.UI", configuration, "Hexalith.Parties.UI.runtimeconfig.json"));
         string publish = Path.Combine(Path.GetTempPath(), $"parties-ui-runtime-floor-{Guid.NewGuid():N}");
         try
         {
@@ -72,6 +72,12 @@ public sealed class SignalRSecurityFloorTests
             })
             {
                 start.ArgumentList.Add(argument);
+            }
+
+            if (CiTestPaths.ArtifactsPath is { } artifacts)
+            {
+                start.ArgumentList.Add("--artifacts-path");
+                start.ArgumentList.Add(artifacts);
             }
 
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);

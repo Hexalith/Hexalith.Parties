@@ -23,6 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Bind the fitness check to this build's explicit SDK restore output. -->
+    <AssemblyMetadata Include="HexalithClientAssetsFile" Value="$(ArtifactsPath)/obj/Hexalith.Parties.Client/project.assets.json" Condition="'$(UseArtifactsOutput)' == 'true'" />
+    <AssemblyMetadata Include="HexalithClientAssetsFile" Value="$(MSBuildProjectDirectory)/../../src/Hexalith.Parties.Client/obj/project.assets.json" Condition="'$(UseArtifactsOutput)' != 'true'" />
     <Using Include="Xunit" />
   </ItemGroup>
 

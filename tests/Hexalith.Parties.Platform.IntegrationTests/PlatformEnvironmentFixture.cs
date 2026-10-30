@@ -16,6 +16,7 @@ public sealed class PlatformEnvironmentFixture : AspireTopologyFixtureBase
     [
         new("eventstore", "eventstore", "http", TimeSpan.FromSeconds(30)),
         new("parties", "parties", "http", TimeSpan.FromSeconds(30)),
+        new("redis", "parties", "tcp", TimeSpan.FromSeconds(30), Authenticated: false),
         new("tenants-api", "tenants", "http", TimeSpan.FromSeconds(30)),
         new("memories", "memories", "dapr-invocation", TimeSpan.FromSeconds(30)) { DaprInvocation = true },
     ];

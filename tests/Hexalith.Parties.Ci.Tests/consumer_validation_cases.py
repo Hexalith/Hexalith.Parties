@@ -75,12 +75,18 @@ class SupportVersions(unittest.TestCase):
 </PropertyGroup><ItemGroup><None Include="payload.txt" Pack="true" PackagePath="content" /></ItemGroup></Project>''')
             (root / 'payload.txt').write_text('fixture')
             (root / 'NuGet.Config').write_text('<configuration><packageSources><clear /></packageSources></configuration>')
+            # Independent package fixtures retain Release and must not inherit sealed Debug source imports.
+            environment = os.environ.copy()
+            for key in ('CustomBeforeDirectoryBuildProps', 'CustomAfterMicrosoftCommonProps',
+                        'CustomBeforeDirectoryBuildTargets', 'CustomAfterDirectoryBuildTargets',
+                        'AfterMicrosoftNETSdkTargets', 'HEXALITH_SOURCE_MAPPING_HASH', 'Configuration'):
+                environment.pop(key, None)
             package_id = 'Hexalith.FrontComposer.Contracts'
             for index, version in enumerate(('6.5.4.0', '6.5.4+build.9', '6.5', '6.5.4.2', '6.5.4-preview.2+build.9')):
                 feed = root / f'feed-{index}'
                 command = ['dotnet', 'pack', str(project), '-c', 'Release', '--output', str(feed),
                            '-p:NoBuild=true', '-p:NuGetAudit=false', f'-p:PackageId={package_id}', f'-p:PackageVersion={version}']
-                result = subprocess.run(command, cwd=root, capture_output=True, text=True, timeout=30)
+                result = subprocess.run(command, cwd=root, env=environment, capture_output=True, text=True, timeout=30)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 CONSUMER.validate_support_packages(feed, frozenset({package_id}), version)
                 consumer = root / f'consumer-{index}'
@@ -91,7 +97,7 @@ class SupportVersions(unittest.TestCase):
 <TargetFramework>net10.0</TargetFramework><RestorePackagesPath>{consumer / 'cache'}</RestorePackagesPath>
 </PropertyGroup><ItemGroup><PackageReference Include="{package_id}" Version="[{version}]" /></ItemGroup></Project>''')
                 result = subprocess.run(['dotnet', 'restore', str(restored_project), '-p:NuGetAudit=false'],
-                                        cwd=consumer, capture_output=True, text=True, timeout=30)
+                                        cwd=consumer, env=environment, capture_output=True, text=True, timeout=30)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 CONSUMER.validate_family_assets(consumer / 'obj' / 'project.assets.json', version,
                                                 frozenset({package_id}), 'FrontComposer')

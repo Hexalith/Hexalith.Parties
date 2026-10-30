@@ -368,7 +368,22 @@ public sealed class ContractsPackageFixture : IDisposable
         string workingDirectory = Path.Combine(Path.GetTempPath(), "hexalith-parties-contracts-package-tests", Guid.NewGuid().ToString("N"));
         string feedDirectory = Path.Combine(workingDirectory, "feed");
         Directory.CreateDirectory(feedDirectory);
-        string restoreSources = $"--source \"{feedDirectory}\" --source \"https://api.nuget.org/v3/index.json\"";
+        string configPath = Path.Combine(workingDirectory, "NuGet.Config");
+        new XDocument(new XElement("configuration",
+            new XElement("packageSources", new XElement("clear"),
+                new XElement("add", new XAttribute("key", "fixture"), new XAttribute("value", feedDirectory)),
+                new XElement("add", new XAttribute("key", "public"), new XAttribute("value", "https://api.nuget.org/v3/index.json"))),
+            new XElement("packageSourceMapping",
+                new XElement("packageSource", new XAttribute("key", "fixture"),
+                    new XElement("package", new XAttribute("pattern", "Hexalith.Parties.Contracts")),
+                    new XElement("package", new XAttribute("pattern", "Hexalith.EventStore.Contracts")),
+                    new XElement("package", new XAttribute("pattern", "Hexalith.Commons.UniqueIds"))),
+                new XElement("packageSource", new XAttribute("key", "public"),
+                    new XElement("package", new XAttribute("pattern", "*")))))).Save(configPath);
+        // Local packages must be resolved from this fixture's feed, even when the same
+        // catalog version already exists with published bytes in the global NuGet cache.
+        string restoreSources = $"--source \"{feedDirectory}\" --source \"https://api.nuget.org/v3/index.json\" "
+            + $"-p:RestorePackagesPath=\"{Path.Combine(workingDirectory, "packages")}\" -p:RestoreNoCache=true -p:RestoreConfigFile=\"{configPath}\"";
         string eventStoreVersion = PackageTestProcess.ResolveMsbuildProperty(
             repoRoot,
             "src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj",

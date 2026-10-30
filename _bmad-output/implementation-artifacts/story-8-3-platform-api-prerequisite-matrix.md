@@ -50,7 +50,7 @@ not the G5 runtime engine.
 
 ### Current source observation — 2026-10-30
 
-Observed from committed Parties `a8e24f6e74ef55befddc4e1a04629e5db2d8b513` selections.
+Observed from committed Parties `f9757d94a9e3f144d250b21f295b903c00d5f412` selections.
 EventStore package `3.128.4` remains unchanged. These Git objects describe selected
 gitlinks; they do not assert that the mapped source checkout equals that selection
 or is clean. The module tool remains the source-root and dependency-mode authority.
@@ -63,16 +63,16 @@ Descriptions below are anchored to the observed tag for the selected Git object.
 
 | Root dependency | Current source identity | Release use |
 | --- | --- | --- |
-| AI.Tools | `5be77fcbd96546e722b30a117516b1e03e6e4975` (`5be77fcb`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
-| Builds | `0b17f8022cdc23b8b242b000f5b2aa15580184ac` (`v4.38.3-37-g0b17f802`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
+| AI.Tools | `70dbf73e80787299c832d30d911b16b105ab194d` (`70dbf73e`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
+| Builds | `1884a88ab80d3d0ae80c09a5ed9dfe23867d9fb9` (`v4.38.3-39-g1884a88a`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
 | Commons | `3edfbdafc7d4fa915286dce8a37dc4cc7c06085a` (`v2.30.3-5-g3edfbdaf`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
-| EventStore | `be4aba873d09736abb4caacf1fae8ad870f0b3b6` (`v3.128.4-5-gbe4aba87`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
-| FrontComposer | `c3f217ee7216f998875b23a4d6b8175280e8a86a` (`v4.7.1-11-gc3f217ee`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
-| McpCli | `e6ddf3f2784f4b8c7d347fc21d046ee3011d4082` (`v1.1.0-15-ge6ddf3f2`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
-| Memories | `28a2beeb7e9baa1785b9cb70f2a8b750f071cfd7` (`v3.0.10-3-g28a2beeb`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
-| Platform | `242b4d7297820495b91c5d7719dd6b1c892c978a` (`v1.0.1-17-g242b4d72`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
+| EventStore | `28ccd32c95ab521755d12deee5d7ad16927e7c92` (`v3.128.4-30-g28ccd32c`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
+| FrontComposer | `e7e892b6ed584501f6dd18e11acd299948c0113f` (`v4.7.1-32-ge7e892b6`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
+| McpCli | `c05335fc2ed90901bcaeef82a67263fb2d1c8703` (`v1.1.0-25-gc05335fc`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
+| Memories | `fc8b46f07f77b73c67cab6687feb07e0e600d585` (`v3.0.10-10-gfc8b46f0`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
+| Platform | `aa8c66edc782b1735539e60b2b949f7f4015e3e3` (`v1.0.1-85-gaa8c66ed`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
 | PolymorphicSerializations | `221ac4592ba908ae7661ba1fa9e2d1fcc23baee0` (`v1.19.5`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
-| Tenants | `8127cb3b47dcfcf4086d07e4af0730c2f4920f9e` (`v5.11.1-5-g8127cb3b`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
+| Tenants | `4fa78baa94f939a2b752bce52d0bac77214ddd83` (`v5.11.1-16-g4fa78baa`) | Observed committed selection only; mapped source overrides and immutable-consumption proof remain separate. |
 
 ### Historical source observation — 2026-10-28 (before descriptor fixture mapping)
 

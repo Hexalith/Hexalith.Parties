@@ -104,18 +104,6 @@ public sealed class ClientPackageTests : IDisposable
             </Project>
             """);
 
-        File.WriteAllText(
-            Path.Combine(consumerDirectory, "NuGet.Config"),
-            $$"""
-            <?xml version="1.0" encoding="utf-8"?>
-            <configuration>
-              <packageSources>
-                <clear />
-                <add key="local-story-feed" value="{{probe.FeedDirectory}}" />
-                <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
-              </packageSources>
-            </configuration>
-            """);
 
         File.WriteAllText(
             Path.Combine(consumerDirectory, "Program.cs"),
@@ -178,13 +166,35 @@ public sealed class ClientPackageTests : IDisposable
         string repoRoot = LocateRepositoryRoot();
         string feedDirectory = Path.Combine(_workDirectory, "feed");
         Directory.CreateDirectory(feedDirectory);
-        string restoreSources = PackRestoreSources(feedDirectory);
+        string configPath = Path.Combine(_workDirectory, "NuGet.Config");
+        new XDocument(new XElement("configuration",
+            new XElement("packageSources", new XElement("clear"),
+                new XElement("add", new XAttribute("key", "fixture"), new XAttribute("value", feedDirectory)),
+                new XElement("add", new XAttribute("key", "public"), new XAttribute("value", "https://api.nuget.org/v3/index.json"))),
+            new XElement("packageSourceMapping",
+                new XElement("packageSource", new XAttribute("key", "fixture"),
+                    new XElement("package", new XAttribute("pattern", "Hexalith.Parties.Contracts")),
+                    new XElement("package", new XAttribute("pattern", "Hexalith.Parties.Client")),
+                    new XElement("package", new XAttribute("pattern", "Hexalith.EventStore.Contracts")),
+                    new XElement("package", new XAttribute("pattern", "Hexalith.Commons.UniqueIds"))),
+                new XElement("packageSource", new XAttribute("key", "public"),
+                    new XElement("package", new XAttribute("pattern", "*")))))).Save(configPath);
+        string restoreSources = $"--source \"{feedDirectory}\" --source \"https://api.nuget.org/v3/index.json\" "
+            + $"-p:RestorePackagesPath=\"{Path.Combine(_workDirectory, "packages")}\" -p:RestoreNoCache=true -p:RestoreConfigFile=\"{configPath}\"";
         string eventStoreVersion = PackageTestProcess.ResolveMsbuildProperty(
             repoRoot,
             "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj",
             "HexalithEventStoreVersion");
-        // External dependencies are the published packages selected by the central
-        // catalog. Only the two packages under test belong in this local feed.
+        string commonsVersion = PackageTestProcess.ResolveMsbuildProperty(
+            repoRoot, "src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj", "HexalithCommonsVersion");
+        string commonsPackVersionProperties = $"-p:MinVerVersionOverride={commonsVersion} -p:PackageVersion={commonsVersion}";
+        string uniqueIdsProject = RepositoryDependencyPaths.Resolve(repoRoot,
+            "references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/Hexalith.Commons.UniqueIds.csproj");
+        // Pack actual owner prerequisites at the selected catalog versions. This is
+        // fixture validation, with no claim about published same-version bytes.
+        RunDotnet("build", $"\"{uniqueIdsProject}\" --configuration {PackageTestProcess.ProbeConfiguration} -m:1 {commonsPackVersionProperties}", repoRoot);
+        RunDotnet("pack", $"\"{uniqueIdsProject}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} {commonsPackVersionProperties}", repoRoot);
+        RunDotnet("pack", $"\"{RepositoryDependencyPaths.Resolve(repoRoot, "references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj")}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} -p:MinVerVersionOverride={eventStoreVersion} -p:PackageVersion={eventStoreVersion}", repoRoot);
         RunDotnet(
             "pack",
             $"\"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Contracts", "Hexalith.Parties.Contracts.csproj")}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} {LocalPackVersionProperties}",
@@ -205,9 +215,6 @@ public sealed class ClientPackageTests : IDisposable
             ReadPackageVersion(clientPackagePath),
             eventStoreVersion);
     }
-
-    private static string PackRestoreSources(string feedDirectory)
-        => $"--source \"{feedDirectory}\" --source \"https://api.nuget.org/v3/index.json\"";
 
     private static IReadOnlyList<string> ReadDependencyIds(string nuspecXml)
     {

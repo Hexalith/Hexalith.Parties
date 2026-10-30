@@ -4,7 +4,7 @@
 
 ```
 Hexalith.Parties/
-├── Hexalith.Parties.slnx              # Solution (14 projects under `src` + one sample project + 16 runnable tests + 1 support host + e2e)
+├── Hexalith.Parties.slnx              # Solution (15 projects under `src` + one sample project + 16 runnable tests + 1 support host + e2e)
 ├── Directory.Build.props              # net10.0, Nullable, ImplicitUsings, TreatWarningsAsErrors=true, MinVer
 ├── Directory.Build.targets            # shared MSBuild targets
 ├── Directory.Packages.props           # central package versions (ManagePackageVersionsCentrally)
@@ -156,3 +156,5 @@ git submodule update --init references/Hexalith.Builds references/Hexalith.Commo
 The runner-owned `Hexalith.Parties.Platform.IntegrationTests` project adds a separate
 Platform lane. Run it through `hexalith-module test`; it requires the validated
 environment descriptor and private credential channel and never starts topology.
+
+The `Hexalith.Parties.EventStoreExtensions` project installs owner intent adapters for Development composition. The completed Story 3.3 owner decision makes it packable and not application-publishable; its separate private package-cohort evidence grants no hosted or public-release qualification.

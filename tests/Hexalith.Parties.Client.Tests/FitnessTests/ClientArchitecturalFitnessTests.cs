@@ -390,8 +390,9 @@ public sealed class ClientArchitecturalFitnessTests
     [Fact]
     public void ClientCsproj_TransitiveDependenciesAreOnlySharedFrameworkPackages()
     {
-        string repoRoot = LocateRepositoryRoot();
-        string assetsFilePath = Path.Combine(repoRoot, "src", "Hexalith.Parties.Client", "obj", "project.assets.json");
+        string assetsFilePath = typeof(ClientArchitecturalFitnessTests).Assembly
+            .GetCustomAttributes<AssemblyMetadataAttribute>()
+            .Single(attribute => attribute.Key == "HexalithClientAssetsFile").Value!;
 
         File.Exists(assetsFilePath).ShouldBeTrue($"Client assets file not found at {assetsFilePath}");
 

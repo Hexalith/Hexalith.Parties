@@ -9,7 +9,7 @@
 - **Architecture:** Event sourcing + CQRS + EventStore SDK domain/projection/query handlers, fronted by the **Hexalith.EventStore** gateway
 - **Orchestration:** .NET Aspire 13.6.4 (`dotnet aspire run --project src/Hexalith.Parties.AppHost`)
 - **Public surface:** EventStore `POST /api/v1/commands` & `/api/v1/queries` (`Domain="party"`); typed .NET client; `parties-mcp` (5 tools)
-- **Scale:** exactly 14 projects under `src` plus one sample project, 16 runnable .NET test projects plus one support host, and Playwright e2e — roughly 408 source `.cs`, 231 test `.cs`, and 36 `.razor` files (counts as of 2026-08-19; indicative, not gated)
+- **Scale:** exactly 15 projects under `src` plus one sample project, 16 runnable .NET test projects plus one support host, and Playwright e2e — roughly 408 source `.cs`, 231 test `.cs`, and 36 `.razor` files (counts as of 2026-08-19; indicative, not gated)
 
 ## Quick reference
 
@@ -98,3 +98,5 @@ Then follow [getting-started.md](./getting-started.md) for auth + first command/
 The runner-owned `Hexalith.Parties.Platform.IntegrationTests` project adds a separate
 Platform lane. Run it through `hexalith-module test`; it requires the validated
 environment descriptor and private credential channel and never starts topology.
+
+The `Hexalith.Parties.EventStoreExtensions` project installs owner intent adapters for Development composition. The completed Story 3.3 owner decision makes it packable and not application-publishable; its separate private package-cohort evidence grants no hosted or public-release qualification.

@@ -15,6 +15,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AssemblyMetadata Include="HexalithTestArtifactsPath" Value="$(ArtifactsPath)" Condition="'$(UseArtifactsOutput)' == 'true'" />
+    <AssemblyMetadata Include="HexalithTestArtifactsPath" Value="" Condition="'$(UseArtifactsOutput)' != 'true'" />
     <Using Include="Xunit" />
     <Using Include="Shouldly" />
   </ItemGroup>

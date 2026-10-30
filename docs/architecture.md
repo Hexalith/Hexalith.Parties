@@ -12,7 +12,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 
 | Attribute | Value |
 |-----------|-------|
-| Repository type | Monolith — single cohesive .NET solution (`Hexalith.Parties.slnx`), exactly 14 projects under `src` plus one sample project + 16 runnable .NET test projects + 1 support host + Playwright e2e |
+| Repository type | Monolith — single cohesive .NET solution (`Hexalith.Parties.slnx`), exactly 15 projects under `src` plus one sample project + 16 runnable .NET test projects + 1 support host + Playwright e2e |
 | Primary language | C# / **.NET 10** (SDK pinned `10.0.403`) |
 | Architecture style | Event sourcing + CQRS + EventStore SDK domain/projection/query handlers, gateway-fronted (EventStore) |
 | Orchestration | .NET Aspire 13.6.4 (`dotnet aspire run`) |
@@ -405,3 +405,5 @@ organization strings. A ciphertext marker elsewhere cannot authorize an unencryp
 The runner-owned `Hexalith.Parties.Platform.IntegrationTests` project adds a separate
 Platform lane. Run it through `hexalith-module test`; it requires the validated
 environment descriptor and private credential channel and never starts topology.
+
+The `Hexalith.Parties.EventStoreExtensions` project installs owner intent adapters for Development composition. The completed Story 3.3 owner decision makes it packable and not application-publishable; its separate private package-cohort evidence grants no hosted or public-release qualification.

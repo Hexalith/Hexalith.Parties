@@ -627,6 +627,15 @@ type class Hexalith.Parties.Contracts.Queries.ChatBotPartyAuthorityResult interf
   property System.Int64 SourceVersion getset
   property System.String TenantId getset
   method System.Void Deconstruct(System.String& TenantId, System.String& PrincipalId, System.String& PartyId, System.String& Operation, System.String& ActorClass, System.String& Origin, System.Boolean& Allowed, System.Int64& SourceVersion, System.String& ObservationId, System.DateTimeOffset& ObservedAt)
+type class Hexalith.Parties.Contracts.Queries.ExportPartyData interfaces:System.IEquatable<Hexalith.Parties.Contracts.Queries.ExportPartyData>
+  ctor ()
+  property System.String PartyId required getset
+type class Hexalith.Parties.Contracts.Queries.GetErasureCertificate interfaces:System.IEquatable<Hexalith.Parties.Contracts.Queries.GetErasureCertificate>
+  ctor ()
+  property System.String PartyId required getset
+type class Hexalith.Parties.Contracts.Queries.GetErasureStatus interfaces:System.IEquatable<Hexalith.Parties.Contracts.Queries.GetErasureStatus>
+  ctor ()
+  property System.String PartyId required getset
 type class Hexalith.Parties.Contracts.Queries.GetParty interfaces:System.IEquatable<Hexalith.Parties.Contracts.Queries.GetParty>
   ctor ()
   property System.String PartyId required getset
@@ -684,6 +693,13 @@ type class Hexalith.Parties.Contracts.Results.PartyCommandResult base:Hexalith.E
 type class Hexalith.Parties.Contracts.Results.PartyIdentityCommandResult base:Hexalith.EventStore.Contracts.Results.DomainResult interfaces:System.IEquatable<Hexalith.EventStore.Contracts.Results.DomainResult>,System.IEquatable<Hexalith.Parties.Contracts.Results.PartyIdentityCommandResult>
   ctor (System.Collections.Generic.IReadOnlyList<Hexalith.EventStore.Contracts.Events.IEventPayload> events, System.Object result)
   property System.String ResultPayload get
+type class Hexalith.Parties.Contracts.Routing.PartiesCatalogDeclarations interfaces:
+  property System.Collections.Generic.IReadOnlyList<Hexalith.EventStore.Contracts.Routing.CommandIntentDeclaration> Commands get
+  property System.Collections.Generic.IReadOnlyList<Hexalith.EventStore.Contracts.Routing.RouteOperationContract> Operations get
+  property System.Collections.Generic.IReadOnlyList<Hexalith.EventStore.Contracts.Routing.RouteContractDeclaration> Projections get
+  property System.Collections.Generic.IReadOnlyList<Hexalith.EventStore.Contracts.Routing.RouteContractDeclaration> Queries get
+  property System.Collections.Generic.IReadOnlyDictionary<System.String,System.String> ReceiverMethods get
+  property System.Collections.Generic.IReadOnlyList<Hexalith.EventStore.Contracts.Routing.RouteContractDeclaration> Routes get
 type interface Hexalith.Parties.Contracts.Search.IPartySearchProvider interfaces:
   method Hexalith.Parties.Contracts.Models.PagedResult<Hexalith.Parties.Contracts.Models.PartySearchResult> Search(System.Collections.Generic.IEnumerable<Hexalith.Parties.Contracts.Models.PartyIndexEntry> entries, System.String query, System.Nullable<Hexalith.Parties.Contracts.ValueObjects.PartyType> typeFilter, System.Nullable<System.Boolean> activeFilter, System.Int32 page, System.Int32 pageSize, System.Threading.CancellationToken cancellationToken)
 type class Hexalith.Parties.Contracts.Security.CryptoShreddingOptions interfaces:System.IEquatable<Hexalith.Parties.Contracts.Security.CryptoShreddingOptions>

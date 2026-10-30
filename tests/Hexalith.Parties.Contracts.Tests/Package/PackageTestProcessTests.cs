@@ -9,6 +9,56 @@ namespace Hexalith.Parties.Contracts.Tests.Package;
 
 public sealed class PackageTestProcessTests
 {
+    /// <summary>The real supervised child receives caller-scoped environment changes instead of ambient source imports.</summary>
+    [Fact]
+    public async Task SupervisorPreservesExplicitEnvironmentAssignmentsAndRemovals()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            Assert.Skip("The descendant supervisor requires Linux /proc.");
+        }
+
+        string removedVariable = $"HEXALITH_PACKAGE_ENV_REMOVED_{Guid.NewGuid():N}";
+        string? previousValue = Environment.GetEnvironmentVariable(removedVariable);
+        Environment.SetEnvironmentVariable(removedVariable, "ambient-value");
+        try
+        {
+            var command = new ProcessStartInfo("python3")
+            {
+                WorkingDirectory = Directory.GetCurrentDirectory(), RedirectStandardOutput = true,
+                RedirectStandardError = true, UseShellExecute = false,
+            };
+            command.ArgumentList.Add("-c");
+            command.ArgumentList.Add("import os,json,sys; print(json.dumps({'assigned':os.environ.get('HEXALITH_PACKAGE_ENV_SENTINEL'),'removed':os.environ.get(sys.argv[1])}))");
+            command.ArgumentList.Add(removedVariable);
+            command.Environment["HEXALITH_PACKAGE_ENV_SENTINEL"] = "caller-scoped-value";
+            command.Environment.Remove(removedVariable);
+            using var supervisor = new PackageTestProcessSupervisor(command, 2_000);
+            using Process process = Process.Start(supervisor.StartInfo)!;
+            try
+            {
+                Task<string> output = process.StandardOutput.ReadToEndAsync(TestContext.Current.CancellationToken);
+                await process.WaitForExitAsync(TestContext.Current.CancellationToken).WaitAsync(TimeSpan.FromSeconds(10)).ConfigureAwait(true);
+                process.ExitCode.ShouldBe(0);
+                using JsonDocument observed = JsonDocument.Parse(await output.ConfigureAwait(true));
+                observed.RootElement.GetProperty("assigned").GetString().ShouldBe("caller-scoped-value");
+                observed.RootElement.GetProperty("removed").ValueKind.ShouldBe(JsonValueKind.Null);
+            }
+            finally
+            {
+                if (!process.HasExited)
+                {
+                    process.Kill(entireProcessTree: true);
+                    await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(2)).ConfigureAwait(true);
+                }
+            }
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(removedVariable, previousValue);
+        }
+    }
+
     [Fact]
     public void RunReportsStartFailure()
     {

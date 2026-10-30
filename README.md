@@ -107,7 +107,7 @@ See the [Getting Started Guide](docs/getting-started.md) for the full EventStore
 
 ## Project Structure
 
-The repository contains exactly **14 projects under `src` plus one sample
+The repository contains exactly **15 projects under `src` plus one sample
 project**, **16 runnable .NET test projects plus one support host**
 (`Hexalith.Parties.EventStoreGateway.TestHost`), with Playwright e2e coverage
 alongside them. Adopter-facing packages (left column) are the only modules
@@ -319,3 +319,5 @@ Isolated package probes use their test build configuration: Debug during local s
 Release in the CI package lane. Each probe removes inherited source-mapping imports before it
 restores an independent package consumer. Debug probes check package structure and APIs only;
 the Release counterpart and authoritative publications remain required for package acceptance.
+
+The `Hexalith.Parties.EventStoreExtensions` project installs owner intent adapters for Development composition. The completed Story 3.3 owner decision makes it packable and not application-publishable; its separate private package-cohort evidence grants no hosted or public-release qualification.

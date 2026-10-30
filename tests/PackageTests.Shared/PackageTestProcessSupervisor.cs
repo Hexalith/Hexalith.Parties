@@ -26,6 +26,13 @@ internal sealed class PackageTestProcessSupervisor : IDisposable
             UseShellExecute = false,
             CreateNoWindow = true,
         };
+        // Preserve the caller's scoped assignments and removals through the Linux wrapper.
+        // In particular, package probes have deliberately removed source-mapping imports.
+        StartInfo.Environment.Clear();
+        foreach ((string key, string? value) in command.Environment)
+        {
+            StartInfo.Environment[key] = value;
+        }
         StartInfo.ArgumentList.Add("-c");
         StartInfo.ArgumentList.Add(Script);
         StartInfo.ArgumentList.Add(_directory);
