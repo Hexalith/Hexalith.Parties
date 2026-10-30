@@ -17,7 +17,7 @@ public sealed class PlatformEnvironmentFixture : AspireTopologyFixtureBase
         new("eventstore", "eventstore", "http", TimeSpan.FromSeconds(30)),
         new("parties", "parties", "http", TimeSpan.FromSeconds(30)),
         new("tenants-api", "tenants", "http", TimeSpan.FromSeconds(30)),
-        new("memories", "memories", "http", TimeSpan.FromSeconds(30)),
+        new("memories", "memories", "dapr-invocation", TimeSpan.FromSeconds(30)) { DaprInvocation = true },
     ];
 
     /// <summary>Gets the authenticated EventStore gateway client.</summary>

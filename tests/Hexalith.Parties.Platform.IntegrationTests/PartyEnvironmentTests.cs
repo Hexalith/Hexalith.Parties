@@ -17,7 +17,7 @@ using Shouldly;
 namespace Hexalith.Parties.Platform.IntegrationTests;
 
 /// <summary>Exercises real Parties, Tenants and Memories; a missing handoff fails fixture initialization.</summary>
-public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture) : IClassFixture<PlatformEnvironmentFixture>
+public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, ITestOutputHelper output) : IClassFixture<PlatformEnvironmentFixture>
 {
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web)
     {
@@ -36,7 +36,7 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture) : 
         tenantResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
         using JsonDocument tenantDocument = JsonDocument.Parse(await tenantResponse.Content.ReadAsStringAsync(token).ConfigureAwait(true));
         tenantDocument.RootElement.GetProperty("tenantId").GetString().ShouldBe(tenant);
-        using HttpResponseMessage memoriesResponse = await fixture.Memories.GetAsync($"/api/v1/tenants/{Uri.EscapeDataString(tenant)}", token).ConfigureAwait(true);
+        using HttpResponseMessage memoriesResponse = await fixture.Memories.GetAsync($"tenants/{Uri.EscapeDataString(tenant)}", token).ConfigureAwait(true);
         memoriesResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
         using JsonDocument memoriesDocument = JsonDocument.Parse(await memoriesResponse.Content.ReadAsStringAsync(token).ConfigureAwait(true));
         memoriesDocument.RootElement.GetProperty("id").GetString().ShouldBe(tenant);
@@ -84,7 +84,7 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture) : 
         created.CreatedAt.ShouldBeGreaterThan(DateTimeOffset.UtcNow.AddMinutes(-5));
         created.CreatedAt.ShouldBeLessThanOrEqualTo(createdEnvelope.Timestamp);
         detail.CreatedAt.ShouldBe(createdEnvelope.Timestamp);
-        Console.WriteLine($"Persisted synthetic stream: {events.Length} exact event envelopes; Tenants and Memories returned the run tenant.");
+        output.WriteLine($"Persisted synthetic stream: {events.Length} exact event envelopes; tenant={tenant}; domain={identity.Domain}; aggregate={partyId}; command={commandId}; metadataSequence={metadata.CurrentSequence}; createdEnvelopeTimestamp={createdEnvelope.Timestamp:O}; Tenants and Memories returned the run tenant.");
     }
 
     private async Task<JsonDocument> PollStatusAsync(string commandId, CancellationToken token)
