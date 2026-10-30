@@ -24,6 +24,17 @@ public interface IProjectionStream
     /// </summary>
     bool IsConnected { get; }
 
+    /// <summary>Gets the durable transition/rejoin generation; zero means unsupported by the selected producer.</summary>
+    long RecoveryGeneration => 0;
+
+    /// <summary>Registers with producer-owned cancellation when supported. Legacy transports must still drain their registration.</summary>
+    Task SubscribeAsync(string projectionType, string tenantId, Action onChanged, CancellationToken cancellationToken)
+        => SubscribeAsync(projectionType, tenantId, onChanged);
+
+    /// <summary>Removes callback authority before a cancellation-aware leave when supported.</summary>
+    Task UnsubscribeAsync(string projectionType, string tenantId, Action onChanged, CancellationToken cancellationToken)
+        => UnsubscribeAsync(projectionType, tenantId, onChanged);
+
     /// <summary>
     /// Idempotently starts the underlying connection (joining any pre-registered groups). A
     /// <strong>no-op when no hub URL is configured</strong> (degraded / test boot): the stream stays

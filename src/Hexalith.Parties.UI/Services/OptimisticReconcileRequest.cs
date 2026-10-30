@@ -18,6 +18,10 @@ public sealed record OptimisticReconcileRequest
     /// <summary>The caller's <strong>idempotent</strong> re-read; returns the freshness so the primitive knows when <c>Current</c>.</summary>
     public required Func<CancellationToken, Task<ProjectionFreshnessStatus>> Reconcile { get; init; }
 
+    /// <summary>Gets the operation-specific witness evaluated after each Current read.</summary>
+    /// <remarks>Capture the accepted command/checkpoint and inspect the model just read. Missing or false witnesses keep the operation pending until cancellation; Current and unrelated signals alone never complete it.</remarks>
+    public Func<CancellationToken, Task<bool>>? OperationWitness { get; init; }
+
     /// <summary>Reverts the optimistic state (caller's job) on rejection.</summary>
     public required Action Revert { get; init; }
 

@@ -1,0 +1,13 @@
+{
+  "command": [
+    "dotnet",
+    "tests/Hexalith.EventStore.SignalR.Tests/bin/Debug/net10.0/Hexalith.EventStore.SignalR.Tests.dll",
+    "-xml",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-causal-reconciliation-2026-10-30/eventstore-tests-final.xml"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+  "exit_code": 0,
+  "elapsed_seconds": 1.35,
+  "log": "eventstore-tests-final.txt",
+  "sha256": "9ec902b1017066d4a9d0fc83648329a5d191815c24813dd7d4d5543d1dc259cc"
+}

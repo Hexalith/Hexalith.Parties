@@ -1,0 +1,442 @@
+The '-xml' switch has been deprecated in favor of '-result-xml' and will be removed in the next major version
+
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.14)
+  Discovering: Hexalith.FrontComposer.Shell.Tests
+  Discovered:  Hexalith.FrontComposer.Shell.Tests
+  Starting:    Hexalith.FrontComposer.Shell.Tests
+    Hexalith.FrontComposer.Shell.Tests.Governance.InfrastructureGovernanceTests.CentralPackageVersions_WhenCatalogIsCentralized_AreInheritedFromPinnedBuilds [FAIL]
+      Shouldly.ShouldAssertException : result.Ok
+          should be
+      True
+          but was
+      False
+      
+      Additional Info:
+          git ls-tree 70dbf73e80787299c832d30d911b16b105ab194d -- .gitmodules failed in /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/references/Hexalith.AI.Tools: fatal: not a tree object
+      Stack Trace:
+        tests/Hexalith.FrontComposer.Shell.Tests/Governance/InfrastructureGovernanceTests.cs(39,0): at Hexalith.FrontComposer.Shell.Tests.Governance.InfrastructureGovernanceTests.CentralPackageVersions_WhenCatalogIsCentralized_AreInheritedFromPinnedBuilds()
+           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+           at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+Mock driver logs:
+
+2026-10-30T17:11:01.558817Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Received request POST /api/v1/commands
+2026-10-30T17:11:01.561328Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Request matched, sending response
+
+Mock driver logs:
+
+2026-10-30T17:11:01.750873Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Received request POST /api/v1/commands
+2026-10-30T17:11:01.751392Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Request matched, sending response
+
+Mock driver logs:
+
+2026-10-30T17:11:01.754823Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Received request POST /api/v1/commands
+2026-10-30T17:11:01.755535Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Request matched, sending response
+
+Mock driver logs:
+
+2026-10-30T17:11:01.789092Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Received request POST /api/v1/commands
+2026-10-30T17:11:01.791325Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Request matched, sending response
+
+Mock driver logs:
+
+2026-10-30T17:11:01.799006Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Received request POST /api/v1/commands
+2026-10-30T17:11:01.800160Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Request matched, sending response
+
+Mock driver logs:
+
+2026-10-30T17:11:01.808666Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Received request POST /api/v1/commands
+2026-10-30T17:11:01.810879Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Request matched, sending response
+
+Mock driver logs:
+
+2026-10-30T17:11:01.818196Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Received request POST /api/v1/commands
+2026-10-30T17:11:01.827000Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Request matched, sending response
+
+Mock driver logs:
+
+2026-10-30T17:11:01.861955Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Received request POST /api/v1/commands
+2026-10-30T17:11:01.864731Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Request matched, sending response
+
+Mock driver logs:
+
+2026-10-30T17:11:01.953465Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Received request POST /api/v1/queries
+2026-10-30T17:11:01.954055Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Request matched, sending response
+
+Mock driver logs:
+
+2026-10-30T17:11:02.108129Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Received request POST /api/v1/queries
+2026-10-30T17:11:02.108722Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Request matched, sending response
+
+Mock driver logs:
+
+2026-10-30T17:11:02.206573Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Received request POST /api/v1/queries
+2026-10-30T17:11:02.207301Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Request matched, sending response
+
+Mock driver logs:
+
+2026-10-30T17:11:02.247056Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Received request POST /api/v1/queries
+2026-10-30T17:11:02.247617Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Request matched, sending response
+
+Mock driver logs:
+
+2026-10-30T17:11:02.254277Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Received request POST /api/v1/queries
+2026-10-30T17:11:02.254967Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Request matched, sending response
+
+Mock driver logs:
+
+2026-10-30T17:11:02.280493Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Received request POST /api/v1/queries
+2026-10-30T17:11:02.281024Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Request matched, sending response
+
+Mock driver logs:
+
+2026-10-30T17:11:02.373395Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Received request POST /api/v1/queries
+2026-10-30T17:11:02.382110Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Request matched, sending response
+
+Mock driver logs:
+
+2026-10-30T17:11:02.422860Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Received request POST /api/v1/queries
+2026-10-30T17:11:02.423604Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Request matched, sending response
+
+Mock driver logs:
+
+2026-10-30T17:11:02.438401Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Received request POST /api/v1/queries
+2026-10-30T17:11:02.439404Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Request matched, sending response
+
+Mock driver logs:
+
+2026-10-30T17:11:02.528839Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Received request POST /api/v1/commands
+2026-10-30T17:11:02.529431Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Request matched, sending response
+
+Mock driver logs:
+
+2026-10-30T17:11:02.556870Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Received request POST /api/v1/queries
+2026-10-30T17:11:02.557451Z  INFO tokio-runtime-worker pact_mock_server::hyper_server: Request matched, sending response
+
+    Hexalith.FrontComposer.Shell.Tests.Governance.ReleaseModelGovernanceTests.PrepublishPublisher_VersionAuditMismatch_FailsClosedBeforePush [FAIL]
+      Shouldly.ShouldAssertException : staging.ExitCode
+          should be
+      0
+          but was
+      1
+      
+      Additional Info:
+          staging must succeed: Traceback (most recent call last):
+        File "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/ci-governance/stage_release_state.py", line 329, in <module>
+          sys.exit(main())
+                   ~~~~^^
+        File "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/ci-governance/stage_release_state.py", line 200, in main
+          manifest["dependency_graph"] = engine.collect_graph(
+                                         ~~~~~~~~~~~~~~~~~~~~^
+              work_root,
+              ^^^^^^^^^^
+          ...<2 lines>...
+              policy,
+              ^^^^^^^
+          )
+          ^
+        File "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/eng/dependency_graph.py", line 610, in collect_graph
+          envelope = _collect_raw_graph(root_dir, root_identity, root_commit, policy)
+        File "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/eng/dependency_graph.py", line 584, in _collect_raw_graph
+          raise GraphError(f"{builds_identity}@{edge['commit']}: missing Props/Directory.Packages.props")
+      dependency_graph.GraphError: github.com/hexalith/hexalith.builds@24886fb615e4e31d5960ba9a8c61ed7b7aad09d5: missing Props/Directory.Packages.props
+      
+      Stack Trace:
+        tests/Hexalith.FrontComposer.Shell.Tests/Governance/ReleaseModelGovernanceTests.cs(444,0): at Hexalith.FrontComposer.Shell.Tests.Governance.ReleaseModelGovernanceTests.PrepublishPublisher_VersionAuditMismatch_FailsClosedBeforePush()
+           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+           at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+    Hexalith.FrontComposer.Shell.Tests.Governance.ReleaseModelGovernanceTests.PrepublishPublisher_PostSealArtifactMutation_FailsClosedBeforePush [FAIL]
+      Shouldly.ShouldAssertException : staging.ExitCode
+          should be
+      0
+          but was
+      1
+      
+      Additional Info:
+          staging must succeed: Traceback (most recent call last):
+        File "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/ci-governance/stage_release_state.py", line 329, in <module>
+          sys.exit(main())
+                   ~~~~^^
+        File "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/ci-governance/stage_release_state.py", line 200, in main
+          manifest["dependency_graph"] = engine.collect_graph(
+                                         ~~~~~~~~~~~~~~~~~~~~^
+              work_root,
+              ^^^^^^^^^^
+          ...<2 lines>...
+              policy,
+              ^^^^^^^
+          )
+          ^
+        File "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/eng/dependency_graph.py", line 610, in collect_graph
+          envelope = _collect_raw_graph(root_dir, root_identity, root_commit, policy)
+        File "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/eng/dependency_graph.py", line 584, in _collect_raw_graph
+          raise GraphError(f"{builds_identity}@{edge['commit']}: missing Props/Directory.Packages.props")
+      dependency_graph.GraphError: github.com/hexalith/hexalith.builds@24886fb615e4e31d5960ba9a8c61ed7b7aad09d5: missing Props/Directory.Packages.props
+      
+      Stack Trace:
+        tests/Hexalith.FrontComposer.Shell.Tests/Governance/ReleaseModelGovernanceTests.cs(404,0): at Hexalith.FrontComposer.Shell.Tests.Governance.ReleaseModelGovernanceTests.PrepublishPublisher_PostSealArtifactMutation_FailsClosedBeforePush()
+           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+           at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+    Hexalith.FrontComposer.Shell.Tests.Governance.ReleaseModelGovernanceTests.ClassifyRelease_HealthyDryRunEvidence_CleanExitGate_ReturnsExit0 [FAIL]
+      Shouldly.ShouldAssertException : staging.ExitCode
+          should be
+      0
+          but was
+      1
+      
+      Additional Info:
+          staging must succeed: Traceback (most recent call last):
+        File "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/ci-governance/stage_release_state.py", line 329, in <module>
+          sys.exit(main())
+                   ~~~~^^
+        File "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/ci-governance/stage_release_state.py", line 200, in main
+          manifest["dependency_graph"] = engine.collect_graph(
+                                         ~~~~~~~~~~~~~~~~~~~~^
+              work_root,
+              ^^^^^^^^^^
+          ...<2 lines>...
+              policy,
+              ^^^^^^^
+          )
+          ^
+        File "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/eng/dependency_graph.py", line 610, in collect_graph
+          envelope = _collect_raw_graph(root_dir, root_identity, root_commit, policy)
+        File "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/eng/dependency_graph.py", line 584, in _collect_raw_graph
+          raise GraphError(f"{builds_identity}@{edge['commit']}: missing Props/Directory.Packages.props")
+      dependency_graph.GraphError: github.com/hexalith/hexalith.builds@c477d0c5ea0c81669a0dee80efb89cfedf224886: missing Props/Directory.Packages.props
+      
+      Stack Trace:
+        tests/Hexalith.FrontComposer.Shell.Tests/Governance/ReleaseModelGovernanceTests.cs(361,0): at Hexalith.FrontComposer.Shell.Tests.Governance.ReleaseModelGovernanceTests.ClassifyRelease_HealthyDryRunEvidence_CleanExitGate_ReturnsExit0()
+           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+           at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+    Hexalith.FrontComposer.Shell.Tests.Infrastructure.EventStore.LiveTwoTenantProductionAdapterTests.ProvisionedTenants_QueryCountAndSubscribe_StayIsolated [SKIP]
+      Live two-tenant EventStore endpoint, identities and bearer tokens are not configured.
+Nightly replay preserves lifecycle outcomes; seed=8638848447558097619,13548474684957705217,0-Ok, passed 1 test.
+    Hexalith.FrontComposer.Shell.Tests.Governance.CiGovernanceTests.ReleaseWorkflow_PinsTrustedPublisherAndPublicationFreezeContract [FAIL]
+      Shouldly.ShouldAssertException : shown.ExitCode
+          should be
+      0
+          but was
+      128
+      
+      Additional Info:
+          fatal: path 'Github/prepare-domain-release/action.yml' does not exist in '360a2b9c4e96809365a7de785be9a68152d5ac28'
+      
+      Stack Trace:
+        tests/Hexalith.FrontComposer.Shell.Tests/Governance/CiGovernanceTests.cs(2515,0): at Hexalith.FrontComposer.Shell.Tests.Governance.CiGovernanceTests.ReleaseWorkflow_PinsTrustedPublisherAndPublicationFreezeContract()
+           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+           at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+    Hexalith.FrontComposer.Shell.Tests.Governance.CiGovernanceTests.ReleaseEvidenceScript_SealAndVerifyManifest_RoundTripsCleanly [FAIL]
+      Shouldly.ShouldAssertException : RunPython(root, [
+                      "tests/ci-governance/stage_release_state.py",
+                      "publish",
+                      root,
+                      tempRoot,
+                  ]).ExitCode
+          should be
+      0
+          but was
+      1
+      Stack Trace:
+        tests/Hexalith.FrontComposer.Shell.Tests/Governance/CiGovernanceTests.cs(2961,0): at Hexalith.FrontComposer.Shell.Tests.Governance.CiGovernanceTests.ReleaseEvidenceScript_SealAndVerifyManifest_RoundTripsCleanly()
+           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+           at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+    Hexalith.FrontComposer.Shell.Tests.Governance.CiGovernanceTests.ReleaseEvidenceScript_DetectsPostSealArtifactMutationFromRealFiles [FAIL]
+      Shouldly.ShouldAssertException : RunPython(root, [
+                      "tests/ci-governance/stage_release_state.py",
+                      "publish",
+                      root,
+                      tempRoot,
+                  ]).ExitCode
+          should be
+      0
+          but was
+      1
+      Stack Trace:
+        tests/Hexalith.FrontComposer.Shell.Tests/Governance/CiGovernanceTests.cs(2255,0): at Hexalith.FrontComposer.Shell.Tests.Governance.CiGovernanceTests.ReleaseEvidenceScript_DetectsPostSealArtifactMutationFromRealFiles()
+           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+           at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+    Hexalith.FrontComposer.Shell.Tests.Governance.CiGovernanceTests.HexalithDependencyMode_DefaultsToProjectReferencesForDebugAndPackagesForRelease [FAIL]
+      System.IO.DirectoryNotFoundException : Could not find a part of the path '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/references/Hexalith.Builds/Props/Directory.Packages.props'.
+      Stack Trace:
+           at Interop.ThrowExceptionForIoErrno(ErrorInfo errorInfo, String path, Boolean isDirError)
+           at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String path, OpenFlags flags, Int32 mode, Boolean failForSymlink, Boolean& wasSymlink, Func`4 createOpenException)
+           at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, UnixFileMode openPermissions, Int64& fileLength, UnixFileMode& filePermissions, Boolean failForSymlink, Boolean& wasSymlink, Func`4 createOpenException)
+           at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+           at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize)
+           at System.Xml.XmlDownloadManager.GetStream(Uri uri, ICredentials credentials, IWebProxy proxy)
+           at System.Xml.XmlTextReaderImpl.FinishInitUriString()
+           at System.Xml.XmlReaderSettings.CreateReader(String inputUri, XmlParserContext inputContext)
+           at System.Xml.Linq.XDocument.Load(String uri, LoadOptions options)
+        tests/Hexalith.FrontComposer.Shell.Tests/Governance/CiGovernanceTests.cs(1234,0): at Hexalith.FrontComposer.Shell.Tests.Governance.CiGovernanceTests.HexalithDependencyMode_DefaultsToProjectReferencesForDebugAndPackagesForRelease()
+           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+           at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+    Hexalith.FrontComposer.Shell.Tests.Governance.CiGovernanceTests.ReleaseEvidenceScript_DetectsReleaseDefinitionDriftFromRealFiles [FAIL]
+      Shouldly.ShouldAssertException : RunPython(root, [
+                      "tests/ci-governance/stage_release_state.py",
+                      "publish",
+                      root,
+                      tempRoot,
+                  ]).ExitCode
+          should be
+      0
+          but was
+      1
+      Stack Trace:
+        tests/Hexalith.FrontComposer.Shell.Tests/Governance/CiGovernanceTests.cs(2294,0): at Hexalith.FrontComposer.Shell.Tests.Governance.CiGovernanceTests.ReleaseEvidenceScript_DetectsReleaseDefinitionDriftFromRealFiles()
+           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+           at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+    Hexalith.FrontComposer.Shell.Tests.Governance.AnalyzerPolicyGovernanceTests.AnalyzerPolicy_Story1122HiddenControlNegativeProbes_RemainClean [FAIL]
+      Shouldly.ShouldAssertException : exitCode
+          should be
+      0
+          but was
+      1
+      
+      Additional Info:
+          Story 11.22 negative-control probe failed for tests/Hexalith.FrontComposer.Testing.Tests/Hexalith.FrontComposer.Testing.Tests.csproj:
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Testing.Tests/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Testing.Tests/Hexalith.FrontComposer.Testing.Tests.csproj]
+      
+      Build FAILED.
+      
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Testing.Tests/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Testing.Tests/Hexalith.FrontComposer.Testing.Tests.csproj]
+          0 Warning(s)
+          1 Error(s)
+      
+      Time Elapsed 00:00:00.61
+      
+      Stack Trace:
+        tests/Hexalith.FrontComposer.Shell.Tests/Governance/AnalyzerPolicyGovernanceTests.cs(1612,0): at Hexalith.FrontComposer.Shell.Tests.Governance.AnalyzerPolicyGovernanceTests.AssertNegativeControlProbeCleanAsync(String root, JsonObject probe, String project)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        tests/Hexalith.FrontComposer.Shell.Tests/Governance/AnalyzerPolicyGovernanceTests.cs(572,0): at Hexalith.FrontComposer.Shell.Tests.Governance.AnalyzerPolicyGovernanceTests.AnalyzerPolicy_Story1122HiddenControlNegativeProbes_RemainClean()
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.FrontComposer.Shell.Tests.Governance.AnalyzerPolicyGovernanceTests.AnalyzerPolicy_Story1122RecordedProjects_RemainRecommendedClean [FAIL]
+      Shouldly.ShouldAssertException : exitCode
+          should be
+      0
+          but was
+      1
+      
+      Additional Info:
+          forced-Recommended Release solution build failed:
+        Hexalith.FrontComposer.Contracts -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/bin/Release/netstandard2.0/Hexalith.FrontComposer.Contracts.dll
+        Hexalith.FrontComposer.SourceTools -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.SourceTools/bin/Release/netstandard2.0/Hexalith.FrontComposer.SourceTools.dll
+        Hexalith.FrontComposer.Contracts -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/bin/Release/net10.0/Hexalith.FrontComposer.Contracts.dll
+        Hexalith.FrontComposer.Contracts.UI -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts.UI/bin/Release/net10.0/Hexalith.FrontComposer.Contracts.UI.dll
+        Hexalith.FrontComposer.Shell -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/bin/Release/net10.0/Hexalith.FrontComposer.Shell.dll
+        Counter.Domain -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/samples/Counter/Counter.Domain/bin/Release/net10.0/Counter.Domain.dll
+        Hexalith.FrontComposer.Schema -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Schema/bin/Release/net10.0/Hexalith.FrontComposer.Schema.dll
+        Hexalith.FrontComposer.Mcp -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Mcp/bin/Release/net10.0/Hexalith.FrontComposer.Mcp.dll
+        Counter.Specimens.Domain -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/samples/Counter/Counter.Specimens.Domain/bin/Release/net10.0/Counter.Specimens.Domain.dll
+        Counter.Specimens -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/samples/Counter/Counter.Specimens/bin/Release/net10.0/Counter.Specimens.dll
+        Counter.Web -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/samples/Counter/Counter.Web/bin/Release/net10.0/Counter.Web.dll
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/samples/IdeParityCounter/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/samples/IdeParityCounter/IdeParityCounter.csproj]
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Cli/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Cli/Hexalith.FrontComposer.Cli.csproj]
+        Hexalith.FrontComposer.Schema -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Schema/bin/Release/netstandard2.0/Hexalith.FrontComposer.Schema.dll
+        Hexalith.FrontComposer.SourceTools -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.SourceTools/bin/Release/netstandard2.0/Hexalith.FrontComposer.SourceTools.dll
+        Hexalith.FrontComposer.Testing -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Testing/bin/Release/net10.0/Hexalith.FrontComposer.Testing.dll
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Cli.Tests/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Cli.Tests/Hexalith.FrontComposer.Cli.Tests.csproj]
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Contracts.Tests/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Contracts.Tests/Hexalith.FrontComposer.Contracts.Tests.csproj]
+        Hexalith.FrontComposer.Contracts.UI.Tests -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Contracts.UI.Tests/bin/Release/net10.0/Hexalith.FrontComposer.Contracts.UI.Tests.dll
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Mcp.Tests/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Mcp.Tests/Hexalith.FrontComposer.Mcp.Tests.csproj]
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests.Bench/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests.Bench/Hexalith.FrontComposer.Shell.Tests.Bench.csproj]
+      /home/administrator/.nuget/packages/verify/33.3.4/buildTransitive/Verify.targets(172,5): SponsorCheck message SC059: Private sponsorship attestation trusted. Package 'Verify': trusting unverified private sponsor declaration (GitHubSponsors=jpiquot): SponsorshipPrivateUntil=2027-09, so the bundled sponsor list is not expected to contain this account. See: https://github.com/SimonCropp/SponsorCheck/blob/main/docs/VerifierDiagnosticCodes.md#sc059
+        Hexalith.FrontComposer.Shell.Tests -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests/bin/Release/net10.0/Hexalith.FrontComposer.Shell.Tests.dll
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.SourceTools.Tests/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.SourceTools.Tests/Hexalith.FrontComposer.SourceTools.Tests.csproj]
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Testing.Tests/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Testing.Tests/Hexalith.FrontComposer.Testing.Tests.csproj]
+      
+      Build FAILED.
+      
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/samples/IdeParityCounter/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/samples/IdeParityCounter/IdeParityCounter.csproj]
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Cli/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Cli/Hexalith.FrontComposer.Cli.csproj]
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Cli.Tests/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Cli.Tests/Hexalith.FrontComposer.Cli.Tests.csproj]
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Contracts.Tests/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Contracts.Tests/Hexalith.FrontComposer.Contracts.Tests.csproj]
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Mcp.Tests/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Mcp.Tests/Hexalith.FrontComposer.Mcp.Tests.csproj]
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests.Bench/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests.Bench/Hexalith.FrontComposer.Shell.Tests.Bench.csproj]
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.SourceTools.Tests/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.SourceTools.Tests/Hexalith.FrontComposer.SourceTools.Tests.csproj]
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Testing.Tests/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Testing.Tests/Hexalith.FrontComposer.Testing.Tests.csproj]
+          0 Warning(s)
+          8 Error(s)
+      
+      Time Elapsed 00:00:33.25
+      
+      Stack Trace:
+        tests/Hexalith.FrontComposer.Shell.Tests/Governance/AnalyzerPolicyGovernanceTests.cs(1624,0): at Hexalith.FrontComposer.Shell.Tests.Governance.AnalyzerPolicyGovernanceTests.AssertZeroWarningZeroErrorBuild(Int32 exitCode, String output, String description)
+        tests/Hexalith.FrontComposer.Shell.Tests/Governance/AnalyzerPolicyGovernanceTests.cs(553,0): at Hexalith.FrontComposer.Shell.Tests.Governance.AnalyzerPolicyGovernanceTests.AnalyzerPolicy_Story1122RecordedProjects_RemainRecommendedClean()
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.FrontComposer.Shell.Tests.Governance.AnalyzerPolicyGovernanceTests.AnalyzerPolicy_ActivatedReleaseBuild_MatchesForcedRecommendedCandidate [FAIL]
+      Shouldly.ShouldAssertException : exitCode
+          should be
+      0
+          but was
+      1
+      
+      Additional Info:
+          canonical Release solution build failed:
+        Hexalith.FrontComposer.Contracts -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/bin/Release/netstandard2.0/Hexalith.FrontComposer.Contracts.dll
+        Hexalith.FrontComposer.SourceTools -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.SourceTools/bin/Release/netstandard2.0/Hexalith.FrontComposer.SourceTools.dll
+        Hexalith.FrontComposer.Contracts -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/bin/Release/net10.0/Hexalith.FrontComposer.Contracts.dll
+        Hexalith.FrontComposer.Contracts.UI -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts.UI/bin/Release/net10.0/Hexalith.FrontComposer.Contracts.UI.dll
+        Hexalith.FrontComposer.Shell -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/bin/Release/net10.0/Hexalith.FrontComposer.Shell.dll
+        Counter.Domain -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/samples/Counter/Counter.Domain/bin/Release/net10.0/Counter.Domain.dll
+        Hexalith.FrontComposer.Schema -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Schema/bin/Release/net10.0/Hexalith.FrontComposer.Schema.dll
+        Hexalith.FrontComposer.Mcp -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Mcp/bin/Release/net10.0/Hexalith.FrontComposer.Mcp.dll
+        Counter.Specimens.Domain -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/samples/Counter/Counter.Specimens.Domain/bin/Release/net10.0/Counter.Specimens.Domain.dll
+        Counter.Specimens -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/samples/Counter/Counter.Specimens/bin/Release/net10.0/Counter.Specimens.dll
+        Counter.Web -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/samples/Counter/Counter.Web/bin/Release/net10.0/Counter.Web.dll
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/samples/IdeParityCounter/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/samples/IdeParityCounter/IdeParityCounter.csproj]
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Cli/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Cli/Hexalith.FrontComposer.Cli.csproj]
+        Hexalith.FrontComposer.Schema -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Schema/bin/Release/netstandard2.0/Hexalith.FrontComposer.Schema.dll
+        Hexalith.FrontComposer.SourceTools -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.SourceTools/bin/Release/netstandard2.0/Hexalith.FrontComposer.SourceTools.dll
+        Hexalith.FrontComposer.Testing -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Testing/bin/Release/net10.0/Hexalith.FrontComposer.Testing.dll
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Cli.Tests/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Cli.Tests/Hexalith.FrontComposer.Cli.Tests.csproj]
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Contracts.Tests/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Contracts.Tests/Hexalith.FrontComposer.Contracts.Tests.csproj]
+        Hexalith.FrontComposer.Contracts.UI.Tests -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Contracts.UI.Tests/bin/Release/net10.0/Hexalith.FrontComposer.Contracts.UI.Tests.dll
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Mcp.Tests/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Mcp.Tests/Hexalith.FrontComposer.Mcp.Tests.csproj]
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests.Bench/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests.Bench/Hexalith.FrontComposer.Shell.Tests.Bench.csproj]
+      /home/administrator/.nuget/packages/verify/33.3.4/buildTransitive/Verify.targets(172,5): SponsorCheck message SC059: Private sponsorship attestation trusted. Package 'Verify': trusting unverified private sponsor declaration (GitHubSponsors=jpiquot): SponsorshipPrivateUntil=2027-09, so the bundled sponsor list is not expected to contain this account. See: https://github.com/SimonCropp/SponsorCheck/blob/main/docs/VerifierDiagnosticCodes.md#sc059
+        Hexalith.FrontComposer.Shell.Tests -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests/bin/Release/net10.0/Hexalith.FrontComposer.Shell.Tests.dll
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.SourceTools.Tests/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.SourceTools.Tests/Hexalith.FrontComposer.SourceTools.Tests.csproj]
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Testing.Tests/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Testing.Tests/Hexalith.FrontComposer.Testing.Tests.csproj]
+      
+      Build FAILED.
+      
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/samples/IdeParityCounter/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/samples/IdeParityCounter/IdeParityCounter.csproj]
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Cli/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Cli/Hexalith.FrontComposer.Cli.csproj]
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Cli.Tests/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Cli.Tests/Hexalith.FrontComposer.Cli.Tests.csproj]
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Contracts.Tests/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Contracts.Tests/Hexalith.FrontComposer.Contracts.Tests.csproj]
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Mcp.Tests/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Mcp.Tests/Hexalith.FrontComposer.Mcp.Tests.csproj]
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests.Bench/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests.Bench/Hexalith.FrontComposer.Shell.Tests.Bench.csproj]
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.SourceTools.Tests/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.SourceTools.Tests/Hexalith.FrontComposer.SourceTools.Tests.csproj]
+      /home/administrator/.dotnet/sdk/10.0.403/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file '/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Testing.Tests/obj/project.assets.json' not found. Run a NuGet package restore to generate this file. [/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Testing.Tests/Hexalith.FrontComposer.Testing.Tests.csproj]
+          0 Warning(s)
+          8 Error(s)
+      
+      Time Elapsed 00:00:28.59
+      
+      Stack Trace:
+        tests/Hexalith.FrontComposer.Shell.Tests/Governance/AnalyzerPolicyGovernanceTests.cs(1624,0): at Hexalith.FrontComposer.Shell.Tests.Governance.AnalyzerPolicyGovernanceTests.AssertZeroWarningZeroErrorBuild(Int32 exitCode, String output, String description)
+        tests/Hexalith.FrontComposer.Shell.Tests/Governance/AnalyzerPolicyGovernanceTests.cs(592,0): at Hexalith.FrontComposer.Shell.Tests.Governance.AnalyzerPolicyGovernanceTests.AnalyzerPolicy_ActivatedReleaseBuild_MatchesForcedRecommendedCandidate()
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+  Finished:    Hexalith.FrontComposer.Shell.Tests (ID = '31ca9d60d0cad6a656f8230063b6425c7eeb89520206df4b0f0e84c8a564bec9')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.FrontComposer.Shell.Tests  Total: 3898, Errors: 0, Failed: 12, Skipped: 1, Not Run: 0, Time: 228.014s

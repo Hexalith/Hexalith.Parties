@@ -1,0 +1,13 @@
+{
+  "command": [
+    "dotnet",
+    "/tmp/causal-accepted/shared-legacy-transport/bin/Debug/net10.0/Focused.dll",
+    "-xml",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-causal-reconciliation-2026-10-30/accepted-shared-legacy-transport-tests.xml"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "exit_code": 0,
+  "elapsed_seconds": 5.36,
+  "log": "accepted-shared-legacy-transport-tests.txt",
+  "sha256": "b7a58c88ff0a1bf8475f7e3b633d6041d40fbc67a5dc2c3a3981037ca77f511d"
+}

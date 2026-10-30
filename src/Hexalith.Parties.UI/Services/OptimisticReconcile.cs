@@ -15,10 +15,10 @@ namespace Hexalith.Parties.UI.Services;
 /// <remarks>
 /// <para>
 /// <strong>Flow.</strong> apply optimistic → announce polite "Saving…" (<see cref="StatusKind.AcceptedProcessing"/>,
-/// no focus steal) → issue command. On acceptance: reconcile on the <em>first</em> of {a SignalR
-/// projection-confirm, a re-read returning <see cref="ProjectionFreshnessStatus.Current"/>} (polling owns the
-/// re-read while disconnected), announce the reconciled state politely, then tear the subscription / polling
-/// down. A <strong>one-shot guard</strong> makes a duplicate or late confirm a no-op (AC3 "no duplicate
+/// no focus steal) → issue command. After acceptance, signals and interval retries trigger re-reads.
+/// Completion requires both <see cref="ProjectionFreshnessStatus.Current"/> and the caller's operation-specific
+/// witness. Missing witnesses remain pending until cancellation. Announce completion politely, then drain
+/// the subscription, retry timers and reads. A <strong>one-shot guard</strong> makes a duplicate or late confirm a no-op (AC3 "no duplicate
 /// application").
 /// </para>
 /// <para>
@@ -78,6 +78,10 @@ public sealed class OptimisticReconcile(
                     ProjectionFreshnessStatus.Stale => Hexalith.FrontComposer.Contracts.Freshness.FcFreshnessStatus.Stale,
                     _ => Hexalith.FrontComposer.Contracts.Freshness.FcFreshnessStatus.Degraded,
                 },
+                OperationWitness = request.OperationWitness ?? (_ => Task.FromResult(false)),
+                TimeProvider = fallback.Clock,
+                RetryInterval = fallback.Interval,
+                RecoveryGeneration = () => subscription.RecoveryGeneration,
                 Revert = request.Revert,
                 Rejected = () => request.Announce(sharedAcceptance.FailureStatus, sharedAcceptance.FailureReason),
                 Failed = exception =>
@@ -97,7 +101,7 @@ public sealed class OptimisticReconcile(
                 Subscribe = callback => subscription.Subscribe(request.ProjectionKey.ProjectionType, request.ProjectionKey.Tenant, callback),
                 WaitForSubscriptionAsync = PartiesProjectionSubscription.WaitUntilReadyAsync,
                 IsConnected = () => subscription.IsConnected,
-                RunFallback = fallback.RunAsync,
+                RunFallback = (poll, _, token) => subscription.IsConnected ? Task.CompletedTask : poll(token),
                 ReadFailed = () => OptimisticReconcileLog.ReadFailed(logger),
             }, cancellationToken).ConfigureAwait(false);
             return;
@@ -113,6 +117,7 @@ public sealed class OptimisticReconcile(
         // Serializing asynchronous reads fences simultaneous confirmations and late responses.
         // The gate remains reachable by a captured late callback, so it is intentionally not disposed.
         var gate = new SemaphoreSlim(1, 1);
+        long generation = subscription.RecoveryGeneration;
         bool done = false;
         bool accepted = false;
         bool commandStarted = false;
@@ -151,6 +156,11 @@ public sealed class OptimisticReconcile(
                 try
                 {
                     freshness = await request.Reconcile(token).ConfigureAwait(false);
+                    if (freshness == ProjectionFreshnessStatus.Current
+                        && (request.OperationWitness is not { } witness || !await witness(token).ConfigureAwait(false)))
+                    {
+                        freshness = ProjectionFreshnessStatus.Stale;
+                    }
                 }
                 catch (OperationCanceledException) when (token.IsCancellationRequested)
                 {
@@ -311,7 +321,7 @@ public sealed class OptimisticReconcile(
             try
             {
                 // The caller's driver observes connectivity for the whole operation, including reconnects.
-                await fallback.RunAsync(TryReconcileAsync, () => Volatile.Read(ref done), token).ConfigureAwait(false);
+                await fallback.RunUntilWitnessedAsync(TryReconcileAsync, () => Volatile.Read(ref done), generation, token).ConfigureAwait(false);
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
             {

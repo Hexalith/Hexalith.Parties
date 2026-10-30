@@ -1,0 +1,9 @@
+  Determining projects to restore...
+  Restored /tmp/causal-focused/shared/Focused.csproj (in 260 ms).
+  Focused -> /tmp/causal-focused/shared/bin/Debug/net10.0/Focused.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.04

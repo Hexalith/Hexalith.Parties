@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Hexalith.Parties.UI.Services;
 
-/// <summary>Owns registration and removal so delayed transport work cannot outlive an operation.</summary>
+/// <summary>Owns local registration and removal; cancellation does not contain arbitrary late remote joins.</summary>
 internal sealed class PartiesProjectionRegistration(
     IProjectionStream stream,
     ILogger logger,
@@ -64,7 +64,7 @@ internal sealed class PartiesProjectionRegistration(
             }
             if (Volatile.Read(ref _disposed) == 0)
             {
-                await stream.SubscribeAsync(projectionType, tenant, Confirm).ConfigureAwait(false);
+                await stream.SubscribeAsync(projectionType, tenant, Confirm, _lifetime.Token).ConfigureAwait(false);
                 _ready.TrySetResult();
             }
         }
@@ -92,9 +92,10 @@ internal sealed class PartiesProjectionRegistration(
         Interlocked.Exchange(ref _disposed, 1);
         await _lifetime.CancelAsync().ConfigureAwait(false);
         await _finished.Task.ConfigureAwait(false);
+        using var leave = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         try
         {
-            await stream.UnsubscribeAsync(projectionType, tenant, Confirm).ConfigureAwait(false);
+            await stream.UnsubscribeAsync(projectionType, tenant, Confirm, leave.Token).ConfigureAwait(false);
         }
         catch (Exception exception)
         {

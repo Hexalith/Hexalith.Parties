@@ -1,0 +1,15 @@
+{
+  "command": [
+    "dotnet",
+    "/tmp/causal-callback-mutant/bin/Debug/net10.0/Focused.dll",
+    "-method",
+    "*RemovalRevokesCallbackInAlreadyCapturedDispatchSnapshot",
+    "-xml",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-causal-reconciliation-2026-10-30/callback-mutation-tests.xml"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "exit_code": 1,
+  "elapsed_seconds": 1.1,
+  "log": "callback-mutation-tests.txt",
+  "sha256": "b82a6a6f2831a2f103adf649da0ba6ef5ec3cd7afa203a4ec1c7d7deaca99e01"
+}

@@ -17,6 +17,10 @@
   <!-- Approved shared primitives are published in Shell/Contracts.UI 4.7.1.
        Registration remains opt-in; the package reconciler lacks registration readiness. -->
   <Target Name="ConfigureFrontComposerFeedbackCandidate" BeforeTargets="PrepareForBuild;CoreCompile">
+    <PropertyGroup Condition="'$(HexalithEventStoreFromSource)' == 'true'">
+      <DefineConstants>$(DefineConstants);HES_CANCELLABLE_PROJECTIONS</DefineConstants>
+    </PropertyGroup>
+
     <PropertyGroup Condition="'$(HexalithFrontComposerFromSource)' == 'true' or '$(HexalithFrontComposerVersion)' == '4.7.1'">
       <DefineConstants>$(DefineConstants);HFC_SHARED_UI</DefineConstants>
     </PropertyGroup>

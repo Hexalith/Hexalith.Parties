@@ -1,0 +1,9 @@
+  Determining projects to restore...
+  Restored /tmp/causal-accepted/shared-legacy-transport/Focused.csproj (in 189 ms).
+  Focused -> /tmp/causal-accepted/shared-legacy-transport/bin/Debug/net10.0/Focused.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.29

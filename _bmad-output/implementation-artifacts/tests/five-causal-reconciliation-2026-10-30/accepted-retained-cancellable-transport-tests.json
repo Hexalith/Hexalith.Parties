@@ -1,0 +1,13 @@
+{
+  "command": [
+    "dotnet",
+    "/tmp/causal-accepted/retained-cancellable-transport/bin/Debug/net10.0/Focused.dll",
+    "-xml",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-causal-reconciliation-2026-10-30/accepted-retained-cancellable-transport-tests.xml"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "exit_code": 0,
+  "elapsed_seconds": 5.4,
+  "log": "accepted-retained-cancellable-transport-tests.txt",
+  "sha256": "5884a8a4953bb9e21e826f621f7a6fc78eb9585802f0c59ca89c4d7f98c94b0a"
+}

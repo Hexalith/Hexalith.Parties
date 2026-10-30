@@ -1,0 +1,17 @@
+{
+  "command": [
+    "dotnet",
+    "/tmp/causal-review-focused/retained-cancellable-transport/bin/Debug/net10.0/Focused.dll",
+    "-class",
+    "Hexalith.EventStore.SignalR.Tests.EventStoreSignalRClientTests",
+    "-class",
+    "Hexalith.Parties.UI.Tests.PartiesProjectionSubscriptionTests",
+    "-xml",
+    "/tmp/causal-review-retained-cancellable-transport-tests.xml"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "exit_code": 0,
+  "elapsed_seconds": 5.41,
+  "log": "review-fixes-retained-cancellable-transport-tests.txt",
+  "sha256": "3ba5cd887039525a841bea03431e68168067a77fae50f920b18b40688d2506e3"
+}

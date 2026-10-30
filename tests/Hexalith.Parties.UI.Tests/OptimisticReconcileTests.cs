@@ -420,16 +420,16 @@ public sealed class OptimisticReconcileTests
         recorder.ReconcileCalls.ShouldBe(1);
         stream.IsConnected = true;
         time.Advance(TimeSpan.FromSeconds(30));
-        recorder.ReconcileCalls.ShouldBe(1);
+        recorder.ReconcileCalls.ShouldBe(2);
         stream.IsConnected = false;
         current = true;
         time.Advance(TimeSpan.FromSeconds(30));
         await run.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
-        recorder.ReconcileCalls.ShouldBe(2);
+        recorder.ReconcileCalls.ShouldBe(3);
         stream.Subscriptions.ShouldBeEmpty();
         time.ActiveTimers.ShouldBe(0);
         time.Advance(TimeSpan.FromMinutes(1));
-        recorder.ReconcileCalls.ShouldBe(2);
+        recorder.ReconcileCalls.ShouldBe(3);
     }
 
     [Fact]
@@ -454,21 +454,116 @@ public sealed class OptimisticReconcileTests
         time.ActiveTimers.ShouldBe(0);
     }
 
-    [Fact]
-    public async Task ConnectedOldCurrentWithoutConfirmation_DoesNotReconcileQueuedCommand()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task OperationWitnessRejectsAnotherPartyAndAnOldCheckpoint(bool shared)
+    {
+        var time = new ManualTimeProvider();
+        FakeProjectionStream stream = NewStream(connected: true);
+        var recorder = new Recorder();
+        string returnedParty = "party-b";
+        long returnedCheckpoint = 100;
+        string? observedParty = null;
+        long observedCheckpoint = 0;
+        const string expectedParty = "party-a";
+        const long acceptedCheckpoint = 12;
+        OptimisticReconcileRequest request = recorder.BuildRequest(
+            _ => Task.FromResult(CommandAcceptance.Accepted),
+            _ =>
+            {
+                observedParty = returnedParty;
+                observedCheckpoint = returnedCheckpoint;
+                return Task.FromResult(ProjectionFreshnessStatus.Current);
+            }) with
+        {
+            OperationWitness = _ => Task.FromResult(
+                observedParty == expectedParty && observedCheckpoint >= acceptedCheckpoint),
+        };
+        Task run = NewPrimitive(stream, time: time, shared: shared).ExecuteAsync(request, TestContext.Current.CancellationToken);
+        stream.RaiseChanged(ProjectionType, Tenant);
+        run.IsCompleted.ShouldBeFalse();
+        returnedParty = expectedParty;
+        returnedCheckpoint = acceptedCheckpoint - 1;
+        stream.RaiseChanged(ProjectionType, Tenant);
+        run.IsCompleted.ShouldBeFalse();
+        returnedCheckpoint = acceptedCheckpoint;
+        stream.RaiseChanged(ProjectionType, Tenant);
+        await run.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        recorder.ReconcileCalls.ShouldBe(3);
+        stream.Subscriptions.ShouldBeEmpty();
+        time.ActiveTimers.ShouldBe(0);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task MissingWitnessCannotCertifyCurrent(bool shared)
     {
         var stream = NewStream(connected: true);
         var time = new ManualTimeProvider();
         var recorder = new Recorder();
         using var cancellation = new CancellationTokenSource();
-        Task run = NewPrimitive(stream, time: time).ExecuteAsync(recorder.BuildRequest(
+        Task run = NewPrimitive(stream, time: time, shared: shared).ExecuteAsync(recorder.BuildRequest(
             _ => Task.FromResult(CommandAcceptance.Accepted),
-            _ => Task.FromResult(ProjectionFreshnessStatus.Current)), cancellation.Token);
-        time.Advance(TimeSpan.FromMinutes(2));
-        run.IsCompleted.ShouldBeFalse();
-        recorder.ReconcileCalls.ShouldBe(0);
-        recorder.Announcements.ShouldHaveSingleItem();
+            _ => Task.FromResult(ProjectionFreshnessStatus.Current)) with { OperationWitness = null }, cancellation.Token);
         stream.RaiseChanged(ProjectionType, Tenant);
+        time.Advance(TimeSpan.FromSeconds(30));
+        run.IsCompleted.ShouldBeFalse();
+        recorder.ReconcileCalls.ShouldBeGreaterThanOrEqualTo(2);
+        await cancellation.CancelAsync();
+        await run.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        stream.Subscriptions.ShouldBeEmpty();
+        time.ActiveTimers.ShouldBe(0);
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task SoleConfirmationRetriesUntilOperationWitness(bool shared, bool failFirst)
+    {
+        var stream = NewStream(connected: true);
+        var time = new ManualTimeProvider();
+        var recorder = new Recorder();
+        bool witnessed = false;
+        int attempt = 0;
+        Task run = NewPrimitive(stream, time: time, shared: shared).ExecuteAsync(recorder.BuildRequest(
+            _ => Task.FromResult(CommandAcceptance.Accepted),
+            _ => ++attempt == 1 && failFirst ? throw new IOException("retryable read") : Task.FromResult(ProjectionFreshnessStatus.Current))
+            with { OperationWitness = _ => Task.FromResult(witnessed) }, TestContext.Current.CancellationToken);
+        Action confirm = stream.Subscriptions.ShouldHaveSingleItem().OnChanged;
+        confirm(); // an unrelated signal with old Current must not finish this operation
+        run.IsCompleted.ShouldBeFalse();
+        time.Advance(TimeSpan.FromSeconds(30));
+        run.IsCompleted.ShouldBeFalse();
+        witnessed = true;
+        time.Advance(TimeSpan.FromSeconds(30));
+        await run.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        recorder.ReconcileCalls.ShouldBe(3);
+        confirm();
+        recorder.ReconcileCalls.ShouldBe(3);
+        recorder.Announcements.Count(item => item == (StatusKind.AcceptedProcessing, (string?)null)).ShouldBe(1);
+        stream.Subscriptions.ShouldBeEmpty();
+        time.ActiveTimers.ShouldBe(0);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task SubIntervalOutageDuringAcceptanceTriggersCatchUp(bool shared)
+    {
+        var stream = NewStream(connected: true);
+        var time = new ManualTimeProvider();
+        var recorder = new Recorder();
+        Task run = NewPrimitive(stream, time: time, shared: shared).ExecuteAsync(recorder.BuildRequest(
+            _ =>
+            {
+                stream.IsConnected = false;
+                stream.IsConnected = true;
+                return Task.FromResult(CommandAcceptance.Accepted);
+            }, _ => Task.FromResult(ProjectionFreshnessStatus.Current)), TestContext.Current.CancellationToken);
         await run.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         recorder.ReconcileCalls.ShouldBe(1);
         stream.Subscriptions.ShouldBeEmpty();
@@ -626,7 +721,7 @@ public sealed class OptimisticReconcileTests
 
     private static FakeProjectionStream NewStream(bool connected) => new() { IsConnected = connected };
 
-    private static OptimisticReconcile NewPrimitive(FakeProjectionStream stream, ILogger<OptimisticReconcile>? logger = null, ManualTimeProvider? time = null, PartiesProjectionSubscription? subscriptionOverride = null)
+    private static OptimisticReconcile NewPrimitive(FakeProjectionStream stream, ILogger<OptimisticReconcile>? logger = null, ManualTimeProvider? time = null, PartiesProjectionSubscription? subscriptionOverride = null, bool shared = true)
     {
         var subscription = subscriptionOverride ?? new PartiesProjectionSubscription(stream, NullLogger<PartiesProjectionSubscription>.Instance);
         var options = Options.Create(new ProjectionFreshnessOptions { PollingIntervalSeconds = 30 });
@@ -635,7 +730,7 @@ public sealed class OptimisticReconcileTests
         var provider = Substitute.For<IServiceProvider>();
         provider.GetService(typeof(Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler))
             .Returns(new Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler());
-        return new OptimisticReconcile(subscription, fallback, logger ?? NullLogger<OptimisticReconcile>.Instance, provider);
+        return new OptimisticReconcile(subscription, fallback, logger ?? NullLogger<OptimisticReconcile>.Instance, shared ? provider : null);
 #else
         return new OptimisticReconcile(subscription, fallback, logger ?? NullLogger<OptimisticReconcile>.Instance);
 #endif
@@ -671,6 +766,7 @@ public sealed class OptimisticReconcileTests
                     ReconcileCalls++;
                     return reconcile(ct);
                 },
+                OperationWitness = _ => Task.FromResult(true),
                 Revert = () => { Reverted = true; RevertCalls++; },
                 ProjectionKey = (ProjectionType, Tenant),
                 Announce = (kind, message) => Announcements.Add((kind, message)),

@@ -18,6 +18,51 @@ public sealed class PartiesProjectionSubscriptionTests
     private const string ProjectionType = PartyProjectionNames.Detail;
     private const string Tenant = "tenant-a";
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CancellableProducerDrainsStalledRegistrationOrRemovalWithoutLateAuthority(bool leave)
+    {
+        var never = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var stream = new FakeProjectionStream { IsConnected = true, SupportsCancellation = true };
+        if (leave)
+        {
+            stream.UnsubscriptionDelay = never.Task;
+        }
+        else
+        {
+            stream.RegistrationDelay = never.Task;
+        }
+        var wrapper = new PartiesProjectionSubscription(stream, NullLogger<PartiesProjectionSubscription>.Instance);
+        int calls = 0;
+        IDisposable handle = wrapper.Subscribe(ProjectionType, Tenant, () => calls++);
+        Action? late = stream.Subscriptions.FirstOrDefault()?.OnChanged;
+        await ((IAsyncDisposable)handle).DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(7), TestContext.Current.CancellationToken);
+        never.SetResult();
+        late?.Invoke();
+        stream.RaiseChanged(ProjectionType, Tenant);
+        calls.ShouldBe(0);
+        stream.Subscriptions.ShouldBeEmpty();
+        await wrapper.DisposeAsync().ConfigureAwait(true);
+    }
+
+    [Fact]
+    public async Task RemovalUsesFreshBoundedTokenAndDrainsHealthyLeave()
+    {
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var stream = new FakeProjectionStream { SupportsCancellation = true, UnsubscriptionDelay = release.Task };
+        var wrapper = new PartiesProjectionSubscription(stream, NullLogger<PartiesProjectionSubscription>.Instance);
+        IDisposable handle = wrapper.Subscribe(ProjectionType, Tenant, () => { });
+        Task removal = ((IAsyncDisposable)handle).DisposeAsync().AsTask();
+        await stream.UnsubscriptionStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        stream.RemovalToken.CanBeCanceled.ShouldBeTrue();
+        stream.RemovalToken.IsCancellationRequested.ShouldBeFalse();
+        removal.IsCompleted.ShouldBeFalse();
+        release.SetResult();
+        await removal.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        await wrapper.DisposeAsync();
+    }
+
     [Fact]
     public void Subscribe_RegistersOnTheStream_AndEnsuresStartedOnce()
     {

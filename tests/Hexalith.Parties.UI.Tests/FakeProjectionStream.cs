@@ -11,7 +11,51 @@ internal sealed class FakeProjectionStream : IProjectionStream
 {
     private readonly List<Registration> _subscriptions = [];
 
-    public bool IsConnected { get; set; }
+    private bool _connected;
+
+    public long RecoveryGeneration { get; private set; }
+
+    public bool IsConnected
+    {
+        get => _connected;
+        set
+        {
+            if (_connected != value)
+            {
+                RecoveryGeneration++;
+                _connected = value;
+            }
+        }
+    }
+
+    public bool SupportsCancellation { get; set; }
+
+    public CancellationToken RemovalToken { get; private set; }
+
+    public async Task SubscribeAsync(string projectionType, string tenantId, Action onChanged, CancellationToken cancellationToken)
+    {
+        if (!SupportsCancellation)
+        {
+            await SubscribeAsync(projectionType, tenantId, onChanged).ConfigureAwait(false);
+            return;
+        }
+        await RegistrationDelay.WaitAsync(cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        _subscriptions.Add(new Registration(projectionType, tenantId, onChanged));
+    }
+
+    public async Task UnsubscribeAsync(string projectionType, string tenantId, Action onChanged, CancellationToken cancellationToken)
+    {
+        if (!SupportsCancellation)
+        {
+            await UnsubscribeAsync(projectionType, tenantId, onChanged).ConfigureAwait(false);
+            return;
+        }
+        RemovalToken = cancellationToken;
+        _ = _subscriptions.RemoveAll(s => s.ProjectionType == projectionType && s.Tenant == tenantId && s.OnChanged == onChanged);
+        UnsubscriptionStarted.TrySetResult();
+        await UnsubscriptionDelay.WaitAsync(cancellationToken).ConfigureAwait(false);
+    }
 
     public Exception? StartFailure { get; set; }
 

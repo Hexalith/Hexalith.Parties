@@ -1,0 +1,13 @@
+{
+  "command": [
+    "dotnet",
+    "/tmp/causal-verified/retained/bin/Debug/net10.0/Focused.dll",
+    "-xml",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-causal-reconciliation-2026-10-30/parity-retained-tests.xml"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "exit_code": 0,
+  "elapsed_seconds": 1.39,
+  "log": "parity-retained-tests.txt",
+  "sha256": "c8af10b29d56423587e80a051b3d92fc6d58d23c1d463eb3832a10f759716f2f"
+}

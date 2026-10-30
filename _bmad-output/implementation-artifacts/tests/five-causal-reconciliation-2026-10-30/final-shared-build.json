@@ -1,0 +1,15 @@
+{
+  "command": [
+    "dotnet",
+    "build",
+    "/tmp/causal-verified/shared/Focused.csproj",
+    "-c",
+    "Debug",
+    "-m:1"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "exit_code": 1,
+  "elapsed_seconds": 1.79,
+  "log": "final-shared-build.txt",
+  "sha256": "dc32270cd2f289c6c886a5e9d5c0360c642c3bbe1e1c632c61623bb31cd6cbef"
+}

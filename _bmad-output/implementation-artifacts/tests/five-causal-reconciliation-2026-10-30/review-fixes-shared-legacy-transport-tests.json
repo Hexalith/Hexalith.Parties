@@ -1,0 +1,17 @@
+{
+  "command": [
+    "dotnet",
+    "/tmp/causal-review-focused/shared-legacy-transport/bin/Debug/net10.0/Focused.dll",
+    "-class",
+    "Hexalith.EventStore.SignalR.Tests.EventStoreSignalRClientTests",
+    "-class",
+    "Hexalith.Parties.UI.Tests.PartiesProjectionSubscriptionTests",
+    "-xml",
+    "/tmp/causal-review-shared-legacy-transport-tests.xml"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "exit_code": 0,
+  "elapsed_seconds": 5.38,
+  "log": "review-fixes-shared-legacy-transport-tests.txt",
+  "sha256": "c07ed6b18b8df461ce49174b579a99670703cb0ce5d5289f269b888cf8f5f7a7"
+}

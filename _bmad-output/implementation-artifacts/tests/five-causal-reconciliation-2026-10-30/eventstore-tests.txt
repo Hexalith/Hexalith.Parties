@@ -1,0 +1,61 @@
+The '-xml' switch has been deprecated in favor of '-result-xml' and will be removed in the next major version
+
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.14)
+  Discovering: Hexalith.EventStore.SignalR.Tests
+  Discovered:  Hexalith.EventStore.SignalR.Tests
+  Starting:    Hexalith.EventStore.SignalR.Tests
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://127.0.0.1:41017
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/tests/Hexalith.EventStore.SignalR.Tests/bin/Debug/net10.0
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://127.0.0.1:41017/hub/negotiate?negotiateVersion=1 - - 0
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint '/hub/negotiate'
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint '/hub/negotiate'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://127.0.0.1:41017/hub/negotiate?negotiateVersion=1 - 200 316 application/json 15.3375ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://127.0.0.1:41017/hub?id=nZ8ey9IxRAapd5UHOlvQkg - - -
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint '/hub'
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint '/hub'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://127.0.0.1:41017/hub?id=nZ8ey9IxRAapd5UHOlvQkg - 101 - - 126.3207ms
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://127.0.0.1:33089
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/tests/Hexalith.EventStore.SignalR.Tests/bin/Debug/net10.0
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://127.0.0.1:33089/hub/negotiate?negotiateVersion=1 - - 0
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint '/hub/negotiate'
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint '/hub/negotiate'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://127.0.0.1:33089/hub/negotiate?negotiateVersion=1 - 200 316 application/json 1.1570ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://127.0.0.1:33089/hub?id=ORFbMNEHW3wGKJ8mepK9eA - - -
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint '/hub'
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint '/hub'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://127.0.0.1:33089/hub?id=ORFbMNEHW3wGKJ8mepK9eA - 101 - - 9.1933ms
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+  Finished:    Hexalith.EventStore.SignalR.Tests (ID = '2d0c12c3213328062a169dae7e6f4fff84553a42b4385e1a84399f7d52a95f50')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.EventStore.SignalR.Tests  Total: 47, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.754s

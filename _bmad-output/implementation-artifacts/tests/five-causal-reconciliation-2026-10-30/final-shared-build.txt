@@ -1,0 +1,11 @@
+  Determining projects to restore...
+  Restored /tmp/causal-verified/shared/Focused.csproj (in 259 ms).
+/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/tests/Hexalith.EventStore.SignalR.Tests/EventStoreSignalRClientTests.cs(879,34): error CA2007: Consider calling ConfigureAwait on the awaited task (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2007) [/tmp/causal-verified/shared/Focused.csproj]
+
+Build FAILED.
+
+/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/tests/Hexalith.EventStore.SignalR.Tests/EventStoreSignalRClientTests.cs(879,34): error CA2007: Consider calling ConfigureAwait on the awaited task (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2007) [/tmp/causal-verified/shared/Focused.csproj]
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:01.47

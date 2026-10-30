@@ -1,0 +1,12 @@
+  Determining projects to restore...
+  Restored /tmp/causal-callback-mutant/Focused.csproj (in 204 ms).
+CSC : warning CS2002: Source file '/tmp/causal-callback-mutant/ProjectionCallback.cs' specified multiple times [/tmp/causal-callback-mutant/Focused.csproj]
+  Focused -> /tmp/causal-callback-mutant/bin/Debug/net10.0/Focused.dll
+
+Build succeeded.
+
+CSC : warning CS2002: Source file '/tmp/causal-callback-mutant/ProjectionCallback.cs' specified multiple times [/tmp/causal-callback-mutant/Focused.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.43

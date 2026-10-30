@@ -1,0 +1,11 @@
+{
+  "command": [
+    "/usr/bin/python3",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-causal-reconciliation-2026-10-30/test-run-check.py"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "exit_code": 0,
+  "elapsed_seconds": 1.48,
+  "log": "accepted-runner-tests.txt",
+  "sha256": "08de59fe3d50392430e24a54af4b71e37dcb774dfb4b3d1af8246d578a45387b"
+}

@@ -3,11 +3,10 @@ using Microsoft.Extensions.Options;
 namespace Hexalith.Parties.UI.Services;
 
 /// <summary>
-/// The single shared polling-fallback coordinator (Story 1.7, AC2; <c>architecture.md:482</c> "No bespoke
-/// per-screen polling"). The optimistic-reconcile primitive uses it while the SignalR stream is
-/// <strong>not</strong> connected: it invokes the supplied reconcile re-read on a configurable interval
-/// (<c>Parties:Freshness:PollingIntervalSeconds</c>, default 30&#160;s) and stops as soon as the operation
-/// completes or the token cancels. Connection observation continues across reconnects.
+/// The shared polling coordinator (Story 1.7, AC2). Witnessed operations retry while connected or
+/// disconnected using <c>Parties:Freshness:PollingIntervalSeconds</c> (default 30&#160;s). Durable transport
+/// generations retain brief outages. The legacy <see cref="RunAsync"/> entry point retains disconnected-only
+/// polling. Both drivers stop when the operation completes or its token cancels.
 /// </summary>
 /// <remarks>
 /// <strong>Testability.</strong> Time comes from the injected <see cref="TimeProvider"/> (a Singleton in the
@@ -19,6 +18,35 @@ public sealed class ProjectionFreshnessFallback(
     TimeProvider timeProvider,
     IOptions<ProjectionFreshnessOptions> options)
 {
+    /// <summary>Gets the caller's deterministic retry clock.</summary>
+    public TimeProvider Clock => timeProvider;
+
+    /// <summary>Gets the configured retry interval.</summary>
+    public TimeSpan Interval => TimeSpan.FromSeconds(Math.Max(1, options.Value.PollingIntervalSeconds));
+
+    /// <summary>Retries accepted operations until witnessed, even while connected. Durable generations retain transitions occurring before this driver starts.</summary>
+    public async Task RunUntilWitnessedAsync(Func<CancellationToken, Task> onPoll, Func<bool> isDone, long generation, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(onPoll);
+        ArgumentNullException.ThrowIfNull(isDone);
+        if (ct.IsCancellationRequested || isDone())
+        {
+            return;
+        }
+        if (!stream.IsConnected || stream.RecoveryGeneration != generation)
+        {
+            await onPoll(ct).ConfigureAwait(false);
+        }
+        while (!ct.IsCancellationRequested && !isDone())
+        {
+            if (!await TryWaitIntervalAsync(Interval, ct).ConfigureAwait(false))
+            {
+                return;
+            }
+            await onPoll(ct).ConfigureAwait(false);
+        }
+    }
+
     /// <summary>
     /// Polls <paramref name="onPoll"/> every interval while the stream is disconnected, starting with an
     /// <strong>immediate</strong> first poll. Returns when <paramref name="isDone"/> is satisfied or

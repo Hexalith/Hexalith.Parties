@@ -1,0 +1,15 @@
+{
+  "command": [
+    "dotnet",
+    "build",
+    "/tmp/causal-accepted/retained-cancellable-transport/Focused.csproj",
+    "-c",
+    "Debug",
+    "-m:1"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "exit_code": 0,
+  "elapsed_seconds": 1.47,
+  "log": "accepted-retained-cancellable-transport-build.txt",
+  "sha256": "f409d27c5486e67a3b4698a5ed13202dca8461cf3df798202843f59689965338"
+}

@@ -1,0 +1,14 @@
+{
+  "command": [
+    "node",
+    "node_modules/@commitlint/cli/cli.js",
+    "--edit",
+    "/tmp/causal-frontcomposer-commit-message.txt",
+    "--verbose"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer",
+  "exit_code": 0,
+  "elapsed_seconds": 0.33,
+  "log": "commitlint-frontcomposer.txt",
+  "sha256": "ab61d21420a166999b3ef2b6edf1c016257196f3708d29887fd52f697974726b"
+}

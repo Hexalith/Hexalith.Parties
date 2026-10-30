@@ -1,0 +1,3 @@
+⧗   --- input ---
+fix: make projection subscriptions cancellable
+✔   found 0 problems, 0 warnings

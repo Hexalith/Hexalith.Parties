@@ -1,0 +1,75 @@
+..
+----------------------------------------------------------------------
+Ran 2 tests in 1.439s
+
+OK
+{"name": "timeout", "exit_code": 124}
+parent ready
+child ready
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+child tick
+
+VERIFICATION TIMEOUT: 0.3 seconds
+

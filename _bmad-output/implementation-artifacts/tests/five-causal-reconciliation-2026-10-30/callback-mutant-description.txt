@@ -1,0 +1,1 @@
+Controlled isolated mutation: replace exactly one guard in a temporary copy of ProjectionCallback.cs: Volatile.Read(ref _revoked) == 0 -> Volatile.Read(ref _revoked) >= 0. All production worktree files and all tests remain unchanged. Use the accepted shared diagnostic project with only that Compile Include redirected. Expected: both captured-snapshot theory cases fail.

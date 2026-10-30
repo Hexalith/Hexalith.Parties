@@ -43,7 +43,10 @@ public sealed class PartiesProjectionSubscription : IAsyncDisposable
         _logger = logger;
     }
 
-    /// <summary>Gets whether the underlying stream is connected (drives the polling fallback).</summary>
+    /// <summary>Gets the producer transition/rejoin generation.</summary>
+    public long RecoveryGeneration => _stream.RecoveryGeneration;
+
+    /// <summary>Gets whether the underlying stream is connected.</summary>
     public bool IsConnected => _stream.IsConnected;
 
     /// <summary>Idempotently starts the underlying stream (no-op when no hub URL is configured).</summary>

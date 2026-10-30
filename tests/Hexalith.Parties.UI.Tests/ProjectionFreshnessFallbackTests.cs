@@ -16,6 +16,27 @@ public sealed class ProjectionFreshnessFallbackTests
     private static readonly TimeSpan Interval = TimeSpan.FromSeconds(30);
 
     [Fact]
+    public async Task StrengthenedDriverCatchesGenerationAndRetriesWhileConnectedThenDrainsTimer()
+    {
+        var time = new ManualTimeProvider();
+        var stream = new FakeProjectionStream { IsConnected = true };
+        long before = stream.RecoveryGeneration;
+        stream.IsConnected = false;
+        stream.IsConnected = true;
+        var fallback = new ProjectionFreshnessFallback(stream, time,
+            Options.Create(new ProjectionFreshnessOptions { PollingIntervalSeconds = 30 }));
+        int reads = 0;
+        Task run = fallback.RunUntilWitnessedAsync(_ => { reads++; return Task.CompletedTask; }, () => reads == 3, before, TestContext.Current.CancellationToken);
+        reads.ShouldBe(1);
+        time.Advance(Interval);
+        reads.ShouldBe(2);
+        time.Advance(Interval);
+        await run.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        reads.ShouldBe(3);
+        time.ActiveTimers.ShouldBe(0);
+    }
+
+    [Fact]
     public async Task PollsWhileDisconnected_ObservesReconnectAndResumesAfterAnotherDisconnect()
     {
         var time = new ManualTimeProvider();

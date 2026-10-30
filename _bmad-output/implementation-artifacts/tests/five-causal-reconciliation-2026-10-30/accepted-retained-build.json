@@ -1,0 +1,15 @@
+{
+  "command": [
+    "dotnet",
+    "build",
+    "/tmp/causal-accepted/retained/Focused.csproj",
+    "-c",
+    "Debug",
+    "-m:1"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "exit_code": 0,
+  "elapsed_seconds": 1.38,
+  "log": "accepted-retained-build.txt",
+  "sha256": "78d243ead71c1bb781146d16f776c214e8846fb6df610a9d036b39f7c46211b7"
+}

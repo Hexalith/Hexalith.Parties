@@ -1,0 +1,54 @@
+Starting Aspire AppHost in the background...
+❌ Failed to start the AppHost.
+ℹ️ Recent AppHost startup output:
+NativeCertificateToolRunner: Failed to trust the certificate in the NSS database in '/home/administrator/.pki/nssdb'. This will likely affect the Chromium 
+family of browsers. This likely indicates that the database already contains an entry for the certificate under a different name. Please remove it and try 
+again.
+NativeCertificateToolRunner: The certificate is only partially trusted - some clients will not accept it.
+NativeCertificateToolRunner: The certificate is not trusted by OpenSSL.  Ensure that the SSL_CERT_DIR environment variable is set correctly.
+NativeCertificateToolRunner: The certificate is not trusted in the NSS database in '/home/administrator/.pki/nssdb'. This will likely affect the Chromium family
+of browsers.
+  Determining projects to restore...
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Picker/Hexalith.Parties.Picker.csproj (in 719 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj (in 725 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Authentication/Hexalith.Parties.Authentication.csproj (in 724 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj (in 719 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj (in 718 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj (in 744 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj (in 722 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj (in 724 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.ConsumerPortal/Hexalith.Parties.ConsumerPortal.csproj (in 725 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj (in 723 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Hexalith.Parties.csproj (in 807 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj (in 814 ms).
+/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Routing/PartiesCatalogDeclarations.cs(7,12): error CS0246: The type or namespace 
+name 'RouteCatalogDeclarationSourceAttribute' could not be found (are you missing a using directive or an assembly reference?) 
+[/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj]
+/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Routing/PartiesCatalogDeclarations.cs(7,12): error CS0246: The type or namespace 
+name 'RouteCatalogDeclarationSource' could not be found (are you missing a using directive or an assembly reference?) 
+[/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj]
+/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Routing/PartiesCatalogDeclarations.cs(15,33): error CS0246: The type or namespace 
+name 'RouteOperationContract' could not be found (are you missing a using directive or an assembly reference?) 
+[/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj]
+/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Routing/PartiesCatalogDeclarations.cs(21,20): error CS0246: The type or namespace 
+name 'RouteOperationContract' could not be found (are you missing a using directive or an assembly reference?) 
+[/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj]
+Build FAILED.
+/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Routing/PartiesCatalogDeclarations.cs(7,12): error CS0246: The type or namespace 
+name 'RouteCatalogDeclarationSourceAttribute' could not be found (are you missing a using directive or an assembly reference?) 
+[/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj]
+/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Routing/PartiesCatalogDeclarations.cs(7,12): error CS0246: The type or namespace 
+name 'RouteCatalogDeclarationSource' could not be found (are you missing a using directive or an assembly reference?) 
+[/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj]
+/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Routing/PartiesCatalogDeclarations.cs(15,33): error CS0246: The type or namespace 
+name 'RouteOperationContract' could not be found (are you missing a using directive or an assembly reference?) 
+[/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj]
+/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Routing/PartiesCatalogDeclarations.cs(21,20): error CS0246: The type or namespace 
+name 'RouteOperationContract' could not be found (are you missing a using directive or an assembly reference?) 
+[/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj]
+    0 Warning(s)
+    4 Error(s)
+Time Elapsed 00:00:07.12
+❌ AppHost failed to build.
+📄 See logs at /home/administrator/.aspire/logs/cli_20261030T165216_ea137d90.log
+🔍 See AppHost logs at /home/administrator/.aspire/logs/cli_20261030T165219526_detach-child_4d0e438e58ff448bbee58be21624049b.log

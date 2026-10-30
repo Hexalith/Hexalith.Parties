@@ -739,6 +739,10 @@ implementation_2026_10_27: FrontComposer now supplies transport-neutral record f
 
 adoption_2026_10_28: The opt-in 4.7.1 package now supplies actual shared freshness and polite/assertive/none live regions while preserving Parties labels, freshness mapping and unregistered local rollback. Registered package services continue to use corrected local reconciliation: readiness precedes dispatch, early confirmations wait for acceptance, cancellation drains work and completion occurs once. The package lacks the newer registration-readiness contract, so fixed shared-reconciler publication/adoption remains open. Package parity does not qualify the current source graph or all G4-B/C. Evidence: `tests/five-published-frontcomposer-adoption-2026-10-28/README.md` (UI 445/445, Admin 327/327, Consumer 85/85 and browser 68/68, zero skips/retries).
 
+source_integration_2026_10_30: Corrected shared reconciliation now accepts caller-owned read witnesses, configured retry clocks/intervals and durable connection generations; Parties maps these source capabilities. Missing witnesses cannot complete the Parties path. Retained/shared linked-source lanes independently pass the five-item matrix. No package or version selection changed; selected FrontComposer 4.7.1 retains local orchestration and selected EventStore packages retain their legacy uncancellable transport APIs.
+remaining_gate_2026_10_30: Publish and explicitly adopt exact compatible FrontComposer and EventStore transport packages, qualify actual package/runtime composition and obtain named owner acceptance before claiming complete shared-reconciler adoption or bounded teardown in the default package graph. Full source mapping currently refuses HXW009; Parties UI build refuses missing catalog APIs. These gates remain open and are not discharged by the diagnostic harness.
+verification_2026_10_30: `spec-five-causal-reconciliation-deferred-items.md`; `tests/five-causal-reconciliation-2026-10-30/README.md`.
+
 
 ### DW-101: Consolidate Admin and Consumer exports onto the approved FrontComposer browser-download service after G4-D delivery
 
@@ -2007,15 +2011,43 @@ verification_final: `tests/five-processing-and-memories-erasure-2026-10-25/`; sp
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-reconciliation-and-migration-deferred-items.md`
   summary: Correlate projection confirmations and Current reads with the accepted command or aggregate checkpoint.
   evidence: Review BH-01: existing tenant/projection-only notifications can originate from another party while a queried old model reports Current. Qualify a command/version witness through the transport and query callback before claiming per-command causal confirmation; the new readiness buffer preserves the existing signal semantics.
+  status: done 2026-10-30
+  resolution: The strengthened Parties request requires an operation-specific read witness after Current; missing witnesses remain pending. Retained/shared controls reject another party at checkpoint 100 and the correct party below the accepted checkpoint, then complete once at the matching checkpoint. The witness is caller-owned authority, not inferred notification metadata.
+  verification: `spec-five-causal-reconciliation-deferred-items.md`; `tests/five-causal-reconciliation-2026-10-30/README.md`. Source qualification remains separate from package publication, owner acceptance and deployment.
+
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-reconciliation-and-migration-deferred-items.md`
   summary: Observe brief disconnect/reconnect transitions and recover confirmations lost entirely between polling ticks.
   evidence: Review BH-02/EC-01: existing IsConnected-only interval sampling sees neither edge when an outage fits between ticks. Add an owner-supported transition/catch-up seam and deterministic sub-interval outage proof; long recurring-disconnect sampling is qualified separately.
+  status: done 2026-10-30
+  resolution: EventStore exposes a durable connection-loss/rejoin generation and Parties forwards it in source mode. Retained/shared catch-up retains an outage during acceptance, and connected interval retries recover when legacy packages cannot expose transitions. Source qualification does not certify deployed transport recovery.
+  verification: `spec-five-causal-reconciliation-deferred-items.md`; `tests/five-causal-reconciliation-2026-10-30/README.md`. Source qualification remains separate from package publication, owner acceptance and deployment.
+
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-reconciliation-and-migration-deferred-items.md`
   summary: Retry a stale or failed reconciliation read after its sole observed confirmation while the transport stays connected.
   evidence: Review BH-03: baseline and current connected paths retry only on another confirmation; a lone stale/error read can remain pending after the model catches up. Qualify bounded retry semantics without mistaking unrelated old Current data for the accepted command.
+  status: done 2026-10-30
+  resolution: Retained and shared orchestration retry serially at the configured interval after acceptance, qualify Current with the operation witness and drain timers/reads at completion or cancellation. Deterministic sole-confirmation stale/error controls pass independently in both lanes.
+  verification: `spec-five-causal-reconciliation-deferred-items.md`; `tests/five-causal-reconciliation-2026-10-30/README.md`. Source qualification remains separate from package publication, owner acceptance and deployment.
+
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-reconciliation-and-migration-deferred-items.md`
   summary: Provide cancellation-aware projection subscription and removal before claiming bounded teardown under stalled transport RPCs.
   evidence: Review BH-08: the existing IProjectionStream/EventStoreSignalRClient SubscribeAsync and UnsubscribeAsync surfaces provide no cancellation token, and the producer JoinGroup/LeaveGroup invocations are uncancellable. Current owned draining waits for them; synthetic delayed tests release them explicitly. Require owner-supported cancellation with no late callback registration and an actual stalled-RPC control before claiming bounded operation/circuit shutdown.
+  status: done 2026-10-30
+  resolution: EventStore adds compatible cancellation-aware join/leave APIs and revocable callback registrations; Parties forwards supported source capabilities. Actual stalled signal/scoped-detail RPC controls settle cancellation before server release, then verify absence of callbacks after late server completion. Cancelling one join preserves another subscriber. Selected older package transport remains unqualified for bounded teardown; publication/adoption stays explicitly open in DW-100.
+  verification: `spec-five-causal-reconciliation-deferred-items.md`; `tests/five-causal-reconciliation-2026-10-30/README.md`. Source qualification remains separate from package publication, owner acceptance and deployment.
+
+
+- source_spec: `spec-five-causal-reconciliation-deferred-items.md`
+  summary: Qualify revocation and draining of raw synchronous callbacks already executing when transport removal begins.
+  evidence: Review BH-03/EC-03; the original raw Action dispatch and the new revocation check both allow a delegate already inside Invoke to finish after removal. Captured-but-not-started registrations and Parties-owned asynchronous read effects are separate qualified boundaries. Stronger arbitrary delegate quiescence needs a reentrancy-safe owner protocol and deterministic concurrent proof.
+
+- source_spec: `spec-five-causal-reconciliation-deferred-items.md`
+  summary: Serialize remote group leave and replacement join operations without evicting surviving subscribers.
+  evidence: Review BH-04; baseline removal and the current client release local registration ownership before the remote leave, allowing a newer join to precede the older leave. Qualify actual server delivery with concurrent group operations; local callback fencing alone does not settle remote membership ordering.
+
+- source_spec: `spec-five-causal-reconciliation-deferred-items.md`
+  summary: Reconcile uncertain remote group joins after cancellation or lost acknowledgement without removing surviving subscribers.
+  evidence: Review BH-05; baseline JoinGroup failure rollback and current cancellation can revoke local authority while a server join still finishes later. Source client invocation cancellation does not certify remote group absence. Require an owner-supported acknowledgement/reconciliation protocol and actual remote-membership evidence.

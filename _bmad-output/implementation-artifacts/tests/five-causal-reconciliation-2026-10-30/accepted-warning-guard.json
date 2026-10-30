@@ -1,0 +1,11 @@
+{
+  "command": [
+    "bash",
+    "scripts/check-no-warning-override.sh"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "exit_code": 0,
+  "elapsed_seconds": 0.28,
+  "log": "accepted-warning-guard.txt",
+  "sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604"
+}

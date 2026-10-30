@@ -1,0 +1,15 @@
+{
+  "command": [
+    "dotnet",
+    "build",
+    "/tmp/causal-accepted/shared-legacy-transport/Focused.csproj",
+    "-c",
+    "Debug",
+    "-m:1"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "exit_code": 0,
+  "elapsed_seconds": 1.54,
+  "log": "accepted-shared-legacy-transport-build.txt",
+  "sha256": "6c6e47cfe1076c9e06a30a40c5741b02e84726d2f675b687b635c0bc98639fc4"
+}

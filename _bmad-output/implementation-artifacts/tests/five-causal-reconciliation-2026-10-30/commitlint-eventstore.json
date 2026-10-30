@@ -1,0 +1,14 @@
+{
+  "command": [
+    "node",
+    "node_modules/@commitlint/cli/cli.js",
+    "--edit",
+    "/tmp/causal-eventstore-commit-message.txt",
+    "--verbose"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+  "exit_code": 0,
+  "elapsed_seconds": 1.13,
+  "log": "commitlint-eventstore.txt",
+  "sha256": "1050158e0092406338d663548de2f6eb5b8e273cae3836e28e00565a4e51d5e4"
+}

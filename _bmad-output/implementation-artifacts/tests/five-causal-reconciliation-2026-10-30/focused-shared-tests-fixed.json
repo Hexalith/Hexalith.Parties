@@ -1,0 +1,13 @@
+{
+  "command": [
+    "dotnet",
+    "/tmp/causal-focused/shared/bin/Debug/net10.0/Focused.dll",
+    "-xml",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-causal-reconciliation-2026-10-30/focused-shared-tests-fixed.xml"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "exit_code": 0,
+  "elapsed_seconds": 0.82,
+  "log": "focused-shared-tests-fixed.txt",
+  "sha256": "92ab113fcb0750cf70daf01568ebd6bb3463269db2cf2b1cb2be07dd37cefa3b"
+}

@@ -1,0 +1,43 @@
+The '-xml' switch has been deprecated in favor of '-result-xml' and will be removed in the next major version
+
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.14)
+  Discovering: Focused
+  Discovered:  Focused
+  Starting:    Focused
+    Hexalith.EventStore.SignalR.Tests.EventStoreSignalRClientTests.RemovalRevokesCallbackInAlreadyCapturedDispatchSnapshot(detail: False) [FAIL]
+      Shouldly.ShouldAssertException : calls
+          should be
+      0
+          but was
+      1
+      Stack Trace:
+        references/Hexalith.EventStore/tests/Hexalith.EventStore.SignalR.Tests/EventStoreSignalRClientTests.cs(991,0): at Hexalith.EventStore.SignalR.Tests.EventStoreSignalRClientTests.RemovalRevokesCallbackInAlreadyCapturedDispatchSnapshot(Boolean detail)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+        references/Hexalith.EventStore/tests/Hexalith.EventStore.SignalR.Tests/EventStoreSignalRClientTests.cs(998,0): at Hexalith.EventStore.SignalR.Tests.EventStoreSignalRClientTests.RemovalRevokesCallbackInAlreadyCapturedDispatchSnapshot(Boolean detail)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.EventStore.SignalR.Tests.EventStoreSignalRClientTests.RemovalRevokesCallbackInAlreadyCapturedDispatchSnapshot(detail: True) [FAIL]
+      Shouldly.ShouldAssertException : calls
+          should be
+      0
+          but was
+      1
+      Stack Trace:
+        references/Hexalith.EventStore/tests/Hexalith.EventStore.SignalR.Tests/EventStoreSignalRClientTests.cs(991,0): at Hexalith.EventStore.SignalR.Tests.EventStoreSignalRClientTests.RemovalRevokesCallbackInAlreadyCapturedDispatchSnapshot(Boolean detail)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+        references/Hexalith.EventStore/tests/Hexalith.EventStore.SignalR.Tests/EventStoreSignalRClientTests.cs(998,0): at Hexalith.EventStore.SignalR.Tests.EventStoreSignalRClientTests.RemovalRevokesCallbackInAlreadyCapturedDispatchSnapshot(Boolean detail)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+  Finished:    Focused (ID = '070f6587f2ec644a95301fa2305cee767bb471fdf3a4b084ac272ca472bb8d40')
+=== TEST EXECUTION SUMMARY ===
+   Focused  Total: 2, Errors: 0, Failed: 2, Skipped: 0, Not Run: 0, Time: 0.396s

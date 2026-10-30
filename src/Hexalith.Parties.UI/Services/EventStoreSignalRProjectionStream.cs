@@ -97,6 +97,16 @@ internal sealed class EventStoreSignalRProjectionStream : IProjectionStream, IAs
             ? Task.CompletedTask
             : _client.UnsubscribeAsync(projectionType, tenantId, onChanged);
 
+#if HES_CANCELLABLE_PROJECTIONS
+    public long RecoveryGeneration => _client?.RecoveryGeneration ?? 0;
+
+    public Task SubscribeAsync(string projectionType, string tenantId, Action onChanged, CancellationToken cancellationToken)
+        => _client?.SubscribeAsync(projectionType, tenantId, onChanged, cancellationToken) ?? Task.CompletedTask;
+
+    public Task UnsubscribeAsync(string projectionType, string tenantId, Action onChanged, CancellationToken cancellationToken)
+        => _client?.UnsubscribeAsync(projectionType, tenantId, onChanged, cancellationToken) ?? Task.CompletedTask;
+#endif
+
     public async ValueTask DisposeAsync()
     {
         if (_client is not null)

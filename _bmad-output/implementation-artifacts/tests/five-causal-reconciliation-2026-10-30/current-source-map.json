@@ -1,0 +1,20 @@
+{
+  "command": [
+    "dotnet",
+    "hexalith-module",
+    "prepare-build",
+    "--manifest",
+    "module/hexalith.module-manifest.v2.json",
+    "--workspace",
+    "/tmp/causal-current-source",
+    "--mode",
+    "source",
+    "--output",
+    "json"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "exit_code": 2,
+  "elapsed_seconds": 5.16,
+  "log": "current-source-map.txt",
+  "sha256": "8cfd7959d669aa11dbb8adf5942a69ae01e31e4afc2eee30bfdf1388baba091f"
+}

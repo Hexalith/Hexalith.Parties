@@ -1,0 +1,15 @@
+{
+  "command": [
+    "dotnet",
+    "tests/Hexalith.FrontComposer.Shell.Tests/bin/Debug/net10.0/Hexalith.FrontComposer.Shell.Tests.dll",
+    "-class",
+    "*FcOptimisticReconcilerTests",
+    "-xml",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-causal-reconciliation-2026-10-30/frontcomposer-reconcile-tests.xml"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer",
+  "exit_code": 0,
+  "elapsed_seconds": 1.08,
+  "log": "frontcomposer-reconcile-tests.txt",
+  "sha256": "389cd09ecd611cbdd08e44b2ae22e39f8631c80fc1aec5b12019e6a371f3fbac"
+}

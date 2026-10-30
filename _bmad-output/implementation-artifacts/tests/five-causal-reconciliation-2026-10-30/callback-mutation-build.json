@@ -1,0 +1,15 @@
+{
+  "command": [
+    "dotnet",
+    "build",
+    "/tmp/causal-callback-mutant/Focused.csproj",
+    "-c",
+    "Debug",
+    "-m:1"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "exit_code": 0,
+  "elapsed_seconds": 1.75,
+  "log": "callback-mutation-build.txt",
+  "sha256": "e3b67342e30a4096493370b0c5d44c3c4b0095fac2b17309a31fba7950a14790"
+}

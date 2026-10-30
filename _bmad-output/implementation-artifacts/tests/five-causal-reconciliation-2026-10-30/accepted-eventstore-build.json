@@ -1,0 +1,15 @@
+{
+  "command": [
+    "dotnet",
+    "build",
+    "tests/Hexalith.EventStore.SignalR.Tests/Hexalith.EventStore.SignalR.Tests.csproj",
+    "-c",
+    "Debug",
+    "-m:1"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+  "exit_code": 0,
+  "elapsed_seconds": 1.55,
+  "log": "accepted-eventstore-build.txt",
+  "sha256": "9cee151cd00713611bb2c6756fcbba2a2f32dbe0852e38c33ee9e3f504fdf393"
+}
