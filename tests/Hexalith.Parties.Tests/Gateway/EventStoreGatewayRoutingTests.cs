@@ -693,7 +693,7 @@ public sealed class EventStoreGatewayRoutingTests
         {
             HttpEndpoint = "http://dapr-transport.test",
             UseJsonSerialization = true,
-        }, transport), NullLogger<QueryRouter>.Instance);
+        }, transport), NullLogger<QueryRouter>.Instance, PartyPagingCatalog.Create(queryType));
         using var factory = new EventStoreGatewayTestFactory(customQueryRouter: router);
         using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["query:read"]);
 
@@ -1251,7 +1251,8 @@ public sealed class EventStoreGatewayRoutingTests
             {
                 // Disable EventStore hosted services that require Dapr or mutate shared indexes in
                 // isolated gateway tests. Preserve EventStoreAuthorizationStartupValidator so
-                // auth-wiring regressions still fail fast at host build. Also preserve
+                // auth-wiring regressions still fail fast at host build. Preserve the shared HTTP security
+                // inventory validator too: it inspects endpoint metadata without Dapr or state writes. Also preserve
                 // FoldedSnapshotQualificationHostedService: it only checks IServiceProviderIsService
                 // for qualification enrollment and logs a warning, with no Dapr calls or state writes.
                 // Concrete factory service types resolved from IL metadata identify exclusions without
@@ -1262,6 +1263,10 @@ public sealed class EventStoreGatewayRoutingTests
                         && !string.Equals(
                             d.ImplementationType?.Name,
                             "EventStoreAuthorizationStartupValidator",
+                            StringComparison.Ordinal)
+                        && !string.Equals(
+                            d.ImplementationType?.Name,
+                            "EventStoreHttpHostSecurityStartupValidator",
                             StringComparison.Ordinal)
                         && !string.Equals(
                             d.ImplementationType?.Name,

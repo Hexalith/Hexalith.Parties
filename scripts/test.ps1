@@ -95,6 +95,11 @@ $ciProjects = @(
     "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj"
 )
 
+# Platform suites are executed only by hexalith-module test, which owns their environment.
+$platformProjects = @(
+    "tests/Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj"
+)
+
 $allProjects = $unitProjects + $integrationProjects + $topologyProjects + $ciProjects
 
 # Projects under tests/ that support test execution but do not themselves contain tests. Keep
@@ -109,7 +114,7 @@ function Assert-TestProjectInventory {
         ForEach-Object { [System.IO.Path]::GetRelativePath($RepositoryRoot, $_.FullName).Replace('\', '/') } |
         Sort-Object
 
-    $inventoryProjects = $allProjects + $testSupportProjects
+    $inventoryProjects = $allProjects + $platformProjects + $testSupportProjects
     $configuredProjects = $inventoryProjects | Sort-Object
     $duplicateProjects = $inventoryProjects | Group-Object | Where-Object { $_.Count -gt 1 }
 

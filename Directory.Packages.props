@@ -13,4 +13,8 @@
   <Import Project="$(Hexalith1BuildPackageProps)" Condition="Exists('$(Hexalith1BuildPackageProps)') And '$(HexalithVersionsLoaded)' != 'true'" />
   <Import Project="$(Hexalith2BuildPackageProps)" Condition="Exists('$(Hexalith2BuildPackageProps)') And '$(HexalithVersionsLoaded)' != 'true'" />
   <Import Project="$(Hexalith3BuildPackageProps)" Condition="'$(HexalithVersionsLoaded)' != 'true'" />
+  <!-- Retain the FrontComposer family version when the catalog supplies Contracts.UI. -->
+  <ItemGroup>
+    <PackageVersion Update="Hexalith.FrontComposer.Contracts.UI" Version="$(HexalithFrontComposerVersion)" />
+  </ItemGroup>
 </Project>

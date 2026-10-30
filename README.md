@@ -289,3 +289,28 @@ Query postconditions retained. Shared McpCli validation and both-head replay
 check wire envelopes, filtered totals, paging and result assertions. Scripted
 replay does not prove live authorization, persisted domain effects or C06–C08;
 Stories 4.11/4.13 remain required before replacement or retirement.
+
+### Platform-owned integration suite
+
+`tests/Hexalith.Parties.Platform.IntegrationTests` consumes the absolute
+`HEXALITH_TEST_ENVIRONMENT_PATH` through the EventStore shared descriptor fixtures. It has no
+AppHost reference and never provisions services or creates credentials. The runner's private
+identity channel must match the descriptor. Missing/unready handoffs fail without a successful skip.
+The suite observes real Tenants through its declared REST interface, reads the synthetic Memories
+tenant through its declared REST interface, creates and queries a Party, and verifies persisted
+aggregate metadata and every event envelope in the run-owned state store.
+
+From the Platform checkout, use the locally built `hexalith-module` candidate:
+
+```bash
+hexalith-module test --manifest references/Hexalith.Parties/module/hexalith.module-manifest.v2.json --profile platform-source --mode source
+hexalith-module test --manifest references/Hexalith.Parties/module/hexalith.module-manifest.v2.json --profile platform-package --mode package
+```
+
+The renderer owns both explicit suite declarations. Package execution requires authoritative
+publications of the migrated EventStore testing packages; Debug source validation grants no package
+acceptance. The existing `Hexalith.Parties.IntegrationTests` topology and infrastructure-control tests
+remain a frozen compatibility lane. Unit and isolated integration projects retain their test-only
+doubles and run without Platform/domain servers. `scripts/test.ps1` inventories the new project but
+leaves its environment-owning execution to the declared runner suite. Attached execution, expiry
+enforcement and termination qualification remain open follow-up work.

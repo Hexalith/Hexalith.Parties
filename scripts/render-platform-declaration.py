@@ -416,6 +416,26 @@ TEMPLATE = json.loads(r'''
         "providers": [],
         "workers": []
       },
+      "tests": [
+        {
+          "name": "platform-source",
+          "executor": "mtp",
+          "entry": "tests/Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj",
+          "reportFormat": "trx",
+          "executionTimeoutSeconds": 300,
+          "stopTimeoutSeconds": 90,
+          "mode": "source"
+        },
+        {
+          "name": "platform-package",
+          "executor": "mtp",
+          "entry": "tests/Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj",
+          "reportFormat": "trx",
+          "executionTimeoutSeconds": 300,
+          "stopTimeoutSeconds": 90,
+          "mode": "package"
+        }
+      ],
       "lifecycle": {
         "readiness": [
           {

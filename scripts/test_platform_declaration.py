@@ -30,6 +30,30 @@ class PlatformDeclarationTests(unittest.TestCase):
         self.assertEqual(module["integration"]["topics"][0]["subscription"], {
             "server": "domain", "route": "/tenants/events", "topic": "system.tenants.events"})
 
+    def test_declared_suites_consume_platform_without_apphost_or_doubles(self):
+        module = renderer.declaration(self.acl)["modules"][0]
+        suites = module["tests"]
+        self.assertEqual([(s["name"], s["mode"]) for s in suites],
+                         [("platform-source", "source"), ("platform-package", "package")])
+        for suite in suites:
+            self.assertEqual(suite["executor"], "mtp")
+            self.assertEqual(suite["reportFormat"], "trx")
+            project = renderer.ROOT / suite["entry"]
+            text = project.read_text()
+            self.assertNotIn("AppHost", text)
+            self.assertNotIn("Aspire.Hosting", text)
+            self.assertNotIn("NSubstitute", text)
+            self.assertIn("Hexalith.EventStore.Testing.Integration", text)
+        fixture = (project.parent / "PlatformEnvironmentFixture.cs").read_text()
+        tests = (project.parent / "PartyEnvironmentTests.cs").read_text()
+        self.assertNotIn("Process.Start", fixture)
+        self.assertNotIn("Assert.Skip", tests)
+        self.assertIn("ReadStoredStreamAsync", tests)
+        self.assertIn("fixture.Tenants.GetAsync", tests)
+        self.assertIn("fixture.Memories.GetAsync", tests)
+        runner = (renderer.ROOT / "scripts/test.ps1").read_text()
+        self.assertIn("$allProjects + $platformProjects + $testSupportProjects", runner)
+
     def test_unsafe_malformed_and_duplicate_acl_inputs_fail_closed(self):
         for label, content in {
             "empty": "", "truncated": self.acl[:self.acl.index("    policies:")],
