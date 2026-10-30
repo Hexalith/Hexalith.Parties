@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 <PropertyGroup><TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><TreatWarningsAsErrors>true</TreatWarningsAsErrors><DefineConstants>HFC_SHARED_UI;HFC_SHARED_RECONCILE_READINESS;HES_CANCELLABLE_PROJECTIONS</DefineConstants></PropertyGroup>
 <ItemGroup><FrameworkReference Include="Microsoft.AspNetCore.App" /><Using Include="Xunit" />
-<PackageReference Include="xunit.v3" Version="4.0.2" />
-<PackageReference Include="Shouldly" Version="4.3.0" />
-<PackageReference Include="NSubstitute" Version="6.2.0" />
-<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.14" />
-<PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.11.0" />
+<PackageReference Include="xunit.v3" />
+<PackageReference Include="Shouldly" />
+<PackageReference Include="NSubstitute" />
+<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
+<PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
 <Compile Include="/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.SignalR/EventStoreSignalRClient.cs" Link="references/Hexalith.EventStore/src/Hexalith.EventStore.SignalR/EventStoreSignalRClient.cs" />
 <Compile Include="/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.SignalR/EventStoreSignalRClientOptions.cs" Link="references/Hexalith.EventStore/src/Hexalith.EventStore.SignalR/EventStoreSignalRClientOptions.cs" />
 <Compile Include="/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.SignalR/ProjectionCallback.cs" Link="references/Hexalith.EventStore/src/Hexalith.EventStore.SignalR/ProjectionCallback.cs" />
