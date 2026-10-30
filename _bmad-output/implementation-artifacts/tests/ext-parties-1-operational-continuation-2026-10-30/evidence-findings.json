@@ -1,0 +1,400 @@
+{
+  "recordedAtUtc": "2026-10-30T06:01:52.704326+00:00",
+  "status": "OperationalPreparationAdvancedFullCustodyStopped",
+  "currentAcceptedProfile": null,
+  "datedMetadataSuccess": {
+    "proof": {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/public-metadata-verification.json",
+      "sha256": "13cc18a07a6e19e4615f21f8f230bf5dbcfd2f1b2a92aa882aa6a76fe9a8e9a1"
+    },
+    "fromUtc": "2026-10-29T19:55:27.667795+00:00",
+    "throughUtc": "2026-10-29T19:55:27.741331+00:00",
+    "httpStatuses": [
+      200,
+      200,
+      200,
+      200
+    ],
+    "wholeMetadataMatchesPinnedOriginal": true,
+    "temporaryGrantActive": false,
+    "permanentReadTransportEstablished": false,
+    "futureFreshnessEstablished": false
+  },
+  "latestRetainedRuntimeAndProviderFacts": {
+    "source": {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/observations/observation-2092c56ff424462898fb5354c09d94e0.json",
+      "sha256": "8ff636067f3e8a0e5044e7f433297e98391b5e9822627d3b21c9b6e3de819248"
+    },
+    "groupObservedAt": {
+      "administration": "2026-10-29T19:54:28.037525+00:00",
+      "authority": "2026-10-29T19:54:27.598019+00:00",
+      "enrollment": "2026-10-29T19:54:37.197179+00:00",
+      "health": "2026-10-29T19:54:38.672227+00:00",
+      "kubernetes": "2026-10-29T19:54:26.223884+00:00",
+      "provider": "2026-10-29T19:54:29.321227+00:00"
+    },
+    "health": {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/health.json",
+      "sha256": "14f87093241abed5cfd47c2998d26d8cfcaec477dc48aaa2840aba4f2f786928"
+    },
+    "authorityRevision": "e19e68c9537246148141ec9d3841cfe4:19",
+    "receiptCount": 19,
+    "profileValidUntil": "2026-10-28T23:51:51.830725+00:00",
+    "leases": {
+      "data": {
+        "classification": "Absent",
+        "lease": null,
+        "nativeErrorClassification": "CanonicalInvalidAccessor",
+        "status": 400
+      },
+      "metadata": {
+        "classification": "Absent",
+        "lease": null,
+        "nativeErrorClassification": "CanonicalInvalidAccessor",
+        "status": 400
+      }
+    },
+    "providerConfigurationSha256": "96ff6b2d26ef3a17a07c4470402a59be570506b6dfff012e3e8b9bdb2766f4f0",
+    "note": "The report was generated later, but its provider group is from 19:54:29 UTC and predates the successful 19:55 metadata reads. The 403 results do not negate those successes. No group is relabeled current today."
+  },
+  "freshResourceMetadata": {
+    "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/kubernetes-metadata-read-only.json",
+    "sha256": "0a3ea136b5dd8f195a3e4fac945763f681614623a5daca94c11700ac1f9d3bf2"
+  },
+  "newSecretRv": "38120141",
+  "historicalWriteProofFound": false,
+  "acceptedHistoricalPreservationFound": false,
+  "humanAppointmentFound": false,
+  "backupAndCopies": {
+    "canonicalOwnerField": "/home/administrator/projects/hexalith/platform/docs/implementation/story-5-4-coupled-delivery-2026-10-25/owner-decisions.json#/mvpOperationalInputs/backupAndRestore",
+    "ownerProducedCurrentLocalFileInventory": null,
+    "currentRecoveryCopyInventory": null,
+    "currentPrivilegedRestoreSubjectsAndCredentialReferences": null,
+    "historicalSignedRestoreEvidence": {
+      "verificationRecordedAtUtc": "2026-10-29T17:37:08.292141+00:00",
+      "signatureVerificationsPassed": 8,
+      "records": [
+        {
+          "recoveryId": "20261001t061620z",
+          "allowedSignersReference": {
+            "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261001t061620z/signatures/allowed_signers",
+            "sha256": "77df53775f890a393578cb5480512b532ef730bcc854a2bf1d4cdd9bb1d77247"
+          },
+          "detachedSignaturesVerified": [
+            {
+              "record": {
+                "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261001t061620z/policy/recovery-policy.json",
+                "sha256": "531807640d49edb5a0ce1bbda22bd947663768125b766941b07179498935d00e"
+              },
+              "signature": {
+                "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261001t061620z/policy/recovery-policy.json.sig",
+                "sha256": "9af7fc306013dead79ccc0de5822f436c798664ae72e13fe9e19434f4e6b53a9"
+              },
+              "verificationArgv": [
+                "ssh-keygen",
+                "-Y",
+                "verify",
+                "-f",
+                "/home/administrator/hexalith-recovery-evidence/4-0/20261001t061620z/signatures/allowed_signers",
+                "-I",
+                "jpiquot@itaneo.com",
+                "-n",
+                "hexalith-recovery",
+                "-s",
+                "/home/administrator/hexalith-recovery-evidence/4-0/20261001t061620z/policy/recovery-policy.json.sig"
+              ],
+              "stdinSource": "/home/administrator/hexalith-recovery-evidence/4-0/20261001t061620z/policy/recovery-policy.json",
+              "observedExitCode": 0
+            },
+            {
+              "record": {
+                "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261001t061620z/openbao/openbao-restore-proof.json",
+                "sha256": "96ed1df1f03f642c05ba0663f37d0e0c1cbfe0f649348ac790ec0f773cee0a54"
+              },
+              "signature": {
+                "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261001t061620z/openbao/openbao-restore-proof.json.sig",
+                "sha256": "0c85b05fb47f4aec5953d7100aea1fabc739b9e7ecd0f546a0c16e25510103f7"
+              },
+              "verificationArgv": [
+                "ssh-keygen",
+                "-Y",
+                "verify",
+                "-f",
+                "/home/administrator/hexalith-recovery-evidence/4-0/20261001t061620z/signatures/allowed_signers",
+                "-I",
+                "jpiquot@itaneo.com",
+                "-n",
+                "hexalith-recovery",
+                "-s",
+                "/home/administrator/hexalith-recovery-evidence/4-0/20261001t061620z/openbao/openbao-restore-proof.json.sig"
+              ],
+              "stdinSource": "/home/administrator/hexalith-recovery-evidence/4-0/20261001t061620z/openbao/openbao-restore-proof.json",
+              "observedExitCode": 0
+            },
+            {
+              "record": {
+                "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261001t061620z/cleanup/restore-target-cleanup.json",
+                "sha256": "bf8022b7642fb4a3df5274f1c07a547837a04befb27421c183b6d6a6bade1c7c"
+              },
+              "signature": {
+                "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261001t061620z/cleanup/restore-target-cleanup.json.sig",
+                "sha256": "6dc8139455a910fe79170f498af290b8fa7b95a18337fab980bc2e6a673194a1"
+              },
+              "verificationArgv": [
+                "ssh-keygen",
+                "-Y",
+                "verify",
+                "-f",
+                "/home/administrator/hexalith-recovery-evidence/4-0/20261001t061620z/signatures/allowed_signers",
+                "-I",
+                "jpiquot@itaneo.com",
+                "-n",
+                "hexalith-recovery",
+                "-s",
+                "/home/administrator/hexalith-recovery-evidence/4-0/20261001t061620z/cleanup/restore-target-cleanup.json.sig"
+              ],
+              "stdinSource": "/home/administrator/hexalith-recovery-evidence/4-0/20261001t061620z/cleanup/restore-target-cleanup.json",
+              "observedExitCode": 0
+            },
+            {
+              "record": {
+                "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261001t061620z/gate/backup-gate.json",
+                "sha256": "2b36b709184796c9309bbc97b1344dfa178f04841c832bb44dafd540f89bb3e0"
+              },
+              "signature": {
+                "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261001t061620z/gate/backup-gate.json.sig",
+                "sha256": "dc21bbc2ad572dda9997d2149d628364686eb4d11e84b1b2104f97cf75dbd840"
+              },
+              "verificationArgv": [
+                "ssh-keygen",
+                "-Y",
+                "verify",
+                "-f",
+                "/home/administrator/hexalith-recovery-evidence/4-0/20261001t061620z/signatures/allowed_signers",
+                "-I",
+                "jpiquot@itaneo.com",
+                "-n",
+                "hexalith-recovery",
+                "-s",
+                "/home/administrator/hexalith-recovery-evidence/4-0/20261001t061620z/gate/backup-gate.json.sig"
+              ],
+              "stdinSource": "/home/administrator/hexalith-recovery-evidence/4-0/20261001t061620z/gate/backup-gate.json",
+              "observedExitCode": 0
+            }
+          ],
+          "signedPayloadHashBindingsVerified": true,
+          "historicalAccountableOperator": "jpiquot@itaneo.com",
+          "historicalRestoreMethod": {
+            "namespace": "recovery-4-0-bao",
+            "replicas": 3,
+            "statefulSet": "bao-restore",
+            "unseal": "temporary copy of Secret openbao/openbao-seal (approved 2026-09-29); deleted with the namespace"
+          },
+          "declaredHistoricalRetention": "30d",
+          "openbaoProofExpiresAt": "2026-10-02T07:21:38Z",
+          "gateExpiresAt": "2026-10-02T06:16:52Z",
+          "scopeLimit": "Signatures verified against the retained owner-declared trust root. Historical named operator and restore procedure only; no EXT-PARTIES-1 lead/deputy appointment or current effective privilege is inferred. The declared 30d policy is not observed all-copy disposal and does not resolve installed 31d/version-lifecycle retention. Gate/proof are expired. Preserve static UNSIGNED text inside the originally signed payloads; detached verification establishes only the signed bytes.",
+          "cleanupLimit": [
+            "host directories of deleted OpenEBS hostpath PVs on node1 are removed by the provisioner; listing them needs node shell access and is not done here"
+          ]
+        },
+        {
+          "recoveryId": "20261014t112353z",
+          "allowedSignersReference": {
+            "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261014t112353z/signatures/allowed_signers",
+            "sha256": "77df53775f890a393578cb5480512b532ef730bcc854a2bf1d4cdd9bb1d77247"
+          },
+          "detachedSignaturesVerified": [
+            {
+              "record": {
+                "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261014t112353z/policy/recovery-policy.json",
+                "sha256": "021a8c773366fc2cc5b36e5407e03fd0e0a4dca363df1da71704725443bdc85a"
+              },
+              "signature": {
+                "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261014t112353z/policy/recovery-policy.json.sig",
+                "sha256": "7f5dc8431113f6f5a993ed7cefda5a427673a3334fff2a380d8a1a3eab715f0e"
+              },
+              "verificationArgv": [
+                "ssh-keygen",
+                "-Y",
+                "verify",
+                "-f",
+                "/home/administrator/hexalith-recovery-evidence/4-0/20261014t112353z/signatures/allowed_signers",
+                "-I",
+                "jpiquot@itaneo.com",
+                "-n",
+                "hexalith-recovery",
+                "-s",
+                "/home/administrator/hexalith-recovery-evidence/4-0/20261014t112353z/policy/recovery-policy.json.sig"
+              ],
+              "stdinSource": "/home/administrator/hexalith-recovery-evidence/4-0/20261014t112353z/policy/recovery-policy.json",
+              "observedExitCode": 0
+            },
+            {
+              "record": {
+                "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261014t112353z/openbao/openbao-restore-proof.json",
+                "sha256": "fc61e1a0ef9f0a29c47f9c003bef73e7467ce08c35fcbef181d8a14acd481545"
+              },
+              "signature": {
+                "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261014t112353z/openbao/openbao-restore-proof.json.sig",
+                "sha256": "5c2c82769da9a29ec29fee51c0cf204a3c98c3cecb6536a14b0f68fe1dd34783"
+              },
+              "verificationArgv": [
+                "ssh-keygen",
+                "-Y",
+                "verify",
+                "-f",
+                "/home/administrator/hexalith-recovery-evidence/4-0/20261014t112353z/signatures/allowed_signers",
+                "-I",
+                "jpiquot@itaneo.com",
+                "-n",
+                "hexalith-recovery",
+                "-s",
+                "/home/administrator/hexalith-recovery-evidence/4-0/20261014t112353z/openbao/openbao-restore-proof.json.sig"
+              ],
+              "stdinSource": "/home/administrator/hexalith-recovery-evidence/4-0/20261014t112353z/openbao/openbao-restore-proof.json",
+              "observedExitCode": 0
+            },
+            {
+              "record": {
+                "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261014t112353z/cleanup/restore-target-cleanup.json",
+                "sha256": "3ae690daad23e6a0f028ab28ca023ba9a04d4c72f810d9129b117125d08d5b78"
+              },
+              "signature": {
+                "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261014t112353z/cleanup/restore-target-cleanup.json.sig",
+                "sha256": "c346a6a9692227302e4c804012bb1df2a0b1b3121f1c76a65a77c794bd6d280c"
+              },
+              "verificationArgv": [
+                "ssh-keygen",
+                "-Y",
+                "verify",
+                "-f",
+                "/home/administrator/hexalith-recovery-evidence/4-0/20261014t112353z/signatures/allowed_signers",
+                "-I",
+                "jpiquot@itaneo.com",
+                "-n",
+                "hexalith-recovery",
+                "-s",
+                "/home/administrator/hexalith-recovery-evidence/4-0/20261014t112353z/cleanup/restore-target-cleanup.json.sig"
+              ],
+              "stdinSource": "/home/administrator/hexalith-recovery-evidence/4-0/20261014t112353z/cleanup/restore-target-cleanup.json",
+              "observedExitCode": 0
+            },
+            {
+              "record": {
+                "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261014t112353z/gate/backup-gate.json",
+                "sha256": "c23f0d12067a4eff0379af8a811ab8ae693b02304b897b570802fccd90356695"
+              },
+              "signature": {
+                "path": "/home/administrator/hexalith-recovery-evidence/4-0/20261014t112353z/gate/backup-gate.json.sig",
+                "sha256": "8f21e993071501b4e3783ee6c965ab3de7967b32bce6566bf2fdcf68f8eedb94"
+              },
+              "verificationArgv": [
+                "ssh-keygen",
+                "-Y",
+                "verify",
+                "-f",
+                "/home/administrator/hexalith-recovery-evidence/4-0/20261014t112353z/signatures/allowed_signers",
+                "-I",
+                "jpiquot@itaneo.com",
+                "-n",
+                "hexalith-recovery",
+                "-s",
+                "/home/administrator/hexalith-recovery-evidence/4-0/20261014t112353z/gate/backup-gate.json.sig"
+              ],
+              "stdinSource": "/home/administrator/hexalith-recovery-evidence/4-0/20261014t112353z/gate/backup-gate.json",
+              "observedExitCode": 0
+            }
+          ],
+          "signedPayloadHashBindingsVerified": true,
+          "historicalAccountableOperator": "jpiquot@itaneo.com",
+          "historicalRestoreMethod": {
+            "namespace": "recovery-4-0-bao",
+            "replicas": 3,
+            "statefulSet": "bao-restore",
+            "unseal": "temporary copy of Secret openbao/openbao-seal (approved 2026-09-29); deleted with the namespace"
+          },
+          "declaredHistoricalRetention": "30d",
+          "openbaoProofExpiresAt": "2026-10-15T14:52:05Z",
+          "gateExpiresAt": "2026-10-15T11:40:42Z",
+          "scopeLimit": "Signatures verified against the retained owner-declared trust root. Historical named operator and restore procedure only; no EXT-PARTIES-1 lead/deputy appointment or current effective privilege is inferred. The declared 30d policy is not observed all-copy disposal and does not resolve installed 31d/version-lifecycle retention. Gate/proof are expired. Preserve static UNSIGNED text inside the originally signed payloads; detached verification establishes only the signed bytes.",
+          "cleanupLimit": [
+            "host directories of deleted OpenEBS hostpath PVs on node1 are removed by the provisioner; listing them needs node shell access and is not done here"
+          ]
+        }
+      ],
+      "currentAcceptedBackupOrRestorePolicyEstablished": false
+    },
+    "previousSnapshotReadFailure": {
+      "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-feasibility-2026-10-29/local-snapshot-stat.json",
+      "sha256": "55030af96e53821c7fe8140f15bb3ac9d0ebea52dc111f881f39b186f2a3e2f7"
+    },
+    "documentedNodeIdentityFile": "/home/administrator/hexalith-upgrade-evidence/access/node1-existing-id_rsa",
+    "documentedNodeIdentityFileExistsAtObservation": false,
+    "sshRetried": false,
+    "runningSnapshotPvcReaderObserved": false,
+    "snapshotPvc": "openbao/openbao-snapshots",
+    "knownLocalPvPath": "/var/openebs/local/pvc-da142de4-dec5-4519-880d-b7ede4000283",
+    "sourceSealReference": "Secret/openbao/openbao-seal",
+    "missingCopies": [
+      "dated openbao-*.snap/checksums",
+      "latest openbao.snap",
+      "seal source and temporary/escrow copies",
+      "node/etcd/offline/exceptional recovery bundles"
+    ],
+    "currentRetentionOrDisposalProved": false,
+    "installedScalewayConfigurationRechecked": false,
+    "retainedFeasibilityStopPreserved": true
+  },
+  "authorityTime": {
+    "qualifiedExistingMechanism": null,
+    "ownerNoneAvailableStatement": null,
+    "hmacCandidate": "Same-cluster local-PVC operational service; no node/authority-state/combined-restore survival claim",
+    "scalewayCandidate": "Off-node immutable storage; no current fence/epoch/revocation and authenticated fresh time authority established",
+    "memoriesCandidate": "Owner handoff still requires actual outside-approved private authority and independently authenticated fresh UTC/status; no accepted installed mechanism supplied",
+    "requiredUncertaintyMs": 100,
+    "requiredObservationAgeSeconds": 1,
+    "fullCustodyStopRetained": true
+  },
+  "discovery": {
+    "local": {
+      "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/local-source-discovery.json",
+      "sha256": "ef1078ffe195b16b89395f08e58f9f3af242d2597f8123afc0049d25f13feec2"
+    },
+    "connected": {
+      "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/connected-source-search.json",
+      "sha256": "150ea63130e7c93b7989785789300254f87a1b468900db53fd385cacc9a493c6"
+    },
+    "limit": "Bounded repositories, public evidence records and connected searches; no claim about inaccessible/unretained external archives."
+  },
+  "thisContinuationActions": {
+    "kubernetesMetadataGetCommands": 5,
+    "providerCalls": 0,
+    "sshCalls": 0,
+    "credentialIssuanceOrRenewals": 0,
+    "runtimeOrPolicyWrites": 0,
+    "backupChanges": 0,
+    "infrastructureProvisioned": 0,
+    "qualificationRuns": 0,
+    "messagesSent": 0
+  },
+  "nextAction": "Locate/admit authentic current scope-bound preservation history/dispositions and an existing metadata-only read-credential reference; then perform the already prepared read-only observation before any separately authorized recovery. New RV prevents reusing the old template unchanged. Keep fixed window and all stops.",
+  "smallestOwnerRequest": {
+    "appointments": "Name the existing-allocation implementer/accountable recovery lead (may be one) and different qualified Human deputy with actual appointment references. Sole Owner need not find or manage already searchable files.",
+    "unavailableSourceAccessOrAttestation": "Identify or grant existing read-only access to the historical Kubernetes write archive and node/copy inventory source, or state that these sources are unavailable; authenticate the exact Secret/Memories/register disposition from real evidence. Provide an existing metadata-only credential reference if one exists, never its token.",
+    "conditionalFullCustodyOnly": "Identify an already operated qualifying authority/time service if one exists; otherwise retain the stop. No new infrastructure or repeated assessment approval requested."
+  },
+  "acceptanceUnchanged": {
+    "dependency": "EXT-PARTIES-1",
+    "state": "Committed/unavailable",
+    "acceptedTarget": "56cb4401c4179d431385ad3d931fefa402e4fc5a",
+    "missedIntegrationDate": "2026-10-08",
+    "replacementTarget": null,
+    "replacementDate": null,
+    "installedHistoryHashes": null,
+    "liveStopped": true,
+    "capEngineerDays": 2,
+    "newInfrastructureSpend": 0,
+    "spentEffortOrNamedAllocationInferred": false
+  }
+}

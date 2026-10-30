@@ -1,0 +1,148 @@
+{
+  "verifiedAtUtc": "2026-10-29T13:39:31.036869+00:00",
+  "allPassed": true,
+  "checks": [
+    {
+      "name": "protected evidence and owner records",
+      "passed": true,
+      "detail": {
+        "files": 387,
+        "drift": []
+      }
+    },
+    {
+      "name": "documentation index changes only one added link",
+      "passed": true,
+      "detail": "Original index bytes recovered by removing the single approved-direction link"
+    },
+    {
+      "name": "new direction links and anchors",
+      "passed": true,
+      "detail": {
+        "links": 8,
+        "missing": [],
+        "badAnchors": [],
+        "validationReportIsOutputOfThisCheck": true
+      }
+    },
+    {
+      "name": "table 1",
+      "passed": true,
+      "detail": {
+        "rows": 7,
+        "columnCounts": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ]
+      }
+    },
+    {
+      "name": "table 2",
+      "passed": true,
+      "detail": {
+        "rows": 8,
+        "columnCounts": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ]
+      }
+    },
+    {
+      "name": "new JSON parsing",
+      "passed": true,
+      "detail": 4
+    },
+    {
+      "name": "recorded approval scope",
+      "passed": true,
+      "detail": "Applied latest work order and cap; no representation or complete-target ratification inferred"
+    },
+    {
+      "name": "missing owner/install bindings stay null",
+      "passed": true,
+      "detail": "No appointment, credential, target, installed history hash or owner date invented"
+    },
+    {
+      "name": "Live and runtime gates stay closed",
+      "passed": true,
+      "detail": {
+        "liveExecuted": false,
+        "liveAuthorized": false,
+        "qualificationExecuted": false,
+        "dependencyAvailable": false,
+        "resourceMutations": 0,
+        "providerCalls": 0,
+        "credentialValuesRequested": false,
+        "credentialRenewalExecuted": false,
+        "recoveryExecutionAuthorized": false,
+        "installationExecuted": false,
+        "productionBackendImplementationAuthorized": false,
+        "agentsRegisterModified": false,
+        "historicalOwnerRecordsModified": false,
+        "originalLedgerNullsFilled": false,
+        "newDependencyOrReducedLiveContractCreated": false
+      }
+    },
+    {
+      "name": "four pinned public GET requests",
+      "passed": true,
+      "detail": {
+        "queries": 4,
+        "exitCodes": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "historical repository evidence remains exact",
+      "passed": true,
+      "detail": {
+        "files": 4
+      }
+    },
+    {
+      "name": "historic lifecycle is not current qualification",
+      "passed": true,
+      "detail": "Historical 31-day lifecycle is a known mismatch lead, not fresh deletion evidence"
+    },
+    {
+      "name": "approved clause bytes preserved",
+      "passed": true,
+      "detail": "Approved exact clause hash"
+    },
+    {
+      "name": "Live retains unconditional refusal",
+      "passed": true,
+      "detail": "Static source check only; no verifier invocation"
+    },
+    {
+      "name": "new file whitespace",
+      "passed": true,
+      "detail": "CRLF, final newline and no trailing whitespace"
+    },
+    {
+      "name": "git diff --check",
+      "passed": true,
+      "detail": {
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    }
+  ],
+  "meaning": "Applied-direction, source/evidence and preservation validation only; no software test or installed qualification run"
+}

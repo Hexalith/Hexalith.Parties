@@ -1,0 +1,10 @@
+{
+  "attempts": [
+    {
+      "command": "python3 -B _bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/verify_continuation.py",
+      "exitCode": 1,
+      "result": "AssertionError: observed source: /home/administrator/projects/hexalith/platform/_bmad-output/implementation-artifacts/sprint-status.yaml",
+      "disposition": "Concurrent mutable source drift retained separately; no protected historical artifact changed. Verifier now distinguishes an immutable source/snapshot check from a historical live-source equality claim."
+    }
+  ]
+}

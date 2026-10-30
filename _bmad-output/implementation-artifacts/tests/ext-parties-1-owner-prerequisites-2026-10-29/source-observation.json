@@ -1,0 +1,65 @@
+{
+  "parties": {
+    "observedHead": "784215a8fe91b4d5ae00eb65ab61d3b9507ca0c2",
+    "trackedChangesAndUntrackedPaths": [
+      "?? _bmad-output/implementation-artifacts/tests/ext-parties-1-owner-prerequisites-2026-10-29/"
+    ],
+    "acceptedTarget": false
+  },
+  "eventstore": {
+    "observedHead": "431470bc570d0f3d665b375467931afeee45d3c3",
+    "trackedChangesAndUntrackedPaths": [
+      " M _bmad-output/implementation-artifacts/spec-5-13-route-catalog-activation-and-topology-binding.md",
+      " M src/Hexalith.EventStore.Contracts/Routing/RouteCatalogRemoteExecution.cs",
+      " M src/Hexalith.EventStore.Contracts/Security/IAnchoredStateTransitionAuthority.cs",
+      " M src/Hexalith.EventStore.Server/Security/DeletionConsumptionActor.cs",
+      " M src/Hexalith.EventStore.Server/Security/InteractionOccurrenceRegistryActor.cs",
+      " M src/Hexalith.EventStore.Server/Security/PublishedTrustDeletionConsumptionAuthority.cs",
+      " M src/Hexalith.EventStore.ServiceDefaults/Routing/GeneratedRouteCatalogFilter.cs",
+      " M src/Hexalith.EventStore.ServiceDefaults/Routing/RouteCatalogDispatchLease.cs",
+      " M src/Hexalith.EventStore.ServiceDefaults/Routing/RouteCatalogInvocationHandler.cs",
+      " M src/Hexalith.EventStore.ServiceDefaults/Routing/RouteCatalogLeaseReleaser.cs",
+      " M tools/ext_protection_1.py",
+      "?? tests/Hexalith.EventStore.ServiceDefaults.Tests/RouteCatalogOptInTests.cs",
+      "?? tests/Hexalith.EventStore.ServiceDefaults.Tests/RouteCatalogRemoteCancellationTests.cs",
+      "?? tools/tests/test_ext_protection_1_mixed_snapshot.py"
+    ],
+    "acceptedTarget": false
+  },
+  "platform": {
+    "observedHead": "251bc9465459b9c28ce1d1738bfbb0525fb07293",
+    "trackedChangesAndUntrackedPaths": [
+      "?? tests/Hexalith.Platform.Protection.Tests/ErasureRootConsumptionFixture.cs",
+      "?? tests/Hexalith.Platform.Protection.Tests/ErasureRootConsumptionTests.cs"
+    ],
+    "acceptedTarget": false
+  },
+  "agents": {
+    "observedHead": "dd4aa1dbcfa5bce9c39567012b339fc6470cc690",
+    "trackedChangesAndUntrackedPaths": [
+      " M _bmad-output/implementation-artifacts/spec-5-4-prove-trusted-principal-tenant-party-and-approver-readiness.md",
+      " M eng/verify-story-5.4.ps1",
+      " M tests/tooling/verifier_audit_policy_test.py",
+      "?? _bmad-output/implementation-artifacts/tests/story-5-4-2026-10-29/",
+      "?? tests/tooling/story_54_verifier_test.py"
+    ],
+    "acceptedTarget": false
+  },
+  "ledger": {
+    "ownerAccepted": false,
+    "available": false,
+    "liveQualified": false,
+    "acceptedReplacementIntegrationDate": null,
+    "qualifyingInstallationEstablished": false,
+    "installedHashes": {
+      "backendProfile": null,
+      "applicationConfiguration": null,
+      "qualificationPlan": null,
+      "publicTrust": null,
+      "completeInstalledTarget": null
+    },
+    "decisionNullPathsCount": 661,
+    "bindingNullPathsCount": 165
+  },
+  "observedAtUtc": "2026-10-29T12:34:20.836632+00:00"
+}

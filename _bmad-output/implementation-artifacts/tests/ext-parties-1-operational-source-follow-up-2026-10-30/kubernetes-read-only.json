@@ -1,0 +1,81 @@
+[
+  {
+    "purpose": "system-secret-current-identity",
+    "argv": [
+      "kubectl",
+      "--kubeconfig",
+      "/home/administrator/.kube/hexalith-production",
+      "--context",
+      "jpiquot@local",
+      "--request-timeout=10s",
+      "get",
+      "secret",
+      "kubesphere-sa-token",
+      "-n",
+      "kubesphere-system",
+      "-o",
+      "jsonpath={.metadata.name}{\"\\t\"}{.metadata.uid}{\"\\t\"}{.metadata.resourceVersion}"
+    ],
+    "startedAtUtc": "2026-10-30T07:18:10.739525+00:00",
+    "completedAtUtc": "2026-10-30T07:18:11.315800+00:00",
+    "exitCode": 0,
+    "stdout": "kubesphere-sa-token\ta97fa037-798b-46b6-9232-76e600480142\t38120141",
+    "stderr": "",
+    "outputSelection": {
+      "retained": "Object name, UID and resourceVersion only; no Secret data."
+    }
+  },
+  {
+    "purpose": "existing-pod-transports",
+    "argv": [
+      "kubectl",
+      "--kubeconfig",
+      "/home/administrator/.kube/hexalith-production",
+      "--context",
+      "jpiquot@local",
+      "--request-timeout=10s",
+      "get",
+      "pods",
+      "-A",
+      "-o",
+      "jsonpath={range .items[*]}{.metadata.namespace}{\"\\t\"}{.metadata.name}{\"\\t\"}{.metadata.uid}{\"\\t\"}{.status.phase}{\"\\t\"}{.spec.nodeName}{\"\\t\"}{range .spec.volumes[*]}{.name}{\":\"}{.persistentVolumeClaim.claimName}{\":\"}{.hostPath.path}{\";\"}{end}{\"\\n\"}{end}"
+    ],
+    "startedAtUtc": "2026-10-30T07:18:11.315829+00:00",
+    "completedAtUtc": "2026-10-30T07:18:11.809516+00:00",
+    "exitCode": 0,
+    "stdout": "calico-system\tcalico-apiserver-5497f697fb-f2b4r\t371417fb-3afd-4b38-8cf9-70e20ea02d61\tRunning\tnode1\tcalico-apiserver-certs::;kube-api-access-hrpb8::;\ncalico-system\tcalico-apiserver-5497f697fb-zstzs\tf8c15468-543f-49f0-8eb7-b24e39439c10\tRunning\tnode1\tcalico-apiserver-certs::;kube-api-access-gc6nb::;\nkube-system\tkube-apiserver-node1\t513b26ca-8e99-4fa5-9cc8-46554c324975\tRunning\tnode1\tca-certs::/etc/ssl/certs;etc-ca-certificates::/etc/ca-certificates;k8s-certs::/etc/kubernetes/pki;usr-local-share-ca-certificates::/usr/local/share/ca-certificates;usr-share-ca-certificates::/usr/share/ca-certificates;\nkubesphere-system\tks-apiserver-5cc56cf596-gczzj\t4eb67677-2cf8-4bd6-bed6-3777428f3065\tRunning\tnode1\tkubesphere-config::;host-time::/etc/localtime;kube-api-access-bjhnb::;\nopenbao\thexalith-keys-0\t01cae80b-4142-4d85-b8ba-e6295371b832\tRunning\tnode1\tdata:data-hexalith-keys-0:;audit:audit-hexalith-keys-0:;config::;openbao-server-tls::;openbao-seal::;tmp::;home::;kube-api-access-b49k2::;\nopenbao\thexalith-keys-1\tf89ff29e-0a36-4e46-bff0-6e545bfb4001\tRunning\tnode1\tdata:data-hexalith-keys-1:;audit:audit-hexalith-keys-1:;config::;openbao-server-tls::;openbao-seal::;tmp::;home::;kube-api-access-p6425::;\nopenbao\thexalith-keys-2\t3ef0013e-6a88-433c-ba88-974b9a3047c2\tRunning\tnode1\tdata:data-hexalith-keys-2:;audit:audit-hexalith-keys-2:;config::;openbao-server-tls::;openbao-seal::;tmp::;home::;kube-api-access-zlh6z::;\nopenbao\topenbao-raft-snapshot-29887230-7kgmb\t890c9aec-b16e-4aac-ba11-8ea5eae4dda3\tSucceeded\tnode1\tsnapshots:openbao-snapshots:;openbao-tls::;service-account-token::;home::;\nopenbao\topenbao-raft-snapshot-29888670-7dc5b\t1ae203d9-4162-443c-9367-7ed95a83fc23\tSucceeded\tnode1\tsnapshots:openbao-snapshots:;openbao-tls::;service-account-token::;home::;\nvelero\topenbao-scaleway-kube-green-kopia-maintain-job-178718905867ccvd\t3c546d44-2e68-4b6e-b169-fc2d196d150b\tSucceeded\tnode1\tcloud-credentials::;plugins::;scratch::;kube-api-access-dmmlm::;\nvelero\topenbao-scaleway-kube-green-kopia-maintain-job-178720799276dkc5\t16904534-2eb9-47f8-a948-eca28e97e83b\tSucceeded\tnode1\tcloud-credentials::;plugins::;scratch::;kube-api-access-glmc9::;\nvelero\topenbao-scaleway-kube-green-kopia-maintain-job-178721183967bxts\t241db4d6-a4e3-44d8-85ee-f09b0edcef1c\tSucceeded\tnode1\tcloud-credentials::;plugins::;scratch::;kube-api-access-ggb5s::;",
+    "stderr": "",
+    "outputSelection": {
+      "totalPodMetadataRows": 119,
+      "retained": "Audit/logging/control-plane and OpenBao/snapshot pod rows only; all volume fields are reference paths, not payloads."
+    }
+  },
+  {
+    "purpose": "apiserver-audit-configuration",
+    "argv": [
+      "kubectl",
+      "--kubeconfig",
+      "/home/administrator/.kube/hexalith-production",
+      "--context",
+      "jpiquot@local",
+      "--request-timeout=10s",
+      "get",
+      "pods",
+      "-n",
+      "kube-system",
+      "-l",
+      "component=kube-apiserver",
+      "-o",
+      "jsonpath={range .items[*]}{.metadata.name}{\"\\n\"}{range .spec.containers[*]}{range .command[*]}{.}{\"\\n\"}{end}{range .args[*]}{.}{\"\\n\"}{end}{end}{end}"
+    ],
+    "startedAtUtc": "2026-10-30T07:18:11.809542+00:00",
+    "completedAtUtc": "2026-10-30T07:18:12.107235+00:00",
+    "exitCode": 0,
+    "stdout": "kube-apiserver-node1",
+    "stderr": "",
+    "outputSelection": {
+      "retained": "Pod name and --audit-* flags only; no unrelated arguments, environments or credentials retained.",
+      "nonemptyResult": true
+    }
+  }
+]

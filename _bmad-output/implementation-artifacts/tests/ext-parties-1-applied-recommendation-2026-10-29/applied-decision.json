@@ -1,0 +1,81 @@
+{
+  "schema": "ext-parties-1-applied-assessment-direction.v1",
+  "decisionId": "DEC-EXT-PARTIES-1-OPENBAO-ASSESSMENT-2026-10-29",
+  "recordedAtUtc": "2026-10-29T13:37:04.511974+00:00",
+  "approval": {
+    "ownerInstruction": "apply recommended",
+    "context": "Latest practical comparison: assess existing OpenBao first, verify backup disposal and surviving authority before broad V2 implementation, retain operational milestone if full custody cannot be supported",
+    "scope": "Project/Parties work direction and capped existing-resource assessment",
+    "recorded": true,
+    "amendmentTextApprovalAlreadyRecorded": true,
+    "exactV2RepresentationRatified": false,
+    "otherOwnersRatified": false,
+    "completeReplacementCommitmentAccepted": false
+  },
+  "assessment": {
+    "candidate": "Existing Kubernetes/Dapr/OpenBao on 192.168.1.30",
+    "firstModeToAssess": "Direct Transit encryption for small history units; envelope only if measurements justify it",
+    "maximumEngineerDays": 2,
+    "newInfrastructureProcurementOrRecurringSpend": 0,
+    "namedEngineeringAllocation": null,
+    "implementer": null,
+    "recoveryLead": null,
+    "distinctHumanDeputy": null,
+    "reviewPoint": "Evidence verdict at end of allocated effort or earlier when owner evidence prevents progress",
+    "capDeclaredExhausted": false,
+    "initialStatus": "ReadOnlyAssessmentPerformedBlockedOnOwnerEvidence",
+    "productionFeasibilityEstablished": false,
+    "productionFeasibilityDisproved": false,
+    "knownExistingOffNodeResource": "Scaleway hexalith-recovery-points/fr-par; historical 31-day current-version lifecycle plus noncurrent cleanup does not establish E+30-day bound",
+    "knownHistoricalProofExpiryUtc": "2026-10-02T06:16:52Z",
+    "currentProviderSettingsVerified": false
+  },
+  "workOrder": [
+    "Collect current operational evidence or prepare separate recovery scope",
+    "Establish backup destruction and independent surviving authority feasibility",
+    "Assess existing unit/key/traffic capacity and direct Transit mode",
+    "Ratify exact affected-owner V2 design only when feasibility is credible",
+    "Implement/accept/install/qualify only under complete later target and permissions"
+  ],
+  "retainedDirection": {
+    "lunaOrCustomFm": "Deferred/stopped",
+    "newAuthorityConsensusSystem": "Not selected",
+    "newCloud": "Not selected",
+    "skrOrConfidentialRuntime": "Not selected",
+    "aws": "Excluded",
+    "fallback": "Retain approved operational milestone with all custody-dependent paths gated"
+  },
+  "ownerReturns": {
+    "canonicalForm": "../platform/docs/implementation/story-5-4-coupled-delivery-2026-10-25/owner-decisions.json",
+    "currentOperationalProfile": "mvpOperationalInputs.currentOperationalProfile",
+    "preservationBaseline": "mvpOperationalInputs.maintenancePreservationBaseline",
+    "backupAndRestore": "mvpOperationalInputs.backupAndRestore",
+    "authorityAndCapacity": "Existing accountable authority/recovery/custody owners; exact existing resources and measurements required"
+  },
+  "remainingBindings": {
+    "currentProfileEvidence": null,
+    "backupDisposalEvidence": null,
+    "independentTimeFenceAuthorityEvidence": null,
+    "unitKeyTrafficCapacityEvidence": null,
+    "acceptedReplacementTarget": null,
+    "acceptedReplacementIntegrationDate": null,
+    "installedHistoryHashes": null
+  },
+  "boundaries": {
+    "liveExecuted": false,
+    "liveAuthorized": false,
+    "qualificationExecuted": false,
+    "dependencyAvailable": false,
+    "resourceMutations": 0,
+    "providerCalls": 0,
+    "credentialValuesRequested": false,
+    "credentialRenewalExecuted": false,
+    "recoveryExecutionAuthorized": false,
+    "installationExecuted": false,
+    "productionBackendImplementationAuthorized": false,
+    "agentsRegisterModified": false,
+    "historicalOwnerRecordsModified": false,
+    "originalLedgerNullsFilled": false,
+    "newDependencyOrReducedLiveContractCreated": false
+  }
+}

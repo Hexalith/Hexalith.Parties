@@ -1,0 +1,39 @@
+{
+  "observedAtUtc": "2026-10-29T12:38:31.761164+00:00",
+  "v2SymbolSearch": {
+    "argv": [
+      "rg",
+      "-n",
+      "IIdentityHistoryCustodyV2|party-actor-custody-amended-v2|ServiceExpiredHistorySegmentProofV2",
+      "src",
+      "../eventstore/src",
+      "../platform/src",
+      "-g",
+      "*.cs"
+    ],
+    "exitCode": 1,
+    "stdout": "",
+    "stderr": "",
+    "meaning": "Exit 1 means no matching proposed V2 symbols in inspected C# sources, not a build result"
+  },
+  "liveSource": {
+    "path": "eng/verify-ext-parties-1.ps1",
+    "sha256": "7169d009a2799a0e4bfa33216ef774ce8057ddfa12ada610e11070b6da0b8012",
+    "inspectedLines": [
+      33,
+      44
+    ],
+    "unconditionalRefusalBeforeEndpoint": true
+  },
+  "custodyDiSource": {
+    "path": "src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs",
+    "sha256": "dca2ac9e7b36345061f851308f1ad6affe24f6bdedc6f641e4577e159f7ec940",
+    "inspectedLines": [
+      206,
+      209,
+      438,
+      441
+    ],
+    "hostSuppliedCustodyOnly": true
+  }
+}

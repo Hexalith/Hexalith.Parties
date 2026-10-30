@@ -1,0 +1,159 @@
+{
+  "recordedAtUtc": "2026-10-30T07:25:30.734259+00:00",
+  "status": "ReadOnlyDiscoveryCompletedOperationalAdmissionStillBlocked",
+  "proposalReference": "recovery-proposal-continuation.json",
+  "completed": [
+    "Searched 9219 public repository documents and separately discovered external public-evidence candidates; captured bounded GitHub/Outlook/Teams results.",
+    "Located newer Conversations current metadata/dependency records and Platform source-only hardening/Protection dispositions; none supplies operational appointments or installed independent authority.",
+    "Collected exactly three read-only Kubernetes observations without Secret values: current Secret identity, existing pod/volume transports and current API-server audit flags.",
+    "Located historical intended metadata-only issuance and distinguished it from a missing admissible current credential.",
+    "Prepared additive full-history segment/admission requirements without editing original proposal, scope, baseline, template, receipts or register."
+  ],
+  "findings": [
+    {
+      "topic": "appointments",
+      "status": "Unresolved",
+      "supported": "Canonical appointment/implementer references remain null; named-deputy and deputy-capability stories remain backlog.",
+      "limit": "Sole ownership, administrator labels and source-work assignments do not appoint Humans."
+    },
+    {
+      "topic": "Secret history",
+      "status": "Unresolved",
+      "currentIdentity": {
+        "uid": "a97fa037-798b-46b6-9232-76e600480142",
+        "resourceVersion": "38120141",
+        "observedAtUtc": "2026-10-30T07:18:11.315800+00:00",
+        "source": {
+          "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/kubernetes-read-only.json",
+          "sha256": "2ba89a478d88658fbcb8d05e109b38861f6e9f7afa16e6333321ea871c43bf5e"
+        }
+      },
+      "separateRequiredTransitions": [
+        {
+          "fromResourceVersion": "36774577",
+          "throughResourceVersion": "37223806",
+          "authenticWriteSource": null,
+          "authenticatedDisposition": null,
+          "completeIntervalCovered": null
+        },
+        {
+          "fromResourceVersion": "37223806",
+          "throughResourceVersion": "37671992",
+          "authenticWriteSource": null,
+          "authenticatedDisposition": null,
+          "completeIntervalCovered": null
+        },
+        {
+          "fromResourceVersion": "37671992",
+          "throughResourceVersion": "38120141",
+          "authenticWriteSource": null,
+          "authenticatedDisposition": null,
+          "completeIntervalCovered": null
+        }
+      ],
+      "supported": "Current kube-apiserver pod command/args expose no --audit-* flags; retained external candidate decisions remain unauthenticated templates.",
+      "limit": "Current configuration and UID/RV equality prove no past write coverage, field equality or absent external archive."
+    },
+    {
+      "topic": "separate Memories and register dispositions",
+      "status": "Unresolved",
+      "supported": "Exact canonical disposition fields and owner-provenance fields remain null. The newer Conversations dependency snapshot retains the current register hash, not an acceptance of the historical mismatch.",
+      "limit": "Do not conflate interval preservation with acceptance of earlier drift."
+    },
+    {
+      "topic": "metadata-only credential",
+      "status": "HistoricalOriginalLocatedCurrentTransportUnresolved",
+      "supported": "Original stored reference #token, accessor and metadata-only policy are located in the original issuance record; recorded expiry was 2026-10-28T18:29:18.226944208Z. Later retained authenticated observation reports absent original accessor. Current owner credential/provenance template fields remain null.",
+      "datedSuccess": {
+        "source": {
+          "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/public-metadata-verification.json",
+          "sha256": "13cc18a07a6e19e4615f21f8f230bf5dbcfd2f1b2a92aa882aa6a76fe9a8e9a1"
+        },
+        "fromUtc": "2026-10-29T19:55:27.667795+00:00",
+        "throughUtc": "2026-10-29T19:55:27.741331+00:00",
+        "httpStatuses": [
+          200,
+          200,
+          200,
+          200
+        ],
+        "temporaryGrantReversed": true,
+        "currentOrFutureReadTransportInferred": false
+      },
+      "limit": "No new credential, provider read or temporary grant is authorized or used."
+    },
+    {
+      "topic": "snapshots/key-recovery copies",
+      "status": "Unresolved",
+      "supported": "Existing snapshot-PVC users are completed pods; no running reader found. Documented node SSH identity remains absent. Alternative local key filenames have no current node-grant evidence. Two snapshot-inventory filename candidates describe telemetry evidence archives.",
+      "limit": "No current owner-produced OpenBao/key-copy inventory, current disposal proof or valid existing node transport located."
+    },
+    {
+      "topic": "independent authority/time",
+      "status": "FullCustodyStopRetained",
+      "supported": "Newer source/component/native records establish no already operated qualified mechanism. The current loop-5 summary records escalation and withdrawn candidates/date; accepted installed authority and physical qualification remain unset.",
+      "limit": "Local host UTC used for deadline arithmetic is not independently authenticated fresh time."
+    }
+  ],
+  "window": {
+    "source": {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-scope-20261029T165350Z-final/recovery-scope.json",
+      "sha256": "f32c1128b54f30682a22734986258a1882483d5d80bb2c253c4769bfb1e7d947"
+    },
+    "proposedWindow": {
+      "automaticRebaseOrExtensionAllowed": false,
+      "exclusiveDeadline": "2026-10-30T16:53:50+00:00",
+      "executionNotBefore": "2026-10-29T16:53:50+00:00",
+      "maximumSeconds": 86400,
+      "recordNotBeforeValuesPreserved": true
+    },
+    "checkedAtUtc": "2026-10-30T07:23:49.250067+00:00",
+    "checkClock": "Session host UTC for deadline comparison only; not an independent authority/time qualification.",
+    "statusAtCheck": "WithinFixedWindow",
+    "secondsUntilExclusiveDeadlineAtCheck": 34200,
+    "automaticRebaseOrExtensionAllowed": false,
+    "admissionAllowed": false,
+    "afterExpiry": "This scope is ineligible for any effects at or after its fixed exclusive deadline. A separately concrete later scope would be required; no replacement is prepared or authorized here."
+  },
+  "olderSourceReferenceDrift": [
+    {
+      "path": "/home/administrator/projects/hexalith/platform/_bmad-output/implementation-artifacts/sprint-status.yaml",
+      "datedSha256": "3394eca9e8aab477e5dc36aa086958f9b70e97ab4cf9af453b2017c33cf94537",
+      "observedSha256": "c60b472033a1118afd0822db46b7cbdfdc9dd48cbee62168369d3fcd83ecb0ad",
+      "treatment": "Retain the earlier dated reference and receipt unchanged. Current source recorded separately; no earlier result restamped."
+    }
+  ],
+  "allInheritedBlockersRetained": true,
+  "currentAcceptedProfile": null,
+  "nextAction": "Admit and authenticate one existing source-return package, covering every historical interval through the actual admission RV, separate exact Secret/Memories/register dispositions, actual role appointments and intended current metadata-only credential provenance. Use an owner-produced snapshot/copy inventory or validated existing read-only transport. Then prepare fresh read-only controlling observations under that admitted transport within the unchanged window. No executor or recovery is authorized by this continuation.",
+  "smallestOwnerReturn": {
+    "scope": "One response with the unresolvable appointments/factual references only; collection of accessible files remains delegated.",
+    "appointments": "Appoint the assessment implementer/accountable Human recovery lead (may be one person) and a different qualified Human deputy from existing allocation, with appointment/access references.",
+    "existingRecordsOrUnavailable": "Identify the existing historical write archive and node/copy-inventory transport or owner-produced records, and the intended current metadata-only credential record (reference only, never token), or state which do not exist/are unavailable. Any preservation disposition must bind actual evidence and authenticated owner provenance; ownership alone supplies no historical proof.",
+    "independentAuthority": "No owner action needed to keep full custody stopped. Only an existing qualifying service reference with operating evidence can reopen its assessment.",
+    "repeatScopeApprovalRequested": false,
+    "credentialsRequested": false
+  },
+  "constraints": {
+    "capEngineerDays": 2,
+    "newInfrastructureSpend": 0,
+    "newCapOrEffortAllocationInferred": false,
+    "spentEffortInferred": false
+  },
+  "effects": {
+    "kubernetesMetadataGetCommands": 3,
+    "providerCalls": 0,
+    "sshCalls": 0,
+    "podExecs": 0,
+    "credentialIssuanceOrRenewals": 0,
+    "runtimeRecoveryExecutions": 0,
+    "runtimeOrPolicyWrites": 0,
+    "backupChanges": 0,
+    "infrastructureProvisioned": 0,
+    "productionBackendChanges": 0,
+    "qualificationRuns": 0,
+    "registerWrites": 0,
+    "messagesSent": 0
+  },
+  "scopeLimit": "Evidence about bounded accessible repositories and public evidence roots at recorded times. No universal absence claim or newly authenticated owner attestation. No operational milestone or dependency availability is claimed."
+}

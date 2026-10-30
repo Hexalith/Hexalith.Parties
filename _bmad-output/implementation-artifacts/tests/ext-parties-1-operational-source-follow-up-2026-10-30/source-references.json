@@ -1,0 +1,127 @@
+{
+  "recordedAtUtc": "2026-10-30T07:23:49.250067+00:00",
+  "files": [
+    {
+      "path": "/home/administrator/projects/hexalith/platform/docs/implementation/story-5-4-coupled-delivery-2026-10-25/owner-decisions.json",
+      "sha256": "755c9956d3afd9538ecd508c3fbf77f08712fa2e684cf007c5e9a3c9607a7650"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/platform/_bmad-output/implementation-artifacts/sprint-status.yaml",
+      "sha256": "c60b472033a1118afd0822db46b7cbdfdc9dd48cbee62168369d3fcd83ecb0ad",
+      "mutableSourceDriftReference": "source-drift-at-validation.json"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/custody-binding-20261027T182648692778Z/metadata-credential-issuance.json",
+      "sha256": "681e01025fc7711a8b14f1c6b1854bbfe2eb43da5b4b55e0c4854e0c88ad64e2"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/kubernetes-metadata-read-only.json",
+      "sha256": "0a3ea136b5dd8f195a3e4fac945763f681614623a5daca94c11700ac1f9d3bf2"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/observations/observation-2092c56ff424462898fb5354c09d94e0.json",
+      "sha256": "8ff636067f3e8a0e5044e7f433297e98391b5e9822627d3b21c9b6e3de819248"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/preservation-decision.template.json",
+      "sha256": "aef349e44c674fccc5aad9ec50eaaa222813e69c21973723a9fc7829d15688dd"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/preservation-decision.template.json",
+      "sha256": "aef349e44c674fccc5aad9ec50eaaa222813e69c21973723a9fc7829d15688dd"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/owner-metadata-credential.template.json",
+      "sha256": "3c48b3f341257caddbe1ec2c7364a912b97a2be480dbb42d34f2f30924b3b788"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/metadata-transport-correction-20261029-f7Z2ajmP/preservation-decision.template.json",
+      "sha256": "aef349e44c674fccc5aad9ec50eaaa222813e69c21973723a9fc7829d15688dd"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/metadata-transport-correction-20261029-f7Z2ajmP/owner-metadata-credential.template.json",
+      "sha256": "3c48b3f341257caddbe1ec2c7364a912b97a2be480dbb42d34f2f30924b3b788"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/preservation-decision.template.json",
+      "sha256": "aef349e44c674fccc5aad9ec50eaaa222813e69c21973723a9fc7829d15688dd"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-spec-refresh-20261029T195425913692Z/owner-metadata-credential.template.json",
+      "sha256": "3c48b3f341257caddbe1ec2c7364a912b97a2be480dbb42d34f2f30924b3b788"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/cluster-inventory.json",
+      "sha256": "b70d659b426e01da2b4a8a432aa2b309af58a3338b32e5590324456bbb69f922"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/dependency-status.json",
+      "sha256": "a55d270945e213808a50d436f6409e36c197b8d546c1aac37a20184e918de7ce"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/historical-gap-disposition.json",
+      "sha256": "c526a2773a282925c92c09726eb6fa5e46b8a803f4f1ac621f6539d2dab30e5a"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-secrets-1-custody-permitted-reference-startup-hardening-2026-10-29.json",
+      "sha256": "3231cd5e3b2f98081957ec39be4c6331493a3cd7cf10bd1514d2b9667b7809c1"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-parent-merged-2026-10-30/loop5/README.md",
+      "sha256": "beab207555f8e9e71f8a314de6701031a68dc0b028d516579cc404603a07a361"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-parent-merged-2026-10-30/loop5/review6/escalation.md",
+      "sha256": "ec8cce80518e881ca0d0044b5c889e5085ab45904706d65f96fd6ab11740ad42"
+    },
+    {
+      "path": "/home/administrator/evidence/hexalith-memories/C1.16/20261006T125948Z-dbbe89368caa/capture-state-20261006T144023Z-a6a1f4b8/full-archive-snapshot-inventory.json",
+      "sha256": "7ab15ddd5e4fa1e90f845db54f837829c378b0abfc27ac475cddd2e53fe61127"
+    },
+    {
+      "path": "/home/administrator/evidence/hexalith-memories/C1.16/20261006T125948Z-dbbe89368caa/capture-pool-20261006T150600Z-3c2f874a/full-archive-snapshot-inventory.json",
+      "sha256": "abacb408b9f01ea6e4f1eaf74c39fb2cea5b0d22064b752a2a1da6a57f97d27c"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/platform/eng/kubernetes-upgrade/recovery-20261015t140709z/PROCEDURE.md",
+      "sha256": "26fd5e3adf0166e531f0c8683274f4952dab3f68721c9c43c520dd74eea1e795"
+    },
+    {
+      "path": "/home/administrator/hexalith-upgrade-evidence/access/story41-node-access-inventory-085552.json",
+      "sha256": "75841f5607699499949b00e7dc5a9f52b7233475b12bc6a4101a4695573b539b"
+    },
+    {
+      "path": "/home/administrator/hexalith-upgrade-evidence/access/story41-existing-key-access-085728.json",
+      "sha256": "098fc8161a34d9b879469b309c22d164d5c9c5831dcbc8201f3a16ebfcfbba64"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/kubernetes-read-only.json",
+      "sha256": "2ba89a478d88658fbcb8d05e109b38861f6e9f7afa16e6333321ea871c43bf5e"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-scope-20261029T165350Z-final/recovery-scope.json",
+      "sha256": "f32c1128b54f30682a22734986258a1882483d5d80bb2c253c4769bfb1e7d947"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/operational-recovery-proposal.json",
+      "sha256": "e0d10b617ca733cf0f7cba91d03762f534914547c37f890b2788ef39ce42186d"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/docs/implementation/ext-parties-1-pragmatic-direction-2026-10-29.md",
+      "sha256": "9af08473ee838792d9e663bf92481ae05b51f7739e4151e858dc2b603628f033"
+    },
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/public-metadata-verification.json",
+      "sha256": "13cc18a07a6e19e4615f21f8f230bf5dbcfd2f1b2a92aa882aa6a76fe9a8e9a1"
+    },
+    {
+      "path": "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1/owner-prerequisites-20261030-060525/prerequisite-status.json",
+      "sha256": "6e6e703c61045b455c0961b11deae8298a149703a4b46407e35e6c8306e3c9f7"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/source-snapshots/sprint-status.yaml",
+      "sha256": "f8edb2f1aade10af5baadee5f86db468aea3d856540689552d21c9add7bd6f4d"
+    }
+  ],
+  "limit": "Hashes bind observed bytes, not attestation authenticity, historical completeness or current grants. Mutable source drift is separately reported; original receipts are never regenerated."
+}

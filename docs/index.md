@@ -57,6 +57,8 @@
 
 ### Deployment & CI
 - [Deployment Guide](./deployment-guide.md) — current runtime ownership boundary
+- [EXT-PARTIES-1 applied assessment direction](./implementation/ext-parties-1-applied-direction-2026-10-29.md) - assess existing OpenBao before implementation; Live remains stopped
+- [EXT-PARTIES-1 pragmatic continuation](./implementation/ext-parties-1-pragmatic-direction-2026-10-29.md) - operational recovery first; independent authority and backup disposal gate full custody
 - [CI](./ci.md) · [Build Gate](./build-gate.md) · [CI Secrets Checklist](./ci-secrets-checklist.md)
 
 ### Frontend

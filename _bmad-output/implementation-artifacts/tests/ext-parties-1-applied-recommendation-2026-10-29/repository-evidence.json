@@ -1,0 +1,38 @@
+{
+  "observedAtUtc": "2026-10-29T13:38:44.073893+00:00",
+  "sourceFileHashes": {
+    "platform/_bmad-output/implementation-artifacts/evidence/epic-4/recovery-destination-setup.md": "5399f7acde40e555975e1a64ce9a1340faa48b705436962c758b330eb40f6161",
+    "platform/_bmad-output/implementation-artifacts/evidence/epic-4/4-0/20261001t061620z/summary.md": "1b299140bf6fe4a6f840bd40b9c098a0579518f7dfdd3a89950fdc6be88aa134",
+    "platform/eng/ext-secrets-1/README.md": "852fc8b072c201dc26348389718c12a50527e0b1b3f46dd0d4cd966b3336e077",
+    "platform/_bmad-output/implementation-artifacts/4-0-prove-off-node-backups-and-isolated-restores.md": "d7f34027e8b0fd8a7450f395185d9690782b1c770b24aa8e01dcdbc67bf334b2"
+  },
+  "existingRecoveryResource": {
+    "provider": "Scaleway",
+    "bucket": "hexalith-recovery-points",
+    "region": "fr-par",
+    "prefix": "openbao/",
+    "recordedDefaultComplianceLockDays": 30,
+    "recordedCurrentVersionExpirationDays": 31,
+    "recordedNoncurrentVersionExpirationDays": 1,
+    "evidencePrefixHasRecordedExpiryRule": false,
+    "historicalRestoreRun": "20261001t061620z",
+    "historicalBackupGateExpiredAtUtc": "2026-10-02T06:16:52Z",
+    "currentProviderSettingsVerified": false,
+    "providerApiCalls": 0
+  },
+  "assessments": [
+    {
+      "finding": "Recorded backup lifecycle does not substantiate actor-history E+30-day all-copy destruction",
+      "kind": "Engineering inference",
+      "basis": "A snapshot created just before E may retain decrypting key material after E+30 under the recorded 31-day current-version lifecycle; versioned/evidence copies require independent closure",
+      "disposition": "Require current lifecycle/all-copy evidence or separately reviewed policy separation/change; do not alter shared bucket during assessment"
+    },
+    {
+      "finding": "Existing HMAC authority is not a qualifying independent actor-history time/fence authority",
+      "kind": "Explicit source limitation",
+      "basis": "Documentation disclaims off-host restore and rollback-resistance, and identifies local retained storage",
+      "disposition": "Keep independent currentness gate unresolved"
+    }
+  ],
+  "meaning": "Repository observations retain historical resource/policy/proof scope; no fresh provider validity, deletion, non-revival or custody qualification inferred"
+}

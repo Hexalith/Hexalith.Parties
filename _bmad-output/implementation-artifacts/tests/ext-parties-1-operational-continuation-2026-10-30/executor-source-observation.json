@@ -1,0 +1,58 @@
+{
+  "observedAtUtc": "2026-10-30T06:01:52.704326+00:00",
+  "files": {
+    "eng/ext-secrets-1/prepare_expired_hmac_recovery.py": {
+      "expected": "6475a12cec40cff6bcd9439e4b0e0c164afa43637935f9ee40b3183d28645ca1",
+      "frozen": "6475a12cec40cff6bcd9439e4b0e0c164afa43637935f9ee40b3183d28645ca1",
+      "frozenMatches": true,
+      "worktree": "6475a12cec40cff6bcd9439e4b0e0c164afa43637935f9ee40b3183d28645ca1",
+      "worktreeMatches": true,
+      "laterTestedExpected": "6475a12cec40cff6bcd9439e4b0e0c164afa43637935f9ee40b3183d28645ca1",
+      "worktreeMatchesLaterTested": true
+    },
+    "eng/ext-secrets-1/recover_expired_hmac.py": {
+      "expected": "8d0cabe971331e53ffe9548c908e20f792bde4273d954c70abacfec0a2108adc",
+      "frozen": "8d0cabe971331e53ffe9548c908e20f792bde4273d954c70abacfec0a2108adc",
+      "frozenMatches": true,
+      "worktree": "11f8343a1626f1f5383aec9afc6016189cbb89244f2b7375dfa29d76f43c1f5d",
+      "worktreeMatches": false,
+      "laterTestedExpected": "11f8343a1626f1f5383aec9afc6016189cbb89244f2b7375dfa29d76f43c1f5d",
+      "worktreeMatchesLaterTested": true
+    },
+    "eng/ext-secrets-1/test_prepare_expired_hmac_recovery.py": {
+      "expected": "62df47f02db2338f6a2edacef4de92ac45b69cea279c2bc16d2d6fece685e36e",
+      "frozen": "62df47f02db2338f6a2edacef4de92ac45b69cea279c2bc16d2d6fece685e36e",
+      "frozenMatches": true,
+      "worktree": "62df47f02db2338f6a2edacef4de92ac45b69cea279c2bc16d2d6fece685e36e",
+      "worktreeMatches": true,
+      "laterTestedExpected": "62df47f02db2338f6a2edacef4de92ac45b69cea279c2bc16d2d6fece685e36e",
+      "worktreeMatchesLaterTested": true
+    },
+    "eng/ext-secrets-1/test_recover_expired_hmac.py": {
+      "expected": "37006f6d195e8cb6452f836fa0ef5c1fd2defd77729d8943a42398adb15c14e1",
+      "frozen": "37006f6d195e8cb6452f836fa0ef5c1fd2defd77729d8943a42398adb15c14e1",
+      "frozenMatches": true,
+      "worktree": "c00490059d8f16d338a817e374d4bd7e7bc1c5b1d52dcaa3c4334bd405623a45",
+      "worktreeMatches": false,
+      "laterTestedExpected": "c00490059d8f16d338a817e374d4bd7e7bc1c5b1d52dcaa3c4334bd405623a45",
+      "worktreeMatchesLaterTested": true
+    }
+  },
+  "originalVerification": {
+    "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/verification.json",
+    "sha256": "753f06d735ed9e60bf67172adaabce2e9b5210d8d260f073341aff09fa438461"
+  },
+  "laterVerification": {
+    "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/root-final-verification.json",
+    "sha256": "fa8599a50bdd354c108a9e4bf96baf4b57b23995896c62c8be9afb78295d8212"
+  },
+  "laterRecordedTests": {
+    "command": "python3 -m unittest discover -s eng/ext-secrets-1 -p 'test_*expired_hmac*.py' -v",
+    "failures": 0,
+    "rootExitCode": 0,
+    "run": 60,
+    "skips": 0
+  },
+  "testsRepeated": false,
+  "disposition": "All four current source hashes equal the later 60-test record. The older frozen 23+8-test snapshot remains separate. No source mismatch blocker is inferred from comparison with only the older generation."
+}

@@ -1,0 +1,20 @@
+{
+  "verifiedAtUtc": "2026-10-30T06:06:49.822852+00:00",
+  "passed": true,
+  "checksPassed": 827,
+  "historicalFilesPreserved": 510,
+  "sourceManifestsVerified": {
+    "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-scope-20261029T165350Z-final/evidence-manifest.json": 10,
+    "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/evidence-manifest.json": 128,
+    "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-correction-20261029/evidence-manifest.json": 47,
+    "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/metadata-access-application-20261029-approved/evidence-manifest.json": 37
+  },
+  "agentsRegisterUnchanged": true,
+  "canonicalOwnerFormUnchanged": true,
+  "existingIndexEditUnchanged": true,
+  "exactScopeProposalVerified": true,
+  "qualificationRun": false,
+  "runtimeRecoveryExecuted": false,
+  "limit": "Offline file integrity and evidence consistency only. No attestation authenticity, historical completeness, current service validity, all-copy disposal or qualification is established.",
+  "command": "python3 -B _bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/verify_continuation.py"
+}

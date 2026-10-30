@@ -1,0 +1,55 @@
+{
+  "observedAt": "2026-10-29T16:53:30.880103+00:00",
+  "kind": "DocumentAndReadOnlyEvidenceValidationNotQualification",
+  "checks": [
+    {
+      "check": "preservation baseline unchanged",
+      "passed": true
+    },
+    {
+      "check": "Agents dependency register covered",
+      "passed": true
+    },
+    {
+      "check": "newly located source hashes unchanged",
+      "passed": true
+    },
+    {
+      "check": "complete version pagination and inventory",
+      "passed": true
+    },
+    {
+      "check": "noncurrent versions included",
+      "passed": true
+    },
+    {
+      "check": "OpenBao versions",
+      "passed": true
+    },
+    {
+      "check": "S3 reads only",
+      "passed": true
+    },
+    {
+      "check": "retention and legal-hold results explicit",
+      "passed": true
+    },
+    {
+      "check": "local document links resolve",
+      "passed": true
+    },
+    {
+      "check": "recovery plan explicitly not executable",
+      "passed": true
+    }
+  ],
+  "preservedFileCount": 140,
+  "drift": [],
+  "missingLinks": [],
+  "qualificationExecuted": false,
+  "liveStopped": true,
+  "runtimeMutations": 0,
+  "backupMutations": 0,
+  "credentialsRenewed": 0,
+  "ownerAppointmentsInferred": false
+}

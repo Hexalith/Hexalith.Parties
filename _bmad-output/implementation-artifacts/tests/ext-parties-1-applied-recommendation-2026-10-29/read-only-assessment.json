@@ -1,0 +1,92 @@
+{
+  "observedAtUtc": "2026-10-29T13:34:32.103793+00:00",
+  "scope": "Selected public metadata of existing snapshot job/storage and OpenBao resource allocation; not provider validity, actual deletion or throughput evidence",
+  "queries": [
+    {
+      "argv": [
+        "kubectl",
+        "--kubeconfig",
+        "/home/administrator/.kube/hexalith-production",
+        "--context",
+        "jpiquot@local",
+        "--request-timeout=10s",
+        "get",
+        "cronjob",
+        "openbao-raft-snapshot",
+        "-n",
+        "openbao",
+        "-o=jsonpath={.metadata.uid}{\"\\t\"}{.spec.schedule}{\"\\t\"}{.status.lastSuccessfulTime}{\"\\t\"}{.spec.jobTemplate.spec.ttlSecondsAfterFinished}{\"\\t\"}{.spec.jobTemplate.spec.template.spec.volumes[*].persistentVolumeClaim.claimName}{\"\\t\"}{range .spec.jobTemplate.spec.template.spec.containers[*]}{.name}{\":\"}{.env[*].name}{\";\"}{end}{\"\\n\"}"
+      ],
+      "startedAtUtc": "2026-10-29T13:34:31.266818+00:00",
+      "completedAtUtc": "2026-10-29T13:34:31.472107+00:00",
+      "exitCode": 0,
+      "stdout": "c10e477c-0f4b-49f1-bd8f-d36ed29d4e91\t30 0 * * *\t2026-10-29T00:30:05Z\t604800\topenbao-snapshots\tsnapshot:BAO_ADDR BAO_CACERT HOME;\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "kubectl",
+        "--kubeconfig",
+        "/home/administrator/.kube/hexalith-production",
+        "--context",
+        "jpiquot@local",
+        "--request-timeout=10s",
+        "get",
+        "pvc",
+        "openbao-snapshots",
+        "-n",
+        "openbao",
+        "-o=jsonpath={.metadata.uid}{\"\\t\"}{.spec.volumeName}{\"\\t\"}{.spec.storageClassName}{\"\\t\"}{.status.capacity.storage}{\"\\t\"}{.status.phase}{\"\\n\"}"
+      ],
+      "startedAtUtc": "2026-10-29T13:34:31.472188+00:00",
+      "completedAtUtc": "2026-10-29T13:34:31.686514+00:00",
+      "exitCode": 0,
+      "stdout": "da142de4-dec5-4519-880d-b7ede4000283\tpvc-da142de4-dec5-4519-880d-b7ede4000283\topenebs-hostpath-retain\t2Gi\tBound\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "kubectl",
+        "--kubeconfig",
+        "/home/administrator/.kube/hexalith-production",
+        "--context",
+        "jpiquot@local",
+        "--request-timeout=10s",
+        "get",
+        "pv",
+        "pvc-da142de4-dec5-4519-880d-b7ede4000283",
+        "-o=jsonpath={.metadata.uid}{\"\\t\"}{.spec.storageClassName}{\"\\t\"}{.spec.persistentVolumeReclaimPolicy}{\"\\t\"}{.spec.local.path}{\"\\t\"}{.spec.hostPath.path}{\"\\t\"}{.spec.nodeAffinity.required.nodeSelectorTerms[*].matchExpressions[*].values}{\"\\n\"}"
+      ],
+      "startedAtUtc": "2026-10-29T13:34:31.686607+00:00",
+      "completedAtUtc": "2026-10-29T13:34:31.887054+00:00",
+      "exitCode": 0,
+      "stdout": "24c7f826-7682-41d5-82ae-344c8c16d873\topenebs-hostpath-retain\tRetain\t/var/openebs/local/pvc-da142de4-dec5-4519-880d-b7ede4000283\t\t[\"node1\"]\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "kubectl",
+        "--kubeconfig",
+        "/home/administrator/.kube/hexalith-production",
+        "--context",
+        "jpiquot@local",
+        "--request-timeout=10s",
+        "get",
+        "statefulset",
+        "hexalith-keys",
+        "-n",
+        "openbao",
+        "-o=jsonpath={.metadata.uid}{\"\\t\"}{.spec.replicas}{\"\\t\"}{.status.readyReplicas}{\"\\t\"}{range .spec.template.spec.containers[*]}{.name}{\":\"}{.resources.requests.cpu}{\",\"}{.resources.requests.memory}{\",\"}{.resources.limits.cpu}{\",\"}{.resources.limits.memory}{\";\"}{end}{\"\\n\"}"
+      ],
+      "startedAtUtc": "2026-10-29T13:34:31.887139+00:00",
+      "completedAtUtc": "2026-10-29T13:34:32.103714+00:00",
+      "exitCode": 0,
+      "stdout": "df2bbbbe-1fe8-4e0b-a8a6-174bd3287806\t3\t3\topenbao:250m,256Mi,1,1Gi;\n",
+      "stderr": ""
+    }
+  ],
+  "qualificationExecuted": false,
+  "providerCalls": 0,
+  "credentialValuesRequested": false,
+  "resourceMutations": 0
+}

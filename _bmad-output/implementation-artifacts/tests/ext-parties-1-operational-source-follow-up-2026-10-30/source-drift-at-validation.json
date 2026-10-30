@@ -1,0 +1,26 @@
+{
+  "recordedAtUtc": "2026-10-30T07:29:30.837959+00:00",
+  "sources": [
+    {
+      "path": "/home/administrator/projects/hexalith/platform/_bmad-output/implementation-artifacts/sprint-status.yaml",
+      "earlierObservationSha256": "c60b472033a1118afd0822db46b7cbdfdc9dd48cbee62168369d3fcd83ecb0ad",
+      "recapturedAtUtc": "2026-10-30T07:29:30.836690+00:00",
+      "recapturedSha256": "f8edb2f1aade10af5baadee5f86db468aea3d856540689552d21c9add7bd6f4d",
+      "retainedSnapshot": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/source-snapshots/sprint-status.yaml",
+        "sha256": "f8edb2f1aade10af5baadee5f86db468aea3d856540689552d21c9add7bd6f4d"
+      },
+      "relevantLinesAtRecapture": [
+        {
+          "line": 137,
+          "text": "  6-3-name-the-recovery-deputy: backlog"
+        },
+        {
+          "line": 186,
+          "text": "  8-14-prove-the-deputy-s-recovery-capability: backlog"
+        }
+      ],
+      "treatment": "Earlier observed reference retained, not restamped. Validate retained snapshot rather than asserting current equality of a concurrently edited external tracker."
+    }
+  ]
+}
