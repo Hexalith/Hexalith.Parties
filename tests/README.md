@@ -17,6 +17,21 @@ dependencies, initialize the optional Memories reference before running the
 whole class: `git submodule update --init references/Hexalith.Memories`.
 Its default run-model cases also cover the topology with optional services disabled.
 
+## Package topology compatibility
+
+Package-built topology sessions select `Parties:Testing:UsePackagedGateway=true`
+before AppHost model construction. The existing owned gateway test host consumes
+the centrally pinned production Gateway package and preserves native gateway
+settings, HTTP/HTTPS launch profiles and the shared AppHost wiring. Private Redis,
+mTLS custody, real create/query/projection and persisted-event assertions remain
+required. The profile is refused for publication; default native runs and publish
+models keep the native EventStore project.
+
+Prepare the package lane with `bash scripts/prepare-aspire-tier.sh`. Direct native
+preparation requires `bash scripts/prepare-aspire-runtime-hosts.sh --gateway-profile native`
+and a matching native AppHost selection. Source-built sessions retain the native
+gateway; their source catalog and Platform qualification remain separate.
+
 ## Running Tests
 
 Run the focused lane first, then broaden only when the changed surface justifies it.
@@ -100,12 +115,12 @@ HXR015 with module tool 4.34.0 (Aspire CLI 13.6.4 versus its SDK 13.6.1 catalog)
 The current module tool 4.39.0 selects SDK 13.6.4; fresh source runs must still
 pass all runtime prerequisites and do not inherit historical qualification.
 
-Source status on 2026-10-31: module tool 4.39.0 refuses fresh source mapping
-with `HXW009`: its pinned Builds `Props/Directory.Packages.props` at
-`970101f4e780f4609b945b8cc740adc3118564b2` is unavailable. An exact-SHA fetch
-returned `upload-pack: not our ref`. Source debug/build commands require an
-owner pin repair before they can establish source qualification; package
-Release builds remain independently verified.
+Source preparation on 2026-10-31 succeeds with module tool 4.39.0 after
+synchronizing the committed Platform identity. The tool derives its catalog
+from the parent repository's committed Platform gitlink, then that Platform
+commit's Builds gitlink. Stage selected source checkouts consistently and commit
+the Platform selection before retrying a stale-catalog diagnostic. Runtime
+topology qualification remains separate from successful build preparation.
 
 See the [published-adoption receipt](../_bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/README.md)
 for exact individual Debug build/test commands, package/source identities, served

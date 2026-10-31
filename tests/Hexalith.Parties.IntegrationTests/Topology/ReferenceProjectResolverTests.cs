@@ -91,6 +91,41 @@ public sealed class ReferenceProjectResolverTests
         }
     }
 
+    /// <summary>Explicit package selection uses the fixed owned host; every other profile retains the native owner.</summary>
+    [Fact]
+    public void GatewaySelectionUsesOnlyTheExplicitRunProfile()
+    {
+        string workspace = CreateTemporaryDirectory();
+        try
+        {
+            DirectoryInfo root = Directory.CreateDirectory(Path.Combine(workspace, "parties"));
+            string native = CreateProject(root.FullName, "references", "Hexalith.EventStore", "src", "Hexalith.EventStore", "Hexalith.EventStore.csproj");
+            string packaged = CreateProject(root.FullName, "tests", "Hexalith.Parties.EventStoreGateway.TestHost", "Hexalith.Parties.EventStoreGateway.TestHost.csproj");
+            ReferenceProjectResolver.ResolveGateway(root, false, false).ShouldBe(native);
+            ReferenceProjectResolver.ResolveGateway(root, false, true).ShouldBe(native);
+            ReferenceProjectResolver.ResolveGateway(root, true, false).ShouldBe(packaged);
+            Should.Throw<InvalidOperationException>(() => ReferenceProjectResolver.ResolveGateway(root, true, true))
+                .Message.ShouldContain("cannot be published");
+        }
+        finally { Directory.Delete(workspace, recursive: true); }
+    }
+
+    /// <summary>A missing package host cannot silently fall back to the newer native gateway.</summary>
+    [Fact]
+    public void PackageGatewaySelectionRefusesMissingOwnedHost()
+    {
+        string workspace = CreateTemporaryDirectory();
+        try
+        {
+            DirectoryInfo root = new(workspace);
+            _ = CreateProject(workspace, "references", "Hexalith.EventStore", "src", "Hexalith.EventStore", "Hexalith.EventStore.csproj");
+            var error = Should.Throw<FileNotFoundException>(() => ReferenceProjectResolver.ResolveGateway(root, true, false));
+            error.FileName.ShouldBe(Path.Combine(workspace, "tests", "Hexalith.Parties.EventStoreGateway.TestHost", "Hexalith.Parties.EventStoreGateway.TestHost.csproj"));
+            error.Message.ShouldContain("package compatibility");
+        }
+        finally { Directory.Delete(workspace, recursive: true); }
+    }
+
     private static string CreateProject(params string[] segments)
     {
         string path = Path.Combine(segments);

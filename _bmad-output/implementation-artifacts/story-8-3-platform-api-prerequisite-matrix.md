@@ -59,23 +59,25 @@ EventStore package `3.128.4` remains selected; Tenants is explicitly `5.11.2`.
 Selection does not revalidate historical parity receipts or grant owner approval,
 package publication, deployment, data-custody or rollback qualification.
 The module tool remains the source-root and dependency-mode authority. Fresh
-source mapping with module tool `4.39.0` is blocked by `HXW009`: embedded Builds
-`Props/Directory.Packages.props` at `970101f4e780f4609b945b8cc740adc3118564b2`
-is unavailable and its exact-SHA fetch returned `upload-pack: not our ref`.
-No source build or runtime qualification is inferred from package success.
+source mapping with module tool `4.39.0` succeeds after the committed Platform
+selection is synchronized: the tool reads the parent HEAD Platform gitlink,
+then that selected Platform commit's Builds gitlink. The initial `HXW009`
+observation used a stale Platform identity and remains historical evidence.
+Source Contracts and owner host compilation pass separately; package topology
+verification does not qualify the newer native/source catalog or Platform runtime.
 
 | Root dependency | Current source identity | Release use |
 | --- | --- | --- |
 | AI.Tools | `9b78aa008cfc62cd88ad0ea4b39b1f07311956ce` (`9b78aa00`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| Builds | `ff1c2952fa6aec113975bbe78b4d2487d6ec0b3d` (`v4.39.0-2-gff1c2952`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| Builds | `a22b55f0a4f6d2aaa3a5ccc505896064ac595364` (`v4.39.0-4-ga22b55f0`) | Pushed owner revision; root adoption and qualification require their own proof. |
 | Commons | `0604bcf5304fc09a569f7abbd8e5d1b9049c02b7` (`v2.30.7`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| EventStore | `a526dae55a74d31a00d175d48b62067835176353` (`v3.128.4-59-ga526dae5`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| FrontComposer | `4dfc5390e117b601b88254304985f60d74981acd` (`v4.7.2-2-g4dfc5390`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| McpCli | `18fb59490311bcdccfe44f59a77804911b5af302` (`v1.1.0-30-g18fb5949`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| Memories | `fe8d36446d8081f60806cc15353aa7ca288e9035` (`v3.0.10-25-gfe8d3644`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| Platform | `405d2c6c0f36be0a513a423cf5fcae57cdd953f3` (`v1.0.1-157-g405d2c6c`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| EventStore | `571784de9d289ec6c66969e926a70c92924cb1c9` (`v3.128.4-68-g571784de`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| FrontComposer | `eacc218d431e198e1d48d83f3e4260c4dd53991b` (`v4.7.3-9-geacc218d`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| McpCli | `09c2acda09b298d8111be46ba2b06a1ef28f2dd7` (`v1.1.0-31-g09c2acda`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| Memories | `7efa9f97726d4441da2bc64e64fd435cfb698cb6` (`v3.0.10-26-g7efa9f97`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| Platform | `75bceb22abc60d22d0c4e6f3d7c86795f3e51cc1` (`v1.0.1-164-g75bceb22`) | Pushed owner revision; root adoption and qualification require their own proof. |
 | PolymorphicSerializations | `92ede24cc11129379efe52cfe7fd2c820c567f7f` (`v1.19.6-2-g92ede24c`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| Tenants | `31785cb2d2fdcb3a6fd94872b535d1f642911ad6` (`v5.11.2-1-g31785cb2`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| Tenants | `5c7b64a0aaef330bb37ea6da8dea593ea70e4628` (`v5.11.2-3-g5c7b64a0`) | Pushed owner revision; root adoption and qualification require their own proof. |
 
 ### Historical source observation — 2026-10-30
 

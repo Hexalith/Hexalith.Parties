@@ -17,7 +17,7 @@ export async function qualifyFrontComposerAssets(page: Page, testInfo?: TestInfo
     expect(mode, 'Source qualification requires the validated pinned-tool mapping.').toBe('source');
     expect(path.isAbsolute(root)).toBe(true);
   } else {
-    expect(version, 'This adoption authorizes exactly the selected 4.7.1 package capabilities.').toBe('4.7.1');
+    expect(version, 'This adoption authorizes exactly the selected 4.7.3 package capabilities.').toBe('4.7.3');
     expect(folders.length, 'Read the restored package folders from the current build.').toBeGreaterThan(0);
   }
   const assets = [];

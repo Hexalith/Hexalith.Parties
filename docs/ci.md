@@ -380,12 +380,12 @@ aspirate; package CI continues to restore packages and build Release. Source mod
 by the tool's persisted mapping, with no file-existence fallback. Legacy hosting
 projects and package publication gates remain in their existing scope.
 
-Source status on 2026-10-31: module tool 4.39.0 refuses fresh source mapping
-with `HXW009`: its pinned Builds `Props/Directory.Packages.props` at
-`970101f4e780f4609b945b8cc740adc3118564b2` is unavailable. An exact-SHA fetch
-returned `upload-pack: not our ref`. Source debug/build commands require an
-owner pin repair before they can establish source qualification; package
-Release builds remain independently verified.
+Source preparation on 2026-10-31 succeeds with module tool 4.39.0 after
+synchronizing the committed Platform identity. The tool derives its catalog
+from the parent repository's committed Platform gitlink, then that Platform
+commit's Builds gitlink. Stage selected source checkouts consistently and commit
+the Platform selection before retrying a stale-catalog diagnostic. Runtime
+topology qualification remains separate from successful build preparation.
 
 The five-item review-loop proof keeps its previous source/package/browser results as historical evidence, including the five imports produced by module tool 4.34.0. That run recorded HXR011 for absent isolated Dapr configuration and HXR012 for the available CLI 1.18.2/runtime 1.18.7 home against the older catalog tuple. Fresh mappings must use the current pinned tool and pass its prerequisites. Historical receipts do not qualify the broad Platform topology. The separate owned component runtime retains its declared tool environment and authenticated three-host boundary.
 
@@ -417,10 +417,20 @@ The required package portal specs contain no skip or optional capability gate.
 
 Aspire CI runs `scripts/prepare-aspire-tier.sh` before its test process.
 The ten-minute preparation budget includes HTTPS trust and serial Release builds
-of all eight external runtime hosts. These use their native source graphs,
-independently of the package-only consumer solution. Preparing shared outputs
-before concurrent topology launches prevents cold `dotnet run` builds from
-colliding. The existing five-minute topology startup deadline remains unchanged.
+of the eight selected runtime hosts. This lane checks package compatibility:
+package-built sessions explicitly select `Parties:Testing:UsePackagedGateway=true`
+before Aspire registers the existing owned gateway test host. That host runs the
+centrally pinned production Gateway package with native base settings and launch
+profiles. Every Dapr, authentication, projection and persisted-event assertion
+remains required. The run-only profile is refused in publish mode; ordinary
+AppHost runs and publication retain the native EventStore project.
+
+`scripts/prepare-aspire-runtime-hosts.sh` prepares the package gateway by default;
+`--gateway-profile native` explicitly prepares the native gateway for a matching
+native run. It builds the selected gateway and the seven other real runtime hosts
+serially to avoid concurrent cold `dotnet run` output writes. The existing
+five-minute topology startup deadline remains unchanged. Package topology does
+not qualify the newer source catalog or replace Platform/source qualification.
 
 The HTTPS helper, `scripts/prepare-aspire-https-trust.sh`, runs first.
 It exports the SDK certificate trust directory while trusting the ephemeral

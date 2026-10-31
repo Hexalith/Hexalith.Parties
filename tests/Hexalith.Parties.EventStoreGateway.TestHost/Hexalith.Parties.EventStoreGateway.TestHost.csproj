@@ -4,6 +4,29 @@
     <IsPublishable>false</IsPublishable>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- This resolves ordinary configuration only; the tool still owns every source selector. -->
+    <_GatewayRepositoryRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../..'))</_GatewayRepositoryRoot>
+    <_GatewayWorkspaceRoot>$([System.IO.Path]::GetFullPath('$(_GatewayRepositoryRoot)/../..'))</_GatewayWorkspaceRoot>
+    <_GatewayInUmbrella Condition="$([System.IO.Path]::GetFileName($([System.IO.Path]::GetDirectoryName('$(_GatewayRepositoryRoot)')))) == 'references'">true</_GatewayInUmbrella>
+    <_GatewayRootManifest Condition="Exists('$(_GatewayRepositoryRoot)/.gitmodules')">$([System.IO.File]::ReadAllText('$(_GatewayRepositoryRoot)/.gitmodules'))</_GatewayRootManifest>
+    <_GatewayWorkspaceManifest Condition="Exists('$(_GatewayWorkspaceRoot)/.gitmodules')">$([System.IO.File]::ReadAllText('$(_GatewayWorkspaceRoot)/.gitmodules'))</_GatewayWorkspaceManifest>
+    <_GatewayEventStoreRoot Condition="'$(HexalithEventStoreRoot)' != ''">$(HexalithEventStoreRoot)</_GatewayEventStoreRoot>
+    <_GatewayEventStoreRoot Condition="'$(_GatewayEventStoreRoot)' == '' and '$(_GatewayInUmbrella)' == 'true' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(_GatewayWorkspaceManifest)', '(?m)^\s*path\s*=\s*references/Hexalith\.EventStore\s*$'))">$([System.IO.Path]::GetFullPath('$(_GatewayRepositoryRoot)/../Hexalith.EventStore'))</_GatewayEventStoreRoot>
+    <_GatewayEventStoreRoot Condition="'$(_GatewayEventStoreRoot)' == '' and '$(_GatewayInUmbrella)' != 'true' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(_GatewayRootManifest)', '(?m)^\s*path\s*=\s*references/Hexalith\.EventStore\s*$'))">$(_GatewayRepositoryRoot)/references/Hexalith.EventStore</_GatewayEventStoreRoot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="$(_GatewayEventStoreRoot)/src/Hexalith.EventStore/appsettings.json"
+             Link="appsettings.gateway.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
+    <Content Include="$(_GatewayEventStoreRoot)/src/Hexalith.EventStore/appsettings.Development.json"
+             Link="appsettings.gateway.Development.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
+  <Target Name="ValidateGatewaySettingsRoot" BeforeTargets="PrepareForBuild">
+    <Error Condition="'$(_GatewayEventStoreRoot)' == ''" Text="The package gateway requires a tool-selected EventStore root or a root-declared standalone/umbrella EventStore reference; nested initialization is not a fallback." />
+  </Target>
+
   <ItemGroup>
     <PackageReference Include="Hexalith.EventStore.Gateway" />
   </ItemGroup>

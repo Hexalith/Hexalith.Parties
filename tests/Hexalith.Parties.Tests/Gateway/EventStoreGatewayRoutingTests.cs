@@ -64,6 +64,23 @@ namespace Hexalith.Parties.Tests.Gateway;
 
 public sealed class EventStoreGatewayRoutingTests
 {
+#if !HEXALITH_EVENTSTORE_SOURCE_CATALOG
+    [Fact]
+    public void PackagedGatewayRetainsNativeDefaultsBelowExplicitConfigurationOverrides()
+    {
+        using var factory = new EventStoreGatewayTestFactory();
+        IConfiguration configuration = factory.Services.GetRequiredService<IConfiguration>();
+        configuration["EventStore:DomainServices:Registrations:system|tenants|v1:AppId"].ShouldBe("tenants");
+        configuration["EventStore:DomainServices:Registrations:system|global-administrators|v1:Domain"].ShouldBe("global-administrators");
+        configuration["EventStore:Publisher:TopicOverrides:global-administrators"].ShouldBe("tenants.events");
+        configuration["EventStore:DomainServices:Registrations:*|counter|v1:AppId"].ShouldBe("sample");
+        configuration["EventStore:DomainServices:Registrations:*|greeting|v1:AppId"].ShouldBe("sample");
+        configuration["EventStore:RateLimiting:ConsumerPermitLimit"].ShouldBe("100");
+        configuration["EventStore:RateLimiting:PermitLimit"].ShouldBe("10000");
+        configuration["Authentication:JwtBearer:SigningKey"].ShouldBe(GatewayJwt.SigningKey);
+    }
+#endif
+
     [Fact]
     public async Task OpenApiDocument_InDocumentationMode_DescribesGatewayContractsAndComplianceWarningAsync()
     {

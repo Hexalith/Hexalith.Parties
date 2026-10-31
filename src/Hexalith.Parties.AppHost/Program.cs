@@ -40,10 +40,10 @@ const string PublishModeJwtIssuer = "https://auth.tache.ai/realms/tache";
 const string PublishModeJwtAuthority = PublishModeJwtIssuer;
 
 DirectoryInfo repositoryRoot = FindRepositoryRoot();
-string eventStoreProjectPath = ReferenceProjectResolver.ResolveRequired(
+string eventStoreProjectPath = ReferenceProjectResolver.ResolveGateway(
     repositoryRoot,
-    "Hexalith.EventStore",
-    Path.Combine("src", "Hexalith.EventStore", "Hexalith.EventStore.csproj"));
+    builder.Configuration.GetValue<bool>("Parties:Testing:UsePackagedGateway"),
+    builder.ExecutionContext.IsPublishMode);
 string adminServerProjectPath = ReferenceProjectResolver.ResolveRequired(
     repositoryRoot,
     "Hexalith.EventStore",

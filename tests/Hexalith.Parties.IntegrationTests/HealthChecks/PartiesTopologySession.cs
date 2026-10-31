@@ -130,6 +130,9 @@ internal sealed class PartiesTopologySession
     internal string[] Arguments(bool complete, bool mtls, bool includeMemoriesDomainService = false) =>
     [
         "--EnableKeycloak=false", "--environment=Development",
+#if !HEXALITH_DEVELOPMENT_CATALOG_SOURCE
+        "--Parties:Testing:UsePackagedGateway=true",
+#endif
         $"--EnableMemoriesSearch={complete}", $"--EnableEventStoreSampleUi={complete}",
         $"--Dapr:Mtls:Enabled={mtls}", $"--Dapr:Mtls:CertificateDirectory={CertificateDirectory}",
         $"--Dapr:Mtls:ConfigurationDirectory={ConfigurationDirectory}", $"--Dapr:Mtls:Namespace={Namespace}",

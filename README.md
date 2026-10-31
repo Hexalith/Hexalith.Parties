@@ -55,12 +55,12 @@ service child process. Stop that exact environment with
 Initialize only this checkout's direct references; leave their nested references
 uninitialized. Ordinary package CI keeps package references and Release builds.
 
-Source status on 2026-10-31: module tool 4.39.0 refuses fresh source mapping
-with `HXW009`: its pinned Builds `Props/Directory.Packages.props` at
-`970101f4e780f4609b945b8cc740adc3118564b2` is unavailable. An exact-SHA fetch
-returned `upload-pack: not our ref`. Source debug/build commands require an
-owner pin repair before they can establish source qualification; package
-Release builds remain independently verified.
+Source preparation on 2026-10-31 succeeds with module tool 4.39.0 after
+synchronizing the committed Platform identity. The tool derives its catalog
+from the parent repository's committed Platform gitlink, then that Platform
+commit's Builds gitlink. Stage selected source checkouts consistently and commit
+the Platform selection before retrying a stale-catalog diagnostic. Runtime
+topology qualification remains separate from successful build preparation.
 
 The owner ACL remains `src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol.parties.yaml`.
 The renderer derives only `callers` and `invocationRules` from that ACL; its

@@ -21,7 +21,7 @@
       <DefineConstants>$(DefineConstants);HES_CANCELLABLE_PROJECTIONS</DefineConstants>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(HexalithFrontComposerFromSource)' == 'true' or '$(HexalithFrontComposerVersion)' == '4.7.1'">
+    <PropertyGroup Condition="'$(HexalithFrontComposerFromSource)' == 'true' or '$(HexalithFrontComposerVersion)' == '4.7.1' or '$(HexalithFrontComposerVersion)' == '4.7.3'">
       <DefineConstants>$(DefineConstants);HFC_SHARED_UI</DefineConstants>
     </PropertyGroup>
     <!-- The selected producer source supplies the corrected readiness/acceptance contract.

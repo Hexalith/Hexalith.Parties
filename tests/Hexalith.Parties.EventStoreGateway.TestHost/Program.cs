@@ -10,6 +10,18 @@ using Hexalith.EventStore.SignalRHub;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+// Native gateway defaults remain below normal appsettings, environment and command-line overrides.
+foreach (string defaultsFile in new[] { "appsettings.gateway.json", $"appsettings.gateway.{builder.Environment.EnvironmentName}.json" })
+{
+    builder.Configuration.Sources.Insert(defaultsFile == "appsettings.gateway.json" ? 0 : 1,
+        new Microsoft.Extensions.Configuration.Json.JsonConfigurationSource
+        {
+            FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(AppContext.BaseDirectory),
+            Path = defaultsFile,
+            Optional = defaultsFile != "appsettings.gateway.json",
+            ReloadOnChange = false,
+        });
+}
 
 builder.AddServiceDefaults();
 builder.Services.AddDaprClient();

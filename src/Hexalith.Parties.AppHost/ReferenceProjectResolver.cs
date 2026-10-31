@@ -27,6 +27,28 @@ internal static class ReferenceProjectResolver
             projectRelativePath);
     }
 
+    /// <summary>Selects the gateway project before Aspire captures its launch profile and project metadata.</summary>
+    /// <param name="repositoryRoot">The owning Parties repository root.</param>
+    /// <param name="usePackagedGateway">Whether this run explicitly selects the production-package compatibility host.</param>
+    /// <param name="publishMode">Whether the AppHost is constructing a publication model.</param>
+    public static string ResolveGateway(DirectoryInfo repositoryRoot, bool usePackagedGateway, bool publishMode)
+    {
+        ArgumentNullException.ThrowIfNull(repositoryRoot);
+        if (!usePackagedGateway)
+        {
+            return ResolveRequired(repositoryRoot, "Hexalith.EventStore",
+                Path.Combine("src", "Hexalith.EventStore", "Hexalith.EventStore.csproj"));
+        }
+        if (publishMode)
+        {
+            throw new InvalidOperationException("Parties:Testing:UsePackagedGateway is a run-only package compatibility profile and cannot be published.");
+        }
+        string path = Path.Combine(repositoryRoot.FullName, "tests", "Hexalith.Parties.EventStoreGateway.TestHost",
+            "Hexalith.Parties.EventStoreGateway.TestHost.csproj");
+        return File.Exists(path) ? path : throw new FileNotFoundException(
+            $"Required package compatibility gateway test host was not found at '{path}'. Restore the owning Parties test project before selecting Parties:Testing:UsePackagedGateway.", path);
+    }
+
     /// <summary>Builds workspace-aware root-only submodule initialization guidance.</summary>
     public static string InitializationGuidance(DirectoryInfo repositoryRoot, string repositoryName)
     {

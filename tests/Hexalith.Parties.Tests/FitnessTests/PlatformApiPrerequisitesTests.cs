@@ -58,36 +58,36 @@ public sealed class PlatformApiPrerequisitesTests
     ];
 
     // Committed source observations are separate from historical migration/parity approvals.
-    private const string CurrentSelectedEventStoreSha = "a526dae55a74d31a00d175d48b62067835176353";
-    private const string CurrentSelectedEventStoreDescribe = "v3.128.4-59-ga526dae5";
+    private const string CurrentSelectedEventStoreSha = "571784de9d289ec6c66969e926a70c92924cb1c9";
+    private const string CurrentSelectedEventStoreDescribe = "v3.128.4-68-g571784de";
     private const string CurrentSelectedEventStoreTag = "v3.128.4";
     // Current committed selections are observations, separate from historical owner approvals.
     private static readonly IReadOnlyDictionary<string, string> CurrentSelectedGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["references/Hexalith.AI.Tools"] = "9b78aa008cfc62cd88ad0ea4b39b1f07311956ce",
-        ["references/Hexalith.Builds"] = "ff1c2952fa6aec113975bbe78b4d2487d6ec0b3d",
+        ["references/Hexalith.Builds"] = "a22b55f0a4f6d2aaa3a5ccc505896064ac595364",
         ["references/Hexalith.Commons"] = "0604bcf5304fc09a569f7abbd8e5d1b9049c02b7",
-        ["references/Hexalith.EventStore"] = "a526dae55a74d31a00d175d48b62067835176353",
-        ["references/Hexalith.FrontComposer"] = "4dfc5390e117b601b88254304985f60d74981acd",
-        ["references/Hexalith.McpCli"] = "18fb59490311bcdccfe44f59a77804911b5af302",
-        ["references/Hexalith.Memories"] = "fe8d36446d8081f60806cc15353aa7ca288e9035",
-        ["references/Hexalith.Platform"] = "405d2c6c0f36be0a513a423cf5fcae57cdd953f3",
+        ["references/Hexalith.EventStore"] = "571784de9d289ec6c66969e926a70c92924cb1c9",
+        ["references/Hexalith.FrontComposer"] = "eacc218d431e198e1d48d83f3e4260c4dd53991b",
+        ["references/Hexalith.McpCli"] = "09c2acda09b298d8111be46ba2b06a1ef28f2dd7",
+        ["references/Hexalith.Memories"] = "7efa9f97726d4441da2bc64e64fd435cfb698cb6",
+        ["references/Hexalith.Platform"] = "75bceb22abc60d22d0c4e6f3d7c86795f3e51cc1",
         ["references/Hexalith.PolymorphicSerializations"] = "92ede24cc11129379efe52cfe7fd2c820c567f7f",
-        ["references/Hexalith.Tenants"] = "31785cb2d2fdcb3a6fd94872b535d1f642911ad6",
+        ["references/Hexalith.Tenants"] = "5c7b64a0aaef330bb37ea6da8dea593ea70e4628",
     };
 
     private static readonly IReadOnlyDictionary<string, string> CurrentSelectedSourceDescribes = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["references/Hexalith.AI.Tools"] = "9b78aa00",
-        ["references/Hexalith.Builds"] = "v4.39.0-2-gff1c2952",
+        ["references/Hexalith.Builds"] = "v4.39.0-4-ga22b55f0",
         ["references/Hexalith.Commons"] = "v2.30.7",
-        ["references/Hexalith.EventStore"] = "v3.128.4-59-ga526dae5",
-        ["references/Hexalith.FrontComposer"] = "v4.7.2-2-g4dfc5390",
-        ["references/Hexalith.McpCli"] = "v1.1.0-30-g18fb5949",
-        ["references/Hexalith.Memories"] = "v3.0.10-25-gfe8d3644",
-        ["references/Hexalith.Platform"] = "v1.0.1-157-g405d2c6c",
+        ["references/Hexalith.EventStore"] = "v3.128.4-68-g571784de",
+        ["references/Hexalith.FrontComposer"] = "v4.7.3-9-geacc218d",
+        ["references/Hexalith.McpCli"] = "v1.1.0-31-g09c2acda",
+        ["references/Hexalith.Memories"] = "v3.0.10-26-g7efa9f97",
+        ["references/Hexalith.Platform"] = "v1.0.1-164-g75bceb22",
         ["references/Hexalith.PolymorphicSerializations"] = "v1.19.6-2-g92ede24c",
-        ["references/Hexalith.Tenants"] = "v5.11.2-1-g31785cb2",
+        ["references/Hexalith.Tenants"] = "v5.11.2-3-g5c7b64a0",
     };
 
     private static readonly string[] RequiredAbsentPayloadProtectionPaths =
@@ -830,7 +830,7 @@ public sealed class PlatformApiPrerequisitesTests
         catalog.ShouldContain("<HexalithCommonsVersion Condition=\"'$(HexalithCommonsVersion)' == ''\">2.30.7</HexalithCommonsVersion>");
         catalog.ShouldContain("<HexalithFrontComposerVersion Condition=\"'$(HexalithFrontComposerVersion)' == ''\">4.7.2</HexalithFrontComposerVersion>");
         catalog.ShouldContain("<HexalithMemoriesVersion Condition=\"'$(HexalithMemoriesVersion)' == ''\">3.0.10</HexalithMemoriesVersion>");
-        catalog.ShouldContain("<HexalithTenantsVersion Condition=\"'$(HexalithTenantsVersion)' == ''\">5.11.1</HexalithTenantsVersion>");
+        catalog.ShouldContain("<HexalithTenantsVersion Condition=\"'$(HexalithTenantsVersion)' == ''\">5.11.2</HexalithTenantsVersion>");
         catalog.ShouldContain("<HexalithPartiesVersion Condition=\"'$(HexalithPartiesVersion)' == ''\">2.0.0</HexalithPartiesVersion>");
         // The selected Builds catalog routes this version through a property whose unconditional value applies to
         // every Parties project (only Hexalith.Folders.Aspire overrides it), so pin both halves exactly.
@@ -898,6 +898,7 @@ public sealed class PlatformApiPrerequisitesTests
         string[] expected =
         [
             "references/Hexalith.EventStore/src/Hexalith.EventStore/Hexalith.EventStore.csproj",
+            "tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj",
             "references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server.Host/Hexalith.EventStore.Admin.Server.Host.csproj",
             "references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj",
             "references/Hexalith.Tenants/src/Hexalith.Tenants/Hexalith.Tenants.csproj",
@@ -921,7 +922,7 @@ public sealed class PlatformApiPrerequisitesTests
         string expectedVersion = EffectivePackageVersions.ReadProperty(root, "HexalithEventStoreVersion", configuration: configuration);
         IReadOnlyDictionary<string, EvaluatedProjectGraph> graphs = ReadExternalRuntimeGraphs(root, ReadExternalRuntimeProjects(root), expectedVersion, configuration);
 
-        graphs.Count.ShouldBeGreaterThan(7, "The runtime preflight must inspect transitive projects as well as the eight roots.");
+        graphs.Count.ShouldBeGreaterThan(7, "The runtime preflight must inspect transitive projects as well as both gateway choices and their peers.");
         graphs.Keys.ShouldContain(path => path.EndsWith("Hexalith.Tenants.csproj", StringComparison.Ordinal));
         graphs.Keys.ShouldContain(path => path.EndsWith("Hexalith.Memories.Server.csproj", StringComparison.Ordinal));
         graphs.Values.SelectMany(static graph => graph.PackageReferences)
@@ -1166,9 +1167,20 @@ public sealed class PlatformApiPrerequisitesTests
     {
         string root = RepositoryRoot.Locate();
         string appHost = File.ReadAllText(Path.Combine(root, "src/Hexalith.Parties.AppHost/Program.cs"));
-        appHost = appHost.Replace("Path.Combine(\"src\", \"Hexalith.EventStore\",", "Path.Combine(\"src\", extraSegment, \"Hexalith.EventStore\",", StringComparison.Ordinal);
+        appHost = appHost.Replace("Path.Combine(\"src\", \"Hexalith.EventStore.Admin.Server.Host\",", "Path.Combine(\"src\", extraSegment, \"Hexalith.EventStore.Admin.Server.Host\",", StringComparison.Ordinal);
         Should.Throw<ShouldAssertException>(() => ReadExternalRuntimeProjects(root, appHost))
             .Message.ShouldContain("nonliteral Path.Combine segments");
+    }
+
+    /// <summary>The explicit package/native gateway decision cannot be replaced with an unrecognized selector.</summary>
+    [Fact]
+    public void ExternalRuntimeInventoryRejectsUnsupportedGatewaySelection()
+    {
+        string root = RepositoryRoot.Locate();
+        string appHost = File.ReadAllText(Path.Combine(root, "src/Hexalith.Parties.AppHost/Program.cs"));
+        appHost = appHost.Replace("Parties:Testing:UsePackagedGateway", "Other:GatewaySelection", StringComparison.Ordinal);
+        Should.Throw<ShouldAssertException>(() => ReadExternalRuntimeProjects(root, appHost))
+            .Message.ShouldContain("unsupported ResolveGateway arguments");
     }
 
     /// <summary>Runtime declarations cannot introduce dependencies outside the root submodule manifest.</summary>
@@ -1199,7 +1211,7 @@ public sealed class PlatformApiPrerequisitesTests
         appHost ??= File.ReadAllText(Path.Combine(root, "src/Hexalith.Parties.AppHost/Program.cs"));
         HashSet<string> rootSubmodules = Regex.Matches(File.ReadAllText(Path.Combine(root, ".gitmodules")), @"(?m)^\s*path\s*=\s*(?<path>[^\r\n]+)")
             .Select(static match => match.Groups["path"].Value.Trim()).ToHashSet(StringComparer.Ordinal);
-        Dictionary<string, string> declarations = new(StringComparer.Ordinal);
+        Dictionary<string, string[]> declarations = new(StringComparer.Ordinal);
         foreach (Match declaration in Regex.Matches(appHost,
                      "(?<variable>[A-Za-z][A-Za-z0-9]*)\\s*=\\s*(?:ReferenceProjectResolver\\.ResolveRequired|ResolveOptionalReferenceProjectPath)\\s*\\(\\s*(?:repositoryRoot,\\s*)?\"(?<module>Hexalith\\.[A-Za-z.]+)\"\\s*,\\s*Path\\.Combine\\((?<segments>[^)]+)\\)",
                      RegexOptions.CultureInvariant))
@@ -1212,15 +1224,38 @@ public sealed class PlatformApiPrerequisitesTests
                 .Select(static match => match.Groups["segment"].Value).ToArray();
             string project = moduleRoot + "/" + string.Join('/', segments);
             File.Exists(RepositoryDependencyPaths.Resolve(root, project)).ShouldBeTrue($"AppHost external runtime project is missing: {project}");
-            declarations.Add(declaration.Groups["variable"].Value, project);
+            declarations.Add(declaration.Groups["variable"].Value, [project]);
+        }
+
+        MatchCollection gatewayCalls = Regex.Matches(appHost, @"ReferenceProjectResolver\.ResolveGateway\s*\(", RegexOptions.CultureInvariant);
+        MatchCollection gateways = Regex.Matches(appHost,
+            "(?<variable>[A-Za-z][A-Za-z0-9]*)\\s*=\\s*ReferenceProjectResolver\\.ResolveGateway\\s*\\(\\s*repositoryRoot\\s*,\\s*builder\\.Configuration\\.GetValue<bool>\\(\"Parties:Testing:UsePackagedGateway\"\\)\\s*,\\s*builder\\.ExecutionContext\\.IsPublishMode\\s*\\)",
+            RegexOptions.CultureInvariant);
+        gateways.Count.ShouldBe(gatewayCalls.Count, "AppHost contains unsupported ResolveGateway arguments; explicit gateway selection must be inventoried exactly.");
+        foreach (Match gateway in gateways)
+        {
+            const string moduleRoot = "references/Hexalith.EventStore";
+            rootSubmodules.ShouldContain(moduleRoot, "The native gateway must belong to a declared root submodule.");
+            string resolver = File.ReadAllText(Path.Combine(root, "src/Hexalith.Parties.AppHost/ReferenceProjectResolver.cs"));
+            resolver.ShouldContain("return ResolveRequired(repositoryRoot, \"Hexalith.EventStore\",");
+            resolver.ShouldContain("Path.Combine(\"src\", \"Hexalith.EventStore\", \"Hexalith.EventStore.csproj\")");
+            resolver.ShouldContain("Path.Combine(repositoryRoot.FullName, \"tests\", \"Hexalith.Parties.EventStoreGateway.TestHost\",");
+            resolver.ShouldContain("\"Hexalith.Parties.EventStoreGateway.TestHost.csproj\")");
+            string[] selectedProjects = [moduleRoot + "/src/Hexalith.EventStore/Hexalith.EventStore.csproj",
+                "tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj"];
+            foreach (string project in selectedProjects)
+            {
+                File.Exists(RepositoryDependencyPaths.Resolve(root, project)).ShouldBeTrue($"Selectable gateway is missing: {project}");
+            }
+            declarations.Add(gateway.Groups["variable"].Value, selectedProjects);
         }
 
         MatchCollection runtimeCalls = Regex.Matches(appHost, @"\bbuilder\s*\.\s*AddProject\s*\(", RegexOptions.CultureInvariant);
         MatchCollection recognizedCalls = Regex.Matches(appHost, "builder\\s*\\.\\s*AddProject\\s*\\(\\s*\"[^\"]+\"\\s*,\\s*(?<variable>[A-Za-z][A-Za-z0-9]*)\\s*\\)", RegexOptions.CultureInvariant);
         recognizedCalls.Count.ShouldBe(runtimeCalls.Count, "AppHost contains unsupported AddProject arguments; update the external runtime inventory parser.");
         return recognizedCalls
-            .Select(match => declarations.TryGetValue(match.Groups["variable"].Value, out string? project)
-                ? project : throw new InvalidOperationException($"No external runtime project declaration for {match.Groups["variable"].Value}."))
+            .SelectMany(match => declarations.TryGetValue(match.Groups["variable"].Value, out string[]? projects)
+                ? projects : throw new InvalidOperationException($"No external runtime project declaration for {match.Groups["variable"].Value}."))
             .Distinct(StringComparer.Ordinal).ToArray();
     }
 

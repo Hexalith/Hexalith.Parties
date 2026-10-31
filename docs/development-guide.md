@@ -260,12 +260,12 @@ retain that logger's category.
 
 ## Platform reference qualification
 
-Source status on 2026-10-31: module tool 4.39.0 refuses fresh source mapping
-with `HXW009`: its pinned Builds `Props/Directory.Packages.props` at
-`970101f4e780f4609b945b8cc740adc3118564b2` is unavailable. An exact-SHA fetch
-returned `upload-pack: not our ref`. Source debug/build commands require an
-owner pin repair before they can establish source qualification; package
-Release builds remain independently verified.
+Source preparation on 2026-10-31 succeeds with module tool 4.39.0 after
+synchronizing the committed Platform identity. The tool derives its catalog
+from the parent repository's committed Platform gitlink, then that Platform
+commit's Builds gitlink. Stage selected source checkouts consistently and commit
+the Platform selection before retrying a stale-catalog diagnostic. Runtime
+topology qualification remains separate from successful build preparation.
 
 Use pinned module tool 4.39.0 with Aspire CLI 13.6.4 from an independent Parties
 checkout. Initialize only its direct references, including Platform, Memories and McpCli. The tool selects the

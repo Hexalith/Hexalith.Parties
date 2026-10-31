@@ -111,3 +111,34 @@ Baseline package build and Aspire start both fail with four CS0246 errors in Con
 Implementation agent made no commits, pushes, workflow dispatches, or nested submodule updates. Parent still owns full project lanes, source verification after resolver repair, shared UI remediation, exact-source hosted CI/RC, release approvals and publication proof.
 
 Parent continuation: all root submodules fast-forwarded where needed without nested initialization. Updated compatible npm tooling in six submodules, browser tooling in Memories/FrontComposer/Tenants, and SDK 10.0.403 pins in Memories/McpCli/Platform. Memories preserves verifier-qualified semantic-release/cosmiconfig pins. Browser axe 4.14 exposed shared FcThemeToggle Title omitting current visible mode; owner component now supplies GetAccessibleLabel() and owner render tests assert accessible name for System/Dark. Parent will qualify and publish owner patch before selecting its package in Parties.
+
+Source investigation resolution: tool4.39.0 correctly derives its catalog from the parent HEAD Platform identity. The old committed Platform86d4be9 selected unavailable Builds970101f4; committed synchronized Platform405d2c6 selects available Buildsff1c2952. Fresh prepare-build succeeds after staging the final FrontComposer selection. Initial mapping failure and unsuccessful exact fetch remain historical observations, not a defect in the tool package. Updated current instructions accordingly.
+
+Final local source proof: fresh pinned-tool source mapping succeeds; Contracts.Tests and Parties host Debug source builds each pass with zero warnings/errors. Catalog schema/inventory2/2, adapter1/1, and source API snapshot1/1 pass. Package-mode post-review CI suite474/474 and service suite2811 with zero failures/four existing skips pass. Root commit9e29b203 is now on origin/main; final FrontComposer package adoption remains pending owner publication.
+
+Owner CI review triage (2026-10-31):
+
+| Finding | Verdict | Evidence / route |
+|---|---|---|
+| Blind1 home-card pending meaning | medium | Preserve localized pending summary in native name as hidden text after complete visible card content; no explicit truncating aria-label. Patch. |
+| Blind2 computed browser name proof | medium | Add actual home-card computed-name/description assertions alongside unchanged axe gate; positive/zero/multirow component cases retain localized summary coverage. Patch. |
+| Blind3 query/tenant denials precede catalog | medium | Existing undeclared-projection HTTP case reaches catalog; add explicit acquisition evidence there and keep early auth denials as separate controls. Patch. |
+| Blind4 tenant transitions | medium | Singleton authority is reused by live19-interaction run, but direct transition/teardown regression makes tenant selection explicit. Patch. |
+| Blind5 immutable fixture lifecycle methods | low | Source methods already reject mutations; add small parameterized/refusal assertions preserving snapshot for named contract. Patch. |
+| Blind6 Memories canonical hash preservation | false | Hash implementation is unchanged within source branch; change selects availability only, verified by package refusal/source adapter construction and source producer canonical tests. No new hashing algorithm is introduced. |
+| Blind7 / verification gap: source assertions excluded by Release CI | medium | Owner CI already builds Debug/source but does not execute source catalog class. Add class execution immediately after existing source build. Patch. |
+| Blind8 temporary-only evidence | low | Exact commands/counts are tracked in specs, CI artifacts provide durable hosted proof; retain compact final provider report/hashes with owning spec before commit. Patch. |
+| Edge hunter | false | No findings returned. |
+
+
+Parent CI continuation (2026-10-31): Memories published catalog compatibility is committed as7efa9f97; additional hosted source-selection/accessibility corrections remain in progress. EventStore bounded query fixture is committed as571784de9 after preserving concurrent upstream changes:80/80 provider tests and all19 unchanged live Pact interactions pass, with retained exact input/source report. FrontComposer theme/metadata fixes were released as4.7.3; independent flat-container archive and nuspec verification confirms all8 packages carry sourcea9c66bfe. Home-card native name correction (23bUnit,2realChromium/axe4.14 journeys) and production-catalog provider selector are pushed at126c43f6; exact-source CI/Quality are running.
+
+Root package topology now selects its existing owned production Gateway package host before Aspire captures project metadata; default native and publish behavior remain unchanged. All8 runtime preparations,8model checks,12CI checks,1configuration check and the existing real authenticated create/query/persisted-event E2E pass on actualFrontComposer4.7.3. Private Redis/mTLS session cleanup is verified. This qualifies package compatibility only. The new topology spec records the existing localNSSalias conflict separately from normal OpenSSL validation and the successful .NETruntime test. Independent review is running before root integration.
+
+Current source dictionaries, dated observation matrix and owner-authorized gitlink ledger are reconciled to all10 exact source selections, including concurrent Buildsa22b55f and Platform32c2f26f. Latest standalone Release build and service project build each pass with zero warnings/errors. Root hosted CI/RC, final publication and independent10-package verification remain outstanding.
+
+Package browser follow-up: theme issue is resolved on4.7.3; the next failure was the asset qualification helper still authorizing only4.7.1. The helper now requires exact4.7.3, preserving byte-for-byte comparison of served focus/keyboard/download/CSS assets with the actually restored package. Full browser gate reruns; no rule or asset proof is weakened.
+
+Root browser gate with actual4.7.3 plus exact restored-asset qualification:68/68 passed in50.3seconds, unchanged axe4.14 gates and visual baseline. Log `/tmp/parties-current-package-browser-final.log`. Independent topology review found a real stale runtime-inventory parser, missing Development sample defaults and umbrella settings-path support; implementation is correcting these and strengthening paired mTLS/model/CLI-argument proof before commit.
+
+Post-review package frontend unit lanes pass: UI458, AdminPortal327, ConsumerPortal85, Picker171; zero errors/failures/skips. Root standalone Release build after all topology review corrections passes with zero warnings/errors. Source observation refresh now selects FCeacc218d and Platform75bceb22 while preserving historical receipts. Parent release gates remain outstanding.
