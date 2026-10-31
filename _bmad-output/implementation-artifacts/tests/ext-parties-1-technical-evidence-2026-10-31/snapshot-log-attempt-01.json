@@ -1,0 +1,47 @@
+{
+    "schema": "EXT-PARTIES-1.existing-snapshot-log-observations.v1",
+    "reason": "Collect previously unread checksum-result logs, including the daily snapshot scheduled since the October 30 metadata observation.",
+    "transport": {
+        "api": "https://192.168.1.30:6443",
+        "context": "jpiquot@local",
+        "kubeconfigReference": "/home/administrator/.kube/hexalith-production",
+        "tlsVerificationExplicitlyRequired": true,
+        "authentication": "Existing kubectl context credentials used by the native client; no credential value read or recorded by this collector.",
+        "limit": "Authenticated native-client transport observation; no detached signature or complete filesystem inventory asserted."
+    },
+    "podListReceipt": {
+        "argv": [
+            "kubectl",
+            "--kubeconfig",
+            "/home/administrator/.kube/hexalith-production",
+            "--context",
+            "jpiquot@local",
+            "--request-timeout=10s",
+            "--insecure-skip-tls-verify=false",
+            "get",
+            "pods",
+            "-n",
+            "openbao",
+            "-o",
+            "jsonpath={range .items[*]}{.metadata.name}{\"\t\"}{.metadata.uid}{\"\t\"}{.metadata.resourceVersion}{\"\t\"}{.status.phase}{\"\t\"}{.spec.nodeName}{\"\t\"}{.metadata.creationTimestamp}{\"\t\"}{.metadata.ownerReferences[0].name}{\"\t\"}{.metadata.ownerReferences[0].uid}{\"\t\"}{.status.containerStatuses[0].state.terminated.finishedAt}{\"\n\"}{end}"
+        ],
+        "startedAtUtc": "2026-10-31T14:51:08.218935+00:00",
+        "completedAtUtc": "2026-10-31T14:51:08.477879+00:00",
+        "exitCode": 1,
+        "stdoutBytes": 0,
+        "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrBytes": 371,
+        "stderrSha256": "89f9e0d094fee77c651b00e01021b7000b4f372bf66c1e16d43493244f3d7e27",
+        "retryPerformed": false,
+        "stderr": "error: error parsing jsonpath {range .items[*]}{.metadata.name}{\"\t\"}{.metadata.uid}{\"\t\"}{.metadata.resourceVersion}{\"\t\"}{.status.phase}{\"\t\"}{.spec.nodeName}{\"\t\"}{.metadata.creationTimestamp}{\"\t\"}{.metadata.ownerReferences[0].name}{\"\t\"}{.metadata.ownerReferences[0].uid}{\"\t\"}{.status.containerStatuses[0].state.terminated.finishedAt}{\"\n\"}{end}, unterminated quoted string\n",
+        "stderrRecoveryMethod": "Known public kubectl parser-error template reconstructed from the recorded query and matched byte-for-byte by original stderr length/SHA-256; no command rerun.",
+        "failureClassification": "LocalJsonpathParsingError"
+    },
+    "snapshotPods": [],
+    "logObservations": [],
+    "copyInventoryComplete": false,
+    "nodeFilesystemRead": false,
+    "podExecs": 0,
+    "writes": 0,
+    "completedAtUtc": "2026-10-31T14:51:08.477956+00:00"
+}

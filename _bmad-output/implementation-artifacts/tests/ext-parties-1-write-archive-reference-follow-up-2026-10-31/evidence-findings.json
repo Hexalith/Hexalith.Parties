@@ -1,0 +1,378 @@
+{
+    "schema": "EXT-PARTIES-1.write-archive-reference-follow-up.v1",
+    "recordedAtUtc": "2026-10-31T16:10:25.116934+00:00",
+    "status": "ConcreteRecoveryReferencesAssessedHistoricalWriteArchiveStillUnknown",
+    "sources": {
+        "priorFindings": {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-technical-evidence-2026-10-31/evidence-findings.json",
+            "sha256": "0095cb115512f148c396cf5adcbcd6637f96e2d33403d74968fb5e9e859a3ad1",
+            "size": 19715
+        },
+        "priorValidation": {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-technical-evidence-2026-10-31/validation.json",
+            "sha256": "12b3633bc63825b13c1bd475a08dc1fb45a94025a23cea10d89108c5b39ee02f",
+            "size": 2247
+        },
+        "priorArchiveDiscovery": {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/repository-discovery.json",
+            "sha256": "d82e3db22f543c2a52c853820f9c6d2c44e0b6ecf6fcee5fb8c13a8bd2812f42",
+            "size": 99063
+        },
+        "ownerClarification": {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-sole-contributor-clarification-2026-10-31/owner-contributor-clarification.json",
+            "sha256": "8bd0c57592681a298e581b471914962fab7cc4505585f97bc8a20766ee848d80",
+            "size": 3371
+        },
+        "ownerAddendum": {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-sole-contributor-clarification-2026-10-31/proposal-addendum.json",
+            "sha256": "16af6876dbe87dfd92c910038e30f6cabec5dcaf5317c741283be5ac31e04ae7",
+            "size": 16714
+        },
+        "ownerCutoffAndAppointment": {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-confirmed-window-proposal-2026-10-31/owner-recommendation-acceptance.json",
+            "sha256": "fd9d2fc439a33be61f1f3ca9c0edf7255664ec13303c51d5b3a6aad4a574f16c",
+            "size": 5046
+        },
+        "soleOwnerDocumentaryPolicy": {
+            "path": "/home/administrator/projects/hexalith/platform/_bmad-output/implementation-artifacts/evidence/epic-4/4-27/20261017t093206z-sole-owner-documentary-policy/sole-owner-policy.json",
+            "sha256": "d3c654d2e9c9f91a236fde5751f28a29ff02b8580dbb029cfc4fdd2e7b0bcbd7",
+            "size": 4162
+        },
+        "canonicalOwnerForm": {
+            "path": "/home/administrator/projects/hexalith/platform/docs/implementation/story-5-4-coupled-delivery-2026-10-25/owner-decisions.json",
+            "sha256": "755c9956d3afd9538ecd508c3fbf77f08712fa2e684cf007c5e9a3c9607a7650",
+            "size": 103222
+        },
+        "retainedBlocker": {
+            "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/next-baseline-reconciliation-20261028T070042156838Z/blocker.json",
+            "sha256": "0481d4d9e115e58c811c0ee83e02cefdd21052b6b50a32829563bae1708acb6e",
+            "size": 2105
+        },
+        "preservationTemplate": {
+            "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/preservation-decision.template.json",
+            "sha256": "aef349e44c674fccc5aad9ec50eaaa222813e69c21973723a9fc7829d15688dd",
+            "size": 2547
+        },
+        "boundedAcceptanceSchema": {
+            "path": "/home/administrator/projects/hexalith/platform/eng/ext-secrets-1/README.md",
+            "sha256": "852fc8b072c201dc26348389718c12a50527e0b1b3f46dd0d4cd966b3336e077",
+            "size": 98297
+        },
+        "operationalSecurityHandoff": {
+            "path": "/home/administrator/projects/hexalith/platform/docs/implementation/story-5-4-operational-security-2026-10-28/README.md",
+            "sha256": "7ea7dbe25f935fe028debb72a0ca4edc268fa3dbcccf00d84014c4f4f3e9a167",
+            "size": 23698
+        },
+        "guardedRecoveryProcedure": {
+            "path": "/home/administrator/projects/hexalith/platform/eng/kubernetes-upgrade/GUARDED-RECOVERY-PREPARATION.md",
+            "sha256": "3caef5a501038d4777d69d0ef4e7e4c87c50ee39bc32cf68a983ae8478913e5c",
+            "size": 22419
+        },
+        "procedureMirror": {
+            "path": "/home/administrator/projects/hexalith/platform/eng/kubernetes-upgrade/recovery-20261015t140709z/PROCEDURE.md",
+            "sha256": "26fd5e3adf0166e531f0c8683274f4952dab3f68721c9c43c520dd74eea1e795",
+            "size": 23011
+        },
+        "recoveryBindings": {
+            "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261015t140709z-s427-expired-recovery-preparation/attempt-bindings.json",
+            "sha256": "eedc30d9ef9bfca5fcef015dd43e1ba1246cf75b59fa4273d9d6cc70a20b212c",
+            "size": 15107
+        },
+        "recoveryExpiryAudit": {
+            "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261015t140709z-s427-expired-recovery-preparation/freshness-gate-closed.json",
+            "sha256": "f15214d9283f2048da31a20f630ece442f229dda6f1dd30b57be1d7c4ed8d7ed",
+            "size": 3154
+        },
+        "prerequisiteLineage": {
+            "path": "/home/administrator/hexalith-upgrade-evidence/evidence/epic-4/4-1/20261015t112841z-post-40-recovery-prerequisite/preparation-lineage.json",
+            "sha256": "b65c80c2c5869ebd9be062f06ae305651cc63f53ea6774edf28d3d76ac1e251c",
+            "size": 6178
+        },
+        "prerequisiteLimits": {
+            "path": "/home/administrator/hexalith-upgrade-evidence/evidence/epic-4/4-1/20261015t112841z-post-40-recovery-prerequisite/NEXT-PREREQUISITE.md",
+            "sha256": "e824089fefcbc10e4cfff8fde2777517bc1fa633fb084bdf62d724f8ad2ab14c",
+            "size": 4972
+        },
+        "historicalEtcdSnapshotReceipt": {
+            "path": "/home/administrator/hexalith-upgrade-evidence/evidence/epic-4/4-1/20261001t075120z-backup-verified/external-etcd-source.json",
+            "sha256": "06ddb6e9f9cfcfd138e2cfbe0369253ab0f8872e782070389796973f72daadad",
+            "size": 2401
+        },
+        "historicalNodeArchiveReceipt": {
+            "path": "/home/administrator/hexalith-upgrade-evidence/evidence/epic-4/4-1/20261001t075120z-backup-verified/node-recovery-bundle.json",
+            "sha256": "61e8b18d4ab28a2322aaf4814699ab17f88e74d9f8ceffd4b0be12375927b85a",
+            "size": 2850
+        }
+    },
+    "method": {
+        "scope": "Follow the canonical historical-proof pointer, its retained blocker and acceptance schemas, then the exact Kubernetes recovery references already returned by prior discovery. Parse selected public documentary fields only.",
+        "newReason": "Determine whether concrete archive/version, retention and authenticated-access references in the linked Kubernetes recovery lineage can supply the required Secret-write intervals. Prior broad discovery is reused, not rerun.",
+        "limit": "Document/receipt integrity is distinct from archive authenticity, current authenticated access and historical write completeness. No credential, encrypted configuration, snapshot payload or archive payload was opened.",
+        "broadDiscoveryRepeated": false,
+        "connectedSearchRepeated": false,
+        "snapshotLogReads": 0,
+        "sourceIntegrityChecksRerun": false,
+        "priorValidationRerun": false,
+        "signatureChecksRerun": false
+    },
+    "canonicalReferenceChain": {
+        "sourceId": "canonicalOwnerForm",
+        "observedPointers": {
+            "/mvpOperationalInputs/maintenancePreservationBaseline/historicalMetadataProofAndAcceptanceReference": null,
+            "/mvpOperationalInputs/maintenancePreservationBaseline/furtherSecretWriteCoverageAndDispositionReference": null,
+            "/mvpOperationalInputs/maintenancePreservationBaseline/acceptedPublicPreservationBaselineReference": null,
+            "/mvpOperationalInputs/maintenancePreservationBaseline/memoriesPreservationDispositionReference": null,
+            "/mvpOperationalInputs/maintenancePreservationBaseline/agentsRegisterPreservationDispositionReference": null,
+            "/mvpOperationalInputs/maintenancePreservationBaseline/expiredRecoveryPreservationDecisionReference": null,
+            "/mvpOperationalInputs/backupAndRestore/everyRecoveryCopyInventoryAndActualDisposalEvidenceReference": null,
+            "/mvpOperationalInputs/currentOperationalProfile/ownerMetadataCredentialRecordReference": null
+        },
+        "retainedBlockerPointer": "/mvpOperationalInputs/maintenancePreservationBaseline/retainedBlockerReference",
+        "retainedBlockerSourceId": "retainedBlocker",
+        "blockerObservedAt": "2026-10-28T07:00:49.023579+00:00",
+        "historicalProofLocatorSupplied": false,
+        "boundedSchemaSourceId": "boundedAcceptanceSchema",
+        "boundedSchemaSection": "Bounded next-baseline reconciliation input",
+        "boundedSchemaLimit": "Requires authentic historical scope evidence and acceptance for only 36774577 to 37223806. Placeholders are requirements, not an archive or acceptance. It does not admit either later interval.",
+        "preservationTemplateSourceId": "preservationTemplate",
+        "templatePointer": "/historicalSecretWriteEvidence",
+        "templateLimit": "Unaccepted; sourceSystem, retentionInterval and completeIntervalCovered are null and sourceFingerprints is empty; target ends at 37671992. No authenticated owner channel or actual write source is supplied.",
+        "operationalSecuritySourceId": "operationalSecurityHandoff",
+        "handoffLimit": "The historical proof paragraph directs a return into the same canonical null field. It supplies no independent archive locator."
+    },
+    "concreteArchiveCandidates": [
+        {
+            "kind": "HistoricalExternalEtcdSnapshotReceipt",
+            "sourceId": "historicalEtcdSnapshotReceipt",
+            "referredBy": "recoveryBindings#/historicalObservations/etcdSource",
+            "capturedAt": "2026-10-01T09:13:43.178563+00:00",
+            "snapshotRevision": 25283476,
+            "compactRevision": 25280571,
+            "snapshotSha256": "027f6e5c3308c7ef001d783466abad3be37802ee27b7f4069752ccacb0fe196c",
+            "finding": "The recorded snapshot revision 25283476 is below starting RV 36774577. This dated point cannot provide writes at the required later revisions. No complete audit/update stream is referenced by this receipt.",
+            "providesAnyRequiredInterval": false,
+            "payloadRead": false,
+            "restorePerformed": false
+        },
+        {
+            "kind": "HistoricalEncryptedNodeRecoveryArchiveReceipt",
+            "sourceId": "historicalNodeArchiveReceipt",
+            "referredBy": "recoveryBindings#/historicalObservations/nodeBundle",
+            "recordedAt": "2026-10-01T09:38:24.534642+00:00",
+            "bucketReference": "hexalith-recovery-points",
+            "bucketReferenceSourceId": "guardedRecoveryProcedure",
+            "key": "evidence/4-1/20261001t075120z-backup-verified/node-recovery.tar.gz.age",
+            "versionId": "1790846185238755",
+            "ciphertextSha256": "dab0817585b6786cbeab95414f8cbaf53c730aca23fe7d6c191e6e710d146749",
+            "recordedReadbackAt": "2026-10-01T09:16:29Z",
+            "recordedReadBy": "validator",
+            "recordedRetention": {
+                "mode": "COMPLIANCE",
+                "retainUntil": "2026-10-31T09:16:25Z"
+            },
+            "finding": "This receipt identifies an October 1 recovery archive and a dated validator readback, not a complete Secret-write journal for later intervals. The recorded COMPLIANCE retain-until is a storage-lock deadline; it establishes neither historical write completeness nor later deletion/current accessibility.",
+            "completeHistoricalWriteArchiveEstablished": false,
+            "currentObjectExistenceAndAccess": "unknown",
+            "payloadRead": false,
+            "remoteReadbackRepeated": false
+        },
+        {
+            "kind": "UnexecutedOctober15RecoveryArchiveProposal",
+            "sourceIds": [
+                "guardedRecoveryProcedure",
+                "procedureMirror",
+                "recoveryBindings",
+                "prerequisiteLineage",
+                "prerequisiteLimits"
+            ],
+            "bucketReference": "hexalith-recovery-points",
+            "regionReference": "fr-par",
+            "proposedPrefix": "evidence/4-1/20261015t140709z-s427-expired-recovery-preparation/",
+            "proposedObjects": [
+                "external-etcd-snapshot.db.age",
+                "node-recovery.tar.gz.age"
+            ],
+            "requiredArchivePathsPointer": "recoveryBindings#/requiredArchivePaths",
+            "preparationOnly": true,
+            "mutationAuthorized": false,
+            "operationalGate": "closed",
+            "scopeApproval": null,
+            "accessReference": {
+                "writerApplication": "9a7cff8d-cffc-4554-93fe-01ed8e0d0d04",
+                "validatorApplication": "406da2fa-5d02-4a49-bcbc-de0218c6460d",
+                "authorizationLimit": "The procedure explicitly says this exact prefix is uncovered by current 4.0 approval/IAM scope. No approval or effective grant is inferred from application IDs.",
+                "credentialLoaded": false
+            },
+            "retentionRequirement": "Proposed exact-version validator GET and both retention APIs must establish AES256/COMPLIANCE and at least 30 days from creation. This is a requirement, not an observed archive.",
+            "finding": "The proposal and configuration/PKI/binary inventory requirements identify no executed write archive or captured Secret-write stream. No new capture, grant, decryption or restore is authorized.",
+            "archiveExistenceFromProposal": "unknown"
+        }
+    ],
+    "authenticatedAccessLimits": {
+        "sourceIds": [
+            "guardedRecoveryProcedure",
+            "recoveryBindings",
+            "prerequisiteLimits"
+        ],
+        "existingKubectlReference": "/home/administrator/.kube/hexalith-production; context jpiquot@local",
+        "kubectlLimit": "Retained KubeSphere authority and prior dated selected-metadata/log reads; no node-filesystem or historical-archive grant is established.",
+        "nodeSshKeyReference": "/home/administrator/hexalith-upgrade-evidence/access/node1-existing-id_rsa",
+        "sshLimit": "Inherited missing-key blocker retained; no retry or replacement credential operation.",
+        "encryptedRecoveredClientReference": "/home/administrator/hexalith-management-evidence/qualification/20261004t110223z-archive-unlock-readback/existing-break-glass-config.age",
+        "recoveredClientLimit": "Historical custody location only. Procedure says recipient decryption, current subject/binding/revocation lineage and independent readback remain unmeasured. The encrypted configuration was not read or decrypted.",
+        "historicalSignatureEvidenceSourceId": "recoveryExpiryAudit",
+        "historicalSignatureLimit": "Inherited October 14 recovery signature/acceptance verification remains historical. No signatures, provider readbacks or source-integrity successes were rerun. It authenticates no required later Secret write.",
+        "currentAuthenticatedWriteArchiveTransportReference": null
+    },
+    "historicalSecretWrites": {
+        "reference": "Secret/kubesphere-system/kubesphere-sa-token",
+        "uid": "a97fa037-798b-46b6-9232-76e600480142",
+        "separateIntervals": [
+            {
+                "fromResourceVersion": "36774577",
+                "throughResourceVersion": "37223806",
+                "authenticWriteSource": null,
+                "authenticatedDisposition": null,
+                "completeIntervalCovered": null
+            },
+            {
+                "fromResourceVersion": "37223806",
+                "throughResourceVersion": "37671992",
+                "authenticWriteSource": null,
+                "authenticatedDisposition": null,
+                "completeIntervalCovered": null
+            },
+            {
+                "fromResourceVersion": "37671992",
+                "throughResourceVersion": "38120141",
+                "authenticWriteSource": null,
+                "authenticatedDisposition": null,
+                "completeIntervalCovered": null
+            }
+        ],
+        "lastDatedIdentityObservation": {
+            "uid": "a97fa037-798b-46b6-9232-76e600480142",
+            "resourceVersion": "38120141",
+            "observedAtUtc": "2026-10-30T09:34:19.150343+00:00",
+            "source": {
+                "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-return-continuation-2026-10-30/system-secret-metadata-read-only.json",
+                "sha256": "dd0364b56bcdfcbe2d5e58719f611f80fa92825b1be463abfad8aedfd0537f22"
+            },
+            "notAdmissionObservation": true,
+            "notRefreshedInThisContinuation": true
+        },
+        "actualCurrentIdentityAtAdmission": null,
+        "coverageThroughActualCurrentAtAdmissionRequired": true,
+        "authenticatedHistoricalWriteRecordsCollected": [],
+        "completeWriteArchiveReference": null,
+        "archiveAvailability": "unknown",
+        "currentMetadataUsedAsHistoricalProof": false,
+        "newSystemSecretGetPerformed": false,
+        "concreteUnresolvedReferences": [
+            {
+                "source": {
+                    "path": "/home/administrator/projects/hexalith/platform/docs/implementation/story-5-4-coupled-delivery-2026-10-25/owner-decisions.json",
+                    "sha256": "755c9956d3afd9538ecd508c3fbf77f08712fa2e684cf007c5e9a3c9607a7650"
+                },
+                "jsonPointers": [
+                    "/mvpOperationalInputs/maintenancePreservationBaseline/historicalMetadataProofAndAcceptanceReference",
+                    "/mvpOperationalInputs/maintenancePreservationBaseline/furtherSecretWriteCoverageAndDispositionReference"
+                ],
+                "observedValues": [
+                    null,
+                    null
+                ]
+            },
+            {
+                "source": {
+                    "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/preservation-decision.template.json",
+                    "sha256": "aef349e44c674fccc5aad9ec50eaaa222813e69c21973723a9fc7829d15688dd"
+                },
+                "jsonPointer": "/historicalSecretWriteEvidence",
+                "limit": "Unaccepted template, null sourceSystem/retentionInterval/completeness/sourceFingerprints, old target RV 37671992. Supplies no write record or admission of RV 38120141 or any later identity."
+            }
+        ]
+    },
+    "confirmedCutoff": {
+        "amendedDeadlineDate": "2026-11-15",
+        "interpretation": "Include the whole of November 15 in Paris; close exclusively at the start of November 16.",
+        "timezone": "Europe/Paris",
+        "exclusiveDeadlineLocal": "2026-11-16T00:00:00+01:00",
+        "utcOffsetAtCutoff": "+01:00",
+        "exactExclusiveDeadlineUtc": "2026-11-15T23:00:00Z",
+        "cutoffTimeAndTimezoneConfirmed": true,
+        "conversionMethod": "Python standard-library zoneinfo.ZoneInfo(Europe/Paris); timezone-aware conversion to UTC.",
+        "technicalOrCredentialWindowExtended": false
+    },
+    "historicalScope": {
+        "source": {
+            "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-scope-20261029T165350Z-final/recovery-scope.json",
+            "sha256": "f32c1128b54f30682a22734986258a1882483d5d80bb2c253c4769bfb1e7d947"
+        },
+        "scopeSha256": "ef4a6896ed192137c4394cf5ef177ace1ce43ddf27a632731cf891f1c80cfbe3",
+        "runId": "9deb3d3afbbf42d39686abc30be4f64b",
+        "exclusiveDeadlineUtc": "2026-10-30T16:53:50+00:00",
+        "expiredAtRecording": true,
+        "status": "ExpiredIneligibleUnderOriginalBindings",
+        "originalBytesOrDigestChanged": false,
+        "revivedOrExecuted": false
+    },
+    "documentaryRoleDisposition": {
+        "owner": "Current user",
+        "contributorCount": 1,
+        "assessmentAndAccountableHumanRecoveryLead": "Current user, using the existing direct appointment.",
+        "soleOwnerSelfReviewPermitted": true,
+        "distinctDeputyStatus": "OwnerConfirmedUnavailable",
+        "deputyNominationNoLongerOutstanding": true,
+        "independentHumanRecoveryAvailable": false,
+        "sourceAccessIdentityAndAllocationEvidenceStillRequired": true
+    },
+    "constraints": {
+        "capEngineerDays": 2,
+        "newInfrastructureSpend": 0,
+        "newCapOrEffortAllocationInferred": false,
+        "spentEffortInferred": false
+    },
+    "unchangedUnresolved": {
+        "copyInventoryAndAuthorizedFileTransport": "unknown",
+        "intendedCurrentMetadataOnlyCredentialAndProvenance": "unknown",
+        "secretPreservationDisposition": "unresolved",
+        "exactMemoriesPreservationDisposition": "unresolved",
+        "historicalAgentsRegisterDisposition": "unresolved",
+        "currentOperationalSourceAdmission": false,
+        "sourceGenerationsAndCurrentCandidates": "Inherited matching-fingerprint findings remain intact; no recheck or execution.",
+        "snapshotLogEvidence": "Inherited October 30/31 checksum-success outputs only; no log reread, digest value, current persisted bytes, latest-file equality or complete inventory inferred."
+    },
+    "remainingFactsNotEstablishedFromAccessibleReferences": [
+        "An actual historical write-archive locator/index or exact retained object versions, complete retention/gap coverage and authenticated read provenance for all three required intervals, continuing to the actual current identity/revision at admission. Archive existence/accessibility remains unknown; no explicit unavailability declaration is supplied.",
+        "Complete snapshot/key-copy census, disposal/escrow and current authorized file-inventory/restore-access references.",
+        "An existing intended current metadata-only credential record, UID/RV/accessor/policy and authenticated provenance/effective grant.",
+        "Separate evidence-bound authenticated Secret, exact Memories PostgreSQL/TLS/reload-state and original Agents-register-transition dispositions.",
+        "Operational subject/issuer/access/competence/allocation evidence for any later operational admission; sole-owner documentary preparation remains permitted."
+    ],
+    "nextAction": "Obtain the existing archive URI/path/index and exact version range, retention/completeness record and already authenticated credential-safe read reference for Secret/kubesphere-system/kubesphere-sa-token UID a97fa037-798b-46b6-9232-76e600480142. The return belongs at canonicalOwnerForm#/mvpOperationalInputs/maintenancePreservationBaseline/historicalMetadataProofAndAcceptanceReference, with any further-write disposition separate. Authenticate 36774577→37223806, 37223806→37671992 and 37671992→38120141 individually, then require continuity through actual current identity/revision at admission. Do not treat a recovery archive receipt, its lock lifetime, a proposed prefix, a current GET or owner self-review as write proof. If a source is unavailable, record only an evidence-supported disposition; until then retain unknown.",
+    "newProposalOrOperationalRunCreated": false,
+    "admissionAllowed": false,
+    "recoveryAllowed": false,
+    "liveStopped": true,
+    "fullCustodyStopped": true,
+    "agentsRegisterChanged": false,
+    "technicalWindowsExtended": false,
+    "effects": {
+        "kubernetesCalls": 0,
+        "providerCalls": 0,
+        "sshCalls": 0,
+        "podExecs": 0,
+        "credentialOperations": 0,
+        "archiveOrSnapshotPayloadReads": 0,
+        "runtimeRecoveryExecutions": 0,
+        "runtimeOrPolicyWrites": 0,
+        "backupChanges": 0,
+        "infrastructureProvisioned": 0,
+        "productionBackendChanges": 0,
+        "qualificationRuns": 0,
+        "existingTestSuitesRerun": 0,
+        "registerWrites": 0,
+        "messagesSent": 0
+    }
+}

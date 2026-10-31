@@ -1,0 +1,183 @@
+{
+    "recordedAtUtc": "2026-10-31T16:10:25.116934+00:00",
+    "documentPrefix": {
+        "path": "/home/administrator/projects/hexalith/parties/docs/implementation/ext-parties-1-operational-continuation-2026-10-30.md",
+        "sha256": "142eea718575cdd4c9c903b96d09d22e930117ecdae764f6619037b73221c1e4",
+        "size": 53468
+    },
+    "protectedFiles": [
+        {
+            "path": "/home/administrator/projects/hexalith/agents/_bmad-output/planning-artifacts/external-dependency-register.md",
+            "sha256": "e29b7fc41cb404209e0abb5fb1e735f29cab253ce4012b142a2c8c30a9c19860",
+            "size": 75611
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/parties/docs/index.md",
+            "sha256": "c362507272da4d4a5709d618df2e4a8f2c82061229080e549b1e982a6cad12b7",
+            "size": 9192
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-technical-evidence-2026-10-31/SHA256SUMS",
+            "sha256": "fabb03af5ad87872f3140d704984d69d870d58ccbb3a85281122e8931f0ab52b",
+            "size": 1010
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-technical-evidence-2026-10-31/check_source_snapshots.py",
+            "sha256": "89e8b4903601ce6a0584f1f074be406d28fa8ed84af1cece58297a41b0a00e8e",
+            "size": 6342
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-technical-evidence-2026-10-31/collect_snapshot_logs.py",
+            "sha256": "0768211d324273d9e99295fe6a532212a33083fd888e76d51c6956184013afca",
+            "size": 4408
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-technical-evidence-2026-10-31/evidence-findings.json",
+            "sha256": "0095cb115512f148c396cf5adcbcd6637f96e2d33403d74968fb5e9e859a3ad1",
+            "size": 19715
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-technical-evidence-2026-10-31/new-source-delta.json",
+            "sha256": "45bda42c97246ae9afdc3b42032dc874a043cf8dd2427217a125c77398d94c6f",
+            "size": 9344
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-technical-evidence-2026-10-31/preservation-before.json",
+            "sha256": "1f1a84a6760d1de7885f3cb9ab09cb5825153a5e66ebd98f7ee1c45d30ff1b4f",
+            "size": 76468
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-technical-evidence-2026-10-31/snapshot-log-attempt-01.json",
+            "sha256": "e5a57e3f2d45d154146a1007df60bd715bcfa1a4942fc225084ef69935c86865",
+            "size": 2866
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-technical-evidence-2026-10-31/snapshot-log-observations.json",
+            "sha256": "5b99d18d8d612f7e8b2ebcccb231690e171b58f75ba5711a8dd4e9617abda025",
+            "size": 7767
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-technical-evidence-2026-10-31/snapshot-pvc-binding.json",
+            "sha256": "cffb1236d916b7bec19906deac9e6f4372bad2d91abe25a8b514ac5f693cea4c",
+            "size": 1497
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-technical-evidence-2026-10-31/source-snapshot-integrity.json",
+            "sha256": "63a27566d48d3279ca4ddaa6e410d8b90a772dcee80d0d6c158c3ccf48e74000",
+            "size": 16147
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-technical-evidence-2026-10-31/validation.json",
+            "sha256": "12b3633bc63825b13c1bd475a08dc1fb45a94025a23cea10d89108c5b39ee02f",
+            "size": 2247
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-technical-evidence-2026-10-31/verify_evidence.py",
+            "sha256": "54cfdf7ba75e75017f226bc3099ca8f4b6a9890d6453a0234489173aacc27e21",
+            "size": 9828
+        }
+    ],
+    "sources": {
+        "priorFindings": {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-technical-evidence-2026-10-31/evidence-findings.json",
+            "sha256": "0095cb115512f148c396cf5adcbcd6637f96e2d33403d74968fb5e9e859a3ad1",
+            "size": 19715
+        },
+        "priorValidation": {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-technical-evidence-2026-10-31/validation.json",
+            "sha256": "12b3633bc63825b13c1bd475a08dc1fb45a94025a23cea10d89108c5b39ee02f",
+            "size": 2247
+        },
+        "priorArchiveDiscovery": {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-source-follow-up-2026-10-30/repository-discovery.json",
+            "sha256": "d82e3db22f543c2a52c853820f9c6d2c44e0b6ecf6fcee5fb8c13a8bd2812f42",
+            "size": 99063
+        },
+        "ownerClarification": {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-sole-contributor-clarification-2026-10-31/owner-contributor-clarification.json",
+            "sha256": "8bd0c57592681a298e581b471914962fab7cc4505585f97bc8a20766ee848d80",
+            "size": 3371
+        },
+        "ownerAddendum": {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-sole-contributor-clarification-2026-10-31/proposal-addendum.json",
+            "sha256": "16af6876dbe87dfd92c910038e30f6cabec5dcaf5317c741283be5ac31e04ae7",
+            "size": 16714
+        },
+        "ownerCutoffAndAppointment": {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-confirmed-window-proposal-2026-10-31/owner-recommendation-acceptance.json",
+            "sha256": "fd9d2fc439a33be61f1f3ca9c0edf7255664ec13303c51d5b3a6aad4a574f16c",
+            "size": 5046
+        },
+        "soleOwnerDocumentaryPolicy": {
+            "path": "/home/administrator/projects/hexalith/platform/_bmad-output/implementation-artifacts/evidence/epic-4/4-27/20261017t093206z-sole-owner-documentary-policy/sole-owner-policy.json",
+            "sha256": "d3c654d2e9c9f91a236fde5751f28a29ff02b8580dbb029cfc4fdd2e7b0bcbd7",
+            "size": 4162
+        },
+        "canonicalOwnerForm": {
+            "path": "/home/administrator/projects/hexalith/platform/docs/implementation/story-5-4-coupled-delivery-2026-10-25/owner-decisions.json",
+            "sha256": "755c9956d3afd9538ecd508c3fbf77f08712fa2e684cf007c5e9a3c9607a7650",
+            "size": 103222
+        },
+        "retainedBlocker": {
+            "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/next-baseline-reconciliation-20261028T070042156838Z/blocker.json",
+            "sha256": "0481d4d9e115e58c811c0ee83e02cefdd21052b6b50a32829563bae1708acb6e",
+            "size": 2105
+        },
+        "preservationTemplate": {
+            "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/preservation-decision.template.json",
+            "sha256": "aef349e44c674fccc5aad9ec50eaaa222813e69c21973723a9fc7829d15688dd",
+            "size": 2547
+        },
+        "boundedAcceptanceSchema": {
+            "path": "/home/administrator/projects/hexalith/platform/eng/ext-secrets-1/README.md",
+            "sha256": "852fc8b072c201dc26348389718c12a50527e0b1b3f46dd0d4cd966b3336e077",
+            "size": 98297
+        },
+        "operationalSecurityHandoff": {
+            "path": "/home/administrator/projects/hexalith/platform/docs/implementation/story-5-4-operational-security-2026-10-28/README.md",
+            "sha256": "7ea7dbe25f935fe028debb72a0ca4edc268fa3dbcccf00d84014c4f4f3e9a167",
+            "size": 23698
+        },
+        "guardedRecoveryProcedure": {
+            "path": "/home/administrator/projects/hexalith/platform/eng/kubernetes-upgrade/GUARDED-RECOVERY-PREPARATION.md",
+            "sha256": "3caef5a501038d4777d69d0ef4e7e4c87c50ee39bc32cf68a983ae8478913e5c",
+            "size": 22419
+        },
+        "procedureMirror": {
+            "path": "/home/administrator/projects/hexalith/platform/eng/kubernetes-upgrade/recovery-20261015t140709z/PROCEDURE.md",
+            "sha256": "26fd5e3adf0166e531f0c8683274f4952dab3f68721c9c43c520dd74eea1e795",
+            "size": 23011
+        },
+        "recoveryBindings": {
+            "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261015t140709z-s427-expired-recovery-preparation/attempt-bindings.json",
+            "sha256": "eedc30d9ef9bfca5fcef015dd43e1ba1246cf75b59fa4273d9d6cc70a20b212c",
+            "size": 15107
+        },
+        "recoveryExpiryAudit": {
+            "path": "/home/administrator/hexalith-retirement-investigation-evidence/20261015t140709z-s427-expired-recovery-preparation/freshness-gate-closed.json",
+            "sha256": "f15214d9283f2048da31a20f630ece442f229dda6f1dd30b57be1d7c4ed8d7ed",
+            "size": 3154
+        },
+        "prerequisiteLineage": {
+            "path": "/home/administrator/hexalith-upgrade-evidence/evidence/epic-4/4-1/20261015t112841z-post-40-recovery-prerequisite/preparation-lineage.json",
+            "sha256": "b65c80c2c5869ebd9be062f06ae305651cc63f53ea6774edf28d3d76ac1e251c",
+            "size": 6178
+        },
+        "prerequisiteLimits": {
+            "path": "/home/administrator/hexalith-upgrade-evidence/evidence/epic-4/4-1/20261015t112841z-post-40-recovery-prerequisite/NEXT-PREREQUISITE.md",
+            "sha256": "e824089fefcbc10e4cfff8fde2777517bc1fa633fb084bdf62d724f8ad2ab14c",
+            "size": 4972
+        },
+        "historicalEtcdSnapshotReceipt": {
+            "path": "/home/administrator/hexalith-upgrade-evidence/evidence/epic-4/4-1/20261001t075120z-backup-verified/external-etcd-source.json",
+            "sha256": "06ddb6e9f9cfcfd138e2cfbe0369253ab0f8872e782070389796973f72daadad",
+            "size": 2401
+        },
+        "historicalNodeArchiveReceipt": {
+            "path": "/home/administrator/hexalith-upgrade-evidence/evidence/epic-4/4-1/20261001t075120z-backup-verified/node-recovery-bundle.json",
+            "sha256": "61e8b18d4ab28a2322aaf4814699ab17f88e74d9f8ceffd4b0be12375927b85a",
+            "size": 2850
+        }
+    },
+    "purpose": "Protect the existing continuation, prior packet, canonical source documents, index and Agents register during this new reference-chain assessment only. No historical source-code integrity suite is repeated."
+}

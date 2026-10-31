@@ -1,0 +1,259 @@
+{
+    "schema": "EXT-PARTIES-1.retained-source-integrity.v1",
+    "reason": "Explicit request to authenticate retained source snapshots after the historical executor worktree disappeared; existing test suites are not rerun.",
+    "observedAtUtc": "2026-10-31T14:54:46.774688+00:00",
+    "inputs": [
+        {
+            "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/verification.json",
+            "sha256": "753f06d735ed9e60bf67172adaabce2e9b5210d8d260f073341aff09fa438461"
+        },
+        {
+            "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/evidence-manifest.json",
+            "sha256": "46d77631b1f790e6ff4deb06169aea1a884891657afe8ce61531901890fb6e31"
+        },
+        {
+            "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/root-final-verification.json",
+            "sha256": "fa8599a50bdd354c108a9e4bf96baf4b57b23995896c62c8be9afb78295d8212"
+        },
+        {
+            "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/final-evidence-sha256.json",
+            "sha256": "e4b237c1aad6a5e08aeaee520d53fa3b91fe7e5f83b2221aadd07c00e90ca210"
+        },
+        {
+            "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/tested-source-pins.json",
+            "sha256": "60a6bf6911966be3eb7e1e3cae0d5ef8251f6626c73823379230ad538d88aa04"
+        }
+    ],
+    "originalSnapshot": [
+        {
+            "source": {
+                "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/final-tested-source/eng/ext-secrets-1/prepare_expired_hmac_recovery.py",
+                "sha256": "6475a12cec40cff6bcd9439e4b0e0c164afa43637935f9ee40b3183d28645ca1"
+            },
+            "expectedSha256": "6475a12cec40cff6bcd9439e4b0e0c164afa43637935f9ee40b3183d28645ca1",
+            "matchesRecordedFingerprint": true,
+            "manifestEntryMatches": true
+        },
+        {
+            "source": {
+                "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/final-tested-source/eng/ext-secrets-1/recover_expired_hmac.py",
+                "sha256": "8d0cabe971331e53ffe9548c908e20f792bde4273d954c70abacfec0a2108adc"
+            },
+            "expectedSha256": "8d0cabe971331e53ffe9548c908e20f792bde4273d954c70abacfec0a2108adc",
+            "matchesRecordedFingerprint": true,
+            "manifestEntryMatches": true
+        },
+        {
+            "source": {
+                "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/final-tested-source/eng/ext-secrets-1/test_prepare_expired_hmac_recovery.py",
+                "sha256": "62df47f02db2338f6a2edacef4de92ac45b69cea279c2bc16d2d6fece685e36e"
+            },
+            "expectedSha256": "62df47f02db2338f6a2edacef4de92ac45b69cea279c2bc16d2d6fece685e36e",
+            "matchesRecordedFingerprint": true,
+            "manifestEntryMatches": true
+        },
+        {
+            "source": {
+                "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-run-20261029-approved/final-tested-source/eng/ext-secrets-1/test_recover_expired_hmac.py",
+                "sha256": "37006f6d195e8cb6452f836fa0ef5c1fd2defd77729d8943a42398adb15c14e1"
+            },
+            "expectedSha256": "37006f6d195e8cb6452f836fa0ef5c1fd2defd77729d8943a42398adb15c14e1",
+            "matchesRecordedFingerprint": true,
+            "manifestEntryMatches": true
+        }
+    ],
+    "laterTestedSnapshot": [
+        {
+            "source": {
+                "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/tested-source/eng/ext-secrets-1/prepare_expired_hmac_recovery.py",
+                "sha256": "6475a12cec40cff6bcd9439e4b0e0c164afa43637935f9ee40b3183d28645ca1"
+            },
+            "expectedSha256": "6475a12cec40cff6bcd9439e4b0e0c164afa43637935f9ee40b3183d28645ca1",
+            "matchesOwnGenerationPin": true,
+            "manifestEntryMatches": true,
+            "equalsLaterFinalReceipt": true
+        },
+        {
+            "source": {
+                "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/tested-source/eng/ext-secrets-1/recover_expired_hmac.py",
+                "sha256": "380f4f7d489d4ab8698900a63d30871e1538dc1d47a7978a35dcb50ae96a6e99"
+            },
+            "expectedSha256": "380f4f7d489d4ab8698900a63d30871e1538dc1d47a7978a35dcb50ae96a6e99",
+            "matchesOwnGenerationPin": true,
+            "manifestEntryMatches": true,
+            "equalsLaterFinalReceipt": false
+        },
+        {
+            "source": {
+                "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/tested-source/eng/ext-secrets-1/test_prepare_expired_hmac_recovery.py",
+                "sha256": "62df47f02db2338f6a2edacef4de92ac45b69cea279c2bc16d2d6fece685e36e"
+            },
+            "expectedSha256": "62df47f02db2338f6a2edacef4de92ac45b69cea279c2bc16d2d6fece685e36e",
+            "matchesOwnGenerationPin": true,
+            "manifestEntryMatches": true,
+            "equalsLaterFinalReceipt": true
+        },
+        {
+            "source": {
+                "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/tested-source/eng/ext-secrets-1/test_recover_expired_hmac.py",
+                "sha256": "3fdee9a6daed938047582851a2eb7a3fcd05582d5df8742c37c292c7a3379bf8"
+            },
+            "expectedSha256": "3fdee9a6daed938047582851a2eb7a3fcd05582d5df8742c37c292c7a3379bf8",
+            "matchesOwnGenerationPin": true,
+            "manifestEntryMatches": true,
+            "equalsLaterFinalReceipt": false
+        }
+    ],
+    "laterPreservedSnapshot": [
+        {
+            "source": {
+                "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/preserved-source/eng/ext-secrets-1/prepare_expired_hmac_recovery.py",
+                "sha256": "6475a12cec40cff6bcd9439e4b0e0c164afa43637935f9ee40b3183d28645ca1"
+            },
+            "expectedManifestSha256": "6475a12cec40cff6bcd9439e4b0e0c164afa43637935f9ee40b3183d28645ca1",
+            "matchesOwnGenerationPin": true
+        },
+        {
+            "source": {
+                "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/preserved-source/eng/ext-secrets-1/recover_expired_hmac.py",
+                "sha256": "0069e22af839c92f42592e6e2944326fb53a8d194ddfb2dc45fba3313a0f8c4b"
+            },
+            "expectedManifestSha256": "0069e22af839c92f42592e6e2944326fb53a8d194ddfb2dc45fba3313a0f8c4b",
+            "matchesOwnGenerationPin": true
+        },
+        {
+            "source": {
+                "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/preserved-source/eng/ext-secrets-1/test_prepare_expired_hmac_recovery.py",
+                "sha256": "62df47f02db2338f6a2edacef4de92ac45b69cea279c2bc16d2d6fece685e36e"
+            },
+            "expectedManifestSha256": "62df47f02db2338f6a2edacef4de92ac45b69cea279c2bc16d2d6fece685e36e",
+            "matchesOwnGenerationPin": true
+        },
+        {
+            "source": {
+                "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/preserved-source/eng/ext-secrets-1/test_recover_expired_hmac.py",
+                "sha256": "b8499fccbe4a72a55eac4d1427e96e55ee2570081d10a66e16acdcc0144e778b"
+            },
+            "expectedManifestSha256": "b8499fccbe4a72a55eac4d1427e96e55ee2570081d10a66e16acdcc0144e778b",
+            "matchesOwnGenerationPin": true
+        }
+    ],
+    "laterFinalReconstruction": [
+        {
+            "base": {
+                "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/preserved-source/eng/ext-secrets-1/recover_expired_hmac.py",
+                "sha256": "0069e22af839c92f42592e6e2944326fb53a8d194ddfb2dc45fba3313a0f8c4b"
+            },
+            "difference": {
+                "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/review-final-recover_expired_hmac.py.diff",
+                "sha256": "a1bfc7b92efb564a9060e48cdd0b0cb95af0610ee6ca950c716c8f20bb4f231e"
+            },
+            "differenceMatchesRecordedManifest": true,
+            "argv": [
+                "patch",
+                "--batch",
+                "--fuzz=0",
+                "--output",
+                "/tmp/ext-parties-source-integrity-8n85rb_z/recover_expired_hmac.py",
+                "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/preserved-source/eng/ext-secrets-1/recover_expired_hmac.py",
+                "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/review-final-recover_expired_hmac.py.diff"
+            ],
+            "exitCode": 0,
+            "stdout": "patching file /tmp/ext-parties-source-integrity-8n85rb_z/recover_expired_hmac.py (read from /home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/preserved-source/eng/ext-secrets-1/recover_expired_hmac.py)\n",
+            "stderr": "",
+            "derivedSha256": "11f8343a1626f1f5383aec9afc6016189cbb89244f2b7375dfa29d76f43c1f5d",
+            "expectedSha256": "11f8343a1626f1f5383aec9afc6016189cbb89244f2b7375dfa29d76f43c1f5d",
+            "matchesFinalRecordedFingerprint": true,
+            "outputTemporaryAndDeleted": true,
+            "sourceExecuted": false
+        },
+        {
+            "base": {
+                "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/preserved-source/eng/ext-secrets-1/test_recover_expired_hmac.py",
+                "sha256": "b8499fccbe4a72a55eac4d1427e96e55ee2570081d10a66e16acdcc0144e778b"
+            },
+            "difference": {
+                "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/review-final-test_recover_expired_hmac.py.diff",
+                "sha256": "74f0bff06f7da80047b0765de407bbce083d69636b03bf25d38275157f9c1ff7"
+            },
+            "differenceMatchesRecordedManifest": true,
+            "argv": [
+                "patch",
+                "--batch",
+                "--fuzz=0",
+                "--output",
+                "/tmp/ext-parties-source-integrity-8n85rb_z/test_recover_expired_hmac.py",
+                "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/preserved-source/eng/ext-secrets-1/test_recover_expired_hmac.py",
+                "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/review-final-test_recover_expired_hmac.py.diff"
+            ],
+            "exitCode": 0,
+            "stdout": "patching file /tmp/ext-parties-source-integrity-8n85rb_z/test_recover_expired_hmac.py (read from /home/administrator/hexalith-secrets-evidence/ext-secrets-1/provider-inventory-resume-20261029T175713722948Z/preserved-source/eng/ext-secrets-1/test_recover_expired_hmac.py)\n",
+            "stderr": "",
+            "derivedSha256": "c00490059d8f16d338a817e374d4bd7e7bc1c5b1d52dcaa3c4334bd405623a45",
+            "expectedSha256": "c00490059d8f16d338a817e374d4bd7e7bc1c5b1d52dcaa3c4334bd405623a45",
+            "matchesFinalRecordedFingerprint": true,
+            "outputTemporaryAndDeleted": true,
+            "sourceExecuted": false
+        }
+    ],
+    "historicalWorktreePaths": [
+        {
+            "path": "/home/administrator/projects/hexalith/platform-ext-secrets-1-runtime-foundations-20261017/eng/ext-secrets-1/prepare_expired_hmac_recovery.py",
+            "availableAsFile": false
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/platform-ext-secrets-1-runtime-foundations-20261017/eng/ext-secrets-1/recover_expired_hmac.py",
+            "availableAsFile": false
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/platform-ext-secrets-1-runtime-foundations-20261017/eng/ext-secrets-1/test_prepare_expired_hmac_recovery.py",
+            "availableAsFile": false
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/platform-ext-secrets-1-runtime-foundations-20261017/eng/ext-secrets-1/test_recover_expired_hmac.py",
+            "availableAsFile": false
+        }
+    ],
+    "currentSourceCandidates": [
+        {
+            "source": {
+                "path": "/home/administrator/projects/hexalith/platform/eng/ext-secrets-1/prepare_expired_hmac_recovery.py",
+                "sha256": "6475a12cec40cff6bcd9439e4b0e0c164afa43637935f9ee40b3183d28645ca1"
+            },
+            "expectedHistoricalFinalSha256": "6475a12cec40cff6bcd9439e4b0e0c164afa43637935f9ee40b3183d28645ca1",
+            "matchesHistoricalFinalReceipt": true,
+            "admittedForExecution": false
+        },
+        {
+            "source": {
+                "path": "/home/administrator/projects/hexalith/platform/eng/ext-secrets-1/recover_expired_hmac.py",
+                "sha256": "11f8343a1626f1f5383aec9afc6016189cbb89244f2b7375dfa29d76f43c1f5d"
+            },
+            "expectedHistoricalFinalSha256": "11f8343a1626f1f5383aec9afc6016189cbb89244f2b7375dfa29d76f43c1f5d",
+            "matchesHistoricalFinalReceipt": true,
+            "admittedForExecution": false
+        },
+        {
+            "source": {
+                "path": "/home/administrator/projects/hexalith/platform/eng/ext-secrets-1/test_prepare_expired_hmac_recovery.py",
+                "sha256": "62df47f02db2338f6a2edacef4de92ac45b69cea279c2bc16d2d6fece685e36e"
+            },
+            "expectedHistoricalFinalSha256": "62df47f02db2338f6a2edacef4de92ac45b69cea279c2bc16d2d6fece685e36e",
+            "matchesHistoricalFinalReceipt": true,
+            "admittedForExecution": false
+        },
+        {
+            "source": {
+                "path": "/home/administrator/projects/hexalith/platform/eng/ext-secrets-1/test_recover_expired_hmac.py",
+                "sha256": "c00490059d8f16d338a817e374d4bd7e7bc1c5b1d52dcaa3c4334bd405623a45"
+            },
+            "expectedHistoricalFinalSha256": "c00490059d8f16d338a817e374d4bd7e7bc1c5b1d52dcaa3c4334bd405623a45",
+            "matchesHistoricalFinalReceipt": true,
+            "admittedForExecution": false
+        }
+    ],
+    "sourceImportedOrExecuted": false,
+    "historicalTestsRerun": false,
+    "currentSourceAdmission": false,
+    "finding": "Original four-file snapshot matches its 23+8-test generation. Later tested and preserved snapshots match their own recorded generations; their executor/test hashes differ from the final 60-test receipt. Applying each retained final-review diff to its preserved base with zero fuzz reconstructs exactly the two final fingerprints. All four files at the current Platform eng/ext-secrets-1 paths also match that final receipt. Historical worktree paths remain unavailable. These are integrity/location findings, not current operational admission, provenance of historical writes, or new test/qualification results."
+}

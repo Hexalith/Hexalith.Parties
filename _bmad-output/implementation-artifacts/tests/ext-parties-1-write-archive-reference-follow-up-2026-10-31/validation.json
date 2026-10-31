@@ -1,0 +1,31 @@
+{
+    "schema": "EXT-PARTIES-1.write-archive-reference-offline-validation.v1",
+    "verifiedAtUtc": "2026-10-31T16:11:09.370380+00:00",
+    "passed": true,
+    "checksPassed": 85,
+    "command": "python3 -B _bmad-output/implementation-artifacts/tests/ext-parties-1-write-archive-reference-follow-up-2026-10-31/verify_evidence.py",
+    "documentPrefixPreserved": true,
+    "priorPacketAndCanonicalOwnerFormAndAgentsRegisterPreserved": true,
+    "sourceReferencesVerified": 20,
+    "archiveAvailabilityAndAllIntervals": "unknown",
+    "writeArchiveAuthenticated": false,
+    "operationalCalls": 0,
+    "priorChecksOrObservationsRerun": false,
+    "admissionAllowed": false,
+    "recoveryAllowed": false,
+    "whitespaceCommand": {
+        "argv": [
+            "git",
+            "-c",
+            "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+            "diff",
+            "--check",
+            "--",
+            "docs/implementation/ext-parties-1-operational-continuation-2026-10-30.md"
+        ],
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+    },
+    "limit": "Local reference-chain consistency and byte preservation only; no archive payload, historical write completeness, current access, preservation acceptance, runtime admission or operational qualification is established."
+}

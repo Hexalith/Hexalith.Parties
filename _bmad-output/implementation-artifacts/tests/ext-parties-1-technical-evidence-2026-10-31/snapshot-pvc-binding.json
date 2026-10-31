@@ -1,0 +1,29 @@
+{
+    "purpose": "Bind the new October 31 checksum-result log to its existing snapshot PVC and immutable image, using references only.",
+    "argv": [
+        "kubectl",
+        "--kubeconfig",
+        "/home/administrator/.kube/hexalith-production",
+        "--context",
+        "jpiquot@local",
+        "--request-timeout=10s",
+        "--server",
+        "https://192.168.1.30:6443",
+        "--insecure-skip-tls-verify=false",
+        "get",
+        "pod",
+        "openbao-raft-snapshot-29890110-mhd8z",
+        "-n",
+        "openbao",
+        "-o",
+        "jsonpath={.metadata.uid}{\"\\n\"}{range .spec.volumes[*]}{.name}{\"\\t\"}{.persistentVolumeClaim.claimName}{\"\\n\"}{end}{range .spec.containers[*]}{.name}{\"\\t\"}{.image}{\"\\n\"}{range .volumeMounts[*]}{.name}{\"\\t\"}{.mountPath}{\"\\n\"}{end}{end}"
+    ],
+    "startedAtUtc": "2026-10-31T14:52:47.512856+00:00",
+    "completedAtUtc": "2026-10-31T14:52:47.777057+00:00",
+    "exitCode": 0,
+    "stdout": "920776a0-c1c6-4ce7-8069-40bd2cd13c8b\nsnapshots\topenbao-snapshots\nopenbao-tls\t\nservice-account-token\t\nhome\t\nsnapshot\tquay.io/openbao/openbao:2.6.2@sha256:11fd73a2102cda9c55d5d881a8c3210303146a7ec1e8ac76f526e175c6d24641\nsnapshots\t/snapshots\nopenbao-tls\t/var/run/openbao-tls\nservice-account-token\t/var/run/secrets/openbao\nhome\t/home/openbao\n",
+    "stderr": "",
+    "expectedPodUid": "920776a0-c1c6-4ce7-8069-40bd2cd13c8b",
+    "uidMatches": true,
+    "retryPerformed": false
+}

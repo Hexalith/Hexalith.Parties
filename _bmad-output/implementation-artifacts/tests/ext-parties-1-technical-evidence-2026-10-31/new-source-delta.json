@@ -1,0 +1,179 @@
+{
+    "schema": "EXT-PARTIES-1.new-public-source-delta.v1",
+    "recordedAtUtc": "2026-10-31T14:55:42.509538+00:00",
+    "afterUtc": "2026-10-31T07:07:53.734456+00:00",
+    "reason": "Select only public records modified after the previous completed source follow-up; no equivalent operational plan or external search rerun. Mtime selects candidates and is not authenticated provenance.",
+    "boundedSelection": {
+        "maxDescendantDirectoryDepth": 4,
+        "excludedDirectories": [
+            "references",
+            "node_modules",
+            "bin",
+            "obj",
+            ".git",
+            ".venv",
+            "packages",
+            "source",
+            "tested-source",
+            "preserved-source",
+            "immutable-helper-source",
+            "final-tested-source",
+            "snapshots"
+        ],
+        "eligibleSuffixes": [
+            ".json",
+            ".md",
+            ".yaml",
+            ".txt",
+            ".log",
+            ".jsonl"
+        ],
+        "pathTerms": [
+            "ext-secrets",
+            "openbao",
+            "recovery",
+            "snapshot",
+            "credential",
+            "preserv",
+            "audit",
+            "owner",
+            "qualification",
+            "tls",
+            "transport"
+        ]
+    },
+    "roots": [
+        {
+            "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1",
+            "eligiblePublicFiles": 13096,
+            "selectedNewFiles": 0
+        },
+        {
+            "path": "/home/administrator/hexalith-upgrade-evidence/access",
+            "eligiblePublicFiles": 4,
+            "selectedNewFiles": 0
+        },
+        {
+            "path": "/home/administrator/hexalith-recovery-evidence",
+            "eligiblePublicFiles": 575,
+            "selectedNewFiles": 0
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/platform/docs",
+            "eligiblePublicFiles": 2071,
+            "selectedNewFiles": 14
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/platform/eng",
+            "eligiblePublicFiles": 279,
+            "selectedNewFiles": 1
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/memories/docs/operations",
+            "eligiblePublicFiles": 41,
+            "selectedNewFiles": 0
+        }
+    ],
+    "selectedNewSourceReferences": [
+        {
+            "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop10/native-fixtures-44662c3e1c3a-parent-audit.json",
+            "sha256": "66d51c17cc0a16445a6a0a3b9e1d62ad387185cd6d0b05dc216030ecbaff83ad"
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop10/source-gaps-7b5a4e938648/transport-components.command.json",
+            "sha256": "97614fbfbada782e26b1fcf2a57ad7afdb00176c81295f57f00ec46afe21925f"
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop10/source-gaps-7b5a4e938648/transport-components.log",
+            "sha256": "b38ff07de971d18271cc672717907bc8184bf3633ed606abc46ae4c750e555db"
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop10/source-gaps-7b5a4e938648/preservation-before.json",
+            "sha256": "3ccd9e8e0f22f2fe81c3bea4bd4edd8db5affd21581ea28ea7f8cf1ebaf14b48"
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop10/source-gaps-7b5a4e938648/parent-verification/audit.json",
+            "sha256": "67a88d3dbc3d297d2c165aeef9ab5dbf7309921181bf88113cdf3c550aa09c6a"
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop10/native-fixtures-44662c3e1c3a/parent-external-runtime-audit-v2.json",
+            "sha256": "7eeac3669e969a53621419655637495ec4544a39035bc6d322fd34e6b268c7d5"
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop10/native-fixtures-44662c3e1c3a/post-run-audit.log",
+            "sha256": "87ea90e8d0e26f14c822ba2c97545687c382eddeb26793171fcaf2d5af251ce2"
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop10/native-fixtures-44662c3e1c3a/post-run-audit.json",
+            "sha256": "6a6087daf496cdd34f4edfb752431c3446bb4039aa1355e2304c886701b0b5ac"
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop10/native-fixtures-44662c3e1c3a/historical-preservation.json",
+            "sha256": "32412aa4e9b262989422ac4f98a5066108895d65b8ef2e3eb7cedc54de62f357"
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop10/native-fixtures-44662c3e1c3a/parent-external-runtime-audit.json",
+            "sha256": "9220c623f0a7ebc5672ec4b0b1de5858c0e95209aea7a9a7c3fc2bd428b0845d"
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop10/native-fixtures-44662c3e1c3a/transport-components.log",
+            "sha256": "84c9029cbddcf129aff2f64646fc1f99fd04c9147f8c16778095f82ff1114a3c"
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop10/native-fixtures-44662c3e1c3a/parent-preservation/final-preservation-audit.json",
+            "sha256": "bfeae59d853d64096351d72ccb707c622b42c5df8d134fc700a883cb0e6ab65e"
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop10/native-fixtures-44662c3e1c3a/parent-preservation/before.json",
+            "sha256": "975fe4b2883f67b9be9443cf64dceebfbb8a92a33dafb30caa069eb759b65b3b"
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop10/native-fixtures-44662c3e1c3a/parent-preservation/build-unblock.json",
+            "sha256": "deeaef1bf71b8738a836595f7b4386c3a8e3f3f5f6e0bcc7a50107ed928075eb"
+        },
+        {
+            "path": "/home/administrator/projects/hexalith/platform/eng/mcpcli-operator-setup/v1/evidence/metadata-recovery-20261031/validation-final.json",
+            "sha256": "7b598c4559657154aa6fb2cee47addf7fce4daa0dcfbf1d91860e836463cadb8"
+        }
+    ],
+    "newSourceScopeFindings": [
+        {
+            "source": {
+                "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop10/native-fixtures-44662c3e1c3a/parent-preservation/final-preservation-audit.json",
+                "sha256": "bfeae59d853d64096351d72ccb707c622b42c5df8d134fc700a883cb0e6ab65e"
+            },
+            "pointer": "/agentsRegisterSha256",
+            "value": "e29b7fc41cb404209e0abb5fb1e735f29cab253ce4012b142a2c8c30a9c19860",
+            "finding": "Equality with that parent session does not reconcile the original 5bf35ac2 historical mismatch or supply owner preservation acceptance."
+        },
+        {
+            "source": {
+                "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop10/source-gaps-7b5a4e938648/transport-components.command.json",
+                "sha256": "97614fbfbada782e26b1fcf2a57ad7afdb00176c81295f57f00ec46afe21925f"
+            },
+            "pointer": "/argv",
+            "finding": "A dotnet test-assembly invocation for transport safety; no existing node/archive transport authorization or current workload metadata credential."
+        },
+        {
+            "source": {
+                "path": "/home/administrator/projects/hexalith/platform/eng/mcpcli-operator-setup/v1/evidence/metadata-recovery-20261031/validation-final.json",
+                "sha256": "7b598c4559657154aa6fb2cee47addf7fce4daa0dcfbf1d91860e836463cadb8"
+            },
+            "pointers": [
+                "/schema",
+                "/secretCount",
+                "/limits"
+            ],
+            "finding": "mcpcli-v1-metadata-recovery-validation/v1 records synthetic/client-only checks and an eight-Secret packet. Metadata here is gateway/Dapr metadata; it identifies no intended EXT-SECRETS-1 provider metadata credential or authentic historical system-Secret writes."
+        },
+        {
+            "source": {
+                "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop10/native-fixtures-44662c3e1c3a/parent-external-runtime-audit-v2.json",
+                "sha256": "7eeac3669e969a53621419655637495ec4544a39035bc6d322fd34e6b268c7d5"
+            },
+            "finding": "Fixture runtime closures/container cleanup in the protection test scope; no production snapshot/key-copy census or all-copy disposal evidence."
+        }
+    ],
+    "sourceAvailability": "unknown",
+    "noUniversalAbsenceOrOwnerUnavailabilityInferred": true
+}

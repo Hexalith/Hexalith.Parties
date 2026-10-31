@@ -1,0 +1,172 @@
+{
+    "schema": "EXT-PARTIES-1.existing-snapshot-log-observations.v1",
+    "reason": "Collect previously unread checksum-result logs, including the daily snapshot scheduled since the October 30 metadata observation.",
+    "transport": {
+        "api": "https://192.168.1.30:6443",
+        "context": "jpiquot@local",
+        "kubeconfigReference": "/home/administrator/.kube/hexalith-production",
+        "tlsVerificationExplicitlyRequired": true,
+        "authentication": "Existing kubectl context credentials used by the native client; no credential value read or recorded by this collector.",
+        "limit": "Authenticated native-client transport observation; no detached signature or complete filesystem inventory asserted."
+    },
+    "podListReceipt": {
+        "argv": [
+            "kubectl",
+            "--kubeconfig",
+            "/home/administrator/.kube/hexalith-production",
+            "--context",
+            "jpiquot@local",
+            "--request-timeout=10s",
+            "--server",
+            "https://192.168.1.30:6443",
+            "--insecure-skip-tls-verify=false",
+            "get",
+            "pods",
+            "-n",
+            "openbao",
+            "-o",
+            "jsonpath={range .items[*]}{.metadata.name}{\"\\t\"}{.metadata.uid}{\"\\t\"}{.metadata.resourceVersion}{\"\\t\"}{.status.phase}{\"\\t\"}{.spec.nodeName}{\"\\t\"}{.metadata.creationTimestamp}{\"\\t\"}{.metadata.ownerReferences[0].name}{\"\\t\"}{.metadata.ownerReferences[0].uid}{\"\\t\"}{.status.containerStatuses[0].state.terminated.finishedAt}{\"\\n\"}{end}"
+        ],
+        "startedAtUtc": "2026-10-31T14:52:18.003570+00:00",
+        "completedAtUtc": "2026-10-31T14:52:18.282915+00:00",
+        "exitCode": 0,
+        "stdoutBytes": 865,
+        "stdoutSha256": "38f3c0677cde9d2522d72bb5ba56b9cf807e7534310fcdf7e1dc98fa258c3d41",
+        "stderrBytes": 0,
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "retryPerformed": false
+    },
+    "snapshotPods": [
+        {
+            "name": "openbao-raft-snapshot-29888670-7dc5b",
+            "uid": "1ae203d9-4162-443c-9367-7ed95a83fc23",
+            "resourceVersion": "38129577",
+            "phase": "Succeeded",
+            "node": "node1",
+            "createdAt": "2026-10-30T00:30:00Z",
+            "jobName": "openbao-raft-snapshot-29888670",
+            "jobUid": "92a993a4-6fbd-4dfd-b24a-8c69e675d348",
+            "finishedAt": "2026-10-30T00:30:02Z"
+        },
+        {
+            "name": "openbao-raft-snapshot-29890110-mhd8z",
+            "uid": "920776a0-c1c6-4ce7-8069-40bd2cd13c8b",
+            "resourceVersion": "38577797",
+            "phase": "Succeeded",
+            "node": "node1",
+            "createdAt": "2026-10-31T00:30:00Z",
+            "jobName": "openbao-raft-snapshot-29890110",
+            "jobUid": "a21805bd-2506-4905-9614-11ffc6f84662",
+            "finishedAt": "2026-10-31T00:30:02Z"
+        }
+    ],
+    "logObservations": [
+        {
+            "pod": {
+                "name": "openbao-raft-snapshot-29890110-mhd8z",
+                "uid": "920776a0-c1c6-4ce7-8069-40bd2cd13c8b",
+                "resourceVersion": "38577797",
+                "phase": "Succeeded",
+                "node": "node1",
+                "createdAt": "2026-10-31T00:30:00Z",
+                "jobName": "openbao-raft-snapshot-29890110",
+                "jobUid": "a21805bd-2506-4905-9614-11ffc6f84662",
+                "finishedAt": "2026-10-31T00:30:02Z"
+            },
+            "receipt": {
+                "argv": [
+                    "kubectl",
+                    "--kubeconfig",
+                    "/home/administrator/.kube/hexalith-production",
+                    "--context",
+                    "jpiquot@local",
+                    "--request-timeout=10s",
+                    "--server",
+                    "https://192.168.1.30:6443",
+                    "--insecure-skip-tls-verify=false",
+                    "logs",
+                    "-n",
+                    "openbao",
+                    "openbao-raft-snapshot-29890110-mhd8z",
+                    "-c",
+                    "snapshot",
+                    "--timestamps=true",
+                    "--tail=100",
+                    "--limit-bytes=32768"
+                ],
+                "startedAtUtc": "2026-10-31T14:52:18.282993+00:00",
+                "completedAtUtc": "2026-10-31T14:52:18.636125+00:00",
+                "exitCode": 0,
+                "stdoutBytes": 70,
+                "stdoutSha256": "4d20b5f7731b4270bdb3eb408e89b58db45153c842e58173b0c77fc9abd71b82",
+                "stderrBytes": 0,
+                "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "retryPerformed": false
+            },
+            "publicChecksumResults": [
+                {
+                    "loggedAt": "2026-10-31T01:30:02.398889050+01:00",
+                    "checksumResult": "openbao-20261031T003001Z.snap: OK"
+                }
+            ],
+            "selection": "Only exact dated snapshot checksum-success lines retained; raw logs and other content are not persisted.",
+            "snapshotDigestValueObtained": false
+        },
+        {
+            "pod": {
+                "name": "openbao-raft-snapshot-29888670-7dc5b",
+                "uid": "1ae203d9-4162-443c-9367-7ed95a83fc23",
+                "resourceVersion": "38129577",
+                "phase": "Succeeded",
+                "node": "node1",
+                "createdAt": "2026-10-30T00:30:00Z",
+                "jobName": "openbao-raft-snapshot-29888670",
+                "jobUid": "92a993a4-6fbd-4dfd-b24a-8c69e675d348",
+                "finishedAt": "2026-10-30T00:30:02Z"
+            },
+            "receipt": {
+                "argv": [
+                    "kubectl",
+                    "--kubeconfig",
+                    "/home/administrator/.kube/hexalith-production",
+                    "--context",
+                    "jpiquot@local",
+                    "--request-timeout=10s",
+                    "--server",
+                    "https://192.168.1.30:6443",
+                    "--insecure-skip-tls-verify=false",
+                    "logs",
+                    "-n",
+                    "openbao",
+                    "openbao-raft-snapshot-29888670-7dc5b",
+                    "-c",
+                    "snapshot",
+                    "--timestamps=true",
+                    "--tail=100",
+                    "--limit-bytes=32768"
+                ],
+                "startedAtUtc": "2026-10-31T14:52:18.636367+00:00",
+                "completedAtUtc": "2026-10-31T14:52:19.012210+00:00",
+                "exitCode": 0,
+                "stdoutBytes": 70,
+                "stdoutSha256": "9c79f0ff7fb80438db119e0e5c674e4fd31a2bf9ff547d1dc466468f188847ec",
+                "stderrBytes": 0,
+                "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "retryPerformed": false
+            },
+            "publicChecksumResults": [
+                {
+                    "loggedAt": "2026-10-30T01:30:02.345394051+01:00",
+                    "checksumResult": "openbao-20261030T003001Z.snap: OK"
+                }
+            ],
+            "selection": "Only exact dated snapshot checksum-success lines retained; raw logs and other content are not persisted.",
+            "snapshotDigestValueObtained": false
+        }
+    ],
+    "copyInventoryComplete": false,
+    "nodeFilesystemRead": false,
+    "podExecs": 0,
+    "writes": 0,
+    "completedAtUtc": "2026-10-31T14:52:19.012279+00:00"
+}
