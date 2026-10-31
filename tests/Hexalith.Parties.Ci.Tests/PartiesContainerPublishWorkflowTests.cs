@@ -33,15 +33,15 @@ public sealed class PartiesContainerPublishWorkflowTests
     }
 
     [Theory]
-    [InlineData("package.json", "package-lock.json", "@commitlint/cli", "^21.2.2", "21.2.2")]
-    [InlineData("package.json", "package-lock.json", "@commitlint/config-conventional", "^21.2.2", "21.2.2")]
+    [InlineData("package.json", "package-lock.json", "@commitlint/cli", "^21.2.4", "21.2.4")]
+    [InlineData("package.json", "package-lock.json", "@commitlint/config-conventional", "^21.2.4", "21.2.4")]
     [InlineData("package.json", "package-lock.json", "@semantic-release/commit-analyzer", "^13.0.1", "13.0.1")]
     [InlineData("package.json", "package-lock.json", "@semantic-release/exec", "^7.1.0", "7.1.0")]
-    [InlineData("package.json", "package-lock.json", "@semantic-release/github", "^12.0.9", "12.0.9")]
+    [InlineData("package.json", "package-lock.json", "@semantic-release/github", "^12.0.10", "12.0.10")]
     [InlineData("package.json", "package-lock.json", "@semantic-release/release-notes-generator", "^14.1.1", "14.1.1")]
     [InlineData("package.json", "package-lock.json", "semantic-release", "^25.0.9", "25.0.9")]
-    [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@axe-core/playwright", "^4.13.0", "4.13.0")]
-    [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@playwright/test", "^1.63.0", "1.63.0")]
+    [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@axe-core/playwright", "^4.14.0", "4.14.0")]
+    [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@playwright/test", "^1.64.1", "1.64.1")]
     [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@types/node", "^24.19.2", "24.19.2")]
     [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "typescript", "^7.0.2", "7.0.2")]
     public void DependencyManifestsAndLocksMatchSelectedVersions(

@@ -5,7 +5,7 @@
     <HexalithBuildsRoot Condition="'$(HexalithBuildsRoot)' == ''">$(MSBuildThisFileDirectory)references/Hexalith.Builds</HexalithBuildsRoot>
     <!-- The Web SDK prunes SignalR.Common in favor of Microsoft.AspNetCore.App.
          Require the fixed shared runtime for the UI as well as the central NuGet floor. -->
-    <RuntimeFrameworkVersion Condition="'$(MSBuildProjectName)' == 'Hexalith.Parties.UI'">10.0.13</RuntimeFrameworkVersion>
+    <RuntimeFrameworkVersion Condition="'$(MSBuildProjectName)' == 'Hexalith.Parties.UI'">10.0.14</RuntimeFrameworkVersion>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

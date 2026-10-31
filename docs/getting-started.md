@@ -20,7 +20,7 @@ authentication setup; those hosts are outside the reference environment.
 | Git | Any recent version | [git-scm.com](https://git-scm.com) |
 | `jq` | Latest, optional for Bash examples | [jqlang.org](https://jqlang.org) |
 
-Install Aspire CLI **13.6.4** to match the catalog embedded in module tool **4.38.3**. The local tool manifest pins that module version; `dotnet tool restore` restores that exact version. The tool owns run-scoped infrastructure, readiness and diagnostics; its catalog requires Dapr CLI 1.18.2 and runtime 1.18.7. Set `HEXALITH_DAPR_HOME` to a prepared absolute isolated Dapr home using the [pinned Platform prerequisites](https://github.com/Hexalith/Hexalith.Platform/blob/17179e59843ee8cfb35892a74a2c18d3136fc9cf/README.md#run-and-debug-a-technical-module); an unset or unprepared home is refused.
+Install Aspire CLI **13.6.4** to match the catalog embedded in module tool **4.39.0**. The local tool manifest pins that module version; `dotnet tool restore` restores that exact version. The tool owns run-scoped infrastructure, readiness and diagnostics; its catalog requires Dapr CLI 1.18.2 and runtime 1.18.7. Set `HEXALITH_DAPR_HOME` to a prepared absolute isolated Dapr home using the [pinned Platform prerequisites](https://github.com/Hexalith/Hexalith.Platform/blob/17179e59843ee8cfb35892a74a2c18d3136fc9cf/README.md#run-and-debug-a-technical-module); an unset or unprepared home is refused.
 
 Verify your setup:
 
@@ -48,6 +48,13 @@ The command waits for seven servers: `parties`, `eventstore`, `tenants`,
 It uses only mapped direct projects and Debug assets. Missing selected source fails
 with a diagnostic; sibling checkouts and packages are not fallback sources.
 Do not initialize references inside those direct references.
+
+Source status on 2026-10-31: module tool 4.39.0 refuses fresh source mapping
+with `HXW009`: its pinned Builds `Props/Directory.Packages.props` at
+`970101f4e780f4609b945b8cc740adc3118564b2` is unavailable. An exact-SHA fetch
+returned `upload-pack: not our ref`. Source debug/build commands require an
+owner pin repair before they can establish source qualification; package
+Release builds remain independently verified.
 Memories is a required reference service; optional rich Parties search remains disabled.
 Stop only this run with `dotnet tool run hexalith-module -- down --manifest module/hexalith.module-manifest.v2.json --run-id <run-id>`.
 

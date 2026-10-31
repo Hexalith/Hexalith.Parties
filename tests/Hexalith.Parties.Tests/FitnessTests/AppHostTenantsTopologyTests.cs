@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 using Shouldly;
@@ -283,12 +284,15 @@ public sealed class AppHostTenantsTopologyTests
     public void LocalRunDocumentationUsesPinnedPlatformToolAndDirectReferencesOnly()
     {
         string root = RepositoryRoot.Locate();
+        using JsonDocument tools = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, ".config/dotnet-tools.json")));
+        string moduleVersion = tools.RootElement.GetProperty("tools")
+            .GetProperty("hexalith.builds.module.cli").GetProperty("version").GetString()!;
         foreach (string relative in new[] { "README.md", "docs/getting-started.md" })
         {
             string document = File.ReadAllText(Path.Combine(root, relative));
             document.ShouldContain("dotnet tool restore");
             document.ShouldContain("dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json");
-            document.ShouldContain("4.38.3");
+            document.ShouldContain(moduleVersion);
             document.ShouldContain("Legacy");
             document.ShouldNotContain("git submodule update --init --recursive");
             document.ShouldNotContain("git submodule update --recursive");

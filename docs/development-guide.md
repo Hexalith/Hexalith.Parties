@@ -260,7 +260,14 @@ retain that logger's category.
 
 ## Platform reference qualification
 
-Use pinned module tool 4.38.3 with Aspire CLI 13.6.4 from an independent Parties
+Source status on 2026-10-31: module tool 4.39.0 refuses fresh source mapping
+with `HXW009`: its pinned Builds `Props/Directory.Packages.props` at
+`970101f4e780f4609b945b8cc740adc3118564b2` is unavailable. An exact-SHA fetch
+returned `upload-pack: not our ref`. Source debug/build commands require an
+owner pin repair before they can establish source qualification; package
+Release builds remain independently verified.
+
+Use pinned module tool 4.39.0 with Aspire CLI 13.6.4 from an independent Parties
 checkout. Initialize only its direct references, including Platform, Memories and McpCli. The tool selects the
 seven-server dependency closure and emits a run ID, mapping and diagnostics.
 Break in `MvpComplianceWarningMiddleware.InvokeAsync` on `/ready`; a disposable

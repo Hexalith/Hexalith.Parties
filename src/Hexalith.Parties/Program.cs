@@ -36,7 +36,9 @@ builder.Services.AddHealthChecks().AddPartiesDaprHealthChecks(
     builder.Configuration["Tenants:PubSubName"] ?? "pubsub");
 
 builder.Services.AddParties(builder.Configuration);
+#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
 builder.Services.AddEventStoreDevelopmentDomainCatalog(builder.Configuration, typeof(Hexalith.Parties.Contracts.Routing.PartiesCatalogDeclarations).Assembly);
+#endif
 string ownerDaprEndpoint = Environment.GetEnvironmentVariable("DAPR_HTTP_ENDPOINT")
     ?? $"http://127.0.0.1:{Environment.GetEnvironmentVariable("DAPR_HTTP_PORT") ?? "3500"}";
 builder.Services.AddHttpClient<PartyChatBotSourceGateway>(client =>

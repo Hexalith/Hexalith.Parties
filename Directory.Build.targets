@@ -39,9 +39,9 @@
     <PropertyGroup>
       <MemoriesSourceRefreshSupported>false</MemoriesSourceRefreshSupported>
     </PropertyGroup>
-    <!-- The selected 3.0.3 package exposes the same explicit revision/refresh protocol.
+    <!-- The qualified 3.0.3 and 3.0.10 packages expose the same explicit revision/refresh protocol.
          Qualify exact package selections; future or older packages remain fail closed. -->
-    <PropertyGroup Condition="'$(HexalithMemoriesFromSource)' == 'true' or '$(HexalithMemoriesVersion)' == '3.0.3'">
+    <PropertyGroup Condition="'$(HexalithMemoriesFromSource)' == 'true' or '$(HexalithMemoriesVersion)' == '3.0.3' or '$(HexalithMemoriesVersion)' == '3.0.10'">
       <DefineConstants>$(DefineConstants);HEXALITH_MEMORIES_SOURCE_REFRESH</DefineConstants>
       <MemoriesSourceRefreshSupported>true</MemoriesSourceRefreshSupported>
     </PropertyGroup>

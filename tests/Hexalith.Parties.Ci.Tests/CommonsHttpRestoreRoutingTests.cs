@@ -27,8 +27,10 @@ public sealed class CommonsHttpRestoreRoutingTests
         props.Descendants("HexalithCommonsHttpPackageVersion").ShouldBeEmpty();
         string packages = CiTestPaths.ReadRepoFile("Directory.Packages.props");
         XDocument packageProps = XDocument.Parse(packages);
-        XElement contractUiVersion = packageProps.Descendants("PackageVersion").ShouldHaveSingleItem();
-        contractUiVersion.Attribute("Include")!.Value.ShouldBe("Hexalith.FrontComposer.Contracts.UI");
+        packageProps.Descendants("PackageVersion").ShouldBeEmpty();
+        XDocument buildsPackages = XDocument.Load(CiTestPaths.RepoFile("references/Hexalith.Builds/Props/Directory.Packages.props"));
+        XElement contractUiVersion = buildsPackages.Descendants("PackageVersion")
+            .Single(element => element.Attribute("Include")?.Value == "Hexalith.FrontComposer.Contracts.UI");
         contractUiVersion.Attribute("Version")!.Value.ShouldBe("$(HexalithFrontComposerVersion)");
         packageProps.Descendants("HexalithBuildsRoot").ShouldBeEmpty();
         packages.ShouldContain("$(Hexalith1BuildPackageProps)");

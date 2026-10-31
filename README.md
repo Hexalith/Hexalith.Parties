@@ -44,7 +44,7 @@ dotnet tool restore
 dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json
 ```
 
-The repository pins module tool **4.38.3** alongside aspirate and uses Aspire CLI
+The repository pins module tool **4.39.0** alongside aspirate and uses Aspire CLI
 **13.6.4**. From this independent checkout, `debug` resolves direct references
 once, builds the selected
 source projects in Debug, and waits for exactly `parties`, `eventstore`, `tenants`,
@@ -54,6 +54,13 @@ service child process. Stop that exact environment with
 `dotnet tool run hexalith-module -- down --manifest module/hexalith.module-manifest.v2.json --run-id <run-id>`.
 Initialize only this checkout's direct references; leave their nested references
 uninitialized. Ordinary package CI keeps package references and Release builds.
+
+Source status on 2026-10-31: module tool 4.39.0 refuses fresh source mapping
+with `HXW009`: its pinned Builds `Props/Directory.Packages.props` at
+`970101f4e780f4609b945b8cc740adc3118564b2` is unavailable. An exact-SHA fetch
+returned `upload-pack: not our ref`. Source debug/build commands require an
+owner pin repair before they can establish source qualification; package
+Release builds remain independently verified.
 
 The owner ACL remains `src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol.parties.yaml`.
 The renderer derives only `callers` and `invocationRules` from that ACL; its

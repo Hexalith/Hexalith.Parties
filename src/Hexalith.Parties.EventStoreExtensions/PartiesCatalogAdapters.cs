@@ -1,8 +1,10 @@
 using Hexalith.EventStore.DomainService;
+#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Routing;
 
 [assembly: RouteCatalogAdapterSource(typeof(Hexalith.Parties.EventStoreExtensions.PartiesCatalogAdapters))]
+#endif
 
 namespace Hexalith.Parties.EventStoreExtensions;
 
@@ -10,6 +12,8 @@ namespace Hexalith.Parties.EventStoreExtensions;
 public static class PartiesCatalogAdapters
 {
     /// <summary>Creates the exact adapter inventory without enabling hosted admission.</summary>
+    /// <exception cref="NotSupportedException">The selected EventStore packages do not expose canonical payload hashing.</exception>
+#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
     public static IReadOnlyList<IDeclaredIdempotencyIntentAdapter> Create() => [
         Adapter<AddContactChannel>(),
         Adapter<AddIdentifier>(),
@@ -44,5 +48,9 @@ public static class PartiesCatalogAdapters
         PartiesCatalogDeclarations.Commands.Single(c => c.Route.Execution!.HandlerType == typeof(T).FullName),
         payload => new Dictionary<string, object?> { ["payload-sha256"] = CanonicalIntentPayload.Sha256(payload) },
         completePayloadFields: payload => new Dictionary<string, object?> { ["payload-sha256"] = CanonicalIntentPayload.Sha256CanonicalJson(payload) });
+#else
+    public static IReadOnlyList<IDeclaredIdempotencyIntentAdapter> Create() =>
+        throw new NotSupportedException("Parties catalog adapter enrollment requires source-selected EventStore canonical payload hashing APIs.");
+#endif
 }
 

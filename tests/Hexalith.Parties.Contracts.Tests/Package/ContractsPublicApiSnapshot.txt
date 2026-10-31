@@ -695,7 +695,6 @@ type class Hexalith.Parties.Contracts.Results.PartyIdentityCommandResult base:He
   property System.String ResultPayload get
 type class Hexalith.Parties.Contracts.Routing.PartiesCatalogDeclarations interfaces:
   property System.Collections.Generic.IReadOnlyList<Hexalith.EventStore.Contracts.Routing.CommandIntentDeclaration> Commands get
-  property System.Collections.Generic.IReadOnlyList<Hexalith.EventStore.Contracts.Routing.RouteOperationContract> Operations get
   property System.Collections.Generic.IReadOnlyList<Hexalith.EventStore.Contracts.Routing.RouteContractDeclaration> Projections get
   property System.Collections.Generic.IReadOnlyList<Hexalith.EventStore.Contracts.Routing.RouteContractDeclaration> Queries get
   property System.Collections.Generic.IReadOnlyDictionary<System.String,System.String> ReceiverMethods get

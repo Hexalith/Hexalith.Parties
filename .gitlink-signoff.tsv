@@ -387,3 +387,17 @@ references/Hexalith.Platform|eee6ce27965b7c7108bbfcc02d447038e0553751|validated-
 #     supplies no new API owner acceptance, parity recertification, custody,
 #     migration, deployment, rollback deletion or release approval.
 references/Hexalith.Tenants|6deb5d5dbaad4e26405910b347d45b82deae1057|validated-advance|v5.11.0-13-g6deb5d5d|jpiquot|2026-10-28
+
+# --- 2026-10-31 explicit dependency synchronization and release task.
+#     Select exact published upstream main commits after compatible tooling checks.
+#     This grants source selection only; CI, publication and platform parity remain separate.
+references/Hexalith.EventStore|a526dae55a74d31a00d175d48b62067835176353|validated-advance|origin/main@a526dae55a74|jpiquot|2026-10-31
+references/Hexalith.Memories|fe8d36446d8081f60806cc15353aa7ca288e9035|validated-advance|origin/main@fe8d36446d80|jpiquot|2026-10-31
+references/Hexalith.FrontComposer|4dfc5390e117b601b88254304985f60d74981acd|validated-advance|origin/main@4dfc5390e117|jpiquot|2026-10-31
+references/Hexalith.Tenants|31785cb2d2fdcb3a6fd94872b535d1f642911ad6|validated-advance|origin/main@31785cb2d2fd|jpiquot|2026-10-31
+references/Hexalith.AI.Tools|9b78aa008cfc62cd88ad0ea4b39b1f07311956ce|validated-advance|origin/main@9b78aa008cfc|jpiquot|2026-10-31
+references/Hexalith.Commons|0604bcf5304fc09a569f7abbd8e5d1b9049c02b7|validated-advance|origin/main@0604bcf5304f|jpiquot|2026-10-31
+references/Hexalith.Builds|ff1c2952fa6aec113975bbe78b4d2487d6ec0b3d|validated-advance|origin/main@ff1c2952fa6a|jpiquot|2026-10-31
+references/Hexalith.PolymorphicSerializations|92ede24cc11129379efe52cfe7fd2c820c567f7f|validated-advance|origin/main@92ede24cc111|jpiquot|2026-10-31
+references/Hexalith.McpCli|18fb59490311bcdccfe44f59a77804911b5af302|validated-advance|origin/main@18fb59490311|jpiquot|2026-10-31
+references/Hexalith.Platform|405d2c6c0f36be0a513a423cf5fcae57cdd953f3|validated-advance|origin/main@405d2c6c0f36|jpiquot|2026-10-31

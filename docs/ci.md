@@ -317,7 +317,7 @@ The owned central catalog pins `Microsoft.AspNetCore.SignalR.Common` to `10.0.13
 for GHSA-334f-vvp4-7g6p, with its required Options and
 DependencyInjection.Abstractions floors aligned to `10.0.13`. NuGet audit stays
 active. The Web SDK prunes this package from the UI in favor of the shared ASP.NET
-runtime, so the UI alone requires runtime `10.0.13` through
+runtime, so the UI alone requires runtime `10.0.14` through
 `RuntimeFrameworkVersion`. Local UI starts require that runtime to be installed.
 The UI ships as a container outside the ten-package NuGet manifest;
 the existing container liveness gate remains required. The separately built
@@ -375,10 +375,17 @@ change also requires an approved parser-invariant and test update. Edit
 `TEMPLATE` for non-ACL changes, then regenerate. Missing, duplicate, unsafe or
 stale input fails without rewriting in `--check` mode.
 
-The local module tool is pinned to 4.38.3 with Aspire CLI 13.6.4 alongside
+The local module tool is pinned to 4.39.0 with Aspire CLI 13.6.4 alongside
 aspirate; package CI continues to restore packages and build Release. Source mode is selected only
 by the tool's persisted mapping, with no file-existence fallback. Legacy hosting
 projects and package publication gates remain in their existing scope.
+
+Source status on 2026-10-31: module tool 4.39.0 refuses fresh source mapping
+with `HXW009`: its pinned Builds `Props/Directory.Packages.props` at
+`970101f4e780f4609b945b8cc740adc3118564b2` is unavailable. An exact-SHA fetch
+returned `upload-pack: not our ref`. Source debug/build commands require an
+owner pin repair before they can establish source qualification; package
+Release builds remain independently verified.
 
 The five-item review-loop proof keeps its previous source/package/browser results as historical evidence, including the five imports produced by module tool 4.34.0. That run recorded HXR011 for absent isolated Dapr configuration and HXR012 for the available CLI 1.18.2/runtime 1.18.7 home against the older catalog tuple. Fresh mappings must use the current pinned tool and pass its prerequisites. Historical receipts do not qualify the broad Platform topology. The separate owned component runtime retains its declared tool environment and authenticated three-host boundary.
 
