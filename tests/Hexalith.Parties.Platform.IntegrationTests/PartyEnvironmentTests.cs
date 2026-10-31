@@ -30,7 +30,7 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, IT
         using var bound = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         bound.CancelAfter(TimeSpan.FromSeconds(120));
         CancellationToken token = bound.Token;
-        string tenant = fixture.Environment.SyntheticTenantId;
+        string tenant = fixture.Descriptor.SyntheticTenantId;
         // The declared Tenants API owns system-scope routing; fixtures never infer its internal query bindings.
         using HttpResponseMessage tenantResponse = await fixture.Tenants.GetAsync($"/api/tenants/{Uri.EscapeDataString(tenant)}", token).ConfigureAwait(true);
         tenantResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -87,7 +87,7 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, IT
         output.WriteLine($"Persisted synthetic stream: {events.Length} exact event envelopes; tenant={tenant}; domain={identity.Domain}; aggregate={partyId}; command={commandId}; metadataSequence={metadata.CurrentSequence}; createdEnvelopeTimestamp={createdEnvelope.Timestamp:O}; Tenants and Memories returned the run tenant.");
         await WritePersistenceObservationsAsync(new
         {
-            runId = fixture.Environment.RunId,
+            runId = fixture.Descriptor.RunId,
             status = "functional-observations-passed",
             qualificationCredit = false,
             observedAtUtc = DateTimeOffset.UtcNow,
@@ -163,7 +163,7 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, IT
         {
             using HttpResponseMessage response = await fixture.Gateway.PostAsJsonAsync("/api/v1/queries", new
             {
-                tenant = fixture.Environment.SyntheticTenantId, domain = "party", aggregateId = partyId,
+                tenant = fixture.Descriptor.SyntheticTenantId, domain = "party", aggregateId = partyId,
                 queryType = "PartyDetail", projectionType = "party-detail", entityId = partyId,
                 payload = new GetParty { PartyId = partyId },
             }, SerializerOptions, token).ConfigureAwait(true);

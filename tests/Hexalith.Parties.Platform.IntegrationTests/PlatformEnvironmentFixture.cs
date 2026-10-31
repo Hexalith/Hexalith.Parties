@@ -37,12 +37,12 @@ public sealed class PlatformEnvironmentFixture : AspireTopologyFixtureBase
     public async Task<(AggregateMetadata Metadata, EventEnvelope[] Events)> ReadStoredStreamAsync(AggregateIdentity identity, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(identity);
-        if (identity.TenantId != Environment.SyntheticTenantId)
+        if (identity.TenantId != Descriptor.SyntheticTenantId)
         {
             throw new InvalidOperationException("Persistence observations require this run's synthetic tenant.");
         }
-        Uri endpoint = Environment.GetEndpoint("redis", "parties", "tcp");
-        using var bound = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, Environment.RequestCancellation);
+        Uri endpoint = Descriptor.GetEndpoint("redis", "parties", "tcp");
+        using var bound = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, Descriptor.RequestCancellation);
         bound.CancelAfter(TimeSpan.FromSeconds(30));
         bound.Token.ThrowIfCancellationRequested();
         Task<ConnectionMultiplexer> connecting = ConnectionMultiplexer.ConnectAsync(new ConfigurationOptions
