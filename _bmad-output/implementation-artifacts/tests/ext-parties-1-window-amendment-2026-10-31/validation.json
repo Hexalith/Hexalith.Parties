@@ -1,0 +1,48 @@
+{
+  "verifiedAtUtc": "2026-10-31T06:03:52.660455+00:00",
+  "passed": true,
+  "checksPassed": 98,
+  "protectedFilesPreserved": 45,
+  "earlierDocumentPrefixPreserved": true,
+  "amendmentSha256": "337a02bc72b29ba8ed0ac9d57f90288bdd84c32e525a4420462e92fa734230f9",
+  "documentSha256": "b5607653c953287f5624a9010f78697a7543fdd704503170e9f9624c6c33ce88",
+  "amendedDeadlineDate": "2026-11-15",
+  "exactCutoffPending": true,
+  "previousScopeExpiredUnderOriginalBindings": true,
+  "allInheritedBlockersRetained": true,
+  "agentsRegisterUnchanged": true,
+  "canonicalOwnerFormUnchanged": true,
+  "admissionAllowed": false,
+  "executionAllowed": false,
+  "effects": {
+    "kubernetesMetadataGetCommands": 0,
+    "providerCalls": 0,
+    "sshCalls": 0,
+    "podExecs": 0,
+    "credentialIssuanceOrRenewals": 0,
+    "runtimeRecoveryExecutions": 0,
+    "runtimeOrPolicyWrites": 0,
+    "backupChanges": 0,
+    "infrastructureProvisioned": 0,
+    "productionBackendChanges": 0,
+    "qualificationRuns": 0,
+    "registerWrites": 0,
+    "messagesSent": 0
+  },
+  "whitespaceCommand": {
+    "argv": [
+      "git",
+      "-c",
+      "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+      "diff",
+      "--check",
+      "--",
+      "docs/implementation/ext-parties-1-operational-continuation-2026-10-30.md"
+    ],
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "validationMethod": "Inline python3 offline SHA-256, prefix, reference, requirement, link and whitespace checks; no prior verifier rerun or earlier receipt regenerated.",
+  "limit": "Records direct user deadline direction only. No new authenticated operational owner return, exact timestamp, executable scope, current grant, preservation acceptance, recovery or qualification established."
+}

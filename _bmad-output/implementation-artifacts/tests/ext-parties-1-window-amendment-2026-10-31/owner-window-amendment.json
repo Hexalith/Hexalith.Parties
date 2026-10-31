@@ -1,0 +1,107 @@
+{
+  "schema": "EXT-PARTIES-1.owner-window-amendment.v1",
+  "recordedAtUtc": "2026-10-31T06:03:26.508128+00:00",
+  "instructionSource": {
+    "kind": "Direct user instruction in current conversation",
+    "verbatim": "the window will stay open until 15 november",
+    "instructionDate": "2026-10-31",
+    "authenticationScope": "Direct owner direction received in this session; supplies no external-owner attestation or missing preservation evidence."
+  },
+  "status": "OwnerAmendedDateRecordedExactCutoffPending",
+  "amendedDeadlineDate": "2026-11-15",
+  "exactExclusiveDeadlineUtc": null,
+  "cutoffTimeAndTimezoneConfirmed": false,
+  "clarificationRequested": {
+    "question": "For the November 15, 2026 cutoff, which exact time should apply?",
+    "options": [
+      "Keep 16:53:50 UTC on November 15",
+      "End of November 15 in Europe/Paris"
+    ],
+    "responseReceived": false
+  },
+  "precedence": "This explicit later owner instruction supersedes the earlier October 30 fixed-date/no-extension direction for the requested deadline amendment. Historical scope bytes, digests and dated observations remain unchanged. No automatic extension or operational action is inferred.",
+  "previousBoundScope": {
+    "source": {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-scope-20261029T165350Z-final/recovery-scope.json",
+      "sha256": "f32c1128b54f30682a22734986258a1882483d5d80bb2c253c4769bfb1e7d947"
+    },
+    "scopeSha256": "ef4a6896ed192137c4394cf5ef177ace1ce43ddf27a632731cf891f1c80cfbe3",
+    "runId": "9deb3d3afbbf42d39686abc30be4f64b",
+    "exclusiveDeadlineUtc": "2026-10-30T16:53:50+00:00",
+    "expiredAtRecording": true,
+    "status": "ExpiredIneligibleUnderOriginalBindings",
+    "originalBytesOrDigestChanged": false,
+    "revivedOrExecuted": false
+  },
+  "inheritedRequirements": {
+    "proposal": {
+      "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-return-continuation-2026-10-30/recovery-proposal-continuation.json",
+      "sha256": "9be051020c4d46f0c86d2e748a5bb811d465ceb62b0197556b3cd94d0c79d676"
+    },
+    "findings": {
+      "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-return-continuation-2026-10-30/evidence-findings.json",
+      "sha256": "efb7ea53affac2dc742a30474337f085a9156f53f750a74bf14a3fb42147b426"
+    },
+    "validationReceipt": {
+      "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-return-continuation-2026-10-30/validation.json",
+      "sha256": "9bd177899de3ea8d170abac756fe0d83455c9b932c3d8c0919f666709ad50c5f"
+    },
+    "allUnresolvedBlockersRetained": true,
+    "separateSecretTransitions": [
+      {
+        "fromResourceVersion": "36774577",
+        "throughResourceVersion": "37223806",
+        "authenticWriteSource": null,
+        "authenticatedDisposition": null,
+        "completeIntervalCovered": null
+      },
+      {
+        "fromResourceVersion": "37223806",
+        "throughResourceVersion": "37671992",
+        "authenticWriteSource": null,
+        "authenticatedDisposition": null,
+        "completeIntervalCovered": null
+      },
+      {
+        "fromResourceVersion": "37671992",
+        "throughResourceVersion": "38120141",
+        "authenticWriteSource": null,
+        "authenticatedDisposition": null,
+        "completeIntervalCovered": null
+      }
+    ],
+    "completeCoverageThroughActualCurrentAtAdmissionRequired": true,
+    "separateSecretMemoriesRegisterDispositionsRequired": true,
+    "currentMetadataSubstitutesForHistoricalWrites": false,
+    "newOwnerFactsOrPreservationDispositionsSupplied": false
+  },
+  "technicalAndCredentialWindowsExtended": false,
+  "newConcreteOperationalScopePrepared": false,
+  "newScopeDigestOrRunId": null,
+  "admissionAllowed": false,
+  "executionAllowed": false,
+  "liveStopped": true,
+  "fullCustodyStopped": true,
+  "constraints": {
+    "capEngineerDays": 2,
+    "newInfrastructureSpend": 0,
+    "newCapOrEffortAllocationInferred": false,
+    "spentEffortInferred": false
+  },
+  "effects": {
+    "kubernetesMetadataGetCommands": 0,
+    "providerCalls": 0,
+    "sshCalls": 0,
+    "podExecs": 0,
+    "credentialIssuanceOrRenewals": 0,
+    "runtimeRecoveryExecutions": 0,
+    "runtimeOrPolicyWrites": 0,
+    "backupChanges": 0,
+    "infrastructureProvisioned": 0,
+    "productionBackendChanges": 0,
+    "qualificationRuns": 0,
+    "registerWrites": 0,
+    "messagesSent": 0
+  },
+  "nextAction": "Resolve the exact November 15 cutoff, then record that timestamp in a separately fingerprinted scope proposal under this explicit date amendment. Retain all historical scope bytes and key/credential technical windows. Continue only the already authorized evidence preparation; admission requires every inherited prerequisite. Recovery, qualification and production backend implementation remain prohibited."
+}
