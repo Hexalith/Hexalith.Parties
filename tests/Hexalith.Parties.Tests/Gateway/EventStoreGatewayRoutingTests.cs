@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
@@ -175,6 +176,31 @@ public sealed class EventStoreGatewayRoutingTests
         problem.GetProperty("title").GetString().ShouldBe(expectedTitle);
         problem.GetProperty("statusCode").GetInt32().ShouldBe((int)expectedStatus);
         problem.GetProperty("correctiveAction").GetString().ShouldBe(expectedCorrectiveAction);
+    }
+
+    [Theory]
+    [InlineData("/swagger/index.html", "anonymous", HttpStatusCode.Unauthorized)]
+    [InlineData("/swagger/index.html", "channel", HttpStatusCode.Unauthorized)]
+    [InlineData("/swagger/index.html", "mixed", HttpStatusCode.Forbidden)]
+    [InlineData("/swagger/index.html", "human", HttpStatusCode.OK)]
+    [InlineData("/openapi/v1.json", "anonymous", HttpStatusCode.Unauthorized)]
+    [InlineData("/openapi/v1.json", "channel", HttpStatusCode.Unauthorized)]
+    [InlineData("/openapi/v1.json", "mixed", HttpStatusCode.Forbidden)]
+    [InlineData("/openapi/v1.json", "human", HttpStatusCode.OK)]
+    public async Task DocumentationSurfacesRetainHumanBoundaryBeforeTerminalInventoryAsync(string path, string credentials, HttpStatusCode expected)
+    {
+        using var factory = new EventStoreGatewayTestFactory(openApiEnabled: true);
+        using HttpClient client = credentials is "human" or "mixed" ? factory.CreateAuthenticatedClient() : factory.CreateClient();
+        if (credentials == "channel")
+        {
+            client.DefaultRequestHeaders.Add(Hexalith.EventStore.ServiceDefaults.Authentication.DaprAppChannelToken.HeaderName, factory.ChannelToken);
+            using HttpResponseMessage channelProof = await client.GetAsync("/dapr/subscribe", TestContext.Current.CancellationToken);
+            channelProof.StatusCode.ShouldBe(HttpStatusCode.OK, "The same configured credential must authenticate through the real channel-only endpoint.");
+        }
+        if (credentials == "mixed")
+            client.DefaultRequestHeaders.Add(Hexalith.EventStore.ServiceDefaults.Authentication.EventStoreWorkloadAuthenticationDefaults.AssertionHeaderName, Convert.ToHexStringLower(RandomNumberGenerator.GetBytes(32)));
+        using HttpResponseMessage response = await client.GetAsync(path, TestContext.Current.CancellationToken);
+        response.StatusCode.ShouldBe(expected);
     }
 
     [Fact]
@@ -1215,6 +1241,8 @@ public sealed class EventStoreGatewayRoutingTests
         bool openApiEnabled = false,
         IQueryRouter? customQueryRouter = null) : WebApplicationFactory<EventStoreProgram>
     {
+        public string ChannelToken { get; } = Convert.ToHexStringLower(RandomNumberGenerator.GetBytes(32));
+
         public FakeAggregateActor CommandActor { get; } = new();
 
         public InMemoryCommandStatusStore StatusStore { get; } = new();
@@ -1251,6 +1279,7 @@ public sealed class EventStoreGatewayRoutingTests
 
             _ = builder.ConfigureAppConfiguration(config => config.AddInMemoryCollection(new Dictionary<string, string?>
             {
+                [Hexalith.EventStore.ServiceDefaults.Authentication.DaprAppChannelToken.ConfigurationKey] = ChannelToken,
                 ["Authentication:JwtBearer:Issuer"] = GatewayJwt.Issuer,
                 ["Authentication:JwtBearer:Audience"] = GatewayJwt.Audience,
                 ["Authentication:JwtBearer:SigningKey"] = GatewayJwt.SigningKey,
@@ -1304,7 +1333,7 @@ public sealed class EventStoreGatewayRoutingTests
                     services.Remove(descriptor);
                 }
 
-#if HEXALITH_EVENTSTORE_SOURCE_CATALOG
+#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
                 // This protocol-only fixture already replaces catalog-enforced entry points
                 // through their friend seam. Exclude only the corresponding new pipeline gate;
                 // tenant/RBAC and HTTP security validation continue to run. The Platform suite
@@ -1335,9 +1364,8 @@ public sealed class EventStoreGatewayRoutingTests
                         null, null, provider.GetRequiredService<IProjectionUpdateOrchestrator>(),
                         provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Hexalith.EventStore.Server.Pipeline.SubmitCommandHandler>>()));
 #endif
-                services.RemoveAll<ICommandActivityTracker>();
-                services.RemoveAll<IStreamActivityTracker>();
-                services.RemoveAll<ICommandCorrelationIndex>();
+                // Retain the standard SDK activity/correlation registrations; the explicit
+                // friend-only protocol handler above does not substitute runtime admission.
 
                 services.RemoveAll<IProjectionActivationOutbox>();
                 services.AddSingleton<IProjectionActivationOutbox, NoOpProjectionActivationOutbox>();

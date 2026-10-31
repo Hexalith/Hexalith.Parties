@@ -5,6 +5,7 @@ using Hexalith.EventStore.Middleware;
 using Hexalith.EventStore.OpenApi;
 using Hexalith.EventStore.Server.Configuration;
 using Hexalith.EventStore.ServiceDefaults;
+using Hexalith.EventStore.ServiceDefaults.Authentication;
 using Hexalith.EventStore.SignalRHub;
 
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -39,12 +40,10 @@ app.UseExceptionHandler();
 app.MapDefaultEndpoints();
 app.UseAuthentication();
 app.UseRateLimiter();
-app.UseAuthorization();
-app.UseCloudEvents();
-
 if (app.Configuration.GetValue("EventStore:OpenApi:Enabled", true))
 {
-    _ = app.MapOpenApi();
+    _ = app.MapOpenApi().RequireAuthorization(EventStoreHttpHostSecurityExtensions.HumanPolicy);
+    _ = app.UseEventStoreHumanSurface("/swagger");
     _ = app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/openapi/v1.json", "Hexalith EventStore API v1");
@@ -52,11 +51,16 @@ if (app.Configuration.GetValue("EventStore:OpenApi:Enabled", true))
     });
 }
 
+app.UseEventStoreHttpHostSecurity();
+app.UseAuthorization();
+app.UseCloudEvents();
+
+
 app.MapControllers();
 app.MapErrorReferences();
 app.MapApiVersionFallback();
-app.MapSubscribeHandler();
-app.MapActorsHandlers();
+app.MapSubscribeHandler().RequireEventStoreChannel();
+app.MapActorsHandlers().WithMetadata(EventStoreActorCallbackEndpointMetadata.Instance).RequireEventStoreChannel();
 app.MapApplicationRuntimeProofEndpoints();
 
 SignalROptions? signalROptions = app.Configuration

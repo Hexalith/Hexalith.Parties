@@ -921,7 +921,8 @@ public sealed class PlatformApiPrerequisitesTests
     {
         string root = RepositoryRoot.Locate();
         string expectedVersion = EffectivePackageVersions.ReadProperty(root, "HexalithEventStoreVersion", configuration: configuration);
-        IReadOnlyDictionary<string, EvaluatedProjectGraph> graphs = ReadExternalRuntimeGraphs(root, ReadExternalRuntimeProjects(root), expectedVersion, configuration);
+        IReadOnlyDictionary<string, EvaluatedProjectGraph> graphs = ReadExternalRuntimeGraphs(root, ReadExternalRuntimeProjects(root), expectedVersion, configuration,
+            $"-p:HexalithEventStoreVersion={expectedVersion}");
 
         graphs.Count.ShouldBeGreaterThan(7, "The runtime preflight must inspect transitive projects as well as both gateway choices and their peers.");
         graphs.Keys.ShouldContain(path => path.EndsWith("Hexalith.Tenants.csproj", StringComparison.Ordinal));
@@ -1184,6 +1185,29 @@ public sealed class PlatformApiPrerequisitesTests
             .Message.ShouldContain("unsupported ResolveGateway arguments");
     }
 
+    /// <summary>Selected SDK properties flow to external evaluation without hiding explicit package skew.</summary>
+    [Theory]
+    [InlineData("Debug")]
+    [InlineData("Release")]
+    public void ExternalRuntimeCommandContextPreservesExactPackageValidation(string configuration)
+    {
+        string root = Path.Combine(Path.GetTempPath(), $"parties-runtime-command-context-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(root);
+        try
+        {
+            string project = Path.Combine(root, "Runtime.csproj");
+            XDocument runtime = XDocument.Parse("<Project><PropertyGroup><HexalithEventStoreVersion>3.128.4</HexalithEventStoreVersion></PropertyGroup><ItemGroup><PackageVersion Include=\"Hexalith.EventStore.Contracts\" Version=\"$(HexalithEventStoreVersion)\" /><PackageReference Include=\"Hexalith.EventStore.Contracts\" /></ItemGroup></Project>");
+            runtime.Save(project);
+            Should.Throw<ShouldAssertException>(() => ReadExternalRuntimeGraphs(root, [project], "3.129.0", configuration));
+            ReadExternalRuntimeGraphs(root, [project], "3.129.0", configuration, "-p:HexalithEventStoreVersion=3.129.0").Count.ShouldBe(1);
+            runtime.Descendants("PackageReference").Single().SetAttributeValue("VersionOverride", "3.128.4");
+            runtime.Save(project);
+            Should.Throw<ShouldAssertException>(() => ReadExternalRuntimeGraphs(root, [project], "3.129.0", configuration, "-p:HexalithEventStoreVersion=3.129.0"))
+                .Message.ShouldContain("independently evaluated Parties EventStore package selection");
+        }
+        finally { Directory.Delete(root, recursive: true); }
+    }
+
     /// <summary>Runtime declarations cannot introduce dependencies outside the root submodule manifest.</summary>
     [Fact]
     public void ExternalRuntimeInventoryRejectsUndeclaredRootSubmodules()
@@ -1267,7 +1291,8 @@ public sealed class PlatformApiPrerequisitesTests
     }
 
     private static IReadOnlyDictionary<string, EvaluatedProjectGraph> ReadExternalRuntimeGraphs(
-        string root, IEnumerable<string> runtimeProjects, string expectedEventStoreVersion, string configuration = "Release")
+        string root, IEnumerable<string> runtimeProjects, string expectedEventStoreVersion, string configuration = "Release",
+        params string[] commandSelectedProperties)
     {
         Dictionary<string, EvaluatedProjectGraph> graphs = new(StringComparer.Ordinal);
         Queue<string> pending = new(runtimeProjects.Select(path => RepositoryDependencyPaths.Resolve(root, path)));
@@ -1279,7 +1304,7 @@ public sealed class PlatformApiPrerequisitesTests
             }
 
             File.Exists(project).ShouldBeTrue($"External runtime project does not exist: {project}");
-            EvaluatedProjectGraph graph = EvaluateProjectGraphForConfiguration(root, project, configuration, useSource: null);
+            EvaluatedProjectGraph graph = EvaluateProjectGraphForConfiguration(root, project, configuration, useSource: null, commandSelectedProperties);
             string.IsNullOrWhiteSpace(graph.Properties["TargetFrameworks"])
                 .ShouldBeTrue($"{project}: unexpanded TargetFrameworks are unsupported by the external runtime preflight; evaluate an explicit inner framework context first");
             foreach (string selector in RuntimeSourceSelectors)

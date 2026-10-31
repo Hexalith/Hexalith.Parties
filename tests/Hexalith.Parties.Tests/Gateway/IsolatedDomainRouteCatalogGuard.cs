@@ -1,4 +1,4 @@
-#if HEXALITH_EVENTSTORE_SOURCE_CATALOG
+#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
 using Hexalith.EventStore.DomainService;
 using Hexalith.EventStore.ServiceDefaults.Routing;
 

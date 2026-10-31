@@ -98,7 +98,7 @@ internal sealed class PartiesProcessTestFactory : WebApplicationFactory<Program>
 
         builder.ConfigureTestServices(services =>
         {
-#if HEXALITH_EVENTSTORE_SOURCE_CATALOG
+#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
             services.AddScoped<Hexalith.EventStore.DomainService.IDomainRouteCatalogGuard, IsolatedDomainRouteCatalogGuard>();
 #endif
             // Replace only configuration binders, preserving real authentication
