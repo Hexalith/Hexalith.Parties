@@ -115,8 +115,9 @@ See the [Getting Started Guide](docs/getting-started.md) for the full EventStore
 ## Project Structure
 
 The repository contains exactly **15 projects under `src` plus one sample
-project**, **16 runnable .NET test projects plus one support host**
-(`Hexalith.Parties.EventStoreGateway.TestHost`), with Playwright e2e coverage
+project**, **16 runnable .NET test projects plus two support hosts and one contracts artifact**
+(`Hexalith.Parties.EventStoreGateway.TestHost`, `Hexalith.Parties.EventStoreSample.TestHost`
+and `Hexalith.Parties.EventStoreSample.Contracts.TestArtifact`), with Playwright e2e coverage
 alongside them. Adopter-facing packages (left column) are the only modules
 consumers normally reference directly. Modules under
 "Internal" are private to the domain-service host and not adopter-facing
@@ -330,4 +331,8 @@ Release in the CI package lane. Each probe removes inherited source-mapping impo
 restores an independent package consumer. Debug probes check package structure and APIs only;
 the Release counterpart and authoritative publications remain required for package acceptance.
 
-The `Hexalith.Parties.EventStoreExtensions` project installs owner intent adapters for Development composition. The completed Story 3.3 owner decision makes it packable and not application-publishable; its separate private package-cohort evidence grants no hosted or public-release qualification.
+The `Hexalith.Parties.EventStoreExtensions` package carries the existing owner-declared canonical intent adapters for catalog composition. It is included in the public release inventory and remains nonpublishable as an application. Package delivery does not activate a catalog; each participating host must independently qualify and commit the bound runtime generation.
+
+The catalog-enabled release cohort requires trusted catalog enrollment before a service becomes ready or accepts catalog dispatch. The run-only packaged test profile prepares the exact selected public packages through `scripts/prepare-aspire-runtime-hosts.sh` and supplies a private Development catalog. Production composition must provide the SDK authority and trust-provider configuration.
+
+Public browser calls require the signed `eventstore:surface=ui` claim; agent calls use `agent` when the declared operation permits that surface. The local confidential `hexalith-parties-ui` OAuth client emits the UI claim alongside its existing audience and authorization claims. Configure the corresponding explicit client claim in an external identity provider; roles and request headers do not determine the caller surface.

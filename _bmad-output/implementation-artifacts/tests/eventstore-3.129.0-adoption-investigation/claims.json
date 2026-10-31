@@ -1,0 +1,255 @@
+{
+  "observedUtc": "2026-10-31T10:21:41.666427+00:00",
+  "rootHeadNow": "6febe55d1c711a305a5969f04b8b9fb1fa80722f",
+  "disposableWorkspace": "/tmp/parties-eventstore-3129-audit-l14nfhpd/Parties",
+  "copiedRelevantRootFilesStillMatch": {
+    "Directory.Build.props": true,
+    "Directory.Build.targets": true,
+    "Directory.Packages.props": true,
+    "src/Hexalith.Parties/Program.cs": true,
+    "src/Hexalith.Parties.Contracts/Routing/PartiesCatalogDeclarations.cs": true
+  },
+  "publicEventStore": {
+    "latestStable": "3.129.0",
+    "archiveHttpStatus": 200,
+    "packageSourceCommit": "c02afa0fce310ccdb696232f18829df96cba088e",
+    "releasePublishedUtc": "2026-10-31T09:44:36Z",
+    "releaseUrl": "https://github.com/Hexalith/Hexalith.EventStore/releases/tag/v3.129.0"
+  },
+  "compileProof": {
+    "unchangedPartiesHost": "passed; zero warnings/errors",
+    "catalogApiBranches": "Parties.Tests graph and EventStoreExtensions passed; probe-only constants, no source-mode change proposed",
+    "sampleCurrentWrapper": "passed; existing catalog exclusions still in place",
+    "logs": [
+      "/tmp/parties-3129-baseline-build.log",
+      "/tmp/parties-3129-guarded-tests-build.log",
+      "/tmp/parties-3129-guarded-adapters-build.log",
+      "/tmp/parties-3129-sample-build.log"
+    ]
+  },
+  "apiCompatibility": {
+    "fullyBinaryCompatible": false,
+    "contracts": "Old RouteCatalogEntry/RouteCatalogEnvelope ctor and Deconstruct signatures replaced by appended optional source parameters",
+    "server": "13 removed ctor/deconstruct signatures across8types",
+    "domainServiceComparison": "tool full diff incomplete due metadata dependency resolution; targeted new public API verified"
+  },
+  "catalogCandidate": {
+    "activated": false,
+    "schema": 3,
+    "routes": 41,
+    "operations": 41,
+    "rootDigest": "8d917bac5304dc9c345241b246ad693ad6c4961e67e5cf8523811a31f004dec6",
+    "log": "/tmp/parties-3129-owner-catalog-probe.log"
+  },
+  "publicOwnerPrerequisites": [
+    {
+      "package": "Hexalith.Tenants.Contracts",
+      "version": "5.11.2",
+      "sourceAttributes": 0,
+      "operationsProperty": false,
+      "actualSdkRefusal": "No compiled owner declaration source was enrolled."
+    },
+    {
+      "package": "Hexalith.Memories.EventStore",
+      "version": "3.0.11",
+      "sourceAttributes": 0,
+      "operationsProperty": false,
+      "actualSdkRefusal": "No compiled owner declaration source was enrolled."
+    }
+  ],
+  "newMemoriesSource": {
+    "commit": "b8f6d298db8c49df88eb36be9a5fb17a77583de6",
+    "enablesPublishedCatalogFrom": "3.129.0",
+    "addsPublishablePackage": "Hexalith.Memories.EventStoreExtensions",
+    "releaseRun": 41191953588,
+    "releaseJob": 124510372610,
+    "blocker": "Three AppHostSecurityConfigurationTests still assume shared3.128.4 and no local effective floor; actual effective3.129.0",
+    "log": "/tmp/memories-b8f6-release-failed.log"
+  },
+  "requiredAdoption": [
+    "Exact package capability marker separate from source-only topology selection",
+    "Rebuild each participating owner host/declaration/adapter against coherent3.129.0 cohort; verify actual emitted/restored graph",
+    "Gateway mirror current official channel/human endpoint security and catalog receiver hooks",
+    "Use real Development bootstrap/authority APIs with private directory, attempt, instance, catalog+receipt/root digest, owner/adapter assemblies, exact participant IDs, actual ACL/component observation, routing state keyPrefix none, configured idempotency ring, prepare/ready/commit/readback",
+    "Do not assign production trust or replace missing compiled owner metadata; source/publish defaults and real auth/mTLS/persistence assertions remain",
+    "Qualify actual runtime before claiming adoption; validated existing runtime ceiling remains3.128.4 until complete cohort is ready"
+  ],
+  "originalRootCodeOrProducerOutputsMutated": false,
+  "claimArtifactWritten": true,
+  "checkpoint": {
+    "observedUtc": "2026-10-31T10:44:48.296317+00:00",
+    "agent": "dependency_audit",
+    "state": "frozen safe handoff for parent combined mandatory parallel SDK/root/Platform review",
+    "originalRootCodeEdited": true,
+    "originalProducerOutputsEdited": true,
+    "memoryFixtureFollowup": {
+      "head": "ef5c134bbee7ec708f354ce1bc3e508ee6105ab7",
+      "pushed": true,
+      "upstreamPreserved": "7352c6a2d9bc718bf34f861f6a5051293f7bff60",
+      "tests": "15/15, no skips",
+      "build": "0 warnings/errors",
+      "exactCommitlintEvidence": "/tmp/memories-effective-floor-commitlint.json",
+      "spec": "references/Hexalith.Memories/_bmad-output/implementation-artifacts/spec-effective-eventstore-package-floor.md"
+    },
+    "ownedButNotYetEdited": [
+      "root API capability guards/availability",
+      "root sample Contracts assembly split",
+      "root package Gateway catalog/security hooks",
+      "root AppHost lifecycle bootstrap/config/tool invocation",
+      "Platform CatalogBuilder mixed actor target mapping"
+    ],
+    "nextSteps": [
+      "Parent reconcile latest root commits preserving frozen edits",
+      "Combined independent review SDK/root/Platform and triage",
+      "Publish/retrieve actual SDK3.129.1 and Tenants6; use verified Memory3.0.13",
+      "Set root normal versions and latest exact SDK owner source pointers",
+      "Build all8actual runtime host graphs with published SDK profile; inspect actual assets",
+      "Coordinate producer freeze then full persisted Counter/Greeting/Parties concurrent and remaining full183Aspire proof; no core-only reduction"
+    ],
+    "criticalSdkObservations": [
+      "Counter query target is projection-actor/ProjectionActor, validator requires Method QueryAsync and QueryRouter requires target.AppId equal actual gateway LocalAppId",
+      "DomainCatalog.Targets must omit only that known actor-query kind from local domain targets; it must still reject arbitrary unsupported kinds",
+      "Gateway observation needs actual actor registration/invoker-derived QueryAsync targets; parent fixes hardcoded eventstore identity using configured DomainService AppId",
+      "Sample legacy projection requires actual explicit legacy projection catalog enrollment; schema operations must use owner actual typed results and conservative existing UI policy without invented agent eligibility"
+    ],
+    "activeToolSessions": [],
+    "disposableRootWorkspace": "/tmp/parties-eventstore-3129-audit-l14nfhpd/Parties",
+    "disposableMemoryWorkspace": "/tmp/memories-3129-floor-8wfmo2ol/Memories",
+    "latestMemoryIdentityFix": {
+      "commit": "0a1f6bf94301094afd0045c4e396dad4dd613ce6",
+      "pushed": true,
+      "tests": "31/31actual HTTP authorization cases",
+      "build": "0warnings/errors",
+      "logs": [
+        "/tmp/memories-run-identity-build.log",
+        "/tmp/memories-run-identity-tests.log"
+      ]
+    },
+    "scopedProof": {
+      "runtimePreparation": "37/37",
+      "contractsSchemaAdapters": "4/4",
+      "sampleCompleteWrapperBuild": "0warnings/errors using actual parent sample source + public3.129.0"
+    },
+    "coordinatedOwnerPrerequisites": [
+      "SDKpublic native topic-binding shim",
+      "SDKreal private auxiliary-client observer and explicit package-profile references for all native SDK peers",
+      "Sample actual ReceiverMethods inventory",
+      "public SDK3.129.1 coherent all8runtime hosts"
+    ],
+    "ownedCurrentChanges": [
+      "exact catalog API availability separate from source host selection",
+      "existing isolatedHTTPunit factory availability",
+      "sample separate native Contracts identity + real inventories",
+      "packageGateway nativecatalog/securityhooks; compile blocked private owner binding API",
+      "actual PlatformCatalogBuilder gatewayAppId/mixedquery mapping",
+      "rootprepare exactSDK property + actual assets package/version checks",
+      "private catalog tool invocation helper in progress"
+    ],
+    "activeBuilds": [],
+    "liveTopologyStarted": false,
+    "rootLocalBase": "f392b099bd5fd1f48fdbde562fe5e675dd380250",
+    "rootRemoteObserved": "05aeee0d",
+    "proof": {
+      "runtimePreparation": "38/38;5actual assets drift controls",
+      "contractsCatalogAdapters": "4/4",
+      "privateAclAndExistingModelParity": "10/10",
+      "sampleWrapperBuild": "0warnings/errors with real parent Sample source and public3.129.0",
+      "actualPlatformTool": "schema3/7routes/7operations; actor query actualgateway/QueryAsync; six sampleHTTP targets; absent gateway refuses before outputs"
+    },
+    "logs": [
+      "/tmp/parties-3129-runtime-cohort-build.log",
+      "/tmp/parties-3129-runtime-cohort-tests.log",
+      "/tmp/parties-3129-contract-catalog-build.log",
+      "/tmp/parties-3129-contract-catalog-tests.log",
+      "/tmp/parties-3129-catalog-config-tests-build.log",
+      "/tmp/parties-3129-catalog-config-tests.log",
+      "/tmp/parties-3129-complete-sample-wrapper-build.log",
+      "/tmp/parties-real-catalog-tool-build.log",
+      "/tmp/parties-real-catalog-tool-generation.log",
+      "/tmp/parties-real-catalog-tool-negative.log"
+    ],
+    "rootGatewayPublicApiRequired": "Hexalith.EventStore.Extensions.ProjectionNotificationEndpointExtensions.WithEventStoreProjectionNotifications in3.129.1"
+  },
+  "acceptedReviewPatchCheckpoint": {
+    "observedUtc": "2026-10-31T13:30:59.888604+00:00",
+    "completedFindings": [
+      "B3",
+      "B4 integration of SDK seam",
+      "B5",
+      "B6",
+      "B7",
+      "B8",
+      "B9",
+      "E2",
+      "E3"
+    ],
+    "publicSdkRuntimeQualified": false,
+    "requiredFinalCohort": "3.129.1",
+    "focusedBuild": "0 warnings/errors; public SDK3.129.0/Tenants5.11.2/Memory3.0.13 compile-only availability proof",
+    "focusedCases": {
+      "bootstrapConfigCleanupTokensCompatibility": "19/19",
+      "runtimeReceiptMutation": "7/7",
+      "preparationAndReceiptIntegration": "15/15"
+    },
+    "memoryPublishedProfile": {
+      "commit": "5aaa3983",
+      "pushed": true,
+      "sourceDefaultBuild": "0 warnings/errors",
+      "publishedServerAndDomainServiceBuilds": "0 warnings/errors",
+      "actualArchiveBoundDeployedBinaries": 15,
+      "evaluationCases": "2 methods/20 MSBuild contexts",
+      "proof": "/tmp/memories-published-host-archive-proof.json"
+    },
+    "pending": [
+      "real official SDK3.129.1 publication",
+      "real complete host preparation",
+      "existing BeforeStart actual full E2E and persisted isolation gates"
+    ],
+    "activeBuilds": [],
+    "liveTopologyStarted": false,
+    "logs": [
+      "/tmp/parties-reviewed-bootstrap-integration-build.log",
+      "/tmp/parties-reviewed-bootstrap-focused-tests.log",
+      "/tmp/parties-runtime-receipt-tests.log",
+      "/tmp/parties-review-receipt-ci-tests.log"
+    ]
+  },
+  "requiredAdminUiLifecycleCheckpoint": {
+    "observedUtc": "2026-10-31T14:11:17.602435+00:00",
+    "tests": "21/21, zero skips",
+    "build": "0 warnings/errors, SDK3.129.0 compile-only proof",
+    "scopes": [
+      "ordinary",
+      "memory-readiness",
+      "complete"
+    ],
+    "actualStartCommand": true,
+    "preserved": [
+      "AppHost explicit-start annotation",
+      "original WaitFor relationships",
+      "all existing infrastructure-failure/worker cleanup assertions",
+      "full183/persisted runtime gate"
+    ],
+    "gating": "actual bootstrap-owned private parameters + real BeforeStart + NotStarted + actual aux-client/RequiredHostIds",
+    "realTopologyStarted": false,
+    "actorStateOwnerMap": "gateway-only actual AppId/CLI EndpointReference/corresponding secret ParameterResource",
+    "logs": [
+      "/tmp/parties-catalog-ui-lifecycle-build.log",
+      "/tmp/parties-catalog-ui-lifecycle-tests.log"
+    ]
+  },
+  "currentSupersedingPublicationPlan": {
+    "observedAtUtc": "2026-10-31T17:21:20Z",
+    "requiredSdk": "3.130.0",
+    "reason": "Upstream feature5e3 changes next semantic release;3.129.1 was never published and is rejected by current finite gates",
+    "sdkProtectedPr": 376,
+    "sdkPrHead": "6bcd40e3158d5b99e8d94cd300575768a6e479ab",
+    "sdkPublication": "pending required automated PR/main proofs and protected Release",
+    "publicTenants": "6.0.0/source9e5a991d0ba304bac7b1a5809cd71797b47d78ed:5archives independently verified",
+    "publicMemories": "3.0.13/source0a1f6bf94301094afd0045c4e396dad4dd613ce6:10archives independently verified",
+    "publicFrontComposer": "4.7.4/source34d0afde14c43b6079208c47f95297d0cf99b51d:8archives independently verified",
+    "rootApiOnlyChecks": "SDK3.129.0 standalone0warnings/errors,Contracts230/230,documentation10/10; not complete hosted qualification",
+    "rootFullQualification": "pending actualofficialSDK3.130.0 and final public cohort preparation/runtime checks",
+    "historicalSections": "Prior intended3.129.1 plans and earlier package observations remain historical, superseded by this exact current plan"
+  }
+}

@@ -293,6 +293,7 @@ public sealed class PartiesTopologyIsolationTests
             Subject = new ClaimsIdentity([new Claim(PartiesClaimTypes.Subject, PartiesTenantBootstrapHost.UserId),
                 new Claim(PartiesClaimTypes.EventStoreTenant, PartiesTenantBootstrapHost.TenantId),
                 new Claim("tenants", JsonSerializer.Serialize(new[] { PartiesTenantBootstrapHost.TenantId })),
+                new Claim("eventstore:surface", "ui"),
                 new Claim("domains", "[\"counter\",\"greeting\"]"), new Claim("permissions", "[\"commands:*\",\"command:submit\",\"query:read\"]")]),
             Issuer = PartiesAspireTopologyFixture.JwtIssuer, Audience = audience, Expires = DateTime.UtcNow.AddMinutes(10),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(PartiesAspireTopologyFixture.JwtSigningKey)), SecurityAlgorithms.HmacSha256),

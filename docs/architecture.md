@@ -12,7 +12,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 
 | Attribute | Value |
 |-----------|-------|
-| Repository type | Monolith — single cohesive .NET solution (`Hexalith.Parties.slnx`), exactly 15 projects under `src` plus one sample project + 16 runnable .NET test projects + 1 support host + Playwright e2e |
+| Repository type | Monolith — single cohesive .NET solution (`Hexalith.Parties.slnx`), exactly 15 projects under `src` plus one sample project + 16 runnable .NET test projects + 2 support hosts + 1 contracts artifact + Playwright e2e |
 | Primary language | C# / **.NET 10** (SDK pinned `10.0.403`) |
 | Architecture style | Event sourcing + CQRS + EventStore SDK domain/projection/query handlers, gateway-fronted (EventStore) |
 | Orchestration | .NET Aspire 13.6.4 (`dotnet aspire run`) |
@@ -333,7 +333,7 @@ scripts/  # local test runner, package validation, and Parties container publish
 
 ## 11. Testing & CI
 
-- Exactly **16 runnable .NET test projects plus one support host** (`Hexalith.Parties.EventStoreGateway.TestHost`) and the Playwright e2e workspace, uniformly **xUnit v3** for runnable .NET tests (Shouldly + NSubstitute; bunit for Blazor). Lanes via `scripts/test.ps1 -Lane {unit|integration|topology|ci|all|coverage}`. `Hexalith.Parties.IntegrationTests` spins up the **full Aspire topology** (`Aspire.Hosting.Testing`), gracefully skipping when Docker/DAPR is absent; `Hexalith.Parties.Ci.Tests` validates static GitHub Actions publication contracts and executes the release source-gate shell against mocked GitHub API fixtures. Architectural fitness tests pin contract/dependency boundaries.
+- Exactly **16 runnable .NET test projects plus two support hosts and one contracts artifact** (`Hexalith.Parties.EventStoreGateway.TestHost`) and the Playwright e2e workspace, uniformly **xUnit v3** for runnable .NET tests (Shouldly + NSubstitute; bunit for Blazor). Lanes via `scripts/test.ps1 -Lane {unit|integration|topology|ci|all|coverage}`. `Hexalith.Parties.IntegrationTests` spins up the **full Aspire topology** (`Aspire.Hosting.Testing`), gracefully skipping when Docker/DAPR is absent; `Hexalith.Parties.Ci.Tests` validates static GitHub Actions publication contracts and executes the release source-gate shell against mocked GitHub API fixtures. Architectural fitness tests pin contract/dependency boundaries.
 - **CI/CD:** `.github/workflows/ci.yml` delegates restore/build/package-consumer validation and test tiers to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@1745ea0f09df9e518aeea3eeb1a7df836f67e09d`; `.github/workflows/release.yml` is a manual caller that requires current `main` and successful exact-source push proof from `ci.yml` before protected approval. Shared preparation and the complete Parties-owned container publisher use one reviewed immutable Hexalith.Builds commit, with caller-owned NuGet trusted publishing. The publication wrapper enforces the same full-CI proof. Submodules are checked out as **root-repository submodules only, never recursive**. See [ci.md](ci.md), [build-gate.md](build-gate.md), [ci-secrets-checklist.md](ci-secrets-checklist.md).
 - **Package API prerequisite:** resolved by published EventStore 3.117.0. The actual DomainService assembly exposes `RequireEventStoreSidecarChannel<TBuilder>`, and the default package-mode Release solution build passes with zero warnings and errors. Security/rebuild calls, package-mode dependencies, and mandatory exact-source full-CI release proof remain intact. The earlier 3.115.0 CS1061 and 3.88.0 rebuild CS0246 failures are historical. See [ci.md](ci.md#required-eventstore-publication) for publication provenance, consumer verification, and the remaining integrated-topology prerequisites.
 
@@ -406,4 +406,8 @@ The runner-owned `Hexalith.Parties.Platform.IntegrationTests` project adds a sep
 Platform lane. Run it through `hexalith-module test`; it requires the validated
 environment descriptor and private credential channel and never starts topology.
 
-The `Hexalith.Parties.EventStoreExtensions` project installs owner intent adapters for Development composition. The completed Story 3.3 owner decision makes it packable and not application-publishable; its separate private package-cohort evidence grants no hosted or public-release qualification.
+The `Hexalith.Parties.EventStoreExtensions` package carries the existing owner-declared canonical intent adapters for catalog composition. It is included in the public release inventory and remains nonpublishable as an application. Package delivery does not activate a catalog; each participating host must independently qualify and commit the bound runtime generation.
+
+The catalog-enabled release cohort requires trusted catalog enrollment before a service becomes ready or accepts catalog dispatch. The run-only packaged test profile prepares the exact selected public packages through `scripts/prepare-aspire-runtime-hosts.sh` and supplies a private Development catalog. Production composition must provide the SDK authority and trust-provider configuration.
+
+Public browser calls require the signed `eventstore:surface=ui` claim; agent calls use `agent` when the declared operation permits that surface. The local confidential `hexalith-parties-ui` OAuth client emits the UI claim alongside its existing audience and authorization claims. Configure the corresponding explicit client claim in an external identity provider; roles and request headers do not determine the caller surface.

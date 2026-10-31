@@ -237,7 +237,7 @@ jobs:
           while IFS= read -r package_id; do
             [ -n "$package_id" ] || continue
             index_url="https://api.nuget.org/v3-flatcontainer/$(printf '%s' "$package_id" | tr '[:upper:]' '[:lower:]')/index.json"
-            # Retry transient transport faults: a single CDN blip across ten serial probes would
+            # Retry transient transport faults: a single CDN blip across the serial package probes would
             # otherwise abort an operator-initiated release and read as permanent drift.
             if ! index_status="$(curl --silent --show-error --location --max-time 30 \
               --retry 3 --retry-connrefused --retry-all-errors \

@@ -1,5 +1,5 @@
 using Hexalith.EventStore.DomainService;
-#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
+#if HEXALITH_EVENTSTORE_CATALOG_API
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Routing;
 
@@ -13,7 +13,7 @@ public static class PartiesCatalogAdapters
 {
     /// <summary>Creates the exact adapter inventory without enabling hosted admission.</summary>
     /// <exception cref="NotSupportedException">The selected EventStore packages do not expose canonical payload hashing.</exception>
-#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
+#if HEXALITH_EVENTSTORE_CATALOG_API
     public static IReadOnlyList<IDeclaredIdempotencyIntentAdapter> Create() => [
         Adapter<AddContactChannel>(),
         Adapter<AddIdentifier>(),

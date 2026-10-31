@@ -71,7 +71,7 @@ public sealed class ContractsPublicApiSnapshotTests
             foreach (PropertyInfo property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly)
                          .OrderBy(static property => property.Name, StringComparer.Ordinal))
             {
-#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
+#if HEXALITH_EVENTSTORE_CATALOG_API
                 // The stable package surface excludes development-only EventStore schemas.
                 // PartiesCatalogTests separately qualifies their source-selected shape and policy.
                 if (type == typeof(Contracts.Routing.PartiesCatalogDeclarations)

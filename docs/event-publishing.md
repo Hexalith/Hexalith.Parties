@@ -153,7 +153,9 @@ Local development uses Redis-backed pub/sub configured in [src/Hexalith.Parties.
   service-invocation access. `accesscontrol.yaml`, `accesscontrol.tenants.yaml`,
   `accesscontrol.memories.yaml`, `accesscontrol.memories-domain-service.yaml`, and
   `accesscontrol.sample.yaml` are likewise
-  deny-by-default. The optional dedicated Memories domain-service policy permits
+  deny-by-default. `accesscontrol.client-only.yaml` is deny-by-default with no
+  incoming invocation policies; the explicit package test profile uses it for
+  auxiliary UI callers. The optional dedicated Memories domain-service policy permits
   only EventStore on the SDK command, replay and metadata POST routes.
   **One documented exception:** `accesscontrol.eventstore-admin.yaml` is
   `defaultAction: allow` at the top level. Local self-hosted DAPR does not reliably

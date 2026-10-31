@@ -1,0 +1,10 @@
+# Explicit package-profile client: no incoming Dapr service-invocation grant.
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: accesscontrol-client-only
+spec:
+  accessControl:
+    defaultAction: deny
+    trustDomain: public
+    policies: []

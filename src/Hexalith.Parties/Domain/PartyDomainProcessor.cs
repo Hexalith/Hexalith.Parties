@@ -40,7 +40,7 @@ internal sealed partial class PartyDomainProcessor(
     IPartyIdentityAuthority? identityAuthority = null,
     IIdentityHistoryCustody? identityHistoryCustody = null,
     IOptionsMonitor<PartyIdentityOptions>? identityOptions = null) : IDomainProcessor, IAsyncDomainProcessor, IAggregateReplay
-#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
+#if HEXALITH_EVENTSTORE_CATALOG_API
     , IDomainCommandPayloadInventory
 #endif
 {
@@ -50,7 +50,7 @@ internal sealed partial class PartyDomainProcessor(
     // Prevents Type.GetType from loading arbitrary assemblies via assembly-qualified wire data.
     private static readonly Assembly ContractsAssembly = typeof(CreateParty).Assembly;
 
-#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
+#if HEXALITH_EVENTSTORE_CATALOG_API
     /// <summary>The finite payload inventory enforced by the actual custom processor, including its retry route.</summary>
     public IReadOnlyList<Type> CommandPayloadTypes => AllowedCommandPayloadTypes;
 #endif

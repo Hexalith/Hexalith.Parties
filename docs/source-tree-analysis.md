@@ -4,7 +4,7 @@
 
 ```
 Hexalith.Parties/
-├── Hexalith.Parties.slnx              # Solution (15 projects under `src` + one sample project + 16 runnable tests + 1 support host + e2e)
+├── Hexalith.Parties.slnx              # Solution (15 projects under `src` + one sample project + 16 runnable tests + 2 support hosts + 1 contracts artifact + e2e)
 ├── Directory.Build.props              # net10.0, Nullable, ImplicitUsings, TreatWarningsAsErrors=true, MinVer
 ├── Directory.Build.targets            # shared MSBuild targets
 ├── Directory.Packages.props           # central package versions (ManagePackageVersionsCentrally)
@@ -87,13 +87,15 @@ Hexalith.Parties/
 │   │   │                              #   erasure verification, key-op audit, PartyKeyRetryActor
 │   └── Hexalith.Parties.Testing/      # 🔒 shared test utilities
 │
-├── tests/                             # 16 runnable .NET test projects + 1 support host + Playwright e2e workspace
+├── tests/                             # 16 runnable .NET test projects + 2 support hosts + 1 contracts artifact + Playwright e2e workspace
 │   ├── Hexalith.Parties.Tests/                 # largest — health, rebuild, search, architectural fitness
 │   ├── Hexalith.Parties.IntegrationTests/      # full Aspire topology E2E (Aspire.Hosting.Testing)
 │   ├── Hexalith.Parties.Ci.Tests/              # GitHub Actions/Zot publication contract validation
 │   ├── Hexalith.Parties.{Contracts,Client,Server,Projections,Security,AdminPortal,ConsumerPortal,Picker,Mcp,UI}.Tests/
 │   ├── Hexalith.Parties.Sample.Tests/          # subscriber integration
 │   ├── Hexalith.Parties.EventStoreGateway.TestHost/ # support host; not a runnable test assembly
+│   ├── Hexalith.Parties.EventStoreSample.TestHost/ # support host; selected SDK packages
+│   ├── Hexalith.Parties.EventStoreSample.Contracts.TestArtifact/ # non-packable linked contracts
 │   ├── e2e/                                     # Playwright route/a11y specs for parties-ui
 │   └── Directory.Build.props                    # imports root props; NoWarn=xUnit1051
 │

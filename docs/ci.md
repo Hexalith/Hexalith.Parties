@@ -151,7 +151,7 @@ set `NuGetPackageSourceCredentials_additional-source-1` (adjust the number for
 later sources) to `Username=<user>;Password=<token>`, following
 [NuGet's authenticated-feed guidance](https://learn.microsoft.com/en-us/nuget/consume-packages/consuming-packages-authenticated-feeds).
 
-The publication preflight freezes the exact source, ten-package manifest, and complete three-container destination set. It rejects missing credentials, identity drift, or an existing package/container version before the first publication write; duplicate skipping is deliberately disabled.
+The publication preflight freezes the exact source, eleven-package manifest, and complete three-container destination set. It rejects missing credentials, identity drift, or an existing package/container version before the first publication write; duplicate skipping is deliberately disabled.
 
 After publication, verification considers only published, non-draft GitHub Releases
 with canonical stable `vMAJOR.MINOR.PATCH` tags: exactly three numeric components,
@@ -170,7 +170,7 @@ and Builds `11a3a79cfac4bba9548c6364a17a01ee9b561370`, with persisted checkout
 credentials disabled. It also initializes only the dispatched root Builds
 gitlink, without recursion, and installs the SDK from `global.json` to evaluate
 that source's package catalog. `scripts/verify-release-publication.py` requires
-all ten unique IDs in `tools/release-packages.json`, downloads each `.nupkg`,
+all eleven unique IDs in `tools/release-packages.json`, downloads each `.nupkg`,
 and reuses archive, README/license and dependency-boundary validation. Nuspec
 ID, version, repository URL, repository type `git` and commit must match the
 release exactly. Existing required dependency and version checks use the evaluated

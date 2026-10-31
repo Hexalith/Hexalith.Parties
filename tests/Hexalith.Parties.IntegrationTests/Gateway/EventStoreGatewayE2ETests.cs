@@ -166,6 +166,7 @@ public sealed class EventStoreGatewayE2ETests
                 new(PartiesClaimTypes.EventStoreTenant, PartiesTenantBootstrapHost.TenantId),
                 new("tenants", JsonSerializer.Serialize(new[] { PartiesTenantBootstrapHost.TenantId })),
                 new("domains", JsonSerializer.Serialize(new[] { "party" })),
+                new("eventstore:surface", "ui"),
                 new("permissions", JsonSerializer.Serialize(new[] { "commands:*", "command:submit", "query:read" })),
             ]),
             NotBefore = DateTime.UtcNow.AddMinutes(-1), Expires = DateTime.UtcNow.AddMinutes(30), IssuedAt = DateTime.UtcNow,

@@ -8,7 +8,6 @@ using Hexalith.EventStore.ServiceDefaults;
 using Hexalith.EventStore.ServiceDefaults.Authentication;
 using Hexalith.EventStore.SignalRHub;
 
-using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 // Native gateway defaults remain below normal appsettings, environment and command-line overrides.
@@ -27,23 +26,46 @@ foreach (string defaultsFile in new[] { "appsettings.gateway.json", $"appsetting
 builder.AddServiceDefaults();
 builder.Services.AddDaprClient();
 builder.Services.AddHealthChecks()
-    .AddEventStoreDaprHealthChecks();
+    .AddEventStoreDaprHealthChecks()
+#if HEXALITH_EVENTSTORE_CATALOG_API
+    .AddEventStoreAppChannelTokenHealthCheck()
+#endif
+    ;
 builder.Services.AddEventStore();
 builder.Services.AddEventStoreServer(builder.Configuration);
 builder.Services.AddEventStoreDomainQueryRouting();
+#if HEXALITH_EVENTSTORE_CATALOG_API
+if (!string.IsNullOrEmpty(builder.Configuration["EventStore:RouteCatalog:DevelopmentBootstrap:CatalogPath"]))
+{
+    Hexalith.EventStore.Server.Routing.RunScopedRouteCatalogGateway.AddEventStoreRunScopedCatalogGateway(builder.Services, builder.Configuration);
+}
+bool workloadAuthorityEnabled = builder.Configuration.GetValue<bool>("Authentication:WorkloadAuthority:Enabled");
+if (workloadAuthorityEnabled)
+{
+    builder.Services.AddEventStoreWorkloadBindingAuthority(builder.Configuration);
+}
+#endif
 builder.Services.AddEventStoreSignalR(builder.Configuration);
+
+builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 1_048_576);
 
 WebApplication app = builder.Build();
 
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseExceptionHandler();
 app.MapDefaultEndpoints();
+app.UseRouting();
 app.UseAuthentication();
 app.UseRateLimiter();
+
 if (app.Configuration.GetValue("EventStore:OpenApi:Enabled", true))
 {
+#if HEXALITH_EVENTSTORE_CATALOG_API
     _ = app.MapOpenApi().RequireAuthorization(EventStoreHttpHostSecurityExtensions.HumanPolicy);
     _ = app.UseEventStoreHumanSurface("/swagger");
+#else
+    _ = app.MapOpenApi();
+#endif
     _ = app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/openapi/v1.json", "Hexalith EventStore API v1");
@@ -51,16 +73,49 @@ if (app.Configuration.GetValue("EventStore:OpenApi:Enabled", true))
     });
 }
 
+#if HEXALITH_EVENTSTORE_CATALOG_API
 app.UseEventStoreHttpHostSecurity();
+#endif
 app.UseAuthorization();
+#if HEXALITH_EVENTSTORE_CATALOG_API
+if (!string.IsNullOrEmpty(app.Configuration["EventStore:RouteCatalog:DevelopmentBootstrap:CatalogPath"]))
+{
+#if HEXALITH_EVENTSTORE_CATALOG_HOSTS
+    Hexalith.EventStore.ServiceDefaults.Routing.FiniteRouteCatalogReceiver.UseFiniteDevelopmentRouteCatalogReceiver(app,
+        Hexalith.EventStore.Server.Routing.RunScopedRouteCatalogGateway.Operation, technical: true);
+#else
+    Hexalith.EventStore.ServiceDefaults.Routing.FiniteRouteCatalogReceiver.UseFiniteDevelopmentRouteCatalogReceiver(app,
+        Hexalith.EventStore.Server.Routing.RunScopedRouteCatalogGateway.Operation);
+#endif
+}
+#endif
 app.UseCloudEvents();
-
-
+#if HEXALITH_EVENTSTORE_CATALOG_API
+bool declarativeSubscriptions = app.Configuration.GetValue<bool>("Dapr:DeclarativeSubscriptions");
+#endif
+#if HEXALITH_EVENTSTORE_CATALOG_HOSTS
+app.MapControllers().WithEventStoreProjectionNotifications(app.Services, declarativeSubscriptions);
+#else
 app.MapControllers();
+#endif
 app.MapErrorReferences();
 app.MapApiVersionFallback();
-app.MapSubscribeHandler().RequireEventStoreChannel();
-app.MapActorsHandlers().WithMetadata(EventStoreActorCallbackEndpointMetadata.Instance).RequireEventStoreChannel();
+#if HEXALITH_EVENTSTORE_CATALOG_API
+if (!declarativeSubscriptions)
+{
+    app.MapSubscribeHandler().RequireEventStoreChannel();
+}
+app.MapActorsHandlers()
+    .WithMetadata(EventStoreActorCallbackEndpointMetadata.Instance)
+    .RequireEventStoreChannel();
+if (workloadAuthorityEnabled)
+{
+    app.MapEventStoreWorkloadBindingAuthority();
+}
+#else
+app.MapSubscribeHandler();
+app.MapActorsHandlers();
+#endif
 app.MapApplicationRuntimeProofEndpoints();
 
 SignalROptions? signalROptions = app.Configuration
@@ -69,15 +124,14 @@ SignalROptions? signalROptions = app.Configuration
 
 if (signalROptions?.Enabled == true)
 {
-    _ = app.MapHub<ProjectionChangedHub>(ProjectionChangedHub.HubPath);
+    _ = app.MapHub<ProjectionChangedHub>(ProjectionChangedHub.HubPath)
+#if HEXALITH_EVENTSTORE_CATALOG_API
+        .RequireAuthorization(EventStoreHttpHostSecurityExtensions.HumanPolicy)
+#endif
+        ;
     _ = app.MapSignalRRuntimeProofEndpoints();
 }
 
-app.Lifetime.ApplicationStarted.Register(() =>
-{
-    KestrelServerOptions? kestrelOptions = app.Services.GetService<KestrelServerOptions>();
-    _ = kestrelOptions?.Limits.MaxRequestBodySize = 1_048_576;
-});
 
 app.Run();
 

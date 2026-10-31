@@ -1,5 +1,17 @@
 <Project>
-  <PropertyGroup Condition="'$(HexalithEventStoreFromSource)' == 'true' or ('$(HexalithEventStoreVersion)' != '' and $([MSBuild]::VersionGreaterThanOrEquals('$(HexalithEventStoreVersion)', '3.129.0')))"><DefineConstants>$(DefineConstants);HEXALITH_DEVELOPMENT_CATALOG_SOURCE</DefineConstants></PropertyGroup>
+  <!-- Catalog API availability does not select native source hosts. Qualify exact package cohorts. -->
+  <PropertyGroup Condition="'$(HexalithEventStoreFromSource)' == 'true'">
+    <DefineConstants>$(DefineConstants);HEXALITH_DEVELOPMENT_CATALOG_SOURCE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(HexalithEventStoreFromSource)' == 'true' or '$(HexalithEventStoreVersion)' == '3.129.0' or '$(HexalithEventStoreVersion)' == '3.130.0'">
+    <HexalithEventStoreCatalogApiSupported>true</HexalithEventStoreCatalogApiSupported>
+    <DefineConstants>$(DefineConstants);HEXALITH_EVENTSTORE_CATALOG_API</DefineConstants>
+  </PropertyGroup>
+  <!-- Complete private hosted topology requires APIs first published in 3.130.0. -->
+  <PropertyGroup Condition="'$(HexalithEventStoreFromSource)' == 'true' or '$(HexalithEventStoreVersion)' == '3.130.0'">
+    <HexalithEventStoreCatalogHostsSupported>true</HexalithEventStoreCatalogHostsSupported>
+    <DefineConstants>$(DefineConstants);HEXALITH_EVENTSTORE_CATALOG_HOSTS</DefineConstants>
+  </PropertyGroup>
   <ItemGroup Condition="'$(HexalithSourceMappingMode)' == 'source' and $(MSBuildProjectName.EndsWith('.Tests'))">
     <!-- Test utilities consume the same exact roots selected by prepare-build. -->
     <AssemblyMetadata Include="HexalithTestRepositoryRoot" Value="$(MSBuildThisFileDirectory)" />
@@ -32,16 +44,13 @@
   </Target>
   <Target Name="ConfigureMemoriesSourceCompilation" BeforeTargets="PrepareForBuild;GetAssemblyAttributes;GenerateCompileDependencyCache;CoreCompile"
           Condition="'$(MSBuildProjectName)' == 'Hexalith.Parties' or '$(MSBuildProjectName)' == 'Hexalith.Parties.Tests'">
-    <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Hexalith.Parties.Tests' and '$(HexalithEventStoreFromSource)' == 'true'">
-      <DefineConstants>$(DefineConstants);HEXALITH_EVENTSTORE_SOURCE_CATALOG</DefineConstants>
-    </PropertyGroup>
     <!-- Evaluate after the generated final source imports, before compile inputs and assembly metadata are captured. -->
     <PropertyGroup>
       <MemoriesSourceRefreshSupported>false</MemoriesSourceRefreshSupported>
     </PropertyGroup>
-    <!-- The qualified 3.0.3, 3.0.10, 3.0.11 and 3.0.12 packages expose the same explicit revision/refresh protocol.
+    <!-- The qualified 3.0.3 and 3.0.10 through 3.0.13 packages expose the same explicit revision/refresh protocol.
          Qualify exact package selections; future or older packages remain fail closed. -->
-    <PropertyGroup Condition="'$(HexalithMemoriesFromSource)' == 'true' or '$(HexalithMemoriesVersion)' == '3.0.3' or '$(HexalithMemoriesVersion)' == '3.0.10' or '$(HexalithMemoriesVersion)' == '3.0.11' or '$(HexalithMemoriesVersion)' == '3.0.12'">
+    <PropertyGroup Condition="'$(HexalithMemoriesFromSource)' == 'true' or '$(HexalithMemoriesVersion)' == '3.0.3' or '$(HexalithMemoriesVersion)' == '3.0.10' or '$(HexalithMemoriesVersion)' == '3.0.11' or '$(HexalithMemoriesVersion)' == '3.0.12' or '$(HexalithMemoriesVersion)' == '3.0.13'">
       <DefineConstants>$(DefineConstants);HEXALITH_MEMORIES_SOURCE_REFRESH</DefineConstants>
       <MemoriesSourceRefreshSupported>true</MemoriesSourceRefreshSupported>
     </PropertyGroup>

@@ -29,6 +29,8 @@ configuration, HTTP/HTTPS launch profiles and shared AppHost wiring. The sample
 copies base/Development JSON and runs the original Program from its output directory,
 so normal Development and environment-provider precedence applies. Source admission
 requires the complete native Program, domain/contracts inputs, JSON and launch profiles.
+The separate non-packable `Hexalith.Parties.EventStoreSample.Contracts.TestArtifact`
+contains the native linked sample contracts used by both the host and catalog builder.
 Private Redis, mTLS custody, receiver credential denials, both sample domains,
 real create/query/projection and persisted-event assertions remain required.
 The profile is refused for publication; default native runs and publish models
@@ -37,8 +39,9 @@ keep the native gateway and sample projects.
 Prepare the package lane with `bash scripts/prepare-aspire-tier.sh`. Direct native
 preparation requires `bash scripts/prepare-aspire-runtime-hosts.sh --gateway-profile native`
 and a matching native AppHost selection. This shared `--gateway-profile` option
-selects the matching gateway/sample pair; preparation builds that pair plus six
-other real runtime hosts. Source-built sessions retain both native projects;
+selects the matching gateway/sample pair; native preparation builds that pair plus six
+other real runtime hosts. Package preparation also builds the Parties host and its
+catalog adapter. Source-built sessions retain both native projects;
 their source catalog and Platform qualification remain separate.
 
 ## Running Tests

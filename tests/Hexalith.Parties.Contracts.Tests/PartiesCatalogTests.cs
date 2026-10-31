@@ -7,7 +7,7 @@ namespace Hexalith.Parties.Contracts.Tests;
 
 public class PartiesCatalogTests
 {
-#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
+#if HEXALITH_EVENTSTORE_CATALOG_API
     [Fact]
     public void ExistingPublicAndInternalOperationsKeepTheirPolicyAndSerializedShapes()
     {

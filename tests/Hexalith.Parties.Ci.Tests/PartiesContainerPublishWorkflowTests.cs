@@ -691,6 +691,7 @@ public sealed class PartiesContainerPublishWorkflowTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("9")]
+    [InlineData("10")]
     [InlineData("12")]
     public void PublicationPreflightWrapperRejectsPackageCountDriftBeforeSharedPreflight(string? packageCount)
     {

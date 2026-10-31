@@ -15,17 +15,23 @@ public sealed class AspireRuntimePreparationTests
     /// <param name="profile">The explicit profile or an empty string for the package CI default.</param>
     /// <param name="missingHost">Whether the selected package gateway is deliberately absent.</param>
     /// <param name="missingSample">Whether the selected package sample is deliberately absent.</param>
+    /// <param name="cohortMutation">The actual restored SDK graph mutation, independent of evaluated property echo.</param>
     [Theory]
-    [InlineData("", false, false)]
-    [InlineData("packaged", false, false)]
-    [InlineData("native", false, false)]
-    [InlineData("invalid", false, false)]
-    [InlineData("missing-value", false, false)]
-    [InlineData("unknown-option", false, false)]
-    [InlineData("extra-arguments", false, false)]
-    [InlineData("packaged", true, false)]
-    [InlineData("packaged", false, true)]
-    public async Task PreparationBuildsExactlyTheSelectedHost(string profile, bool missingHost, bool missingSample)
+    [InlineData("", false, false, "valid")]
+    [InlineData("packaged", false, false, "valid")]
+    [InlineData("native", false, false, "valid")]
+    [InlineData("invalid", false, false, "valid")]
+    [InlineData("missing-value", false, false, "valid")]
+    [InlineData("unknown-option", false, false, "valid")]
+    [InlineData("extra-arguments", false, false, "valid")]
+    [InlineData("packaged", true, false, "valid")]
+    [InlineData("packaged", false, true, "valid")]
+    [InlineData("packaged", false, false, "wrong-version")]
+    [InlineData("packaged", false, false, "project-type")]
+    [InlineData("packaged", false, false, "missing-sdk")]
+    [InlineData("packaged", false, false, "missing-assets")]
+    [InlineData("packaged", false, false, "missing-core-library")]
+    public async Task PreparationBuildsExactlyTheSelectedHost(string profile, bool missingHost, bool missingSample, string cohortMutation)
     {
         ArgumentNullException.ThrowIfNull(profile);
         if (OperatingSystem.IsWindows()) { Assert.Skip("Runtime preparation requires Bash."); return; }
@@ -51,7 +57,10 @@ public sealed class AspireRuntimePreparationTests
         try
         {
             File.Copy(CiTestPaths.RepoFile("scripts/prepare-aspire-runtime-hosts.sh"), script);
-            foreach (string relative in commonHosts.Append(NativeHost).Append(NativeSample).Append(PackageSample)
+            File.Copy(CiTestPaths.RepoFile("scripts/validate-aspire-runtime-cohort.py"), Path.Combine(root, "scripts", "validate-aspire-runtime-cohort.py"));
+            string[] catalogProjects = profile == "native" ? [] : ["src/Hexalith.Parties/Hexalith.Parties.csproj",
+                "src/Hexalith.Parties.EventStoreExtensions/Hexalith.Parties.EventStoreExtensions.csproj"];
+            foreach (string relative in commonHosts.Concat(catalogProjects).Append(NativeHost).Append(NativeSample).Append(PackageSample)
                 .Concat(missingHost ? [] : new[] { PackageHost }).Distinct(StringComparer.Ordinal)
                 .Where(relative => !missingSample || relative != PackageSample))
             {
@@ -60,7 +69,64 @@ public sealed class AspireRuntimePreparationTests
                 File.WriteAllText(project, "<Project />");
             }
             string compiler = Path.Combine(root, "tools", "dotnet");
-            File.WriteAllText(compiler, "#!/usr/bin/env python3\nimport json, os, sys\nwith open(os.environ['PARTIES_COMPILER_CALLS'], 'a') as output:\n    output.write(json.dumps(sys.argv[1:]) + '\\n')\n");
+            File.WriteAllText(compiler, """
+                #!/usr/bin/env python3
+                import json, os, sys, zipfile
+                from pathlib import Path
+                args = sys.argv[1:]
+                with open(os.environ['PARTIES_COMPILER_CALLS'], 'a') as output:
+                    output.write(json.dumps(args) + '\n')
+                project = Path(args[1])
+                configuration = next((arg.split('=', 1)[1] for arg in args if arg.startswith('-p:Configuration=')), 'Release')
+                if '--configuration' in args:
+                    configuration = args[args.index('--configuration') + 1]
+                target = (project.parent / 'bin' / configuration / 'net10.0' / (project.stem + '.dll')).resolve()
+                assets = (project.parent / 'obj/project.assets.json').resolve()
+                families = {'HexalithTenantsVersion':'6.0.0', 'HexalithMemoriesVersion':'3.0.13', 'HexalithFrontComposerVersion':'4.7.4'}
+                if '-getProperty:HexalithEventStoreVersion' in args:
+                    print('3.130.0')
+                elif any(arg.startswith('-getProperty:HexalithTenantsVersion,') for arg in args):
+                    print(json.dumps({'Properties':families}))
+                elif any(arg.startswith('-getProperty:TargetPath,') for arg in args):
+                    print(json.dumps({'Properties':{'TargetPath':str(target), 'ProjectAssetsFile':str(assets),
+                        'Configuration':configuration, 'HexalithEventStoreVersion':'3.130.0'}}))
+                elif args[0] == 'build':
+                    mode = os.environ['PARTIES_COHORT_MUTATION']
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(b'completed entry PE')
+                    target.with_suffix('.runtimeconfig.json').write_text('{"runtimeOptions":{"tfm":"net10.0"}}')
+                    assets.parent.mkdir(parents=True, exist_ok=True)
+                    cache = Path('packages').resolve()
+                    libraries, targets = {}, {}
+                    for package in ['Hexalith.EventStore.Client','Hexalith.EventStore.Contracts','Hexalith.EventStore.ServiceDefaults']:
+                        relative = package.lower() + '/3.130.0'
+                        folder = cache / relative
+                        folder.mkdir(parents=True, exist_ok=True)
+                        entry = 'lib/net10.0/' + package + '.dll'
+                        contents = ('runtime archive ' + package).encode()
+                        (target.parent / (package + '.dll')).write_bytes(contents)
+                        archive_path = folder / (package.lower() + '.3.130.0.nupkg')
+                        if not archive_path.exists():
+                            with zipfile.ZipFile(archive_path, 'w') as archive:
+                                archive.writestr(package + '.nuspec','<package><metadata><id>' + package + '</id><version>3.130.0</version><repository type="git" url="https://github.com/Hexalith/Hexalith.EventStore" commit="' + 'a'*40 + '" /></metadata></package>')
+                                archive.writestr(entry,contents)
+                        identity = package + '/3.130.0'
+                        libraries[identity] = {'type':'package','path':relative}
+                        targets[identity] = {'runtime':{entry:{}}}
+                    if mode == 'wrong-version': libraries['Hexalith.EventStore.Client/3.128.4'] = libraries.pop('Hexalith.EventStore.Client/3.130.0')
+                    elif mode == 'project-type': libraries['Hexalith.EventStore.Client/3.130.0']['type'] = 'project'
+                    elif mode == 'missing-core-library': libraries.pop('Hexalith.EventStore.Contracts/3.130.0')
+                    elif mode == 'missing-sdk': libraries = {}
+                    if mode != 'missing-assets': assets.write_text(json.dumps({'libraries':libraries,'targets':{'net10.0':targets},'packageFolders':{str(cache):{}}}))
+                    target.with_suffix('.deps.json').write_text(json.dumps({'libraries':libraries,'targets':{'net10.0':targets}}))
+                    archive_cache = Path('artifacts/runtime-profile') / configuration / 'public-archives'
+                    archive_cache.mkdir(parents=True,exist_ok=True)
+                    for package,version,repo in [('Hexalith.Tenants.Contracts','6.0.0','Hexalith.Tenants'),('Hexalith.Tenants.Server','6.0.0','Hexalith.Tenants'),('Hexalith.Memories.EventStore','3.0.13','Hexalith.Memories'),('Hexalith.Memories.EventStoreExtensions','3.0.13','Hexalith.Memories')]:
+                        archive_path = archive_cache / (package.lower()+'.'+version+'.nupkg')
+                        if not archive_path.exists():
+                            with zipfile.ZipFile(archive_path,'w') as archive:
+                                archive.writestr(package+'.nuspec','<package><metadata><id>'+package+'</id><version>'+version+'</version><repository type="git" url="https://github.com/Hexalith/'+repo+'" commit="'+'b'*40+'" /></metadata></package>')
+                """.ReplaceLineEndings("\n") + "\n");
             File.SetUnixFileMode(compiler, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
             var start = new ProcessStartInfo("bash") { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
             start.ArgumentList.Add(script);
@@ -73,6 +139,7 @@ public sealed class AspireRuntimePreparationTests
             else if (profile.Length > 0) { start.ArgumentList.Add("--gateway-profile"); start.ArgumentList.Add(profile); }
             start.Environment["PATH"] = Path.GetDirectoryName(compiler) + Path.PathSeparator + start.Environment["PATH"];
             start.Environment["PARTIES_COMPILER_CALLS"] = calls;
+            start.Environment["PARTIES_COHORT_MUTATION"] = cohortMutation;
             using Process process = Process.Start(start)!;
             Task<string> stdout = process.StandardOutput.ReadToEndAsync(TestContext.Current.CancellationToken);
             Task<string> stderr = process.StandardError.ReadToEndAsync(TestContext.Current.CancellationToken);
@@ -87,10 +154,31 @@ public sealed class AspireRuntimePreparationTests
                 File.Exists(calls).ShouldBeFalse("Admission must fail before any runtime output is changed.");
                 return;
             }
-            process.ExitCode.ShouldBe(0, diagnostics);
             string[][] arguments = File.ReadAllLines(calls).Select(line => JsonSerializer.Deserialize<string[]>(line)!).ToArray();
-            arguments.Select(call => call[1]).ShouldBe(new[] { profile == "native" ? NativeHost : PackageHost }.Concat(commonHosts));
-            arguments.ShouldAllBe(call => call[0] == "build" && call.Contains("Release") && call.Contains("-warnaserror") && call.Contains("-m:1"));
+            string[][] builds = arguments.Where(call => call[0] == "build").ToArray();
+            if (cohortMutation != "valid")
+            {
+                process.ExitCode.ShouldBe(1, diagnostics);
+                diagnostics.ShouldContain("Runtime SDK qualification failed");
+                builds.ShouldHaveSingleItem("Restore drift must stop preparation before another host or any runner starts.");
+                return;
+            }
+            process.ExitCode.ShouldBe(0, diagnostics);
+            builds.Select(call => call[1]).ShouldBe(new[] { profile == "native" ? NativeHost : PackageHost }.Concat(commonHosts).Concat(catalogProjects));
+            builds.ShouldAllBe(call => call.Contains("Release") && call.Contains("-warnaserror") && call.Contains("-m:1"));
+            if (profile != "native")
+            {
+                builds.ShouldAllBe(call => call.Contains("-p:HexalithEventStoreVersion=3.130.0") && call.Contains("-p:HexalithUsePublishedSdkForHostedTests=true"));
+                arguments.Count(call => call.Any(argument => argument.StartsWith("-getProperty:TargetPath,", StringComparison.Ordinal))).ShouldBe(10);
+                builds.ShouldAllBe(call => call.Contains("-t:Rebuild") && call.Contains("-p:HexalithFrontComposerVersion=4.7.4")
+                    && call.Contains("-p:HexalithTenantsVersion=6.0.0") && call.Contains("-p:HexalithMemoriesVersion=3.0.13"));
+                File.Exists(Path.Combine(root, "artifacts", "runtime-profile", "Release", "prepared.json")).ShouldBeTrue();
+            }
+            else
+            {
+                arguments.Length.ShouldBe(8);
+                builds.ShouldAllBe(call => !call.Any(argument => argument.StartsWith("-p:HexalithEventStoreVersion=", StringComparison.Ordinal)));
+            }
         }
         finally { Directory.Delete(root, recursive: true); }
     }
@@ -172,7 +260,7 @@ public sealed class AspireRuntimePreparationTests
                     properties.GetProperty("RunWorkingDirectory").GetString().ShouldBe(properties.GetProperty("TargetDir").GetString());
                     string[] compiled = result.RootElement.GetProperty("Items").GetProperty("Compile").EnumerateArray()
                         .Select(item => item.GetProperty("FullPath").GetString()!).Order(StringComparer.Ordinal).ToArray();
-                    compiled.ShouldBe(RepresentativeSampleSources(selected).Order(StringComparer.Ordinal));
+                    compiled.ShouldBe(RepresentativeSampleSources(selected).Where(path => !path.Contains("Hexalith.EventStore.Sample.Contracts", StringComparison.Ordinal)).Order(StringComparer.Ordinal));
                     compiled.ShouldAllBe(path => path.StartsWith(selected + Path.DirectorySeparatorChar, StringComparison.Ordinal));
                     File.ReadAllText(Path.Combine(selected, "samples", "Hexalith.EventStore.Sample", "Program.cs")).ShouldContain("selected");
                 }
@@ -207,7 +295,7 @@ public sealed class AspireRuntimePreparationTests
         CiTestPaths.ReadRepoFile("tests/Hexalith.Parties.EventStoreGateway.TestHost/Program.cs").ShouldContain("builder.Configuration.Sources.Insert(defaultsFile == \"appsettings.gateway.json\" ? 0 : 1,");
     }
 
-    /// <summary>The real linked sample program/domain/contracts use the published SDK without offline source catalogs.</summary>
+    /// <summary>The linked native program and distinct Contracts identity retain complete catalog inputs and stay outside publication.</summary>
     [Fact]
     public void PackageSampleRetainsNativeProgramProfilesAndNonpublicationBoundary()
     {
@@ -215,18 +303,24 @@ public sealed class AspireRuntimePreparationTests
         XDocument project = XDocument.Load(CiTestPaths.RepoFile(Host + "Hexalith.Parties.EventStoreSample.TestHost.csproj"));
         project.Descendants("IsPackable").Single().Value.ShouldBe("false");
         project.Descendants("IsPublishable").Single().Value.ShouldBe("false");
-        project.Descendants("ProjectReference").ShouldBeEmpty();
+        project.Descendants("ProjectReference").Single().Attribute("Include")!.Value.ShouldContain("Hexalith.Parties.EventStoreSample.Contracts.TestArtifact");
         XElement dependency = project.Descendants("PackageReference").ShouldHaveSingleItem();
         dependency.Attribute("Include")!.Value.ShouldBe("Hexalith.EventStore.DomainService");
         dependency.Attribute("Version").ShouldBeNull();
-        project.Descendants("Compile").Select(item => item.Attribute("Include")!.Value).ShouldBe(
-        [
-            "$(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample/**/*.cs",
-            "$(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample.Contracts/**/*.cs",
-        ]);
-        string exclusions = string.Join(';', project.Descendants("Compile").Select(item => item.Attribute("Exclude")!.Value));
-        exclusions.Split(';').Where(path => !path.Contains("/obj/", StringComparison.Ordinal) && !path.Contains("/bin/", StringComparison.Ordinal))
-            .Select(Path.GetFileName).ShouldBe(["SampleCatalog.cs", "GreetingCatalogDeclarations.cs", "CounterCatalogDeclarations.cs"]);
+        project.Descendants("Compile").Where(item => item.Attribute("Include") is not null).Select(item => item.Attribute("Include")!.Value)
+            .ShouldBe(["$(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample/**/*.cs"]);
+        XElement catalogTarget = project.Descendants("Target").Single(target => target.Attribute("Name")?.Value == "SelectSampleCatalogCompilation");
+        catalogTarget.Descendants("DefineConstants").Single().Value.ShouldContain("HEXALITH_SAMPLE_CATALOG");
+        catalogTarget.Descendants("Compile").Single().Attribute("Remove")!.Value.Split(';').Select(Path.GetFileName)
+            .ShouldBe(["SampleCatalog.cs", "SampleCatalogAdapters.cs", "GreetingCatalogDeclarations.cs"]);
+        const string ContractsArtifact = "tests/Hexalith.Parties.EventStoreSample.Contracts.TestArtifact/Hexalith.Parties.EventStoreSample.Contracts.TestArtifact.csproj";
+        XDocument contracts = XDocument.Load(CiTestPaths.RepoFile(ContractsArtifact));
+        contracts.Descendants("AssemblyName").Single().Value.ShouldBe("Hexalith.EventStore.Sample.Contracts");
+        contracts.Descendants("IsPackable").Single().Value.ShouldBe("false");
+        contracts.Descendants("IsPublishable").Single().Value.ShouldBe("false");
+        contracts.Descendants("Compile").Single(item => item.Attribute("Include") is not null).Attribute("Include")!.Value
+            .ShouldBe("$(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample.Contracts/**/*.cs");
+        CiTestPaths.ReadRepoFile("tools/release-packages.json").ShouldNotContain("EventStoreSample.Contracts.TestArtifact");
         File.Exists(CiTestPaths.RepoFile(Host + "Program.cs")).ShouldBeFalse("The wrapper must execute the original program and its SDK security policy.");
         project.Descendants("Content").Single().Attribute("CopyToPublishDirectory")!.Value.ShouldBe("Never");
         project.Descendants("RunWorkingDirectory").Single().Value.ShouldBe("$(TargetDir)");
@@ -304,6 +398,10 @@ public sealed class AspireRuntimePreparationTests
             }
             string project = Path.Combine(projectDirectory, "Hexalith.Parties.EventStoreSample.TestHost.csproj");
             File.Copy(CiTestPaths.RepoFile("tests/Hexalith.Parties.EventStoreSample.TestHost/Hexalith.Parties.EventStoreSample.TestHost.csproj"), project);
+            string contractsDirectory = Path.Combine(workspace, "tests", "Hexalith.Parties.EventStoreSample.Contracts.TestArtifact");
+            Directory.CreateDirectory(contractsDirectory);
+            const string ContractsProject = "Hexalith.Parties.EventStoreSample.Contracts.TestArtifact.csproj";
+            File.Copy(CiTestPaths.RepoFile("tests/Hexalith.Parties.EventStoreSample.Contracts.TestArtifact/" + ContractsProject), Path.Combine(contractsDirectory, ContractsProject));
             File.Copy(CiTestPaths.RepoFile("global.json"), Path.Combine(workspace, "global.json"));
             File.WriteAllText(Path.Combine(workspace, "Directory.Build.props"),
                 "<Project><PropertyGroup><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><TreatWarningsAsErrors>true</TreatWarningsAsErrors></PropertyGroup></Project>");
@@ -336,6 +434,56 @@ public sealed class AspireRuntimePreparationTests
             await AssertActualSampleAllowedHostsAsync(output, "development.invalid", null).ConfigureAwait(true);
             await AssertActualSampleAllowedHostsAsync(output, "environment.invalid", "environment.invalid").ConfigureAwait(true);
             Directory.EnumerateDirectories(workspace, ".git", SearchOption.AllDirectories).ShouldBeEmpty();
+        }
+        finally { Directory.Delete(workspace, recursive: true); }
+    }
+
+    /// <summary>Actual file/archive/configuration mutations fail through the same completed-receipt entrypoint used before startup.</summary>
+    [Fact]
+    public async Task CompletedRuntimeReceiptsRefuseDriftBeforeAnyRunner()
+    {
+        var start = new ProcessStartInfo("python3") { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
+        start.ArgumentList.Add(CiTestPaths.RepoFile("tests/Hexalith.Parties.Ci.Tests/runtime_cohort_receipt_cases.py"));
+        using Process process = Process.Start(start)!;
+        Task<string> output = process.StandardOutput.ReadToEndAsync(TestContext.Current.CancellationToken);
+        Task<string> error = process.StandardError.ReadToEndAsync(TestContext.Current.CancellationToken);
+        using var bound = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        bound.CancelAfter(TimeSpan.FromSeconds(30));
+        try { await process.WaitForExitAsync(bound.Token).ConfigureAwait(true); }
+        catch (OperationCanceledException) { process.Kill(entireProcessTree: true); await process.WaitForExitAsync().ConfigureAwait(true); throw; }
+        process.ExitCode.ShouldBe(0, await output.ConfigureAwait(true) + await error.ConfigureAwait(true));
+    }
+
+    /// <summary>Package API availability never selects native hosts and refuses unqualified future cohorts.</summary>
+    /// <param name="version">The selected EventStore package version.</param>
+    /// <param name="source">Whether this is actual source mode.</param>
+    /// <param name="available">Whether the catalog API has been explicitly qualified.</param>
+    /// <param name="hostsAvailable">Whether the complete private hosted topology is qualified.</param>
+    [Theory]
+    [InlineData("3.128.4", false, false, false)]
+    [InlineData("3.129.0", false, true, false)]
+    [InlineData("3.129.1", false, false, false)]
+    [InlineData("3.130.0", false, true, true)]
+    [InlineData("3.131.0", false, false, false)]
+    [InlineData("3.128.4", true, true, true)]
+    public async Task CatalogApiAvailabilityDoesNotSelectNativeHosts(string version, bool source, bool available, bool hostsAvailable)
+    {
+        string workspace = Path.Combine(Path.GetTempPath(), "parties-catalog-capability-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(workspace);
+        try
+        {
+            string project = Path.Combine(workspace, "Capability.csproj");
+            new XDocument(new XElement("Project", new XAttribute("Sdk", "Microsoft.NET.Sdk"),
+                new XElement("PropertyGroup", new XElement("TargetFramework", "net10.0"),
+                    new XElement("HexalithEventStoreVersion", version), new XElement("HexalithEventStoreFromSource", source.ToString().ToLowerInvariant())),
+                new XElement("Import", new XAttribute("Project", CiTestPaths.RepoFile("Directory.Build.targets")))))
+                .Save(project);
+            var result = await RunDotnetAsync(workspace, "msbuild", project, "-nologo", "-getProperty:DefineConstants").ConfigureAwait(true);
+            result.ExitCode.ShouldBe(0, result.Output + result.Error);
+            string[] constants = result.Output.Trim().Split(';');
+            constants.Contains("HEXALITH_EVENTSTORE_CATALOG_API", StringComparer.Ordinal).ShouldBe(available);
+            constants.Contains("HEXALITH_EVENTSTORE_CATALOG_HOSTS", StringComparer.Ordinal).ShouldBe(hostsAvailable);
+            constants.Contains("HEXALITH_DEVELOPMENT_CATALOG_SOURCE", StringComparer.Ordinal).ShouldBe(source);
         }
         finally { Directory.Delete(workspace, recursive: true); }
     }

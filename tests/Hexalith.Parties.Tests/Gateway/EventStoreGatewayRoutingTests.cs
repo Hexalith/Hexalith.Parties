@@ -65,7 +65,7 @@ namespace Hexalith.Parties.Tests.Gateway;
 
 public sealed class EventStoreGatewayRoutingTests
 {
-#if !HEXALITH_EVENTSTORE_SOURCE_CATALOG
+#if !HEXALITH_EVENTSTORE_CATALOG_API
     [Fact]
     public void PackagedGatewayRetainsNativeDefaultsBelowExplicitConfigurationOverrides()
     {
@@ -202,6 +202,39 @@ public sealed class EventStoreGatewayRoutingTests
         using HttpResponseMessage response = await client.GetAsync(path, TestContext.Current.CancellationToken);
         response.StatusCode.ShouldBe(expected);
     }
+
+#if HEXALITH_EVENTSTORE_CATALOG_HOSTS
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData("configured-projection-events", false)]
+    [InlineData("configured-projection-events", true)]
+    public async Task PackagedGatewaySubscriptionsFollowConfiguredComponentAndDeclarativeModeAsync(string? component, bool declarative)
+    {
+        using var factory = new EventStoreGatewayTestFactory(projectionPubSubName: component, declarativeSubscriptions: declarative);
+        using HttpClient client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(Hexalith.EventStore.ServiceDefaults.Authentication.DaprAppChannelToken.HeaderName, factory.ChannelToken);
+        using HttpResponseMessage response = await client.GetAsync("/dapr/subscribe", TestContext.Current.CancellationToken);
+        Microsoft.AspNetCore.Routing.RouteEndpoint receiver = factory.Services
+            .GetRequiredService<Microsoft.AspNetCore.Routing.EndpointDataSource>().Endpoints
+            .OfType<Microsoft.AspNetCore.Routing.RouteEndpoint>()
+            .Single(endpoint => endpoint.RoutePattern.RawText == "projections/changed");
+        if (declarative)
+        {
+            response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+            receiver.Metadata.GetMetadata<Dapr.ITopicMetadata>().ShouldBeNull();
+            return;
+        }
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using JsonDocument subscriptions = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        JsonElement subscription = subscriptions.RootElement.EnumerateArray()
+            .Single(item => item.GetProperty("topic").GetString() == "*.*.projection-changed");
+        string expected = component ?? "pubsub";
+        subscription.EnumerateObject().Single(property => property.Name.Equals("pubsubname", StringComparison.OrdinalIgnoreCase))
+            .Value.GetString().ShouldBe(expected);
+        receiver.Metadata.GetMetadata<Dapr.ITopicMetadata>()!.PubsubName.ShouldBe(expected);
+    }
+#endif
 
     [Fact]
     public async Task PostCommands_NoAuth_Returns401BeforePartyInvocationAsync()
@@ -1239,7 +1272,9 @@ public sealed class EventStoreGatewayRoutingTests
         bool usePartiesDomainRouter = false,
         ConfigurableCommandRouter? customCommandRouter = null,
         bool openApiEnabled = false,
-        IQueryRouter? customQueryRouter = null) : WebApplicationFactory<EventStoreProgram>
+        IQueryRouter? customQueryRouter = null,
+        string? projectionPubSubName = null,
+        bool declarativeSubscriptions = false) : WebApplicationFactory<EventStoreProgram>
     {
         public string ChannelToken { get; } = Convert.ToHexStringLower(RandomNumberGenerator.GetBytes(32));
 
@@ -1285,6 +1320,8 @@ public sealed class EventStoreGatewayRoutingTests
                 ["Authentication:JwtBearer:SigningKey"] = GatewayJwt.SigningKey,
                 ["Authentication:JwtBearer:RequireHttpsMetadata"] = "false",
                 ["EventStore:OpenApi:Enabled"] = openApiEnabled ? "true" : "false",
+                ["EventStore:ProjectionChanges:PubSubName"] = projectionPubSubName ?? "pubsub",
+                ["Dapr:DeclarativeSubscriptions"] = declarativeSubscriptions ? "true" : "false",
                 ["EventStore:RateLimiting:PermitLimit"] = "10000",
                 ["EventStore:DomainServices:Registrations:*|party|v1:AppId"] = "parties",
                 ["EventStore:DomainServices:Registrations:*|party|v1:MethodName"] = "process",
@@ -1333,7 +1370,7 @@ public sealed class EventStoreGatewayRoutingTests
                     services.Remove(descriptor);
                 }
 
-#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
+#if HEXALITH_EVENTSTORE_CATALOG_API
                 // This protocol-only fixture already replaces catalog-enforced entry points
                 // through their friend seam. Exclude only the corresponding new pipeline gate;
                 // tenant/RBAC and HTTP security validation continue to run. The Platform suite

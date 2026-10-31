@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Hexalith.EventStore.Sample.Contracts</AssemblyName>
+    <RootNamespace>Hexalith.EventStore.Sample.Contracts</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsPublishable>false</IsPublishable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- This resolves ordinary configuration only; the tool still owns every source selector. -->
+    <_SampleRepositoryRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../..'))</_SampleRepositoryRoot>
+    <_SampleWorkspaceRoot>$([System.IO.Path]::GetFullPath('$(_SampleRepositoryRoot)/../..'))</_SampleWorkspaceRoot>
+    <_SampleInUmbrella Condition="$([System.IO.Path]::GetFileName($([System.IO.Path]::GetDirectoryName('$(_SampleRepositoryRoot)')))) == 'references'">true</_SampleInUmbrella>
+    <_SampleRootManifest Condition="Exists('$(_SampleRepositoryRoot)/.gitmodules')">$([System.IO.File]::ReadAllText('$(_SampleRepositoryRoot)/.gitmodules'))</_SampleRootManifest>
+    <_SampleWorkspaceManifest Condition="Exists('$(_SampleWorkspaceRoot)/.gitmodules')">$([System.IO.File]::ReadAllText('$(_SampleWorkspaceRoot)/.gitmodules'))</_SampleWorkspaceManifest>
+    <_SampleEventStoreRoot Condition="'$(HexalithEventStoreRoot)' != ''">$(HexalithEventStoreRoot)</_SampleEventStoreRoot>
+    <_SampleEventStoreRoot Condition="'$(_SampleEventStoreRoot)' == '' and '$(_SampleInUmbrella)' == 'true' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(_SampleWorkspaceManifest)', '(?m)^\s*path\s*=\s*references/Hexalith\.EventStore\s*$'))">$([System.IO.Path]::GetFullPath('$(_SampleRepositoryRoot)/../Hexalith.EventStore'))</_SampleEventStoreRoot>
+    <_SampleEventStoreRoot Condition="'$(_SampleEventStoreRoot)' == '' and '$(_SampleInUmbrella)' != 'true' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(_SampleRootManifest)', '(?m)^\s*path\s*=\s*references/Hexalith\.EventStore\s*$'))">$(_SampleRepositoryRoot)/references/Hexalith.EventStore</_SampleEventStoreRoot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample.Contracts/**/*.cs"
+             Exclude="$(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample.Contracts/obj/**/*.cs;$(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample.Contracts/bin/**/*.cs"
+             Link="Contracts/%(RecursiveDir)%(Filename)%(Extension)" />
+    <PackageReference Include="Hexalith.EventStore.Contracts" />
+  </ItemGroup>
+
+  <Target Name="SelectSampleContractsCatalogCompilation" BeforeTargets="CoreCompile">
+    <ItemGroup Condition="'$(HexalithEventStoreCatalogApiSupported)' != 'true'">
+      <Compile Remove="$(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample.Contracts/Counter/CounterCatalogDeclarations.cs" />
+    </ItemGroup>
+  </Target>
+</Project>

@@ -29,6 +29,7 @@ PACKAGE_IDS = [
     "Hexalith.Parties.AdminPortal",
     "Hexalith.Parties.ConsumerPortal",
     "Hexalith.Parties.Picker",
+    "Hexalith.Parties.EventStoreExtensions",
 ]
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -58,6 +59,8 @@ EVENT_STORE_SUPPORT_PACKAGE_IDS = frozenset(
 CLIENT_REQUIRED_EVENT_STORE_PACKAGE_IDS = frozenset(
     {
         "Hexalith.EventStore.Contracts",
+        "Hexalith.EventStore.DomainService",
+        "Hexalith.EventStore.ServiceDefaults",
     }
 )
 
@@ -299,13 +302,19 @@ def write_client_consumer(root: Path, version: str) -> Path:
   <ItemGroup>
     <PackageReference Include="Hexalith.Parties.Contracts" Version="{version}" />
     <PackageReference Include="Hexalith.Parties.Client" Version="{version}" />
+    <PackageReference Include="Hexalith.Parties.EventStoreExtensions" Version="{version}" />
   </ItemGroup>
 </Project>
 """,
         encoding="utf-8",
     )
     (project_dir / "Program.cs").write_text(
-        """using Hexalith.Parties.Client.Abstractions;
+        """using System.Reflection;
+using Hexalith.EventStore.DomainService;
+using Hexalith.EventStore.ServiceDefaults.Routing;
+using Hexalith.Parties.Contracts.Routing;
+using Hexalith.Parties.EventStoreExtensions;
+using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Client.Extensions;
 using Hexalith.Parties.Contracts.Commands;
 
@@ -325,6 +334,17 @@ services.AddPartiesClient(configuration);
 _ = services.Single(static descriptor => descriptor.ServiceType == typeof(IPartiesCommandClient));
 _ = services.Single(static descriptor => descriptor.ServiceType == typeof(IPartiesQueryClient));
 _ = typeof(CreateParty).FullName ?? throw new InvalidOperationException("CreateParty contract type is unavailable.");
+var owners = new[] { typeof(PartiesCatalogDeclarations).Assembly };
+var routes = CompiledRouteCatalogDeclarations.Read(owners);
+var operations = CompiledRouteCatalogDeclarations.ReadOperations(owners);
+var adapters = PartiesCatalogAdapters.Create();
+if (routes.Count != 41 || operations.Count != 41 || adapters.Count != 28
+    || !operations.Select(operation => operation.RouteId).Order(StringComparer.Ordinal)
+        .SequenceEqual(routes.Select(route => route.RouteId).Order(StringComparer.Ordinal), StringComparer.Ordinal)
+    || typeof(PartiesCatalogAdapters).Assembly.GetCustomAttributes<RouteCatalogAdapterSourceAttribute>()
+        .Single().SourceType != typeof(PartiesCatalogAdapters))
+    throw new InvalidOperationException("Published Parties declaration, operation or adapter enrollment is incomplete.");
+Console.WriteLine("Published catalog: 41 routes, 41 operation schemas, 28 canonical intent adapters.");
 """,
         encoding="utf-8",
     )
@@ -453,6 +473,9 @@ def validate_consumer(
         ],
         project_file.parent,
     )
+    if not require_portal_packages:
+        run_dotnet(["run", "--project", str(project_file), "--configuration", "Release",
+                    "--no-build", "--no-restore"], project_file.parent)
 
 
 def main() -> int:

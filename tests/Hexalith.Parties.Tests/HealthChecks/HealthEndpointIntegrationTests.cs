@@ -377,7 +377,7 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
 
             builder.ConfigureTestServices(services =>
             {
-#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
+#if HEXALITH_EVENTSTORE_CATALOG_API
                 // This fixture supplies local health dependencies; activation itself is covered
                 // by the descriptor-only Platform suite and EventStore owner tests.
                 var catalog = Substitute.For<Hexalith.EventStore.ServiceDefaults.Routing.IRouteCatalogAuthority>();

@@ -42,6 +42,11 @@ public sealed class PackagedGatewayTopologyTests
             }
             IDistributedApplicationTestingBuilder native = await CreateAsync(false, isolatedMtls ? directory : null).ConfigureAwait(true);
             await using var nativeLifetime = native.ConfigureAwait(true);
+#if HEXALITH_EVENTSTORE_CATALOG_API && !HEXALITH_EVENTSTORE_CATALOG_HOSTS
+            NotSupportedException unsupported = await Should.ThrowAsync<NotSupportedException>(() => CreateAsync(true, isolatedMtls ? directory : null)).ConfigureAwait(true);
+            unsupported.Message.ShouldContain("3.129.1");
+            return;
+#else
             IDistributedApplicationTestingBuilder packaged = await CreateAsync(true, isolatedMtls ? directory : null).ConfigureAwait(true);
             await using var packageLifetime = packaged.ConfigureAwait(true);
             ProjectResource nativeGateway = native.Resources.OfType<ProjectResource>().Single(resource => resource.Name == "eventstore");
@@ -77,8 +82,26 @@ public sealed class PackagedGatewayTopologyTests
             File.ReadAllText(Path.Combine(Path.GetDirectoryName(packageSample.GetProjectMetadata().ProjectPath)!, "Properties", "launchSettings.json"))
                 .ReplaceLineEndings().ShouldBe(File.ReadAllText(Path.Combine(
                     Path.GetDirectoryName(nativeSample.GetProjectMetadata().ProjectPath)!, "Properties", "launchSettings.json")).ReplaceLineEndings());
+#if HEXALITH_EVENTSTORE_CATALOG_HOSTS
+            string[] participants = ["eventstore", "eventstore-admin", "eventstore-admin-ui", "memories", "parties", "sample", "sample-blazor-ui", "tenants"];
+            string[] expectedSecrets = [.. participants.SelectMany(host => new[] { "catalog-" + host + "-app-token", "catalog-" + host + "-dapr-token" }),
+                "catalog-idempotency-digest-key", "catalog-tenants-stream-proof-key"];
+            ParameterResource[] privateParameters = packaged.Resources.OfType<ParameterResource>()
+                .Where(parameter => expectedSecrets.Contains(parameter.Name, StringComparer.Ordinal)).ToArray();
+            privateParameters.Select(parameter => parameter.Name).Order(StringComparer.Ordinal).ShouldBe(expectedSecrets.Order(StringComparer.Ordinal));
+            privateParameters.ShouldAllBe(parameter => parameter.Secret);
+            DaprComponentResource routing = packaged.Resources.OfType<DaprComponentResource>()
+                .Where(component => component.Name.StartsWith("routing-parties-", StringComparison.Ordinal)).ShouldHaveSingleItem();
+            routing.Type.ShouldBe("state.redis");
+            routing.Options?.LocalPath.ShouldBeNull();
+            string catalogComponent = routing.Name;
+            packaged.Resources.Where(resource => !expectedSecrets.Contains(resource.Name, StringComparer.Ordinal) && resource.Name != catalogComponent)
+                .Select(resource => resource.Name).Order(StringComparer.Ordinal)
+                .ShouldBe(native.Resources.Select(resource => resource.Name).Order(StringComparer.Ordinal));
+#else
             packaged.Resources.Select(resource => resource.Name).Order(StringComparer.Ordinal)
                 .ShouldBe(native.Resources.Select(resource => resource.Name).Order(StringComparer.Ordinal));
+#endif
 
             foreach (ProjectResource original in native.Resources.OfType<ProjectResource>())
             {
@@ -94,7 +117,17 @@ public sealed class PackagedGatewayTopologyTests
                     .SelectMany(sidecar => sidecar.Sidecar.Annotations.OfType<DaprSidecarOptionsAnnotation>()).Select(annotation => annotation.Options);
                 var selectedOptions = selected.Annotations.OfType<DaprSidecarAnnotation>()
                     .SelectMany(sidecar => sidecar.Sidecar.Annotations.OfType<DaprSidecarOptionsAnnotation>()).Select(annotation => annotation.Options);
-                selectedOptions.Select(options => (options.AppId, options.Config)).ShouldBe(nativeOptions.Select(options => (options.AppId, options.Config)));
+                selectedOptions.Select(options => options.AppId).ShouldBe(nativeOptions.Select(options => options.AppId));
+#if HEXALITH_EVENTSTORE_CATALOG_HOSTS
+                if (!isolatedMtls && original.Name is "sample-blazor-ui" or "eventstore-admin-ui")
+                {
+                    selectedOptions.Single().Config.ShouldNotBeNull();
+                    File.ReadAllText(selectedOptions.Single().Config!).ShouldContain("defaultAction: deny");
+                    File.ReadAllText(selectedOptions.Single().Config!).ShouldContain("policies: []");
+                }
+                else
+#endif
+                { selectedOptions.Select(options => options.Config).ShouldBe(nativeOptions.Select(options => options.Config)); }
                 foreach (DaprSidecarAnnotation originalSidecar in original.Annotations.OfType<DaprSidecarAnnotation>())
                 {
                     IDaprSidecarResource selectedSidecar = selected.Annotations.OfType<DaprSidecarAnnotation>()
@@ -102,8 +135,12 @@ public sealed class PackagedGatewayTopologyTests
                     var expectedSidecarEnvironment = await EnvironmentAsync(native, originalSidecar.Sidecar).ConfigureAwait(true);
                     var actualSidecarEnvironment = await EnvironmentAsync(packaged, selectedSidecar).ConfigureAwait(true);
                     AssertEnvironmentMatches(expectedSidecarEnvironment, actualSidecarEnvironment, selectedSidecar.Name);
+                    IEnumerable<string> expectedComponents = originalSidecar.Sidecar.Annotations.OfType<DaprComponentReferenceAnnotation>().Select(reference => reference.Component.Name);
+#if HEXALITH_EVENTSTORE_CATALOG_HOSTS
+                    if (participants.Contains(original.Name, StringComparer.Ordinal)) { expectedComponents = expectedComponents.Append(catalogComponent!); }
+#endif
                     selectedSidecar.Annotations.OfType<DaprComponentReferenceAnnotation>().Select(reference => reference.Component.Name)
-                        .ShouldBe(originalSidecar.Sidecar.Annotations.OfType<DaprComponentReferenceAnnotation>().Select(reference => reference.Component.Name));
+                        .ShouldBe(expectedComponents);
                     var options = selectedSidecar.Annotations.OfType<DaprSidecarOptionsAnnotation>().Single().Options;
                     if (isolatedMtls)
                     {
@@ -127,6 +164,7 @@ public sealed class PackagedGatewayTopologyTests
                 ProjectResource parties = packaged.Resources.OfType<ProjectResource>().Single(resource => resource.Name == "parties");
                 (await EnvironmentAsync(packaged, parties).ConfigureAwait(true))["Authentication__Workload__AllowedCallers__0"].ShouldBe("eventstore-model");
             }
+#endif
         }
         finally { Directory.Delete(directory, recursive: true); }
     }
@@ -180,8 +218,50 @@ public sealed class PackagedGatewayTopologyTests
 
     private static void AssertEnvironmentMatches(IDictionary<string, object> expected, IDictionary<string, object> actual, string resource)
     {
-        actual.Keys.Order(StringComparer.Ordinal).ShouldBe(expected.Keys.Order(StringComparer.Ordinal), resource);
-        foreach ((string key, object value) in expected)
+        HashSet<string> privateKeys = [];
+#if HEXALITH_EVENTSTORE_CATALOG_HOSTS
+        string host = resource.EndsWith("-dapr", StringComparison.Ordinal) ? resource[..^5] : resource;
+        if (new[] { "eventstore", "eventstore-admin", "eventstore-admin-ui", "memories", "parties", "sample", "sample-blazor-ui", "tenants" }.Contains(host, StringComparer.Ordinal))
+        {
+            foreach ((string key, string kind) in new[] { ("APP_API_TOKEN", "app"), ("DAPR_API_TOKEN", "dapr") })
+            {
+                privateKeys.Add(key);
+                actual[key].ShouldBeAssignableTo<IManifestExpressionProvider>().ValueExpression
+                    .ShouldBe("{catalog-" + host + "-" + kind + "-token.value}");
+            }
+        }
+        if (resource == "tenants")
+        {
+            const string Key = "Authentication__BoundStreamRead__PrivateKey";
+            privateKeys.Add(Key);
+            actual[Key].ShouldBeAssignableTo<IManifestExpressionProvider>().ValueExpression.ShouldBe("{catalog-tenants-stream-proof-key.value}");
+        }
+        if (resource == "eventstore")
+        {
+            const string Prefix = "EventStore__IdempotencyAdmission__";
+            foreach ((string key, string value) in new[]
+            {
+                ("Enabled", "true"), ("DigestKeySource", "Configuration"), ("ActiveDigestKeyVersion", "development-v1"),
+                ("DigestKeySecretStoreName", "secretstore"), ("DigestKeySecretName", "eventstore-idempotency-ring"),
+                ("DigestKeySecretGeneration", "development-v1"),
+            })
+            {
+                privateKeys.Add(Prefix + key);
+                actual[Prefix + key].ShouldBe(value);
+            }
+            privateKeys.Add(Prefix + "DigestKeys__development-v1");
+            actual[Prefix + "DigestKeys__development-v1"].ShouldBeAssignableTo<IManifestExpressionProvider>().ValueExpression
+                .ShouldBe("{catalog-idempotency-digest-key.value}");
+            string proofKey = actual.Keys.Where(key => key.StartsWith("Authentication__BoundStreamRead__PublicKeys__tenants", StringComparison.Ordinal)).ShouldHaveSingleItem();
+            privateKeys.Add(proofKey);
+            using RSA proof = RSA.Create();
+            proof.ImportSubjectPublicKeyInfo(Convert.FromBase64String((string)actual[proofKey]), out _);
+            proof.KeySize.ShouldBe(2048);
+        }
+#endif
+        actual.Keys.Except(privateKeys, StringComparer.Ordinal).Order(StringComparer.Ordinal)
+            .ShouldBe(expected.Keys.Except(privateKeys, StringComparer.Ordinal).Order(StringComparer.Ordinal), resource);
+        foreach ((string key, object value) in expected.Where(pair => !privateKeys.Contains(pair.Key)))
         {
             switch (value)
             {

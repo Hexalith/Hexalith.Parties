@@ -4,7 +4,7 @@ using Hexalith.EventStore.Contracts.Routing;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Queries;
 
-#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
+#if HEXALITH_EVENTSTORE_CATALOG_API
 [assembly: RouteCatalogDeclarationSource(typeof(Hexalith.Parties.Contracts.Routing.PartiesCatalogDeclarations))]
 #endif
 
@@ -13,7 +13,7 @@ namespace Hexalith.Parties.Contracts.Routing;
 /// <summary>Complete owner inventory for the existing domain-service commands, queries and named projections.</summary>
 public static class PartiesCatalogDeclarations
 {
-#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
+#if HEXALITH_EVENTSTORE_CATALOG_API
     /// <summary>Owner schemas and eligibility for existing wires, including UI operations and internal identity/custody calls.</summary>
     public static IReadOnlyList<RouteOperationContract> Operations => Routes.Select(Operation).ToArray();
 
@@ -23,7 +23,7 @@ public static class PartiesCatalogDeclarations
     public static IReadOnlyDictionary<string, string> ReceiverMethods => Routes.ToDictionary(route => route.RouteId,
         route => route.Kind switch { "command" => "process", "query" => "query", _ => "project/v2" }, StringComparer.Ordinal);
 
-#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
+#if HEXALITH_EVENTSTORE_CATALOG_API
     private static RouteOperationContract Operation(RouteContractDeclaration route)
     {
         Type request;

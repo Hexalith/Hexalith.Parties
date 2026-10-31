@@ -183,6 +183,20 @@
       },
       "protocolMappers": [
         {
+          "name": "eventstore-ui-surface",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-hardcoded-claim-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "eventstore:surface",
+            "claim.value": "ui",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "false"
+          }
+        },
+        {
           "name": "audience-mapper",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-audience-mapper",

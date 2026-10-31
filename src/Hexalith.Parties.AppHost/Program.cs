@@ -355,7 +355,10 @@ if (builder.ExecutionContext.IsPublishMode
             _ = sidecar.WithOptions(new DaprSidecarOptions
             {
                 AppId = "sample-blazor-ui",
-                Config = daprMtls is null ? null : mtlsOnlyConfigPath,
+                Config = daprMtls is null
+                    ? builder.Configuration.GetValue<bool>("Parties:Testing:UsePackagedGateway")
+                        ? ResolveDaprConfigPath("accesscontrol.client-only.yaml") : null
+                    : mtlsOnlyConfigPath,
             });
             daprMtls?.ConfigureSidecar(sidecar);
         })
@@ -524,6 +527,10 @@ if (builder.ExecutionContext.IsPublishMode)
             .WithEnvironment("DOTNET_ENVIRONMENT", "Production");
     }
 }
+
+#if HEXALITH_EVENTSTORE_CATALOG_API
+PartiesDevelopmentCatalogBootstrap.Register(builder, repositoryRoot);
+#endif
 
 builder.Build().Run();
 

@@ -5,6 +5,7 @@ using System.Net;
 using System.Text.Json;
 
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Testing;
 
 using Hexalith.Parties.IntegrationTests.HealthChecks;
@@ -21,6 +22,30 @@ namespace Hexalith.Parties.IntegrationTests.Topology;
 [Collection("Non-parallel")]
 public sealed class PartiesAspireTopologyFixtureTests
 {
+    /// <summary>Sidecar probes resolve actual secret parameters and respect a later fixture credential override.</summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task SidecarCredentialResolvesActualParameterAndFinalOverride(bool overridden)
+    {
+        IDistributedApplicationTestingBuilder builder = await DistributedApplicationTestingBuilder.CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>(
+            ["--operation=run", "--EnableKeycloak=false", "--Parties:Testing:UsePackagedGateway=false"], TestContext.Current.CancellationToken).ConfigureAwait(true);
+        await using var lifetime = builder.ConfigureAwait(true);
+        string secret = Guid.NewGuid().ToString("N");
+        var parameter = builder.AddParameter("probe-token", secret, secret: true);
+        var sidecar = builder.AddExecutable("credential-probe", "noop", ".").WithEnvironment("DAPR_API_TOKEN", parameter);
+        if (overridden) { sidecar.WithEnvironment("DAPR_API_TOKEN", "actual-fixture-override"); }
+        string? resolved = await PartiesAspireTopologyFixture.ResolveModeledSidecarApiTokenAsync(builder.ExecutionContext,
+            sidecar.Resource, TestContext.Current.CancellationToken).ConfigureAwait(true);
+        resolved.ShouldBe(overridden ? "actual-fixture-override" : secret);
+        var absent = builder.AddExecutable("credential-absent", "noop", ".");
+        (await PartiesAspireTopologyFixture.ResolveModeledSidecarApiTokenAsync(builder.ExecutionContext,
+            absent.Resource, TestContext.Current.CancellationToken).ConfigureAwait(true)).ShouldBeNull();
+        absent.Resource.Annotations.Add(new EnvironmentCallbackAnnotation(context => context.EnvironmentVariables["DAPR_API_TOKEN"] = new object()));
+        await Should.ThrowAsync<InvalidOperationException>(() => PartiesAspireTopologyFixture.ResolveModeledSidecarApiTokenAsync(builder.ExecutionContext,
+            absent.Resource, TestContext.Current.CancellationToken)).ConfigureAwait(true);
+    }
+
     [Theory]
     [InlineData("""{"actors":[{"type":"AggregateActor","count":0}]}""", true)]
     [InlineData("""{"actorRuntime":{"hostReady":true,"runtimeStatus":"RUNNING"},"actors":[]}""", false)]
@@ -49,7 +74,8 @@ public sealed class PartiesAspireTopologyFixtureTests
         int startAttempts = 0;
         var fixture = new PartiesAspireTopologyFixture(
             (session, cancellationToken) => failsDuringStartup
-                ? DistributedApplicationTestingBuilder.CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>(session.Arguments(false, false), cancellationToken)
+                ? DistributedApplicationTestingBuilder.CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>(
+                    [.. session.Arguments(false, false), "--Parties:Testing:UsePackagedGateway=false"], cancellationToken)
                 : Task.FromException<IDistributedApplicationTestingBuilder>(new FileNotFoundException("missing test infrastructure")),
             (_, _) =>
             {

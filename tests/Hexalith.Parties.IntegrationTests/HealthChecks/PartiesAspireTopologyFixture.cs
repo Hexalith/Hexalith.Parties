@@ -76,6 +76,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     private readonly HashSet<string> _stoppedWorkerNames = new(StringComparer.Ordinal);
     private bool _workersQuiesced;
     private bool _startupScheduled;
+    private readonly TaskCompletionSource _beforeStart = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     /// <summary>Observes worker exit while backing containers and control-plane ownership still exist.</summary>
     internal Func<DistributedApplication, CancellationToken, Task>? ObserveQuiescenceAsync { get; set; }
@@ -193,6 +194,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
 
             InitializationPhase = "create-builder";
             _builder = await _createBuilder(Session, cts.Token).ConfigureAwait(false);
+            bool privateCatalogUi = PartiesCatalogParticipantStartup.HasModeledAdminUi(_builder.Resources);
 
             PartiesMtlsProfile.ConfigureInternalGrpcEndpoints(_builder, Session);
             PartiesMtlsProfile.ConfigureAdminServerSidecarEndpoint(_builder);
@@ -205,12 +207,16 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             if (_completeMtlsProfile)
             {
                 PartiesMtlsProfile.ConfigureOptionalDependencies(_builder);
-                PartiesMtlsProfile.ConfigureAppChannelEndpoint(_builder, "eventstore-admin-ui");
                 IResourceBuilder<ParameterResource> token = _builder.AddParameter("fixture-parties-channel-token", _appChannelToken, secret: true);
                 _ = _builder.CreateResourceBuilder<ProjectResource>("parties").WithEventStoreAppChannelToken(token);
                 IResourceBuilder<ParameterResource> sampleToken = _builder.AddParameter("fixture-sample-channel-token",
                     Convert.ToHexString(RandomNumberGenerator.GetBytes(32)), secret: true);
                 _ = _builder.CreateResourceBuilder<ProjectResource>("sample").WithEventStoreAppChannelToken(sampleToken);
+            }
+
+            if (_completeMtlsProfile || privateCatalogUi)
+            {
+                PartiesMtlsProfile.ConfigureAppChannelEndpoint(_builder, "eventstore-admin-ui");
             }
 
             // The normal AppHost clears symmetric keys for its OIDC topology. Override
@@ -235,9 +241,13 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 _ = _builder.CreateResourceBuilder<ProjectResource>("sample")
                     .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-eventstore")
                     .WithEnvironment("Authentication__Workload__AllowedCallers__0", Session.AppId("eventstore"));
+            }
+            if (_completeMtlsProfile || privateCatalogUi)
+            {
                 // Exercise the UI-owned bearer acquisition and SDK handlers against this
                 // fixture's real protected APIs; development keys remain scoped to test resources.
-                foreach (string ui in new[] { "eventstore-admin-ui", "sample-blazor-ui" })
+                foreach (string ui in new[] { "eventstore-admin-ui", "sample-blazor-ui" }
+                    .Where(name => _builder.Resources.OfType<ProjectResource>().Any(project => project.Name == name)))
                 {
                     _ = _builder.CreateResourceBuilder<ProjectResource>(ui)
                         .WithEnvironment("EventStore__Authentication__Authority", string.Empty)
@@ -283,6 +293,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             _builder.Eventing.Subscribe<BeforeStartEvent>((_, _) =>
             {
                 _startupScheduled = true;
+                _beforeStart.TrySetResult();
                 if (_app is not null && !_workersQuiesced && _workerObservation is null)
                 {
                     _workerObservationCancellation = new CancellationTokenSource();
@@ -293,18 +304,10 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             InitializationPhase = "build-application";
             _app = await _builder.BuildAsync(cts.Token).ConfigureAwait(false);
             InitializationPhase = "start-application";
-            await _startApplication(_app, cts.Token).ConfigureAwait(false);
+            await PartiesCatalogParticipantStartup.StartAsync(_builder, _app, _startApplication, _beforeStart.Task,
+                legacyComplete: _completeMtlsProfile && !_memoriesReadinessScope, cts.Token).ConfigureAwait(false);
             if (_completeMtlsProfile && !_memoriesReadinessScope)
             {
-                // Keep the AppHost's explicit-start semantics and start the optional UI through Aspire.
-                await _app.ResourceNotifications.WaitForResourceAsync("eventstore-admin-ui", KnownResourceStates.NotStarted, cts.Token)
-                    .ConfigureAwait(false);
-                ExecuteCommandResult start = await _app.Services.GetRequiredService<ResourceCommandService>()
-                    .ExecuteCommandAsync("eventstore-admin-ui", KnownResourceCommands.StartCommand, cts.Token).ConfigureAwait(false);
-                if (!start.Success)
-                {
-                    throw new InvalidOperationException("The explicit EventStore admin UI start command failed.");
-                }
                 await WaitForAllSidecarsAsync(cts.Token).ConfigureAwait(false);
             }
 
@@ -440,7 +443,35 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     {
         ProjectResource project = App.Services.GetRequiredService<DistributedApplicationModel>().Resources.OfType<ProjectResource>().Single(resource => resource.Name == appId);
         DaprSidecarAnnotation sidecar = project.Annotations.OfType<DaprSidecarAnnotation>().Single();
-        return App.CreateHttpClient(sidecar.Sidecar.Name + "-cli", "http");
+        string cliName = sidecar.Sidecar.Name + "-cli";
+        ExecutableResource cli = App.Services.GetRequiredService<DistributedApplicationModel>().Resources.OfType<ExecutableResource>().Single(resource => resource.Name == cliName);
+        HttpClient client = App.CreateHttpClient(cliName, "http");
+        string? apiToken = ResolveModeledSidecarApiTokenAsync(_builder!.ExecutionContext, cli, TestContext.Current.CancellationToken).GetAwaiter().GetResult();
+        if (_sidecarApiTokens?.TryGetValue(appId, out string? expected) == true && apiToken != expected)
+        {
+            client.Dispose();
+            throw new InvalidOperationException("The actual modeled sidecar API token differs from the fixture override.");
+        }
+        if (!string.IsNullOrEmpty(apiToken)) { client.DefaultRequestHeaders.Add("dapr-api-token", apiToken); }
+        return client;
+    }
+
+    /// <summary>Resolves only the effective modeled API credential, including secret parameters and later fixture overrides.</summary>
+    internal static async Task<string?> ResolveModeledSidecarApiTokenAsync(DistributedApplicationExecutionContext executionContext,
+        IResource sidecar, CancellationToken cancellationToken)
+    {
+        EnvironmentCallbackContext context = new(executionContext, sidecar, new Dictionary<string, object>(), cancellationToken);
+        foreach (EnvironmentCallbackAnnotation callback in sidecar.Annotations.OfType<EnvironmentCallbackAnnotation>())
+        {
+            await callback.Callback(context).ConfigureAwait(false);
+        }
+        if (!context.EnvironmentVariables.TryGetValue("DAPR_API_TOKEN", out object? value)) { return null; }
+        return value switch
+        {
+            string text => text,
+            IValueProvider provider => await provider.GetValueAsync(cancellationToken).ConfigureAwait(false),
+            _ => throw new InvalidOperationException("The modeled sidecar API token has an unsupported value provider."),
+        };
     }
 
     /// <summary>Reads one exact private Redis key, never using scans or shared developer state.</summary>
@@ -513,10 +544,6 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         {
             InitializationPhase = $"sidecar-{appId}";
             using HttpClient client = CreateSidecarClient(appId);
-            if (_sidecarApiTokens?.TryGetValue(appId, out string? apiToken) == true)
-            {
-                client.DefaultRequestHeaders.Add("dapr-api-token", apiToken);
-            }
             // Cold external hosts build on first launch. Give each sidecar the remaining
             // shared startup budget; the caller's five-minute deadline still bounds the whole topology.
             await WaitForEndpointAsync(client, "/v1.0/healthz", [HttpStatusCode.NoContent],
@@ -970,7 +997,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     {
         var descriptor = new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity([new(ClaimTypes.Role, "GlobalAdministrator")]),
+            Subject = new ClaimsIdentity([new(ClaimTypes.Role, "GlobalAdministrator"), new("eventstore:surface", "ui")]),
             NotBefore = DateTime.UtcNow.AddMinutes(-1),
             Expires = DateTime.UtcNow.AddMinutes(30),
             IssuedAt = DateTime.UtcNow,

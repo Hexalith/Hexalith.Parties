@@ -36,7 +36,7 @@ builder.Services.AddHealthChecks().AddPartiesDaprHealthChecks(
     builder.Configuration["Tenants:PubSubName"] ?? "pubsub");
 
 builder.Services.AddParties(builder.Configuration);
-#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
+#if HEXALITH_EVENTSTORE_CATALOG_API
 builder.Services.AddEventStoreDevelopmentDomainCatalog(builder.Configuration, typeof(Hexalith.Parties.Contracts.Routing.PartiesCatalogDeclarations).Assembly);
 #endif
 string ownerDaprEndpoint = Environment.GetEnvironmentVariable("DAPR_HTTP_ENDPOINT")

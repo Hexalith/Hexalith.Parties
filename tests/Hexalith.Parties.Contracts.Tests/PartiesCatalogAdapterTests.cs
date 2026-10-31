@@ -9,7 +9,7 @@ public class PartiesCatalogAdapterTests
     [Fact]
     public void EnrollmentRequiresCanonicalPayloadHashingFromTheSelectedEventStore()
     {
-#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
+#if HEXALITH_EVENTSTORE_CATALOG_API
         var adapters = PartiesCatalogAdapters.Create();
         adapters.Count.ShouldBe(28);
         adapters.Select(adapter => adapter.Declaration.Route.RouteId)

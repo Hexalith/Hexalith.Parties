@@ -131,7 +131,7 @@ class RestoredVersions(unittest.TestCase):
                     except ValueError:
                         self.assertEqual(calls, ['restore'], 'Invalid selections must fail before build')
                         raise
-                self.assertEqual(calls, ['restore', 'build'])
+                self.assertEqual(calls, ['restore', 'build'] if portal else ['restore', 'build', 'run'])
 
             validate(good)
             validate({key: value for key, value in good.items() if key.startswith(('Hexalith.EventStore.', 'Hexalith.Commons.'))}, portal=False)

@@ -234,7 +234,7 @@ public sealed class PartyMemoryOwnedRuntimeTests
         })
         {
             using HttpClient client = fixture.CreateSidecarClient(caller);
-            if (caller == "memories") { client.DefaultRequestHeaders.Add("dapr-api-token", apiToken); }
+            // The fixture resolves the actual modeled credential, including this profile's override.
             using var request = new HttpRequestMessage(verb, "/v1.0/invoke/" + session.AppId("memories-domain-service") + "/method/" + path);
             using HttpResponseMessage denied = await client.SendAsync(request, token).ConfigureAwait(false);
             string body = await denied.Content.ReadAsStringAsync(token).ConfigureAwait(false);

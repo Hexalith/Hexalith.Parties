@@ -1,8 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><Description>Parties-owned local EventStore route and intent adapter enrollment.</Description><IsPackable>true</IsPackable><IsPublishable>false</IsPublishable></PropertyGroup>
+  <PropertyGroup>
+    <Description>Parties-owned compiled EventStore route and canonical intent adapter enrollment.</Description>
+    <PackageId>Hexalith.Parties.EventStoreExtensions</PackageId>
+    <PackageTags>parties;eventstore;routing;idempotency;catalog</PackageTags>
+    <IsPackable>true</IsPackable>
+    <IsPublishable>false</IsPublishable>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj" />
     <ProjectReference Include="$(HexalithEventStoreRoot)/src/Hexalith.EventStore.DomainService/Hexalith.EventStore.DomainService.csproj" Condition="'$(HexalithEventStoreFromSource)' == 'true'" />
+    <ProjectReference Include="$(HexalithEventStoreRoot)/src/Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj" Condition="'$(HexalithEventStoreFromSource)' == 'true'" />
+    <PackageReference Include="Hexalith.EventStore.Contracts" Condition="'$(HexalithEventStoreFromSource)' != 'true'" />
     <PackageReference Include="Hexalith.EventStore.DomainService" Condition="'$(HexalithEventStoreFromSource)' != 'true'" />
   </ItemGroup>
 </Project>

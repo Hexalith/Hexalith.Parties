@@ -99,7 +99,7 @@ public sealed class DocumentationFitnessTests
 
         // Assert the exact set, not the count. A bare Length check lets a rename, or an add paired
         // with a removal, pass while the documented inventory silently drifts.
-        string[] expectedTestProjects = [.. ExpectedRunnableProjects, "Hexalith.Parties.Platform.IntegrationTests", "Hexalith.Parties.EventStoreGateway.TestHost", "Hexalith.Parties.EventStoreSample.TestHost"];
+        string[] expectedTestProjects = [.. ExpectedRunnableProjects, "Hexalith.Parties.Platform.IntegrationTests", "Hexalith.Parties.EventStoreGateway.TestHost", "Hexalith.Parties.EventStoreSample.Contracts.TestArtifact", "Hexalith.Parties.EventStoreSample.TestHost"];
         testProjects.ShouldBe([.. expectedTestProjects.Order(StringComparer.Ordinal)]);
 
         string testScript = Read(root, "scripts/test.ps1");
@@ -115,6 +115,7 @@ public sealed class DocumentationFitnessTests
         testScript.ShouldContain("$platformProjects");
         testScript.ShouldContain("$testSupportProjects");
         testScript.ShouldContain("Hexalith.Parties.EventStoreGateway.TestHost.csproj");
+        testScript.ShouldContain("Hexalith.Parties.EventStoreSample.Contracts.TestArtifact.csproj");
 
         foreach (string relativePath in InventoryDocumentation)
         {
