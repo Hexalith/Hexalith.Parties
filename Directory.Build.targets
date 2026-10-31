@@ -21,7 +21,7 @@
       <DefineConstants>$(DefineConstants);HES_CANCELLABLE_PROJECTIONS</DefineConstants>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(HexalithFrontComposerFromSource)' == 'true' or '$(HexalithFrontComposerVersion)' == '4.7.1' or '$(HexalithFrontComposerVersion)' == '4.7.3'">
+    <PropertyGroup Condition="'$(HexalithFrontComposerFromSource)' == 'true' or '$(HexalithFrontComposerVersion)' == '4.7.1' or '$(HexalithFrontComposerVersion)' == '4.7.3' or '$(HexalithFrontComposerVersion)' == '4.7.4'">
       <DefineConstants>$(DefineConstants);HFC_SHARED_UI</DefineConstants>
     </PropertyGroup>
     <!-- The selected producer source supplies the corrected readiness/acceptance contract.
@@ -39,9 +39,9 @@
     <PropertyGroup>
       <MemoriesSourceRefreshSupported>false</MemoriesSourceRefreshSupported>
     </PropertyGroup>
-    <!-- The qualified 3.0.3 and 3.0.10 packages expose the same explicit revision/refresh protocol.
+    <!-- The qualified 3.0.3, 3.0.10 and 3.0.11 packages expose the same explicit revision/refresh protocol.
          Qualify exact package selections; future or older packages remain fail closed. -->
-    <PropertyGroup Condition="'$(HexalithMemoriesFromSource)' == 'true' or '$(HexalithMemoriesVersion)' == '3.0.3' or '$(HexalithMemoriesVersion)' == '3.0.10'">
+    <PropertyGroup Condition="'$(HexalithMemoriesFromSource)' == 'true' or '$(HexalithMemoriesVersion)' == '3.0.3' or '$(HexalithMemoriesVersion)' == '3.0.10' or '$(HexalithMemoriesVersion)' == '3.0.11'">
       <DefineConstants>$(DefineConstants);HEXALITH_MEMORIES_SOURCE_REFRESH</DefineConstants>
       <MemoriesSourceRefreshSupported>true</MemoriesSourceRefreshSupported>
     </PropertyGroup>

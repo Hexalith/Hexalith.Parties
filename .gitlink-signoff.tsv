@@ -418,3 +418,11 @@ references/Hexalith.Tenants|5c7b64a0aaef330bb37ea6da8dea593ea70e4628|validated-a
 # --- Additional verified owner CI synchronization.
 references/Hexalith.FrontComposer|eacc218d431e198e1d48d83f3e4260c4dd53991b|validated-advance|origin/main@eacc218d431e|jpiquot|2026-10-31
 references/Hexalith.Platform|75bceb22abc60d22d0c4e6f3d7c86795f3e51cc1|validated-advance|origin/main@75bceb22abc6|jpiquot|2026-10-31
+
+# --- Additional verified owner CI synchronization.
+references/Hexalith.EventStore|c02afa0fce310ccdb696232f18829df96cba088e|validated-advance|origin/main@c02afa0fce31|jpiquot|2026-10-31
+references/Hexalith.FrontComposer|34d0afde14c43b6079208c47f95297d0cf99b51d|validated-advance|origin/main@34d0afde14c4|jpiquot|2026-10-31
+references/Hexalith.McpCli|19de453867b0599c673596870d1b77a4fdcc9047|validated-advance|origin/main@19de453867b0|jpiquot|2026-10-31
+references/Hexalith.Memories|ceb7a8496079aca9df3e714314bc4c47549525f6|validated-advance|origin/main@ceb7a8496079|jpiquot|2026-10-31
+references/Hexalith.Platform|60761c60b662e592e89fd0b84a3a1280ab2b7db4|validated-advance|origin/main@60761c60b662|jpiquot|2026-10-31
+references/Hexalith.Tenants|3aa86b374ba9004d401978141aa7fff0237485a0|validated-advance|origin/main@3aa86b374ba9|jpiquot|2026-10-31

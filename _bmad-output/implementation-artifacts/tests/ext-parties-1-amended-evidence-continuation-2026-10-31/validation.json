@@ -1,0 +1,59 @@
+{
+  "schema": "EXT-PARTIES-1.offline-continuation-validation.v1",
+  "verifiedAtUtc": "2026-10-31T07:09:52.509543+00:00",
+  "passed": true,
+  "checksPassed": 709,
+  "protectedFilesUnchangedDuringThisContinuation": 556,
+  "preexistingHistoricalFingerprintDifferencesRetained": [
+    {
+      "path": "/home/administrator/projects/hexalith/parties/docs/index.md",
+      "expectedSha256": "143b09d2cfb96295bbee97c50f475257061d03de649951889db9a7a9a81e08e1",
+      "actualSha256": "c362507272da4d4a5709d618df2e4a8f2c82061229080e549b1e982a6cad12b7"
+    }
+  ],
+  "earlierDocumentPrefixPreserved": true,
+  "documentSha256": "9e1918089294290db0ea75b1b4d463a7171f3864db624a573603f7c741927e7f",
+  "historicalScopeExpiredUnderOriginalBindings": true,
+  "exactCutoffPending": true,
+  "amendedProposalPrepared": false,
+  "allInheritedBlockersRetained": true,
+  "agentsRegisterUnchanged": true,
+  "canonicalOwnerFormUnchanged": true,
+  "effects": {
+    "kubernetesMetadataGetCommands": 0,
+    "providerCalls": 0,
+    "sshCalls": 0,
+    "podExecs": 0,
+    "credentialIssuanceOrRenewals": 0,
+    "runtimeRecoveryExecutions": 0,
+    "runtimeOrPolicyWrites": 0,
+    "backupChanges": 0,
+    "infrastructureProvisioned": 0,
+    "productionBackendChanges": 0,
+    "qualificationRuns": 0,
+    "registerWrites": 0,
+    "messagesSent": 0
+  },
+  "constraints": {
+    "capEngineerDays": 2,
+    "newInfrastructureSpend": 0,
+    "newCapOrEffortAllocationInferred": false,
+    "spentEffortInferred": false
+  },
+  "whitespaceCommand": {
+    "argv": [
+      "git",
+      "-c",
+      "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+      "diff",
+      "--check",
+      "--",
+      "docs/implementation/ext-parties-1-operational-continuation-2026-10-30.md"
+    ],
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "command": "python3 -B _bmad-output/implementation-artifacts/tests/ext-parties-1-amended-evidence-continuation-2026-10-31/verify_continuation.py --record",
+  "limit": "Offline integrity, references, history/requirement preservation and whitespace only. No old verifier/tests/signatures, service checks, recovery or qualification rerun. Source hashes supply no new owner authentication, historical completeness, current grant or technical extension."
+}

@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsPublishable>false</IsPublishable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- This resolves ordinary configuration only; the tool still owns every source selector. -->
+    <_SampleRepositoryRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../..'))</_SampleRepositoryRoot>
+    <_SampleWorkspaceRoot>$([System.IO.Path]::GetFullPath('$(_SampleRepositoryRoot)/../..'))</_SampleWorkspaceRoot>
+    <_SampleInUmbrella Condition="$([System.IO.Path]::GetFileName($([System.IO.Path]::GetDirectoryName('$(_SampleRepositoryRoot)')))) == 'references'">true</_SampleInUmbrella>
+    <_SampleRootManifest Condition="Exists('$(_SampleRepositoryRoot)/.gitmodules')">$([System.IO.File]::ReadAllText('$(_SampleRepositoryRoot)/.gitmodules'))</_SampleRootManifest>
+    <_SampleWorkspaceManifest Condition="Exists('$(_SampleWorkspaceRoot)/.gitmodules')">$([System.IO.File]::ReadAllText('$(_SampleWorkspaceRoot)/.gitmodules'))</_SampleWorkspaceManifest>
+    <_SampleEventStoreRoot Condition="'$(HexalithEventStoreRoot)' != ''">$(HexalithEventStoreRoot)</_SampleEventStoreRoot>
+    <_SampleEventStoreRoot Condition="'$(_SampleEventStoreRoot)' == '' and '$(_SampleInUmbrella)' == 'true' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(_SampleWorkspaceManifest)', '(?m)^\s*path\s*=\s*references/Hexalith\.EventStore\s*$'))">$([System.IO.Path]::GetFullPath('$(_SampleRepositoryRoot)/../Hexalith.EventStore'))</_SampleEventStoreRoot>
+    <_SampleEventStoreRoot Condition="'$(_SampleEventStoreRoot)' == '' and '$(_SampleInUmbrella)' != 'true' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(_SampleRootManifest)', '(?m)^\s*path\s*=\s*references/Hexalith\.EventStore\s*$'))">$(_SampleRepositoryRoot)/references/Hexalith.EventStore</_SampleEventStoreRoot>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <!-- Reuse the real sample and wire contracts; these three inventories require unpublished source APIs. -->
+    <Compile Include="$(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample/**/*.cs"
+             Exclude="$(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample/obj/**/*.cs;$(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample/bin/**/*.cs;$(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample/Counter/SampleCatalog.cs;$(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample/Greeting/GreetingCatalogDeclarations.cs"
+             Link="Sample/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="$(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample.Contracts/**/*.cs"
+             Exclude="$(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample.Contracts/obj/**/*.cs;$(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample.Contracts/bin/**/*.cs;$(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample.Contracts/Counter/CounterCatalogDeclarations.cs"
+             Link="Contracts/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Content Include="$(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample/appsettings.json;$(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample/appsettings.Development.json"
+             Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
+    <PackageReference Include="Hexalith.EventStore.DomainService" />
+  </ItemGroup>
+
+  <Target Name="ValidateSampleSettingsRoot" BeforeTargets="PrepareForBuild">
+    <Error Condition="'$(_SampleEventStoreRoot)' == ''" Text="The package sample requires a tool-selected EventStore root or a root-declared standalone/umbrella EventStore reference; nested initialization is not a fallback." />
+    <ItemGroup>
+      <_RequiredSampleSource Include="$(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample/Program.cs;
+        $(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample/Counter/CounterAggregate.cs;
+        $(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample/Greeting/GreetingAggregate.cs;
+        $(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample.Contracts/Hexalith.EventStore.Sample.Contracts.csproj;
+        $(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample.Contracts/Counter/Commands/IncrementCounter.cs;
+        $(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample.Contracts/Counter/Queries/GetCounterStatusQuery.cs;
+        $(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample/appsettings.json;
+        $(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample/appsettings.Development.json;
+        $(_SampleEventStoreRoot)/samples/Hexalith.EventStore.Sample/Properties/launchSettings.json" />
+    </ItemGroup>
+    <Error Condition="!Exists('%(_RequiredSampleSource.Identity)')"
+           Text="The package sample checkout '$(_SampleEventStoreRoot)' is missing required native source/config '%(_RequiredSampleSource.Identity)'. Restore the complete sample and contracts in the selected root-declared checkout before building; do not initialize nested submodules." />
+  </Target>
+
+  <Target Name="SelectSampleRunDirectory" BeforeTargets="ComputeRunArguments">
+    <!-- The linked native Program loads ordinary appsettings from its content root. -->
+    <PropertyGroup><RunWorkingDirectory>$(TargetDir)</RunWorkingDirectory></PropertyGroup>
+  </Target>
+</Project>

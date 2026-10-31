@@ -99,7 +99,7 @@ public sealed class DocumentationFitnessTests
 
         // Assert the exact set, not the count. A bare Length check lets a rename, or an add paired
         // with a removal, pass while the documented inventory silently drifts.
-        string[] expectedTestProjects = [.. ExpectedRunnableProjects, "Hexalith.Parties.Platform.IntegrationTests", "Hexalith.Parties.EventStoreGateway.TestHost"];
+        string[] expectedTestProjects = [.. ExpectedRunnableProjects, "Hexalith.Parties.Platform.IntegrationTests", "Hexalith.Parties.EventStoreGateway.TestHost", "Hexalith.Parties.EventStoreSample.TestHost"];
         testProjects.ShouldBe([.. expectedTestProjects.Order(StringComparer.Ordinal)]);
 
         string testScript = Read(root, "scripts/test.ps1");

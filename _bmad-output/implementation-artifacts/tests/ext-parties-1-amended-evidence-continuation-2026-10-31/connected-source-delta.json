@@ -1,0 +1,94 @@
+{
+  "recordedAtUtc": {
+    "current_time": "2026-10-31 07:05:20 UTC"
+  },
+  "cutoffUtc": "2026-10-30T09:33:31Z",
+  "reason": "Relevant new connected records since previous completed connected delta; Outlook date granularity overlaps the prior day and returned hits require timestamp deduplication.",
+  "results": [
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "github",
+        "tool": "mcp__codex_apps__github_search_issues",
+        "args": {
+          "query": "org:Hexalith (\"EXT-PARTIES-1\" OR \"kubesphere-sa-token\") updated:>=2026-10-30T09:33:31Z",
+          "sort": "updated",
+          "order": "desc",
+          "topn": 20
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "Action completed."
+            }
+          ],
+          "structuredContent": {
+            "issues": []
+          },
+          "isError": false
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "outlook",
+        "tool": "mcp__codex_apps__microsoft_outlook_email_search_messages",
+        "args": {
+          "query": "EXT-PARTIES-1 received>=2026-10-30",
+          "size": 20
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "Action completed."
+            }
+          ],
+          "structuredContent": {
+            "results": [],
+            "has_more": false,
+            "next_from_index": null
+          },
+          "isError": false
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "teams",
+        "tool": "mcp__codex_apps__microsoft_teams_search",
+        "args": {
+          "query": "EXT-PARTIES-1",
+          "sent_after": "2026-10-30T09:33:31Z",
+          "include_channel_threads": true,
+          "topn": 20
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "Action completed."
+            }
+          ],
+          "structuredContent": {
+            "results": [],
+            "reason": "query_too_restrictive",
+            "applied_filters": {
+              "team_id": null,
+              "channel_id": null,
+              "chat_id": null,
+              "sender_name": [],
+              "recipient_name": [],
+              "sent_after": "2026-10-30T09:33:31+00:00",
+              "include_channel_threads": true
+            }
+          },
+          "isError": false
+        }
+      }
+    }
+  ]
+}

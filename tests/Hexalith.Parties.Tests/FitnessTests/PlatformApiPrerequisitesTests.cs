@@ -58,8 +58,8 @@ public sealed class PlatformApiPrerequisitesTests
     ];
 
     // Committed source observations are separate from historical migration/parity approvals.
-    private const string CurrentSelectedEventStoreSha = "571784de9d289ec6c66969e926a70c92924cb1c9";
-    private const string CurrentSelectedEventStoreDescribe = "v3.128.4-68-g571784de";
+    private const string CurrentSelectedEventStoreSha = "c02afa0fce310ccdb696232f18829df96cba088e";
+    private const string CurrentSelectedEventStoreDescribe = "v3.128.4-72-gc02afa0f";
     private const string CurrentSelectedEventStoreTag = "v3.128.4";
     // Current committed selections are observations, separate from historical owner approvals.
     private static readonly IReadOnlyDictionary<string, string> CurrentSelectedGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
@@ -67,13 +67,13 @@ public sealed class PlatformApiPrerequisitesTests
         ["references/Hexalith.AI.Tools"] = "9b78aa008cfc62cd88ad0ea4b39b1f07311956ce",
         ["references/Hexalith.Builds"] = "a22b55f0a4f6d2aaa3a5ccc505896064ac595364",
         ["references/Hexalith.Commons"] = "0604bcf5304fc09a569f7abbd8e5d1b9049c02b7",
-        ["references/Hexalith.EventStore"] = "571784de9d289ec6c66969e926a70c92924cb1c9",
-        ["references/Hexalith.FrontComposer"] = "eacc218d431e198e1d48d83f3e4260c4dd53991b",
-        ["references/Hexalith.McpCli"] = "09c2acda09b298d8111be46ba2b06a1ef28f2dd7",
-        ["references/Hexalith.Memories"] = "7efa9f97726d4441da2bc64e64fd435cfb698cb6",
-        ["references/Hexalith.Platform"] = "75bceb22abc60d22d0c4e6f3d7c86795f3e51cc1",
+        ["references/Hexalith.EventStore"] = "c02afa0fce310ccdb696232f18829df96cba088e",
+        ["references/Hexalith.FrontComposer"] = "34d0afde14c43b6079208c47f95297d0cf99b51d",
+        ["references/Hexalith.McpCli"] = "19de453867b0599c673596870d1b77a4fdcc9047",
+        ["references/Hexalith.Memories"] = "ceb7a8496079aca9df3e714314bc4c47549525f6",
+        ["references/Hexalith.Platform"] = "60761c60b662e592e89fd0b84a3a1280ab2b7db4",
         ["references/Hexalith.PolymorphicSerializations"] = "92ede24cc11129379efe52cfe7fd2c820c567f7f",
-        ["references/Hexalith.Tenants"] = "5c7b64a0aaef330bb37ea6da8dea593ea70e4628",
+        ["references/Hexalith.Tenants"] = "3aa86b374ba9004d401978141aa7fff0237485a0",
     };
 
     private static readonly IReadOnlyDictionary<string, string> CurrentSelectedSourceDescribes = new Dictionary<string, string>(StringComparer.Ordinal)
@@ -81,13 +81,13 @@ public sealed class PlatformApiPrerequisitesTests
         ["references/Hexalith.AI.Tools"] = "9b78aa00",
         ["references/Hexalith.Builds"] = "v4.39.0-4-ga22b55f0",
         ["references/Hexalith.Commons"] = "v2.30.7",
-        ["references/Hexalith.EventStore"] = "v3.128.4-68-g571784de",
-        ["references/Hexalith.FrontComposer"] = "v4.7.3-9-geacc218d",
-        ["references/Hexalith.McpCli"] = "v1.1.0-31-g09c2acda",
-        ["references/Hexalith.Memories"] = "v3.0.10-26-g7efa9f97",
-        ["references/Hexalith.Platform"] = "v1.0.1-164-g75bceb22",
+        ["references/Hexalith.EventStore"] = "v3.128.4-72-gc02afa0f",
+        ["references/Hexalith.FrontComposer"] = "v4.7.4",
+        ["references/Hexalith.McpCli"] = "v1.1.0-35-g19de4538",
+        ["references/Hexalith.Memories"] = "v3.0.11-1-gceb7a849",
+        ["references/Hexalith.Platform"] = "v1.0.1-165-g60761c60",
         ["references/Hexalith.PolymorphicSerializations"] = "v1.19.6-2-g92ede24c",
-        ["references/Hexalith.Tenants"] = "v5.11.2-3-g5c7b64a0",
+        ["references/Hexalith.Tenants"] = "v5.11.2-4-g3aa86b37",
     };
 
     private static readonly string[] RequiredAbsentPayloadProtectionPaths =
@@ -899,6 +899,7 @@ public sealed class PlatformApiPrerequisitesTests
         [
             "references/Hexalith.EventStore/src/Hexalith.EventStore/Hexalith.EventStore.csproj",
             "tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj",
+            "tests/Hexalith.Parties.EventStoreSample.TestHost/Hexalith.Parties.EventStoreSample.TestHost.csproj",
             "references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server.Host/Hexalith.EventStore.Admin.Server.Host.csproj",
             "references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj",
             "references/Hexalith.Tenants/src/Hexalith.Tenants/Hexalith.Tenants.csproj",
@@ -1227,27 +1228,33 @@ public sealed class PlatformApiPrerequisitesTests
             declarations.Add(declaration.Groups["variable"].Value, [project]);
         }
 
-        MatchCollection gatewayCalls = Regex.Matches(appHost, @"ReferenceProjectResolver\.ResolveGateway\s*\(", RegexOptions.CultureInvariant);
-        MatchCollection gateways = Regex.Matches(appHost,
-            "(?<variable>[A-Za-z][A-Za-z0-9]*)\\s*=\\s*ReferenceProjectResolver\\.ResolveGateway\\s*\\(\\s*repositoryRoot\\s*,\\s*builder\\.Configuration\\.GetValue<bool>\\(\"Parties:Testing:UsePackagedGateway\"\\)\\s*,\\s*builder\\.ExecutionContext\\.IsPublishMode\\s*\\)",
+        MatchCollection selectionCalls = Regex.Matches(appHost, @"ReferenceProjectResolver\.Resolve(?:Gateway|Sample)\s*\(", RegexOptions.CultureInvariant);
+        MatchCollection selections = Regex.Matches(appHost,
+            "(?<variable>[A-Za-z][A-Za-z0-9]*)\\s*=\\s*ReferenceProjectResolver\\.Resolve(?<kind>Gateway|Sample)\\s*\\(\\s*repositoryRoot\\s*,\\s*builder\\.Configuration\\.GetValue<bool>\\(\"Parties:Testing:UsePackagedGateway\"\\)\\s*,\\s*builder\\.ExecutionContext\\.IsPublishMode\\s*\\)",
             RegexOptions.CultureInvariant);
-        gateways.Count.ShouldBe(gatewayCalls.Count, "AppHost contains unsupported ResolveGateway arguments; explicit gateway selection must be inventoried exactly.");
-        foreach (Match gateway in gateways)
+        selections.Count.ShouldBe(selectionCalls.Count, "AppHost contains unsupported ResolveGateway arguments or unsupported ResolveSample arguments; explicit package selection must be inventoried exactly.");
+        foreach (Match selection in selections)
         {
             const string moduleRoot = "references/Hexalith.EventStore";
-            rootSubmodules.ShouldContain(moduleRoot, "The native gateway must belong to a declared root submodule.");
+            rootSubmodules.ShouldContain(moduleRoot, "The native runtime must belong to a declared root submodule.");
             string resolver = File.ReadAllText(Path.Combine(root, "src/Hexalith.Parties.AppHost/ReferenceProjectResolver.cs"));
             resolver.ShouldContain("return ResolveRequired(repositoryRoot, \"Hexalith.EventStore\",");
-            resolver.ShouldContain("Path.Combine(\"src\", \"Hexalith.EventStore\", \"Hexalith.EventStore.csproj\")");
-            resolver.ShouldContain("Path.Combine(repositoryRoot.FullName, \"tests\", \"Hexalith.Parties.EventStoreGateway.TestHost\",");
-            resolver.ShouldContain("\"Hexalith.Parties.EventStoreGateway.TestHost.csproj\")");
-            string[] selectedProjects = [moduleRoot + "/src/Hexalith.EventStore/Hexalith.EventStore.csproj",
-                "tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj"];
+            bool sample = selection.Groups["kind"].Value == "Sample";
+            string nativeProject = sample
+                ? moduleRoot + "/samples/Hexalith.EventStore.Sample/Hexalith.EventStore.Sample.csproj"
+                : moduleRoot + "/src/Hexalith.EventStore/Hexalith.EventStore.csproj";
+            string hostName = sample ? "Hexalith.Parties.EventStoreSample.TestHost" : "Hexalith.Parties.EventStoreGateway.TestHost";
+            resolver.ShouldContain(sample
+                ? "Path.Combine(\"samples\", \"Hexalith.EventStore.Sample\", \"Hexalith.EventStore.Sample.csproj\")"
+                : "Path.Combine(\"src\", \"Hexalith.EventStore\", \"Hexalith.EventStore.csproj\")");
+            resolver.ShouldContain($"Path.Combine(repositoryRoot.FullName, \"tests\", \"{hostName}\",");
+            resolver.ShouldContain($"\"{hostName}.csproj\")");
+            string[] selectedProjects = [nativeProject, $"tests/{hostName}/{hostName}.csproj"];
             foreach (string project in selectedProjects)
             {
                 File.Exists(RepositoryDependencyPaths.Resolve(root, project)).ShouldBeTrue($"Selectable gateway is missing: {project}");
             }
-            declarations.Add(gateway.Groups["variable"].Value, selectedProjects);
+            declarations.Add(selection.Groups["variable"].Value, selectedProjects);
         }
 
         MatchCollection runtimeCalls = Regex.Matches(appHost, @"\bbuilder\s*\.\s*AddProject\s*\(", RegexOptions.CultureInvariant);

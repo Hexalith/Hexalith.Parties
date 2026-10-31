@@ -126,6 +126,27 @@ public sealed class ReferenceProjectResolverTests
         finally { Directory.Delete(workspace, recursive: true); }
     }
 
+    /// <summary>The sample follows the same explicit package profile and refuses missing hosts or publication.</summary>
+    [Fact]
+    public void SampleSelectionUsesOnlyTheExplicitRunProfileAndRefusesMissingHost()
+    {
+        string workspace = CreateTemporaryDirectory();
+        try
+        {
+            DirectoryInfo root = new(workspace);
+            string native = CreateProject(workspace, "references", "Hexalith.EventStore", "samples", "Hexalith.EventStore.Sample", "Hexalith.EventStore.Sample.csproj");
+            ReferenceProjectResolver.ResolveSample(root, false, false).ShouldBe(native);
+            ReferenceProjectResolver.ResolveSample(root, false, true).ShouldBe(native);
+            Should.Throw<FileNotFoundException>(() => ReferenceProjectResolver.ResolveSample(root, true, false))
+                .Message.ShouldContain("package compatibility sample");
+            string packaged = CreateProject(workspace, "tests", "Hexalith.Parties.EventStoreSample.TestHost", "Hexalith.Parties.EventStoreSample.TestHost.csproj");
+            ReferenceProjectResolver.ResolveSample(root, true, false).ShouldBe(packaged);
+            Should.Throw<InvalidOperationException>(() => ReferenceProjectResolver.ResolveSample(root, true, true))
+                .Message.ShouldContain("cannot be published");
+        }
+        finally { Directory.Delete(workspace, recursive: true); }
+    }
+
     private static string CreateProject(params string[] segments)
     {
         string path = Path.Combine(segments);

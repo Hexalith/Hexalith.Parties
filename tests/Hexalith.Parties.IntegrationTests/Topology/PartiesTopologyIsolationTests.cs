@@ -11,6 +11,7 @@ using Aspire.Hosting.Testing;
 
 using Hexalith.Commons.UniqueIds;
 using Hexalith.EventStore.Contracts.Identity;
+using Hexalith.EventStore.ServiceDefaults.Authentication;
 using Microsoft.IdentityModel.Tokens;
 using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.IntegrationTests.Gateway;
@@ -88,6 +89,8 @@ public sealed class PartiesTopologyIsolationTests
         second.IsAvailable.ShouldBeTrue(second.UnavailableReason);
         await SeedPersistedCounterAsync(first, 2, TestContext.Current.CancellationToken);
         await SeedPersistedCounterAsync(second, 5, TestContext.Current.CancellationToken);
+        await AssertSampleReceiverRefusesInvalidCredentialsAsync(first, TestContext.Current.CancellationToken);
+        await VerifyGreetingAndCounterRejectionAsync(first, TestContext.Current.CancellationToken);
         await AssertAuthenticatedUiRoutingAsync(first, 2, TestContext.Current.CancellationToken);
         await AssertAuthenticatedUiRoutingAsync(second, 5, TestContext.Current.CancellationToken);
         const string markerKey = "fixture-runtime-isolation-marker";
@@ -143,16 +146,7 @@ public sealed class PartiesTopologyIsolationTests
         using var budget = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         budget.CancelAfter(TimeSpan.FromSeconds(60));
         var identity = new AggregateIdentity(PartiesTenantBootstrapHost.TenantId, "counter", "counter-1");
-        var token = new JwtSecurityTokenHandler().CreateEncodedJwt(new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity([new Claim(PartiesClaimTypes.Subject, PartiesTenantBootstrapHost.UserId),
-                new Claim(PartiesClaimTypes.EventStoreTenant, identity.TenantId), new Claim("tenants", JsonSerializer.Serialize(new[] { identity.TenantId })),
-                new Claim("domains", "[\"counter\"]"), new Claim("permissions", "[\"commands:*\",\"command:submit\",\"query:read\"]")]),
-            Issuer = PartiesAspireTopologyFixture.JwtIssuer, Audience = "hexalith-eventstore", Expires = DateTime.UtcNow.AddMinutes(10),
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(PartiesAspireTopologyFixture.JwtSigningKey)), SecurityAlgorithms.HmacSha256),
-        });
-        using var client = new HttpClient { BaseAddress = fixture.EventStoreClient.BaseAddress };
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        using HttpClient client = CreateSampleGatewayClient(fixture);
         for (int increment = 0; increment < count; increment++)
         {
             string id = UniqueIdHelper.GenerateSortableUniqueStringId();
@@ -184,6 +178,125 @@ public sealed class PartiesTopologyIsolationTests
         stored.Events.Length.ShouldBe(count);
         stored.Events.ShouldAllBe(item => item.Identity == identity && item.EventTypeName.EndsWith(".CounterIncremented", StringComparison.Ordinal));
     }
+
+
+    /// <summary>Real receiver policies deny app-channel and workload credential failures before dispatch.</summary>
+    private static async Task AssertSampleReceiverRefusesInvalidCredentialsAsync(PartiesAspireTopologyFixture fixture, CancellationToken cancellationToken)
+    {
+        using HttpClient direct = fixture.App.CreateHttpClient("sample", "http");
+        using HttpClient gatewaySidecar = fixture.CreateSidecarClient("eventstore");
+        string humanAssertion = CreateSampleBearerToken(fixture.Session.AppId("sample"));
+        foreach (string route in new[] { "/process", "/project", "/replay-state", "/admin/operational-index-metadata" })
+        {
+            foreach (bool invalidChannel in new[] { false, true })
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Post, route) { Content = JsonContent.Create(new { }) };
+                if (invalidChannel)
+                {
+                    request.Headers.Add("dapr-api-token", "incorrect-channel-token");
+                    request.Headers.Add(EventStoreWorkloadAuthenticationDefaults.AssertionHeaderName, "invalid-workload-assertion");
+                }
+                using HttpResponseMessage denied = await direct.SendAsync(request, cancellationToken).ConfigureAwait(false);
+                denied.StatusCode.ShouldBe(HttpStatusCode.Unauthorized, "The real sample receiver must reject absent/invalid direct credentials: " + route);
+            }
+            // The permitted, mTLS-authenticated gateway sidecar supplies the genuine app-channel proof.
+            // Missing, malformed and correctly signed human credentials still cannot impersonate its workload.
+            foreach (string? assertion in new[] { null, "invalid-workload-assertion", humanAssertion })
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Post,
+                    $"/v1.0/invoke/{fixture.Session.AppId("sample")}/method{route}") { Content = JsonContent.Create(new { }) };
+                if (assertion is not null) { request.Headers.Add(EventStoreWorkloadAuthenticationDefaults.AssertionHeaderName, assertion); }
+                using HttpResponseMessage denied = await gatewaySidecar.SendAsync(request, cancellationToken).ConfigureAwait(false);
+                denied.StatusCode.ShouldBe(HttpStatusCode.Unauthorized, "The real sample workload policy must challenge, not admit or defer to body binding: " + route);
+            }
+        }
+        var unchanged = await fixture.ReadStoredStreamAsync(new AggregateIdentity(PartiesTenantBootstrapHost.TenantId, "counter", "counter-1"), cancellationToken).ConfigureAwait(false);
+        unchanged.Metadata.CurrentSequence.ShouldBe(2);
+        unchanged.Events.Length.ShouldBe(2);
+        unchanged.Events.ShouldAllBe(item => item.EventTypeName.EndsWith(".CounterIncremented", StringComparison.Ordinal));
+    }
+
+    /// <summary>Both sample domains and Counter's rejection serializer execute through the real package gateway.</summary>
+    private static async Task VerifyGreetingAndCounterRejectionAsync(PartiesAspireTopologyFixture fixture, CancellationToken cancellationToken)
+    {
+        using HttpClient client = CreateSampleGatewayClient(fixture);
+        var greeting = new AggregateIdentity(PartiesTenantBootstrapHost.TenantId, "greeting", UniqueIdHelper.GenerateSortableUniqueStringId());
+        string greetingId = UniqueIdHelper.GenerateSortableUniqueStringId();
+        using HttpResponseMessage accepted = await client.PostAsJsonAsync("/api/v1/commands", new
+        {
+            messageId = greetingId, correlationId = greetingId, tenant = greeting.TenantId, domain = greeting.Domain,
+            aggregateId = greeting.AggregateId, commandType = "SendGreeting", payload = new { },
+        }, cancellationToken).ConfigureAwait(false);
+        accepted.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        await AssertSampleCommandStatusAsync(client, greetingId, "Completed", cancellationToken).ConfigureAwait(false);
+        var sent = await fixture.ReadStoredStreamAsync(greeting, cancellationToken).ConfigureAwait(false);
+        sent.Metadata.CurrentSequence.ShouldBe(1);
+        var greetingEvent = sent.Events.ShouldHaveSingleItem();
+        greetingEvent.Identity.ShouldBe(greeting);
+        greetingEvent.EventTypeName.ShouldBe("Hexalith.EventStore.Sample.Greeting.Events.GreetingSent");
+        greetingEvent.CorrelationId.ShouldBe(greetingId);
+        greetingEvent.CausationId.ShouldBe(greetingId);
+        greetingEvent.UserId.ShouldBe(PartiesTenantBootstrapHost.UserId);
+        greetingEvent.SerializationFormat.ShouldBe("json");
+        Encoding.UTF8.GetString(greetingEvent.Payload).ShouldBe("{}");
+
+        var counter = new AggregateIdentity(PartiesTenantBootstrapHost.TenantId, "counter", UniqueIdHelper.GenerateSortableUniqueStringId());
+        string rejectionId = UniqueIdHelper.GenerateSortableUniqueStringId();
+        using HttpResponseMessage rejected = await client.PostAsJsonAsync("/api/v1/commands", new
+        {
+            messageId = rejectionId, correlationId = rejectionId, tenant = counter.TenantId, domain = counter.Domain,
+            aggregateId = counter.AggregateId, commandType = "decrement-counter", payload = new { counterId = counter.AggregateId },
+        }, cancellationToken).ConfigureAwait(false);
+        rejected.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+        using JsonDocument problem = await rejected.Content.ReadFromJsonAsync<JsonDocument>(cancellationToken).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("Counter rejection problem was empty.");
+        problem.RootElement.GetProperty("type").GetString().ShouldNotBeNull().ShouldContain("counter-cannot-go-negative");
+        await AssertSampleCommandStatusAsync(client, rejectionId, "Rejected", cancellationToken).ConfigureAwait(false);
+        var rejection = await fixture.ReadStoredStreamAsync(counter, cancellationToken).ConfigureAwait(false);
+        rejection.Metadata.CurrentSequence.ShouldBe(1);
+        var rejectionEvent = rejection.Events.ShouldHaveSingleItem();
+        rejectionEvent.Identity.ShouldBe(counter);
+        rejectionEvent.EventTypeName.ShouldBe("Hexalith.EventStore.Sample.Counter.Events.CounterCannotGoNegative");
+        rejectionEvent.CorrelationId.ShouldBe(rejectionId);
+        rejectionEvent.SerializationFormat.ShouldBe("json");
+        Encoding.UTF8.GetString(rejectionEvent.Payload).ShouldBe("{}");
+    }
+
+    private static async Task AssertSampleCommandStatusAsync(HttpClient client, string id, string expected, CancellationToken cancellationToken)
+    {
+        using var budget = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        budget.CancelAfter(TimeSpan.FromSeconds(60));
+        while (true)
+        {
+            using HttpResponseMessage response = await client.GetAsync($"/api/v1/commands/status/{id}", budget.Token).ConfigureAwait(false);
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                using JsonDocument status = await response.Content.ReadFromJsonAsync<JsonDocument>(budget.Token).ConfigureAwait(false)
+                    ?? throw new InvalidOperationException("Sample command status was empty.");
+                string? actual = status.RootElement.GetProperty("status").GetString();
+                if (actual is "Completed" or "Rejected" or "PublishFailed" or "TimedOut") { actual.ShouldBe(expected); return; }
+            }
+            await Task.Delay(TimeSpan.FromMilliseconds(250), budget.Token).ConfigureAwait(false);
+        }
+    }
+
+    private static HttpClient CreateSampleGatewayClient(PartiesAspireTopologyFixture fixture)
+    {
+        var client = new HttpClient { BaseAddress = fixture.EventStoreClient.BaseAddress };
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CreateSampleBearerToken());
+        return client;
+    }
+
+    private static string CreateSampleBearerToken(string audience = "hexalith-eventstore") =>
+        new JwtSecurityTokenHandler().CreateEncodedJwt(new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity([new Claim(PartiesClaimTypes.Subject, PartiesTenantBootstrapHost.UserId),
+                new Claim(PartiesClaimTypes.EventStoreTenant, PartiesTenantBootstrapHost.TenantId),
+                new Claim("tenants", JsonSerializer.Serialize(new[] { PartiesTenantBootstrapHost.TenantId })),
+                new Claim("domains", "[\"counter\",\"greeting\"]"), new Claim("permissions", "[\"commands:*\",\"command:submit\",\"query:read\"]")]),
+            Issuer = PartiesAspireTopologyFixture.JwtIssuer, Audience = audience, Expires = DateTime.UtcNow.AddMinutes(10),
+            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(PartiesAspireTopologyFixture.JwtSigningKey)), SecurityAlgorithms.HmacSha256),
+        });
 
     /// <summary>Prerendering executes the real UI clients, bearer handlers and configured SDK Dapr routing.</summary>
     private static async Task AssertAuthenticatedUiRoutingAsync(PartiesAspireTopologyFixture fixture, int expectedCount, CancellationToken cancellationToken)

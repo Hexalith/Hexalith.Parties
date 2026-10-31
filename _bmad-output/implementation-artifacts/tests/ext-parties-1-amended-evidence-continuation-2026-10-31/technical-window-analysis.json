@@ -1,0 +1,108 @@
+{
+  "analyzedAtUtc": "2026-10-31T07:07:53.735426+00:00",
+  "source": {
+    "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/operational-recovery-proposal.json",
+    "sha256": "e0d10b617ca733cf0f7cba91d03762f534914547c37f890b2788ef39ce42186d"
+  },
+  "sourcePointer": "/keyPlan/*/mapping",
+  "retainedPublicMetadataEvidence": {
+    "data": {
+      "classification": "Absent",
+      "lease": null,
+      "nativeErrorClassification": "CanonicalInvalidAccessor",
+      "status": 400
+    },
+    "metadata": {
+      "classification": "Absent",
+      "lease": null,
+      "nativeErrorClassification": "CanonicalInvalidAccessor",
+      "status": 400
+    }
+  },
+  "datedLeaseObservationUtc": "2026-10-29T19:54:29.321227+00:00",
+  "keyMappings": [
+    {
+      "tenantId": "01M54GTX47NH1PRB00T2YS5048",
+      "purpose": "TrustedEnvelope",
+      "opaqueVersion": "hmac-6b7b27b5-6c53-42b7-8924-15f5a8c5f564",
+      "nativeVersion": "2",
+      "notBefore": "2026-10-27T18:29:26.735178868Z",
+      "verifyUntil": "2026-11-03T18:29:26.735178+00:00"
+    },
+    {
+      "tenantId": "01M54GTX47NH1PRB00T2YS5048",
+      "purpose": "ContentDigest",
+      "opaqueVersion": "hmac-3867729b-972d-449a-b445-373ee7e6ca12",
+      "nativeVersion": "2",
+      "notBefore": "2026-10-27T18:29:29.478313849Z",
+      "verifyUntil": "2026-11-03T18:29:29.478313+00:00"
+    },
+    {
+      "tenantId": "01M54GTX479F4Y9A3MRW578C4R",
+      "purpose": "TrustedEnvelope",
+      "opaqueVersion": "hmac-eba15f8a-21b5-45f2-bb32-1c9e578e3912",
+      "nativeVersion": "2",
+      "notBefore": "2026-10-27T18:29:32.286790576Z",
+      "verifyUntil": "2026-11-03T18:29:32.286790+00:00"
+    },
+    {
+      "tenantId": "01M54GTX479F4Y9A3MRW578C4R",
+      "purpose": "ContentDigest",
+      "opaqueVersion": "hmac-5e9ed87e-6430-48ec-9849-d231fde10e10",
+      "nativeVersion": "2",
+      "notBefore": "2026-10-27T18:29:35.156783337Z",
+      "verifyUntil": "2026-11-03T18:29:35.156783+00:00"
+    }
+  ],
+  "authorityPlanValidUntil": [
+    {
+      "kind": "SetInventoryHost",
+      "operationId": "246d860f1f135016b2325ec718311220",
+      "validUntil": "2026-10-30T16:53:50+00:00"
+    },
+    {
+      "kind": "SetInventoryHost",
+      "operationId": "bd55b8bcfc245c4791092cf38bc2d801",
+      "validUntil": "2026-10-30T16:53:50+00:00"
+    },
+    {
+      "kind": "SetCaller",
+      "operationId": "1a7df2b122c0520e94a050e2bdee29e2",
+      "validUntil": "2026-10-30T16:53:50+00:00"
+    },
+    {
+      "kind": "SetCaller",
+      "operationId": "765adc37d81f5673a7951a18ab95647b",
+      "validUntil": "2026-10-30T16:53:50+00:00"
+    },
+    {
+      "kind": "SetKeyStatus",
+      "operationId": "af7ae558262c5f77b557f8e65fa2dd7f",
+      "validUntil": "2026-10-30T16:53:50+00:00"
+    },
+    {
+      "kind": "SetKeyStatus",
+      "operationId": "cbd38805f716530b93e8479853742da6",
+      "validUntil": "2026-10-30T16:53:50+00:00"
+    },
+    {
+      "kind": "SetKeyStatus",
+      "operationId": "48e18b59d504530888af937c54467ab0",
+      "validUntil": "2026-10-30T16:53:50+00:00"
+    },
+    {
+      "kind": "SetKeyStatus",
+      "operationId": "d87bed561a325331a06fd6cb17058c12",
+      "validUntil": "2026-10-30T16:53:50+00:00"
+    },
+    {
+      "kind": "PublishProfile",
+      "operationId": "7c0ce3871b745494a912b094dcc53f6d",
+      "validUntil": "2026-10-30T16:53:50+00:00"
+    }
+  ],
+  "finding": "All four retained version-2 mappings end on November 3, before amended calendar date November 15. The old authority proposal ends October 30. Date amendment alone supplies no valid credential/profile or technical-window extension. Later assessment must deny once any applicable technical window ends.",
+  "credentialOrKeyWindowsExtended": false,
+  "freshProviderObservation": false,
+  "limit": "Offline interpretation of retained evidence only, not fresh provider status or accepted revised authority bodies."
+}

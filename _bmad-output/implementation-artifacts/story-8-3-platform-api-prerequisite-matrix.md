@@ -71,13 +71,13 @@ verification does not qualify the newer native/source catalog or Platform runtim
 | AI.Tools | `9b78aa008cfc62cd88ad0ea4b39b1f07311956ce` (`9b78aa00`) | Pushed owner revision; root adoption and qualification require their own proof. |
 | Builds | `a22b55f0a4f6d2aaa3a5ccc505896064ac595364` (`v4.39.0-4-ga22b55f0`) | Pushed owner revision; root adoption and qualification require their own proof. |
 | Commons | `0604bcf5304fc09a569f7abbd8e5d1b9049c02b7` (`v2.30.7`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| EventStore | `571784de9d289ec6c66969e926a70c92924cb1c9` (`v3.128.4-68-g571784de`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| FrontComposer | `eacc218d431e198e1d48d83f3e4260c4dd53991b` (`v4.7.3-9-geacc218d`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| McpCli | `09c2acda09b298d8111be46ba2b06a1ef28f2dd7` (`v1.1.0-31-g09c2acda`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| Memories | `7efa9f97726d4441da2bc64e64fd435cfb698cb6` (`v3.0.10-26-g7efa9f97`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| Platform | `75bceb22abc60d22d0c4e6f3d7c86795f3e51cc1` (`v1.0.1-164-g75bceb22`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| EventStore | `c02afa0fce310ccdb696232f18829df96cba088e` (`v3.128.4-72-gc02afa0f`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| FrontComposer | `34d0afde14c43b6079208c47f95297d0cf99b51d` (`v4.7.4`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| McpCli | `19de453867b0599c673596870d1b77a4fdcc9047` (`v1.1.0-35-g19de4538`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| Memories | `ceb7a8496079aca9df3e714314bc4c47549525f6` (`v3.0.11-1-gceb7a849`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| Platform | `60761c60b662e592e89fd0b84a3a1280ab2b7db4` (`v1.0.1-165-g60761c60`) | Pushed owner revision; root adoption and qualification require their own proof. |
 | PolymorphicSerializations | `92ede24cc11129379efe52cfe7fd2c820c567f7f` (`v1.19.6-2-g92ede24c`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| Tenants | `5c7b64a0aaef330bb37ea6da8dea593ea70e4628` (`v5.11.2-3-g5c7b64a0`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| Tenants | `3aa86b374ba9004d401978141aa7fff0237485a0` (`v5.11.2-4-g3aa86b37`) | Pushed owner revision; root adoption and qualification require their own proof. |
 
 ### Historical source observation — 2026-10-30
 

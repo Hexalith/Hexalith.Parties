@@ -13,8 +13,12 @@ if (( $# > 0 )); then
     gateway_profile="$2"
 fi
 case "$gateway_profile" in
-    packaged) gateway_project=tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj ;;
-    native) gateway_project=references/Hexalith.EventStore/src/Hexalith.EventStore/Hexalith.EventStore.csproj ;;
+    packaged)
+        gateway_project=tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj
+        sample_project=tests/Hexalith.Parties.EventStoreSample.TestHost/Hexalith.Parties.EventStoreSample.TestHost.csproj ;;
+    native)
+        gateway_project=references/Hexalith.EventStore/src/Hexalith.EventStore/Hexalith.EventStore.csproj
+        sample_project=references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample/Hexalith.EventStore.Sample.csproj ;;
     *) printf 'Unsupported gateway profile: %s\n' "$gateway_profile" >&2; exit 2 ;;
 esac
 runtime_hosts=(
@@ -24,7 +28,7 @@ runtime_hosts=(
     references/Hexalith.Tenants/src/Hexalith.Tenants/Hexalith.Tenants.csproj
     references/Hexalith.Memories/src/Hexalith.Memories.Server/Hexalith.Memories.Server.csproj
     references/Hexalith.Memories/src/Hexalith.Memories.DomainService/Hexalith.Memories.DomainService.csproj
-    references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample/Hexalith.EventStore.Sample.csproj
+    "$sample_project"
     references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample.BlazorUI/Hexalith.EventStore.Sample.BlazorUI.csproj
 )
 

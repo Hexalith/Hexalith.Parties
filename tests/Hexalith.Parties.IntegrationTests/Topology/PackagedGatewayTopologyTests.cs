@@ -50,6 +50,15 @@ public sealed class PackagedGatewayTopologyTests
                 .ShouldEndWith("/src/Hexalith.EventStore/Hexalith.EventStore.csproj");
             packageGateway.GetProjectMetadata().ProjectPath.Replace('\\', '/')
                 .ShouldEndWith("/tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj");
+            ProjectResource nativeSample = native.Resources.OfType<ProjectResource>().Single(resource => resource.Name == "sample");
+            ProjectResource packageSample = packaged.Resources.OfType<ProjectResource>().Single(resource => resource.Name == "sample");
+            nativeSample.GetProjectMetadata().ProjectPath.Replace('\\', '/')
+                .ShouldEndWith("/samples/Hexalith.EventStore.Sample/Hexalith.EventStore.Sample.csproj");
+            packageSample.GetProjectMetadata().ProjectPath.Replace('\\', '/')
+                .ShouldEndWith("/tests/Hexalith.Parties.EventStoreSample.TestHost/Hexalith.Parties.EventStoreSample.TestHost.csproj");
+            packageSample.GetProjectMetadata().ShouldBeSameAs(packageSample.Annotations.OfType<IProjectMetadata>().ShouldHaveSingleItem());
+            packageSample.Annotations.OfType<EndpointAnnotation>().Select(endpoint => (endpoint.Name, endpoint.UriScheme, endpoint.TargetPort))
+                .ShouldBe(nativeSample.Annotations.OfType<EndpointAnnotation>().Select(endpoint => (endpoint.Name, endpoint.UriScheme, endpoint.TargetPort)));
             packageGateway.GetProjectMetadata().ShouldBeSameAs(packageGateway.Annotations.OfType<IProjectMetadata>().ShouldHaveSingleItem());
             packageGateway.Annotations.OfType<EndpointAnnotation>().Select(endpoint => (endpoint.Name, endpoint.UriScheme, endpoint.TargetPort))
                 .ShouldBe(nativeGateway.Annotations.OfType<EndpointAnnotation>().Select(endpoint => (endpoint.Name, endpoint.UriScheme, endpoint.TargetPort)));
@@ -65,6 +74,9 @@ public sealed class PackagedGatewayTopologyTests
                 packageProfiles.RootElement.GetProperty("profiles").GetProperty(profile).GetProperty("applicationUrl").GetString()
                     .ShouldBe(nativeProfiles.RootElement.GetProperty("profiles").GetProperty(profile).GetProperty("applicationUrl").GetString());
             }
+            File.ReadAllText(Path.Combine(Path.GetDirectoryName(packageSample.GetProjectMetadata().ProjectPath)!, "Properties", "launchSettings.json"))
+                .ReplaceLineEndings().ShouldBe(File.ReadAllText(Path.Combine(
+                    Path.GetDirectoryName(nativeSample.GetProjectMetadata().ProjectPath)!, "Properties", "launchSettings.json")).ReplaceLineEndings());
             packaged.Resources.Select(resource => resource.Name).Order(StringComparer.Ordinal)
                 .ShouldBe(native.Resources.Select(resource => resource.Name).Order(StringComparer.Ordinal));
 
@@ -148,6 +160,9 @@ public sealed class PackagedGatewayTopologyTests
             ["--operation=publish", "--PUBLISH_TARGET=", "--PartiesUi:OidcClientSecret=model-only-secret"], TestContext.Current.CancellationToken).ConfigureAwait(true);
         await using var publishedLifetime = published.ConfigureAwait(true);
         published.Resources.OfType<ProjectResource>().ShouldAllBe(resource => !resource.GetProjectMetadata().ProjectPath.Contains("EventStoreGateway.TestHost", StringComparison.Ordinal));
+        published.Resources.OfType<ProjectResource>().ShouldAllBe(resource => !resource.GetProjectMetadata().ProjectPath.Contains("EventStoreSample.TestHost", StringComparison.Ordinal));
+        published.Resources.OfType<ProjectResource>().Single(resource => resource.Name == "sample")
+            .GetProjectMetadata().ProjectPath.Replace('\\', '/').ShouldEndWith("/samples/Hexalith.EventStore.Sample/Hexalith.EventStore.Sample.csproj");
         published.Resources.OfType<ProjectResource>().Single(resource => resource.Name == "eventstore")
             .GetProjectMetadata().ProjectPath.Replace('\\', '/').ShouldEndWith("/src/Hexalith.EventStore/Hexalith.EventStore.csproj");
     }

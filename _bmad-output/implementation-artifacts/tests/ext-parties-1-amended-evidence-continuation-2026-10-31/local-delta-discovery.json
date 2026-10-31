@@ -1,0 +1,322 @@
+{
+  "recordedAtUtc": "2026-10-31T07:04:58.068870+00:00",
+  "cutoffUtc": "2026-10-30T09:36:03.543698+00:00",
+  "reason": "Prior bounded discovery completed at cutoff. Only newly modified relevant public evidence candidates are selected; mtime is selection, never provenance.",
+  "method": "External root/immediate-child filename/stat selection; relevant repository public filenames/stats and bounded path history. No historical content search repeated.",
+  "rootsAndEligiblePublicFiles": {
+    "/home/administrator/hexalith-secrets-evidence/ext-secrets-1": 954,
+    "/home/administrator/hexalith-upgrade-evidence/access": 4,
+    "/home/administrator/hexalith-recovery-evidence": 38,
+    "/home/administrator/hexalith-conversations-evidence/ext-conv-ai-1": 84
+  },
+  "newerImmediateDirectories": [
+    {
+      "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z",
+      "mtimeUtc": "2026-10-30T11:33:16.069919+00:00"
+    }
+  ],
+  "newerFilenameCandidates": [],
+  "repositoryDelta": [
+    {
+      "repository": "/home/administrator/projects/hexalith/platform",
+      "readOnlyContext": {
+        "branch": {
+          "exitCode": 0,
+          "stdout": "main\n",
+          "stderr": ""
+        },
+        "status": {
+          "exitCode": 0,
+          "stdout": " M _bmad-output/implementation-artifacts/deferred-work.md\n M _bmad-output/implementation-artifacts/spec-3-3-generate-the-run-scoped-routing-catalog.md\n M eng/mcpcli-operator-setup/v1/README.md\n M eng/mcpcli-operator-setup/v1/evidence/preparation-attempts.json\n M eng/mcpcli-operator-setup/v1/prepare.py\n M eng/mcpcli-operator-setup/v1/test_v1.py\n?? eng/mcpcli-operator-setup/v1/evidence/dns-recovery-20261031/validation-final.json\n?? eng/mcpcli-operator-setup/v1/packet-20261031-dns-review/\n",
+          "stderr": "warning: unable to find all commit-graph files\nwarning: unable to find all commit-graph files\nwarning: unable to find all commit-graph files\nwarning: unable to find all commit-graph files\n"
+        },
+        "remotes": {
+          "exitCode": 0,
+          "stdout": "origin\thttps://github.com/Hexalith/Hexalith.Platform.git (fetch)\norigin\thttps://github.com/Hexalith/Hexalith.Platform.git (push)\n",
+          "stderr": ""
+        },
+        "recentHistory": {
+          "exitCode": 0,
+          "stdout": "405d2c6c0f36be0a513a423cf5fcae57cdd953f3 2026-10-31T07:59:02+01:00 build(deps): refresh sdk and commit validation\na8922b46ae272ef317d6b867f4fae68ec268b9d9 2026-10-31T07:47:50+01:00 fix: ext protection\nad99f7e41871af751120795e1278f79bb6dedf32 2026-10-31T07:46:13+01:00 feat(qualification): prepare offline isolated Docker bundles\n",
+          "stderr": ""
+        }
+      },
+      "argv": [
+        "git",
+        "-C",
+        "/home/administrator/projects/hexalith/platform",
+        "log",
+        "-20",
+        "--since=2026-10-30T09:36:03.543698+00:00",
+        "--format=%H %cI %s",
+        "--name-only",
+        "--",
+        "docs/implementation/story-5-4-coupled-delivery-2026-10-25",
+        "docs/implementation/*ext-secrets*",
+        "docs/implementation/*ext-parties*",
+        "docs/implementation/*owner*",
+        "_bmad-output/implementation-artifacts/sprint-status.yaml"
+      ],
+      "exitCode": 0,
+      "stdout": "097d663f79f409f723fc1d2bd0609d46be4a417a 2026-10-31T07:26:34+01:00 docs: reopen story 5.1 after sixth-pass code review\n\n_bmad-output/implementation-artifacts/sprint-status.yaml\n5b50eae37ef9b7bd1cce108c97e8416f8ce9344d 2026-10-31T07:25:38+01:00 fix(composition): close story 2.9 review findings\n\n_bmad-output/implementation-artifacts/sprint-status.yaml\n8af2e4d21718dd1547a0202ce756483ba7b71c4c 2026-10-31T07:01:59+01:00 fix: complete reference Helm export qualification\n\n_bmad-output/implementation-artifacts/sprint-status.yaml\n069e550a0fa0b71def0bf4b13c390591d78f8837 2026-10-31T05:58:24+01:00 docs(4.5): record code review 5 decisions and reopen story\n\n_bmad-output/implementation-artifacts/sprint-status.yaml\n4449baf065621bbd656d87b4499b51126d3df332 2026-10-30T21:43:39+01:00 feat(testing): complete EventStore and Parties descriptor fixture migration\n\n_bmad-output/implementation-artifacts/sprint-status.yaml\nbe86dbc192545624e6de965edfab94c1dd6e3e4c 2026-10-30T20:10:11+01:00 feat(routing): generate the run-scoped routing catalog\n\n_bmad-output/implementation-artifacts/sprint-status.yaml\na57daffb9015f7b2f8b21fc342d305593f92b721 2026-10-30T19:07:26+01:00 build: sync in-progress local changes\n\n_bmad-output/implementation-artifacts/sprint-status.yaml\n2e8d28f8edbf3fd8f5c9453949685deaba1003e7 2026-10-30T19:06:38+01:00 docs: complete the story 3.1 follow-up review\n\n_bmad-output/implementation-artifacts/sprint-status.yaml\n915f5011f6868d75ef1e5c58da5044e3a3fccb33 2026-10-30T18:29:52+01:00 revert: restore work removed by a stale pushall\n\n_bmad-output/implementation-artifacts/sprint-status.yaml\neba576951e61e9763341463516247dcbf8fc0b90 2026-10-30T18:18:56+01:00 build: sync local changes via /pushall\n\n_bmad-output/implementation-artifacts/sprint-status.yaml\n9e01ffacc45cb6a5ee12853d44f4b7f6e1f4084c 2026-10-30T18:12:31+01:00 build: sync local changes via /pushall\n\n_bmad-output/implementation-artifacts/sprint-status.yaml\ncb78eb9a39041cd8b5867ce57ce7a33beedc2588 2026-10-30T17:52:58+01:00 docs: complete story 5.1 staging evidence policy\n\n_bmad-output/implementation-artifacts/sprint-status.yaml\n92f8f05187afc873806f48af75a736ee5ae997c0 2026-10-30T17:41:08+01:00 fix: story 5.1\n\n_bmad-output/implementation-artifacts/sprint-status.yaml\n8ff6db8feb5b3165bdaaf90899778199823bc59e 2026-10-30T17:31:27+01:00 build: merge origin/main into main\n7954e38a844b72736aa1ba046dc9a3f7d72ddf4e 2026-10-30T16:55:42+01:00 fix: complete story 2.7 withdrawal and retention review\n\n_bmad-output/implementation-artifacts/sprint-status.yaml\n7f2969da03c058d4182effb64fb1f3ddf87e1a1f 2026-10-30T16:46:33+01:00 build: merge origin/main into main\ndeee5d2f8633ea77527c3151f52a56bf4f2656e4 2026-10-30T16:24:59+01:00 fix: story 2.7\n\n_bmad-output/implementation-artifacts/sprint-status.yaml\n3c4e75d4c2c3d890c1ac55fb9bac855ca5f89515 2026-10-30T15:02:57+01:00 fix: complete story 5.1 staging evidence policy review\n\n_bmad-output/implementation-artifacts/sprint-status.yaml\nb96d9ffbe22d421e3c93adca28f4f6f36abf8f54 2026-10-30T14:44:37+01:00 fix: story 3.3\n\n_bmad-output/implementation-artifacts/sprint-status.yaml\na4bd3f608219362101155d5ede60c4f8779cd153 2026-10-30T14:43:27+01:00 fix: complete story 2.7 fourth-pass review\n\n_bmad-output/implementation-artifacts/sprint-status.yaml\n",
+      "stderr": "",
+      "newerPublicFilenameCandidates": [
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-parent-merged-2026-10-30/loop7/original-baseline-diff-audit.json",
+          "size": 692943,
+          "mtimeUtc": "2026-10-30T12:56:49.387479+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-parent-merged-2026-10-30/loop6/integrity-audit.json",
+          "size": 8772,
+          "mtimeUtc": "2026-10-30T10:48:41.508234+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-parent-merged-2026-10-30/loop6/artifact-inventory.json",
+          "size": 7459,
+          "mtimeUtc": "2026-10-30T10:52:00.176536+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-parent-merged-2026-10-30/loop6/review7/artifact-inventory.json",
+          "size": 1715,
+          "mtimeUtc": "2026-10-30T11:06:47.026956+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-parent-merged-2026-10-30/loop6/matrix-audit.json",
+          "size": 16490,
+          "mtimeUtc": "2026-10-30T10:48:41.508234+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-parent-merged-2026-10-30/loop6/type-audit.json",
+          "size": 1403,
+          "mtimeUtc": "2026-10-30T10:48:41.508234+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-parent-merged-2026-10-30/loop7/artifact-inventory.json",
+          "size": 11204,
+          "mtimeUtc": "2026-10-30T13:24:55.247606+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-parent-merged-2026-10-30/loop7/packet-audit.json",
+          "size": 22229,
+          "mtimeUtc": "2026-10-30T12:50:47.840072+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-parent-merged-2026-10-30/loop7/matrix-audit.json",
+          "size": 15487,
+          "mtimeUtc": "2026-10-30T12:54:40.733083+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-parent-merged-2026-10-30/loop7/review8/pre-review-artifact-inventory.json",
+          "size": 7388,
+          "mtimeUtc": "2026-10-30T12:57:18.798218+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-parent-merged-2026-10-30/loop7/integrity-audit.json",
+          "size": 12381,
+          "mtimeUtc": "2026-10-30T12:45:41.116438+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop6/verification/pinned-owner-preservation.json",
+          "size": 698,
+          "mtimeUtc": "2026-10-30T10:48:59.456648+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop6/verification/pinned-owner-preservation-attempt-01.json",
+          "size": 190,
+          "mtimeUtc": "2026-10-30T10:48:59.452648+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop6/verification/register-preservation.json",
+          "size": 345,
+          "mtimeUtc": "2026-10-30T10:48:59.480649+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop6/verification/frozen-intent-preservation.json",
+          "size": 272,
+          "mtimeUtc": "2026-10-30T10:48:59.116642+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop6/verification/keep-preservation-audit-final.json",
+          "size": 19634,
+          "mtimeUtc": "2026-10-30T10:48:59.124642+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop6/verification/keep-preservation-audit.json",
+          "size": 19080,
+          "mtimeUtc": "2026-10-30T10:48:59.132642+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop6/functional-source-inventory.json",
+          "size": 64397,
+          "mtimeUtc": "2026-10-30T10:48:58.668633+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop6/loop6-delta-inventory.json",
+          "size": 23677,
+          "mtimeUtc": "2026-10-30T10:48:58.672633+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop6/external-attempt-inventory.json",
+          "size": 36097,
+          "mtimeUtc": "2026-10-30T10:48:58.664633+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop6/artifact-inventory.json",
+          "size": 35437,
+          "mtimeUtc": "2026-10-30T10:48:58.660633+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop10/parent-audit.json",
+          "size": 2608,
+          "mtimeUtc": "2026-10-31T05:21:50.631596+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop10/artifact-inventory.json",
+          "size": 10754,
+          "mtimeUtc": "2026-10-31T05:22:09.592459+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop7/verification/recovery-vectors/P36.json",
+          "size": 148163,
+          "mtimeUtc": "2026-10-30T12:50:57.403846+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop7/verification/recovery-vectors/P28.json",
+          "size": 124149,
+          "mtimeUtc": "2026-10-30T12:50:57.399846+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop7/verification/recovery-vectors/P25.json",
+          "size": 125514,
+          "mtimeUtc": "2026-10-30T12:50:57.395846+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop7/verification/recovery-vectors/P35.json",
+          "size": 99511,
+          "mtimeUtc": "2026-10-30T12:50:57.403846+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop7/verification/recovery-vectors/P06.json",
+          "size": 127341,
+          "mtimeUtc": "2026-10-30T12:50:57.395846+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop7/acceptance-artifact-inventory.json",
+          "size": 595,
+          "mtimeUtc": "2026-10-30T12:50:56.167788+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop7/functional-source-inventory.json",
+          "size": 68893,
+          "mtimeUtc": "2026-10-30T12:50:56.187789+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop7/external-attempt-inventory.json",
+          "size": 593,
+          "mtimeUtc": "2026-10-30T12:50:56.175788+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop7/artifact-inventory.json",
+          "size": 25632,
+          "mtimeUtc": "2026-10-30T12:50:56.171788+00:00"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop7/loop7-delta-inventory.json",
+          "size": 10463,
+          "mtimeUtc": "2026-10-30T12:50:56.191789+00:00"
+        }
+      ]
+    },
+    {
+      "repository": "/home/administrator/projects/hexalith/memories",
+      "readOnlyContext": {
+        "branch": {
+          "exitCode": 0,
+          "stdout": "main\n",
+          "stderr": ""
+        },
+        "status": {
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        "remotes": {
+          "exitCode": 0,
+          "stdout": "origin\thttps://github.com/Hexalith/Hexalith.Memories.git (fetch)\norigin\thttps://github.com/Hexalith/Hexalith.Memories.git (push)\n",
+          "stderr": ""
+        },
+        "recentHistory": {
+          "exitCode": 0,
+          "stdout": "fe8d36446d8081f60806cc15353aa7ca288e9035 2026-10-31T07:58:04+01:00 build(deps): refresh sdk and browser tooling\n9bda2c1731892fc1b98d521b4cc94e06748f7269 2026-10-31T07:46:50+01:00 build(deps): advance Platform for isolated Docker preparation\nf58788c7844c6fbdd7be965d539e25e1c9af97dc 2026-10-31T07:46:50+01:00 fix: story 27.4\n",
+          "stderr": ""
+        }
+      },
+      "argv": [
+        "git",
+        "-C",
+        "/home/administrator/projects/hexalith/memories",
+        "log",
+        "-20",
+        "--since=2026-10-30T09:36:03.543698+00:00",
+        "--format=%H %cI %s",
+        "--name-only",
+        "--",
+        "docs/operations",
+        "docs/implementation/*2026-10-3*"
+      ],
+      "exitCode": 0,
+      "stdout": "f58788c7844c6fbdd7be965d539e25e1c9af97dc 2026-10-31T07:46:50+01:00 fix: story 27.4\n\ndocs/operations/qualification/full-campaign-preparation-2026-10-25/command-catalog.json\ndocs/operations/qualification/full-campaign-preparation-2026-10-25/preparation.json\n0391e51111c0a738940645a8b696083880eedf43 2026-10-30T16:42:19+01:00 fix: story 27.4\n\ndocs/operations/access-telemetry-full-qualification.md\ndocs/operations/qualification/full-campaign-preparation-2026-10-25/command-catalog.json\ndocs/operations/qualification/full-campaign-preparation-2026-10-25/preparation.json\n",
+      "stderr": "",
+      "newerPublicFilenameCandidates": [
+        {
+          "path": "/home/administrator/projects/hexalith/memories/docs/operations/access-telemetry-full-qualification.md",
+          "size": 85646,
+          "mtimeUtc": "2026-10-30T13:27:40.288444+00:00"
+        }
+      ]
+    },
+    {
+      "repository": "/home/administrator/projects/hexalith/agents",
+      "readOnlyContext": {
+        "branch": {
+          "exitCode": 0,
+          "stdout": "main\n",
+          "stderr": ""
+        },
+        "status": {
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        "remotes": {
+          "exitCode": 0,
+          "stdout": "origin\thttps://github.com/Hexalith/Hexalith.Agents.git (fetch)\norigin\thttps://github.com/Hexalith/Hexalith.Agents.git (push)\n",
+          "stderr": ""
+        },
+        "recentHistory": {
+          "exitCode": 0,
+          "stdout": "9fb9dd2afe76908994d807a15eda25725fc40b9b 2026-10-30T16:47:04+01:00 build: record reconciled Builds and Platform pointers\n7f55dcdd8960836a60d5544a90d632de08f91045 2026-10-30T16:44:09+01:00 build: sync local changes via /pushall\nbdc6ae1dbaccbfc5f7e908778b385eaa255456be 2026-10-30T13:21:56+01:00 fix: story 5.4\n",
+          "stderr": ""
+        }
+      },
+      "argv": [
+        "git",
+        "-C",
+        "/home/administrator/projects/hexalith/agents",
+        "log",
+        "-20",
+        "--since=2026-10-30T09:36:03.543698+00:00",
+        "--format=%H %cI %s",
+        "--name-only",
+        "--",
+        "_bmad-output/planning-artifacts/external-dependency-register.md"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "",
+      "newerPublicFilenameCandidates": []
+    }
+  ],
+  "limit": "Bounded accessible source delta, not universal absence or authentication. No private material or snapshot contents read."
+}

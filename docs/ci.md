@@ -302,9 +302,10 @@ evidence and 3.117.1 [consumer receipt](../_bmad-output/implementation-artifacts
 remain historical. Exact-source push CI and release gates must validate the
 selected graph.
 
-Before topology startup, `PlatformApiPrerequisitesTests` inventories the seven
-external EventStore, Tenants, Memories and optional sample projects declared by
-the AppHost, then follows their selected project references. It rejects missing
+Before topology startup, `PlatformApiPrerequisitesTests` inventories both native
+and package gateway/sample choices plus the six other EventStore, Tenants,
+Memories and sample-UI runtime hosts declared by the AppHost, then follows their
+selected project references. It rejects missing
 projects, unexpected source selection and EventStore packages that disagree
 with the independently evaluated Parties package version. This preflight checks
 dependency selection in both Debug and Release; separate project compilation
@@ -419,16 +420,22 @@ Aspire CI runs `scripts/prepare-aspire-tier.sh` before its test process.
 The ten-minute preparation budget includes HTTPS trust and serial Release builds
 of the eight selected runtime hosts. This lane checks package compatibility:
 package-built sessions explicitly select `Parties:Testing:UsePackagedGateway=true`
-before Aspire registers the existing owned gateway test host. That host runs the
-centrally pinned production Gateway package with native base settings and launch
-profiles. Every Dapr, authentication, projection and persisted-event assertion
-remains required. The run-only profile is refused in publish mode; ordinary
-AppHost runs and publication retain the native EventStore project.
+before Aspire registers the owned gateway/sample test-host pair. They run the
+centrally pinned production Gateway and DomainService packages with native settings
+and launch profiles. The sample links the original Program, Counter/Greeting domain
+and command/query contract sources, excluding only the offline SampleCatalog,
+CounterCatalogDeclarations and GreetingCatalogDeclarations source inventories.
+It requires complete selected source/config inputs, copies native base/Development
+JSON, and runs from its output directory so the original Program loads those files
+with normal environment-provider precedence. Every Dapr, receiver authentication,
+projection, multi-domain and persisted-event assertion remains required. The run-only
+profile is refused in publish mode; ordinary AppHost runs and publication retain
+the native gateway and sample projects.
 
-`scripts/prepare-aspire-runtime-hosts.sh` prepares the package gateway by default;
-`--gateway-profile native` explicitly prepares the native gateway for a matching
-native run. It builds the selected gateway and the seven other real runtime hosts
-serially to avoid concurrent cold `dotnet run` output writes. The existing
+`scripts/prepare-aspire-runtime-hosts.sh` prepares the package pair by default;
+the shared `--gateway-profile native` option explicitly prepares both native
+projects for a matching native run. It builds the selected pair and the six other
+real runtime hosts serially to avoid concurrent cold `dotnet run` output writes. The existing
 five-minute topology startup deadline remains unchanged. Package topology does
 not qualify the newer source catalog or replace Platform/source qualification.
 

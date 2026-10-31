@@ -1,0 +1,51 @@
+{
+    "schema": "EXT-PARTIES-1.sole-contributor-clarification.v1",
+    "recordedAtUtc": "2026-10-31T07:42:18.316998+00:00",
+    "instructionSource": {
+        "kind": "Direct owner statement in current conversation",
+        "verbatim": "there is no distinct deputy, I am the owner and only contibutor",
+        "instructionDate": "2026-10-31",
+        "sourceMessageTimestamp": null,
+        "authenticationScope": "Direct conversational owner declaration about the project. Records sole contribution and no distinct appointed Human deputy; no external identity/access/competence attestation is inferred."
+    },
+    "ownerCount": 1,
+    "contributorCount": 1,
+    "ownerAndContributor": "Current user, already designated responsible for assessment and accountable Human recovery lead.",
+    "distinctDeputy": {
+        "status": "OwnerConfirmedUnavailable",
+        "existsInProject": false,
+        "appointmentAndAccessReference": null,
+        "appointmentRequestOutstanding": false,
+        "independentHumanRecoveryRequirementSatisfied": false,
+        "assistantOrOwnerCountedAsSecondHuman": false
+    },
+    "documentaryModel": {
+        "status": "SoleOwnerSelfReviewed",
+        "source": {
+            "path": "/home/administrator/projects/hexalith/platform/_bmad-output/implementation-artifacts/evidence/epic-4/4-27/20261017t093206z-sole-owner-documentary-policy/sole-owner-policy.json",
+            "sha256": "d3c654d2e9c9f91a236fde5751f28a29ff02b8580dbb029cfc4fdd2e7b0bcbd7"
+        },
+        "independentHumanReviewerRequired": false,
+        "scope": "Owner declarations and the owner's own project documents; source facts about PKI, grants, custody and actual runtime behavior still need their factual evidence.",
+        "deployedAuthorizationOrAcceptanceRulesChanged": false
+    },
+    "requestHandling": "Do not repeat the deputy nomination request unless the owner later changes staffing or explicitly requests reassessment. Use one-person documentary preparation and preserve the unavailable independent-recovery capability as a known constraint.",
+    "unavailabilityScope": "This statement establishes deputy unavailability only. It does not declare archives, backups, copy inventories, existing transports or credential records unavailable.",
+    "technicalIndependenceOrHistoricalEvidenceWaived": false,
+    "ownerLeadAppointment": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-confirmed-window-proposal-2026-10-31/owner-recommendation-acceptance.json",
+        "sha256": "fd9d2fc439a33be61f1f3ca9c0edf7255664ec13303c51d5b3a6aad4a574f16c"
+    },
+    "confirmedCutoff": {
+        "amendedDeadlineDate": "2026-11-15",
+        "interpretation": "Include the whole of November 15 in Paris; close exclusively at the start of November 16.",
+        "timezone": "Europe/Paris",
+        "exclusiveDeadlineLocal": "2026-11-16T00:00:00+01:00",
+        "utcOffsetAtCutoff": "+01:00",
+        "exactExclusiveDeadlineUtc": "2026-11-15T23:00:00Z",
+        "cutoffTimeAndTimezoneConfirmed": true,
+        "conversionMethod": "Python standard-library zoneinfo.ZoneInfo(Europe/Paris); timezone-aware conversion to UTC.",
+        "technicalOrCredentialWindowExtended": false
+    },
+    "recoveryAndLiveAndFullCustodyStopped": true
+}

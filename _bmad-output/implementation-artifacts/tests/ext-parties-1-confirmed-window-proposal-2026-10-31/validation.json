@@ -1,0 +1,74 @@
+{
+    "schema": "EXT-PARTIES-1.confirmed-proposal-offline-validation.v1",
+    "verifiedAtUtc": "2026-10-31T07:32:30.751294+00:00",
+    "passed": true,
+    "checksPassed": 672,
+    "protectedFilesPreserved": 570,
+    "earlierDocumentPrefixPreserved": true,
+    "exactExclusiveDeadlineLocal": "2026-11-16T00:00:00+01:00",
+    "timezone": "Europe/Paris",
+    "exactExclusiveDeadlineUtc": "2026-11-15T23:00:00Z",
+    "scopeSha256": "5d976b39f5d75e80eab42289787194de79947113a63cecd0c8792a5111d8b836",
+    "amendedProposalFileSha256": "3a460f084160255ca50865eba917657b35dfbcac28b8311eb5a54c79e0603d8e",
+    "historicalScopeExpiredAndUnchanged": true,
+    "ownerDocumentaryDesignationRecorded": true,
+    "operationalAppointmentGateSatisfied": false,
+    "distinctQualifiedDeputyFound": false,
+    "allInheritedBlockersRetained": true,
+    "credentialAndKeyTechnicalWindowsUnchanged": true,
+    "agentsRegisterAndCanonicalOwnerFormUnchanged": true,
+    "preexistingHistoricalDifferencesRetained": [
+        {
+            "path": "/home/administrator/projects/hexalith/parties/docs/index.md",
+            "expectedSha256": "143b09d2cfb96295bbee97c50f475257061d03de649951889db9a7a9a81e08e1",
+            "actualSha256": "c362507272da4d4a5709d618df2e4a8f2c82061229080e549b1e982a6cad12b7"
+        }
+    ],
+    "historicalSourceDriftObserved": [
+        {
+            "path": "/home/administrator/projects/hexalith/platform-ext-secrets-1-runtime-foundations-20261017/eng/ext-secrets-1/recover_expired_hmac.py",
+            "historicalSha256": "11f8343a1626f1f5383aec9afc6016189cbb89244f2b7375dfa29d76f43c1f5d",
+            "currentSha256": null,
+            "admissionAllowed": false
+        }
+    ],
+    "admissionAllowed": false,
+    "executionAllowed": false,
+    "effects": {
+        "kubernetesMetadataGetCommands": 0,
+        "providerCalls": 0,
+        "sshCalls": 0,
+        "podExecs": 0,
+        "credentialIssuanceOrRenewals": 0,
+        "runtimeRecoveryExecutions": 0,
+        "runtimeOrPolicyWrites": 0,
+        "backupChanges": 0,
+        "infrastructureProvisioned": 0,
+        "productionBackendChanges": 0,
+        "qualificationRuns": 0,
+        "registerWrites": 0,
+        "messagesSent": 0
+    },
+    "constraints": {
+        "capEngineerDays": 2,
+        "newInfrastructureSpend": 0,
+        "newCapOrEffortAllocationInferred": false,
+        "spentEffortInferred": false
+    },
+    "whitespaceCommand": {
+        "argv": [
+            "git",
+            "-c",
+            "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+            "diff",
+            "--check",
+            "--",
+            "docs/implementation/ext-parties-1-operational-continuation-2026-10-30.md"
+        ],
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+    },
+    "command": "python3 -B _bmad-output/implementation-artifacts/tests/ext-parties-1-confirmed-window-proposal-2026-10-31/verify_proposal.py",
+    "limit": "Offline integrity, cutoff/fingerprint and requirement checks only. No old verifier, discovery, service/provider/SSH probe, credential operation, recovery, qualification or external message. Documentary owner designation supplies no missing operational identity/access/allocation or factual preservation proof."
+}

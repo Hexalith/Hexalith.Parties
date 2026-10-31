@@ -1,0 +1,109 @@
+{
+  "schema": "EXT-PARTIES-1.evidence-findings.v1",
+  "recordedAtUtc": "2026-10-31T07:07:53.735847+00:00",
+  "status": "BlockedExactCutoffAndEvidencePending",
+  "continuation": {
+    "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-amended-evidence-continuation-2026-10-31/continuation.json",
+    "sha256": "07549745b69bb659d2e8d31ed950846f36f5a22c2570b77e769820a7570e4e79"
+  },
+  "verifiedFindings": [
+    {
+      "topic": "Deadline",
+      "finding": "Owner amended date November 15 is honored; exact exclusive cutoff/timezone remains unconfirmed. No amended operational proposal, run or digest created. Original scope remains expired/ineligible.",
+      "source": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-window-amendment-2026-10-31/owner-window-amendment.json",
+        "sha256": "337a02bc72b29ba8ed0ac9d57f90288bdd84c32e525a4420462e92fa734230f9"
+      }
+    },
+    {
+      "topic": "Owner records and appointments",
+      "finding": "Canonical form remains byte-identical, with all required appointments, inventory, preservation and current metadata-credential return fields null. Both deputy stories remain backlog in the new tracker snapshot. No admissible owner record established.",
+      "source": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-amended-evidence-continuation-2026-10-31/source-observations.json",
+        "sha256": "b0e50f5fd0e30adac3482edd4b80fdaa34dcfd6fd3db425f014a550fa96e6774"
+      }
+    },
+    {
+      "topic": "Relevant delta",
+      "finding": "No new immediate public owner-return candidate in the selected external roots. Connected searches returned no hits; Teams reports query_too_restrictive, not an absence attestation. Newer Protection and Memories records were followed to their relevant source bindings.",
+      "sources": [
+        {
+          "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-amended-evidence-continuation-2026-10-31/local-delta-discovery.json",
+          "sha256": "b8eb174ad5384c651ce52a77d3401d6fe61e428d2d9fe20f9d3b097635be2794"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-amended-evidence-continuation-2026-10-31/connected-source-delta.json",
+          "sha256": "4368602deb9e87577c5284843567b5dfb8c7764e20c787660f17937386512c51"
+        },
+        {
+          "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-amended-evidence-continuation-2026-10-31/newer-source-follow-up.json",
+          "sha256": "3346b93c55db1d10f0d4009ee247803bf6bb4acf2ff14391b04ae94a6fe904df"
+        }
+      ]
+    },
+    {
+      "topic": "Memories limited node capture",
+      "finding": "Linked source chain is fingerprint-consistent but the recorded approval concerns dedicated rootless Docker setup. No EXT-PARTIES-1 lead/deputy appointment, OpenBao snapshot/key-copy inventory, archive grant, intended metadata-only credential or exact Secret/Memories/register disposition is supplied. Completed limited node preflight is not a standing transport grant. Its setup/launch authorization does not transfer to this task.",
+      "source": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-amended-evidence-continuation-2026-10-31/newer-source-follow-up.json",
+        "sha256": "3346b93c55db1d10f0d4009ee247803bf6bb4acf2ff14391b04ae94a6fe904df"
+      }
+    },
+    {
+      "topic": "Preservation",
+      "finding": "Three Secret intervals stay separate and unresolved through actual current identity/revision at admission. Last observed RV 38120141 retains its October 30 timestamp; no live metadata GET was needed for this non-admission continuation. Separate exact Memories differences and the historical register mismatch remain unresolved. Newer register-preservation receipt proves only same-session hash equality.",
+      "source": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-amended-evidence-continuation-2026-10-31/continuation.json",
+        "sha256": "07549745b69bb659d2e8d31ed950846f36f5a22c2570b77e769820a7570e4e79"
+      }
+    },
+    {
+      "topic": "Technical windows",
+      "finding": "Retained version-2 key windows end November 3. November 15 calendar amendment does not extend them or revive old authority/credential records.",
+      "source": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-amended-evidence-continuation-2026-10-31/technical-window-analysis.json",
+        "sha256": "e92914ac858d7b007c9a413d84df7749cdd17556c3df675aa13676c259c759b9"
+      }
+    },
+    {
+      "topic": "Historical integrity",
+      "finding": "Before work, docs/index.md differed from its older preserved fingerprint. Both fingerprints are recorded in preservation-before.json. Current index is protected from this point; no prior receipt or expected historical hash is rewritten.",
+      "source": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-amended-evidence-continuation-2026-10-31/preservation-before.json",
+        "sha256": "ed978e1ce86a77305cea9f40415342c9a1433d047a9ca1ecfea4bbb3519ccfc8"
+      }
+    }
+  ],
+  "allInheritedBlockersRetained": true,
+  "remainingOwnerFactsOnly": [
+    "Exact exclusive cutoff time and timezone for the amended November 15 date.",
+    "Actual assessment implementer/accountable Human recovery lead appointment (may be one person), plus different qualified Human deputy appointment/access reference within existing allocation.",
+    "Existing authentic complete historical write archive and snapshot/key-copy inventory or already authorized read-only transport references, or explicit unavailability.",
+    "Existing intended current metadata-only credential record and authenticated provenance, reference only, never token.",
+    "Separate authenticated evidence-bound Secret, Memories and Agents-register preservation dispositions; unresolved facts remain unresolved."
+  ],
+  "noIndependentAuthorityOwnerActionRequiredWhileFullCustodyStopped": true,
+  "nextAction": "Receive the exact owner-authorized exclusive November 15 cutoff and timezone, then prepare its separately fingerprinted proposal while preserving expired original scope and all technical windows. Admit only actual scope-bound appointment, write-history, copy/transport, current metadata-credential/provenance and separate preservation records. No recovery or qualification.",
+  "effects": {
+    "kubernetesMetadataGetCommands": 0,
+    "providerCalls": 0,
+    "sshCalls": 0,
+    "podExecs": 0,
+    "credentialIssuanceOrRenewals": 0,
+    "runtimeRecoveryExecutions": 0,
+    "runtimeOrPolicyWrites": 0,
+    "backupChanges": 0,
+    "infrastructureProvisioned": 0,
+    "productionBackendChanges": 0,
+    "qualificationRuns": 0,
+    "registerWrites": 0,
+    "messagesSent": 0
+  },
+  "constraints": {
+    "capEngineerDays": 2,
+    "newInfrastructureSpend": 0,
+    "newCapOrEffortAllocationInferred": false,
+    "spentEffortInferred": false
+  },
+  "limit": "Offline source integrity, scope/requirement reconciliation and bounded new-source searches. No new owner attestation, complete historical write coverage, current grant, all-copy disposal, independent currentness, admission, recovery or qualification established."
+}

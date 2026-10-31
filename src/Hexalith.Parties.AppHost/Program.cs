@@ -322,10 +322,10 @@ if (builder.ExecutionContext.IsPublishMode
 if (builder.ExecutionContext.IsPublishMode
     || string.Equals(builder.Configuration["EnableEventStoreSampleUi"], "true", StringComparison.OrdinalIgnoreCase))
 {
-    string sampleProjectPath = ResolveOptionalReferenceProjectPath(
-        "Hexalith.EventStore",
-        Path.Combine("samples", "Hexalith.EventStore.Sample", "Hexalith.EventStore.Sample.csproj"),
-        "EnableEventStoreSampleUi");
+    string sampleProjectPath = ReferenceProjectResolver.ResolveSample(
+        repositoryRoot,
+        builder.Configuration.GetValue<bool>("Parties:Testing:UsePackagedGateway"),
+        builder.ExecutionContext.IsPublishMode);
     string sampleBlazorUiProjectPath = ResolveOptionalReferenceProjectPath(
         "Hexalith.EventStore",
         Path.Combine("samples", "Hexalith.EventStore.Sample.BlazorUI", "Hexalith.EventStore.Sample.BlazorUI.csproj"),

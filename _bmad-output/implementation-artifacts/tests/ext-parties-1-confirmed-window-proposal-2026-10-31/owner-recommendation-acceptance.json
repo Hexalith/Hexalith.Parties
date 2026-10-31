@@ -1,0 +1,77 @@
+{
+    "schema": "EXT-PARTIES-1.owner-recommendation-acceptance.v1",
+    "recordedAtUtc": "2026-10-31T07:30:22.155851+00:00",
+    "instructionSource": {
+        "kind": "Direct owner instruction in this conversation",
+        "verbatim": "apply recommended",
+        "instructionDate": "2026-10-31",
+        "sourceMessageTimestamp": null,
+        "acceptedImmediatelyPrecedingRecommendation": {
+            "cutoffVerbatim": "Je propose d’inclure toute cette journée : arrêt strict le 16 novembre 2026 à 00 h 00, heure de Paris.",
+            "responsibilityVerbatim": "Je propose que vous soyez le responsable de l’évaluation et de la récupération, si vous pouvez assurer ce rôle.",
+            "unresolvedFactsRecommendation": "Leave unknown records unknown and retain separate unreconciled Secret, Memories and Agents-register differences until supported by evidence."
+        },
+        "authenticationScope": "Direct authenticated conversational owner direction, using the retained sole-owner declaration. Supplies a documentary cutoff and designation only; no external subject/access attestation or historical preservation evidence.",
+        "soleOwnerDeclarationBasis": {
+            "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-operational-continuation-2026-10-30/operational-recovery-proposal.json",
+            "sha256": "e0d10b617ca733cf0f7cba91d03762f534914547c37f890b2788ef39ce42186d",
+            "jsonPointer": "/appointments/soleOwner"
+        }
+    },
+    "acceptedCutoff": {
+        "amendedDeadlineDate": "2026-11-15",
+        "interpretation": "Include the whole of November 15 in Paris; close exclusively at the start of November 16.",
+        "timezone": "Europe/Paris",
+        "exclusiveDeadlineLocal": "2026-11-16T00:00:00+01:00",
+        "utcOffsetAtCutoff": "+01:00",
+        "exactExclusiveDeadlineUtc": "2026-11-15T23:00:00Z",
+        "cutoffTimeAndTimezoneConfirmed": true,
+        "conversionMethod": "Python standard-library zoneinfo.ZoneInfo(Europe/Paris); timezone-aware conversion to UTC.",
+        "technicalOrCredentialWindowExtended": false
+    },
+    "ownerResponsibility": {
+        "status": "DocumentaryOwnerAppointmentRecordedOperationalIdentityAndAccessPending",
+        "appointee": "The current user, sole Owner in this conversation",
+        "designation": "Responsible for assessment and accountable Human recovery lead; one person may hold both roles.",
+        "assessmentResponsibilityAccepted": true,
+        "assessmentExecutionAllocationReference": null,
+        "humanRecoveryLeadAppointmentAccepted": true,
+        "namedHumanIdentityRecord": null,
+        "humanSubjectAndIssuer": null,
+        "independentMfaRecoveryAccessAndEscalationReference": null,
+        "twoPersonChangeAuthorityReference": null,
+        "differentQualifiedHumanDeputy": null,
+        "deputyAppointmentAndAccessReference": null,
+        "operationalAppointmentGateSatisfied": false,
+        "limits": "The explicit acceptance appoints its conversational referent. No repository author, account label, MFA/recovery access, competence, engineering allocation or second Human is inferred. The assistant continues delegated evidence collection; it is not the Human deputy."
+    },
+    "preservationDirection": {
+        "secret": "Keep separately unresolved pending authentic complete write coverage and evidence-bound disposition.",
+        "memories": "Keep exact PostgreSQL StatefulSet/TLS Secret/reload-state differences unresolved pending evidence-bound disposition.",
+        "agentsRegister": "Keep historical mismatch unresolved and register unchanged pending evidence-bound disposition.",
+        "factualPreservationAccepted": false,
+        "historicalEvidenceWaived": false
+    },
+    "recordsOrUnavailabilitySupplied": false,
+    "priorOwnerAmendment": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-window-amendment-2026-10-31/owner-window-amendment.json",
+        "sha256": "337a02bc72b29ba8ed0ac9d57f90288bdd84c32e525a4420462e92fa734230f9"
+    },
+    "historicalScopePreserved": {
+        "source": {
+            "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/expired-hmac-recovery-scope-20261029T165350Z-final/recovery-scope.json",
+            "sha256": "f32c1128b54f30682a22734986258a1882483d5d80bb2c253c4769bfb1e7d947"
+        },
+        "scopeSha256": "ef4a6896ed192137c4394cf5ef177ace1ce43ddf27a632731cf891f1c80cfbe3",
+        "runId": "9deb3d3afbbf42d39686abc30be4f64b",
+        "exclusiveDeadlineUtc": "2026-10-30T16:53:50+00:00",
+        "expiredAtRecording": true,
+        "status": "ExpiredIneligibleUnderOriginalBindings",
+        "originalBytesOrDigestChanged": false,
+        "revivedOrExecuted": false
+    },
+    "capEngineerDays": 2,
+    "newInfrastructureSpend": 0,
+    "admissionAllowed": false,
+    "executionAllowed": false
+}

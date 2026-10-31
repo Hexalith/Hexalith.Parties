@@ -1,0 +1,117 @@
+{
+  "observedAtUtc": "2026-10-31T07:07:53.734456+00:00",
+  "newerDirectoryFollowup": {
+    "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1/operational-security-preparation-20261028T192822243257Z",
+    "reason": "Immediate directory mtime changed after previous discovery, so its descendants were selected by file mtime.",
+    "newerDescendantFiles": [],
+    "limit": "No new public record established; directory mtime itself is not evidence."
+  },
+  "protection": {
+    "sources": [
+      {
+        "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop10/README.md",
+        "sha256": "afd8cdc543ce00d6b3e2832b8cdf66d6f2ad734050dc51573f6104d0a79342bf"
+      },
+      {
+        "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop10/verification.json",
+        "sha256": "6e3f3d2e043cd3bd6f9f9b2c04b687a5e842c7bccdc326c0dadb55d690319fcf"
+      },
+      {
+        "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop10/parent-audit.json",
+        "sha256": "05561a2257d77f71bbac60a55311d9b8594777cab6dc2a9b76bf211067f83a9d"
+      }
+    ],
+    "recordedUtc": "2026-10-31T05:20:31.447097+00:00",
+    "selectedFields": {
+      "status": "in-progress",
+      "acceptedTarget": null,
+      "acceptedProfile": null,
+      "acceptedDate": null,
+      "availability": null,
+      "nativeFiveCaseRerun": false,
+      "installed41CaseRun": false,
+      "physicalCopyQualification": false
+    },
+    "qualificationStatement": "Native five-case, installed 41-case, physical-copy, Live/OQ/Agents, cluster and production operations were not run by this resume.",
+    "finding": "Newer focused source verification supplies no accepted installed independent authority/time mechanism, actual all-copy inventory or preservation decision. No tests/qualification were rerun here."
+  },
+  "newerPreservationNamedCandidates": {
+    "sources": [
+      {
+        "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop6/verification/register-preservation.json",
+        "sha256": "e1a06d4e46da4db0e1e8127744230af9d2ae0136c973b3b34cfd279eda187edd"
+      },
+      {
+        "path": "/home/administrator/projects/hexalith/platform/docs/implementation/ext-protection-1-loop6/verification/pinned-owner-preservation.json",
+        "sha256": "afb35cfd97d4686f416acfe1e0bb465259835167954363f00da45189c2631f13"
+      }
+    ],
+    "registerSelected": {
+      "path": "/home/administrator/projects/hexalith/agents/_bmad-output/planning-artifacts/external-dependency-register.md",
+      "sha256": "e29b7fc41cb404209e0abb5fb1e735f29cab253ce4012b142a2c8c30a9c19860",
+      "expectedSessionSha256": "e29b7fc41cb404209e0abb5fb1e735f29cab253ce4012b142a2c8c30a9c19860",
+      "matchesSession": true,
+      "readOnly": true
+    },
+    "pinnedOwnerSubject": "tests/Hexalith.Platform.Secrets.Runtime.Tests/OwnerConformance/DeletionConsumptionIdentity.cs",
+    "finding": "Register receipt checks session equality at e29b7fc4 only; it does not reconcile the historical 5bf35ac2 mismatch. Pinned-owner preservation is a test-fixture source hash, not a Human appointment or factual owner preservation disposition."
+  },
+  "memories": {
+    "sources": [
+      {
+        "path": "/home/administrator/projects/hexalith/memories/docs/operations/access-telemetry-full-qualification.md",
+        "sha256": "613635904e1888ebd45b842163c2accba5923edce57168ae56f183284654efb0"
+      },
+      {
+        "path": "/home/administrator/projects/hexalith/memories/docs/operations/qualification/full-campaign-preparation-2026-10-25/command-catalog.json",
+        "sha256": "db343f124143191117c125054333944485fd814f2ca7e3832b55af2c0a4d2946"
+      },
+      {
+        "path": "/home/administrator/projects/hexalith/memories/docs/operations/qualification/full-campaign-preparation-2026-10-25/preparation.json",
+        "sha256": "c9e2ebf9aa7911f931647a69c93189a0942d81061d51844ae4536e7e7c772c6e"
+      },
+      {
+        "path": "/home/administrator/.local/state/hexalith/memories/access-telemetry/full-campaign-offline-20261025-buc4thfg/isolated-docker-approved-20261031-sl84w1p3/approved-setup-record.json",
+        "sha256": "a5bba35b9e0e68eea99986bc37e0f7b60d132feda292528ecd8c694afb4eb377"
+      },
+      {
+        "path": "/home/administrator/.local/state/hexalith/memories/access-telemetry/full-campaign-offline-20261025-buc4thfg/isolated-docker-approved-20261031-sl84w1p3/owner-approval.json",
+        "sha256": "62069b1d50e8ed83e998ba667069ddf803a0fcbba8eb1dcbd4635b433584e362"
+      },
+      {
+        "path": "/home/administrator/.local/state/hexalith/memories/access-telemetry/full-campaign-offline-20261025-buc4thfg/isolated-docker-approved-20261031-sl84w1p3/approval-adoption-verification.json",
+        "sha256": "9921aa56b6f0877b6944199f26bc38cbcb9cda0f57f6c2e615fe892b01848364"
+      }
+    ],
+    "catalogToSetupFingerprintMatches": true,
+    "setupToApprovalFingerprintMatches": true,
+    "adoptionReceiptFingerprintMatches": true,
+    "approvalRecordedConversationDate": "2026-10-31",
+    "approvalScope": "new dedicated rootless node1 host setup described in the presented Platform plan; bind routine actual host inputs, preserve Kubernetes/containerd and existing data",
+    "approvalVerbatimAsRecorded": "i approve",
+    "setupStatus": "owner-approved-prerequisite-observation-complete-host-setup-blocked",
+    "hostChangesExecuted": false,
+    "engineProvisioned": false,
+    "launchReady": false,
+    "qualificationCredit": false,
+    "preflight": {
+      "executedInOtherScope": true,
+      "pod": {
+        "name": "platform-rootless-preflight-ca5f6895af",
+        "namespace": "default",
+        "node": "node1",
+        "uid": "8f5526cd-dae6-4265-938f-973e1007bead"
+      },
+      "cleanupVerified": true,
+      "originalCaptureReplayed": false
+    },
+    "recordedVerification": {
+      "status": "passed",
+      "passedChecks": 98,
+      "rerunHere": false
+    },
+    "finding": "Linked source chain is fingerprint-consistent but the recorded approval concerns dedicated rootless Docker setup. No EXT-PARTIES-1 lead/deputy appointment, OpenBao snapshot/key-copy inventory, archive grant, intended metadata-only credential or exact Secret/Memories/register disposition is supplied. Completed limited node preflight is not a standing transport grant. Its setup/launch authorization does not transfer to this task.",
+    "authenticationLimit": "Recorded message/provenance is not independently reauthenticated as a new EXT-PARTIES-1 owner return. Hash continuity is integrity only. No scope transfer or factual preservation acceptance inferred."
+  },
+  "limit": "Read existing selected public records only. Other scopes retain their own operations, dates, results and approvals; none were executed by this continuation."
+}

@@ -142,3 +142,14 @@ Package browser follow-up: theme issue is resolved on4.7.3; the next failure was
 Root browser gate with actual4.7.3 plus exact restored-asset qualification:68/68 passed in50.3seconds, unchanged axe4.14 gates and visual baseline. Log `/tmp/parties-current-package-browser-final.log`. Independent topology review found a real stale runtime-inventory parser, missing Development sample defaults and umbrella settings-path support; implementation is correcting these and strengthening paired mTLS/model/CLI-argument proof before commit.
 
 Post-review package frontend unit lanes pass: UI458, AdminPortal327, ConsumerPortal85, Picker171; zero errors/failures/skips. Root standalone Release build after all topology review corrections passes with zero warnings/errors. Source observation refresh now selects FCeacc218d and Platform75bceb22 while preserving historical receipts. Parent release gates remain outstanding.
+
+
+Final package qualification — 2026-10-31:
+
+- Public FrontComposer4.7.4: all8 official flat-container archives downloadedHTTP200 and embedded nuspec source equals34d0afde14c43b6079208c47f95297d0cf99b51d. Receipt `/tmp/frontcomposer-final-nuget-publication.json`. Owner exact-source CI41188424341, Quality41188423963 and Release41188973350 all succeed.
+- Root selects FrontComposer4.7.4 and Memories3.0.11 before shared catalog defaults; exact shared-UI and Memories revision/refresh availability fences include these qualified versions. Package shared-reconciler readiness remains source-only.
+- `dotnet build Hexalith.Parties.Standalone.slnx -c Release --disable-build-servers -m:1 -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true -warnaserror`: PASS, zero warnings/errors in75.88s. `/tmp/parties-final-cohort-build.log`.
+- Final frontend unit suites: UI458, AdminPortal327, ConsumerPortal85, Picker171; all pass without skips. Memories REST recovery plus regression classes:41/41 pass. Full Ci.Tests:502/502 pass, zero errors/failures/skips/not-run. Logs `/tmp/parties-final-*-tests.log`.
+- Node24.22.1 browser configuration tests and typecheck pass; `CI=true npm run test:ui` passes all68 in54.8s using actual4.7.4 restored asset-byte qualification and unchanged axe/visual checks. `/tmp/parties-final-browser.log`.
+- Concurrent operational records remain byte-preserved. Read-only recheck confirms13+7+6 SHA256SUMS entries in the three new2026-10-31 evidence folders. Their recommendations do not authorize executing operational changes.
+- A new EventStore3.129.0 release became public during final verification. Version-only adoption is not yet qualified because it adds catalog-backed domain/gateway admission. Existing3.128.4 results are retained as historical package compatibility evidence. Parent is assessing the complete latest-package adoption and correcting the separate owner live-sidecar CI failure; final root CI/RC/release remain outstanding.

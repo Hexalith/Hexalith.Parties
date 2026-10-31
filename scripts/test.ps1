@@ -106,7 +106,8 @@ $allProjects = $unitProjects + $integrationProjects + $topologyProjects + $ciPro
 # these explicit so the inventory gate still fails when an unreviewed project appears, without
 # attempting to execute a Web test host as a test assembly.
 $testSupportProjects = @(
-    "tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj"
+    "tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj",
+    "tests/Hexalith.Parties.EventStoreSample.TestHost/Hexalith.Parties.EventStoreSample.TestHost.csproj"
 )
 
 function Assert-TestProjectInventory {

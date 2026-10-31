@@ -1,0 +1,17 @@
+{
+    "schema": "EXT-PARTIES-1.historical-source-availability.v1",
+    "observedAtUtc": "2026-10-31T07:32:30.700873+00:00",
+    "reason": "Narrow reference validation of the inherited historical transport/executor source pin.",
+    "observations": [
+        {
+            "path": "/home/administrator/projects/hexalith/platform-ext-secrets-1-runtime-foundations-20261017/eng/ext-secrets-1/recover_expired_hmac.py",
+            "historicalSha256": "11f8343a1626f1f5383aec9afc6016189cbb89244f2b7375dfa29d76f43c1f5d",
+            "currentSha256": null,
+            "admissionAllowed": false
+        }
+    ],
+    "finding": "The inherited recover_expired_hmac.py path is no longer available as a file at its historical location. Its expected hash remains preserved, alongside original frozen-source evidence and receipts. No current executor/source pin is established by this proposal. This is an additional source-admission blocker; it does not rewrite or invalidate the historical observation.",
+    "discoveryRepeated": false,
+    "recoveryExecuted": false,
+    "admissionAllowed": false
+}

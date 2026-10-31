@@ -49,6 +49,25 @@ internal static class ReferenceProjectResolver
             $"Required package compatibility gateway test host was not found at '{path}'. Restore the owning Parties test project before selecting Parties:Testing:UsePackagedGateway.", path);
     }
 
+    /// <summary>Selects the matching sample receiver before Aspire captures project defaults.</summary>
+    public static string ResolveSample(DirectoryInfo repositoryRoot, bool usePackagedGateway, bool publishMode)
+    {
+        ArgumentNullException.ThrowIfNull(repositoryRoot);
+        if (!usePackagedGateway)
+        {
+            return ResolveRequired(repositoryRoot, "Hexalith.EventStore",
+                Path.Combine("samples", "Hexalith.EventStore.Sample", "Hexalith.EventStore.Sample.csproj"));
+        }
+        if (publishMode)
+        {
+            throw new InvalidOperationException("Parties:Testing:UsePackagedGateway is a run-only package compatibility profile and cannot be published.");
+        }
+        string path = Path.Combine(repositoryRoot.FullName, "tests", "Hexalith.Parties.EventStoreSample.TestHost",
+            "Hexalith.Parties.EventStoreSample.TestHost.csproj");
+        return File.Exists(path) ? path : throw new FileNotFoundException(
+            $"Required package compatibility sample test host was not found at '{path}'. Restore the owning Parties test project before selecting Parties:Testing:UsePackagedGateway.", path);
+    }
+
     /// <summary>Builds workspace-aware root-only submodule initialization guidance.</summary>
     public static string InitializationGuidance(DirectoryInfo repositoryRoot, string repositoryName)
     {

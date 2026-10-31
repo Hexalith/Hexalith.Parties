@@ -1,0 +1,77 @@
+{
+    "schema": "EXT-PARTIES-1.confirmed-owner-amendment-findings.v1",
+    "recordedAtUtc": "2026-10-31T07:30:22.156653+00:00",
+    "status": "PreparedUnderConfirmedAmendmentOperationalAdmissionBlocked",
+    "ownerAcceptance": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-confirmed-window-proposal-2026-10-31/owner-recommendation-acceptance.json",
+        "sha256": "fd9d2fc439a33be61f1f3ca9c0edf7255664ec13303c51d5b3a6aad4a574f16c"
+    },
+    "amendedProposal": {
+        "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-confirmed-window-proposal-2026-10-31/amended-recovery-proposal.json",
+        "sha256": "3a460f084160255ca50865eba917657b35dfbcac28b8311eb5a54c79e0603d8e"
+    },
+    "resolvedByOwnerDirection": [
+        "Exact exclusive cutoff is 2026-11-16T00:00:00+01:00 Europe/Paris, equivalent to 2026-11-15T23:00:00Z.",
+        "The owner accepted the proposed documentary designation as responsible for assessment and accountable Human recovery lead. Named subject/access/competence/allocation evidence remains pending.",
+        "Keep unresolved historical facts and the three distinct preservation areas unresolved; no factual acceptance or waiver is inferred."
+    ],
+    "verifiedFindings": [
+        {
+            "topic": "New separate fingerprint",
+            "scopeSha256": "5d976b39f5d75e80eab42289787194de79947113a63cecd0c8792a5111d8b836",
+            "proposalId": "ext-parties-1-amended-proposal-b360d6e9c2fd4fe593915664d1fb80ee",
+            "newOperationalRunId": null,
+            "finding": "A separate proposal fingerprint and preparation identity are created. No runtime operation/run identity or executable body is created; expired original scope/run is preserved."
+        },
+        {
+            "topic": "Secret history",
+            "finding": "All three intervals remain separate and unresolved, with complete authenticated coverage through the actual current revision at admission. No new metadata observation or history reconstruction."
+        },
+        {
+            "topic": "Technical windows",
+            "finding": "Retained key mappings still end November 3; historical authority records still end October 30. Neither calendar change nor owner designation extends them."
+        },
+        {
+            "topic": "Evidence collection",
+            "finding": "This turn admits direct owner direction and prepares documents only. The previous bounded discovery is retained; no source search, denied probe, SSH attempt, service check, qualification or external message repeated."
+        },
+        {
+            "topic": "Historical executor path availability",
+            "finding": "The inherited recover_expired_hmac.py path is no longer available as a file at its historical location. Its expected hash remains preserved, alongside original frozen-source evidence and receipts. No current executor/source pin is established by this proposal. This is an additional source-admission blocker; it does not rewrite or invalidate the historical observation.",
+            "source": {
+                "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/ext-parties-1-confirmed-window-proposal-2026-10-31/historical-source-availability.json",
+                "sha256": "44ae7a6a6c223e8cc45085fb9961856e416ced78dde7e451d3b4b5d58220bdac"
+            }
+        }
+    ],
+    "remainingOwnerFactsOnly": [
+        "A different qualified Human deputy appointment/access reference, plus concrete operational subject/access/competence/allocation references for the designated owner/lead.",
+        "Existing authentic historical write archive and snapshot/key-copy inventory or already authorized read-only transport, or explicit unavailability.",
+        "Existing intended current metadata-only credential record and authenticated provenance, references only, never tokens.",
+        "Separate authenticated evidence-bound Secret, Memories and Agents-register preservation dispositions."
+    ],
+    "allInheritedBlockersRetained": true,
+    "effects": {
+        "kubernetesMetadataGetCommands": 0,
+        "providerCalls": 0,
+        "sshCalls": 0,
+        "podExecs": 0,
+        "credentialIssuanceOrRenewals": 0,
+        "runtimeRecoveryExecutions": 0,
+        "runtimeOrPolicyWrites": 0,
+        "backupChanges": 0,
+        "infrastructureProvisioned": 0,
+        "productionBackendChanges": 0,
+        "qualificationRuns": 0,
+        "registerWrites": 0,
+        "messagesSent": 0
+    },
+    "constraints": {
+        "capEngineerDays": 2,
+        "newInfrastructureSpend": 0,
+        "newCapOrEffortAllocationInferred": false,
+        "spentEffortInferred": false
+    },
+    "nextAction": "Use the confirmed cutoff and recorded owner designation in this separate proposal. Continue delegated evidence collection only when a relevant new concrete source is available. Authenticate remaining appointment/access/allocation, archive/copy/transport and intended metadata-credential provenance, then assess separate evidence-bound preservation records. No recovery, technical-window extension, qualification or new infrastructure.",
+    "limits": "Direct owner approval resolves cutoff and documentary designation only. No external identity/access attestation, deputy, historical proof, current grant, preservation acceptance, recovery or qualification established. Older null/pending records and receipts remain dated history."
+}
