@@ -14,9 +14,9 @@ contract_directory="${HEXALITH_RELEASE_CONTRACT_DIRECTORY:-$PWD/.hexalith/releas
 publication_preflight="${HEXALITH_PUBLICATION_PREFLIGHT:-./.hexalith/release/publication_preflight.py}"
 evidence_directory="${HEXALITH_RELEASE_EVIDENCE_DIRECTORY:-$PWD/.hexalith/release-evidence/$version/preflight}"
 
-# Hexalith.Parties publishes exactly these ten NuGet packages. Keep this declaration
+# Hexalith.Parties publishes exactly these eleven NuGet packages. Keep this declaration
 # independent from the manifest so an inventory change fails closed until reviewed.
-readonly expected_package_count=10
+readonly expected_package_count=11
 
 fail() {
   echo "[publication-preflight] $1" >&2

@@ -39,6 +39,10 @@
     {
       "id": "Hexalith.Parties.Aspire",
       "project": "src/Hexalith.Parties.Aspire/Hexalith.Parties.Aspire.csproj"
+    },
+    {
+      "id": "Hexalith.Parties.EventStoreExtensions",
+      "project": "src/Hexalith.Parties.EventStoreExtensions/Hexalith.Parties.EventStoreExtensions.csproj"
     }
   ]
 }

@@ -21,6 +21,7 @@ from msbuild_properties import (
 EXPECTED_PACKAGE_IDS = frozenset(
     {
         "Hexalith.Parties.Contracts",
+        "Hexalith.Parties.EventStoreExtensions",
         "Hexalith.Parties.Client",
         "Hexalith.Parties.AdminPortal",
         "Hexalith.Parties.ConsumerPortal",
@@ -336,7 +337,7 @@ def load_package_inventory(manifest: Path) -> tuple[str, ...]:
     if (any(not isinstance(package_id, str) for package_id in ids)
             or len({package_id.casefold() for package_id in ids}) != len(ids)
             or set(ids) != EXPECTED_PACKAGE_IDS):
-        raise ValueError("Release package inventory must declare exactly the ten unique Parties package IDs")
+        raise ValueError("Release package inventory must declare exactly the eleven unique Parties package IDs")
     return tuple(ids)
 
 

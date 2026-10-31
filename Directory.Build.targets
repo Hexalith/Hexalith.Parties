@@ -1,5 +1,5 @@
 <Project>
-  <PropertyGroup Condition="'$(HexalithEventStoreFromSource)' == 'true'"><DefineConstants>$(DefineConstants);HEXALITH_DEVELOPMENT_CATALOG_SOURCE</DefineConstants></PropertyGroup>
+  <PropertyGroup Condition="'$(HexalithEventStoreFromSource)' == 'true' or ('$(HexalithEventStoreVersion)' != '' and $([MSBuild]::VersionGreaterThanOrEquals('$(HexalithEventStoreVersion)', '3.129.0')))"><DefineConstants>$(DefineConstants);HEXALITH_DEVELOPMENT_CATALOG_SOURCE</DefineConstants></PropertyGroup>
   <ItemGroup Condition="'$(HexalithSourceMappingMode)' == 'source' and $(MSBuildProjectName.EndsWith('.Tests'))">
     <!-- Test utilities consume the same exact roots selected by prepare-build. -->
     <AssemblyMetadata Include="HexalithTestRepositoryRoot" Value="$(MSBuildThisFileDirectory)" />

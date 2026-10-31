@@ -28,6 +28,7 @@
     <Project Path="src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj" />
     <Project Path="src/Hexalith.Parties.ConsumerPortal/Hexalith.Parties.ConsumerPortal.csproj" />
     <Project Path="src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj" />
+    <Project Path="src/Hexalith.Parties.EventStoreExtensions/Hexalith.Parties.EventStoreExtensions.csproj" />
     <Project Path="src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj" />
     <Project Path="src/Hexalith.Parties.Picker/Hexalith.Parties.Picker.csproj" />
     <Project Path="src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj" />

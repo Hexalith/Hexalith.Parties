@@ -328,7 +328,7 @@ jobs:
           source-branch: main
           source-ci-workflow: ci.yml
           package-manifest: tools/release-packages.json
-          expected-package-count: 10
+          expected-package-count: 11
           publication-flag: ${{ vars.HEXALITH_RELEASE_PUBLISH_ENABLED }}
           nuget-user: ${{ vars.NUGET_USER }}
       - name: Validate changed root gitlinks before publication
@@ -374,7 +374,7 @@ jobs:
           HEXALITH_RELEASE_SOURCE_BRANCH: main
           HEXALITH_RELEASE_SOURCE_CI_WORKFLOW: ci.yml
           HEXALITH_RELEASE_PACKAGE_MANIFEST: tools/release-packages.json
-          HEXALITH_RELEASE_EXPECTED_PACKAGE_COUNT: '10'
+          HEXALITH_RELEASE_EXPECTED_PACKAGE_COUNT: '11'
           HEXALITH_RELEASE_RESERVED_VERSION: ''
           HEXALITH_RELEASE_AUTHORITY_ISSUE_URL: ''
           HEXALITH_RELEASE_AUTHORITY_OWNER: ''

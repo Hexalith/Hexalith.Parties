@@ -14,6 +14,7 @@ from msbuild_properties import MsbuildPropertyResolutionError, resolve_hexalith_
 PACKAGE_PROJECTS = [
     "src/Hexalith.Parties.Aspire/Hexalith.Parties.Aspire.csproj",
     "src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj",
+    "src/Hexalith.Parties.EventStoreExtensions/Hexalith.Parties.EventStoreExtensions.csproj",
     "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj",
     "src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj",
     "src/Hexalith.Parties.ConsumerPortal/Hexalith.Parties.ConsumerPortal.csproj",

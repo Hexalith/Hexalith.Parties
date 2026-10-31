@@ -3,7 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
     <!-- User-selected EventStore package family; mapped source builds retain tool authority. -->
-    <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == ''">3.128.4</HexalithEventStoreVersion>
+    <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == ''">3.129.0</HexalithEventStoreVersion>
     <!-- Latest compatible published Tenants family, before the shared catalog defaults. -->
     <HexalithTenantsVersion Condition="'$(HexalithTenantsVersion)' == ''">5.11.2</HexalithTenantsVersion>
     <!-- Shared theme accessibility correction, qualified through the package browser gate. -->

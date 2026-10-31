@@ -22,7 +22,8 @@
     "Hexalith.Parties.Projections",
     "Hexalith.Parties.Security",
     "Hexalith.Parties.Testing",
-    "Hexalith.Parties.Aspire"
+    "Hexalith.Parties.Aspire",
+    "Hexalith.Parties.EventStoreExtensions"
   ],
   "setupUrl": "https://www.nuget.org/account/TrustedPublishing",
   "documentationUrl": "https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing",
