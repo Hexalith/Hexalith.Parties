@@ -23,8 +23,9 @@ Package-built topology sessions select `Parties:Testing:UsePackagedGateway=true`
 before AppHost model construction. The owned gateway/sample test-host pair consumes
 the centrally pinned production Gateway and DomainService packages. The sample
 links the native Program, Counter/Greeting domain and command/query contract sources;
-only the source-only offline SampleCatalog, CounterCatalogDeclarations and
-GreetingCatalogDeclarations inventories are excluded. Both hosts preserve native
+qualified catalog cohorts include the native declarations/adapters, while the
+explicit older compatibility lane excludes source-only offline inventories.
+Both hosts preserve native
 configuration, HTTP/HTTPS launch profiles and shared AppHost wiring. The sample
 copies base/Development JSON and runs the original Program from its output directory,
 so normal Development and environment-provider precedence applies. Source admission
@@ -34,7 +35,9 @@ contains the native linked sample contracts used by both the host and catalog bu
 Private Redis, mTLS custody, receiver credential denials, both sample domains,
 real create/query/projection and persisted-event assertions remain required.
 The profile is refused for publication; default native runs and publish models
-keep the native gateway and sample projects.
+keep the native gateway and sample projects. The catalog package lane selects
+`accesscontrol.eventstore-admin.catalog.yaml` before mTLS rendering, preserving
+Admin UI grants with a deny default; native/publish keep the original Admin ACL.
 
 Prepare the package lane with `bash scripts/prepare-aspire-tier.sh`. Direct native
 preparation requires `bash scripts/prepare-aspire-runtime-hosts.sh --gateway-profile native`

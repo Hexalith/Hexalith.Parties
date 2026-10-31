@@ -20,6 +20,16 @@ SDK_IDS = {
     "Hexalith.EventStore.Testing", "Hexalith.EventStore.Testing.Integration",
 }
 CORE_IDS = {"Hexalith.EventStore.Client", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.ServiceDefaults"}
+ADMIN_SERVER_IDS = {"Hexalith.EventStore.Admin.Server", "Hexalith.EventStore.Admin.Abstractions",
+                    "Hexalith.EventStore.Contracts", "Hexalith.EventStore.ServiceDefaults"}
+ADMIN_SERVER_PROJECT = (Path(__file__).resolve().parents[1] / "references/Hexalith.EventStore/src/"
+                        "Hexalith.EventStore.Admin.Server.Host/Hexalith.EventStore.Admin.Server.Host.csproj")
+
+
+def required_sdk_ids(project: Path | None = None) -> set[str]:
+    # This host uses Admin.Server's Dapr transport, not the domain SDK Client.
+    # Bind the exception to the declared project, never a supplied name or missing assembly.
+    return ADMIN_SERVER_IDS if project is not None and project.resolve() == ADMIN_SERVER_PROJECT else CORE_IDS
 
 PUBLIC_FAMILIES = {
     "HexalithTenantsVersion": {"Hexalith.Tenants." + name for name in ("Contracts", "Client", "Server", "Testing", "Aspire")},
@@ -56,13 +66,13 @@ def write(path: Path, value: dict) -> None:
     temporary.replace(path)
 
 
-def validate(assets_path: Path, expected_version: str) -> dict:
+def validate(assets_path: Path, expected_version: str, project: Path | None = None) -> dict:
     assets = load(assets_path)
     selected = [(identity, metadata) for identity, metadata in assets["libraries"].items()
                 if identity.rsplit("/", 1)[0] in SDK_IDS]
     if not selected:
         raise ValueError("No actual restored EventStore SDK libraries were found")
-    missing = CORE_IDS - {identity.rsplit("/", 1)[0] for identity, _ in selected}
+    missing = required_sdk_ids(project) - {identity.rsplit("/", 1)[0] for identity, _ in selected}
     if missing:
         raise ValueError("Actual runtime SDK restore is incomplete: " + ", ".join(sorted(missing)))
     drifted = [identity + " (type=" + str(metadata.get("type")) + ")" for identity, metadata in selected
@@ -134,11 +144,11 @@ def sdk_proof(assets: dict, target: Path, version: str, families: dict) -> tuple
     return archives, binaries
 
 
-def validate_deps(path: Path, version: str, sdk_libraries: set[str], families: dict) -> None:
+def validate_deps(path: Path, version: str, sdk_libraries: set[str], families: dict, project: Path | None = None) -> None:
     deps = load(path)
     selected = {identity for identity, metadata in deps["libraries"].items()
                 if identity.rsplit("/", 1)[0] in SDK_IDS}
-    if not CORE_IDS.issubset({identity.rsplit("/", 1)[0] for identity in selected}) or not selected.issubset(sdk_libraries):
+    if not required_sdk_ids(project).issubset({identity.rsplit("/", 1)[0] for identity in selected}) or not selected.issubset(sdk_libraries):
         raise ValueError("Deployed dependency manifest differs from the restored SDK graph")
     if any(identity.rsplit("/", 1)[1] != version or deps["libraries"][identity].get("type") != "package" for identity in selected):
         raise ValueError("Deployed dependency manifest has a foreign SDK version/type")
@@ -160,9 +170,9 @@ def record(metadata: dict, project: Path, configuration: str, version: str, star
     runtimeconfig = target.with_suffix(".runtimeconfig.json")
     if not deps.is_file() or role == "runtime" and not runtimeconfig.is_file():
         raise ValueError("The prepared runtime dependency/configuration output is missing")
-    assets = validate(assets_path, version)
+    assets = validate(assets_path, version, project)
     validate_families(assets, families)
-    validate_deps(deps, version, set(assets["libraries"]), families)
+    validate_deps(deps, version, set(assets["libraries"]), families, project)
     archives, binaries = sdk_proof(assets, target, version, families)
     paths = {target, deps, assets_path, project.resolve()}
     if runtimeconfig.is_file():
@@ -186,9 +196,9 @@ def verify_receipt(receipt: dict, project: Path, configuration: str, version: st
         if digest(Path(filename)) != expected:
             raise ValueError("Prepared runtime file drifted after completed build: " + filename)
     target, assets_path = Path(receipt["targetPath"]), Path(receipt["assetsPath"])
-    assets = validate(assets_path, version)
+    assets = validate(assets_path, version, project)
     validate_families(assets, receipt["familyVersions"])
-    validate_deps(target.with_suffix(".deps.json"), version, set(assets["libraries"]), receipt["familyVersions"])
+    validate_deps(target.with_suffix(".deps.json"), version, set(assets["libraries"]), receipt["familyVersions"], project)
     archives, binaries = sdk_proof(assets, target, version, receipt["familyVersions"])
     if archives != receipt["sdkArchives"] or binaries != receipt["sdkBinaries"]:
         raise ValueError("Prepared runtime SDK archive/binary proof drifted")
@@ -275,7 +285,7 @@ def main() -> None:
         elif args.manifest:
             print(json.dumps(verify_manifest(args.manifest, args.project, args.configuration, args.version, families)))
         elif args.assets:
-            validate(args.assets, args.version)
+            validate(args.assets, args.version, args.project)
         else:
             raise ValueError("An actual assets, completed build or manifest selection is required")
     except (OSError, ValueError, KeyError, TypeError, zipfile.BadZipFile, ET.ParseError) as failure:

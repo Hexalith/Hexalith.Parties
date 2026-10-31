@@ -423,14 +423,18 @@ package-built sessions explicitly select `Parties:Testing:UsePackagedGateway=tru
 before Aspire registers the owned gateway/sample test-host pair. They run the
 centrally pinned production Gateway and DomainService packages with native settings
 and launch profiles. The sample links the original Program, Counter/Greeting domain
-and command/query contract sources, excluding only the offline SampleCatalog,
-CounterCatalogDeclarations and GreetingCatalogDeclarations source inventories.
+and command/query contract sources. Qualified catalog cohorts include the native
+catalog declarations/adapters; the explicit older compatibility lane excludes
+source-only offline inventories.
 It requires complete selected source/config inputs, copies native base/Development
 JSON, and runs from its output directory so the original Program loads those files
 with normal environment-provider precedence. Every Dapr, receiver authentication,
 projection, multi-domain and persisted-event assertion remains required. The run-only
 profile is refused in publish mode; ordinary AppHost runs and publication retain
-the native gateway and sample projects.
+the native gateway and sample projects. The explicit catalog package profile also
+selects `accesscontrol.eventstore-admin.catalog.yaml` before mTLS rendering: deny
+by default, with the existing Admin UI grants retained. Native/publish profiles
+keep their original Admin ACL.
 
 `scripts/prepare-aspire-runtime-hosts.sh` prepares the package pair by default;
 the shared `--gateway-profile native` option explicitly prepares both native

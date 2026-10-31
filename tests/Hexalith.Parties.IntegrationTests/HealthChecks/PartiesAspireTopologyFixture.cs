@@ -76,6 +76,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     private readonly HashSet<string> _stoppedWorkerNames = new(StringComparer.Ordinal);
     private bool _workersQuiesced;
     private bool _startupScheduled;
+    private Exception? _initializationFailure;
     private readonly TaskCompletionSource _beforeStart = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     /// <summary>Observes worker exit while backing containers and control-plane ownership still exist.</summary>
@@ -410,6 +411,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         catch (Exception ex)
         {
             IsAvailable = false;
+            _initializationFailure = ex;
             UnavailableReason = $"{InitializationPhase}: {ex.GetType().Name}: {ex.Message}";
             if (ObserveInitializationFailureAsync is not null)
             {
@@ -436,7 +438,15 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         + "Use the explicit complete mTLS qualification profile and authenticated subscription "
         + "bootstrap when testing tenant access. Health/ready/alive endpoints do not require seeded tenants.");
 
-    public async ValueTask DisposeAsync() => await DisposeApplicationAsync().ConfigureAwait(false);
+    public async ValueTask DisposeAsync()
+    {
+        try { await DisposeApplicationAsync().ConfigureAwait(false); }
+        catch (Exception cleanupException) when (_initializationFailure is not null)
+        {
+            throw new AggregateException("Topology initialization and owned cleanup both failed at " + InitializationPhase + ".",
+                _initializationFailure, cleanupException);
+        }
+    }
 
     /// <summary>Creates an HTTP client for the named project's own Dapr metadata/invocation API.</summary>
     internal HttpClient CreateSidecarClient(string appId)

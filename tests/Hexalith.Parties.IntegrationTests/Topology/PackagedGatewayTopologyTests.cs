@@ -125,6 +125,18 @@ public sealed class PackagedGatewayTopologyTests
                     File.ReadAllText(selectedOptions.Single().Config!).ShouldContain("defaultAction: deny");
                     File.ReadAllText(selectedOptions.Single().Config!).ShouldContain("policies: []");
                 }
+                else if (original.Name == "eventstore-admin")
+                {
+                    string selectedConfig = selectedOptions.Single().Config.ShouldNotBeNull();
+                    string nativeConfig = nativeOptions.Single().Config.ShouldNotBeNull();
+                    Path.GetFileName(selectedConfig).ShouldBe("accesscontrol.eventstore-admin.catalog.yaml");
+                    Path.GetFileName(nativeConfig).ShouldBe("accesscontrol.eventstore-admin.yaml");
+                    var selectedAcl = apphost::Hexalith.Parties.AppHost.PartiesDevelopmentCatalogConfiguration.Read(selectedConfig)["spec"]!["accessControl"]!;
+                    var nativeAcl = apphost::Hexalith.Parties.AppHost.PartiesDevelopmentCatalogConfiguration.Read(nativeConfig)["spec"]!["accessControl"]!;
+                    selectedAcl["defaultAction"]!.GetValue<string>().ShouldBe("deny");
+                    nativeAcl["defaultAction"]!.GetValue<string>().ShouldBe("allow");
+                    selectedAcl["policies"]!.ToJsonString().ShouldBe(nativeAcl["policies"]!.ToJsonString());
+                }
                 else
 #endif
                 { selectedOptions.Select(options => options.Config).ShouldBe(nativeOptions.Select(options => options.Config)); }
@@ -203,6 +215,9 @@ public sealed class PackagedGatewayTopologyTests
             .GetProjectMetadata().ProjectPath.Replace('\\', '/').ShouldEndWith("/samples/Hexalith.EventStore.Sample/Hexalith.EventStore.Sample.csproj");
         published.Resources.OfType<ProjectResource>().Single(resource => resource.Name == "eventstore")
             .GetProjectMetadata().ProjectPath.Replace('\\', '/').ShouldEndWith("/src/Hexalith.EventStore/Hexalith.EventStore.csproj");
+        Path.GetFileName(published.Resources.OfType<ProjectResource>().Single(resource => resource.Name == "eventstore-admin")
+            .Annotations.OfType<DaprSidecarAnnotation>().Single().Sidecar.Annotations.OfType<DaprSidecarOptionsAnnotation>().Single().Options.Config)
+            .ShouldBe("accesscontrol.eventstore-admin.yaml");
     }
 
     private static Task<IDistributedApplicationTestingBuilder> CreateAsync(bool packaged, string? certificateDirectory = null) =>

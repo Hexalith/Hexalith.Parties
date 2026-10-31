@@ -306,6 +306,13 @@ public sealed class PartiesTopologyIsolationTests
         string dashboard = await admin.GetStringAsync("/dapr", cancellationToken).ConfigureAwait(false);
         dashboard.ShouldContain(fixture.Session.AppId("eventstore-admin"));
         dashboard.ShouldNotContain("Unable to load DAPR infrastructure");
+        using HttpClient foreignCaller = fixture.CreateSidecarClient("parties");
+        using HttpResponseMessage denied = await foreignCaller.GetAsync(
+            $"/v1.0/invoke/{fixture.Session.AppId("eventstore-admin")}/method/health", cancellationToken).ConfigureAwait(false);
+        denied.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        using JsonDocument evidence = JsonDocument.Parse(await denied.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
+        evidence.RootElement.GetProperty("errorCode").GetString().ShouldBe("ERR_DIRECT_INVOKE");
+        evidence.RootElement.GetProperty("message").GetString().ShouldNotBeNull().ShouldContain("access control policy has denied access");
         using HttpClient sample = fixture.App.CreateHttpClient("sample-blazor-ui", "http");
         using var budget = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         budget.CancelAfter(TimeSpan.FromSeconds(60));

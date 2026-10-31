@@ -19,6 +19,12 @@ daprMtls?.ConfigureRuntimeLauncher(builder);
 
 string eventStoreAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.yaml");
 string adminServerAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.eventstore-admin.yaml");
+#if HEXALITH_EVENTSTORE_CATALOG_HOSTS
+if (builder.ExecutionContext.IsRunMode && builder.Configuration.GetValue<bool>("Parties:Testing:UsePackagedGateway"))
+{
+    adminServerAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.eventstore-admin.catalog.yaml");
+}
+#endif
 string sampleAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.sample.yaml");
 string tenantsAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.tenants.yaml");
 string partiesAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.parties.yaml");

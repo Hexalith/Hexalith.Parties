@@ -157,6 +157,9 @@ Local development uses Redis-backed pub/sub configured in [src/Hexalith.Parties.
   incoming invocation policies; the explicit package test profile uses it for
   auxiliary UI callers. The optional dedicated Memories domain-service policy permits
   only EventStore on the SDK command, replay and metadata POST routes.
+  `accesscontrol.eventstore-admin.catalog.yaml` is the explicit packaged run
+  profile's deny-by-default Admin receiver input. It retains the native Admin UI
+  grants; authenticated mTLS supplies the required caller identity.
   **One documented exception:** `accesscontrol.eventstore-admin.yaml` is
   `defaultAction: allow` at the top level. Local self-hosted DAPR does not reliably
   expose caller identity without mTLS, so the Admin UI to Admin Server hop would

@@ -143,8 +143,11 @@ public sealed class PartiesAspireTopologyFixtureTests
                 Directory.Exists(certificateDirectory).ShouldBeTrue();
                 File.Exists(Path.Combine(certificateDirectory, ".owned-control-plane-network")).ShouldBeTrue();
                 File.Exists(Path.Combine(certificateDirectory, "issuer.key")).ShouldBeTrue();
-                (await Should.ThrowAsync<InvalidOperationException>(() => fixture.DisposeAsync().AsTask()).ConfigureAwait(true))
-                    .Message.ShouldContain("Docker unavailable");
+                AggregateException failures = await Should.ThrowAsync<AggregateException>(() => fixture.DisposeAsync().AsTask()).ConfigureAwait(true);
+                failures.InnerExceptions.Count.ShouldBe(2);
+                failures.InnerExceptions[0].ShouldBeOfType<FileNotFoundException>().Message
+                    .ShouldBe("model construction failed after scoped preparation");
+                failures.InnerExceptions[1].ShouldBeOfType<InvalidOperationException>().Message.ShouldContain("Docker unavailable");
                 Directory.Exists(certificateDirectory).ShouldBeTrue();
                 commands.SetFailure(null);
             }

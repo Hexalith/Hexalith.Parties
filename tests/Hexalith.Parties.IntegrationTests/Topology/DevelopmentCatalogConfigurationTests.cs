@@ -33,6 +33,29 @@ public sealed class DevelopmentCatalogConfigurationTests
             .Message.ShouldContain("no qualified owner-declared finite transport");
     }
 
+    /// <summary>The explicit Admin profile preserves every UI grant while refusing unnamed callers; native input stays unchanged.</summary>
+    [Fact]
+    public void AdminCatalogProfileUsesDenyDefaultAndRetainsNativeUiGrants()
+    {
+        string nativePath = Source("accesscontrol.eventstore-admin.yaml");
+        byte[] original = File.ReadAllBytes(nativePath);
+        JsonObject native = CatalogConfiguration.Read(nativePath);
+        var rendered = CatalogConfiguration.Receiver(Source("accesscontrol.eventstore-admin.catalog.yaml"),
+            Declaration("Hexalith.EventStore"), "admin", Apps, auxiliary: false, technical: true);
+        native["spec"]!["accessControl"]!["defaultAction"]!.GetValue<string>().ShouldBe("allow");
+        rendered.Configuration["spec"]!["accessControl"]!["defaultAction"]!.GetValue<string>().ShouldBe("deny");
+        CatalogConfiguration.Read(Source("accesscontrol.eventstore-admin.catalog.yaml"))["spec"]!["accessControl"]!["policies"]!.ToJsonString()
+            .ShouldBe(native["spec"]!["accessControl"]!["policies"]!.ToJsonString());
+        rendered.Invocations.ShouldHaveSingleItem();
+        rendered.Invocations[0]!["CallerAppId"]!.GetValue<string>().ShouldBe("eventstore-admin-ui");
+        rendered.Invocations[0]!["Method"]!.GetValue<string>().ShouldBe("/**");
+        rendered.Invocations[0]!["HttpMethods"]!.ToJsonString().ShouldBe("[\"DELETE\",\"GET\",\"POST\",\"PUT\"]");
+        File.ReadAllBytes(nativePath).ShouldBe(original);
+        Should.Throw<InvalidDataException>(() => CatalogConfiguration.Receiver(nativePath,
+            Declaration("Hexalith.EventStore"), "admin", Apps, auxiliary: false, technical: true))
+            .Message.ShouldContain("default-open receiver");
+    }
+
     /// <summary>Both source grants and independent invocation observations retain all verbs on a repeated path.</summary>
     [Fact]
     public void DuplicatePathsMergeVerbsInBothConfigurationAndInvocationObservations()

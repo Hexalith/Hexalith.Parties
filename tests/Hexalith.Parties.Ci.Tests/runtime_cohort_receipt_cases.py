@@ -34,23 +34,7 @@ class RuntimeReceiptCases(unittest.TestCase):
         self.families = {"HexalithFrontComposerVersion": "4.7.4"}
         libraries, packages = {}, {}
         for package, version in [(name, "3.129.1") for name in sorted(cohort.CORE_IDS)] + [("Hexalith.FrontComposer.Contracts", "4.7.4")]:
-            relative = package.lower() + "/" + version
-            folder = self.cache / relative
-            folder.mkdir(parents=True)
-            entry = "lib/net10.0/" + package + ".dll"
-            contents = ("actual archive runtime:" + package + "/" + version).encode()
-            (self.output / (package + ".dll")).write_bytes(contents)
-            archive = folder / (package.lower() + "." + version + ".nupkg")
-            owner = "Hexalith.EventStore" if package in cohort.SDK_IDS else "Hexalith.FrontComposer"
-            nuspec = ('<package><metadata><id>' + package + '</id><version>' + version + '</version>'
-                      '<repository type="git" url="https://github.com/Hexalith/' + owner + '" commit="' + 'a' * 40 + '" />'
-                      '</metadata></package>')
-            with zipfile.ZipFile(archive, "w") as zipped:
-                zipped.writestr(package + ".nuspec", nuspec)
-                zipped.writestr(entry, contents)
-            identity = package + "/" + version
-            libraries[identity] = {"type": "package", "path": relative}
-            packages[identity] = {"runtime": {entry: {}}}
+            self.add_package(package, version, libraries, packages)
         self.assets = {"libraries": libraries, "targets": {"net10.0": packages}, "packageFolders": {str(self.cache): {}}}
         self.assets_path.write_text(json.dumps(self.assets))
         self.deps = {"libraries": libraries, "targets": {"net10.0": packages}, "runtimeTarget": {"name": "net10.0"}}
@@ -59,6 +43,25 @@ class RuntimeReceiptCases(unittest.TestCase):
                                        "Configuration": "Release", "HexalithEventStoreVersion": "3.129.1"}}
         self.receipt_path = self.root / "receipt.json"
         self.manifest = self.root / "prepared.json"
+
+    def add_package(self, package, version, libraries, packages):
+        relative = package.lower() + "/" + version
+        folder = self.cache / relative
+        folder.mkdir(parents=True)
+        entry = "lib/net10.0/" + package + ".dll"
+        contents = ("actual archive runtime:" + package + "/" + version).encode()
+        (self.output / (package + ".dll")).write_bytes(contents)
+        archive = folder / (package.lower() + "." + version + ".nupkg")
+        owner = "Hexalith.EventStore" if package in cohort.SDK_IDS else "Hexalith.FrontComposer"
+        nuspec = ('<package><metadata><id>' + package + '</id><version>' + version + '</version>'
+                  '<repository type="git" url="https://github.com/Hexalith/' + owner + '" commit="' + 'a' * 40 + '" />'
+                  '</metadata></package>')
+        with zipfile.ZipFile(archive, "w") as zipped:
+            zipped.writestr(package + ".nuspec", nuspec)
+            zipped.writestr(entry, contents)
+        identity = package + "/" + version
+        libraries[identity] = {"type": "package", "path": relative}
+        packages[identity] = {"runtime": {entry: {}}}
 
     def tearDown(self):
         self.temp.cleanup()
@@ -77,6 +80,89 @@ class RuntimeReceiptCases(unittest.TestCase):
         if result.returncode == 0:
             runner.write_text("started after the exact entrypoint")
         return result, runner
+
+    def use_admin_graph(self):
+        self.project = cohort.ADMIN_SERVER_PROJECT
+        client = "Hexalith.EventStore.Client/3.129.1"
+        self.assets["libraries"].pop(client)
+        self.assets["targets"]["net10.0"].pop(client)
+        (self.output / "Hexalith.EventStore.Client.dll").unlink()
+        for package in sorted(cohort.ADMIN_SERVER_IDS - cohort.CORE_IDS):
+            self.add_package(package, "3.129.1", self.assets["libraries"], self.assets["targets"]["net10.0"])
+        self.assets_path.write_text(json.dumps(self.assets))
+        self.target.with_suffix(".deps.json").write_text(json.dumps(self.deps))
+
+    def test_declared_admin_server_qualifies_its_actual_transport_without_sdk_client(self):
+        self.use_admin_graph()
+        receipt = self.prepare()
+        self.assertEqual(cohort.ADMIN_SERVER_IDS, {p["id"] for p in receipt["sdkArchives"] if p["id"] in cohort.SDK_IDS})
+        result, runner = self.launch()
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertTrue(runner.exists())
+
+    def test_admin_server_requires_each_owned_dependency_in_restore_and_deployment(self):
+        for package in sorted(cohort.ADMIN_SERVER_IDS):
+            for graph in ("assets", "deps"):
+                with self.subTest(package=package, graph=graph):
+                    self.tearDown(); self.setUp(); self.use_admin_graph()
+                    identity = package + "/3.129.1"
+                    if graph == "assets":
+                        self.assets["libraries"].pop(identity)
+                        self.assets_path.write_text(json.dumps(self.assets))
+                    else:
+                        deps = json.loads(self.target.with_suffix(".deps.json").read_text())
+                        deps["libraries"].pop(identity)
+                        self.target.with_suffix(".deps.json").write_text(json.dumps(deps))
+                    with self.assertRaisesRegex(ValueError, "incomplete|dependency manifest"):
+                        self.prepare()
+                    self.assertFalse(self.manifest.exists())
+
+    def test_admin_readback_cannot_rebind_hashes_to_hide_missing_owned_dependencies(self):
+        for package in sorted(cohort.ADMIN_SERVER_IDS):
+            for graph in ("assets", "deps"):
+                with self.subTest(package=package, graph=graph):
+                    self.tearDown(); self.setUp(); self.use_admin_graph()
+                    receipt = self.prepare()
+                    path = self.assets_path if graph == "assets" else self.target.with_suffix(".deps.json")
+                    value = json.loads(path.read_text())
+                    value["libraries"].pop(package + "/3.129.1")
+                    path.write_text(json.dumps(value))
+                    receipt["files"][str(path)] = cohort.digest(path)
+                    cohort.write(self.receipt_path, receipt)
+                    manifest = cohort.load(self.manifest)
+                    manifest["projects"][str(self.project)]["sha256"] = cohort.digest(self.receipt_path)
+                    cohort.write(self.manifest, manifest)
+                    result, runner = self.launch()
+                    self.assertNotEqual(0, result.returncode)
+                    self.assertFalse(runner.exists())
+                    self.assertRegex(result.stderr, "incomplete|dependency manifest")
+
+    def test_admin_server_refuses_foreign_versions_source_edges_and_stale_binary(self):
+        for mutation in ("version", "source", "binary"):
+            with self.subTest(mutation=mutation):
+                self.tearDown(); self.setUp(); self.use_admin_graph()
+                package = "Hexalith.EventStore.Admin.Server"
+                if mutation == "version":
+                    self.assets["libraries"][package + "/3.128.4"] = self.assets["libraries"].pop(package + "/3.129.1")
+                elif mutation == "source":
+                    self.assets["libraries"][package + "/3.129.1"]["type"] = "project"
+                else:
+                    (self.output / (package + ".dll")).write_bytes(b"older Admin runtime")
+                self.assets_path.write_text(json.dumps(self.assets))
+                with self.assertRaisesRegex(ValueError, "cohort differs|differs from its actual archive"):
+                    self.prepare()
+                self.assertFalse(self.manifest.exists())
+
+    def test_admin_graph_cannot_exempt_an_ordinary_or_same_named_foreign_host(self):
+        for name in ("Host.csproj", cohort.ADMIN_SERVER_PROJECT.name):
+            with self.subTest(project=name):
+                self.tearDown(); self.setUp(); self.use_admin_graph()
+                project = self.root / name
+                self.project = project
+                project.write_text("<Project />")
+                with self.assertRaisesRegex(ValueError, "incomplete: Hexalith.EventStore.Client"):
+                    self.prepare()
+                self.assertFalse(self.manifest.exists())
 
     def test_completed_exact_build_qualifies_the_same_entrypoint_used_before_start(self):
         receipt = self.prepare()

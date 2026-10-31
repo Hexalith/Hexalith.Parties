@@ -1,0 +1,20 @@
+# Explicit packaged Development catalog profile for the actual Admin receiver.
+# Preserve the native UI grants while requiring authenticated mTLS caller identity.
+# Native and publish profiles retain accesscontrol.eventstore-admin.yaml.
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: accesscontrol-eventstore-admin-catalog
+spec:
+  accessControl:
+    defaultAction: deny
+    trustDomain: "public"
+    policies:
+      - appId: eventstore-admin-ui
+        defaultAction: deny
+        trustDomain: "public"
+        namespace: "default"
+        operations:
+          - name: /**
+            httpVerb: ['GET', 'POST', 'PUT', 'DELETE']
+            action: allow

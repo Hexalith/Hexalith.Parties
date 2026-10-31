@@ -84,12 +84,12 @@ public sealed class AspireRuntimePreparationTests
                 assets = (project.parent / 'obj/project.assets.json').resolve()
                 families = {'HexalithTenantsVersion':'6.0.0', 'HexalithMemoriesVersion':'3.0.13', 'HexalithFrontComposerVersion':'4.7.4'}
                 if '-getProperty:HexalithEventStoreVersion' in args:
-                    print('3.130.0')
+                    print('3.130.1')
                 elif any(arg.startswith('-getProperty:HexalithTenantsVersion,') for arg in args):
                     print(json.dumps({'Properties':families}))
                 elif any(arg.startswith('-getProperty:TargetPath,') for arg in args):
                     print(json.dumps({'Properties':{'TargetPath':str(target), 'ProjectAssetsFile':str(assets),
-                        'Configuration':configuration, 'HexalithEventStoreVersion':'3.130.0'}}))
+                        'Configuration':configuration, 'HexalithEventStoreVersion':'3.130.1'}}))
                 elif args[0] == 'build':
                     mode = os.environ['PARTIES_COHORT_MUTATION']
                     target.parent.mkdir(parents=True, exist_ok=True)
@@ -98,24 +98,27 @@ public sealed class AspireRuntimePreparationTests
                     assets.parent.mkdir(parents=True, exist_ok=True)
                     cache = Path('packages').resolve()
                     libraries, targets = {}, {}
-                    for package in ['Hexalith.EventStore.Client','Hexalith.EventStore.Contracts','Hexalith.EventStore.ServiceDefaults']:
-                        relative = package.lower() + '/3.130.0'
+                    packages = ['Hexalith.EventStore.Client','Hexalith.EventStore.Contracts','Hexalith.EventStore.ServiceDefaults']
+                    if project.name == 'Hexalith.EventStore.Admin.Server.Host.csproj':
+                        packages = ['Hexalith.EventStore.Admin.Server','Hexalith.EventStore.Admin.Abstractions','Hexalith.EventStore.Contracts','Hexalith.EventStore.ServiceDefaults']
+                    for package in packages:
+                        relative = package.lower() + '/3.130.1'
                         folder = cache / relative
                         folder.mkdir(parents=True, exist_ok=True)
                         entry = 'lib/net10.0/' + package + '.dll'
                         contents = ('runtime archive ' + package).encode()
                         (target.parent / (package + '.dll')).write_bytes(contents)
-                        archive_path = folder / (package.lower() + '.3.130.0.nupkg')
+                        archive_path = folder / (package.lower() + '.3.130.1.nupkg')
                         if not archive_path.exists():
                             with zipfile.ZipFile(archive_path, 'w') as archive:
-                                archive.writestr(package + '.nuspec','<package><metadata><id>' + package + '</id><version>3.130.0</version><repository type="git" url="https://github.com/Hexalith/Hexalith.EventStore" commit="' + 'a'*40 + '" /></metadata></package>')
+                                archive.writestr(package + '.nuspec','<package><metadata><id>' + package + '</id><version>3.130.1</version><repository type="git" url="https://github.com/Hexalith/Hexalith.EventStore" commit="' + 'a'*40 + '" /></metadata></package>')
                                 archive.writestr(entry,contents)
-                        identity = package + '/3.130.0'
+                        identity = package + '/3.130.1'
                         libraries[identity] = {'type':'package','path':relative}
                         targets[identity] = {'runtime':{entry:{}}}
-                    if mode == 'wrong-version': libraries['Hexalith.EventStore.Client/3.128.4'] = libraries.pop('Hexalith.EventStore.Client/3.130.0')
-                    elif mode == 'project-type': libraries['Hexalith.EventStore.Client/3.130.0']['type'] = 'project'
-                    elif mode == 'missing-core-library': libraries.pop('Hexalith.EventStore.Contracts/3.130.0')
+                    if mode == 'wrong-version': libraries['Hexalith.EventStore.Client/3.128.4'] = libraries.pop('Hexalith.EventStore.Client/3.130.1')
+                    elif mode == 'project-type': libraries['Hexalith.EventStore.Client/3.130.1']['type'] = 'project'
+                    elif mode == 'missing-core-library': libraries.pop('Hexalith.EventStore.Contracts/3.130.1')
                     elif mode == 'missing-sdk': libraries = {}
                     if mode != 'missing-assets': assets.write_text(json.dumps({'libraries':libraries,'targets':{'net10.0':targets},'packageFolders':{str(cache):{}}}))
                     target.with_suffix('.deps.json').write_text(json.dumps({'libraries':libraries,'targets':{'net10.0':targets}}))
@@ -168,7 +171,7 @@ public sealed class AspireRuntimePreparationTests
             builds.ShouldAllBe(call => call.Contains("Release") && call.Contains("-warnaserror") && call.Contains("-m:1"));
             if (profile != "native")
             {
-                builds.ShouldAllBe(call => call.Contains("-p:HexalithEventStoreVersion=3.130.0") && call.Contains("-p:HexalithUsePublishedSdkForHostedTests=true"));
+                builds.ShouldAllBe(call => call.Contains("-p:HexalithEventStoreVersion=3.130.1") && call.Contains("-p:HexalithUsePublishedSdkForHostedTests=true"));
                 arguments.Count(call => call.Any(argument => argument.StartsWith("-getProperty:TargetPath,", StringComparison.Ordinal))).ShouldBe(10);
                 builds.ShouldAllBe(call => call.Contains("-t:Rebuild") && call.Contains("-p:HexalithFrontComposerVersion=4.7.4")
                     && call.Contains("-p:HexalithTenantsVersion=6.0.0") && call.Contains("-p:HexalithMemoriesVersion=3.0.13"));
@@ -464,6 +467,8 @@ public sealed class AspireRuntimePreparationTests
     [InlineData("3.129.0", false, true, false)]
     [InlineData("3.129.1", false, false, false)]
     [InlineData("3.130.0", false, true, true)]
+    [InlineData("3.130.1", false, true, true)]
+    [InlineData("3.130.2", false, false, false)]
     [InlineData("3.131.0", false, false, false)]
     [InlineData("3.128.4", true, true, true)]
     public async Task CatalogApiAvailabilityDoesNotSelectNativeHosts(string version, bool source, bool available, bool hostsAvailable)
