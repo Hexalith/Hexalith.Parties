@@ -67,7 +67,7 @@ public sealed class PackagedGatewayTopologyTests
             }
             packaged.Resources.Select(resource => resource.Name).Order(StringComparer.Ordinal)
                 .ShouldBe(native.Resources.Select(resource => resource.Name).Order(StringComparer.Ordinal));
-    
+
             foreach (ProjectResource original in native.Resources.OfType<ProjectResource>())
             {
                 ProjectResource selected = packaged.Resources.OfType<ProjectResource>().Single(resource => resource.Name == original.Name);
