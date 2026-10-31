@@ -6,7 +6,8 @@
     <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj" />
+    <ProjectReference Include="../../src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj" Condition="'$(HexalithPartiesFromSource)' == 'true'" />
+    <PackageReference Include="Hexalith.Parties.Contracts" Condition="'$(HexalithPartiesFromSource)' != 'true'" />
     <ProjectReference Include="$(HexalithEventStoreRoot)/src/Hexalith.EventStore.Testing.Integration/Hexalith.EventStore.Testing.Integration.csproj" Condition="'$(HexalithEventStoreFromSource)' == 'true'" />
     <PackageReference Include="Hexalith.EventStore.Testing.Integration" Condition="'$(HexalithEventStoreFromSource)' != 'true'" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
