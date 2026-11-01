@@ -2051,3 +2051,30 @@ verification_final: `tests/five-processing-and-memories-erasure-2026-10-25/`; sp
 - source_spec: `spec-five-causal-reconciliation-deferred-items.md`
   summary: Reconcile uncertain remote group joins after cancellation or lost acknowledgement without removing surviving subscribers.
   evidence: Review BH-05; baseline JoinGroup failure rollback and current cancellation can revoke local authority while a server join still finishes later. Source client invocation cancellation does not certify remote group absence. Require an owner-supported acknowledgement/reconciliation protocol and actual remote-membership evidence.
+
+### DW-199: Bring the five-verification maintenance spec under the spine I17 six-clause gate
+
+status: open
+origin: Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-11-01)
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+location: `_bmad-output/implementation-artifacts/spec-five-verification-maintenance-deferred-items.md`
+severity: medium
+reason: Spine I17 lets an Epic 8 ledger item be worked only through a spec that declares all six §4 clauses. DW-144/DW-92 (8.10) and DW-33/DW-52 (8.6) were closed under `route: 'oneshot'` with no Prerequisites, Touched repos, Rollback path, Validation lanes, Non-goals or Parity checklist, although the commit (`fb07a6cf`) edits the I16 surfaces `EpicEightClosureFitnessTests`/`PlatformApiPrerequisitesTests` and the I6 surface `EventStoreGatewayRoutingTests`. The fix edits another spec, so it is out of scope for an 8.10 code review.
+
+### DW-200: Decide whether executed DI exclusions should guard the retired projection interfaces again
+
+status: open
+origin: Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-11-01)
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+location: `tests/Hexalith.Parties.Tests/Projections/ProjectionPlatformAdapterTests.cs:39`
+severity: low
+reason: `fb07a6cf` removed the `ServiceType.FullName` exclusions for `Hexalith.Parties.Projections.Services.IPartyProjectionPlatformAdapter` and `IProjectionRebuildService`. The remaining guard, `ArchitecturalFitnessTests.PartiesProjectionRuntimeUsesOnlyEventStoreSdkHandlers`, only checks that 18 fixed file paths are absent, so a retired interface re-declared in another file and registered in `AddParties` passes every test. Restoring the exclusions reverses the DW-33 owner decision (typed checks over string-name exclusions), so it needs that owner's call.
+
+### DW-201: Reconcile the stale Tenants row in the architecture technology table
+
+status: open
+origin: Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-11-01)
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+location: `docs/architecture.md:57`
+severity: low
+reason: Pre-existing and outside the reviewed diff. The row says Tenants package `5.11.1` "by default", while the effective Release graph (`dotnet msbuild src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj -p:Configuration=Release -getProperty:HexalithTenantsVersion`) selects `6.0.0`. `DocumentationFitnessTests.MaintainedTechnologyTablesMatchCentralPackageCatalog` has no assertion for this row, so it drifts silently.
