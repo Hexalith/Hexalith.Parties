@@ -1,0 +1,250 @@
+{
+  "observedAtUtc": "2026-11-01T12:35:30.102890+00:00",
+  "sourceSha": "639d6e98b496429eb0490d1f8feeec97bd1a3280",
+  "runs": [
+    {
+      "conclusion": "success",
+      "databaseId": 41303194270,
+      "event": "push",
+      "headSha": "639d6e98b496429eb0490d1f8feeec97bd1a3280",
+      "jobs": [
+        {
+          "databaseId": 124838221375,
+          "name": "UI accessibility",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/41303194270/job/124838221375"
+        },
+        {
+          "databaseId": 124838221509,
+          "name": "BMAD configuration tests",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/41303194270/job/124838221509"
+        },
+        {
+          "databaseId": 124838221582,
+          "name": "Parties Platform declaration",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/41303194270/job/124838221582"
+        },
+        {
+          "databaseId": 124838221585,
+          "name": "ci / build-and-test",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/41303194270/job/124838221585"
+        },
+        {
+          "databaseId": 124838221597,
+          "name": "Owner publisher qualification",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/41303194270/job/124838221597"
+        },
+        {
+          "databaseId": 124840740104,
+          "name": "ci / aspire-tests",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/41303194270/job/124840740104"
+        },
+        {
+          "databaseId": 124840741305,
+          "name": "ci / performance-tests",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/41303194270/job/124840741305"
+        }
+      ],
+      "name": "CI",
+      "status": "completed",
+      "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/41303194270"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 41303193972,
+      "event": "push",
+      "headSha": "639d6e98b496429eb0490d1f8feeec97bd1a3280",
+      "jobs": [
+        {
+          "databaseId": 124838220459,
+          "name": "Root gitlink RC gate",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/41303193972/job/124838220459"
+        }
+      ],
+      "name": "Release Candidate Gate",
+      "status": "completed",
+      "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/41303193972"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 41303194246,
+      "event": "push",
+      "headSha": "639d6e98b496429eb0490d1f8feeec97bd1a3280",
+      "jobs": [
+        {
+          "databaseId": 124838221331,
+          "name": "commitlint / commitlint",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/41303194246/job/124838221331"
+        }
+      ],
+      "name": "Commitlint",
+      "status": "completed",
+      "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/41303194246"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 41303194217,
+      "event": "push",
+      "headSha": "639d6e98b496429eb0490d1f8feeec97bd1a3280",
+      "jobs": [
+        {
+          "databaseId": 124838221068,
+          "name": "codeql / analyze",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/41303194217/job/124838221068"
+        }
+      ],
+      "name": "CodeQL",
+      "status": "completed",
+      "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/41303194217"
+    }
+  ],
+  "release": {
+    "conclusion": "success",
+    "databaseId": 41306016150,
+    "event": "workflow_dispatch",
+    "headSha": "639d6e98b496429eb0490d1f8feeec97bd1a3280",
+    "jobs": [
+      {
+        "databaseId": 124846430389,
+        "name": "Verify exact green main source",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/41306016150/job/124846430389"
+      },
+      {
+        "databaseId": 124846470981,
+        "name": "release",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/41306016150/job/124846470981"
+      },
+      {
+        "databaseId": 124849392826,
+        "name": "Verify complete exact-source publication",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/41306016150/job/124849392826"
+      }
+    ],
+    "name": "Release",
+    "status": "completed",
+    "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/41306016150"
+  },
+  "releaseVersion": "3.0.0",
+  "releaseUrl": "https://github.com/Hexalith/Hexalith.Parties/releases/tag/v3.0.0",
+  "submodules": [
+    {
+      "path": "references/Hexalith.EventStore",
+      "commit": "ba4c5548ad260b049bda5a1c7def2e8af3484733",
+      "clean": true,
+      "existsUpstream": true,
+      "nestedSubmodulesUninitialized": true,
+      "nestedCount": 9
+    },
+    {
+      "path": "references/Hexalith.Memories",
+      "commit": "b93b32cf77f3d76e51d3221550eff99f4d1e93cb",
+      "clean": true,
+      "existsUpstream": true,
+      "nestedSubmodulesUninitialized": true,
+      "nestedCount": 9
+    },
+    {
+      "path": "references/Hexalith.FrontComposer",
+      "commit": "c092e8f91ebb670fad4ab959f2d3c8e13d809e0f",
+      "clean": true,
+      "existsUpstream": true,
+      "nestedSubmodulesUninitialized": true,
+      "nestedCount": 9
+    },
+    {
+      "path": "references/Hexalith.Tenants",
+      "commit": "2d3fa6da2312c1b5cf7f5c9461cc2d0ffc995b43",
+      "clean": true,
+      "existsUpstream": true,
+      "nestedSubmodulesUninitialized": true,
+      "nestedCount": 9
+    },
+    {
+      "path": "references/Hexalith.AI.Tools",
+      "commit": "9b78aa008cfc62cd88ad0ea4b39b1f07311956ce",
+      "clean": true,
+      "existsUpstream": true,
+      "nestedSubmodulesUninitialized": true,
+      "nestedCount": 0
+    },
+    {
+      "path": "references/Hexalith.Commons",
+      "commit": "bbbce518bcca9ca359762393688f02d142af1c61",
+      "clean": true,
+      "existsUpstream": true,
+      "nestedSubmodulesUninitialized": true,
+      "nestedCount": 3
+    },
+    {
+      "path": "references/Hexalith.Builds",
+      "commit": "df13d9d31f7ee1a1b0fb7eeac7e8b27b9a9f9fb0",
+      "clean": true,
+      "existsUpstream": true,
+      "nestedSubmodulesUninitialized": true,
+      "nestedCount": 1
+    },
+    {
+      "path": "references/Hexalith.PolymorphicSerializations",
+      "commit": "821b784bb51483acefa9725acc6792d111304a4e",
+      "clean": true,
+      "existsUpstream": true,
+      "nestedSubmodulesUninitialized": true,
+      "nestedCount": 2
+    },
+    {
+      "path": "references/Hexalith.McpCli",
+      "commit": "17eb4fbbc151ca4b99dfa452e9f65655db2b402f",
+      "clean": true,
+      "existsUpstream": true,
+      "nestedSubmodulesUninitialized": true,
+      "nestedCount": 17
+    },
+    {
+      "path": "references/Hexalith.Platform",
+      "commit": "03799ed553a16c8a1528068ba4d95bb5509ea75e",
+      "clean": true,
+      "existsUpstream": true,
+      "nestedSubmodulesUninitialized": true,
+      "nestedCount": 17
+    }
+  ],
+  "operatorAuthorization": "User explicitly requested publication and bypassing human validation; both production checkpoints were approved automatically as jpiquot.",
+  "independentNugetVerification": {
+    "packages": 11,
+    "version": "3.0.0",
+    "repositoryCommit": "639d6e98b496429eb0490d1f8feeec97bd1a3280",
+    "hashesMatchHostedDownloads": true,
+    "proofFile": "nuget-publication-proof.json"
+  },
+  "artifact": {
+    "name": "publication-verification-41306016150-1",
+    "id": 13084015599,
+    "archiveSha256": "9ca39fdd37da64e987c9b4e01ff93d67522dffe9e3df2cbb25ad7a5c09f63b3d",
+    "resultFile": "publication-verification.json"
+  }
+}

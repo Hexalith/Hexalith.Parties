@@ -2,7 +2,7 @@
 title: 'Synchronize dependencies and publish a verified release'
 type: 'bugfix'
 created: '2026-11-01'
-status: 'in-review'
+status: 'done'
 route: 'dispatch'
 review_loop_iteration: 0
 baseline_commit: '8dae3f15c2624bc3990128691c732bef73858b78'
@@ -42,8 +42,8 @@ context: []
 - [x] Shared Builds catalog/audit -- update Commons and PolymorphicSerializations to latest published stable patches; run relevant catalog validation without nested initialization. Implementation agent makes local edits only; parent validates messages, commits and pushes inside Builds.
 - [x] `.config/dotnet-tools.json`, `README.md`, `docs/getting-started.md` -- select module tool 4.41.0 and update current documentation, then restore/validate the tool.
 - [x] Release workflow and existing CI tests -- map preferred Zot names with fallback to existing repository secret names for publish and verification, preserving production and automated release gates.
-- [ ] Parent synchronization -- fast-forward upstream root submodule main branches, publish Builds changes, record exact selected gitlinks/signoffs, and push parent after validation. Implementation agent leaves Git operations to parent.
-- [ ] Parent release -- require green CI/RC on exact main, dispatch Release, approve pending production jobs under explicit operator authorization, diagnose/retry failures, and independently check all eleven NuGet package versions and source metadata.
+- [x] Parent synchronization -- fast-forward upstream root submodule main branches, publish Builds changes, record exact selected gitlinks/signoffs, and push parent after validation. Implementation agent leaves Git operations to parent.
+- [x] Parent release -- require green CI/RC on exact main, dispatch Release, approve pending production jobs under explicit operator authorization, diagnose/retry failures, and independently check all eleven NuGet package versions and source metadata.
 
 **Acceptance Criteria:**
 - Given official current registries, when dependencies are audited, then SDK and direct dependency selections are latest compatible stable versions with deliberate prereleases preserved.
@@ -96,3 +96,12 @@ context: []
 - Focused runtime run verified the production-client gateway scenario. Isolation completed the first2event stream and then3successful second-stream commands before its single60second seed token canceled the fourth. A five-call setup needs a bounded budget derived from its configured30second per-invocation limit; keep2vs5event assertions and the60second projection query deadline. The full Client suite passed345/345. A parallel Contracts package fixture collided on a shared generated Commons nupkg; rerun Contracts serially after all runtime resources have disposed, without treating the shared-output collision as a product defect.
 
 - Final local runtime verification passed 2/2 with no skips in 378.332 seconds, including two versus five persisted events, cross-session denials, peer disposal, and the production-client query. Serial Contracts passed 230/230; the complete Release build had zero warnings/errors; full Client passed 345/345 and query tests passed 875/875. The private invocation cap remains 30 seconds, setup allocates each call plus bounded status slack, and projection polling remains 60 seconds. Live persisted-state checks cover the setup allocation; redundant formula-only cases and unreachable private guards were removed before commit. All three polling diagnostic cases passed. Package fixtures must run serially and normal assets must be restored after their temporary stores are disposed.
+
+## Completed Hosted Verification
+
+- Released source `639d6e98b496429eb0490d1f8feeec97bd1a3280` passed push CI [41303194270](https://github.com/Hexalith/Hexalith.Parties/actions/runs/41303194270), including Aspire runtime checks. Exact-source RC [41303193972](https://github.com/Hexalith/Hexalith.Parties/actions/runs/41303193972), commitlint [41303194246](https://github.com/Hexalith/Hexalith.Parties/actions/runs/41303194246), and CodeQL [41303194217](https://github.com/Hexalith/Hexalith.Parties/actions/runs/41303194217) also passed. Builds CI [41298349338](https://github.com/Hexalith/Hexalith.Builds/actions/runs/41298349338) passed for the selected catalog revision.
+- Release [41306016150](https://github.com/Hexalith/Hexalith.Parties/actions/runs/41306016150) passed all three jobs: exact-source admission, publication, and complete publication verification. Both production checkpoints were approved automatically under the user's explicit authorization; environment policy and automated gates remained enforced.
+- GitHub Release [v3.0.0](https://github.com/Hexalith/Hexalith.Parties/releases/tag/v3.0.0) was published on 2026-11-01. The tag resolves to the exact tested source above. Semantic Release selected the major version from the existing commit history.
+- All eleven declared NuGet packages at version 3.0.0 downloaded from the official flat-container endpoint. Their IDs, versions, repository URLs, and repository commits match the release. Independent downloads match the hosted verification hashes. All three container images passed immutable manifest, linux/amd64 and linux/arm64, and source-provenance checks.
+- All ten selected root submodule commits are available upstream and clean locally; nested submodules remain uninitialized. The final documentation receipt follows the released source without changing its tag or published artifacts.
+- Durable proof is in `tests/sync-release-2026-11-01/hosted-verification.json`, `publication-verification.json`, `nuget-publication-proof.json`, and `release-approval-monitor.txt`. The only retained dependency limitation is the upstream bundled npm audit advisories already recorded above; no unsupported forced downgrade was applied.

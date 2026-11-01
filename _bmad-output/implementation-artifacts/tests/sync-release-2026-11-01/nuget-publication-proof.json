@@ -1,0 +1,101 @@
+[
+  {
+    "id": "Hexalith.Parties.Contracts",
+    "version": "3.0.0",
+    "sourceSha": "639d6e98b496429eb0490d1f8feeec97bd1a3280",
+    "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.contracts/3.0.0/hexalith.parties.contracts.3.0.0.nupkg",
+    "bytes": 138877,
+    "sha256": "6d7f60375285705c50170c0354f0adbb45faf275eb305c3699be246bbff35214",
+    "verified": true
+  },
+  {
+    "id": "Hexalith.Parties.Client",
+    "version": "3.0.0",
+    "sourceSha": "639d6e98b496429eb0490d1f8feeec97bd1a3280",
+    "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.client/3.0.0/hexalith.parties.client.3.0.0.nupkg",
+    "bytes": 64189,
+    "sha256": "fcd4eb4be9b2871021d714483a678b95a1bbfa5671fad2b65cdf4bc690bab020",
+    "verified": true
+  },
+  {
+    "id": "Hexalith.Parties.AdminPortal",
+    "version": "3.0.0",
+    "sourceSha": "639d6e98b496429eb0490d1f8feeec97bd1a3280",
+    "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.adminportal/3.0.0/hexalith.parties.adminportal.3.0.0.nupkg",
+    "bytes": 153856,
+    "sha256": "498d6e623619f22fabea52751d23b3e493eed0534e5a60bd7040eaa7c7623639",
+    "verified": true
+  },
+  {
+    "id": "Hexalith.Parties.ConsumerPortal",
+    "version": "3.0.0",
+    "sourceSha": "639d6e98b496429eb0490d1f8feeec97bd1a3280",
+    "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.consumerportal/3.0.0/hexalith.parties.consumerportal.3.0.0.nupkg",
+    "bytes": 86553,
+    "sha256": "a462a244dd6dfff98915b84fd6e037cdb14eea399c4610d0b21a0dc6805fdb64",
+    "verified": true
+  },
+  {
+    "id": "Hexalith.Parties.Picker",
+    "version": "3.0.0",
+    "sourceSha": "639d6e98b496429eb0490d1f8feeec97bd1a3280",
+    "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.picker/3.0.0/hexalith.parties.picker.3.0.0.nupkg",
+    "bytes": 61392,
+    "sha256": "f0105546363a552dc29bf1790b1e030bcf0002678c2425a3418698a2d8b569fa",
+    "verified": true
+  },
+  {
+    "id": "Hexalith.Parties.Authentication",
+    "version": "3.0.0",
+    "sourceSha": "639d6e98b496429eb0490d1f8feeec97bd1a3280",
+    "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.authentication/3.0.0/hexalith.parties.authentication.3.0.0.nupkg",
+    "bytes": 28353,
+    "sha256": "7523c50346adf8642d7bc8dfec56457ab79d91a295b21a5e92a8678d4d34feea",
+    "verified": true
+  },
+  {
+    "id": "Hexalith.Parties.Projections",
+    "version": "3.0.0",
+    "sourceSha": "639d6e98b496429eb0490d1f8feeec97bd1a3280",
+    "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.projections/3.0.0/hexalith.parties.projections.3.0.0.nupkg",
+    "bytes": 83345,
+    "sha256": "5de090dbd2ec01c9df74409e6bc219ea54a833659d5583421895039f82df804c",
+    "verified": true
+  },
+  {
+    "id": "Hexalith.Parties.Security",
+    "version": "3.0.0",
+    "sourceSha": "639d6e98b496429eb0490d1f8feeec97bd1a3280",
+    "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.security/3.0.0/hexalith.parties.security.3.0.0.nupkg",
+    "bytes": 90774,
+    "sha256": "04724735b38f3a39fcfe4b8107247f5871556b517e5c8a0ff9f99bf360a1225a",
+    "verified": true
+  },
+  {
+    "id": "Hexalith.Parties.Testing",
+    "version": "3.0.0",
+    "sourceSha": "639d6e98b496429eb0490d1f8feeec97bd1a3280",
+    "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.testing/3.0.0/hexalith.parties.testing.3.0.0.nupkg",
+    "bytes": 33891,
+    "sha256": "b396666b2f1da6d3fd0f0695db138a649f3a7aa3d518f05bcd6587ef4ae43c2f",
+    "verified": true
+  },
+  {
+    "id": "Hexalith.Parties.Aspire",
+    "version": "3.0.0",
+    "sourceSha": "639d6e98b496429eb0490d1f8feeec97bd1a3280",
+    "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.aspire/3.0.0/hexalith.parties.aspire.3.0.0.nupkg",
+    "bytes": 27700,
+    "sha256": "49bda56745826b871d76f7387e5a24a3abf785665d9fb60f3da7c5daf75085df",
+    "verified": true
+  },
+  {
+    "id": "Hexalith.Parties.EventStoreExtensions",
+    "version": "3.0.0",
+    "sourceSha": "639d6e98b496429eb0490d1f8feeec97bd1a3280",
+    "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.eventstoreextensions/3.0.0/hexalith.parties.eventstoreextensions.3.0.0.nupkg",
+    "bytes": 30368,
+    "sha256": "5ec9ab0b77ff123b09a4c2d740424644d7262b04321b728d7390b14f53092c51",
+    "verified": true
+  }
+]

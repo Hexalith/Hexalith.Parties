@@ -1,0 +1,8 @@
+Release state: ('in_progress', None)
+Release state: ('waiting', None)
+Approved production job for release 41306016150 using the explicit operator authorization.
+Release state: ('in_progress', None)
+Release state: ('waiting', None)
+Approved production job for release 41306016150 using the explicit operator authorization.
+Release state: ('in_progress', None)
+Release state: ('completed', 'success')

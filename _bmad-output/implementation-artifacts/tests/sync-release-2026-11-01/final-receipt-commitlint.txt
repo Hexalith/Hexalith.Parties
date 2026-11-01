@@ -1,0 +1,5 @@
+Command: ./node_modules/.bin/commitlint --edit /tmp/parties-release-20261101/final-receipt-commit-message.txt --verbose
+⧗   --- input ---
+docs: record verified release publication
+✔   found 0 problems, 0 warnings
+Exit code: 0
