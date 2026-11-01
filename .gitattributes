@@ -4,3 +4,6 @@ _bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-1
 # Preserve captured command/XML receipt bytes, including tool-emitted whitespace.
 _bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/**/*.txt -text whitespace=-blank-at-eol,-blank-at-eof,cr-at-eol
 _bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoption-2026-10-28/**/*.xml -text whitespace=-blank-at-eol,-blank-at-eof,cr-at-eol
+
+# Markdown follows the repository EditorConfig CRLF policy.
+*.md whitespace=cr-at-eol
