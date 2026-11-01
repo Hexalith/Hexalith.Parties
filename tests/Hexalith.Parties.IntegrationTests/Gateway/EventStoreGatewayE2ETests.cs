@@ -10,14 +10,15 @@ using System.Text.Json.Serialization;
 using Hexalith.Commons.UniqueIds;
 using Hexalith.EventStore.Contracts.Identity;
 using Hexalith.EventStore.Server.Events;
+using Hexalith.Parties.Client;
 using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.IntegrationTests.HealthChecks;
-using Hexalith.Parties.Queries;
 
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 using Shouldly;
@@ -128,31 +129,37 @@ public sealed class EventStoreGatewayE2ETests
         }
     }
 
-    private static async Task<PartyDetail> PollProjectionAsync(HttpClient client, string partyId, string firstName, CancellationToken cancellationToken)
+    internal static async Task<PartyDetail> PollProjectionAsync(HttpClient client, string partyId, string firstName, CancellationToken cancellationToken, TimeSpan? pollingBudget = null)
     {
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeout.CancelAfter(TimeSpan.FromSeconds(60));
-        while (true)
+        timeout.CancelAfter(pollingBudget ?? TimeSpan.FromSeconds(60));
+        var queries = new HttpPartiesQueryClient(client, Options.Create(new PartiesClientOptions
         {
-            using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", new
+            Tenant = PartiesTenantBootstrapHost.TenantId,
+        }));
+        PartiesClientException? lastRefusal = null;
+        try
+        {
+            while (true)
             {
-                tenant = PartiesTenantBootstrapHost.TenantId, domain = "party", aggregateId = partyId,
-                queryType = PartyDetailQueryTypes.PartyDetailQueryType, projectionType = PartyDetailQueryTypes.ProjectionType,
-                projectionActorType = PartyDetailQueryTypes.ActorTypeName, entityId = partyId,
-            }, timeout.Token).ConfigureAwait(false);
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                using JsonDocument document = await response.Content.ReadFromJsonAsync<JsonDocument>(timeout.Token).ConfigureAwait(false)
-                    ?? throw new InvalidOperationException("The projected query returned no response.");
-                PartyDetail? detail = document.RootElement.GetProperty("payload").Deserialize<PartyDetail>(SerializerOptions);
-                if (detail is { Freshness.Status: ProjectionFreshnessStatus.Current }
-                    && detail.Id == partyId && detail.PersonDetails?.FirstName == firstName) { return detail; }
+                try
+                {
+                    PartyDetail detail = await queries.GetPartyAsync(partyId, timeout.Token).ConfigureAwait(false);
+                    if (detail is { Freshness.Status: ProjectionFreshnessStatus.Current }
+                        && detail.Id == partyId && detail.PersonDetails?.FirstName == firstName) { return detail; }
+                }
+                catch (PartiesClientException error) when (error.Status is (int)HttpStatusCode.NotFound or (int)HttpStatusCode.ServiceUnavailable)
+                {
+                    lastRefusal = error;
+                }
+                await Task.Delay(TimeSpan.FromMilliseconds(250), timeout.Token).ConfigureAwait(false);
             }
-            else if (response.StatusCode != HttpStatusCode.NotFound && response.StatusCode != HttpStatusCode.ServiceUnavailable)
-            {
-                throw new InvalidOperationException($"The authenticated query failed with HTTP {(int)response.StatusCode}.");
-            }
-            await Task.Delay(TimeSpan.FromMilliseconds(250), timeout.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException failure) when (!cancellationToken.IsCancellationRequested && timeout.IsCancellationRequested)
+        {
+            string diagnostic = lastRefusal is null ? "No gateway refusal was received."
+                : $"Last gateway refusal: HTTP {lastRefusal.Status}; Title={lastRefusal.Title}; Type={lastRefusal.Type}; Detail={lastRefusal.Detail}; CorrelationId={lastRefusal.CorrelationId}.";
+            throw new TimeoutException("Party projection did not become current within its polling budget. " + diagnostic, lastRefusal ?? (Exception)failure);
         }
     }
 

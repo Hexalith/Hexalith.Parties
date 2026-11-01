@@ -100,7 +100,7 @@ public sealed partial class PartySdkQueryService(
             };
             return Success(
                 package,
-                PartyDetailQueryTypes.DataPortabilityProjectionType,
+                PartyDetailQueryTypes.ProjectionType,
                 read.Value,
                 read.ETag,
                 now,
@@ -147,7 +147,7 @@ public sealed partial class PartySdkQueryService(
             IReadOnlyList<ProcessingActivityRecord> records = await ReadAllProcessingRecordsAsync(query.TenantId, partyId, model, read.ETag, cancellationToken).ConfigureAwait(false);
             return Success(
                 records,
-                "party-processing-records",
+                PartyDetailQueryTypes.ProjectionType,
                 model,
                 read.ETag,
                 timeProvider.GetUtcNow(),
@@ -185,7 +185,7 @@ public sealed partial class PartySdkQueryService(
 
             return Success(
                 status,
-                "party-erasure-status",
+                PartyDetailQueryTypes.ProjectionType,
                 model ?? s_unknownFreshness,
                 read.ETag,
                 timeProvider.GetUtcNow(),
@@ -217,7 +217,7 @@ public sealed partial class PartySdkQueryService(
                 .ConfigureAwait(false);
             return Success(
                 certificate,
-                "party-erasure-certificate",
+                PartyDetailQueryTypes.ProjectionType,
                 s_unknownFreshness,
                 etag: null,
                 timeProvider.GetUtcNow());

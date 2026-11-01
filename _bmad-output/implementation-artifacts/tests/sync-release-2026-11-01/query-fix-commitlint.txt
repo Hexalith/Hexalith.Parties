@@ -1,0 +1,9 @@
+⧗   --- input ---
+fix: align query routing with the active catalog
+
+Remove obsolete actor hints and align GDPR query results with the
+committed domain-service projection identity.
+
+Keep runtime checks bounded per command and retain routing refusal
+diagnostics when projection polling expires.
+✔   found 0 problems, 0 warnings

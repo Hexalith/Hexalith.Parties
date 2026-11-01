@@ -88,7 +88,10 @@ internal sealed class PartiesDevelopmentCatalogBootstrap : IDistributedApplicati
         IResourceBuilder<ProjectResource> gatewayResource = builder.CreateResourceBuilder(gateway);
         IResourceBuilder<ParameterResource> digest = builder.AddParameter("catalog-idempotency-digest-key",
             Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)), secret: true);
-        _ = gatewayResource.WithEnvironment("EventStore__IdempotencyAdmission__Enabled", "true")
+        // Two private catalog sessions recapture topology and authentication inside the invocation budget.
+        // Keep the production default untouched while allowing bounded cold test-host calls to complete.
+        _ = gatewayResource.WithEnvironment("EventStore__DomainServices__InvocationTimeoutSeconds", "30")
+            .WithEnvironment("EventStore__IdempotencyAdmission__Enabled", "true")
             .WithEnvironment("EventStore__IdempotencyAdmission__DigestKeySource", "Configuration")
             .WithEnvironment("EventStore__IdempotencyAdmission__ActiveDigestKeyVersion", "development-v1")
             .WithEnvironment("EventStore__IdempotencyAdmission__DigestKeys__development-v1", digest)

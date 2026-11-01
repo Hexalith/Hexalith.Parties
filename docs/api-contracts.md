@@ -181,14 +181,14 @@ AdminPortal uses the optional `type` and `active` parameters to keep debounced d
 
 ### `IAdminPortalGdprClient`
 
-`src/Hexalith.Parties.Client/AdminPortal/IAdminPortalGdprClient.cs` — a GDPR-focused client over the same gateway, used by the AdminPortal and by the `parties-ui` self-scoped Consumer adapters. Methods: `RequestErasureAsync` (→ `EraseParty`), `CancelErasureAsync` (→ additive `CancelPartyErasure`), `GetErasureStatusAsync` (→ `GetErasureStatus` via `PartyDetailProjectionQueryActor` and authoritative erasure status), `RestrictProcessingAsync`/`LiftRestrictionAsync`, `AddConsentAsync` (→ `RecordConsent`) / `RevokeConsentAsync`, `GetConsentAsync`, `ExportPartyDataAsync` (→ `ExportPartyData` → JSON download), `GetProcessingRecordsAsync` (→ `GetProcessingRecords`), `GetErasureCertificateAsync` (→ `GetErasureCertificate`), and `RetryErasureVerificationAsync` (→ `RetryErasureVerification`). Results map to an `AdminPortalGdprOutcome` enum (Accepted/Completed/ValidationRejected/Forbidden/ContractUnavailable/…).
+`src/Hexalith.Parties.Client/AdminPortal/IAdminPortalGdprClient.cs` — a GDPR-focused client over the same gateway, used by the AdminPortal and by the `parties-ui` self-scoped Consumer adapters. Methods: `RequestErasureAsync` (→ `EraseParty`), `CancelErasureAsync` (→ additive `CancelPartyErasure`), `GetErasureStatusAsync` (→ catalog-owned `GetErasureStatus` and authoritative erasure status), `RestrictProcessingAsync`/`LiftRestrictionAsync`, `AddConsentAsync` (→ `RecordConsent`) / `RevokeConsentAsync`, `GetConsentAsync`, `ExportPartyDataAsync` (→ `ExportPartyData` → JSON download), `GetProcessingRecordsAsync` (→ `GetProcessingRecords`), `GetErasureCertificateAsync` (→ `GetErasureCertificate`), and `RetryErasureVerificationAsync` (→ `RetryErasureVerification`). Results map to an `AdminPortalGdprOutcome` enum (Accepted/Completed/ValidationRejected/Forbidden/ContractUnavailable/…).
 
-The erasure certificate path uses the existing `PartyDetailProjectionQueryActor` query route; it does not add a public `parties` endpoint or a DAPR `/query` service-invocation allowance. `RetryErasureVerification` is an EventStore command that the Parties domain service handles through the existing erasure orchestrator and record store.
+The erasure certificate path uses the existing catalog-owned `party-detail` domain-service query route; it does not add a public `parties` endpoint or a DAPR `/query` service-invocation allowance. `RetryErasureVerification` is an EventStore command that the Parties domain service handles through the existing erasure orchestrator and record store.
 
 ### Transport details
 
 - Commands serialise to a private `EventStoreCommandRequest` record (`messageId`, `tenant`, `domain="party"`, `aggregateId`, `commandType = typeof(T).FullName`, `payload`, `correlationId`) → `POST api/v1/commands`.
-- Queries serialise to `Hexalith.EventStore.Contracts.Queries.SubmitQueryRequest` (tenant, domain, aggregateId, queryType, projectionType `party-detail`/`party-index`, payload, entityId, projectionActorType) → `POST api/v1/queries`.
+- Queries serialise to `Hexalith.EventStore.Contracts.Queries.SubmitQueryRequest` (tenant, domain, aggregateId, queryType, projectionType `party-detail`/`party-index`, payload, entityId; canonical requests omit `projectionActorType` because the committed catalog owns domain-service routing) → `POST api/v1/queries`.
 - **JSON options:** camelCase, ignore-null, `JsonStringEnumConverter`.
 - **Correlation:** client-generated `messageId = Guid("N")`, used as both `MessageId` and `CorrelationId`. No explicit idempotency header.
 - **Errors:** RFC 9457 `problem+json` parsed into `PartiesClientException(Status, Title, Type, Detail, CorrelationId)`; `Detail` is **redacted** when it matches sensitive tokens (payload/token/authorization/bearer/secret/password/dapr/redis/connection string/api-key).
@@ -322,7 +322,7 @@ also rejects. An existing channel ID listed for both addition and update has
 its addition skipped and its update applied.
 All these checks run before protected aggregate state is accessed.
 
-The four local vectors in `tests/conformance-vectors/mcpcli-v1/` target only the
+**Historical Story 4.9 compatibility receipt:** the four local vectors in `tests/conformance-vectors/mcpcli-v1/` target only the
 unpublished scratch package `Hexalith.Parties.Contracts` **0.0.0-story49**. They
 include prerequisite writes, repeat deactivation and semantic `parties.get-party`
 postconditions using the approved `PartyDetail` / `party-detail` /
@@ -364,13 +364,17 @@ pinned in Builds and enrolled in McpCli. The existing five-tool MCP host remains
 available; this declaration work does not authorize retirement.
 
 Queries use domain `party` and envelope tenant authority. Detail uses wire type
-`PartyDetail`, projection `party-detail`, historical compatibility name
-`PartyDetailProjectionQueryActor`, and root `PartyId`. List and search use wire
-`PartyIndex` / `PartySearch`, projection `party-index`, compatibility name
-`PartyIndexProjectionQueryActor`, and aggregate `parties`. The current SDK
+`PartyDetail`, projection `party-detail`, and root `PartyId`. List and search use
+wire `PartyIndex` / `PartySearch`, projection `party-index`, and aggregate `parties`.
+The committed catalog selects domain-service execution; canonical clients and
+McpCli declarations omit actor hints. GDPR detail-backed success responses retain
+the same `party-detail` routing identity as their committed declarations. The current SDK
 `PartyDetailQueryHandler`, `PartyIndexQueryHandler` and `PartySearchQueryHandler`
-dispatch directly to canonical read models; actor compatibility fields do not
-prove actor execution. Omitted EntityId falls back to AggregateId; supplied
+dispatch directly to canonical read models.
+
+**Legacy compatibility aliases:** `PartyDetailProjectionQueryActor` and
+`PartyIndexProjectionQueryActor` remain available for explicitly configured legacy
+consumers; they are not canonical catalog query targets. Omitted EntityId falls back to AggregateId; supplied
 EntityId must match before any read. String IDs retain existing Parties syntax;
 McpCli still refuses legacy braced, parenthesized and X-format GUID IDs.
 

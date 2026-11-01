@@ -448,6 +448,18 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         }
     }
 
+    /// <summary>Reads the invocation cap applied to this fixture's actual modeled private gateway.</summary>
+    internal async Task<int> GatewayInvocationTimeoutSecondsAsync(CancellationToken cancellationToken)
+    {
+        ProjectResource gateway = App.Services.GetRequiredService<DistributedApplicationModel>().Resources.OfType<ProjectResource>().Single(resource => resource.Name == "eventstore");
+        EnvironmentCallbackContext context = new(_builder!.ExecutionContext, gateway, new Dictionary<string, object>(), cancellationToken);
+        foreach (EnvironmentCallbackAnnotation callback in gateway.Annotations.OfType<EnvironmentCallbackAnnotation>())
+        {
+            await callback.Callback(context).ConfigureAwait(false);
+        }
+        return int.Parse((string)context.EnvironmentVariables["EventStore__DomainServices__InvocationTimeoutSeconds"], System.Globalization.CultureInfo.InvariantCulture);
+    }
+
     /// <summary>Creates an HTTP client for the named project's own Dapr metadata/invocation API.</summary>
     internal HttpClient CreateSidecarClient(string appId)
     {

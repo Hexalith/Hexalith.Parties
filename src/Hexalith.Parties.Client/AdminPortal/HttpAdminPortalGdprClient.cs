@@ -59,7 +59,6 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
             partyId,
             queryType: "GetErasureStatus",
             projectionType: PartyProjectionNames.Detail,
-            projectionActorType: "PartyDetailProjectionQueryActor",
             payload: new PartyQueryPayload(partyId),
             cancellationToken);
     }
@@ -71,7 +70,6 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
             partyId,
             queryType: "GetErasureCertificate",
             projectionType: PartyProjectionNames.Detail,
-            projectionActorType: "PartyDetailProjectionQueryActor",
             payload: new PartyQueryPayload(partyId),
             cancellationToken);
     }
@@ -145,7 +143,6 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
             partyId,
             queryType: "ExportPartyData",
             projectionType: PartyProjectionNames.Detail,
-            projectionActorType: "PartyDetailProjectionQueryActor",
             payload: new PartyQueryPayload(partyId),
             cancellationToken).ConfigureAwait(false);
 
@@ -186,7 +183,6 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
             partyId,
             queryType: "GetProcessingRecords",
             projectionType: PartyProjectionNames.Detail,
-            projectionActorType: "PartyDetailProjectionQueryActor",
             payload: new PartyQueryPayload(partyId),
             cancellationToken).ConfigureAwait(false);
 
@@ -202,7 +198,7 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         var request = new SubmitQueryRequest(Tenant: _options.Tenant, Domain: PartyDomain, AggregateId: partyId,
             QueryType: "GetProcessingRecords", ProjectionType: PartyProjectionNames.Detail,
             Payload: JsonSerializer.SerializeToElement(new PartyQueryPayload(partyId), HttpPartiesCommandClient.JsonOptions),
-            EntityId: partyId, ProjectionActorType: "PartyDetailProjectionQueryActor") { Paging = new QueryPagingOptions(PageSize: pageSize, Cursor: cursor) };
+            EntityId: partyId) { Paging = new QueryPagingOptions(PageSize: pageSize, Cursor: cursor) };
         using HttpResponseMessage response = await _httpClient.PostAsJsonAsync(QueryGatewayPath, request, HttpPartiesCommandClient.JsonOptions, cancellationToken).ConfigureAwait(false);
         if (!response.IsSuccessStatusCode) await ThrowQueryErrorAsync(response, cancellationToken).ConfigureAwait(false);
         using JsonDocument document = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false), cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -264,7 +260,6 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         string aggregateId,
         string queryType,
         string projectionType,
-        string? projectionActorType,
         object? payload,
         CancellationToken cancellationToken)
     {
@@ -278,8 +273,7 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
             QueryType: queryType,
             ProjectionType: projectionType,
             Payload: payload is null ? null : JsonSerializer.SerializeToElement(payload, HttpPartiesCommandClient.JsonOptions),
-            EntityId: aggregateId,
-            ProjectionActorType: projectionActorType);
+            EntityId: aggregateId);
 
         using HttpResponseMessage response = await _httpClient
             .PostAsJsonAsync(QueryGatewayPath, request, HttpPartiesCommandClient.JsonOptions, cancellationToken)
@@ -308,7 +302,6 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         string aggregateId,
         string queryType,
         string projectionType,
-        string? projectionActorType,
         object? payload,
         CancellationToken cancellationToken)
     {
@@ -322,8 +315,7 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
             QueryType: queryType,
             ProjectionType: projectionType,
             Payload: payload is null ? null : JsonSerializer.SerializeToElement(payload, HttpPartiesCommandClient.JsonOptions),
-            EntityId: aggregateId,
-            ProjectionActorType: projectionActorType);
+            EntityId: aggregateId);
 
         using HttpResponseMessage response = await _httpClient
             .PostAsJsonAsync(QueryGatewayPath, request, HttpPartiesCommandClient.JsonOptions, cancellationToken)
@@ -353,7 +345,6 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
             partyId,
             queryType: "GetParty",
             projectionType: PartyProjectionNames.Detail,
-            projectionActorType: "PartyDetailProjectionQueryActor",
             payload: null,
             cancellationToken).ConfigureAwait(false);
 

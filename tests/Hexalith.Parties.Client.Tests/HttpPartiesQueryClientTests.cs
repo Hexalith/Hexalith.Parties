@@ -49,7 +49,7 @@ public sealed class HttpPartiesQueryClientTests
         root.GetProperty("entityId").GetString().ShouldBe("p-1");
         root.GetProperty("queryType").GetString().ShouldBe("PartyDetail");
         root.GetProperty("projectionType").GetString().ShouldBe(PartyProjectionNames.Detail);
-        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionQueryActor");
+        root.TryGetProperty("projectionActorType", out _).ShouldBeFalse("Canonical domain-service queries must not select a projection actor.");
     }
 
     [Fact]
@@ -160,7 +160,7 @@ public sealed class HttpPartiesQueryClientTests
         JsonElement root = body.RootElement;
         root.GetProperty("queryType").GetString().ShouldBe("PartyIndex");
         root.GetProperty("projectionType").GetString().ShouldBe(PartyProjectionNames.Index);
-        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyIndexProjectionQueryActor");
+        root.TryGetProperty("projectionActorType", out _).ShouldBeFalse("Canonical domain-service queries must not select a projection actor.");
 
         JsonElement payload = root.GetProperty("payload");
         payload.GetProperty("page").GetInt32().ShouldBe(1);
@@ -337,7 +337,7 @@ public sealed class HttpPartiesQueryClientTests
         JsonElement root = body.RootElement;
         root.GetProperty("queryType").GetString().ShouldBe("PartySearch");
         root.GetProperty("projectionType").GetString().ShouldBe(PartyProjectionNames.Index);
-        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyIndexProjectionQueryActor");
+        root.TryGetProperty("projectionActorType", out _).ShouldBeFalse("Canonical domain-service queries must not select a projection actor.");
         root.GetProperty("entityId").GetString().ShouldBe("parties");
         JsonElement payload = root.GetProperty("payload");
         payload.GetProperty("query").GetString().ShouldBe("acme");

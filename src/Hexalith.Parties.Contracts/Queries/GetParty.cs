@@ -7,7 +7,7 @@ namespace Hexalith.Parties.Contracts.Queries;
 /// <summary>Read an existing party's detail in the envelope tenant. Missing and erased parties return the same safe not-found result; inactive parties remain visible.</summary>
 [HexalithQuery("Read an existing party's detail in the envelope tenant. Missing and erased parties return the same safe not-found result; inactive parties remain visible.",
     Domain = "party", WireType = "PartyDetail", AggregateIdProperty = nameof(PartyId),
-    ProjectionType = "party-detail", ProjectionActorType = "PartyDetailProjectionQueryActor",
+    ProjectionType = "party-detail",
     Example = """{"PartyId":"party-49"}""")]
 public sealed record GetParty
 {

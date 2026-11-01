@@ -9,7 +9,7 @@ namespace Hexalith.Parties.Contracts.Queries;
 /// <summary>Search visible display names in the envelope tenant using trimmed, case-insensitive, diacritic-normalized exact, prefix, contains and fuzzy matching. Type and Active apply before paging; totals exclude erased parties. Empty query returns no matches. Date filters and advanced search modes reject. Use envelope paging: default size 20 and offset 0, maximum size 100, page-aligned offsets or a scoped continuation cursor. To continue, supply the returned paging.nextCursor without offset, keeping the same query, filters, envelope tenant, user and page size.</summary>
 [HexalithQuery("Search visible display names in the envelope tenant using trimmed, case-insensitive, diacritic-normalized exact, prefix, contains and fuzzy matching. Type and Active apply before paging; totals exclude erased parties. Empty query returns no matches. Date filters and advanced search modes reject. Use envelope paging: default size 20 and offset 0, maximum size 100, page-aligned offsets or a scoped continuation cursor. To continue, supply the returned paging.nextCursor without offset, keeping the same query, filters, envelope tenant, user and page size.",
     Domain = "party", WireType = "PartySearch", AggregateId = "parties",
-    ProjectionType = "party-index", ProjectionActorType = "PartyIndexProjectionQueryActor",
+    ProjectionType = "party-index",
     Example = """{"Query":"Ada","Type":"Person","Active":true}""")]
 public sealed record SearchParties
 {

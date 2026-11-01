@@ -36,7 +36,7 @@ public sealed class McpCliDecorationTests
             query.Domain.ShouldBe("party");
             query.WireType.ShouldBe(type == typeof(GetParty) ? "PartyDetail" : type == typeof(ListParties) ? "PartyIndex" : "PartySearch");
             query.ProjectionType.ShouldBe(type == typeof(GetParty) ? "party-detail" : "party-index");
-            query.ProjectionActorType.ShouldBe(type == typeof(GetParty) ? "PartyDetailProjectionQueryActor" : "PartyIndexProjectionQueryActor");
+            query.ProjectionActorType.ShouldBeNull("Canonical queries target the declared domain service, not a projection actor.");
             query.AggregateIdProperty.ShouldBe(type == typeof(GetParty) ? "PartyId" : null);
             query.AggregateId.ShouldBe(type == typeof(GetParty) ? null : "parties");
             query.TenantProperty.ShouldBeNull();

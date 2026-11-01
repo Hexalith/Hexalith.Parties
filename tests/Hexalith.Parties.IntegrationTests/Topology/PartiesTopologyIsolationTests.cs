@@ -145,9 +145,11 @@ public sealed class PartiesTopologyIsolationTests
     private static async Task SeedPersistedCounterAsync(PartiesAspireTopologyFixture fixture, int count, CancellationToken cancellationToken)
     {
         using var budget = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        budget.CancelAfter(TimeSpan.FromSeconds(60));
+        int invocationSeconds = await fixture.GatewayInvocationTimeoutSecondsAsync(cancellationToken).ConfigureAwait(false);
+        TimeSpan seedingBudget = TimeSpan.FromSeconds(30 + count * (invocationSeconds + 10));
+        budget.CancelAfter(seedingBudget);
         long seedStarted = Stopwatch.GetTimestamp();
-        Console.WriteLine($"CounterSeed session={fixture.Session.Id} count={count} phase=start budgetSeconds=60");
+        Console.WriteLine($"CounterSeed session={fixture.Session.Id} count={count} phase=start budgetSeconds={seedingBudget.TotalSeconds}");
         var identity = new AggregateIdentity(PartiesTenantBootstrapHost.TenantId, "counter", "counter-1");
         using HttpClient client = CreateSampleGatewayClient(fixture);
         for (int increment = 0; increment < count; increment++)

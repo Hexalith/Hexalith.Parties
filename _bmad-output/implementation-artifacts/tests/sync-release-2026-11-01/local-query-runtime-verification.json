@@ -1,0 +1,30 @@
+{
+  "testedBaseline": "7df367e3916a18732f4c243ed1a6776bcf6e5fb9",
+  "scope": "working tree query compatibility and private runtime setup fixes; hosted exact-source CI follows",
+  "results": [
+    {
+      "command": "dotnet tests/Hexalith.Parties.Client.Tests/bin/Release/net10.0/Hexalith.Parties.Client.Tests.dll",
+      "localLog": "client-tests-query-fix-full.log",
+      "logSha256": "3e55ea91f93c231f0c0414fb53062ae5d855e5cd46b23bcb65824f53cffe797a",
+      "summary": "=== TEST EXECUTION SUMMARY ===\n   Hexalith.Parties.Client.Tests  Total: 345, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 26.179s"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Contracts.Tests/bin/Release/net10.0/Hexalith.Parties.Contracts.Tests.dll",
+      "localLog": "contracts-tests-query-fix-serial.log",
+      "logSha256": "d2045002cb6b8754b302ec685562f3e6327203185afeb9fdc0da7de3ed68aa39",
+      "summary": "=== TEST EXECUTION SUMMARY ===\n   Hexalith.Parties.Contracts.Tests  Total: 230, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 9.700s"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -class \"*PartySdkQueryHandlerTests\"",
+      "localLog": "query-results-review-tests.log",
+      "logSha256": "2867d31ccde2b6caf5ffd6a608464f316cbc9c1d6a41885c43b43c900a29d7b3",
+      "summary": "=== TEST EXECUTION SUMMARY ===\n   Hexalith.Parties.Tests  Total: 875, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.760s"
+    },
+    {
+      "command": "SSL_CERT_DIR=/home/administrator/.aspnet/dev-certs/trust:/usr/lib/ssl/certs PARTIES_MTLS_TOPOLOGY_TESTS=true dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -method \"*EventStoreGatewayE2ETests.AuthenticatedCreate_ProjectsDetailsAndPersistsMatchingEventEnvelopesAsync\" -method \"*PartiesTopologyIsolationTests.ConcurrentSessions_IsolateStreamsRejectCrossCallsAndSurvivePeerDisposalAsync\"",
+      "localLog": "focused-runtime-tests-final.log",
+      "logSha256": "870a33fc6077131d9a3a4d6e4e2000ba1ea6bf81a822cd0484956ae7d01f5aab",
+      "summary": "=== TEST EXECUTION SUMMARY ===\n   Hexalith.Parties.IntegrationTests  Total: 2, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 378.332s"
+    }
+  ]
+}

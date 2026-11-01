@@ -275,6 +275,10 @@ public sealed class PackagedGatewayTopologyTests
         }
         if (resource == "eventstore")
         {
+            const string InvocationBudget = "EventStore__DomainServices__InvocationTimeoutSeconds";
+            privateKeys.Add(InvocationBudget);
+            expected.ShouldNotContainKey(InvocationBudget);
+            actual[InvocationBudget].ShouldBe("30");
             const string Prefix = "EventStore__IdempotencyAdmission__";
             foreach ((string key, string value) in new[]
             {

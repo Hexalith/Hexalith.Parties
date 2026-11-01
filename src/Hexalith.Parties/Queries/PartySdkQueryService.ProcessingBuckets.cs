@@ -50,7 +50,7 @@ public sealed partial class PartySdkQueryService
         bool more = records.Count > size;
         var items = records.Take(size).ToArray();
         string? next = more ? cursorCodec.Encode(query.QueryType, CompactCursorScope(scope), items[^1].SequenceNumber.ToString(CultureInfo.InvariantCulture)) : null;
-        return Success(items, "party-processing-records", model, etag, timeProvider.GetUtcNow(), degraded,
+        return Success(items, PartyDetailQueryTypes.ProjectionType, model, etag, timeProvider.GetUtcNow(), degraded,
             new QueryPagingMetadata(size, NextCursor: next, TotalCount: model.BucketGeneration is null ? model.Records.Count : model.RecordCount, HasMore: more));
     }
 

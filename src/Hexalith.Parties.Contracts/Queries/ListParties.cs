@@ -9,7 +9,7 @@ namespace Hexalith.Parties.Contracts.Queries;
 /// <summary>List visible parties in the envelope tenant, ordered by normalized display name then PartyId. Filters apply before paging and totals exclude erased parties. Use envelope paging: default size 20 and offset 0, maximum size 100, page-aligned offsets or a scoped continuation cursor. To continue, supply the returned paging.nextCursor without offset, keeping the same query, filters, envelope tenant, user and page size.</summary>
 [HexalithQuery("List visible parties in the envelope tenant, ordered by normalized display name then PartyId. Filters apply before paging and totals exclude erased parties. Use envelope paging: default size 20 and offset 0, maximum size 100, page-aligned offsets or a scoped continuation cursor. To continue, supply the returned paging.nextCursor without offset, keeping the same query, filters, envelope tenant, user and page size.",
     Domain = "party", WireType = "PartyIndex", AggregateId = "parties",
-    ProjectionType = "party-index", ProjectionActorType = "PartyIndexProjectionQueryActor",
+    ProjectionType = "party-index",
     Example = """{"Type":"Person","Active":true,"CreatedAfter":"2026-01-01T00:00:00Z"}""")]
 public sealed record ListParties
 {

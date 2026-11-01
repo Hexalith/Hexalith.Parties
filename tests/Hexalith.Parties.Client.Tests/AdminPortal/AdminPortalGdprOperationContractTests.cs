@@ -423,7 +423,7 @@ public sealed class AdminPortalGdprOperationContractTests
         JsonElement root = body.RootElement;
         root.GetProperty("queryType").GetString().ShouldBe("GetParty");
         root.GetProperty("projectionType").GetString().ShouldBe(PartyProjectionNames.Detail);
-        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionQueryActor");
+        root.TryGetProperty("projectionActorType", out _).ShouldBeFalse("Canonical domain-service queries must not select a projection actor.");
     }
 
     [Fact]
@@ -468,7 +468,7 @@ public sealed class AdminPortalGdprOperationContractTests
         JsonElement root = body.RootElement;
         root.GetProperty("queryType").GetString().ShouldBe("ExportPartyData");
         root.GetProperty("projectionType").GetString().ShouldBe(PartyProjectionNames.Detail);
-        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionQueryActor");
+        root.TryGetProperty("projectionActorType", out _).ShouldBeFalse("Canonical domain-service queries must not select a projection actor.");
     }
 
     [Fact]
@@ -489,6 +489,7 @@ public sealed class AdminPortalGdprOperationContractTests
         body.RootElement.GetProperty("paging").GetProperty("pageSize").GetInt32().ShouldBe(17);
         body.RootElement.GetProperty("paging").GetProperty("cursor").GetString().ShouldBe("protected-prior");
         body.RootElement.GetProperty("queryType").GetString().ShouldBe("GetProcessingRecords");
+        body.RootElement.TryGetProperty("projectionActorType", out _).ShouldBeFalse("Canonical processing-history pages must not select a projection actor.");
     }
 
     [Fact]
@@ -564,7 +565,7 @@ public sealed class AdminPortalGdprOperationContractTests
         JsonElement root = body.RootElement;
         root.GetProperty("queryType").GetString().ShouldBe("GetProcessingRecords");
         root.GetProperty("projectionType").GetString().ShouldBe(PartyProjectionNames.Detail);
-        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionQueryActor");
+        root.TryGetProperty("projectionActorType", out _).ShouldBeFalse("Canonical domain-service queries must not select a projection actor.");
     }
 
     [Fact]
@@ -595,7 +596,7 @@ public sealed class AdminPortalGdprOperationContractTests
         JsonElement root = body.RootElement;
         root.GetProperty("queryType").GetString().ShouldBe("GetErasureCertificate");
         root.GetProperty("projectionType").GetString().ShouldBe(PartyProjectionNames.Detail);
-        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionQueryActor");
+        root.TryGetProperty("projectionActorType", out _).ShouldBeFalse("Canonical domain-service queries must not select a projection actor.");
 
         string serialized = JsonSerializer.Serialize(result, s_jsonOptions);
         serialized.ShouldNotContain("Ada", Case.Insensitive);
@@ -698,7 +699,7 @@ public sealed class AdminPortalGdprOperationContractTests
         JsonElement root = body.RootElement;
         root.GetProperty("queryType").GetString().ShouldBe("GetErasureStatus");
         root.GetProperty("projectionType").GetString().ShouldBe(PartyProjectionNames.Detail);
-        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionQueryActor");
+        root.TryGetProperty("projectionActorType", out _).ShouldBeFalse("Canonical domain-service queries must not select a projection actor.");
     }
 
     private static BindingFlags PublicInstance => BindingFlags.Public | BindingFlags.Instance;

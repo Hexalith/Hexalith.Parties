@@ -6,6 +6,7 @@ using Hexalith.EventStore.Client.Registration;
 using Hexalith.EventStore.Contracts.Queries;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Routing;
 using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -154,12 +155,14 @@ public sealed class PartySdkQueryHandlerTests
         if (scenario == "long-user") envelope = envelope with { UserId = new string('u', 8192) };
         QueryResult complete = await service.GetProcessingRecordsAsync(envelope, token);
         complete.Success.ShouldBeTrue();
+        complete.ProjectionType.ShouldBe(PartiesCatalogDeclarations.Queries.Single(route => route.MessageType == "GetProcessingRecords").ProjectionType);
         complete.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!.Length.ShouldBe(80);
         QueryResult exported = await service.ExportPartyDataAsync(envelope with { QueryType = "ExportPartyData" }, token);
         exported.Success.ShouldBeTrue();
         exported.GetPayload().Deserialize<PartyDataPortabilityPackage>(PartiesJsonOptions.Default)!.ProcessingRecords.Count.ShouldBe(80);
         QueryResult first = await service.GetProcessingRecordsAsync(envelope with { Paging = new QueryPagingOptions(PageSize: 17) }, token);
         first.Success.ShouldBeTrue();
+        first.ProjectionType.ShouldBe(PartiesCatalogDeclarations.Queries.Single(route => route.MessageType == "GetProcessingRecords").ProjectionType);
         first.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!.Length.ShouldBe(17);
         string cursor = first.Metadata!.Paging!.NextCursor.ShouldNotBeNull();
         var next = envelope with { Paging = new QueryPagingOptions(PageSize: 17, Cursor: cursor) };
@@ -973,6 +976,18 @@ public sealed class PartySdkQueryHandlerTests
         QueryResult certificateResult = await new GetErasureCertificateQueryHandler(service).ExecuteAsync(
             CreateDetailEnvelope(PartyDetailQueryTypes.GetErasureCertificateQueryType),
             TestContext.Current.CancellationToken);
+
+        foreach ((string queryType, QueryResult result) in new[]
+        {
+            ("ExportPartyData", exportResult), ("GetProcessingRecords", processingResult),
+            ("GetErasureStatus", statusResult), ("GetErasureCertificate", certificateResult),
+        })
+        {
+            result.Success.ShouldBeTrue(queryType);
+            var declaration = PartiesCatalogDeclarations.Queries.Single(route => route.MessageType == queryType);
+            declaration.Execution!.TargetKind.ShouldBe("domain-service");
+            result.ProjectionType.ShouldBe(declaration.ProjectionType, queryType);
+        }
 
         exportResult.GetPayload().Deserialize<PartyDataPortabilityPackage>(PartiesJsonOptions.Default)!
             .ProcessingRecords.ShouldHaveSingleItem().ShouldBe(activity);
