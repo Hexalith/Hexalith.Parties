@@ -48,37 +48,37 @@ retention action, and does not change Story 8.7's `blocked` status: the
 release adds Story 8.6's shared-projection rebuild completion mechanics only,
 not the G5 runtime engine.
 
-### Current source observation — 2026-10-31
+### Current source observation — 2026-11-01
 
-Reconciled against the ten exact pushed owner revisions and staged root
-gitlinks on 2026-10-31. Root adoption and qualification still require their
-own committed evidence. The unchanged exact-selection gate requires committed
-root gitlinks and matching clean checkouts; staged entries or working-tree
-HEADs alone cannot satisfy it.
-EventStore package `3.129.0` and Memories package `3.0.12` are selected;
-Tenants remains explicitly `5.11.2`. These are published package selections.
+Selected from the ten exact pushed owner revisions for release synchronization
+on 2026-11-01. Root adoption and qualification still require their own committed
+evidence. The unchanged exact-selection gate requires committed root gitlinks
+and matching clean checkouts; staged entries or working-tree HEADs alone cannot
+satisfy it.
+EventStore package `3.130.2`, Commons `2.30.8`, FrontComposer `4.7.4`, Memories
+`3.0.13` and Tenants `6.0.0` are selected. These are published package selections.
 Selection does not revalidate historical parity receipts or grant owner approval,
 package publication, deployment, data-custody or rollback qualification.
-The module tool remains the source-root and dependency-mode authority. Fresh
-source mapping with module tool `4.39.0` succeeds after the committed Platform
-selection is synchronized: the tool reads the parent HEAD Platform gitlink,
+The pinned module tool is `4.41.0` and remains the source-root and dependency-mode
+authority. The successful source mapping with module tool `4.39.0` on 2026-10-31
+remains a historical observation: it reads the parent HEAD Platform gitlink,
 then that selected Platform commit's Builds gitlink. The initial `HXW009`
 observation used a stale Platform identity and remains historical evidence.
-Source Contracts and owner host compilation pass separately; package topology
-verification does not qualify the newer native/source catalog or Platform runtime.
+Prior source Contracts and owner host compilation and package topology verification
+do not qualify these newer source selections or the Platform runtime.
 
 | Root dependency | Current source identity | Release use |
 | --- | --- | --- |
 | AI.Tools | `9b78aa008cfc62cd88ad0ea4b39b1f07311956ce` (`9b78aa00`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| Builds | `a22b55f0a4f6d2aaa3a5ccc505896064ac595364` (`v4.39.0-4-ga22b55f0`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| Commons | `0604bcf5304fc09a569f7abbd8e5d1b9049c02b7` (`v2.30.7`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| EventStore | `c02afa0fce310ccdb696232f18829df96cba088e` (`v3.128.4-72-gc02afa0f`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| FrontComposer | `34d0afde14c43b6079208c47f95297d0cf99b51d` (`v4.7.4`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| McpCli | `19de453867b0599c673596870d1b77a4fdcc9047` (`v1.1.0-35-g19de4538`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| Memories | `ceb7a8496079aca9df3e714314bc4c47549525f6` (`v3.0.11-1-gceb7a849`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| Platform | `60761c60b662e592e89fd0b84a3a1280ab2b7db4` (`v1.0.1-165-g60761c60`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| PolymorphicSerializations | `92ede24cc11129379efe52cfe7fd2c820c567f7f` (`v1.19.6-2-g92ede24c`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| Tenants | `3aa86b374ba9004d401978141aa7fff0237485a0` (`v5.11.2-4-g3aa86b37`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| Builds | `df13d9d31f7ee1a1b0fb7eeac7e8b27b9a9f9fb0` (`v4.41.0-16-gdf13d9d3`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| Commons | `bbbce518bcca9ca359762393688f02d142af1c61` (`v2.30.8`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| EventStore | `ba4c5548ad260b049bda5a1c7def2e8af3484733` (`v3.130.2-63-gba4c5548`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| FrontComposer | `c092e8f91ebb670fad4ab959f2d3c8e13d809e0f` (`v4.7.4-15-gc092e8f9`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| McpCli | `17eb4fbbc151ca4b99dfa452e9f65655db2b402f` (`v1.1.0-55-g17eb4fbb`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| Memories | `b93b32cf77f3d76e51d3221550eff99f4d1e93cb` (`v3.0.13-13-gb93b32cf`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| Platform | `03799ed553a16c8a1528068ba4d95bb5509ea75e` (`v1.0.1-187-g03799ed5`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| PolymorphicSerializations | `821b784bb51483acefa9725acc6792d111304a4e` (`v1.19.7-1-g821b784b`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| Tenants | `2d3fa6da2312c1b5cf7f5c9461cc2d0ffc995b43` (`v6.0.0-17-g2d3fa6da`) | Pushed owner revision; root adoption and qualification require their own proof. |
 
 ### Historical source observation — 2026-10-30
 

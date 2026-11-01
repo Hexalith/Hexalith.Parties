@@ -1,0 +1,502 @@
+{
+  "observedAtUtc": "2026-11-01T10:22:22.290811+00:00",
+  "kind": "initial direct dependency registry audit",
+  "packages": [
+    {
+      "id": "Aspire.Hosting",
+      "current": "13.6.4",
+      "latest_stable": "13.6.4",
+      "latest": "13.6.4",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/aspire.hosting/index.json"
+    },
+    {
+      "id": "Aspire.Hosting.Azure.AppContainers",
+      "current": "13.6.4",
+      "latest_stable": "13.6.4",
+      "latest": "13.6.4",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/aspire.hosting.azure.appcontainers/index.json"
+    },
+    {
+      "id": "Aspire.Hosting.Docker",
+      "current": "13.6.4",
+      "latest_stable": "13.6.4",
+      "latest": "13.6.4",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/aspire.hosting.docker/index.json"
+    },
+    {
+      "id": "Aspire.Hosting.Keycloak",
+      "current": "13.6.4-preview.1.26523.11",
+      "latest_stable": "13.6.4-preview.1.26523.11",
+      "latest": "13.6.4-preview.1.26523.11",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/aspire.hosting.keycloak/index.json"
+    },
+    {
+      "id": "Aspire.Hosting.Kubernetes",
+      "current": "13.6.4-preview.1.26523.11",
+      "latest_stable": "13.6.4-preview.1.26523.11",
+      "latest": "13.6.4-preview.1.26523.11",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/aspire.hosting.kubernetes/index.json"
+    },
+    {
+      "id": "Aspire.Hosting.Redis",
+      "current": "13.6.4",
+      "latest_stable": "13.6.4",
+      "latest": "13.6.4",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/aspire.hosting.redis/index.json"
+    },
+    {
+      "id": "Aspire.Hosting.Testing",
+      "current": "13.6.4",
+      "latest_stable": "13.6.4",
+      "latest": "13.6.4",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/aspire.hosting.testing/index.json"
+    },
+    {
+      "id": "CommunityToolkit.Aspire.Hosting.Dapr",
+      "current": "13.6.2-beta.959",
+      "latest_stable": "13.0.0",
+      "latest": "13.6.2-beta.959",
+      "outdated": true,
+      "url": "https://api.nuget.org/v3-flatcontainer/communitytoolkit.aspire.hosting.dapr/index.json"
+    },
+    {
+      "id": "Dapr.Actors",
+      "current": "1.19.0",
+      "latest_stable": "1.19.0",
+      "latest": "1.19.0",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/dapr.actors/index.json"
+    },
+    {
+      "id": "Dapr.Actors.AspNetCore",
+      "current": "1.19.0",
+      "latest_stable": "1.19.0",
+      "latest": "1.19.0",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/dapr.actors.aspnetcore/index.json"
+    },
+    {
+      "id": "Dapr.AspNetCore",
+      "current": "1.19.0",
+      "latest_stable": "1.19.0",
+      "latest": "1.19.0",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/dapr.aspnetcore/index.json"
+    },
+    {
+      "id": "Dapr.Client",
+      "current": "1.19.0",
+      "latest_stable": "1.19.0",
+      "latest": "1.19.0",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/dapr.client/index.json"
+    },
+    {
+      "id": "FluentValidation",
+      "current": "12.2.0",
+      "latest_stable": "12.2.0",
+      "latest": "12.2.0",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/fluentvalidation/index.json"
+    },
+    {
+      "id": "FluentValidation.DependencyInjectionExtensions",
+      "current": "12.2.0",
+      "latest_stable": "12.2.0",
+      "latest": "12.2.0",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/fluentvalidation.dependencyinjectionextensions/index.json"
+    },
+    {
+      "id": "Fluxor",
+      "current": "6.11.0",
+      "latest_stable": "6.11.0",
+      "latest": "6.11.0",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/fluxor/index.json"
+    },
+    {
+      "id": "Hexalith.Commons",
+      "current": "2.30.7",
+      "latest_stable": "2.30.8",
+      "latest": "2.30.8",
+      "outdated": true,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.commons/index.json"
+    },
+    {
+      "id": "Hexalith.Commons.Http",
+      "current": "2.30.7",
+      "latest_stable": "2.30.8",
+      "latest": "2.30.8",
+      "outdated": true,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.commons.http/index.json"
+    },
+    {
+      "id": "Hexalith.Commons.ServiceDefaults",
+      "current": "2.30.7",
+      "latest_stable": "2.30.8",
+      "latest": "2.30.8",
+      "outdated": true,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.commons.servicedefaults/index.json"
+    },
+    {
+      "id": "Hexalith.Commons.UniqueIds",
+      "current": "2.30.7",
+      "latest_stable": "2.30.8",
+      "latest": "2.30.8",
+      "outdated": true,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.commons.uniqueids/index.json"
+    },
+    {
+      "id": "Hexalith.EventStore.Admin.Abstractions",
+      "current": "3.130.2",
+      "latest_stable": "3.130.2",
+      "latest": "3.130.2",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.admin.abstractions/index.json"
+    },
+    {
+      "id": "Hexalith.EventStore.Aspire",
+      "current": "3.130.2",
+      "latest_stable": "3.130.2",
+      "latest": "3.130.2",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.aspire/index.json"
+    },
+    {
+      "id": "Hexalith.EventStore.Client",
+      "current": "3.130.2",
+      "latest_stable": "3.130.2",
+      "latest": "3.130.2",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.client/index.json"
+    },
+    {
+      "id": "Hexalith.EventStore.Contracts",
+      "current": "3.130.2",
+      "latest_stable": "3.130.2",
+      "latest": "3.130.2",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.contracts/index.json"
+    },
+    {
+      "id": "Hexalith.EventStore.DomainService",
+      "current": "3.130.2",
+      "latest_stable": "3.130.2",
+      "latest": "3.130.2",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.domainservice/index.json"
+    },
+    {
+      "id": "Hexalith.EventStore.Gateway",
+      "current": "3.130.2",
+      "latest_stable": "3.130.2",
+      "latest": "3.130.2",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.gateway/index.json"
+    },
+    {
+      "id": "Hexalith.EventStore.Server",
+      "current": "3.130.2",
+      "latest_stable": "3.130.2",
+      "latest": "3.130.2",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.server/index.json"
+    },
+    {
+      "id": "Hexalith.EventStore.ServiceDefaults",
+      "current": "3.130.2",
+      "latest_stable": "3.130.2",
+      "latest": "3.130.2",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.servicedefaults/index.json"
+    },
+    {
+      "id": "Hexalith.EventStore.SignalR",
+      "current": "3.130.2",
+      "latest_stable": "3.130.2",
+      "latest": "3.130.2",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.signalr/index.json"
+    },
+    {
+      "id": "Hexalith.EventStore.Testing",
+      "current": "3.130.2",
+      "latest_stable": "3.130.2",
+      "latest": "3.130.2",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.testing/index.json"
+    },
+    {
+      "id": "Hexalith.EventStore.Testing.Integration",
+      "current": "3.130.2",
+      "latest_stable": "3.130.2",
+      "latest": "3.130.2",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.testing.integration/index.json"
+    },
+    {
+      "id": "Hexalith.FrontComposer.Contracts",
+      "current": "4.7.4",
+      "latest_stable": "4.7.4",
+      "latest": "4.7.4",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.frontcomposer.contracts/index.json"
+    },
+    {
+      "id": "Hexalith.FrontComposer.Contracts.UI",
+      "current": "4.7.4",
+      "latest_stable": "4.7.4",
+      "latest": "4.7.4",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.frontcomposer.contracts.ui/index.json"
+    },
+    {
+      "id": "Hexalith.FrontComposer.Mcp",
+      "current": "4.7.4",
+      "latest_stable": "4.7.4",
+      "latest": "4.7.4",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.frontcomposer.mcp/index.json"
+    },
+    {
+      "id": "Hexalith.FrontComposer.Shell",
+      "current": "4.7.4",
+      "latest_stable": "4.7.4",
+      "latest": "4.7.4",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.frontcomposer.shell/index.json"
+    },
+    {
+      "id": "Hexalith.FrontComposer.SourceTools",
+      "current": "4.7.4",
+      "latest_stable": "4.7.4",
+      "latest": "4.7.4",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.frontcomposer.sourcetools/index.json"
+    },
+    {
+      "id": "Hexalith.McpCli.Abstractions",
+      "current": "1.1.0",
+      "latest_stable": "1.1.0",
+      "latest": "1.1.0",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.mcpcli.abstractions/index.json"
+    },
+    {
+      "id": "Hexalith.Memories.Client.Rest",
+      "current": "3.0.13",
+      "latest_stable": "3.0.13",
+      "latest": "3.0.13",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.memories.client.rest/index.json"
+    },
+    {
+      "id": "Hexalith.Parties.Contracts",
+      "current": "2.0.0",
+      "latest_stable": "2.0.0",
+      "latest": "2.0.0",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.contracts/index.json"
+    },
+    {
+      "id": "Hexalith.Tenants.Client",
+      "current": "6.0.0",
+      "latest_stable": "6.0.0",
+      "latest": "6.0.0",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.tenants.client/index.json"
+    },
+    {
+      "id": "Hexalith.Tenants.Contracts",
+      "current": "6.0.0",
+      "latest_stable": "6.0.0",
+      "latest": "6.0.0",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.tenants.contracts/index.json"
+    },
+    {
+      "id": "Hexalith.Tenants.Testing",
+      "current": "6.0.0",
+      "latest_stable": "6.0.0",
+      "latest": "6.0.0",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.tenants.testing/index.json"
+    },
+    {
+      "id": "MediatR",
+      "current": "14.2.0",
+      "latest_stable": "14.2.0",
+      "latest": "14.2.0",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/mediatr/index.json"
+    },
+    {
+      "id": "Microsoft.AspNetCore.Authentication.JwtBearer",
+      "current": "10.0.14",
+      "latest_stable": "10.0.14",
+      "latest": "11.0.0-rc.3.26522.148",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.authentication.jwtbearer/index.json"
+    },
+    {
+      "id": "Microsoft.AspNetCore.Components.CustomElements",
+      "current": "10.0.14",
+      "latest_stable": "10.0.14",
+      "latest": "11.0.0-rc.3.26522.148",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.components.customelements/index.json"
+    },
+    {
+      "id": "Microsoft.AspNetCore.Mvc.Testing",
+      "current": "10.0.14",
+      "latest_stable": "10.0.14",
+      "latest": "11.0.0-rc.3.26522.148",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.mvc.testing/index.json"
+    },
+    {
+      "id": "Microsoft.AspNetCore.SignalR.Client",
+      "current": "10.0.14",
+      "latest_stable": "10.0.14",
+      "latest": "11.0.0-rc.3.26522.148",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.signalr.client/index.json"
+    },
+    {
+      "id": "Microsoft.Extensions.Configuration.Binder",
+      "current": "10.0.14",
+      "latest_stable": "10.0.14",
+      "latest": "11.0.0-rc.3.26522.148",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.configuration.binder/index.json"
+    },
+    {
+      "id": "Microsoft.Extensions.Hosting.Abstractions",
+      "current": "10.0.14",
+      "latest_stable": "10.0.14",
+      "latest": "11.0.0-rc.3.26522.148",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.hosting.abstractions/index.json"
+    },
+    {
+      "id": "Microsoft.Extensions.Http",
+      "current": "10.0.14",
+      "latest_stable": "10.0.14",
+      "latest": "11.0.0-rc.3.26522.148",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.http/index.json"
+    },
+    {
+      "id": "Microsoft.Extensions.Logging.Abstractions",
+      "current": "10.0.14",
+      "latest_stable": "10.0.14",
+      "latest": "11.0.0-rc.3.26522.148",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.logging.abstractions/index.json"
+    },
+    {
+      "id": "Microsoft.Extensions.Options",
+      "current": "10.0.14",
+      "latest_stable": "10.0.14",
+      "latest": "11.0.0-rc.3.26522.148",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.options/index.json"
+    },
+    {
+      "id": "Microsoft.FluentUI.AspNetCore.Components",
+      "current": "5.0.1",
+      "latest_stable": "5.0.1",
+      "latest": "5.0.1",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.fluentui.aspnetcore.components/index.json"
+    },
+    {
+      "id": "Microsoft.FluentUI.AspNetCore.Components.Icons",
+      "current": "5.0.1",
+      "latest_stable": "5.0.1",
+      "latest": "5.0.1",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.fluentui.aspnetcore.components.icons/index.json"
+    },
+    {
+      "id": "Microsoft.NET.Test.Sdk",
+      "current": "18.11.0",
+      "latest_stable": "18.11.0",
+      "latest": "18.11.0",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.net.test.sdk/index.json"
+    },
+    {
+      "id": "ModelContextProtocol.AspNetCore",
+      "current": "2.3.0",
+      "latest_stable": "2.3.0",
+      "latest": "2.3.0",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/modelcontextprotocol.aspnetcore/index.json"
+    },
+    {
+      "id": "NSubstitute",
+      "current": "6.2.0",
+      "latest_stable": "6.2.0",
+      "latest": "6.2.0",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/nsubstitute/index.json"
+    },
+    {
+      "id": "Shouldly",
+      "current": "4.3.0",
+      "latest_stable": "4.3.0",
+      "latest": "5.0.0-preview.2",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/shouldly/index.json"
+    },
+    {
+      "id": "StackExchange.Redis",
+      "current": "3.4.29",
+      "latest_stable": "3.4.29",
+      "latest": "4.0.155-alpha",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/stackexchange.redis/index.json"
+    },
+    {
+      "id": "bunit",
+      "current": "2.13.3",
+      "latest_stable": "2.13.3",
+      "latest": "2.13.3",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/bunit/index.json"
+    },
+    {
+      "id": "coverlet.collector",
+      "current": "10.1.0",
+      "latest_stable": "10.1.0",
+      "latest": "10.1.0",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/coverlet.collector/index.json"
+    },
+    {
+      "id": "xunit.runner.visualstudio",
+      "current": "4.0.1",
+      "latest_stable": "4.0.1",
+      "latest": "4.0.1",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/xunit.runner.visualstudio/index.json"
+    },
+    {
+      "id": "xunit.v3",
+      "current": "4.0.2",
+      "latest_stable": "4.0.2",
+      "latest": "4.0.2",
+      "outdated": false,
+      "url": "https://api.nuget.org/v3-flatcontainer/xunit.v3/index.json"
+    }
+  ]
+}

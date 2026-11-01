@@ -7,7 +7,7 @@ namespace Hexalith.Parties.Ci.Tests;
 public sealed class PartiesContainerPublishWorkflowTests
 {
     private const int ExpectedPackageCount = 11;
-    private const string BuildsCiSha = "1745ea0f09df9e518aeea3eeb1a7df836f67e09d";
+    private const string BuildsCiSha = "df13d9d31f7ee1a1b0fb7eeac7e8b27b9a9f9fb0";
     private const string BuildsValidationSha = "332b2c144defba546fe0a09626a4a72f2340e22f";
     private const string BuildsExecutionSha = "11a3a79cfac4bba9548c6364a17a01ee9b561370";
     private static readonly TimeSpan WorkflowReadTimeout = TimeSpan.FromSeconds(10);
@@ -236,6 +236,7 @@ public sealed class PartiesContainerPublishWorkflowTests
             "Validate changed root gitlinks before publication",
             "Set up arm64 emulation",
             "Prepare release container publisher",
+            "Authenticate release container registry",
             "NuGet trusted publishing login",
             "Semantic Release",
         })
@@ -276,6 +277,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         gate.ShouldContain("\n        run: bash scripts/gitlink-rc-gate.sh --diff \"$RELEASE_FLOOR_TAG\"\n");
         int gatePosition = release.IndexOf("name: Validate changed root gitlinks before publication", StringComparison.Ordinal);
         gatePosition.ShouldBeGreaterThan(release.IndexOf("id: prepare", StringComparison.Ordinal));
+        gatePosition.ShouldBeLessThan(release.IndexOf("name: Authenticate release container registry", StringComparison.Ordinal));
         gatePosition.ShouldBeLessThan(release.IndexOf("id: nuget-login", StringComparison.Ordinal));
         gatePosition.ShouldBeLessThan(release.IndexOf("name: Semantic Release", StringComparison.Ordinal));
     }
@@ -325,8 +327,8 @@ public sealed class PartiesContainerPublishWorkflowTests
             "GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}",
             "HEXALITH_CONTAINER_PROJECTS: |",
             "HEXALITH_ZOT_REGISTRY: ${{ vars.HEXALITH_ZOT_REGISTRY || 'registry.hexalith.com' }}",
-            "HEXALITH_ZOT_USERNAME: ${{ secrets.HEXALITH_ZOT_USERNAME }}",
-            "HEXALITH_ZOT_API_KEY: ${{ secrets.HEXALITH_ZOT_API_KEY }}",
+            "HEXALITH_ZOT_USERNAME: ${{ secrets.HEXALITH_ZOT_USERNAME != '' && secrets.HEXALITH_ZOT_API_KEY != '' && secrets.HEXALITH_ZOT_USERNAME || secrets.ZOT_REGISTRY_USERNAME }}",
+            "HEXALITH_ZOT_API_KEY: ${{ secrets.HEXALITH_ZOT_USERNAME != '' && secrets.HEXALITH_ZOT_API_KEY != '' && secrets.HEXALITH_ZOT_API_KEY || secrets.ZOT_REGISTRY_API_KEY }}",
             $"HEXALITH_BUILDS_EXECUTION_SHA: {BuildsExecutionSha}",
             "HEXALITH_RELEASE_ENVIRONMENT: production",
             "HEXALITH_RELEASE_SOURCE_BRANCH: main",
@@ -343,6 +345,46 @@ public sealed class PartiesContainerPublishWorkflowTests
         }
 
         publication.ShouldContain("run: npm exec --no -- semantic-release\n");
+    }
+
+    /// <summary>Authentication, publishing and verification select the same complete Zot credential pair.</summary>
+    /// <param name="job">The production job containing the credential boundary.</param>
+    /// <param name="step">The step that authenticates to Zot.</param>
+    [Theory]
+    [InlineData("release", "Authenticate release container registry")]
+    [InlineData("release", "Semantic Release")]
+    [InlineData("verify-publication", "Verify every declared registry artifact")]
+    public void PublicationBoundariesPreservePreferredZotSecretsAndConfiguredFallback(string job, string step)
+    {
+        string workflow = CiTestPaths.ReadRepoFile(".github/workflows/release.yml").Replace("\r\n", "\n");
+        string boundary = ReadReleaseStep(step, ReadWorkflowJob(workflow, job));
+        const string completePreferredPair = "secrets.HEXALITH_ZOT_USERNAME != '' && secrets.HEXALITH_ZOT_API_KEY != ''";
+        foreach ((string name, string fallback) in new[]
+        {
+            ("HEXALITH_ZOT_USERNAME", "ZOT_REGISTRY_USERNAME"),
+            ("HEXALITH_ZOT_API_KEY", "ZOT_REGISTRY_API_KEY"),
+        })
+        {
+            boundary.Split('\n').Single(line => line.StartsWith($"          {name}:", StringComparison.Ordinal))
+                .ShouldBe($"          {name}: ${{{{ {completePreferredPair} && secrets.{name} || secrets.{fallback} }}}}");
+        }
+    }
+
+    /// <summary>Registry authentication fails before acquiring a NuGet credential or publishing packages.</summary>
+    [Fact]
+    public void ReleaseWorkflowAuthenticatesRegistryBeforeNuGetLoginAndPublication()
+    {
+        string release = ReadReleaseJob();
+        string authentication = ReadReleaseStep("Authenticate release container registry");
+        authentication.ShouldContain("shell: bash\n");
+        authentication.ShouldContain("set -euo pipefail\n");
+        authentication.ShouldContain(": \"${HEXALITH_ZOT_USERNAME:?A complete Zot credential pair is required.}\"\n");
+        authentication.ShouldContain(": \"${HEXALITH_ZOT_API_KEY:?A complete Zot credential pair is required.}\"\n");
+        authentication.ShouldContain("printf '%s' \"$HEXALITH_ZOT_API_KEY\" | docker login \"$HEXALITH_ZOT_REGISTRY\" --username \"$HEXALITH_ZOT_USERNAME\" --password-stdin\n");
+        int authenticationPosition = release.IndexOf("name: Authenticate release container registry", StringComparison.Ordinal);
+        authenticationPosition.ShouldBeGreaterThan(release.IndexOf("name: Prepare release container publisher", StringComparison.Ordinal));
+        authenticationPosition.ShouldBeLessThan(release.IndexOf("id: nuget-login", StringComparison.Ordinal));
+        authenticationPosition.ShouldBeLessThan(release.IndexOf("name: Semantic Release", StringComparison.Ordinal));
     }
 
     [Fact]

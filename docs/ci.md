@@ -4,7 +4,7 @@ Hexalith.Parties uses GitHub Actions with shared Hexalith.Builds workflows and a
 
 ## Workflows
 
-- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@1745ea0f09df9e518aeea3eeb1a7df836f67e09d`.
+- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@df13d9d31f7ee1a1b0fb7eeac7e8b27b9a9f9fb0`.
 - `.github/workflows/release.yml` is a manual `workflow_dispatch` workflow with a protected, caller-owned release job. It uses `Hexalith/Hexalith.Builds/Github/prepare-domain-release@11a3a79cfac4bba9548c6364a17a01ee9b561370` and takes the nested publisher from that same immutable Builds checkout.
 - `.github/workflows/commitlint.yml` delegates Conventional Commit validation to the retained immutable Builds revision `332b2c144defba546fe0a09626a4a72f2340e22f`, for pull requests and main pushes.
 - `.github/workflows/dependency-review.yml` delegates dependency review for pull requests.
@@ -110,7 +110,7 @@ Both `release` and `verify-publication` independently declare the `production` e
 - permits publication only when `HEXALITH_RELEASE_PUBLISH_ENABLED` is exactly lowercase `true`;
 - requires the explicit NuGet creator account in repository variable `NUGET_USER` and revalidates the exact dispatched `main` SHA against successful push proof from `ci.yml`.
 
-The enabled job then prepares arm64 emulation and the shared container publisher, authenticates through SHA-pinned `NuGet/login@8d196754b4036150537f80ac539e15c2f1028841`, and runs semantic-release. Login and publication are skipped when preparation reports a frozen release. Semantic-release:
+The enabled job then prepares arm64 emulation and the shared container publisher, authenticates to Zot with `docker login --password-stdin` before acquiring a NuGet credential, authenticates through SHA-pinned `NuGet/login@8d196754b4036150537f80ac539e15c2f1028841`, and runs semantic-release. Login and publication are skipped when preparation reports a frozen release. Semantic-release:
 
 - packs and validates Parties NuGet packages through `scripts/pack-release-packages.py`, `scripts/validate-nuget-packages.py`, and `scripts/validate-consumer-package-references.py`;
 - publishes NuGet packages with the short-lived `NUGET_API_KEY` supplied exclusively by the login output;
@@ -347,7 +347,7 @@ The [earlier 2026-10-08 observation](../_bmad-output/implementation-artifacts/te
 
 ## Secrets
 
-Required release variables, NuGet policy configuration, and Zot secrets are listed in [ci-secrets-checklist.md](ci-secrets-checklist.md). Zot automation uses `HEXALITH_ZOT_USERNAME` and `HEXALITH_ZOT_API_KEY`; the API key is generated after Zot Keycloak/OIDC login and replaces the password for Docker-compatible clients.
+Required release variables, NuGet policy configuration, and Zot secrets are listed in [ci-secrets-checklist.md](ci-secrets-checklist.md). Zot authentication, publication and verification select `HEXALITH_ZOT_USERNAME` and `HEXALITH_ZOT_API_KEY` only when both preferred secrets are nonempty; otherwise they select both `ZOT_REGISTRY_USERNAME` and `ZOT_REGISTRY_API_KEY`. Partial preferred credentials are never mixed with fallback credentials. Registry authentication must succeed before NuGet login and package publication; the API key is generated after Zot Keycloak/OIDC login and replaces the password for Docker-compatible clients.
 
 ## Pact Readiness
 
@@ -376,7 +376,7 @@ change also requires an approved parser-invariant and test update. Edit
 `TEMPLATE` for non-ACL changes, then regenerate. Missing, duplicate, unsafe or
 stale input fails without rewriting in `--check` mode.
 
-The local module tool is pinned to 4.39.0 with Aspire CLI 13.6.4 alongside
+The local module tool is pinned to 4.41.0 with Aspire CLI 13.6.4 alongside
 aspirate; package CI continues to restore packages and build Release. Source mode is selected only
 by the tool's persisted mapping, with no file-existence fallback. Legacy hosting
 projects and package publication gates remain in their existing scope.

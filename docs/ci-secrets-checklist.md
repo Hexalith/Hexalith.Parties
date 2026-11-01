@@ -13,8 +13,12 @@ Configure these before running `.github/workflows/release.yml`:
 - Repository variable `NUGET_USER=jpiquot`: the individual NuGet account that created the trusted publishing policy. Do not substitute the package owner `Hexalith` or derive this account from the GitHub actor.
 - An active NuGet trusted publishing policy for package owner `Hexalith`, GitHub repository `Hexalith/Hexalith.Parties`, workflow filename `release.yml`, and environment `production`. The local policy JSON records the user-reported registration; it does not configure NuGet.
 - Repository variable `HEXALITH_RELEASE_PUBLISH_ENABLED`: set exactly lowercase `true` to allow publication. Set an explicit repository value to avoid unintentionally inheriting an organization value; other values keep login and publication frozen.
-- `HEXALITH_ZOT_USERNAME`: Zot username / mapped Keycloak identity used by GitHub Actions. This is the username passed to `docker login registry.hexalith.com`.
-- `HEXALITH_ZOT_API_KEY`: Zot API key generated after Keycloak/OIDC login for that identity. The Zot API key replaces the password in Docker/.NET container publish authentication.
+- Preferred Zot pair: `HEXALITH_ZOT_USERNAME` and `HEXALITH_ZOT_API_KEY`.
+- Configured fallback pair: `ZOT_REGISTRY_USERNAME` and `ZOT_REGISTRY_API_KEY`.
+
+Each pair contains a Zot username / mapped Keycloak identity and a Zot API key generated after Keycloak/OIDC login for that identity. The username is passed to `docker login registry.hexalith.com`; the API key replaces its password.
+
+Registry authentication, publication and verification use the preferred pair only when both preferred secrets are nonempty; otherwise all three use both fallback secrets. An incomplete preferred pair never contributes either credential. The enabled release job requires a complete selected pair and successful `docker login --password-stdin` before NuGet trusted login or package publication.
 
 The protected Parties job requests `id-token: write` and uses SHA-pinned official `NuGet/login` after successful shared preparation. Semantic-release receives `NUGET_API_KEY` only from that login's masked, short-lived output, with no fallback to `secrets.NUGET_API_KEY`. A stored long-lived NuGet key is not required, and this change does not delete existing secrets.
 

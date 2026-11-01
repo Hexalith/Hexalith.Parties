@@ -351,6 +351,18 @@ jobs:
             src/Hexalith.Parties/Hexalith.Parties.csproj|parties
             src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj|parties-mcp
             src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj|parties-ui
+      - name: Authenticate release container registry
+        if: ${{ steps.prepare.outputs.publish-enabled == 'true' }}
+        shell: bash
+        env:
+          HEXALITH_ZOT_REGISTRY: ${{ vars.HEXALITH_ZOT_REGISTRY || 'registry.hexalith.com' }}
+          HEXALITH_ZOT_USERNAME: ${{ secrets.HEXALITH_ZOT_USERNAME != '' && secrets.HEXALITH_ZOT_API_KEY != '' && secrets.HEXALITH_ZOT_USERNAME || secrets.ZOT_REGISTRY_USERNAME }}
+          HEXALITH_ZOT_API_KEY: ${{ secrets.HEXALITH_ZOT_USERNAME != '' && secrets.HEXALITH_ZOT_API_KEY != '' && secrets.HEXALITH_ZOT_API_KEY || secrets.ZOT_REGISTRY_API_KEY }}
+        run: |
+          set -euo pipefail
+          : "${HEXALITH_ZOT_USERNAME:?A complete Zot credential pair is required.}"
+          : "${HEXALITH_ZOT_API_KEY:?A complete Zot credential pair is required.}"
+          printf '%s' "$HEXALITH_ZOT_API_KEY" | docker login "$HEXALITH_ZOT_REGISTRY" --username "$HEXALITH_ZOT_USERNAME" --password-stdin
       - name: NuGet trusted publishing login
         id: nuget-login
         if: ${{ steps.prepare.outputs.publish-enabled == 'true' }}
@@ -367,8 +379,8 @@ jobs:
             src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj|parties-mcp
             src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj|parties-ui
           HEXALITH_ZOT_REGISTRY: ${{ vars.HEXALITH_ZOT_REGISTRY || 'registry.hexalith.com' }}
-          HEXALITH_ZOT_USERNAME: ${{ secrets.HEXALITH_ZOT_USERNAME }}
-          HEXALITH_ZOT_API_KEY: ${{ secrets.HEXALITH_ZOT_API_KEY }}
+          HEXALITH_ZOT_USERNAME: ${{ secrets.HEXALITH_ZOT_USERNAME != '' && secrets.HEXALITH_ZOT_API_KEY != '' && secrets.HEXALITH_ZOT_USERNAME || secrets.ZOT_REGISTRY_USERNAME }}
+          HEXALITH_ZOT_API_KEY: ${{ secrets.HEXALITH_ZOT_USERNAME != '' && secrets.HEXALITH_ZOT_API_KEY != '' && secrets.HEXALITH_ZOT_API_KEY || secrets.ZOT_REGISTRY_API_KEY }}
           HEXALITH_BUILDS_EXECUTION_SHA: 11a3a79cfac4bba9548c6364a17a01ee9b561370
           HEXALITH_RELEASE_ENVIRONMENT: production
           HEXALITH_RELEASE_SOURCE_BRANCH: main
@@ -559,8 +571,8 @@ jobs:
           RELEASE_TAG: ${{ steps.published.outputs.matching-tag }}
           DISPATCH_SHA: ${{ github.sha }}
           HEXALITH_ZOT_REGISTRY: ${{ vars.HEXALITH_ZOT_REGISTRY || 'registry.hexalith.com' }}
-          HEXALITH_ZOT_USERNAME: ${{ secrets.HEXALITH_ZOT_USERNAME }}
-          HEXALITH_ZOT_API_KEY: ${{ secrets.HEXALITH_ZOT_API_KEY }}
+          HEXALITH_ZOT_USERNAME: ${{ secrets.HEXALITH_ZOT_USERNAME != '' && secrets.HEXALITH_ZOT_API_KEY != '' && secrets.HEXALITH_ZOT_USERNAME || secrets.ZOT_REGISTRY_USERNAME }}
+          HEXALITH_ZOT_API_KEY: ${{ secrets.HEXALITH_ZOT_USERNAME != '' && secrets.HEXALITH_ZOT_API_KEY != '' && secrets.HEXALITH_ZOT_API_KEY || secrets.ZOT_REGISTRY_API_KEY }}
         run: |
           set -euo pipefail
           python3 scripts/verify-release-publication.py \
