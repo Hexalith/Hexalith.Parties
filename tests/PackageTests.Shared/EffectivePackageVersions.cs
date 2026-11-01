@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -24,9 +25,9 @@ internal static class EffectivePackageVersions
     }
 
     /// <summary>Evaluates central package items after all applicable root pins, imports, and assignments.</summary>
-    internal static IReadOnlyDictionary<string, string> ReadPackages(string repositoryRoot, string projectRelativePath = DefaultProject, string configuration = "Release")
+    internal static IReadOnlyDictionary<string, string> ReadPackages(string repositoryRoot, string projectRelativePath = DefaultProject, string configuration = "Release", bool isolateEnvironment = false)
     {
-        string output = Query(repositoryRoot, projectRelativePath, "-getItem:PackageVersion", configuration);
+        string output = Query(repositoryRoot, projectRelativePath, "-getItem:PackageVersion", configuration, isolateEnvironment);
         using JsonDocument document = JsonDocument.Parse(output);
         return document.RootElement.GetProperty("Items").GetProperty("PackageVersion").EnumerateArray()
             .ToDictionary(
@@ -35,7 +36,7 @@ internal static class EffectivePackageVersions
                 StringComparer.Ordinal);
     }
 
-    private static string Query(string repositoryRoot, string projectRelativePath, string query, string configuration)
+    private static string Query(string repositoryRoot, string projectRelativePath, string query, string configuration, bool isolateEnvironment = false)
     {
         string projectFile = Path.GetFullPath(Path.Combine(repositoryRoot, projectRelativePath));
         if (!File.Exists(projectFile))
@@ -43,8 +44,28 @@ internal static class EffectivePackageVersions
             throw new InvalidOperationException($"MSBuild version project does not exist: {projectRelativePath}");
         }
 
-        PackageTestProcessResult result = PackageTestProcess.Run("dotnet",
-            ["msbuild", projectFile, "-nologo", $"-p:Configuration={configuration}", query], repositoryRoot, 30_000);
+        var startInfo = new ProcessStartInfo("dotnet");
+        foreach (string argument in new[] { "msbuild", projectFile, "-nologo", $"-p:Configuration={configuration}", query })
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+        if (isolateEnvironment)
+        {
+            // Historical versions come only from the committed inputs. Keep the process-launch
+            // environment, not arbitrary environment properties imported by MSBuild.
+            HashSet<string> platform = new(StringComparer.OrdinalIgnoreCase)
+            {
+                "PATH", "PATHEXT", "HOME", "USERPROFILE", "TMP", "TEMP", "TMPDIR", "SystemRoot",
+                "SystemDrive", "WINDIR", "COMSPEC", "APPDATA", "LOCALAPPDATA", "ProgramFiles",
+                "ProgramFiles(x86)", "ProgramW6432", "DOTNET_ROOT", "DOTNET_ROOT_X64", "DOTNET_ROOT_X86",
+                "LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH", "LANG", "LC_ALL", "DOTNET_SYSTEM_GLOBALIZATION_INVARIANT",
+            };
+            foreach (string name in startInfo.Environment.Keys.Where(name => !platform.Contains(name)).ToArray())
+            {
+                startInfo.Environment.Remove(name);
+            }
+        }
+        PackageTestProcessResult result = PackageTestProcess.Run(startInfo, repositoryRoot, 30_000);
         if (result.ExitCode != 0)
         {
             string diagnostic = (result.StandardOutput + result.StandardError).Replace('\r', ' ').Replace('\n', ' ');
@@ -58,7 +79,8 @@ internal static class EffectivePackageVersions
     {
         if (!Regex.IsMatch(value, @"\A(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*)){1,3}(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?\z", RegexOptions.CultureInvariant))
         {
-            throw new InvalidOperationException($"MSBuild version {identity} did not resolve to a concrete NuGet version.");
+            string diagnostic = value.Replace("\r", "\\r", StringComparison.Ordinal).Replace("\n", "\\n", StringComparison.Ordinal);
+            throw new InvalidOperationException($"MSBuild version {identity} did not resolve to a concrete NuGet version: '{diagnostic}'.");
         }
 
         return value;

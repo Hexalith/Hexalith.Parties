@@ -65,6 +65,7 @@ public sealed class EffectivePackageVersionsTests
     [InlineData("3.8.0&#13;&#10;")]
     public void MissingOrUnresolvedVersionsFailClosedForPropertiesAndPackages(string value)
     {
+        ArgumentNullException.ThrowIfNull(value);
         string root = CreateFixture();
         try
         {
@@ -73,10 +74,14 @@ public sealed class EffectivePackageVersionsTests
                 <ItemGroup><PackageVersion Include="Hexalith.EventStore.Contracts" Version="$(HexalithEventStoreVersion)" /></ItemGroup></Project>
                 """);
 
-            Should.Throw<InvalidOperationException>(() => EffectivePackageVersions.ReadProperty(root, "HexalithEventStoreVersion", "Consumer.csproj"))
-                .Message.ShouldContain("HexalithEventStoreVersion");
-            Should.Throw<InvalidOperationException>(() => EffectivePackageVersions.ReadPackages(root, "Consumer.csproj"))
-                .Message.ShouldContain("Hexalith.EventStore.Contracts");
+            string expectedValue = value.Replace("%24%28UnresolvedVersion%29", "$(UnresolvedVersion)", StringComparison.Ordinal)
+                .Replace("&#13;", "\\r", StringComparison.Ordinal).Replace("&#10;", "\\n", StringComparison.Ordinal);
+            string propertyFailure = Should.Throw<InvalidOperationException>(() => EffectivePackageVersions.ReadProperty(root, "HexalithEventStoreVersion", "Consumer.csproj")).Message;
+            propertyFailure.ShouldContain("HexalithEventStoreVersion");
+            propertyFailure.ShouldContain($"'{expectedValue}'");
+            string packageFailure = Should.Throw<InvalidOperationException>(() => EffectivePackageVersions.ReadPackages(root, "Consumer.csproj")).Message;
+            packageFailure.ShouldContain("Hexalith.EventStore.Contracts");
+            packageFailure.ShouldContain($"'{expectedValue}'");
         }
         finally
         {
@@ -95,6 +100,32 @@ public sealed class EffectivePackageVersionsTests
         }
         finally
         {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void HistoricalEvaluationIgnoresAmbientVersionOverridesWhileLiveEvaluationRetainsThem()
+    {
+        string root = CreateFixture();
+        const string variable = "HexalithHistoricalFixtureVersion";
+        string? original = Environment.GetEnvironmentVariable(variable);
+        try
+        {
+            File.WriteAllText(Path.Combine(root, "Consumer.csproj"), """
+                <Project><PropertyGroup>
+                  <HexalithHistoricalFixtureVersion Condition="'$(HexalithHistoricalFixtureVersion)' == ''">1.0.0</HexalithHistoricalFixtureVersion>
+                </PropertyGroup><ItemGroup>
+                  <PackageVersion Include="Example" Version="$(HexalithHistoricalFixtureVersion)" />
+                </ItemGroup></Project>
+                """);
+            Environment.SetEnvironmentVariable(variable, "9.9.9");
+            EffectivePackageVersions.ReadPackages(root, "Consumer.csproj")["Example"].ShouldBe("9.9.9");
+            EffectivePackageVersions.ReadPackages(root, "Consumer.csproj", isolateEnvironment: true)["Example"].ShouldBe("1.0.0");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(variable, original);
             Directory.Delete(root, recursive: true);
         }
     }

@@ -23,6 +23,7 @@ internal sealed class PackageTestProcessSupervisor : IDisposable
             WorkingDirectory = command.WorkingDirectory,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            RedirectStandardInput = command.RedirectStandardInput,
             UseShellExecute = false,
             CreateNoWindow = true,
         };

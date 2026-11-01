@@ -2,12 +2,12 @@
 title: Epic 8 Architecture Spine (Reconciliation)
 epic: 8
 date: 2026-07-07
-updated: 2026-10-05
+updated: 2026-11-01
 status: final
-amendment: 2026-10-05 final identity/approval reconciliation (Builds/Tenants selection, EventStore 3.113.0 package and source, I16 re-validation approved for the final set, I13/DW-111 accepted deferral — see §13), then the same-day DW-140/DW-141/DW-142 closure-blocker resolution and its review loop 3 correction (§13); prior 2026-10-04 identity/documentation reconciliation (Round 6, explicit three-pin approval, then working-tree five-pin approval); prior 2026-09-08 validation-driven (I19/I19a/I20 added; I1/I7/I10/I11/I14/I16 tightened; §2/§4/§5/§7 corrected; Inherited Invariants + Deferred added — see §10); prior 2026-08-18 amendment in §8
+amendment: 2026-11-01 Round 7 approved current identity set, selected-gitlink accessibility stamps and closure-commit v2 evidence; prior 2026-10-05 final identity/approval reconciliation (Builds/Tenants selection, EventStore 3.113.0 package and source, I16 re-validation approved for the final set, I13/DW-111 accepted deferral — see §13), then the same-day DW-140/DW-141/DW-142 closure-blocker resolution and its review loop 3 correction (§13); prior 2026-10-04 identity/documentation reconciliation (Round 6, explicit three-pin approval, then working-tree five-pin approval); prior 2026-09-08 validation-driven (I19/I19a/I20 added; I1/I7/I10/I11/I14/I16 tightened; §2/§4/§5/§7 corrected; Inherited Invariants + Deferred added — see §10); prior 2026-08-18 amendment in §8
 classification: post-MVP maintenance (Class C) — zero new PRD FRs
 closes-blocker: "Story 8.1 preserved 'missing Epic 8 architecture spine' blocker"
-open-condition: "The 2026-10-05 final identity set is approved, including EventStore 3.113.0 package and source (EventStore root gitlink committed in Parties `75b4fa1f`); I16 re-validation is approved but only receipts rerun at the stamped identities count as Pass (see §7a, the 8.3 I20 table, and tests/test-summary.md); I13 is not discharged (accepted DW-111 deferral)"
+open-condition: "The 2026-11-01 selected source/package identity set at Parties b6443b2475d3495b58358f84cdb161b05c62d0f9 is owner-approved (8.3 I20 table); all six current closure receipts remain Unvalidated pending rerun at the v2 snapshot. I13 remains Deferred under accepted DW-111; DW-159 is open for compile-level external-runtime preflight."
 related:
   - _bmad-output/planning-artifacts/sprint-change-proposal-2026-07-06.md
   - _bmad-output/planning-artifacts/sprint-change-proposal-2026-07-16-g7-g9-tenant-claims-ownership.md
@@ -438,7 +438,7 @@ sprint-status tracks.
 | I1a | Deferred | `8.8-runtime-boundary-cleanup` retains the Parties AppHost until integrated-topology, security, publish, and rollback parity exist. Retirement additionally requires requalifying completed DW-96 (`8.6-residual-review-debt`) host/gateway/ACL proof against the successor topology under I20 and the open `8.8-runtime-boundary-cleanup` / `external-runtime-deployment` owners. Every deferral whose exit proof or rollback names the Parties AppHost must pass or be re-approved (I20) against that successor; successor-topology parity remains required. |
 | I2 | Executable | `RetiredLeafProjectFitnessTests` guards the retained EventStore SDK host shape and retired leaf boundaries; `EventStoreGatewayE2ETests` executes authenticated handler discovery, exact projected detail and persisted event-envelope checks in the explicitly configured isolated topology. DW-96 closure receipts are in `_bmad-output/implementation-artifacts/tests/five-published-sdk-and-runtime-closure-2026-10-26/`; original-name coexistence and independent deployment gates remain separate. |
 | I3 | Deferred | `8.8-runtime-boundary-cleanup` retains the host/gateway/ACL switch-back seams after DW-96 proof completion; together with `8.7-data-protection-extraction` and `8.9-frontcomposer-ui-consolidation`, it retains every named local rollback path until parity is executable. `external-runtime-deployment` retains the release-recovery rollback path and successor-topology requalification. All existing retirement, I20 approval and parity gates remain required. |
-| I4 | Executable | `PlatformApiPrerequisitesTests` proves committed root gitlinks via `git ls-tree HEAD` plus clean matching checkouts and package/source graphs separately. The 2026-10-05 final set (Administrator / jpiquot, 8.3 I20 rows for decisions 1 and 2) records separately: EventStore package `3.113.0` (Parties pre-import CPM pin) and source `865cd9e49273dffbb1cdae85efeaf1aac322e09e` (tag `v3.113.0`, the same release); Builds `360a2b9c4e96809365a7de785be9a68152d5ac28`; Tenants `72b8e4f508176b69826549e87b7b2a286f607fd1` / package `5.7.0`; Commons HTTP `116d26815eb81e35b3c161e1799e5ee12805fc0a` / package fallback `2.30.1`; FrontComposer `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470` / package `4.5.0`; Memories `5b43fe2f8a0f04dc021921a077dff1a573c2ce5e` / package `2.27.1`; PolymorphicSerializations `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375`; AI.Tools `3f194e17174994d308ec84af9ee2b5aa68674d0d`. Every root gitlink in the final set is committed: EventStore `865cd9e49273dffbb1cdae85efeaf1aac322e09e` in Parties `75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6`, the other seven were already committed at Parties `47e2da3244fd7d6d14e39bc30513b23504e9bc27`, so `git ls-tree HEAD references/` records all eight and the committed-tree guard is green. Dated history: never-approved committed EventStore `547c938d52e4fd31b47783b9dd032528a5100549` / `0dc44e46ccb7f56c3182b855c21f337173a1307f` and Tenants `b55f96d89b839fd443ac589835880102add46d64`; superseded, never-committed 2026-10-04 approvals of EventStore `2242ad55a1b678828df8aa093fd92399c29af5bf` and Tenants `04e655cf070b17eced9daefb9eaa87a09ec60e81`; the superseded 2026-10-04 Builds `145ae921d9032f110b7371614939559e0aee202a`, three-pin, and Round 6 selections. Source presence/compile and selection signoff do not certify parity. |
+| I4 | Executable | `PlatformApiPrerequisitesTests` proves committed root gitlinks via `git ls-tree HEAD` plus clean matching checkouts and package/source graphs separately. The current source/package set is approved by Administrator / jpiquot in the 2026-11-01 I20 row; selection does not revalidate parity. The dated 2026-10-05 set (8.3 I20 rows for decisions 1 and 2) recorded separately: EventStore package `3.113.0` (Parties pre-import CPM pin) and source `865cd9e49273dffbb1cdae85efeaf1aac322e09e` (tag `v3.113.0`, the same release); Builds `360a2b9c4e96809365a7de785be9a68152d5ac28`; Tenants `72b8e4f508176b69826549e87b7b2a286f607fd1` / package `5.7.0`; Commons HTTP `116d26815eb81e35b3c161e1799e5ee12805fc0a` / package fallback `2.30.1`; FrontComposer `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470` / package `4.5.0`; Memories `5b43fe2f8a0f04dc021921a077dff1a573c2ce5e` / package `2.27.1`; PolymorphicSerializations `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375`; AI.Tools `3f194e17174994d308ec84af9ee2b5aa68674d0d`. Every root gitlink in the final set is committed: EventStore `865cd9e49273dffbb1cdae85efeaf1aac322e09e` in Parties `75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6`, the other seven were already committed at Parties `47e2da3244fd7d6d14e39bc30513b23504e9bc27`, so `git ls-tree HEAD references/` records all eight and the committed-tree guard is green. Dated history: never-approved committed EventStore `547c938d52e4fd31b47783b9dd032528a5100549` / `0dc44e46ccb7f56c3182b855c21f337173a1307f` and Tenants `b55f96d89b839fd443ac589835880102add46d64`; superseded, never-committed 2026-10-04 approvals of EventStore `2242ad55a1b678828df8aa093fd92399c29af5bf` and Tenants `04e655cf070b17eced9daefb9eaa87a09ec60e81`; the superseded 2026-10-04 Builds `145ae921d9032f110b7371614939559e0aee202a`, three-pin, and Round 6 selections. Source presence/compile and selection signoff do not certify parity. |
 | I5 | Executable | `ContractsPublicApiSnapshotTests`, `ClientPackageTests`, `PartyPickerPackagingTests`, `AdminPortalPackagingTests`, and `ConsumerPortalPackagingTests` preserve the public package surface. |
 | I6 | Executable + Deferred | `EventStoreGatewayRoutingTests`, `HttpPartiesQueryClientTests`, and `SelfScopedPartiesClientTests` preserve command/query behavior and self-scope; `8.8-runtime-boundary-cleanup` owns future shared-helper adoption. |
 | I7 | Executable | `PartyAggregateConsentTests`, `PartyAggregateErasureTests`, and `ErasureVerificationServiceTests` guard retained consent, restriction, certificate and erasure behavior. Story 8.6 residual review is resolved under DW-96; DW-82 authoritative inventory and DW-168 live physical-erasure qualification remain open, alongside shared-provider migration, publication and deployment gates. |
@@ -475,13 +475,23 @@ fitness test parses.
   approval does not turn a receipt into Pass: a receipt is Pass only when it was
   rerun at the stamped identity, and every receipt not rerun stays
   **unvalidated** in the canonical `tests/test-summary.md` table. The
-  accessibility gate uses `PlatformApiPrerequisitesTests.FrontComposerSha` as
-  its single approved stamp (`2cc8dd3a3ac76c03f5ea6f6f92e65829306db470`); the
-  2026-10-04 Playwright execution at superseded
-  `374bb83392d8ab4e8a8397cfd312d09948fb0b9d` and the historical proof at
-  `f0c3b6fd7dbf0a750170b5ec72d09d17febb8f6a` stay unvalidated at that stamp. No
-  deletion is authorized by the approval. Owner: the changing story plus the
-  named Parties/EventStore/FrontComposer test owners.
+  accessibility gate now requires the selected
+  `references/Hexalith.FrontComposer` gitlink bound by `parties_snapshot`,
+  rather than the historical `PlatformApiPrerequisitesTests.FrontComposerSha`.
+  Administrator / jpiquot approved the current set at Parties
+  `b6443b2475d3495b58358f84cdb161b05c62d0f9` on 2026-11-01 (Round 7 decision 3,
+  recorded in the 8.3 I20 table); its FrontComposer selection is
+  `c092e8f91ebb670fad4ab959f2d3c8e13d809e0f`, separate from package `4.7.4`.
+  Every current clean Pass must bind the live v2 snapshot and dependency set.
+  Once Story 8.10 is committed `done`, closure evidence, both digests and the
+  FrontComposer gitlink are verified against the Git objects of the commit
+  that recorded that done transition. Later work does not recertify or erase
+  that closed evidence; a reopening returns qualification to the live tree.
+  A shallow history that cannot establish the closure commit skips loudly,
+  granting no verification credit. Earlier receipts keep their original
+  identities and confer no parity at this set. No deletion is authorized by
+  selection or by deriving a stamp. Owner: the changing story plus the named
+  Parties/EventStore/FrontComposer test owners.
 - **I17 (deferral executors inherit the gate) — process gate, not executable.**
   Enforced at spec-authoring and review time. The `deferred-work.md` field
   vocabulary added 2026-08-19 (`authored_by_spec` / `activated_by_spec` /
@@ -517,7 +527,9 @@ evidence.
   selection, the later 2026-10-04 working-tree five-pin approval, and the four
   2026-10-05 decisions (Builds/Tenants selection, EventStore `3.113.0` package
   and source, I16 identity re-validation for the final set, and the I13/DW-111
-  accepted deferral) are recorded with exact scope and provenance. Other
+  accepted deferral), plus the 2026-11-01 Round 7 approval of the current set
+  at Parties `b6443b2475d3495b58358f84cdb161b05c62d0f9` and the selected-gitlink
+  accessibility rule, are recorded with exact scope and provenance. Other
   applicable decision kinds remain pending. A populated selection row does not
   certify parity; under the approved I16 row only receipts rerun at the stamped
   identities count. Each applicable pending row needs its

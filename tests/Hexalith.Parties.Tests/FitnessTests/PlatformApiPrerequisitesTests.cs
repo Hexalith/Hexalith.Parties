@@ -61,7 +61,8 @@ public sealed class PlatformApiPrerequisitesTests
     private const string CurrentSelectedEventStoreSha = "ba4c5548ad260b049bda5a1c7def2e8af3484733";
     private const string CurrentSelectedEventStoreDescribe = "v3.130.2-63-gba4c5548";
     private const string CurrentSelectedEventStoreTag = "v3.130.2";
-    // Current committed selections are observations, separate from historical owner approvals.
+    // Current committed selections are approved by the 2026-11-01 Round 7 I20 row;
+    // selection remains separate from historical approvals and executed parity receipts.
     private static readonly IReadOnlyDictionary<string, string> CurrentSelectedGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["references/Hexalith.AI.Tools"] = "9b78aa008cfc62cd88ad0ea4b39b1f07311956ce",

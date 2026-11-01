@@ -60,7 +60,9 @@ internal static class PackageTestProcess
         string workingDirectory,
         int processTimeoutMilliseconds = DefaultProcessTimeoutMilliseconds,
         int postKillExitTimeoutMilliseconds = DefaultOutputCaptureTimeoutMilliseconds,
-        int outputCaptureTimeoutMilliseconds = DefaultOutputCaptureTimeoutMilliseconds)
+        int outputCaptureTimeoutMilliseconds = DefaultOutputCaptureTimeoutMilliseconds,
+        string? standardInput = null,
+        string? standardOutputFile = null)
     {
         ArgumentNullException.ThrowIfNull(arguments);
         var startInfo = new ProcessStartInfo(fileName);
@@ -70,16 +72,18 @@ internal static class PackageTestProcess
         }
 
         return Run(startInfo, workingDirectory, processTimeoutMilliseconds,
-            postKillExitTimeoutMilliseconds, outputCaptureTimeoutMilliseconds);
+            postKillExitTimeoutMilliseconds, outputCaptureTimeoutMilliseconds, standardInput, standardOutputFile);
     }
 
     /// <summary>Captures both streams under one deadline and reaps a stalled process tree.</summary>
-    private static PackageTestProcessResult Run(
+    internal static PackageTestProcessResult Run(
         ProcessStartInfo startInfo,
         string workingDirectory,
         int processTimeoutMilliseconds,
-        int postKillExitTimeoutMilliseconds,
-        int outputCaptureTimeoutMilliseconds)
+        int postKillExitTimeoutMilliseconds = DefaultOutputCaptureTimeoutMilliseconds,
+        int outputCaptureTimeoutMilliseconds = DefaultOutputCaptureTimeoutMilliseconds,
+        string? standardInput = null,
+        string? standardOutputFile = null)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(processTimeoutMilliseconds);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(postKillExitTimeoutMilliseconds);
@@ -99,6 +103,7 @@ internal static class PackageTestProcess
         startInfo.WorkingDirectory = workingDirectory;
         startInfo.RedirectStandardError = true;
         startInfo.RedirectStandardOutput = true;
+        startInfo.RedirectStandardInput = standardInput is not null;
         startInfo.UseShellExecute = false;
         startInfo.CreateNoWindow = true;
         string fileName = startInfo.FileName;
@@ -124,8 +129,9 @@ internal static class PackageTestProcess
         }
 
         Stopwatch stopwatch = Stopwatch.StartNew();
-        Task<string> standardOutput = process.StandardOutput.ReadToEndAsync();
+        Task<string> standardOutput = CaptureStandardOutputAsync(process, standardOutputFile);
         Task<string> standardError = process.StandardError.ReadToEndAsync();
+        Task? input = standardInput is null ? null : WriteStandardInputAsync(process, standardInput);
         bool exited;
         try
         {
@@ -143,7 +149,7 @@ internal static class PackageTestProcess
         {
             KillAndWaitForExit(process, supervisor, postKillExitTimeoutMilliseconds);
             supervisor.EnsureCleanupSucceeded(fileName);
-            WaitForOutput(standardOutput, standardError, outputCaptureTimeoutMilliseconds, fileName);
+            WaitForOutput(standardOutput, standardError, outputCaptureTimeoutMilliseconds, fileName, input);
             string diagnostic = string.IsNullOrWhiteSpace(standardError.Result)
                 ? standardOutput.Result
                 : standardError.Result;
@@ -157,8 +163,25 @@ internal static class PackageTestProcess
         int remainingMilliseconds = (int)Math.Min(
             outputCaptureTimeoutMilliseconds,
             Math.Max(0, processTimeoutMilliseconds - stopwatch.ElapsedMilliseconds));
-        WaitForOutput(standardOutput, standardError, remainingMilliseconds, fileName);
+        WaitForOutput(standardOutput, standardError, remainingMilliseconds, fileName, input);
         return new PackageTestProcessResult(process.ExitCode, standardOutput.Result, standardError.Result);
+    }
+
+    private static async Task<string> CaptureStandardOutputAsync(Process process, string? destination)
+    {
+        if (destination is null)
+        {
+            return await process.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
+        }
+        using FileStream output = File.Create(destination);
+        await process.StandardOutput.BaseStream.CopyToAsync(output).ConfigureAwait(false);
+        return string.Empty;
+    }
+
+    private static async Task WriteStandardInputAsync(Process process, string value)
+    {
+        await process.StandardInput.WriteAsync(value).ConfigureAwait(false);
+        process.StandardInput.Close();
     }
 
     /// <summary>Requests termination and waits only for the configured cleanup interval.</summary>
@@ -200,9 +223,11 @@ internal static class PackageTestProcess
         Task<string> standardOutput,
         Task<string> standardError,
         int timeoutMilliseconds,
-        string fileName)
+        string fileName,
+        Task? standardInput = null)
     {
-        if (!Task.WaitAll([standardOutput, standardError], timeoutMilliseconds))
+        Task[] captures = standardInput is null ? [standardOutput, standardError] : [standardOutput, standardError, standardInput];
+        if (!Task.WaitAll(captures, timeoutMilliseconds))
         {
             throw new TimeoutException(
                 $"{fileName} output capture did not complete within {timeoutMilliseconds} ms.");

@@ -104,6 +104,34 @@ public sealed class PackageTestProcessTests
         result.StandardError.Length.ShouldBe(200_000);
     }
 
+    /// <summary>Feeds beyond pipe capacity while preserving raw BOM/binary output and draining stderr.</summary>
+    [Fact]
+    public void RunFeedsLargeInputWhileCapturingExactBinaryOutput()
+    {
+        string destination = Path.GetTempFileName();
+        const int size = 1_048_576;
+        try
+        {
+            PackageTestProcessResult result = PackageTestProcess.Run("python3",
+                ["-c", "import sys; sys.stdout.buffer.write(bytes([239,187,191])+bytes(range(256))*1024); sys.stdout.buffer.flush(); sys.stderr.write('e'*262144); sys.stderr.flush(); data=sys.stdin.buffer.read(); sys.stdout.buffer.write(data)"],
+                Directory.GetCurrentDirectory(), processTimeoutMilliseconds: 10_000,
+                standardInput: new string('x', size), standardOutputFile: destination);
+
+            result.ExitCode.ShouldBe(0);
+            result.StandardOutput.ShouldBeEmpty();
+            result.StandardError.Length.ShouldBe(262_144);
+            byte[] bytes = File.ReadAllBytes(destination);
+            bytes.Length.ShouldBe(3 + 262_144 + size);
+            bytes[..3].ShouldBe([239, 187, 191]);
+            bytes[3 + 255].ShouldBe((byte)255);
+            bytes.AsSpan(3 + 262_144).SequenceEqual(System.Text.Encoding.UTF8.GetBytes(new string('x', size))).ShouldBeTrue();
+        }
+        finally
+        {
+            File.Delete(destination);
+        }
+    }
+
     [Fact]
     public void DiagnosticFallsBackToStandardOutput()
     {

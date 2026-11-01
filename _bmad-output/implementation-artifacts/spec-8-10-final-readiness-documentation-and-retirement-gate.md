@@ -2,7 +2,7 @@
 title: '8.10 Final readiness, documentation, and retirement gate'
 type: 'refactor'
 created: '2026-08-17'
-status: 'in-progress'
+status: 'in-review'
 baseline_commit: '37f4ec826c6f4aea4651cfbad94fb6ab7fc4f0a0'
 review_loop_iteration: 3
 context:
@@ -312,15 +312,15 @@ Scope: `git diff fb07a6cf^ fb07a6cf -- tests docs` (14 files, +1,167/−117), th
 - [x] [Review][Decision] The snapshot hashes raw worktree bytes and filesystem exec bits — `ReadWorktreeManifestEntry` reads file bytes and, on Unix, the owner-execute bit. `.gitattributes` has no eol normalization, so the same commit gives a different `parties_snapshot` under Windows `core.autocrlf=true` or a `core.fileMode=false` mount, and a receipt stamped there fails in Linux CI. Options: (a) hash Git-normalized content and index modes that honor `core.fileMode` (for example `git hash-object --stdin-paths`), bumping the manifest to v2 together with the test-summary format text; (b) document that stamping and verification are Linux-only. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:1199] — resolved 2026-11-01: option (a), Git-normalized v2 hashing; patch below.
 - [x] [Review][Decision] The FrontComposer accessibility stamp now follows the live gitlink, which contradicts spine §7a — `DescribeAccessibilityStampGaps` receives `ReadSelectedRootGitlinkSha(root, "references/Hexalith.FrontComposer")` (HEAD gitlink `c092e8f91ebb670fad4ab959f2d3c8e13d809e0f`). `ARCHITECTURE-SPINE.md:478` still names `PlatformApiPrerequisitesTests.FrontComposerSha` (`2cc8dd3a3ac76c03f5ea6f6f92e65829306db470`) as the single approved stamp, and `CurrentSelectedGitlinks` labels the current set "observations, separate from historical owner approvals". Rerunning the six lanes at the current set would close 8.10 at identities no owner approved. Options: (a) owner-approve the current identity set and amend spine §7a/I20 to the selected-gitlink rule; (b) restore the constant, so an accessibility Pass requires a run at the approved FrontComposer identity. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:434] — resolved 2026-11-01: option (a), the owner approves the current identity set and spine §7a/I20 moves to the selected-gitlink rule; patch below.
 - [x] [Review][Decision] DW-159 was closed by a preflight that cannot detect its motivating failure — DW-159's reason is the upstream Tenants source/package mismatch. `spec-fix-ci-and-publish-release.md:95` records that failure as CS0246 for `IDomainServiceAdministratorVerifier`/`DomainServiceAdministratorClaim`, with EventStore 3.115.0 selected on both sides ("forwarding the central version would not supply them"). `ReadExternalRuntimeGraphs` compares only EventStore package version strings, so that failure still passes the preflight and appears at topology startup. Options: (a) reopen DW-159 with the compile gap as its remaining exit proof; (b) extend the preflight to compile the external runtime roots in package mode; (c) re-scope DW-159 to graph selection and open a new item for the compile gap. [tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs:1295] — resolved 2026-11-01: option (a), reopen DW-159; patch below.
-- [ ] [Review][Patch] Exercise the live-identity wrapper with Pass rows — `DescribeCurrentReceiptIdentityGaps` returns `[]` unless a required row is a clean Pass, and no test calls it with one. Inverting the guard or changing `Any` to `All` passes every test. Inject the identity reader and add cases: one Pass with a stale stamp plus Unvalidated rows yields gaps; all non-passing rows never call the reader. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:1035]
-- [ ] [Review][Patch] Assert that the root gitlink SHA reaches the closure digests — `RootGitlinkReaderRejectsDirtyAndMismatchedIsolatedCheckouts` checks only `Mode` and the two throws. A reader that hashed nothing would still pass, while gitlink bumps would stop changing `parties_snapshot`/`dependency_set`. Assert the entry digest equals the documented `selected=<sha>` LF `checkout=<sha>` encoding and differs for another SHA. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:733]
-- [ ] [Review][Patch] Correct the test double's claim to mirror `SubmitCommandHandler` — at the selected EventStore source, `SubmitCommandHandler` writes `Received` after `RouteCommandAsync`, and only when no status was observed (`references/Hexalith.EventStore/src/Hexalith.EventStore.Server/Pipeline/SubmitCommandHandler.cs:363,446-471`). The comment says Received precedes domain processing, and the new `DirectPartiesCommandRouter_StatusWritesUseMessageIdWhenCorrelationDiffersAsync` exercises only that double. [tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs:1526]
-- [ ] [Review][Patch] State where qualifying-run evidence may live — only the canonical receipts section is exempt from `parties_snapshot`, so committing a dated evidence folder (the usual practice here) after deriving the stamps invalidates them. The closure procedure should say evidence stays inside the canonical receipts section or outside the repository. [_bmad-output/implementation-artifacts/tests/test-summary.md:2604]
-- [ ] [Review][Patch] Include the offending value in `ValidateVersion` failures — the replaced `ResolveMsbuildProperty` reported MSBuild diagnostics, but the new message names only the identity. [tests/PackageTests.Shared/EffectivePackageVersions.cs:57]
-- [ ] [Review][Patch] (Decision 1) Pin a closed 8.10 to its closure commit — while 8.10 is not `done`, keep verifying stamps against the live tree. Once `done`, derive `parties_snapshot`/`dependency_set` from the git objects of the commit that recorded `done`, skipping loudly on a shallow history as `EpicEightAddsNoPrdFunctionalRequirement` does, and update the test-summary closure procedure to match. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:405,430,1035]
-- [ ] [Review][Patch] (Decision 2) Move the closure identity to Git-normalized v2 hashing — hash git's normalized blob content and index modes that honor `core.fileMode`, rename the domains to `parties-snapshot-v2`/`parties-dependency-set-v2`, and update the test-summary format text. Include a token emitter that produces gate-compatible tokens, which also fixes the `diagnostic_` emitter mismatch noted below. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:1199]
-- [ ] [Review][Patch] (Decision 3) Amend spine §7a/I20 to the selected-gitlink rule and record the owner approval of the current identity set — replace the "single approved stamp `2cc8dd3a…`" text: an accessibility Pass must name the selected `references/Hexalith.FrontComposer` gitlink bound by `parties_snapshot`. Record the 2026-11-01 approval of the set at HEAD `b6443b24`. [_bmad-output/planning-artifacts/architecture/epic-8-domain-focus-2026-07-06/ARCHITECTURE-SPINE.md:478]
-- [ ] [Review][Patch] (Decision 4) Reopen DW-159 — set its active-ledger status back to `open`, keep the graph-selection preflight as recorded partial progress, and make detecting the compile-level mismatch (types missing from the published package) before topology startup its remaining exit proof. [_bmad-output/implementation-artifacts/deferred-work.md:1233]
+- [x] [Review][Patch] Exercise the live-identity wrapper with Pass rows — `DescribeCurrentReceiptIdentityGaps` returns `[]` unless a required row is a clean Pass, and no test calls it with one. Inverting the guard or changing `Any` to `All` passes every test. Inject the identity reader and add cases: one Pass with a stale stamp plus Unvalidated rows yields gaps; all non-passing rows never call the reader. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:1035]
+- [x] [Review][Patch] Assert that the root gitlink SHA reaches the closure digests — `RootGitlinkReaderRejectsDirtyAndMismatchedIsolatedCheckouts` checks only `Mode` and the two throws. A reader that hashed nothing would still pass, while gitlink bumps would stop changing `parties_snapshot`/`dependency_set`. Assert the entry digest equals the documented `selected=<sha>` LF `checkout=<sha>` encoding and differs for another SHA. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:733]
+- [x] [Review][Patch] Correct the test double's claim to mirror `SubmitCommandHandler` — at the selected EventStore source, `SubmitCommandHandler` writes `Received` after `RouteCommandAsync`, and only when no status was observed (`references/Hexalith.EventStore/src/Hexalith.EventStore.Server/Pipeline/SubmitCommandHandler.cs:363,446-471`). The comment says Received precedes domain processing, and the new `DirectPartiesCommandRouter_StatusWritesUseMessageIdWhenCorrelationDiffersAsync` exercises only that double. [tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs:1526]
+- [x] [Review][Patch] State where qualifying-run evidence may live — only the canonical receipts section is exempt from `parties_snapshot`, so committing a dated evidence folder (the usual practice here) after deriving the stamps invalidates them. The closure procedure should say evidence stays inside the canonical receipts section or outside the repository. [_bmad-output/implementation-artifacts/tests/test-summary.md:2604]
+- [x] [Review][Patch] Include the offending value in `ValidateVersion` failures — the replaced `ResolveMsbuildProperty` reported MSBuild diagnostics, but the new message names only the identity. [tests/PackageTests.Shared/EffectivePackageVersions.cs:57]
+- [x] [Review][Patch] (Decision 1) Pin a closed 8.10 to its closure commit — while 8.10 is not `done`, keep verifying stamps against the live tree. Once `done`, derive `parties_snapshot`/`dependency_set` from the git objects of the commit that recorded `done`, skipping loudly on a shallow history as `EpicEightAddsNoPrdFunctionalRequirement` does, and update the test-summary closure procedure to match. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:405,430,1035]
+- [x] [Review][Patch] (Decision 2) Move the closure identity to Git-normalized v2 hashing — hash git's normalized blob content and index modes that honor `core.fileMode`, rename the domains to `parties-snapshot-v2`/`parties-dependency-set-v2`, and update the test-summary format text. Include a token emitter that produces gate-compatible tokens, which also fixes the `diagnostic_` emitter mismatch noted below. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:1199]
+- [x] [Review][Patch] (Decision 3) Amend spine §7a/I20 to the selected-gitlink rule and record the owner approval of the current identity set — replace the "single approved stamp `2cc8dd3a…`" text: an accessibility Pass must name the selected `references/Hexalith.FrontComposer` gitlink bound by `parties_snapshot`. Record the 2026-11-01 approval of the set at HEAD `b6443b24`. [_bmad-output/planning-artifacts/architecture/epic-8-domain-focus-2026-07-06/ARCHITECTURE-SPINE.md:478]
+- [x] [Review][Patch] (Decision 4) Reopen DW-159 — set its active-ledger status back to `open`, keep the graph-selection preflight as recorded partial progress, and make detecting the compile-level mismatch (types missing from the published package) before topology startup its remaining exit proof. [_bmad-output/implementation-artifacts/deferred-work.md:1233]
 - [x] [Review][Defer] Epic 8 ledger items were worked through a oneshot spec without the six §4 clauses [_bmad-output/implementation-artifacts/spec-five-verification-maintenance-deferred-items.md:1] — deferred: spine I17 process gate, and the fix edits another spec. DW-144/DW-92 (8.10) and DW-33/DW-52 (8.6) were closed under `route: 'oneshot'` with no Prerequisites, Touched repos, Rollback path, Validation lanes, Non-goals or Parity checklist. Recorded as DW-199.
 - [x] [Review][Defer] Executed DI exclusions for the retired `IPartyProjectionPlatformAdapter`/`IProjectionRebuildService` were replaced by file-path guards [tests/Hexalith.Parties.Tests/Projections/ProjectionPlatformAdapterTests.cs:39] — deferred: restoring them would reverse the DW-33 owner decision (typed checks over string-name exclusions) and is 8.6 scope. A retired interface re-declared in another file and registered in `AddParties` passes every remaining guard. Recorded as DW-200.
 - [x] [Review][Defer] The Tenants row in the architecture technology table is stale [docs/architecture.md:57] — deferred: pre-existing, and the row is not in the reviewed diff. HEAD says package `5.11.1` while the effective Release graph selects `6.0.0`, and no fitness assertion covers the row. Recorded as DW-201.
@@ -540,6 +540,56 @@ intent, original baseline, and frontmatter status are preserved.
 
 ## Review Triage Log
 
+### Round 7 resumed implementation review - 2026-11-01
+
+All three layers returned. The original-baseline diff is retained at
+`/tmp/parties-810-review-v6tecdh5/baseline.diff` (about 127 MB); installed BMAD
+assets and unrelated historical changes were not exhaustively re-reviewed.
+The layers traced the supplementary resumed delta from
+`ed3aecb41d5707d7572d776cdb0cf3a9e0c2d8d9`, including the preserved concurrent
+documentation commit. Each finding is assessed separately below before grouping.
+
+| Finding | Verdict | Evidence and route |
+| --- | --- | --- |
+| Blind 1 - deleted-file identity continuity | medium | Live enumeration emits a missing tombstone for an unstaged tracked deletion; the committed tree omits that path. The reviewer reproduced unequal digests for the same final content. Patch the live encoding to agree with the Git tree and update the format instructions and regression. |
+| Blind 2 - materialized symlink portability | low | Confirmed in an isolated fixture: a mode-120000 link materialized as text hashes differently live and committed. The current repository has no tracked links (`git ls-files --stage` has no 120000 entry). Reject under the low/unlikely rule: supporting this future shape adds a branch and tests beyond a direct correction. |
+| Blind 3 - BOM loss in committed bookkeeping | medium | The shared text process reader decodes `git show` before re-encoding; the reviewer reproduced lost summary BOM bytes and unequal identities. Patch committed bookkeeping reads to preserve exact blob bytes and add the regression. |
+| Blind 4 - ambient historical package overrides | medium | The archived MSBuild evaluation inherits ambient version properties, so an unchanged closure commit can derive another dependency set. The reviewer reproduced this with an MSBuild version environment variable. Patch historical evaluation to isolate ambient overrides; retain live evaluation semantics. |
+| Blind 5 - Git archive attributes | medium | `git archive` honors export-ignore/export-subst instead of exporting exact object content; the reviewer reproduced MSB4019 after excluding the imported props. This can break the archived Client dependency graph. Patch exact tree materialization and cover excluded/substituted inputs. |
+| Blind 6 - absent Builds repository | medium | A missing resolved Builds directory causes process startup to throw before the missing-object skip can report its prerequisite. Patch the availability check before Git invocation and exercise the promised visible diagnostic. |
+| Blind 7 - merged closure epochs | false | The reader explicitly follows first-parent history, preserving the uninterrupted epoch on the current branch. A parent-owned disposable merge probe produced done/in-review history and selected the merge commit correctly; the finding provides no demonstrated contrary outcome. No new merge policy is required. |
+| Blind 8 - corrupted closed receipts | medium | The archived fixture currently asserts only valid receipts, so it does not independently demonstrate rejection of stale archived snapshot tokens and a foreign historical FrontComposer stamp. Patch negative archived-receipt controls using the actual closed route. |
+| Blind 9 - emitter branch verification | medium | The emitting fact checks only hexadecimal shape; forcing diagnostic hashing under qualifying names would pass it. Patch captured qualifying output through the gate, with the ordinary diagnostic case distinct. Shared root cause with Verification 2. |
+| Blind 10 - fixed v2 reference vector | low | Synthetic helper tests use SHA256 entries while actual Git-backed fixtures compare the live reader with committed blob IDs and independently verify gitlink bytes. No current format failure is demonstrated; reject the additional reference-vector machinery under the low/unlikely rule. |
+| Edge 1 - materialized symlink portability | low | Same reproduced mode-120000/core.symlinks=false outcome as Blind 2; the link-free current tree cannot take it. Reject under the same low/unlikely rule; no supported current path is weakened. |
+| Verification 1 - historical Builds import coverage | medium | Pre-verified regression gap: the history fixture declares Example locally, so deleting the Builds export leaves it green even though the real Client import would fail. Patch a real dependency import and a later changed Builds selection, asserting the original historical evaluation. |
+| Verification 2 - emitter compatibility coverage | medium | Pre-verified broken-verification gap: changing immutable consumption to false still passes the opt-in fact's shape assertions. Patch real emitted tokens against independently derived immutable identities, alongside diagnostic output. Shared root cause with Blind 9. |
+
+Surviving entries are implementation patches: deletion continuity, exact BOM/blob
+bytes, deterministic historical evaluation, exact tree export, missing-repository
+diagnostics, corrupted closed evidence, historical import coverage, and emitter
+compatibility (Blind 9 plus Verification 2). They add no public surface and address
+states demonstrated by the review. There is no intent_gap or bad_spec entry.
+Full verification and final snapshot collection follow these repairs.
+
+Resolved before qualification: all eight surviving entries are repaired. The
+extended real-Git history fixture now imports its Builds catalog, changes the
+live selection, preserves BOMs, deletes before staging, rejects corrupt archived
+stamps, survives ambient version overrides, and checks missing-history reporting
+and actual emitter output. Exact binary object materialization ignores archive
+attributes; the bounded shared runner forwards stdin and captures raw output.
+Focused checks pass 91/91 plus 28/28 shared-runner checks with no skips, and both
+Release builds have zero warnings/errors. Parent inspection covered the full
+repair delta, including the one-line Linux stdin forwarding change.
+
+A separate read-only parent smoke probe reconstructed the real committed Parties
+tree `e3c798b01bf656aa913183c281b8fb717876e85c` and selected Builds catalog in
+7.13 seconds (exit 0); the temporary harness build had zero warnings/errors.
+This is reconstruction evidence only, not qualification of this working tree.
+Full-lane output stays outside the repository under
+`/tmp/parties-810-qualification-6p4w60kn`. No intent or spec loopback was needed.
+
+
 ### Baseline review following the three-pin approval — 2026-10-04
 
 Review content is the full baseline diff from `37f4ec826c6f4aea4651cfbad94fb6ab7fc4f0a0`
@@ -746,3 +796,26 @@ are rerun and stamped. This maintenance correction does not alter the frozen
 intent, accepted historical decisions, dependency selections, or other blocked
 story statuses. The executable gate and stamp format are documented in the
 canonical test summary.
+
+## Round 7 implementation and audit - 2026-11-01
+
+All nine Round 7 patches are implemented. The original baseline and frozen
+intent remain unchanged. Parent inspection of the resumed unified diff confirms
+the closure-commit anchor (including the accessibility stamp), Git-normalized
+v2 identities, strict token emitter, injected-reader and gitlink-digest checks,
+accurate synthetic-router comment, offending-value diagnostics, approval records,
+evidence-location instructions and reopened DW-159. The maintained matrix also
+records the already-pinned module tool 4.41.1.
+
+The package-mode Release build has zero warnings/errors. All 212 affected fitness
+tests and the separate router regression pass without skips; the strict emitter
+and policy/static checks pass. The two frozen matrix rows are exercised by the
+accepted/incomplete-deferral and selected-dependency/receipt-identity tests in
+those executed classes. See [focused verification](tests/test-summary.md#story-810-round-7-patch-verification--2026-11-01).
+
+Review covers the resumed Round 7 delta from
+`ed3aecb41d5707d7572d776cdb0cf3a9e0c2d8d9`; the complete original-baseline diff
+is retained outside the repository, and earlier bounded reviews remain history.
+The concurrent documentation commit
+`e3c798b01bf656aa913183c281b8fb717876e85c` is preserved. All six canonical
+closure receipts remain Unvalidated pending review and final qualification.

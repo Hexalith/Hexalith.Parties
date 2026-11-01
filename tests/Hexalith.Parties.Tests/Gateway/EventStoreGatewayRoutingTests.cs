@@ -1523,8 +1523,10 @@ public sealed class EventStoreGatewayRoutingTests
         {
             ArgumentNullException.ThrowIfNull(command);
 
-            // Mirror EventStore SubmitCommandHandler: status history uses tenant/message identity.
-            // Received precedes domain processing; correlation remains metadata in both status records.
+            // This direct-routing fixture writes a synthetic Received before processing, keyed by
+            // tenant/message identity with correlation as metadata. It does not model the real
+            // SubmitCommandHandler lifecycle: that handler routes first, then writes Received only
+            // if it did not observe a status. These checks prove this fixture's keying contract only.
             await _statusStore.WriteStatusAsync(
                 command.Tenant,
                 command.MessageId,

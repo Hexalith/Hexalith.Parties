@@ -57,9 +57,10 @@ and matching clean checkouts; staged entries or working-tree HEADs alone cannot
 satisfy it.
 EventStore package `3.130.2`, Commons `2.30.8`, FrontComposer `4.7.4`, Memories
 `3.0.13` and Tenants `6.0.0` are selected. These are published package selections.
-Selection does not revalidate historical parity receipts or grant owner approval,
-package publication, deployment, data-custody or rollback qualification.
-The pinned module tool is `4.41.0` and remains the source-root and dependency-mode
+Administrator / jpiquot approved this exact source/package set for Story 8.10
+qualification on 2026-11-01 (Round 7 decision 3; I20 row below). Selection does not revalidate historical parity receipts or grant package publication,
+deployment, data-custody or rollback qualification.
+The pinned module tool is `4.41.1` and remains the source-root and dependency-mode
 authority. The successful source mapping with module tool `4.39.0` on 2026-10-31
 remains a historical observation: it reads the parent HEAD Platform gitlink,
 then that selected Platform commit's Builds gitlink. The initial `HXW009`
@@ -69,16 +70,16 @@ do not qualify these newer source selections or the Platform runtime.
 
 | Root dependency | Current source identity | Release use |
 | --- | --- | --- |
-| AI.Tools | `9b78aa008cfc62cd88ad0ea4b39b1f07311956ce` (`9b78aa00`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| Builds | `df13d9d31f7ee1a1b0fb7eeac7e8b27b9a9f9fb0` (`v4.41.0-16-gdf13d9d3`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| Commons | `bbbce518bcca9ca359762393688f02d142af1c61` (`v2.30.8`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| EventStore | `ba4c5548ad260b049bda5a1c7def2e8af3484733` (`v3.130.2-63-gba4c5548`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| FrontComposer | `c092e8f91ebb670fad4ab959f2d3c8e13d809e0f` (`v4.7.4-15-gc092e8f9`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| McpCli | `17eb4fbbc151ca4b99dfa452e9f65655db2b402f` (`v1.1.0-55-g17eb4fbb`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| Memories | `b93b32cf77f3d76e51d3221550eff99f4d1e93cb` (`v3.0.13-13-gb93b32cf`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| Platform | `03799ed553a16c8a1528068ba4d95bb5509ea75e` (`v1.0.1-187-g03799ed5`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| PolymorphicSerializations | `821b784bb51483acefa9725acc6792d111304a4e` (`v1.19.7-1-g821b784b`) | Pushed owner revision; root adoption and qualification require their own proof. |
-| Tenants | `2d3fa6da2312c1b5cf7f5c9461cc2d0ffc995b43` (`v6.0.0-17-g2d3fa6da`) | Pushed owner revision; root adoption and qualification require their own proof. |
+| AI.Tools | `9b78aa008cfc62cd88ad0ea4b39b1f07311956ce` (`9b78aa00`) | Approved selection (2026-11-01 Round 7 decision 3); qualification still requires its own executed proof. |
+| Builds | `df13d9d31f7ee1a1b0fb7eeac7e8b27b9a9f9fb0` (`v4.41.0-16-gdf13d9d3`) | Approved selection (2026-11-01 Round 7 decision 3); qualification still requires its own executed proof. |
+| Commons | `bbbce518bcca9ca359762393688f02d142af1c61` (`v2.30.8`) | Approved selection (2026-11-01 Round 7 decision 3); qualification still requires its own executed proof. |
+| EventStore | `ba4c5548ad260b049bda5a1c7def2e8af3484733` (`v3.130.2-63-gba4c5548`) | Approved selection (2026-11-01 Round 7 decision 3); qualification still requires its own executed proof. |
+| FrontComposer | `c092e8f91ebb670fad4ab959f2d3c8e13d809e0f` (`v4.7.4-15-gc092e8f9`) | Approved selection (2026-11-01 Round 7 decision 3); qualification still requires its own executed proof. |
+| McpCli | `17eb4fbbc151ca4b99dfa452e9f65655db2b402f` (`v1.1.0-55-g17eb4fbb`) | Approved selection (2026-11-01 Round 7 decision 3); qualification still requires its own executed proof. |
+| Memories | `b93b32cf77f3d76e51d3221550eff99f4d1e93cb` (`v3.0.13-13-gb93b32cf`) | Approved selection (2026-11-01 Round 7 decision 3); qualification still requires its own executed proof. |
+| Platform | `03799ed553a16c8a1528068ba4d95bb5509ea75e` (`v1.0.1-187-g03799ed5`) | Approved selection (2026-11-01 Round 7 decision 3); qualification still requires its own executed proof. |
+| PolymorphicSerializations | `821b784bb51483acefa9725acc6792d111304a4e` (`v1.19.7-1-g821b784b`) | Approved selection (2026-11-01 Round 7 decision 3); qualification still requires its own executed proof. |
+| Tenants | `2d3fa6da2312c1b5cf7f5c9461cc2d0ffc995b43` (`v6.0.0-17-g2d3fa6da`) | Approved selection (2026-11-01 Round 7 decision 3); qualification still requires its own executed proof. |
 
 ### Historical source observation — 2026-10-30
 
@@ -956,6 +957,7 @@ The original selection row transcribes the Round 6 reviewer-recorded decision in
 | I10 freshness dialect | Named G6 freshness shape and grammar | Pending — named accountable owner | Pending | Pending; no approval inferred from routing, source presence, or compile. |
 | I16 identity parity re-validation | Exact I9/I10/I13 surfaces and all affected claim stamps at the 2026-10-05 final set: AI.Tools `3f194e17174994d308ec84af9ee2b5aa68674d0d`; Builds `360a2b9c4e96809365a7de785be9a68152d5ac28`; Commons `116d26815eb81e35b3c161e1799e5ee12805fc0a` / package `2.30.1`; EventStore `865cd9e49273dffbb1cdae85efeaf1aac322e09e` / package `3.113.0`; FrontComposer `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470` / package `4.5.0`; Memories `5b43fe2f8a0f04dc021921a077dff1a573c2ce5e` / package `2.27.1`; PolymorphicSerializations `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375`; Tenants `72b8e4f508176b69826549e87b7b2a286f607fd1` / package `5.7.0` | Administrator / jpiquot | 2026-10-05 | **Approved (decision 3)** for the final set only. The approval does not turn a receipt into `Pass`: a receipt is `Pass` only when it was rerun at the stamped identity, and any receipt not rerun stays `Unvalidated` in the canonical `tests/test-summary.md` table. Claims stamped at any other identity stay unvalidated. No rollback deletion is authorized by this row. |
 | I13 / DW-111 accepted closure deferral (2026-10-05 decision 4) | The missing runtime content-control focus, forced-colors, and reduced-motion proof (DW-111) is accepted as a named deferral owned by `8.9-frontcomposer-ui-consolidation` for Story 8.10 closure. I13 itself is **not** discharged; spine §7 keeps it `Deferred`. | Administrator / jpiquot | 2026-10-05 | **Accepted deferral** — a waiting contract only. It grants no parity, no I13 discharge, and no deletion of the retained Parties UI primitives or the app-owned focus-visible, forced-colors, and reduced-motion CSS. |
+| I4/I16 current identity set and selected-gitlink accessibility stamp (2026-11-01 Round 7 decision 3) | Parties `b6443b2475d3495b58358f84cdb161b05c62d0f9`: AI.Tools `9b78aa008cfc62cd88ad0ea4b39b1f07311956ce`; Builds `df13d9d31f7ee1a1b0fb7eeac7e8b27b9a9f9fb0`; Commons `bbbce518bcca9ca359762393688f02d142af1c61` / package `2.30.8`; EventStore `ba4c5548ad260b049bda5a1c7def2e8af3484733` / package `3.130.2`; FrontComposer `c092e8f91ebb670fad4ab959f2d3c8e13d809e0f` / package `4.7.4`; McpCli `17eb4fbbc151ca4b99dfa452e9f65655db2b402f`; Memories `b93b32cf77f3d76e51d3221550eff99f4d1e93cb` / package `3.0.13`; Platform `03799ed553a16c8a1528068ba4d95bb5509ea75e`; PolymorphicSerializations `821b784bb51483acefa9725acc6792d111304a4e`; Tenants `2d3fa6da2312c1b5cf7f5c9461cc2d0ffc995b43` / package `6.0.0`. Accessibility Pass names the selected FrontComposer root gitlink bound by the v2 `parties_snapshot`; closed evidence uses the closure commit's selection. | Administrator / jpiquot | 2026-11-01 | **Approved exact identity set and stamp rule** — transcribed from the resolved Round 7 decision 3 in spec 8.10. All six current receipts remain Unvalidated until rerun; no historical parity, publication, deployment, custody or rollback deletion is authorized. |
 | I17 activation handover | Any second activation of an accepted closure deferral | Pending — named accountable owner | Pending | Pending; no approval inferred from routing, source presence, or compile. |
 | I18 successor tests | Any baseline-test replacement | Pending — named accountable owner | Pending | Pending; no approval inferred from routing, source presence, or compile. |
 | I19 store reclassification / class-(b) test set | Touched stores, semantics, and approved consistency tests | Pending — named accountable owner | Pending | Pending; no approval inferred from routing, source presence, or compile. |

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -396,20 +397,28 @@ public sealed class EpicEightClosureFitnessTests
             return;
         }
 
+        string? closureCommit = ReadClosureCommit(root);
+        if (closureCommit is not null)
+        {
+            spec = RunGit(root, "show", $"{closureCommit}:{SpecPath}");
+        }
         Regex.Matches(spec, @"(?m)^\s*- \[ \]", RegexOptions.CultureInvariant).ShouldBeEmpty();
         epicStatus.ShouldBe("done");
-        string summary = Read(root, TestSummaryPath);
+        string summary = ReadClosureSummary(root, closureCommit);
         summary.ShouldContain("Story 8.10 Final Readiness, Documentation, and Retirement Gate");
         Dictionary<string, string> receipts = ParseValidationReceipts(summary);
         DescribeReceiptGaps(receipts).ShouldBeEmpty();
-        DescribeCurrentReceiptIdentityGaps(root, summary, receipts).ShouldBeEmpty();
+        DescribeCurrentReceiptIdentityGaps(summary, receipts, () => ReadClosureIdentity(root, closureCommit)).ShouldBeEmpty();
+        DescribeAccessibilityStampGaps(summary, receipts, ReadSelectedRootGitlinkSha(root, "references/Hexalith.FrontComposer", closureCommit ?? "HEAD"))
+            .ShouldBeEmpty();
     }
 
     [Fact]
     public void ValidationReceiptSectionResolvesToTheCurrentTableAndIsWellFormed()
     {
         string root = RepositoryRoot.Locate();
-        string summary = Read(root, TestSummaryPath);
+        string? closureCommit = ReadClosureCommit(root);
+        string summary = ReadClosureSummary(root, closureCommit);
         Dictionary<string, string> receipts = ParseValidationReceipts(summary);
 
         // Deliberately exercised regardless of story status. The closure gate reads these receipts
@@ -427,11 +436,11 @@ public sealed class EpicEightClosureFitnessTests
             receipt.Value.ShouldNotBeNullOrWhiteSpace(receipt.Key);
         }
 
-        DescribeCurrentReceiptIdentityGaps(root, summary, receipts).ShouldBeEmpty(
-            "Every clean Pass receipt must bind the current Parties snapshot and dependency set.");
+        DescribeCurrentReceiptIdentityGaps(summary, receipts, () => ReadClosureIdentity(root, closureCommit)).ShouldBeEmpty(
+            "Every clean Pass receipt must bind its qualifying Parties snapshot and dependency set.");
         if (IsCleanPass(receipts["Playwright accessibility"]))
         {
-            DescribeAccessibilityStampGaps(summary, receipts, ReadSelectedRootGitlinkSha(root, "references/Hexalith.FrontComposer"))
+            DescribeAccessibilityStampGaps(summary, receipts, ReadSelectedRootGitlinkSha(root, "references/Hexalith.FrontComposer", closureCommit ?? "HEAD"))
                 .ShouldBeEmpty("A clean Pass accessibility receipt must prove the selected FrontComposer source identity.");
         }
     }
@@ -596,6 +605,29 @@ public sealed class EpicEightClosureFitnessTests
             .ShouldBeEmpty();
     }
 
+    /// <summary>Derives the live identity for even one successful lane, never for unsuccessful rows.</summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CurrentIdentityReaderRunsOnlyWhenAnyRequiredReceiptPasses(bool hasPass)
+    {
+        string snapshot = new('a', 64);
+        string dependencies = new('b', 64);
+        string summary = "### Validation receipts\n\n| Check | Result | Evidence |\n| --- | --- | --- |\n"
+            + string.Join('\n', RequiredValidationReceiptChecks.Select((check, index) =>
+                $"| {check} | {(hasPass && index == 0 ? "Pass" : "Unvalidated")} | parties_snapshot={new string('c', 64)} dependency_set={dependencies} |"));
+        int calls = 0;
+
+        string[] gaps = DescribeCurrentReceiptIdentityGaps(summary, ParseValidationReceipts(summary), () =>
+        {
+            calls++;
+            return (snapshot, dependencies);
+        });
+
+        calls.ShouldBe(hasPass ? 1 : 0);
+        gaps.ShouldBe(hasPass ? [$"{RequiredValidationReceiptChecks[0]}:parties_snapshot:expected={snapshot}"] : []);
+    }
+
     /// <summary>Proves that receipt normalization exempts only the current receipt section.</summary>
     [Fact]
     public void SnapshotBindsFileBytesModesPathsAndGitlinksButNotReceiptPayload()
@@ -607,31 +639,31 @@ public sealed class EpicEightClosureFitnessTests
             CreateManifestEntry(TestSummaryPath, "100644", Encoding.UTF8.GetBytes(summary)),
             CreateManifestEntry("references/Example", "160000", Encoding.UTF8.GetBytes(new string('a', 40))),
         ];
-        string baseline = HashManifest("parties-snapshot-v1", entries);
+        string baseline = HashManifest("parties-snapshot-v2", entries);
         (string Path, string Mode, string Digest)[] receiptEdit = [.. entries];
         receiptEdit[1] = CreateManifestEntry(TestSummaryPath, "100644", Encoding.UTF8.GetBytes(
             summary.Replace("Unvalidated | Pending", "Pass | parties_snapshot=anything dependency_set=anything", StringComparison.Ordinal)));
-        HashManifest("parties-snapshot-v1", receiptEdit).ShouldBe(baseline);
+        HashManifest("parties-snapshot-v2", receiptEdit).ShouldBe(baseline);
 
         (string Path, string Mode, string Digest)[] changes =
         [
             CreateManifestEntry("src/example.cs", "100644", Encoding.UTF8.GetBytes("changed source")),
             (entries[0].Path, "100755", entries[0].Digest),
             ("src/renamed.cs", entries[0].Mode, entries[0].Digest),
-            (entries[0].Path, "missing", entries[0].Digest),
         ];
         foreach ((string Path, string Mode, string Digest) change in changes)
         {
-            HashManifest("parties-snapshot-v1", [change, .. entries.Skip(1)]).ShouldNotBe(baseline);
+            HashManifest("parties-snapshot-v2", [change, .. entries.Skip(1)]).ShouldNotBe(baseline);
         }
+        HashManifest("parties-snapshot-v2", entries.Skip(1)).ShouldNotBe(baseline, "Deleted paths are absent from the final-content manifest.");
 
-        HashManifest("parties-snapshot-v1", [.. entries.Take(2), CreateManifestEntry("references/Example", "160000", Encoding.UTF8.GetBytes(new string('b', 40)))])
+        HashManifest("parties-snapshot-v2", [.. entries.Take(2), CreateManifestEntry("references/Example", "160000", Encoding.UTF8.GetBytes(new string('b', 40)))])
             .ShouldNotBe(baseline);
-        HashManifest("parties-snapshot-v1", [.. entries, CreateManifestEntry("untracked.txt", "100644", [1])])
+        HashManifest("parties-snapshot-v2", [.. entries, CreateManifestEntry("untracked.txt", "100644", [1])])
             .ShouldNotBe(baseline);
-        HashManifest("parties-snapshot-v1", [entries[0], CreateManifestEntry(TestSummaryPath, "100644", Encoding.UTF8.GetBytes(summary.Replace("Historical result", "Changed history", StringComparison.Ordinal))), entries[2]])
+        HashManifest("parties-snapshot-v2", [entries[0], CreateManifestEntry(TestSummaryPath, "100644", Encoding.UTF8.GetBytes(summary.Replace("Historical result", "Changed history", StringComparison.Ordinal))), entries[2]])
             .ShouldNotBe(baseline);
-        HashManifest("parties-snapshot-v1", entries.Reverse()).ShouldBe(baseline);
+        HashManifest("parties-snapshot-v2", entries.Reverse()).ShouldBe(baseline);
     }
 
     /// <summary>Exempts only the three closure bookkeeping values needed after gates are rerun.</summary>
@@ -645,11 +677,11 @@ public sealed class EpicEightClosureFitnessTests
             CreateManifestEntry(SpecPath, "100644", Encoding.UTF8.GetBytes(spec)),
             CreateManifestEntry(SprintStatusPath, "100644", Encoding.UTF8.GetBytes(sprint)),
         ];
-        string baseline = HashManifest("parties-snapshot-v1", entries);
+        string baseline = HashManifest("parties-snapshot-v2", entries);
         string doneSpec = spec.Replace("status: 'in-review'\n---", "status: 'done'\n---", StringComparison.Ordinal);
         string doneSprint = sprint.Replace("epic-8: in-progress", "epic-8: done", StringComparison.Ordinal)
             .Replace("retirement-gate: review", "retirement-gate: done", StringComparison.Ordinal);
-        HashManifest("parties-snapshot-v1",
+        HashManifest("parties-snapshot-v2",
         [
             CreateManifestEntry(SpecPath, "100644", Encoding.UTF8.GetBytes(doneSpec)),
             CreateManifestEntry(SprintStatusPath, "100644", Encoding.UTF8.GetBytes(doneSprint)),
@@ -662,11 +694,11 @@ public sealed class EpicEightClosureFitnessTests
                      spec.Replace("status: 'in-review'\n---", "status: 'blocked'\n---", StringComparison.Ordinal),
                  })
         {
-            HashManifest("parties-snapshot-v1", [CreateManifestEntry(SpecPath, "100644", Encoding.UTF8.GetBytes(changedSpec)), entries[1]])
+            HashManifest("parties-snapshot-v2", [CreateManifestEntry(SpecPath, "100644", Encoding.UTF8.GetBytes(changedSpec)), entries[1]])
                 .ShouldNotBe(baseline);
         }
 
-        HashManifest("parties-snapshot-v1", [entries[0], CreateManifestEntry(SprintStatusPath, "100644", Encoding.UTF8.GetBytes(
+        HashManifest("parties-snapshot-v2", [entries[0], CreateManifestEntry(SprintStatusPath, "100644", Encoding.UTF8.GetBytes(
                 sprint.Replace("consolidation: blocked", "consolidation: done", StringComparison.Ordinal)))])
             .ShouldNotBe(baseline);
     }
@@ -728,6 +760,272 @@ public sealed class EpicEightClosureFitnessTests
         }
     }
 
+    /// <summary>Git clean conversion and index modes make the same content portable across checkouts.</summary>
+    [Fact]
+    public void SnapshotUsesGitNormalizedContentAndHonorsDisabledFileMode()
+    {
+        DirectoryInfo fixture = Directory.CreateTempSubdirectory("parties-closure-normalization-");
+        try
+        {
+            string root = Path.Combine(fixture.FullName, "root");
+            RunGit(fixture.FullName, "clone", "--shared", "--no-checkout", "--", RepositoryRoot.Locate(), root);
+            RunGit(root, "restore", "--source=HEAD", "--staged", "--worktree", "--", "README.md");
+            File.WriteAllText(Path.Combine(root, ".gitattributes"), "*.md text eol=lf\n*.yaml text eol=lf\n");
+            foreach ((string path, string text) in new[]
+                     {
+                         (SpecPath, "---\nstatus: 'in-review'\n---\nRequirements\n"),
+                         (SprintStatusPath, "  epic-8: in-progress\n  8-10-final-readiness-documentation-and-retirement-gate: review\n"),
+                         (TestSummaryPath, "Historical evidence\n\n### Validation receipts\n\nPending\n\n### Instructions\nRetained\n"),
+                     })
+            {
+                string fullPath = Path.Combine(root, path);
+                Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+                File.WriteAllText(fullPath, text);
+            }
+            RunGit(root, "config", "core.autocrlf", "false");
+            RunGit(root, "config", "core.fileMode", "false");
+            string baseline = ReadFixtureSnapshot(root);
+            foreach (string path in new[] { "README.md", SpecPath, SprintStatusPath, TestSummaryPath })
+            {
+                string fullPath = Path.Combine(root, path);
+                File.WriteAllText(fullPath, File.ReadAllText(fullPath).Replace("\r\n", "\n", StringComparison.Ordinal).Replace("\n", "\r\n", StringComparison.Ordinal));
+            }
+            RunGit(root, "config", "core.autocrlf", "true");
+            ReadFixtureSnapshot(root).ShouldBe(baseline, "Git-normalized LF and CRLF checkouts must identify the same content, including bookkeeping files.");
+            if (!OperatingSystem.IsWindows())
+            {
+                string tracked = Path.Combine(root, "README.md");
+                UnixFileMode original = File.GetUnixFileMode(tracked);
+                File.SetUnixFileMode(tracked, original ^ UnixFileMode.UserExecute);
+                ReadFixtureSnapshot(root).ShouldBe(baseline, "core.fileMode=false preserves the tracked index mode.");
+            }
+            File.AppendAllText(Path.Combine(root, "README.md"), "Changed content\r\n");
+            ReadFixtureSnapshot(root).ShouldNotBe(baseline);
+        }
+        finally
+        {
+            fixture.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>Preserves legacy mixed blobs that Git does not renormalize during ordinary checkout/add.</summary>
+    [Fact]
+    public void SnapshotPreservesTrackedMixedLineEndingsWithoutEolAttributes()
+    {
+        DirectoryInfo fixture = Directory.CreateTempSubdirectory("parties-closure-mixed-eol-");
+        try
+        {
+            string root = Path.Combine(fixture.FullName, "root");
+            RunGit(fixture.FullName, "clone", "--shared", "--no-checkout", "--", RepositoryRoot.Locate(), root);
+            RunGit(root, "restore", "--source=HEAD", "--staged", "--worktree", "--", "README.md");
+            RunGit(root, "config", "core.autocrlf", "false");
+            const string mixed = "Historical CRLF\r\nHistorical LF\n\n### Validation receipts\n\nPending\r\n\n### Instructions\nRetained\r\n";
+            string summary = Path.Combine(root, TestSummaryPath);
+            Directory.CreateDirectory(Path.GetDirectoryName(summary)!);
+            File.WriteAllText(summary, mixed);
+            RunGit(root, "add", "--", TestSummaryPath);
+            RunGit(root, "ls-files", "--eol", "--", TestSummaryPath).ShouldContain("i/mixed");
+            string baseline = ReadFixtureSnapshot(root);
+            RunGit(root, "config", "core.autocrlf", "true");
+            ReadFixtureSnapshot(root).ShouldBe(baseline, "Changing checkout configuration cannot reinterpret a legacy mixed-EOL blob.");
+            File.WriteAllText(summary, mixed.Replace("Pending", "Pass with recorded tokens", StringComparison.Ordinal));
+            ReadFixtureSnapshot(root).ShouldBe(baseline, "Only the canonical receipt payload changed.");
+            File.WriteAllText(summary, mixed.Replace("Historical LF", "Changed historical LF", StringComparison.Ordinal));
+            ReadFixtureSnapshot(root).ShouldNotBe(baseline);
+        }
+        finally
+        {
+            fixture.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>Exercises exact closed inputs, later changes, rejected receipts, reopening and shallow history.</summary>
+    [Fact]
+    public void ClosedIdentityUsesTheClosureCommitThroughLaterChangesAndReopening()
+    {
+        DirectoryInfo fixture = Directory.CreateTempSubdirectory("parties-closure-history-");
+        const string versionProperty = "HexalithClosureFixtureVersion";
+        string? originalVersion = Environment.GetEnvironmentVariable(versionProperty);
+        try
+        {
+            Environment.SetEnvironmentVariable(versionProperty, null);
+            string root = Path.Combine(fixture.FullName, "root");
+            Directory.CreateDirectory(root);
+            RunGit(root, "init");
+            RunGit(root, "config", "user.name", "Closure fixture");
+            RunGit(root, "config", "user.email", "closure-fixture@example.invalid");
+            RunGit(root, "config", "core.autocrlf", "false");
+            RunGit(root, "config", "core.fileMode", "false");
+            string ownerRoot = RepositoryRoot.Locate();
+            const string buildsPath = "references/Hexalith.Builds";
+            const string composerPath = "references/Hexalith.FrontComposer";
+            string buildsRoot = Path.Combine(root, buildsPath);
+            Directory.CreateDirectory(buildsRoot);
+            RunGit(buildsRoot, "init");
+            RunGit(buildsRoot, "config", "user.name", "Closure fixture");
+            RunGit(buildsRoot, "config", "user.email", "closure-fixture@example.invalid");
+            RunGit(buildsRoot, "config", "core.autocrlf", "false");
+            void WriteFixture(string path, string content)
+            {
+                string fullPath = Path.Combine(root, path);
+                Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+                File.WriteAllText(fullPath, content, new UTF8Encoding(encoderShouldEmitUTF8Identifier: IsClosureBookkeepingPath(path)));
+            }
+            void CommitFixture(string repository)
+                => RunGit(repository, "commit", "--allow-empty", "-m", "test: exercise closure identity");
+            WriteFixture(buildsPath + "/.gitattributes", "Props/hidden.props export-ignore\nProps/substituted.props export-subst\nProps/Directory.Packages.props text eol=crlf\n");
+            WriteFixture(buildsPath + "/Props/hidden.props", "<Project><PropertyGroup><HexalithClosureFixtureVersion Condition=\"'$(HexalithClosureFixtureVersion)' == ''\">1.0.0</HexalithClosureFixtureVersion></PropertyGroup></Project>");
+            WriteFixture(buildsPath + "/Props/substituted.props", "<Project><PropertyGroup><Marker>$Format:%H$</Marker><HexalithClosureFixtureVersion Condition=\"'$(Marker)' != '&#36;Format:%H&#36;'\">8.8.8</HexalithClosureFixtureVersion></PropertyGroup></Project>");
+            WriteFixture(buildsPath + "/Props/Directory.Packages.props", "<Project><Import Project=\"hidden.props\" /><Import Project=\"substituted.props\" /><ItemGroup><PackageVersion Include=\"Example\" Version=\"$(HexalithClosureFixtureVersion)\" /></ItemGroup></Project>");
+            RunGit(buildsRoot, "add", "--", ".");
+            CommitFixture(buildsRoot);
+            string builds = RunGit(buildsRoot, "rev-parse", "HEAD").Trim();
+            string composer = ReadSelectedRootGitlinkSha(ownerRoot, composerPath);
+            RunGit(fixture.FullName, "clone", "--shared", "--no-checkout", "--", RepositoryDependencyPaths.Resolve(ownerRoot, composerPath), Path.Combine(root, composerPath));
+            RunGit(Path.Combine(root, composerPath), "sparse-checkout", "set", "--no-cone", "/README.md");
+            RunGit(Path.Combine(root, composerPath), "checkout", "--detach", composer);
+            WriteFixture(".gitmodules", $"[submodule \"Builds\"]\n path = {buildsPath}\n[submodule \"FrontComposer\"]\n path = {composerPath}\n");
+            WriteFixture("global.json", "{}\n");
+            WriteFixture("Directory.Packages.props", "<Project><Import Project=\"references/Hexalith.Builds/Props/Directory.Packages.props\" /></Project>");
+            WriteFixture("src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj", "<Project><Import Project=\"../../Directory.Packages.props\" /></Project>");
+            WriteFixture(SpecPath, "---\nstatus: 'in-review'\n---\nRequirements\n");
+            WriteFixture(SprintStatusPath, "  epic-8: in-progress\n  8-10-final-readiness-documentation-and-retirement-gate: review\n");
+            WriteFixture(TestSummaryPath, "### Validation receipts\n\nOriginal evidence\n");
+            WriteFixture("retired.txt", "Removed before qualification\n");
+            RunGit(root, "add", "--", ".gitmodules", "global.json", "Directory.Packages.props", "src", "_bmad-output", "retired.txt");
+            RunGit(root, "update-index", "--add", "--cacheinfo", $"160000,{builds},{buildsPath}");
+            RunGit(root, "update-index", "--add", "--cacheinfo", $"160000,{composer},{composerPath}");
+            CommitFixture(root);
+            ReadClosureCommit(root).ShouldBeNull();
+            EffectivePackageVersions.ReadPackages(root)["Example"].ShouldBe("1.0.0");
+
+            File.Delete(Path.Combine(root, "retired.txt"));
+            (string Snapshot, string Dependencies) deleted = ReadCurrentClosureIdentity(root);
+            RunGit(root, "add", "--", "retired.txt");
+            ReadCurrentClosureIdentity(root).ShouldBe(deleted, "Staging a deletion cannot change final-content identity.");
+            CommitFixture(root);
+            ReadCommittedClosureIdentity(root, "HEAD").ShouldBe(deleted, "Deleted paths are absent both before staging and after commit.");
+            (string Snapshot, string Dependencies) qualifying = ReadCommittedClosureIdentity(root, "HEAD");
+            List<string> emitted = [];
+            EmitCurrentClosureIdentity(root, qualify: true, emitted.Add);
+            string qualifyingOutput = emitted.ShouldHaveSingleItem();
+            qualifyingOutput.ShouldContain("immutable_consumption=true");
+            string emittedSummary = CreateStampedValidationSummary("Release solution build", "Pass", qualifyingOutput, qualifyingOutput);
+            DescribeReceiptIdentityGaps(emittedSummary, ParseValidationReceipts(emittedSummary), qualifying.Snapshot, qualifying.Dependencies)
+                .ShouldBeEmpty("Actual qualifying output must match independently reconstructed immutable Git-object identities.");
+            emitted.Clear();
+            EmitCurrentClosureIdentity(root, qualify: false, emitted.Add);
+            string diagnosticOutput = emitted.ShouldHaveSingleItem();
+            diagnosticOutput.ShouldContain("diagnostic_parties_snapshot=");
+            diagnosticOutput.ShouldContain("immutable_consumption=false");
+            string diagnosticSummary = CreateStampedValidationSummary("Release solution build", "Pass", diagnosticOutput, diagnosticOutput);
+            DescribeReceiptIdentityGaps(diagnosticSummary, ParseValidationReceipts(diagnosticSummary), qualifying.Snapshot, qualifying.Dependencies).ShouldNotBeEmpty();
+
+            string evidence = $"Original evidence parties_snapshot={qualifying.Snapshot} dependency_set={qualifying.Dependencies} FrontComposer {composer}";
+            WriteFixture(TestSummaryPath, CreateStampedValidationSummary("Release solution build", "Pass", evidence, evidence));
+            WriteFixture(SpecPath, "---\nstatus: 'done'\n---\nRequirements\n");
+            WriteFixture(SprintStatusPath, "  epic-8: done\n  8-10-final-readiness-documentation-and-retirement-gate: done\n");
+            ReadClosureCommit(root).ShouldBeNull("An uncommitted done transition still qualifies the live tree.");
+            RunGit(root, "add", "--", SpecPath, SprintStatusPath, TestSummaryPath);
+            CommitFixture(root);
+            string closure = RunGit(root, "rev-parse", "HEAD").Trim();
+            ReadClosureCommit(root).ShouldBe(closure);
+            (string Snapshot, string Dependencies) identity = ReadCommittedClosureIdentity(root, closure);
+            ReadCurrentClosureIdentity(root).ShouldBe(identity, "BOM-bearing bookkeeping must preserve live/committed equality.");
+            ReadCommittedClosureIdentity(root, $"{closure}^").ShouldBe(identity, "Only normalized statuses and receipts changed, with BOMs retained.");
+            foreach (string path in new[] { SpecPath, SprintStatusPath, TestSummaryPath })
+            {
+                byte[] bytes = ReadGitBlobBytes(root, RunGit(root, "rev-parse", $"{closure}:{path}").Trim());
+                bytes.AsSpan().StartsWith(Encoding.UTF8.Preamble).ShouldBeTrue(path);
+            }
+            Environment.SetEnvironmentVariable(versionProperty, "9.9.9");
+            EffectivePackageVersions.ReadPackages(root)["Example"].ShouldBe("9.9.9", "Live evaluation retains ambient overrides.");
+            ReadCurrentClosureIdentity(root).Dependencies.ShouldNotBe(identity.Dependencies);
+            ReadCommittedClosureIdentity(root, closure).ShouldBe(identity, "An ambient MSBuild override cannot rewrite historical qualification.");
+            Environment.SetEnvironmentVariable(versionProperty, null);
+
+            string movedBuilds = Path.Combine(fixture.FullName, "temporarily-unavailable-builds");
+            Directory.Move(buildsRoot, movedBuilds);
+            try
+            {
+                Should.Throw<Exception>(() => ReadCommittedClosureIdentity(root, closure)).Message.ShouldContain("Closure Builds repository is unavailable");
+            }
+            finally
+            {
+                Directory.Move(movedBuilds, buildsRoot);
+            }
+
+            WriteFixture(buildsPath + "/Props/hidden.props", "<Project><PropertyGroup><HexalithClosureFixtureVersion>2.0.0</HexalithClosureFixtureVersion></PropertyGroup></Project>");
+            RunGit(buildsRoot, "add", "--", "Props/hidden.props");
+            CommitFixture(buildsRoot);
+            string laterBuilds = RunGit(buildsRoot, "rev-parse", "HEAD").Trim();
+            EffectivePackageVersions.ReadPackages(root)["Example"].ShouldBe("2.0.0");
+            WriteFixture("later.txt", "Later unrelated work\n");
+            WriteFixture(TestSummaryPath, "### Validation receipts\n\nLater evidence\n");
+            string laterComposer = RunGit(ownerRoot, "-C", composerPath, "rev-parse", $"{composer}^").Trim();
+            RunGit(root, "add", "--", "later.txt", TestSummaryPath);
+            RunGit(root, "update-index", "--cacheinfo", $"160000,{laterComposer},{composerPath}");
+            RunGit(root, "update-index", "--cacheinfo", $"160000,{laterBuilds},{buildsPath}");
+            CommitFixture(root);
+            ReadClosureCommit(root).ShouldBe(closure);
+            ReadClosureIdentity(root, ReadClosureCommit(root)).ShouldBe(identity, "The original Builds import remains 1.0.0 despite the live 2.0.0 catalog and gitlink.");
+            string closedSummary = ReadClosureSummary(root, ReadClosureCommit(root));
+            Dictionary<string, string> closedReceipts = ParseValidationReceipts(closedSummary);
+            DescribeReceiptGaps(closedReceipts).ShouldBeEmpty();
+            DescribeCurrentReceiptIdentityGaps(closedSummary, closedReceipts, () => ReadClosureIdentity(root, ReadClosureCommit(root))).ShouldBeEmpty();
+            DescribeAccessibilityStampGaps(closedSummary, closedReceipts, ReadSelectedRootGitlinkSha(root, composerPath, ReadClosureCommit(root)!)).ShouldBeEmpty();
+            ReadSelectedRootGitlinkSha(root, composerPath, closure).ShouldBe(composer);
+            ReadSelectedRootGitlinkSha(root, composerPath).ShouldBe(laterComposer);
+            ReadCommittedClosureIdentity(root, "HEAD").Snapshot.ShouldNotBe(identity.Snapshot);
+            ReadCommittedClosureIdentity(root, "HEAD").Dependencies.ShouldNotBe(identity.Dependencies);
+
+            foreach (bool corruptSnapshot in new[] { true, false })
+            {
+                WriteFixture(SpecPath, "---\nstatus: 'in-review'\n---\nRequirements\n");
+                ReadClosureCommit(root).ShouldBeNull("Reopening returns to live qualification.");
+                RunGit(root, "add", "--", SpecPath);
+                CommitFixture(root);
+                (string Snapshot, string Dependencies) nextIdentity = ReadCommittedClosureIdentity(root, "HEAD");
+                string badSnapshot = corruptSnapshot ? new string('0', 64) : nextIdentity.Snapshot;
+                string stamp = corruptSnapshot ? laterComposer : composer;
+                string badEvidence = $"parties_snapshot={badSnapshot} dependency_set={nextIdentity.Dependencies} FrontComposer {stamp}";
+                WriteFixture(TestSummaryPath, CreateStampedValidationSummary("Release solution build", "Pass", badEvidence, badEvidence));
+                WriteFixture(SpecPath, "---\nstatus: 'done'\n---\nRequirements\n");
+                ReadClosureCommit(root).ShouldBeNull("A new uncommitted closure cannot reuse an earlier done epoch.");
+                RunGit(root, "add", "--", SpecPath, TestSummaryPath);
+                CommitFixture(root);
+                string rejectedClosure = ReadClosureCommit(root)!;
+                rejectedClosure.ShouldBe(RunGit(root, "rev-parse", "HEAD").Trim());
+                string goodEvidence = $"parties_snapshot={nextIdentity.Snapshot} dependency_set={nextIdentity.Dependencies} FrontComposer {laterComposer}";
+                WriteFixture(TestSummaryPath, CreateStampedValidationSummary("Release solution build", "Pass", goodEvidence, goodEvidence));
+                string rejectedSummary = ReadClosureSummary(root, rejectedClosure);
+                Dictionary<string, string> rejectedReceipts = ParseValidationReceipts(rejectedSummary);
+                string[] identityGaps = DescribeCurrentReceiptIdentityGaps(rejectedSummary, rejectedReceipts, () => ReadClosureIdentity(root, rejectedClosure));
+                string[] accessibilityGaps = DescribeAccessibilityStampGaps(rejectedSummary, rejectedReceipts, ReadSelectedRootGitlinkSha(root, composerPath, rejectedClosure));
+                if (corruptSnapshot)
+                {
+                    identityGaps.ShouldNotBeEmpty("Corrupted archived snapshot tokens must fail despite valid live receipt edits.");
+                    accessibilityGaps.ShouldBeEmpty();
+                }
+                else
+                {
+                    identityGaps.ShouldBeEmpty();
+                    accessibilityGaps.ShouldBe(["Playwright accessibility:frontcomposer-stamp"], "A foreign historical FrontComposer stamp must fail through the closed route.");
+                }
+            }
+
+            string shallow = Path.Combine(fixture.FullName, "shallow");
+            RunGit(fixture.FullName, "clone", "--depth=1", "--no-checkout", "--", new Uri(root + Path.DirectorySeparatorChar).AbsoluteUri, shallow);
+            RunGit(shallow, "restore", "--source=HEAD", "--worktree", "--", SpecPath);
+            Should.Throw<Exception>(() => ReadClosureCommit(shallow)).Message.ShouldContain("fetch-depth 0");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(versionProperty, originalVersion);
+            fixture.Delete(recursive: true);
+        }
+    }
+
     /// <summary>Rejects actual dirty and mismatched root checkouts without changing any user repository.</summary>
     [Fact]
     public void RootGitlinkReaderRejectsDirtyAndMismatchedIsolatedCheckouts()
@@ -744,7 +1042,15 @@ public sealed class EpicEightClosureFitnessTests
             RunGit(checkout, "sparse-checkout", "set", "--no-cone", "/README.md");
             string selected = ReadSelectedRootGitlinkSha(root, path);
             RunGit(checkout, "checkout", "--detach", selected);
-            ReadValidatedRootGitlinkEntry(root, path).Mode.ShouldBe("160000");
+            (string Path, string Mode, string Digest) entry = ReadValidatedRootGitlinkEntry(root, path);
+            entry.Mode.ShouldBe("160000");
+            entry.Digest.ShouldBe(Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes($"selected={selected}\ncheckout={selected}"))));
+            string otherSha = RunGit(checkout, "rev-parse", $"{selected}^").Trim();
+            (string Path, string Mode, string Digest) other = CreateManifestEntry(path, "160000", Encoding.UTF8.GetBytes($"selected={otherSha}\ncheckout={otherSha}"));
+            foreach (string domain in new[] { "parties-snapshot-v2", "parties-dependency-set-v2" })
+            {
+                HashManifest(domain, [entry]).ShouldNotBe(HashManifest(domain, [other]));
+            }
 
             string file = Path.Combine(checkout, "README.md");
             byte[] original = File.ReadAllBytes(file);
@@ -766,11 +1072,18 @@ public sealed class EpicEightClosureFitnessTests
     [Fact]
     public void CurrentClosureIdentityCanBeDerivedWithoutClaimingQualification()
     {
-        (string snapshot, string dependencies) = ReadCurrentClosureIdentity(RepositoryRoot.Locate(), requireImmutableConsumption: false);
+        bool qualify = string.Equals(Environment.GetEnvironmentVariable("HEXALITH_EMIT_CLOSURE_IDENTITY"), "true", StringComparison.Ordinal);
+        EmitCurrentClosureIdentity(RepositoryRoot.Locate(), qualify, static output => TestContext.Current.TestOutputHelper?.WriteLine(output));
+    }
+
+    private static void EmitCurrentClosureIdentity(string root, bool qualify, Action<string> output)
+    {
+        (string snapshot, string dependencies) = ReadCurrentClosureIdentity(root, requireImmutableConsumption: qualify);
 
         Regex.IsMatch(snapshot, @"\A[0-9a-f]{64}\z", RegexOptions.CultureInvariant).ShouldBeTrue();
         Regex.IsMatch(dependencies, @"\A[0-9a-f]{64}\z", RegexOptions.CultureInvariant).ShouldBeTrue();
-        TestContext.Current.TestOutputHelper?.WriteLine($"diagnostic_parties_snapshot={snapshot} diagnostic_dependency_set={dependencies} immutable_consumption=false");
+        string prefix = qualify ? string.Empty : "diagnostic_";
+        output($"{prefix}parties_snapshot={snapshot} {prefix}dependency_set={dependencies} immutable_consumption={qualify.ToString().ToLowerInvariant()}");
     }
 
     private static string CreateStampedValidationSummary(string changedCheck, string status, string evidence, string validEvidence)
@@ -1031,15 +1344,173 @@ public sealed class EpicEightClosureFitnessTests
             .Select(static receipt => $"{receipt.Key}:{receipt.Value}"))
             .ToArray();
 
+    /// <summary>Uses live evidence until closure is committed, then locates that done epoch's first commit.</summary>
+    private static string? ReadClosureCommit(string root)
+    {
+        if (NormalizeStoryStatus(ReadFrontmatterValue(Read(root, SpecPath), "status")) != "done"
+            || ReadFrontmatterValue(RunGit(root, "show", $"HEAD:{SpecPath}"), "status") != "done")
+        {
+            return null;
+        }
+
+        string? closure = null;
+        foreach (string revision in SplitLines(RunGit(root, "log", "--first-parent", "--format=%H", "HEAD", "--", SpecPath)))
+        {
+            if (ReadFrontmatterValue(RunGit(root, "show", $"{revision}:{SpecPath}"), "status") != "done")
+            {
+                closure.ShouldNotBeNull("A committed done transition must have a closure commit.");
+                return closure;
+            }
+            closure = revision;
+        }
+
+        Assert.SkipUnless(RunGit(root, "rev-parse", "--is-shallow-repository").Trim() == "false",
+            "Story 8.10 closure history is shallow; check out with fetch-depth 0 to verify its closure commit.");
+        closure.ShouldNotBeNull("No Story 8.10 closure commit was found.");
+        return closure;
+    }
+
+    private static string ReadClosureSummary(string root, string? revision)
+        => revision is null ? Read(root, TestSummaryPath) : RunGit(root, "show", $"{revision}:{TestSummaryPath}");
+
+    private static (string Snapshot, string Dependencies) ReadClosureIdentity(string root, string? revision)
+        => revision is null ? ReadCurrentClosureIdentity(root) : ReadCommittedClosureIdentity(root, revision);
+
+    /// <summary>Reads closed evidence from Git objects; subsequent worktree and dependency changes are irrelevant.</summary>
+    private static (string Snapshot, string Dependencies) ReadCommittedClosureIdentity(string root, string revision)
+    {
+        Dictionary<string, (string Path, string Mode, string Digest)> files = new(StringComparer.Ordinal);
+        foreach (string entry in RunGit(root, "ls-tree", "-r", "-z", revision).Split('\0', StringSplitOptions.RemoveEmptyEntries))
+        {
+            string[] parts = entry.Split('\t', 2);
+            string[] metadata = parts[0].Split(' ');
+            string path = parts[1];
+            if (metadata[0] == "160000")
+            {
+                files.Add(path, CreateManifestEntry(path, "160000", Encoding.UTF8.GetBytes($"selected={metadata[2]}\ncheckout={metadata[2]}")));
+            }
+            else if (IsClosureBookkeepingPath(path))
+            {
+                files.Add(path, CreateNormalizedBlobEntry(root, path, metadata[0], ReadGitBlobBytes(root, metadata[2]), applyFilters: false));
+            }
+            else if (metadata[0] == "120000")
+            {
+                files.Add(path, CreateManifestEntry(path, "120000", ReadGitBlobBytes(root, metadata[2])));
+            }
+            else
+            {
+                files.Add(path, (path, metadata[0], metadata[2]));
+            }
+        }
+
+        List<(string Path, string Mode, string Digest)> dependencies = files.Values.Where(static entry => entry.Mode == "160000").ToList();
+        dependencies.AddRange(files.Values.Where(static entry => entry.Path is ".gitmodules" or "global.json"
+            || (!entry.Path.Contains('/') && (entry.Path.EndsWith(".props", StringComparison.Ordinal) || entry.Path.EndsWith(".targets", StringComparison.Ordinal)))));
+        const string buildsPath = "references/Hexalith.Builds";
+        string buildsRevision = ReadSelectedRootGitlinkSha(root, buildsPath, revision);
+        string buildsRoot = RepositoryDependencyPaths.Resolve(root, buildsPath);
+        Assert.SkipUnless(Directory.Exists(buildsRoot)
+            && (File.Exists(Path.Combine(buildsRoot, ".git")) || Directory.Exists(Path.Combine(buildsRoot, ".git"))),
+            $"Closure Builds repository is unavailable at {buildsRoot}; initialize the declared root dependency and fetch object {buildsRevision} before verifying closed evidence.");
+        Assert.SkipUnless(TryRunGit(buildsRoot, out _, "cat-file", "-e", $"{buildsRevision}^{{commit}}"),
+            $"Closure Builds object {buildsRevision} is unreachable; fetch its full history before verifying closed evidence.");
+        dependencies.Add(($"{buildsPath}/Props/Directory.Packages.props", "100644",
+            RunGit(buildsRoot, "rev-parse", $"{buildsRevision}:Props/Directory.Packages.props").Trim()));
+
+        DirectoryInfo fixture = Directory.CreateTempSubdirectory("parties-closed-identity-");
+        try
+        {
+            string snapshotRoot = Path.Combine(fixture.FullName, "snapshot");
+            MaterializeGitTree(root, revision, snapshotRoot);
+            MaterializeGitTree(buildsRoot, buildsRevision, Path.Combine(snapshotRoot, buildsPath));
+            foreach ((string package, string version) in EffectivePackageVersions.ReadPackages(snapshotRoot, isolateEnvironment: true))
+            {
+                dependencies.Add(CreateManifestEntry($"evaluated-package/{package}", "version", Encoding.UTF8.GetBytes(version)));
+            }
+        }
+        finally
+        {
+            fixture.Delete(recursive: true);
+        }
+        return (HashManifest("parties-snapshot-v2", files.Values), HashManifest("parties-dependency-set-v2", dependencies));
+    }
+
+    /// <summary>Reads raw object bytes without a text decoder consuming a UTF-8 BOM.</summary>
+    private static byte[] ReadGitBlobBytes(string root, string objectId)
+    {
+        string temporary = Path.GetTempFileName();
+        try
+        {
+            PackageTestProcessResult result = PackageTestProcess.Run("git", ["cat-file", "blob", objectId], root, 30_000, standardOutputFile: temporary);
+            result.ExitCode.ShouldBe(0, result.Diagnostic);
+            return File.ReadAllBytes(temporary);
+        }
+        finally
+        {
+            File.Delete(temporary);
+        }
+    }
+
+    /// <summary>Materializes exact blobs; archive attributes and ambient clean/smudge filters never apply.</summary>
+    private static void MaterializeGitTree(string root, string revision, string destination)
+    {
+        var entries = RunGit(root, "ls-tree", "-r", "-z", revision).Split('\0', StringSplitOptions.RemoveEmptyEntries)
+            .Select(static entry => entry.Split('\t', 2))
+            .Select(static entry => (Metadata: entry[0].Split(' '), Path: entry[1]))
+            .Where(static entry => entry.Metadata[1] == "blob")
+            .GroupBy(static entry => entry.Metadata[2], StringComparer.Ordinal).ToArray();
+        string temporary = Path.GetTempFileName();
+        try
+        {
+            PackageTestProcessResult result = PackageTestProcess.Run("git", ["cat-file", "--batch"], root, 30_000,
+                standardInput: string.Join('\n', entries.Select(static entry => entry.Key)) + "\n", standardOutputFile: temporary);
+            result.ExitCode.ShouldBe(0, result.Diagnostic);
+            using FileStream blobs = File.OpenRead(temporary);
+            foreach (var group in entries)
+            {
+                StringBuilder header = new();
+                int next;
+                while ((next = blobs.ReadByte()) != '\n' && next >= 0)
+                {
+                    header.Append((char)next);
+                }
+                string[] fields = header.ToString().Split(' ');
+                fields.Length.ShouldBe(3);
+                fields[0].ShouldBe(group.Key);
+                fields[1].ShouldBe("blob");
+                byte[] content = new byte[int.Parse(fields[2], CultureInfo.InvariantCulture)];
+                blobs.ReadExactly(content);
+                blobs.ReadByte().ShouldBe((int)'\n');
+                foreach (var entry in group)
+                {
+                    string path = Path.Combine(destination, entry.Path);
+                    Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                    if (entry.Metadata[0] == "120000")
+                    {
+                        File.CreateSymbolicLink(path, Encoding.UTF8.GetString(content));
+                    }
+                    else
+                    {
+                        File.WriteAllBytes(path, content);
+                    }
+                }
+            }
+        }
+        finally
+        {
+            File.Delete(temporary);
+        }
+    }
+
     /// <summary>Derives identities only when a required row claims successful current qualification.</summary>
-    private static string[] DescribeCurrentReceiptIdentityGaps(string root, string summary, IReadOnlyDictionary<string, string> receipts)
+    private static string[] DescribeCurrentReceiptIdentityGaps(string summary, IReadOnlyDictionary<string, string> receipts, Func<(string Snapshot, string Dependencies)> readIdentity)
     {
         if (!RequiredValidationReceiptChecks.Any(check => receipts.TryGetValue(check, out string? result) && IsCleanPass(result)))
         {
             return [];
         }
 
-        (string snapshot, string dependencies) = ReadCurrentClosureIdentity(root);
+        (string snapshot, string dependencies) = readIdentity();
         return DescribeReceiptIdentityGaps(summary, receipts, snapshot, dependencies);
     }
 
@@ -1106,7 +1577,20 @@ public sealed class EpicEightClosureFitnessTests
             }
             else
             {
-                dependencyInputs.Add(ReadWorktreeManifestEntry(root, path, trackedModes.GetValueOrDefault(path, "100644")));
+                if (path.StartsWith("references/Hexalith.Builds/", StringComparison.Ordinal))
+                {
+                    const string buildsPath = "references/Hexalith.Builds";
+                    (string Path, string Mode, string Digest) catalog = ReadWorktreeManifestEntry(
+                        RepositoryDependencyPaths.Resolve(root, buildsPath), path[(buildsPath.Length + 1)..], "100644");
+                    dependencyInputs.Add((path, catalog.Mode, catalog.Digest));
+                }
+                else
+                {
+                    if (File.Exists(Path.Combine(root, path)) || new FileInfo(Path.Combine(root, path)).LinkTarget is not null)
+                    {
+                        dependencyInputs.Add(ReadWorktreeManifestEntry(root, path, trackedModes.GetValueOrDefault(path, "100644")));
+                    }
+                }
             }
         }
 
@@ -1115,8 +1599,8 @@ public sealed class EpicEightClosureFitnessTests
             dependencyInputs.Add(CreateManifestEntry($"evaluated-package/{package}", "version", Encoding.UTF8.GetBytes(version)));
         }
 
-        return (HashManifest(requireImmutableConsumption ? "parties-snapshot-v1" : "parties-diagnostic-snapshot-v1", [.. files, .. gitlinks]),
-            HashManifest(requireImmutableConsumption ? "parties-dependency-set-v1" : "parties-diagnostic-dependency-set-v1", dependencyInputs));
+        return (HashManifest(requireImmutableConsumption ? "parties-snapshot-v2" : "parties-diagnostic-snapshot-v2", [.. files, .. gitlinks]),
+            HashManifest(requireImmutableConsumption ? "parties-dependency-set-v2" : "parties-diagnostic-dependency-set-v2", dependencyInputs));
     }
 
     private static Dictionary<string, string> ReadTrackedModes(string root)
@@ -1133,18 +1617,58 @@ public sealed class EpicEightClosureFitnessTests
         return trackedModes;
     }
 
+    /// <summary>Matches Git's index-aware preservation of legacy CRLF/mixed blobs without text attributes.</summary>
+    private static HashSet<string> ReadPreservedLineEndingPaths(string root)
+        => RunGit(root, "ls-files", "--eol", "-z").Split('\0', StringSplitOptions.RemoveEmptyEntries)
+            .Where(static entry => Regex.IsMatch(entry, @"\Ai/(?:crlf|mixed)\s+\S+\s+attr/[ \t]*\t", RegexOptions.CultureInvariant))
+            .Select(static entry => entry[(entry.IndexOf('\t') + 1)..])
+            .ToHashSet(StringComparer.Ordinal);
+
     private static List<(string Path, string Mode, string Digest)> ReadRootWorktreeManifest(
         string root,
         IReadOnlyDictionary<string, string> trackedModes,
         IReadOnlySet<string> rootGitlinkPaths)
     {
         List<(string Path, string Mode, string Digest)> files = [];
+        bool trustMode = !TryRunGit(root, out string fileMode, "config", "--bool", "--get", "core.fileMode") || fileMode.Trim() != "false";
+        HashSet<string> preserved = ReadPreservedLineEndingPaths(root);
+        List<(string Path, string Mode, bool Preserve)> ordinary = [];
         foreach (string path in RunGit(root, "ls-files", "--cached", "--others", "--exclude-standard", "-z")
                      .Split('\0', StringSplitOptions.RemoveEmptyEntries).Distinct(StringComparer.Ordinal))
         {
             if (!rootGitlinkPaths.Contains(path))
             {
-                files.Add(ReadWorktreeManifestEntry(root, path, trackedModes.GetValueOrDefault(path, "100644")));
+                string mode = trackedModes.GetValueOrDefault(path, "100644");
+                string fullPath = Path.Combine(root, path);
+                string? target = new FileInfo(fullPath).LinkTarget;
+                if (!File.Exists(fullPath) && target is null)
+                {
+                    continue;
+                }
+                if (IsClosureBookkeepingPath(path) || target is not null)
+                {
+                    files.Add(ReadWorktreeManifestEntry(root, path, mode, trustMode, preserved.Contains(path)));
+                }
+                else
+                {
+                    ordinary.Add((path, ReadWorktreeMode(fullPath, mode, trustMode), preserved.Contains(path)));
+                }
+            }
+        }
+
+        foreach (IGrouping<bool, (string Path, string Mode, bool Preserve)> group in ordinary.GroupBy(static entry => entry.Preserve))
+        {
+            foreach ((string Path, string Mode, bool Preserve)[] batch in group.Chunk(128))
+            {
+                string[] arguments = group.Key
+                    ? ["hash-object", "--no-filters", "--", .. batch.Select(static entry => entry.Path)]
+                    : ["hash-object", "--", .. batch.Select(static entry => entry.Path)];
+                string[] digests = SplitLines(RunGit(root, arguments));
+                digests.Length.ShouldBe(batch.Length);
+                for (int index = 0; index < batch.Length; index++)
+                {
+                    files.Add((batch[index].Path, batch[index].Mode, digests[index]));
+                }
             }
         }
 
@@ -1152,7 +1676,7 @@ public sealed class EpicEightClosureFitnessTests
     }
 
     private static string ReadFixtureSnapshot(string root)
-        => HashManifest("parties-snapshot-v1", ReadRootWorktreeManifest(root, ReadTrackedModes(root), new HashSet<string>(StringComparer.Ordinal)));
+        => HashManifest("parties-snapshot-v2", ReadRootWorktreeManifest(root, ReadTrackedModes(root), new HashSet<string>(StringComparer.Ordinal)));
 
     /// <summary>Hashes diagnostic source observations without producing immutable-consumption evidence.</summary>
     private static (string Path, string Mode, string Digest) ReadObservedRootGitlinkEntry(string root, string path)
@@ -1196,7 +1720,7 @@ public sealed class EpicEightClosureFitnessTests
         return CreateManifestEntry(path, "160000", Encoding.UTF8.GetBytes($"selected={selected}\ncheckout={checkout}"));
     }
 
-    private static (string Path, string Mode, string Digest) ReadWorktreeManifestEntry(string root, string path, string indexedMode)
+    private static (string Path, string Mode, string Digest) ReadWorktreeManifestEntry(string root, string path, string indexedMode, bool? trustFileMode = null, bool? preserveLineEndings = null)
     {
         string fullPath = Path.Combine(root, path);
         string? target = new FileInfo(fullPath).LinkTarget;
@@ -1210,24 +1734,59 @@ public sealed class EpicEightClosureFitnessTests
             return CreateManifestEntry(path, "missing", []);
         }
 
-        string mode = indexedMode;
-        if (!OperatingSystem.IsWindows())
-        {
-            mode = (File.GetUnixFileMode(fullPath) & UnixFileMode.UserExecute) != 0 ? "100755" : "100644";
-        }
+        bool trustMode = trustFileMode ?? (!TryRunGit(root, out string configured, "config", "--bool", "--get", "core.fileMode") || configured.Trim() != "false");
+        string mode = ReadWorktreeMode(fullPath, indexedMode, trustMode);
+        bool preserve = preserveLineEndings ?? ReadPreservedLineEndingPaths(root).Contains(path);
 
-        return CreateManifestEntry(path, mode, File.ReadAllBytes(fullPath));
+        return IsClosureBookkeepingPath(path)
+            ? CreateNormalizedBlobEntry(root, path, mode, File.ReadAllBytes(fullPath), applyFilters: !preserve)
+            : (path, mode, (preserve
+                ? RunGit(root, "hash-object", "--no-filters", "--", fullPath)
+                : RunGit(root, "hash-object", $"--path={path}", "--", fullPath)).Trim());
     }
 
-    private static string ReadSelectedRootGitlinkSha(string root, string path)
+    private static string ReadWorktreeMode(string fullPath, string indexedMode, bool trustFileMode)
+        => !OperatingSystem.IsWindows() && trustFileMode
+            ? (File.GetUnixFileMode(fullPath) & UnixFileMode.UserExecute) != 0 ? "100755" : "100644"
+            : indexedMode;
+
+    private static string ReadSelectedRootGitlinkSha(string root, string path, string revision = "HEAD")
     {
-        Match selected = Regex.Match(RunGit(root, "ls-tree", "HEAD", "--", path), @"\A160000 commit (?<sha>[0-9a-f]{40})\t", RegexOptions.CultureInvariant);
+        Match selected = Regex.Match(RunGit(root, "ls-tree", revision, "--", path), @"\A160000 commit (?<sha>[0-9a-f]{40})\t", RegexOptions.CultureInvariant);
         selected.Success.ShouldBeTrue($"No committed root gitlink: {path}");
         return selected.Groups["sha"].Value;
     }
 
-    private static (string Path, string Mode, string Digest) CreateManifestEntry(string path, string mode, byte[] content)
+    private static bool IsClosureBookkeepingPath(string path)
+        => path is TestSummaryPath or SpecPath or SprintStatusPath;
+
+    private static (string Path, string Mode, string Digest) CreateNormalizedBlobEntry(string root, string path, string mode, byte[] content, bool applyFilters)
     {
+        string temporary = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllBytes(temporary, NormalizeManifestContent(path, mode, content));
+            string digest = applyFilters
+                ? RunGit(root, "hash-object", $"--path={path}", "--", temporary).Trim()
+                : RunGit(root, "hash-object", "--no-filters", "--", temporary).Trim();
+            return (path, mode, digest);
+        }
+        finally
+        {
+            File.Delete(temporary);
+        }
+    }
+
+    private static (string Path, string Mode, string Digest) CreateManifestEntry(string path, string mode, byte[] content)
+        => (path, mode, Convert.ToHexStringLower(SHA256.HashData(NormalizeManifestContent(path, mode, content))));
+
+    private static byte[] NormalizeManifestContent(string path, string mode, byte[] content)
+    {
+        bool hasBom = content.AsSpan().StartsWith(Encoding.UTF8.Preamble);
+        if (hasBom)
+        {
+            content = content[Encoding.UTF8.Preamble.Length..];
+        }
         if (string.Equals(path, TestSummaryPath, StringComparison.Ordinal) && mode != "missing")
         {
             string summary = Encoding.UTF8.GetString(content);
@@ -1254,7 +1813,7 @@ public sealed class EpicEightClosureFitnessTests
             content = Encoding.UTF8.GetBytes(sprint);
         }
 
-        return (path, mode, Convert.ToHexStringLower(SHA256.HashData(content)));
+        return hasBom ? [.. Encoding.UTF8.Preamble, .. content] : content;
     }
 
     private static string NormalizeClosureStatusValue(string content, string key, string allowedValues)

@@ -2552,96 +2552,214 @@ qualify. Other blocked stories and historical approvals keep their scope.
 
 ### Validation receipts
 
-Current canonical closure table. Every required clean `Pass` must carry its own
-matching `parties_snapshot` and `dependency_set` tokens. An honest unsuccessful
-receipt remains recordable without stamps. These rows are Unvalidated because
-the full closure suite has not been rerun for the current snapshot.
+Current canonical closure qualification, 2026-11-01. Round 7 implementation and
+all surviving review repairs are complete. Story 8.10 remains `in-review`
+(sprint `review`) and Epic 8 remains `in-progress`: mandatory build gates are
+blocked. Every clean Pass below binds this exact working snapshot; unsuccessful
+and unrun lanes confer no qualification.
 
 | Check | Result | Evidence |
 | --- | --- | --- |
-| Warning and nested-submodule policy | Unvalidated | No current exact-snapshot closure qualification recorded. |
-| Release solution build | Unvalidated | No current exact-snapshot closure qualification recorded. |
-| All .NET test projects | Unvalidated | No current exact-snapshot closure qualification recorded. |
-| Package/API and package-only consumers | Unvalidated | No current exact-snapshot closure qualification recorded. |
-| npm install and typecheck | Unvalidated | No current exact-snapshot closure qualification recorded. |
-| Playwright accessibility | Unvalidated | No current exact-snapshot closure qualification recorded; a future Pass also requires the selected FrontComposer source stamp. |
+| Warning and nested-submodule policy | Pass | `bash scripts/check-no-warning-override.sh` and `bash scripts/gitlink-rc-gate.sh` exited 0. All 10 root dependencies were inspected; all 76 nested declarations remain uninitialized. Strict emitter passed. `parties_snapshot=dca1acb639e0e8ae81e1f4cd8fccd3c38855f16bbfe53b1963644593a84125df` `dependency_set=891a3101a5d6dc5c77938ddc3ef9e688ec44cd28675035f8a24e87cc80cd4d24`. Logs: `/tmp/parties-810-qualification-6p4w60kn/{warning-policy,gitlink-policy,nested-policy,identity}.log`. |
+| Release solution build | Blocked | `dotnet restore Hexalith.Parties.slnx` passed with NuGet auditing enabled. `dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1 -p:MinVerVersionOverride=1.0.0` exited 1 with 522 errors and 0 warnings (21.783 s), in referenced EventStore Admin UI. First errors: CS0234 for Client, SignalR, ServiceDefaults and Admin.Abstractions namespaces; CS0246 for admin DTOs. The focused `dotnet build tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` reproduces the same 522 errors. Logs: `solution-build-audit-enabled.log`, `admin-ui-fallback.log` under the qualification directory. No dependency, source gitlink or warning gate was changed. |
+| All .NET test projects | Blocked | `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory /tmp/parties-810-qualification-6p4w60kn/TestResults -Properties NuGetAudit=false` exited 1 after 311.569 s: 14 projects passed, IntegrationTests could not build (CS0234, `EventIdentityValidator.cs:1`, Hexalith.Commons namespace missing in referenced EventStore.Contracts), and six CI audit assertions correctly rejected this diagnostic setting. After audit-enabled solution restore, `dotnet test tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj --configuration Release --verbosity minimal --results-directory /tmp/parties-810-qualification-6p4w60kn/AuditEnabled --report-xunit-trx --report-xunit-trx-filename Hexalith.Parties.Ci.Tests.trx` passed 522/522. Combined verified evidence: 15 projects, 6,270 passed, 0 unresolved test failures, 5 explicit skips (4 opt-in Memories runtime cases and 1 obsolete-package compatibility case); the six initial audit failures are superseded by this correction. IntegrationTests remains unbuilt/unrun, so this lane is not Pass. Per-test TRX and exact logs are outside the repository in the qualification directory. |
+| Package/API and package-only consumers | Unvalidated | Not run after mandatory build verification remained blocked; no current package/consumer qualification claimed. |
+| npm install and typecheck | Unvalidated | Not run after mandatory build verification remained blocked; pinned Node 24.22.1 and npm 11.19.1 are available for the eventual rerun. |
+| Playwright accessibility | Unvalidated | Not run after mandatory build verification remained blocked; no current accessibility qualification claimed. Selected FrontComposer gitlink remains `c092e8f91ebb670fad4ab959f2d3c8e13d809e0f`, separate from package `4.7.4`. |
 
-### Closure receipt identity format — 2026-10-21
+The fallback ladder preserved the separate evidence: edited Release projects and
+focused checks pass (91 main checks, 28 shared-runner checks, plus the full
+2,839-case service run with 2,835 passes and its four explicit runtime skips).
+Raw reconstruction of the real committed tree passed separately. Audit-enabled
+restore and CI verification pass; the broad solution and integration build
+failures remain visible. Existing approvals, accepted deferrals and rollback
+paths retain their scope, and DW-159 remains open.
+
+The bmad-build review step requires a halt when required verification fails and
+cannot be repaired within the approved story boundaries. This run stops at that
+verification gate before presentation/closure. No release, commit, push,
+submodule update or owner-repository edit occurred. Exact commands, process
+results and outputs are retained under
+`/tmp/parties-810-qualification-6p4w60kn`; the earlier focused receipts remain
+historical and do not turn the unrun lanes into Pass.
+
+### Closure receipt identity format — v2, 2026-11-01
 
 Each passing required row's Evidence cell must contain exactly one
 `parties_snapshot=<64 lowercase hexadecimal characters>` token and exactly one
-`dependency_set=<64 lowercase hexadecimal characters>` token. Both values must
-match independently derived current values. Tokens in another row, historical
-section, or later prose cannot supply a missing stamp. Malformed, repeated,
-conflicting, and stale tokens fail closed. The accessibility-specific
-FrontComposer source assertion remains a separate condition. A digest is an
-identity check; it does not prove that a command ran or passed.
+`dependency_set=<64 lowercase hexadecimal characters>` token. While Story 8.10
+is open, both must match independently derived live values. Tokens in another
+row, historical section, or later prose cannot supply a missing stamp.
+Malformed, repeated, conflicting, and stale tokens fail closed. A clean Pass
+accessibility receipt must also name the selected FrontComposer root gitlink
+bound by that snapshot. The owner approved the exact current source/package set
+at Parties `b6443b2475d3495b58358f84cdb161b05c62d0f9` on 2026-11-01 (spec 8.10
+Round 7 decision 3; 8.3 I20 table). Source and package identities remain separate.
+A digest proves identity only; it does not prove that a command ran or passed.
 
-`parties_snapshot` is a SHA256 content digest, not a Git tree or commit ID.
-`EpicEightClosureFitnessTests.ReadCurrentClosureIdentity` builds its version-1
+`parties_snapshot` is a SHA256 manifest digest, not a Git tree or commit ID.
+`EpicEightClosureFitnessTests.ReadCurrentClosureIdentity` builds its version-2
 manifest from `git ls-files --cached --others --exclude-standard -z`, including
-all tracked paths (with a missing marker for deletions), unignored untracked
-root files, Git-compatible file modes, symlink targets, and the committed
-selection plus actual checkout SHA of every root-declared gitlink. Root
-checkouts must be initialized, clean, and match their committed gitlinks.
-Ignored generated outputs are excluded by Git; submodule files stay represented
-by their root gitlinks. On Unix, only the owner-executable (`UserExecute`)
-worktree bit determines Git's executable file mode; group-only or other-only
-execute bits do not. On Windows, tracked index modes apply. It does not stage files or write Git
-objects.
+existing tracked paths (deleted paths omitted), unignored untracked root
+files, Git modes, symlink targets, and the committed selection plus actual
+checkout SHA of every root-declared gitlink. Root checkouts must be initialized,
+clean, and match their committed gitlinks. Ignored generated outputs stay
+excluded; submodule files are represented by their root gitlinks.
 
-The content exemptions are limited to receipt bookkeeping. The latest
-canonical `### Validation receipts` section through the next level-1/2/3 heading
-is replaced by the fixed UTF-8 marker `<!-- closure-receipt-payload:v1 -->`
-followed by LF. Three exact status values are replaced with
-`<closure-status:v1>` while preserving their surrounding bytes: Story 8.10's
-frontmatter `status` (`in-review`/`review`/`done`), sprint key
+Regular-file entry digests are Git blob IDs from Git's clean conversion
+(`git hash-object`, without writing objects). Git attributes and checkout EOL
+conversion therefore govern text normalization. Like an ordinary index-aware
+Git add, legacy tracked CRLF/mixed blobs without text/EOL attributes preserve
+their indexed byte policy; switching `core.autocrlf` does not renormalize that
+history. The actual canonical summary has mixed historical EOLs and receives
+this protection. A real content change remains bound. Explicit `-text` assets
+retain their bytes. The Builds catalog uses its own repository's attributes.
+Tracked index modes apply when `core.fileMode=false` or on Windows; when Git
+trusts Unix modes, only owner-execute determines `100755` versus `100644`.
+Group-only and other-only execute do not change the mode. Neither the index nor
+repository objects are written.
+
+Only receipt bookkeeping is exempt. The latest canonical
+`### Validation receipts` section through the next level-1/2/3 heading is
+replaced by the fixed UTF-8 marker `<!-- closure-receipt-payload:v1 -->` and LF.
+Three exact status values are replaced with `<closure-status:v1>` while
+preserving surrounding content: Story 8.10's frontmatter `status`
+(`in-review`/`review`/`done`), sprint key
 `8-10-final-readiness-documentation-and-retirement-gate` (`review`/`done`), and
 sprint key `epic-8` (`in-progress`/`done`). Frontmatter normalization ends at its
-closing delimiter; identically spelled fields in later prose are covered.
-No other status, text, whitespace, quotation, or file-mode change is exempt.
+closing delimiter; the same field in later prose remains covered. Git clean
+conversion then applies as above. No other status, text, whitespace, quotation,
+path or mode change is exempt.
 
-These narrow exemptions prevent recursive receipt hashes and permit honest
-closure after qualification. First stabilize all other files with the story
-`in-review` (sprint `review`) and Epic 8 `in-progress`. Collect the identity
-without assigning Pass, run all required gates against that snapshot, and
-record successful rows with their exact stamps. After all six lanes qualify,
-transition only the three normalized status values to `done`; the existing
-strict done-and-green checks remain in force. Historical evidence and these
-instructions remain covered. Any other code, configuration, document, status,
-mode, path, or root-gitlink change invalidates the snapshot and requires fresh
-qualification.
+First resolve the Round 7 patches and their review, then stabilize every other
+file with Story 8.10 `in-review`, sprint `review`, and Epic 8 `in-progress`.
+Collect the qualifying tokens without assigning Pass, run all six required
+gates against that snapshot, and record successful rows with those exact tokens.
+Qualifying-run output must stay **inside the canonical receipts section or
+outside the repository**, for example under `/tmp`. Creating or committing a
+dated evidence folder, appending historical notes, or adding an unignored file
+after deriving tokens changes the snapshot and requires collecting tokens and
+rerunning qualification. Establish any tracked evidence files before collecting
+the final tokens; only canonical receipt edits are exempt afterward.
 
-For each manifest entry, compute the lowercase SHA256 of its bytes (gitlinks
-use UTF-8 `selected=<sha>` plus LF plus `checkout=<sha>`). Sort entries by path
-using ordinal comparison. Hash UTF-8 `parties-snapshot-v1` plus NUL, followed by
-`path`, NUL, `mode`, NUL, `entry digest`, NUL for every entry. Deleted files use
-mode `missing` and empty bytes. Symlink mode is `120000`, ordinary files are
-`100644` or `100755`, and gitlinks are `160000`.
+After all six lanes qualify, transition only the three normalized status values
+to `done`. Until that transition is committed, the gate still checks the live
+tree. Once committed, the first commit of that uninterrupted done epoch is the
+closure commit. The gate reads that commit's spec and canonical receipts, derives
+both v2 digests from its Git objects, and uses its selected FrontComposer gitlink.
+Historical effective package versions are evaluated from exact binary Git-blob
+materializations of that Parties tree and its selected Builds tree. No archive
+export-ignore/export-subst or clean/smudge transformation applies. UTF-8 BOM
+bytes are retained, including in normalized bookkeeping blobs. Historical
+evaluation discards ambient MSBuild property overrides while preserving only
+process-launch environment; live evaluation retains its ordinary environment.
+Neither today's catalog nor ambient version values can rewrite closed evidence.
+Later commits, logs, gitlink changes and untracked files do not invalidate closed
+evidence or grant it new parity. Reopening Story 8.10 returns qualification to
+the live tree and a later committed closure starts a new done epoch. If shallow
+history cannot establish the closure commit, or its Builds object is unavailable,
+verification skips loudly with the missing history named; it grants no credit.
 
-`dependency_set` uses the same manifest encoding with the domain prefix
-`parties-dependency-set-v1`. Its independent inputs are all root-declared
-selected/checked-out gitlinks, `.gitmodules`, `global.json`, top-level `.props`
-and `.targets` files, the selected Builds `Props/Directory.Packages.props`, and
-all effective Release `PackageVersion` items evaluated through the Client
-project by `EffectivePackageVersions.ReadPackages`. Evaluated versions use
-path `evaluated-package/<package ID>`, mode `version`, and UTF-8 version bytes.
-These catalog selection inputs are also bound by the full snapshot. Missing or
-unresolved evaluated versions fail closed. Expected token values are reported
-in receipt identity failure diagnostics; deriving them grants no test credit.
-Only a real rerun against the final snapshot can justify replacing Unvalidated
-with Pass.
+Sort manifest entries by ordinal path. Hash UTF-8 `parties-snapshot-v2` and NUL,
+then `path`, NUL, `mode`, NUL, `entry digest`, NUL for every entry. Regular files
+use their normalized Git blob IDs as entry digests. Other entries use lowercase
+SHA256 over their content: gitlinks encode UTF-8 `selected=<sha>`, LF,
+`checkout=<sha>`; symlinks encode their target. Deleted files have no manifest
+entry, both before staging their removal and in the committed tree. Symlink mode
+is `120000`, ordinary modes are `100644` or
+`100755`, and gitlinks are `160000`. Version 1 tokens cannot qualify version 2.
 
+`dependency_set` uses the same encoding with domain
+`parties-dependency-set-v2`. Inputs remain all selected/checked-out root gitlinks,
+`.gitmodules`, `global.json`, top-level `.props` and `.targets`, the selected
+Builds `Props/Directory.Packages.props`, and all effective Release
+`PackageVersion` items evaluated through Client by `EffectivePackageVersions`.
+Evaluated versions use path `evaluated-package/<package ID>`, mode `version`,
+and the SHA256 of UTF-8 version bytes. Missing/unresolved versions fail closed.
+All dependency inputs are also bound by the snapshot. Failure diagnostics name
+expected tokens, but only actual reruns justify a Pass.
 
-To collect the two current tokens honestly, build the Debug service test
-project, then run its read-only identity fact with live output directed
-outside the repository:
+To emit **gate-compatible** tokens, build the Release service test project and
+explicitly enable immutable-consumption validation for the read-only fact:
 
 ```bash
-dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -method Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.CurrentClosureIdentityCanBeDerivedWithoutClaimingQualification -showLiveOutput > /tmp/parties-closure-identity.txt
+HEXALITH_EMIT_CLOSURE_IDENTITY=true dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -method Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.CurrentClosureIdentityCanBeDerivedWithoutClaimingQualification -showLiveOutput > /tmp/parties-closure-identity.txt
 ```
 
-The fact emits `parties_snapshot=... dependency_set=...` and assigns no
-closure-lane qualification. Keeping this output outside the root avoids
-adding an input while collecting the snapshot. Do not change a canonical row
-to Pass merely to obtain the tokens.
+It emits `parties_snapshot=... dependency_set=... immutable_consumption=true`
+without assigning qualification. Without that explicit opt-in, the ordinary
+fact emits only `diagnostic_parties_snapshot` / `diagnostic_dependency_set`
+under separate diagnostic domains and permits source observations; those values
+cannot qualify any closure lane. Never change a row to Pass merely to obtain
+tokens, and never reuse tokens collected before subsequent bound edits.
+
+### Story 8.10 Round 7 patch verification — 2026-11-01
+
+The resumed patch scope starts at Parties
+`ed3aecb41d5707d7572d776cdb0cf3a9e0c2d8d9`, preserving the spec's original
+baseline and earlier reviews. Round 7 decisions 1–4 authorize the closure-commit
+anchor, portable v2 identity, current selected-gitlink approval and reopened
+DW-159. The gate now exercises an injected identity reader with one Pass and
+with no passing rows, verifies gitlink digest bytes and both manifest domains,
+and covers EOL/mode conversion, later closed-tree edits and reopening.
+`EffectivePackageVersions` errors include the offending value, with CR/LF escaped.
+The direct router comment now describes its synthetic Received lifecycle rather
+than claiming to mirror EventStore SubmitCommandHandler. The spine and 8.3 I20
+row record the exact owner-approved set; no dependency or gitlink changed.
+
+Focused verification is recorded below before six-lane requalification. The six
+canonical rows remain Unvalidated. These focused checks do not establish complete
+closure qualification, I13 discharge, external-runtime compile parity or deletion
+authority. Round 7 review precedes rerunning the six required lanes.
+
+
+| Focused check | Exact command | Result |
+| --- | --- | --- |
+| Package-mode Release service-test build | `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` | Exit 0; 0 warnings, 0 errors (4.04 s). `/tmp/parties-810-round7-build.log`. |
+| Four affected fitness classes | `dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests -class Hexalith.Parties.Tests.FitnessTests.EffectivePackageVersionsTests -class Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests` | Exit 0; 212 passed, 0 errors/failures/skips/not-run (76.569 s). Includes LF/CRLF conversion, the actual no-EOL-attribute mixed-history policy, index modes with `core.fileMode=false`, live/committed v2 equality, closed receipts after later gitlink changes, reopen/reclose epochs, and caught shallow-history refusal. `/tmp/parties-810-round7-focused.log`. |
+| Direct-router key regression | `dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -method Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests.DirectPartiesCommandRouter_StatusWritesUseMessageIdWhenCorrelationDiffersAsync` | Exit 0; 1 passed, 0 errors/failures/skips/not-run. This verifies the synthetic fixture's tenant/message key, not the upstream handler lifecycle. `/tmp/parties-810-round7-router.log`. |
+| Qualifying-token emitter | `HEXALITH_EMIT_CLOSURE_IDENTITY=true dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -method Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.CurrentClosureIdentityCanBeDerivedWithoutClaimingQualification -showLiveOutput` | Exit 0; 1 passed, 0 errors/failures/skips/not-run (8.323 s). Emits both gate-compatible v2 tokens and `immutable_consumption=true`; no closure lane was qualified. Output was redirected to `/tmp/parties-810-round7-identity.log`. These probe tokens predate this evidence edit and must not be reused. |
+| Warning policy and whitespace | `bash scripts/check-no-warning-override.sh`; `git -c core.whitespace=cr-at-eol diff --check` | Exit 0 for each. Focused policy/static checks only; canonical warning/nested-submodule qualification remains Unvalidated. |
+| Isolated-fixture commit policy | `node_modules/.bin/commitlint --edit /tmp/parties-810-fixture-message.txt --verbose` | Exit 0; 0 problems, 0 warnings for the exact full candidate `test: exercise closure identity`. Only disposable fixture repositories create commits; no user repository commit, stage, push, gitlink, or dependency update occurred. |
+
+The spec/checklist/review records and sprint metadata still need finalization
+before collecting the final qualifying snapshot. Full solution build, the complete
+.NET test lane, package/consumer qualification, npm/typecheck and Playwright are
+not credited by this focused patch verification. DW-159 remains open for its
+compile-level exit proof; I13 and the accepted deferrals retain their scope.
+
+
+### Round 7 review patch verification — 2026-11-01
+
+The review fixes align deletion identity before staging and after commit, preserve
+raw BOM-bearing blobs, materialize exact Git objects without archive attributes,
+and isolate historical MSBuild versions from ambient overrides. The history
+fixture imports its version through Builds, then changes that catalog and gitlink
+after closure; it also rejects corrupted archived tokens and foreign historical
+FrontComposer stamps and reports an unavailable Builds repository visibly. Actual
+qualifying emitter output is validated against independently reconstructed Git
+identities; diagnostic output remains nonqualifying.
+
+Focused Release builds of Parties.Tests and Contracts.Tests pass with zero
+warnings/errors. Direct xUnit v3 execution of EpicEightClosureFitnessTests,
+EffectivePackageVersionsTests and RepositoryTestProcessTests passes 91/91 with no
+failures/skips/not-run; PackageTestProcessTests passes 28/28. The latter includes
+1 MiB stdin plus binary BOM output and stderr beyond pipe capacity, exercising
+concurrent draining and the Linux supervisor's stdin forwarding. Logs remain
+outside the repository at `/tmp/parties-810-review-fix-{build,tests,process-build,process-tests}.log`.
+No full qualification or canonical Pass is credited by these focused checks.
+
+
+Parent reconstruction smoke, 2026-11-01: a temporary reflection harness invoked
+`ReadCommittedClosureIdentity` against the real committed Parties tree
+`e3c798b01bf656aa913183c281b8fb717876e85c` and its selected Builds objects. It
+completed in 7.13 s (exit 0), with no missing inputs or byte/materialization
+errors. The harness Debug build reported zero warnings/errors. Logs:
+`/tmp/parties-810-qualification-6p4w60kn/smoke-build.log` and
+`/tmp/parties-810-qualification-6p4w60kn/smoke-real-tree.log`. This diagnoses
+reconstruction only; its digest is not a qualification stamp for the working tree.
+
+Round 7 review and all eight surviving repairs are complete. The final six-lane
+qualification logs and package/consumer outputs remain outside the repository
+under `/tmp/parties-810-qualification-6p4w60kn`; only the canonical receipt section
+and the three normalized status values will change after collecting final tokens.

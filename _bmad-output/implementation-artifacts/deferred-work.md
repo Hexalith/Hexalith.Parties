@@ -1232,10 +1232,13 @@ archived: 2026-10-25
 
 ### DW-159: Include external dynamically launched runtime project graphs in orchestration dependency verification.
 
-status: done 2026-10-21
+status: open
 origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
-archived: 2026-10-25
+decision: Administrator / jpiquot reopened this item on 2026-11-01 (spec 8.10 Round 7 decision 4). Graph-selection verification is partial progress; equal package versions cannot establish compile compatibility.
+progress: The 2026-10-21 preflight inventories the seven external runtime roots and their transitive project closure, checking package selection, reference contexts and missing mappings in Debug/Release. The original completed receipt remains historical in deferred-work-archive.md.
+exit_proof: Detect an external runtime root that uses contracts absent from its selected published EventStore package before topology startup, including the motivating Tenants CS0246 case for IDomainServiceAdministratorVerifier / DomainServiceAdministratorClaim even when EventStore version strings match. Record the package-mode compile or equivalent discriminating contract-availability check and exact result; graph version equality alone cannot close this item.
+evidence: spec-fix-ci-and-publish-release.md:95; PlatformApiPrerequisitesTests.ReadExternalRuntimeGraphs; tests/five-verification-maintenance-deferred-items-2026-10-21/validation.json; spec-8-10-final-readiness-documentation-and-retirement-gate.md Round 7 decision 4.
 
 ### DW-160: Extend the existing gateway command test with a direct persisted-stream and aggregate identity read.
 
