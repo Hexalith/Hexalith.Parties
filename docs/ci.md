@@ -436,6 +436,14 @@ selects `accesscontrol.eventstore-admin.catalog.yaml` before mTLS rendering: den
 by default, with the existing Admin UI grants retained. Native/publish profiles
 keep their original Admin ACL.
 
+The supported catalog package profile also selects the nonpackable
+`Hexalith.Parties.EventStoreAdminUI.TestHost`. It uses the actual SDK Admin UI
+services and Razor application, preserves authentication, middleware, SignalR
+and native root assets, and maps no subscription receiver. Its real HTTP
+`GET /dapr/subscribe` returns404 without an HTTPS redirect; Dapr interprets that
+as zero subscriptions. Native/default/publish keep the original UI host and its
+`200 []` discovery. This changes no SDK receiver guard or catalog authority.
+
 `scripts/prepare-aspire-runtime-hosts.sh` prepares the package pair by default;
 the shared `--gateway-profile native` option explicitly prepares both native
 projects for a matching native run. It builds the selected pair and the six other

@@ -179,6 +179,18 @@ def record(metadata: dict, project: Path, configuration: str, version: str, star
         paths.add(runtimeconfig)
     paths.update(path.resolve() for path in target.parent.rglob("*") if path.is_file() and path.suffix.lower() in {".dll", ".exe"})
     paths.update(path.resolve() for path in target.parent.glob("appsettings*.json"))
+    paths.update(path.resolve() for path in (target.parent / "wwwroot").rglob("*") if path.is_file())
+    paths.update(path.resolve() for path in (target.parent / "native-ui-artifact").rglob("*") if path.is_file())
+    paths.update(path.resolve() for path in target.parent.glob("*staticwebassets*.json"))
+    for proof in target.parent.glob("native-admin-ui-artifact.tsv"):
+        paths.add(proof.resolve())
+        for row in proof.read_text(encoding="utf-8").splitlines():
+            filename, separator, expected = row.partition("|")
+            if separator and Path(filename).is_absolute():
+                source = Path(filename).resolve()
+                if not re.fullmatch(r"[0-9a-fA-F]{64}", expected) or digest(source) != expected.lower():
+                    raise ValueError("Native UI artifact provenance differs from its actual file: " + filename)
+                paths.add(source)
     return {"schemaVersion": 1, "completed": True, "project": str(project.resolve()), "configuration": configuration,
             "sdkVersion": version, "familyVersions": families, "role": role, "targetPath": str(target), "assetsPath": str(assets_path),
             "buildStartedNs": started_ns, "completedNs": time.time_ns(), "files": {str(path): digest(path) for path in sorted(paths)},

@@ -1,0 +1,89 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsPublishable>false</IsPublishable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- This resolves ordinary configuration only; the tool still owns every source selector. -->
+    <_AdminUiRepositoryRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../..'))</_AdminUiRepositoryRoot>
+    <_AdminUiWorkspaceRoot>$([System.IO.Path]::GetFullPath('$(_AdminUiRepositoryRoot)/../..'))</_AdminUiWorkspaceRoot>
+    <_AdminUiInUmbrella Condition="$([System.IO.Path]::GetFileName($([System.IO.Path]::GetDirectoryName('$(_AdminUiRepositoryRoot)')))) == 'references'">true</_AdminUiInUmbrella>
+    <_AdminUiRootManifest Condition="Exists('$(_AdminUiRepositoryRoot)/.gitmodules')">$([System.IO.File]::ReadAllText('$(_AdminUiRepositoryRoot)/.gitmodules'))</_AdminUiRootManifest>
+    <_AdminUiWorkspaceManifest Condition="Exists('$(_AdminUiWorkspaceRoot)/.gitmodules')">$([System.IO.File]::ReadAllText('$(_AdminUiWorkspaceRoot)/.gitmodules'))</_AdminUiWorkspaceManifest>
+    <_AdminUiEventStoreRoot Condition="'$(HexalithEventStoreRoot)' != ''">$(HexalithEventStoreRoot)</_AdminUiEventStoreRoot>
+    <_AdminUiEventStoreRoot Condition="'$(_AdminUiEventStoreRoot)' == '' and '$(_AdminUiInUmbrella)' == 'true' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(_AdminUiWorkspaceManifest)', '(?m)^\s*path\s*=\s*references/Hexalith\.EventStore\s*$'))">$([System.IO.Path]::GetFullPath('$(_AdminUiRepositoryRoot)/../Hexalith.EventStore'))</_AdminUiEventStoreRoot>
+    <_AdminUiEventStoreRoot Condition="'$(_AdminUiEventStoreRoot)' == '' and '$(_AdminUiInUmbrella)' != 'true' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(_AdminUiRootManifest)', '(?m)^\s*path\s*=\s*references/Hexalith\.EventStore\s*$'))">$(_AdminUiRepositoryRoot)/references/Hexalith.EventStore</_AdminUiEventStoreRoot>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <!-- Consume the real UI assembly and public SDK packages; this host owns only private client-only composition. -->
+    <PackageReference Include="Hexalith.EventStore.Admin.Abstractions" />
+    <PackageReference Include="Hexalith.EventStore.Client" />
+    <PackageReference Include="Hexalith.EventStore.ServiceDefaults" />
+    <PackageReference Include="Hexalith.EventStore.SignalR" />
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Icons" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <Content Include="$(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/appsettings*.json"
+             Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
+    <Content Include="$(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/wwwroot/**/*"
+             Link="wwwroot/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
+  <Target Name="ValidateAdminUiSettingsRoot" BeforeTargets="PrepareForBuild">
+    <ItemGroup>
+      <_RequiredAdminUiInput Include="$(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj;
+        $(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/appsettings.json;
+        $(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/appsettings.Development.json;
+        $(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/Properties/launchSettings.json;
+        $(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/wwwroot/css/app.css;
+        $(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/wwwroot/js/interop.js;
+        $(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/wwwroot/js/download.js" />
+    </ItemGroup>
+    <Error Condition="'$(_AdminUiEventStoreRoot)' == ''" Text="The private Admin UI requires a selected root-declared EventStore checkout; do not initialize nested submodules." />
+    <Error Condition="!Exists('%(_RequiredAdminUiInput.Identity)')"
+           Text="The selected Admin UI checkout is missing '%(_RequiredAdminUiInput.Identity)'. Restore its complete ordinary UI/config/assets in the root-declared checkout; do not initialize nested submodules." />
+  </Target>
+  <!-- Native UI is a nonpackable application artifact, not a source SDK library.
+       Restore and build it with the same explicit global profile; ProjectReference
+       metadata is discarded by NuGet's path walk and can restore the wrong graph. -->
+  <Target Name="StageNativeAdminUiAssets" BeforeTargets="PrepareForBuild;ResolveStaticWebAssetsInputs" DependsOnTargets="ValidateAdminUiSettingsRoot">
+    <ItemGroup><_NativeAdminUiAsset Include="$(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/wwwroot/**/*" /></ItemGroup>
+    <MakeDir Directories="$(MSBuildProjectDirectory)/wwwroot" />
+    <Copy SourceFiles="@(_NativeAdminUiAsset)" DestinationFiles="@(_NativeAdminUiAsset->'$(MSBuildProjectDirectory)/wwwroot/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="BuildNativeAdminUiArtifact" BeforeTargets="ResolveAssemblyReferences" DependsOnTargets="ValidateAdminUiSettingsRoot">
+    <PropertyGroup>
+      <_NativeAdminUiBuildProperties>Configuration=$(Configuration);HexalithUsePublishedSdkForHostedTests=true;HexalithEventStoreVersion=$(HexalithEventStoreVersion);StaticWebAssetsEnabled=false;UseHexalithProjectReferences=false;UseNuGetDeps=true;CopyLocalLockFileAssemblies=true</_NativeAdminUiBuildProperties>
+    </PropertyGroup>
+    <MSBuild Projects="$(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj"
+             Targets="Restore;Build;GetTargetPath" Properties="$(_NativeAdminUiBuildProperties)" BuildInParallel="false">
+      <Output TaskParameter="TargetOutputs" ItemName="_NativeAdminUiBuiltAssembly" />
+    </MSBuild>
+    <ItemGroup>
+      <Reference Include="@(_NativeAdminUiBuiltAssembly)"><Private>true</Private></Reference>
+    </ItemGroup>
+  </Target>
+  <Target Name="ExposePrivateAdminUiOutput" BeforeTargets="GetAssemblyAttributes">
+    <ItemGroup><AssemblyMetadata Include="PrivateAdminUiOutputRoot" Value="$(TargetDir)" /></ItemGroup>
+  </Target>
+  <Target Name="RecordNativeAdminUiArtifact" AfterTargets="Build">
+    <Exec Command="git -C &quot;$(_AdminUiEventStoreRoot)&quot; rev-parse HEAD" ConsoleToMSBuild="true" StandardOutputImportance="Low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_NativeAdminUiSourceCommit" />
+    </Exec>
+    <ItemGroup>
+      <_NativeAdminUiEvidence Include="$(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj;@(_NativeAdminUiBuiltAssembly);@(_NativeAdminUiBuiltAssembly->'%(RootDir)%(Directory)%(Filename).deps.json');$(TargetDir)wwwroot/**/*;$(MSBuildProjectDirectory)/wwwroot/**/*" />
+    </ItemGroup>
+    <RemoveDuplicates Inputs="@(_NativeAdminUiEvidence)"><Output TaskParameter="Filtered" ItemName="_UniqueNativeAdminUiEvidence" /></RemoveDuplicates>
+    <GetFileHash Files="@(_UniqueNativeAdminUiEvidence)" Algorithm="SHA256"><Output TaskParameter="Items" ItemName="_NativeAdminUiHashedEvidence" /></GetFileHash>
+    <Copy SourceFiles="@(_NativeAdminUiBuiltAssembly->'%(RootDir)%(Directory)%(Filename).deps.json')" DestinationFolder="$(TargetDir)native-ui-artifact" />
+    <WriteLinesToFile File="$(TargetDir)native-admin-ui-artifact.tsv" Overwrite="true"
+      Lines="sourceProject|$(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj;sourceCommit|$(_NativeAdminUiSourceCommit);sdkVersion|$(HexalithEventStoreVersion);properties|$(_NativeAdminUiBuildProperties);@(_NativeAdminUiHashedEvidence->'%(FullPath)|%(FileHash)')" />
+  </Target>
+  <Target Name="SelectAdminUiRunDirectory" BeforeTargets="ComputeRunArguments">
+    <PropertyGroup><RunWorkingDirectory>$(TargetDir)</RunWorkingDirectory></PropertyGroup>
+  </Target>
+</Project>

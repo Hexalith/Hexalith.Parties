@@ -62,6 +62,14 @@ if [[ "$gateway_profile" == packaged ]]; then
         printf 'The packaged runtime requires one exact evaluated stable SDK version; received: %s\n' "$sdk_version" >&2
         exit 1
     fi
+    catalog_hosts="$(dotnet msbuild "$gateway_project" -nologo -getProperty:HexalithEventStoreCatalogHostsSupported)"
+    if [[ "$catalog_hosts" == true ]]; then
+        runtime_hosts[2]=tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj
+        if [[ ! -f "${repository_root}/${runtime_hosts[2]}" ]]; then
+            printf 'Missing declared private Admin UI project: %s\n' "${runtime_hosts[2]}" >&2
+            exit 1
+        fi
+    fi
     peer_versions="$(dotnet msbuild "$gateway_project" -nologo -getProperty:HexalithTenantsVersion,HexalithMemoriesVersion,HexalithFrontComposerVersion)"
     families_json="$(python3 -c 'import json,sys; print(json.dumps(json.load(sys.stdin)["Properties"]))' <<< "$peer_versions")"
     tenants_version="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["HexalithTenantsVersion"])' <<< "$families_json")"

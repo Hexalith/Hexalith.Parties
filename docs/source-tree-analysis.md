@@ -94,6 +94,7 @@ Hexalith.Parties/
 │   ├── Hexalith.Parties.{Contracts,Client,Server,Projections,Security,AdminPortal,ConsumerPortal,Picker,Mcp,UI}.Tests/
 │   ├── Hexalith.Parties.Sample.Tests/          # subscriber integration
 │   ├── Hexalith.Parties.EventStoreGateway.TestHost/ # support host; not a runnable test assembly
+│   ├── Hexalith.Parties.EventStoreAdminUI.TestHost/ # private SDK UI support host; not a runnable test assembly
 │   ├── Hexalith.Parties.EventStoreSample.TestHost/ # support host; selected SDK packages
 │   ├── Hexalith.Parties.EventStoreSample.Contracts.TestArtifact/ # non-packable linked contracts
 │   ├── e2e/                                     # Playwright route/a11y specs for parties-ui

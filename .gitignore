@@ -455,3 +455,6 @@ src/Hexalith.Parties.AppHost/aspirate-state.json
 .bmad-loop/cache/
 .bmad-loop/policy.toml
 _bmad/render/
+
+# Generated exact native Admin UI asset staging for the private fixture host.
+tests/Hexalith.Parties.EventStoreAdminUI.TestHost/wwwroot/

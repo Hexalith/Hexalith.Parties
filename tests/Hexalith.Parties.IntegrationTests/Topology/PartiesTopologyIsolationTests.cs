@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
@@ -145,19 +146,27 @@ public sealed class PartiesTopologyIsolationTests
     {
         using var budget = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         budget.CancelAfter(TimeSpan.FromSeconds(60));
+        long seedStarted = Stopwatch.GetTimestamp();
+        Console.WriteLine($"CounterSeed session={fixture.Session.Id} count={count} phase=start budgetSeconds=60");
         var identity = new AggregateIdentity(PartiesTenantBootstrapHost.TenantId, "counter", "counter-1");
         using HttpClient client = CreateSampleGatewayClient(fixture);
         for (int increment = 0; increment < count; increment++)
         {
             string id = UniqueIdHelper.GenerateSortableUniqueStringId();
+            long postStarted = Stopwatch.GetTimestamp();
+            Console.WriteLine($"CounterSeed session={fixture.Session.Id} message={id} index={increment} phase=post-start elapsedMs={Stopwatch.GetElapsedTime(seedStarted).TotalMilliseconds:F1}");
             using HttpResponseMessage submitted = await client.PostAsJsonAsync("/api/v1/commands", new
             {
                 messageId = id, correlationId = id, tenant = identity.TenantId, domain = identity.Domain,
                 aggregateId = identity.AggregateId, commandType = "increment-counter", payload = new { counterId = identity.AggregateId },
             }, budget.Token).ConfigureAwait(false);
+            Console.WriteLine($"CounterSeed session={fixture.Session.Id} message={id} phase=post-return status={(int)submitted.StatusCode} durationMs={Stopwatch.GetElapsedTime(postStarted).TotalMilliseconds:F1} elapsedMs={Stopwatch.GetElapsedTime(seedStarted).TotalMilliseconds:F1}");
             submitted.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+            long statusStarted = Stopwatch.GetTimestamp();
+            int statusRequests = 0;
             while (true)
             {
+                statusRequests++;
                 using HttpResponseMessage response = await client.GetAsync($"/api/v1/commands/status/{id}", budget.Token).ConfigureAwait(false);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
@@ -166,6 +175,7 @@ public sealed class PartiesTopologyIsolationTests
                     string? outcome = status.RootElement.GetProperty("status").GetString();
                     if (outcome is "Completed" or "Rejected" or "PublishFailed" or "TimedOut")
                     {
+                        Console.WriteLine($"CounterSeed session={fixture.Session.Id} message={id} phase=status-return outcome={outcome} requests={statusRequests} durationMs={Stopwatch.GetElapsedTime(statusStarted).TotalMilliseconds:F1} elapsedMs={Stopwatch.GetElapsedTime(seedStarted).TotalMilliseconds:F1}");
                         outcome.ShouldBe("Completed");
                         break;
                     }
@@ -177,6 +187,7 @@ public sealed class PartiesTopologyIsolationTests
         stored.Metadata.CurrentSequence.ShouldBe(count);
         stored.Events.Length.ShouldBe(count);
         stored.Events.ShouldAllBe(item => item.Identity == identity && item.EventTypeName.EndsWith(".CounterIncremented", StringComparison.Ordinal));
+        Console.WriteLine($"CounterSeed session={fixture.Session.Id} phase=persisted-verified count={stored.Events.Length} elapsedMs={Stopwatch.GetElapsedTime(seedStarted).TotalMilliseconds:F1}");
     }
 
 
@@ -303,6 +314,40 @@ public sealed class PartiesTopologyIsolationTests
     private static async Task AssertAuthenticatedUiRoutingAsync(PartiesAspireTopologyFixture fixture, int expectedCount, CancellationToken cancellationToken)
     {
         using HttpClient admin = fixture.App.CreateHttpClient("eventstore-admin-ui", "http");
+        // Dapr treats a genuine unmapped discovery endpoint as an empty subscription set.
+        // This host owns no receiver: do not fake an empty SDK discovery callback.
+        using (var discovery = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }) { BaseAddress = admin.BaseAddress })
+        using (HttpResponseMessage absent = await discovery.GetAsync("/dapr/subscribe", cancellationToken).ConfigureAwait(false))
+        {
+            absent.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+            absent.Headers.Location.ShouldBeNull();
+        }
+        using (HttpClient uiSidecar = fixture.CreateSidecarClient("eventstore-admin-ui"))
+        using (JsonDocument metadata = (await uiSidecar.GetFromJsonAsync<JsonDocument>("/v1.0/metadata", cancellationToken).ConfigureAwait(false))!)
+        {
+            metadata.RootElement.GetProperty("id").GetString().ShouldBe(fixture.Session.AppId("eventstore-admin-ui"));
+            metadata.RootElement.GetProperty("runtimeVersion").GetString().ShouldNotBeNullOrWhiteSpace();
+            // Pinned Dapr metadata.go omits this field when its real subscription set is empty.
+            if (metadata.RootElement.TryGetProperty("subscriptions", out JsonElement subscriptions))
+            {
+                subscriptions.GetArrayLength().ShouldBe(0);
+            }
+        }
+        foreach (string asset in new[] { "css/app.css", "js/interop.js", "js/download.js" })
+        {
+            byte[] actual = await admin.GetByteArrayAsync("/" + asset, cancellationToken).ConfigureAwait(false);
+            actual.ShouldBe(await File.ReadAllBytesAsync(PrivateAdminUiCompositionTests.NativeAssetPath(asset), cancellationToken).ConfigureAwait(false));
+        }
+        using (HttpResponseMessage fluent = await admin.GetAsync("/_content/Microsoft.FluentUI.AspNetCore.Components/Microsoft.FluentUI.AspNetCore.Components.bundle.scp.css", cancellationToken).ConfigureAwait(false))
+        {
+            fluent.StatusCode.ShouldBe(HttpStatusCode.OK);
+            fluent.Content.Headers.ContentType.ShouldNotBeNull().MediaType.ShouldBe("text/css");
+            (await fluent.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false)).Length.ShouldBeGreaterThan(0);
+        }
+        string settings = await admin.GetStringAsync("/settings", cancellationToken).ConfigureAwait(false);
+        settings.ShouldContain("Settings - Hexalith EventStore");
+        settings.ShouldContain("Configure admin dashboard preferences.");
+        settings.ShouldNotContain("Something went wrong");
         string dashboard = await admin.GetStringAsync("/dapr", cancellationToken).ConfigureAwait(false);
         dashboard.ShouldContain(fixture.Session.AppId("eventstore-admin"));
         dashboard.ShouldNotContain("Unable to load DAPR infrastructure");

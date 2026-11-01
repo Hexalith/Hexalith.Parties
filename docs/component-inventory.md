@@ -113,6 +113,7 @@ The `parties-ui` host registers scoped adapters for those ports and delegates to
 | `IntegrationTests` | E2E / topology | **full Aspire topology** (health, tenant isolation, publishing, dead-letter, gateway E2E, encryption) |
 | `Ci.Tests` | CI publication validation | static guardrails over GitHub Actions Zot container publication |
 | `EventStoreGateway.TestHost` | support host (not a runnable test assembly) | package-built EventStore gateway fixture used by topology/consumer validation |
+| `EventStoreAdminUI.TestHost` | support host (not a runnable test assembly) | actual SDK Admin UI/Razor composition for the strict private auxiliary client, with native assets and genuine empty-discovery 404 |
 | `EventStoreSample.TestHost` | support host (not a runnable test assembly) | native Counter/Greeting sample composed with the selected SDK packages |
 | `EventStoreSample.Contracts.TestArtifact` | non-packable contracts artifact | linked native sample command/query contracts used by the sample host and catalog builder |
 | `tests/e2e` | Playwright | browser accessibility/route specs for `parties-ui`, AdminPortal, and ConsumerPortal |

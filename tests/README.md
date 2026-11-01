@@ -39,6 +39,14 @@ keep the native gateway and sample projects. The catalog package lane selects
 `accesscontrol.eventstore-admin.catalog.yaml` before mTLS rendering, preserving
 Admin UI grants with a deny default; native/publish keep the original Admin ACL.
 
+The supported catalog package profile also selects the nonpackable
+`Hexalith.Parties.EventStoreAdminUI.TestHost`. It uses the actual SDK Admin UI
+services and Razor application, preserves authentication, middleware, SignalR
+and native root assets, and maps no subscription receiver. Its real HTTP
+`GET /dapr/subscribe` returns404 without an HTTPS redirect; Dapr interprets that
+as zero subscriptions. Native/default/publish keep the original UI host and its
+`200 []` discovery. This changes no SDK receiver guard or catalog authority.
+
 Prepare the package lane with `bash scripts/prepare-aspire-tier.sh`. Direct native
 preparation requires `bash scripts/prepare-aspire-runtime-hosts.sh --gateway-profile native`
 and a matching native AppHost selection. This shared `--gateway-profile` option

@@ -279,8 +279,7 @@ internal sealed class PartiesDevelopmentCatalogBootstrap : IDistributedApplicati
                 .WithEnvironment(prefix + "AccessControlPath", acl).WithEnvironment(prefix + "DeclaredInvocations", profile.Invocations.ToJsonString())
                 .WithEnvironment("EventStore__RouteCatalog__StateStore", _componentName).WithEnvironment("EventStore__RouteCatalog__StateKey", _instance + "-authority")
                 .WithEnvironment("EventStore__DomainService__AppId", appId).WithEnvironment("EventStore__DomainService__ServiceVersion", "v1")
-                .WithEnvironment("Authentication__Workload__Audience", appId).WithEnvironment("Authentication__WorkloadIssuer__Workload", appId)
-                .WithEnvironment("Authentication__WorkloadJwtBearer__Audience", appId);
+                .WithEnvironment("Authentication__Workload__Audience", appId).WithEnvironment("Authentication__WorkloadIssuer__Workload", appId);
             for (int index = 0; index < projects.Length; index++) { _ = resource.WithEnvironment(prefix + "RequiredHostIds__" + index, projects[index].Name); }
             string[] apps = selected.Values.Order(StringComparer.Ordinal).ToArray();
             for (int index = 0; index < apps.Length; index++) { _ = resource.WithEnvironment(prefix + "SelectedAppIds__" + index, apps[index]); }

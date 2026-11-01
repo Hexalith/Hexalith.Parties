@@ -210,6 +210,46 @@ class RuntimeReceiptCases(unittest.TestCase):
         self.assertFalse(runner.exists())
         self.assertIn("differs from its actual archive", result.stderr)
 
+    def test_native_ui_assets_and_application_source_are_bound_until_launch(self):
+        for changed in ("output-asset", "source-asset", "native-app", "runtime-assets", "provenance"):
+            with self.subTest(changed=changed):
+                self.tearDown(); self.setUp()
+                output_asset = self.output / "wwwroot/css/app.css"
+                output_asset.parent.mkdir(parents=True)
+                output_asset.write_bytes(b"actual native CSS")
+                source_asset = self.root / "selected-ui/wwwroot/css/app.css"
+                source_asset.parent.mkdir(parents=True)
+                source_asset.write_bytes(output_asset.read_bytes())
+                native_app = self.root / "selected-ui/bin/NativeUI.dll"
+                native_app.parent.mkdir(parents=True)
+                native_app.write_bytes(b"actual selected native application")
+                runtime = self.output / "Host.staticwebassets.runtime.json"
+                runtime.write_text(json.dumps({"ContentRoots": [str(source_asset.parent)]}))
+                provenance = self.output / "native-admin-ui-artifact.tsv"
+                provenance.write_text("sourceCommit|" + "a" * 40 + "\n" + "\n".join(
+                    str(path) + "|" + cohort.digest(path) for path in (source_asset, native_app)) + "\n")
+                receipt = self.prepare()
+                for bound in (output_asset, source_asset, native_app, runtime, provenance):
+                    self.assertIn(str(bound), receipt["files"])
+                result, runner = self.launch()
+                self.assertEqual(0, result.returncode, result.stderr)
+                runner.unlink()
+                selected = {"output-asset": output_asset, "source-asset": source_asset,
+                            "native-app": native_app, "runtime-assets": runtime, "provenance": provenance}[changed]
+                selected.write_bytes(b"mutated after the completed build")
+                result, runner = self.launch()
+                self.assertNotEqual(0, result.returncode)
+                self.assertFalse(runner.exists())
+                self.assertIn("drifted", result.stderr)
+
+    def test_native_ui_provenance_refuses_an_unmatched_initial_file_hash(self):
+        native_app = self.root / "NativeUI.dll"
+        native_app.write_bytes(b"actual native application")
+        (self.output / "native-admin-ui-artifact.tsv").write_text(str(native_app) + "|" + "0" * 64 + "\n")
+        with self.assertRaisesRegex(ValueError, "Native UI artifact provenance"):
+            self.prepare()
+        self.assertFalse(self.manifest.exists())
+
     def test_record_rejects_old_entry_output_and_missing_dependencies(self):
         self.target.unlink()
         with self.assertRaisesRegex(ValueError, "entry PE"):

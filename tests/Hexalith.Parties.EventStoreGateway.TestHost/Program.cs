@@ -31,6 +31,7 @@ builder.Services.AddHealthChecks()
     .AddEventStoreAppChannelTokenHealthCheck()
 #endif
     ;
+Hexalith.Parties.EventStoreGateway.TestHost.PrivateDaprPlacementCredential.AddTo(builder);
 builder.Services.AddEventStore();
 builder.Services.AddEventStoreServer(builder.Configuration);
 builder.Services.AddEventStoreDomainQueryRouting();

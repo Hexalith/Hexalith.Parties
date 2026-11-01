@@ -51,6 +51,16 @@ public sealed class PackagedGatewayTopologyTests
             await using var packageLifetime = packaged.ConfigureAwait(true);
             ProjectResource nativeGateway = native.Resources.OfType<ProjectResource>().Single(resource => resource.Name == "eventstore");
             ProjectResource packageGateway = packaged.Resources.OfType<ProjectResource>().Single(resource => resource.Name == "eventstore");
+#if HEXALITH_EVENTSTORE_CATALOG_HOSTS
+            ProjectResource packageAdminUi = packaged.Resources.OfType<ProjectResource>().Single(resource => resource.Name == "eventstore-admin-ui");
+            packageAdminUi.GetProjectMetadata().ProjectPath.Replace('\\', '/')
+                .ShouldEndWith("/tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj");
+            ProjectResource nativeAdminUi = native.Resources.OfType<ProjectResource>().Single(resource => resource.Name == "eventstore-admin-ui");
+            nativeAdminUi.GetProjectMetadata().ProjectPath.Replace('\\', '/')
+                .ShouldEndWith("/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj");
+            packageAdminUi.Annotations.OfType<EndpointAnnotation>().Select(endpoint => (endpoint.Name, endpoint.UriScheme, endpoint.TargetPort))
+                .ShouldBe(nativeAdminUi.Annotations.OfType<EndpointAnnotation>().Select(endpoint => (endpoint.Name, endpoint.UriScheme, endpoint.TargetPort)));
+#endif
             nativeGateway.GetProjectMetadata().ProjectPath.Replace('\\', '/')
                 .ShouldEndWith("/src/Hexalith.EventStore/Hexalith.EventStore.csproj");
             packageGateway.GetProjectMetadata().ProjectPath.Replace('\\', '/')
@@ -211,10 +221,14 @@ public sealed class PackagedGatewayTopologyTests
         await using var publishedLifetime = published.ConfigureAwait(true);
         published.Resources.OfType<ProjectResource>().ShouldAllBe(resource => !resource.GetProjectMetadata().ProjectPath.Contains("EventStoreGateway.TestHost", StringComparison.Ordinal));
         published.Resources.OfType<ProjectResource>().ShouldAllBe(resource => !resource.GetProjectMetadata().ProjectPath.Contains("EventStoreSample.TestHost", StringComparison.Ordinal));
+        published.Resources.OfType<ProjectResource>().Single(resource => resource.Name == "eventstore-admin-ui")
+            .GetProjectMetadata().ProjectPath.Replace('\\', '/').ShouldEndWith("/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj");
         published.Resources.OfType<ProjectResource>().Single(resource => resource.Name == "sample")
             .GetProjectMetadata().ProjectPath.Replace('\\', '/').ShouldEndWith("/samples/Hexalith.EventStore.Sample/Hexalith.EventStore.Sample.csproj");
         published.Resources.OfType<ProjectResource>().Single(resource => resource.Name == "eventstore")
             .GetProjectMetadata().ProjectPath.Replace('\\', '/').ShouldEndWith("/src/Hexalith.EventStore/Hexalith.EventStore.csproj");
+        ProjectResource publishedParties = published.Resources.OfType<ProjectResource>().Single(resource => resource.Name == "parties");
+        (await EnvironmentAsync(published, publishedParties).ConfigureAwait(true)).ShouldNotContainKey("Tenants__ReadinessBaseAddress");
         Path.GetFileName(published.Resources.OfType<ProjectResource>().Single(resource => resource.Name == "eventstore-admin")
             .Annotations.OfType<DaprSidecarAnnotation>().Single().Sidecar.Annotations.OfType<DaprSidecarOptionsAnnotation>().Single().Options.Config)
             .ShouldBe("accesscontrol.eventstore-admin.yaml");
@@ -244,6 +258,14 @@ public sealed class PackagedGatewayTopologyTests
                 actual[key].ShouldBeAssignableTo<IManifestExpressionProvider>().ValueExpression
                     .ShouldBe("{catalog-" + host + "-" + kind + "-token.value}");
             }
+        }
+        if (resource == "parties")
+        {
+            const string Key = "Tenants__ReadinessBaseAddress";
+            privateKeys.Add(Key);
+            expected.ShouldNotContainKey(Key);
+            actual[Key].ShouldBeAssignableTo<EndpointReference>().Resource.Name.ShouldBe("tenants");
+            actual[Key].ShouldBeAssignableTo<IManifestExpressionProvider>().ValueExpression.ShouldBe("{tenants.bindings.http.url}");
         }
         if (resource == "tenants")
         {

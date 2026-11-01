@@ -75,7 +75,10 @@ Coordinate the original producer freeze only before the real live run.
 
 Allowed files for this story:
 
+- `.gitignore` - ignore only generated native Admin UI static-asset staging
+
 - `.github/workflows/release.yml`
+- `.github/workflows/ci.yml` - reconcile incoming staged enrollment with the accepted producer and retain backend/Aspire gates
 - `Directory.Build.targets` - implement or record the exact published catalog composition
 - `Directory.Packages.props`
 - `Hexalith.Parties.Standalone.slnx` - implement or record the exact published catalog composition
@@ -116,7 +119,17 @@ Allowed files for this story:
 - `tests/Hexalith.Parties.Contracts.Tests/Package/ContractsPublicApiSnapshotTests.cs` - implement or record the exact published catalog composition
 - `tests/Hexalith.Parties.Contracts.Tests/PartiesCatalogAdapterTests.cs` - implement or record the exact published catalog composition
 - `tests/Hexalith.Parties.Contracts.Tests/PartiesCatalogTests.cs` - implement or record the exact published catalog composition
-- `tests/Hexalith.Parties.EventStoreGateway.TestHost/Program.cs` - implement or record the exact published catalog composition
+- `tests/Hexalith.Parties.EventStoreGateway.TestHost/Program.cs`
+- `tests/Hexalith.Parties.EventStoreGateway.TestHost/PrivateDaprPlacementCredential.cs` - private local sidecar credential on the unchanged SDK placement probe
+- `tests/Hexalith.Parties.IntegrationTests/Topology/PrivateDaprPlacementCredentialTests.cs` - real SDK protected metadata and readiness controls
+- `tests/Hexalith.Parties.IntegrationTests/Topology/PrivateCatalogWorkloadAuthenticationTests.cs` - actual SDK signed shared-verifier and partial-dedicated refusal controls
+- `tests/Hexalith.Parties.Tests/HealthChecks/DaprTenantsReadinessProbeTests.cs` - actual bound receiver readiness and malformed endpoint refusal
+- `tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj` - bounded private UI composition, inventory and HTTP evidence
+- `tests/Hexalith.Parties.IntegrationTests/Topology/PrivateAdminUiCompositionTests.cs` - bounded private UI composition, inventory and HTTP evidence
+- `tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Properties/launchSettings.json` - private client-only native Admin UI composition and exact source artifact binding
+- `tests/Hexalith.Parties.EventStoreAdminUI.TestHost/PrivateAdminUiComposition.cs` - private client-only native Admin UI composition and exact source artifact binding
+- `tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Program.cs` - private client-only native Admin UI composition and exact source artifact binding
+- `tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj` - private client-only native Admin UI composition and exact source artifact binding - implement or record the exact published catalog composition
 - `tests/Hexalith.Parties.EventStoreSample.Contracts.TestArtifact/Hexalith.Parties.EventStoreSample.Contracts.TestArtifact.csproj` - implement or record the exact published catalog composition
 - `tests/Hexalith.Parties.EventStoreSample.TestHost/Hexalith.Parties.EventStoreSample.TestHost.csproj` - implement or record the exact published catalog composition
 - `tests/Hexalith.Parties.IntegrationTests/Gateway/EventStoreGatewayE2ETests.cs`
@@ -446,3 +459,201 @@ Concurrent external source changes after these checks are separately assessed be
 The operator explicitly chose a separate Parties prerequisite release. Select published SDKv3.130.1/source1de42b706f52af0da6513f0b7663002606d17156 and the finite Tenants qualification commit3dc758ed5d460751fa41916fff90eaf6fdb3ead9 on `fix/qualify-sdk-3.130.1`. The latter is a single descendant of6f34; an independent Git tree comparison proves all4,814 entries outside its five exact workflow push-trigger files and owning spec remain byte/mode-identical. It preserves the already qualified public131/66HTTP/71selector-floor/host-profile behavior. Both selected original checkouts are clean at those remote-published commit coordinates. Newer SDK and Tenant mains are fetched and preserved, without importing their unrelated runtime/API features into this release.
 
 Final owner gates follow those actual selected sources: existing SDK tagv3.130.1 Integration and the normal separate-ref Tenant qualification CI. Newer unrelated main cancellation or missing tests cannot substitute for their actual gates. The existing ledger disposition remains `validated-advance` for moves from Root's old pointers; final ref annotations must name the real published SDK tag and Tenant qualification branch, rather than claim these are latest main tips. No new ledger line is written before final successful qualification. Final Integration rebuild against actual public131 and selected source identities succeeds with zero warnings/errors in34.53s. Fresh ten-artifact preparation and actual concurrent/whole-assembly runtime proof follow, with producer inputs frozen during live execution.
+
+
+### External sync checkpoint and bounded CI reconciliation
+
+A competing sync changed SDK/Tenant checkouts during preparation and later committed the pending Root changes asb1859b81, on top of incomingcc57ab3e. Both commits and every branch/ref are preserved. No actual131 topology started; the task-owned completed manifest was invalidated and its bytes retained in `/tmp/parties-public1301-drifted-prepared.json`, with source drift evidence `/tmp/parties-public1301-frozen-source-drift.json`. The operator explicitly confirmed external sync stopped before normal qualified-cohort reselection. This incomplete preparation is not runtime proof.
+
+Incomingcc57 changes only RootCI and the Platform.IntegrationTests project/fixture. Its exact main CI41249147216 fails at startup. The still-accepted domain-ci.yml@1745ea0f09df9e518aeea3eeb1a7df836f67e09d declares neither integration-test-profiles nor registry-pull credential secrets. The same commit removes the original Main/Sample/Ci backend projects and the complete Aspire integration lane; the existing focused regression test reproduces their loss. Restore supported inputs and all original blocking lanes while retaining the new package project/stream-observer fixture code and leaving its separate package-workflow enrollment staged until a qualified workflow/tool handoff. This preserves the accepted defaultpublic131 compiler/cohort rather than silently selecting a different module preparation profile. No v2 producer pin, optional check, authentication policy or source gate is weakened.
+
+
+### Safe checkpoint — private Admin UI composition (no live topology)
+
+The actual stable131 concurrent run failed within its unchanged five-minute initialization budget at `sidecar-eventstore-admin-ui`, before any Counter/Greeting/Parties/security assertion. Gateway and Admin sidecar readiness had already passed. Exact source/log trace proves native UseAdminUI maps an empty GET/dapr/subscribe endpoint, while the public131 auxiliary-client observer correctly refuses any such SDK receiver path. The UI process stops, leaving its sidecar unready. The actual failure332.334s and all-owned automatic cleanup are retained in `/tmp/parties-public1301-concurrent-live.{log,xml}` and `/tmp/parties-public1301-concurrent-cleanup-receipt.json`. No runtime qualification is claimed. All session80b52fee5eb9 processes, Redis, control plane/network and private root are absent; producer freeze is thawed.
+
+A Root-owned nonpackable AdminUI test host now compiles the genuine native UI as an explicitly ordered application artifact with global publicSDK131 properties; all SDK libraries remain ordinary official PackageReferences. It invokes the actual public AddAdminUI/RequireDaprSidecar/defaults/SignalR APIs and maps actual public SDK Components.App with the complete native middleware sequence. Only the empty discovery endpoint is absent; GET/dapr/subscribe retains native HTTPS-redirection exclusion, so unmatched routing can genuinely return404. Pinned Dapr1.18.7 primary source subscriptions.go197–211 interprets404 as zero subscriptions,nil. Native/default/publish remain selected on the original project/UseAdminUI behavior. No classifier/path/authority bypass, fake response, hidden middleware or substituted SDK library is introduced.
+
+First ProjectReference attempt failed522 compiler errors because NuGet discards AdditionalProperties during path traversal, restoring a sourceSDK3.1290 graph before a package131 build. That failed attempt is retained, not qualification. The corrected explicit ordered Restore/Build/GetTargetPath application artifact step succeeds with zero warnings/errors (v2:9.12s; v3 with DLL/static/deps provenance:2.51s). Both actual nativeUI and wrapper assets files contain only package3.130.1 SDK libraries. Native project/source commit/global properties and native DLL/deps/static hashes are emitted to the wrapper output native-admin-ui-artifact.tsv; the existing runtime receipt collector now includes static assets/manifest/native proof files. Source tag remains1de and official SDK packages are unchanged.
+
+Current completed edits: new host project, Program, one composition helper type and copied native launch profile; AppHost selection before AddProject in the explicit supported package run profile; preparation inventory switches AdminUI only when evaluated CatalogHostsSupported=true; both solution inventories include the nonpackable host. Build logs `/tmp/parties-private-admin-ui-build{,-v2,-v3}.log`. Public API inspection uses the allowed dotnet-inspect skill and prepared nativeUI DLL; logs `/tmp/parties-admin-ui-{public,app}-api-inspection.log`. No HTTP404, actualDapr zero-subscription, static HTTP bytes, UI/auth rendering or new actual topology success has been proved yet.
+
+Remaining bounded work: focused real HTTP composition test (native200[] versus private404 without redirect), root CSS/interop/download and Fluent asset byte proof, actual SDK Razor/auth behavior, native/publish/model and preparation-fixture inventory checks, docs/support project inventory updates, then relevant build/tests. The new host is not yet covered by those tests. Verify/select next Tenant8e785341 qualification successor (tests/spec-only), preserve newer main60cc and SDK main7e. Then final Integration build and entirely fresh ten-artifact preparation LAST; run unchanged expanded concurrent method and full Integration assembly, cleanup/thaw. Selected SDK tag's actual publishedcompat49/1 false-green is a separate blocking owner gate under repair; never accept workflow success without actual counts. Final metadata/ledger/major commit/push/RootCI+RC/Release/all11NuGets remain incomplete.
+
+
+### Private Admin UI composition — focused qualification 2026-11-01
+
+The explicit supported package run profile selects the Root-owned nonpackable Admin UI composition before AddProject. Native and publish models retain the original native UI project and unchanged UseAdminUI. The wrapper uses the actual native UI application artifact, public SDK131 packages and actual Razor application. Ordered Restore/Build binds selected source1de, exact global131 properties, native project/DLL/deps and copied assets. Generated source wwwroot staging is ignored (not a vendored tracked asset tree); repeated normal builds have80 static endpoints with no duplicate route+selector binding. Gzip selector variants are intentional. Exact source/copy/provenance/static-manifest files are hashed in the immutable preparation receipt.
+
+Focused current evidence: zero-warning Integration/Ci/service builds;8/8 actual HTTP/model tests (native200empty/private404 with no redirect, exact native CSS/JS + actual Fluent HTTP response, unchanged authentication challenge and genuine SDK Razor settings rendering);42/42 actual preparation tests;14/14 receipt Python cases including source/output/native-application/static-manifest drift and bad initial provenance hash refusal;10/10 documentation fitness cases. Logs `/tmp/parties-private-admin-ui-http-model.{log,xml}`, `...-preparation.{log,xml}`, `...-receipt-python.log`, `...-doc-fitness.{log,xml}` and `...-static-endpoint-proof.json`. These do not claim actual Dapr delivery/catalog enrollment. The unchanged concurrent live method now additionally requires genuine404/no redirect, actual Admin UI sidecar ID and zero subscriptions, native asset byte identity, real Razor rendering and successful authenticated Admin routing.
+
+The incoming staged Platform.IntegrationTests project explicitly compiles with normal publicSDK3.130.1 in Release with warnings as errors (0warnings/errors,3.11s), `/tmp/parties-public1301-preserved-platform-project-build.log`. Standalone's BuildProject=false does not compile that project; this explicit compile preserves incoming work without activating or qualifying its staged module profile. Tenant exact8e full CI/538 Aspire cases and all separate workflows are independently verified; original checkout is normally selected at8e before fresh runtime preparation. SDK remains published tag1de. Fresh full runtime qualification remains pending; no successful public131 live assertion is claimed by this focused evidence.
+
+
+### Actual private UI startup and catalog-tool consumer mismatch
+
+Fresh131 preparation succeeded for9hosts+adapter with actual SDK1de/Tenant8e and all0warning/error builds; completed manifest `/tmp/parties-public1301-wrapper-prepared.json` SHA256bfb219299368e72a41cbaeaa538e5121e92a8a5c8c0e9a7d73e84927a2ea6150. The unchanged full concurrent method then failed before domain assertions in325.607s (1failed,0skips), `/tmp/parties-public1301-wrapper-concurrent-live.{log,xml}`. The actual AdminUI independently captured its receiver-free auxiliary surface with no subscription endpoint/incoming operations; its prior receiver refusal is resolved. No activated runtime success is claimed.
+
+The actual coordinator now correctly refuses activation because all45 candidate idempotency policies bind default ConsumerAppId=eventstore while the isolated gateway is eventstore-979cfa850715. Every route has an enrolled actual application identity. Compact captured-file facts and exact catalog hash are preserved in `/tmp/parties-public1301-activation-consumer-mismatch.json`. The owning Platform tool calls the2argument DevelopmentIdempotencyBindings.Bind; the existing public131 SDK3argument API and native Aspire path already support actual gatewayAppId. Root's request already supplies that independently modeled identity. A bounded owner-tool correction is being qualified independently; do not rewrite candidate descriptors or weaken SDK activation checks.
+
+All owned session979cfa850715 private files/processes/containers/network are gone; `/tmp/parties-public1301-wrapper-concurrent-cleanup-receipt.json` confirms automatic cleanup. Producer freeze thawed after cleanup. Any selected Platform successor requires fresh source/PE preparation before another live run. Startup/cleanup budgets, all Counter/Greeting/Parties/auth/mTLS/isolation assertions and full assembly gate remain unchanged.
+
+
+### Reviewed owner consumer binding selected — 2026-11-01
+
+Platform exactpushed d9d0eb18e8f30826289991e5972dd200c4d48fd0 (fix/catalog-consumer-run-binding, parent68b785b6) is normally selected after its single required independent review and all6 triaged corrections. The two product files Program.cs/csproj travel together: actual explicit gatewayAppId binds every command policy through the public SDK3argument factory only for qualified130/131; legacy129 retains its actual literal eventstore consumer and refuses unsupported scoped consumers. No descriptor rewriting or SDK gate changes occur. Ownerdefault129 build without a version override has0warnings/errors. Public130/131 real Sample+Tenant controls pass13each; copied actualRoot131 owners pass11controls with45actual policies,1canonicalactor query,19domain queries and7SampleRoutes, while original declaration/binding/operation/nonconsumer-policy data remain structurally equal. Proofpacket `/tmp/platform-catalog-consumer-ky973qv0/proof/packet-manifest.json`. OwnerCI remains a final gate; local runtime may overlap it.
+
+The Builds checkout observation was stale: its prior local main ef40e875 contains pre-stop pushall merges with a tree exactly equal to the already qualified d8d0d70f (e7d8a28a846040882f31dafdb1b876d4def45890), not a new competing write. Normal detached d8 selection preserves ef40 plus newer fetched source heads/tags. SDK1de/Tenant8e remain selected. Platform original newer localmain799d29b1 is likewise preserved; qualifiedd9 is separately selected. No reset, force or nested operation was used.
+
+Final integration-runner compilation after exact selection and meaningful nonnull CSS MIME assertion passes with0warnings/errors,5.77s (`/tmp/parties-public1301-consumer-fixed-integration-build.log`). Four focused actual HTTP cases are rerun before fresh preparation. Source/ref metadata remains preview-only: `/tmp/parties-final-metadata-preview.diff`; no ledger finalization or release qualification is asserted. Fresh runtime preparation/concurrent/fullassembly remain mandatory.
+
+
+### Final source audit excludes unqualified FrontComposer metadata
+
+Parent exact-source audit identifies the pre-stop e442544c FC nested-gitlink-only update as failing required owner-pin governance in both CI41246730936 and Quality41246730593. Its code/public474bytes are unchanged, but it cannot be called source-qualified. Previously qualified6811bfd6 has all5 exact-source gates green. The just-started consumer-fixed run was explicitly cancelled with SIGINT only to exactowned test PID399541, before qualification; its xUnit result57.413s/exit58 and separately observable cleanup cancellation are retained. This is not a product failure or a passing runtime proof. All owned session440735a068f3 processes/private root/network and its3actualAspirecontainers are absent, `/tmp/parties-public1301-consumer-fixed-cancelled-cleanup.json`.
+
+Normal detached FC681 selection preserves e442 main and all newer refs. Fresh final-source Integration/preparation follows before live. Other selected-source gates are independently green (`/tmp/parties-selected-five-remote-gates.json`, FC681 source-audit receipt, Tenant8e full10851+538 case proofs and Platformd9 both matrix artifacts). SDK131/source1de coreCI/Lint and published-characterization108/108 are verified; only actual live-sidecar gate remains pending. Historical239case legacy receipt remains explicitly nonqualifying and unchanged. No ledger or release success is claimed.
+
+
+### Actual SDK technical HTTP reachability defect — mandatory maintenance prerequisite
+
+The final ten selected sources and fresh10receipt preparation were unchanged and successful, but actual publicSDK131 gateway Prepare rejects its loaded topology; the other7 participants reach Ready. The unchanged concurrent method fails before domain assertions in326.844s (1failed/0skipped), `/tmp/parties-public1301-final-concurrent-live.{log,xml}`. Exactowned automatic cleanup is complete: session85ca5575870e private root/processes/network and its3actualAspirecontainers are absent (`/tmp/parties-public1301-final-concurrent-cleanup-receipt.json`). Original source/producer freeze thawed only after those checks.
+
+An isolated zero-warning diagnostic uses the actual prepared publicContracts131 DLL and actual captured activation/observation inputs, without modifying any host or library. It reproduces `unbound-technical-controller-code-or-policy` only for gateway;7others validate. RouteCatalogTopologyValidator.ValidateTechnicalReceiver computes reachable endpoints by path without intersecting actual HTTP verbs. Actual Tenant/Parties **POST grants therefore demandPOST witnesses fromGET/PUT-only routes (14each). More decisively, the exact existing Sample UI /api/v1/commands POST grant includes the descendant GET command-status endpoint by path: the validator rejects it despite that endpoint being unreachable byPOST. Narrowing Root's real POST paths cannot remove this counterexample without dropping supported status endpoints, path tricks, or broader caller grants; those are disallowed. All actual endpoint/auxiliary descriptor bindings otherwise match.
+
+All29 bounded endpoint/caller/grant diagnostics, actual8observations+activation/catalog and publicSDK diagnostic source/build/results remain private0600 under `/tmp/parties-topology-diagnostic-85ca5575870e`; `technical-policy-diagnostics.json` records the exact Sample counterexample. Parent authorizes a minimal SDK maintenance correction from the qualified source lineage, preserving actual full observation, endpoint/code/auth/catalog/lease boundaries and unknown-method refusal. No newer feature main, fake inventory, synthetic authority or grant expansion is substituted. OwnerSDK131 executor0a635 fullCI/Lint/Integration is green (live304/4existingworker skips +metadata1, published108pass with unchanged nonqualifying239legacy receipt); the new Root cross-verb counterexample remains a real newly demonstrated prerequisite despite those successful owner gates.
+
+Expected maintenance132 finite downstream changes are prepared only in `/tmp/parties-sdk132-finite-adoption.diff` (3Rootpaths). They retain earlier supported aliases and meaningful source/version/type/PE controls. No Rootpin, package cache, metadata signoff or runtime success is changed/claimed before actual official maintenance publication and owner finite-alias qualification. Full Root public static/runtime/183-plus-case assembly and final release/eleven-archive verification remain mandatory after adoption.
+
+
+### Actual public SDK3.130.2 adoption and static qualification
+
+Official maintenanceSDK3.130.2/source28e3f260bbaf4619d1a99d656fba04c0c532387b is now public: all14 actual nuget.org archives independently downloaded/verified (receipt `/tmp/eventstore-31302-nuget-publication.json`, SHA2568e07e4b6be063dd23b60483e3dd920078dd78c1bcfc3b70e8341a0751a2ae312), exact protected sourceCI/Lint/fullIntegration and entireRelease41277013578 includingOCI succeed. The first ordinary Rootrestore failsNU1102 on a stale officialindex; its normal retry with the same nuget.org source and noHTTPcache succeeds. Both logs are retained (`/tmp/parties-public1302-restore{,-retry}.log`). No alternativefeed/archiveinjection/globalcacheclear occurs.
+
+Root SDKdefault/API/host qualifiers now admit exact132 while retaining129/130/131 support; the former future132negative now tests133. Actual source tags/finitealiases normally selected: SDKv3.130.2→28e, Tenant7df847270719bd392a4ad2ea48c700c3a9e3d939 and Platforme37d8cecc77cebe2ce675367e45a8f72759a3664. Newer feature mains and all user commits remain preserved. Owner localproofs use actualpublic132; their fullCI/artifact gates remain separately required before finalledger/release.
+
+Normal public132 standaloneRelease build succeeds with0warnings/errors17.21s. All15 individual static projects execute6256cases:6248pass,5existing skips,0errors/notrun and exactly3 deferred current-source metadata failures (committedMCP/Platform observations and currentpackageparagraph). They are not waived and require the finalcommittedmetadata class rerun. Contracts postfixture normalrestore succeeds. Browser68/68 passes55.2s, actual FC474 assets/axe/visual gates unchanged. Explicit preserved stagedPlatform.IntegrationTests132compile succeeds0warnings/errors1.67s, without activating its unqualified module runtime. Integrationrunner compiles0warnings/errors25.22s; actualHTTP/model8/8 passes withoutskip. Logs/report `/tmp/parties-public1302-{standalone-build.log,static/report.json,browser.log,preserved-platform-project-build.log,integration-build.log,http-model.xml}`.
+
+An isolated replay using the actual normal-restored public132ContractsDLL (verifiedbyte-equal to its actual nupkg) validates all8 captured previous131 host topologies unchanged; `/tmp/parties-topology-diagnostic-sdk132/{result.log,provenance.json}`. This confirms the specific methodreachability correction without alteringgrants/observations; it is not fresh runtime qualification. Final9hosts+adapter preparation and fullpersisted concurrent/wholeassembly are next. No ledgerfinalization, Rootcommit or release/publication success is asserted yet.
+
+
+### Actual public3.130.2 startup and private placement credential
+
+The first full concurrent method failed before domain assertions after327.637s
+(`/tmp/parties-public1302-concurrent-live.{log,xml}`). All eight actual catalog
+participants observed, became ready and committed. The genuine SDK placement
+probe then received HTTP401 from its protected local `/v1.0/metadata`: its typed
+HTTP client does not propagate `DAPR_API_TOKEN`, although normal DaprClient calls
+do. The actual health body is retained at
+`/tmp/parties-public1302-live-health.json`. The unchanged five-minute startup
+budget expired; automatic cleanup removed all three actual containers, session
+processes/network and private root. Exact cleanup proof is
+`/tmp/parties-public1302-concurrent-cleanup-receipt.json`.
+
+The nonpackable package gateway configures only the existing SDK placement
+probe's typed HTTP client with the actual configured local API token, only in
+Development with the explicit private catalog profile. It preserves the actual
+SDK probe, health check, metadata `hostReady` decision and all other clients.
+Missing/invalid credentials remain401/unhealthy; Production and ordinary profile
+receive no additional credential. Focused verification and fresh immutable
+preparation/live qualification follow; no success is claimed yet.
+
+
+The placement correction passed all six actual-SDK controls, all14 affected
+HTTP/model controls with zero skips and a zero-warning Release build. Fresh
+nine-host/adapter preparation produced ten SDK132 receipts. The next unchanged
+concurrent method failed232.555s at the existing three-minute Parties `/health`
+budget: Gateway placement, catalog and writer-protocol checks were healthy;
+Parties' actual Tenants readiness client invoked Dapr GET `/ready`, which the SDK
+correctly refuses outside its committed business/auxiliary inventory. Actual
+receiver ACL and all eight committed participants were retained. Logs/XML:
+`/tmp/parties-public1302-placement-concurrent-live.*`; exact automatic cleanup
+proof: `/tmp/parties-public1302-placement-concurrent-cleanup-receipt.json`.
+
+The explicit private package run binds the existing validated
+`Tenants:ReadinessBaseAddress` health-only setting to the actual modeled Tenants
+HTTP endpoint. It preserves the actual receiver's health response and all
+independent Dapr GETready ACL, mTLS and cross-session assertions. Native/default
+and publish models have no such binding. This uses ordinary endpoint health
+configuration rather than changing SDK catalog eligibility. Focused actual
+unready/malformed/model controls and fresh complete runtime proof follow.
+
+
+The final focused readiness check is28/28 with zero skips
+(`/tmp/parties-public1302-readiness-unit-tests.{log,xml}`), including actual
+receiver200/503 health decisions and six malformed-binding refusals. Actual
+package/native/publish model and HTTP/probe regressions are14/14 with zero skips
+(`/tmp/parties-public1302-readiness-http-model.{log,xml}`). The model binds exactly
+the `tenants` HTTP EndpointReference, and native/publish environments lack the
+private readiness setting. Both affected Release builds have zero warnings:
+unit17.24s and Integration20.65s. Fresh preparation and unchanged actual
+concurrent/full Integration qualification remain required.
+
+
+### Actual SDK132 business admission diagnostic
+
+The first readiness-corrected attempt failed before catalog activation because
+its owned Docker Redis backend60914 refused while the actual container returned
+PONG. Evidence and exact complete cleanup are retained at
+`/tmp/parties-public1302-readiness-owned-redis-startup-diagnosis.json` and
+`/tmp/parties-public1302-readiness-concurrent-cleanup-receipt.json` (318.849s).
+A separate exact-image owned Redis preflight returned PONG through its actual
+published port54955 and removed itself. No source or budget was changed.
+
+The single fresh unchanged retry then initialized both complete sessions, each
+with eight committed participants. Its first Counter command returned500 because
+the real Sample `/process` workload policy returned401 `verifier-unconfigured`.
+The private bootstrap had accidentally created an incomplete dedicated verifier
+by setting only `Authentication:WorkloadJwtBearer:Audience`; SDK intentionally
+refuses to inherit signing trust when that section exists. Actual
+`Authentication:Workload:Audience` already narrows the receiver's valid audience.
+Removing only the redundant dedicated-section entry preserves SDK's documented
+shared-JWT verifier, exact audience, issuer, key, caller and operation checks.
+The deliberately partial dedicated contract must remain refused.
+
+The101.473s failed command result and both complete cleanup proofs are retained at
+`/tmp/parties-public1302-redis-retry-concurrent-live.{log,xml}` and
+`/tmp/parties-public1302-redis-retry-concurrent-cleanup-receipt.json`. Both private
+roots, six data containers, control planes, processes and networks are absent.
+Actual signed positive/wrong-audience/issuer/key/caller/partial-contract controls
+and fresh full runtime proof follow; no business success is claimed yet.
+
+
+The actual SDK issuer/validator controls pass6/6: shared verifier accepts the
+exact signed gateway/audience/operation, and wrong audience, issuer, key, caller
+and partial dedicated configuration refuse. Together with existing private
+HTTP/model controls,20/20 pass with no skips; the affected Integration Release
+build is zero-warning30.01s. Logs/XML:
+`/tmp/parties-public1302-workload-http-model.*` and
+`/tmp/parties-public1302-workload-integration-build.log`.
+
+Both final SDK132 downstream owner gates are independently green. ExactTenant
+7df847270719bd392a4ad2ea48c700c3a9e3d939 CI41278404929 includes10,863main and
+538actual Aspire cases, all passing without skips; live125/published66/blocking270
+and source6 plus Source/Story/Lint/CodeQL are green. ExactPlatform
+e37d8cecc77cebe2ce675367e45a8f72759a3664 CI41278445212 has all three public
+SDK1300/131/132 matrix lanes and their actual13-case artifacts/source/DLL
+identities verified. Combined receipt:
+`/tmp/downstream-sdk132-drafts-wd24gzkq/proof/final-owner-milestone2.json`.
+Actual Root concurrent/full-assembly/cleanup and final committed-source fitness
+remain pending; these owner results do not substitute for them.
+
+
+The signed-verifier correction allows both sessions to initialize and real
+Counter processing to persist/complete sequences2 and5. The next unchanged
+method still fails176.551s at initial second-session seeding's existing60s total
+budget (line91→POST153), before Greeting/UI/disposal assertions. Its fifth
+Counter completes at06:33:58.586Z but the HTTP submission does not return before
+the remaining budget expires. Actual state-client2157responses have median3.78ms,
+p9511.2ms/max83.46ms; seven domain invocation responses have median437ms/max591ms.
+This distinguishes admission/response/status overhead from a transport hang;
+no deadline, assertion or production policy is changed from this observation.
+Both sessions' six data containers, control planes, private roots, processes and
+networks are gone, verified in
+`/tmp/parties-public1302-workload-concurrent-cleanup-receipt.json`.
+
+A bounded test-only Stopwatch diagnostic records session/message identity,
+POST/status/persisted-verification phases, duration and status. It prints no
+JWT, API token, payload or private key and preserves the60s budget, all five
+commands and every persisted-state assertion. One attribution run follows
+against verified unchanged prepared publicSDK132 host outputs.

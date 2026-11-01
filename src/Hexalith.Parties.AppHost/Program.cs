@@ -58,6 +58,13 @@ string adminUiProjectPath = ReferenceProjectResolver.ResolveRequired(
     repositoryRoot,
     "Hexalith.EventStore",
     Path.Combine("src", "Hexalith.EventStore.Admin.UI", "Hexalith.EventStore.Admin.UI.csproj"));
+#if HEXALITH_EVENTSTORE_CATALOG_HOSTS
+if (builder.ExecutionContext.IsRunMode && builder.Configuration.GetValue<bool>("Parties:Testing:UsePackagedGateway"))
+{
+    adminUiProjectPath = Path.Combine(repositoryRoot.FullName, "tests", "Hexalith.Parties.EventStoreAdminUI.TestHost", "Hexalith.Parties.EventStoreAdminUI.TestHost.csproj");
+    if (!File.Exists(adminUiProjectPath)) { throw new FileNotFoundException("The private Admin UI composition host is missing.", adminUiProjectPath); }
+}
+#endif
 string tenantsProjectPath = ReferenceProjectResolver.ResolveRequired(
     repositoryRoot,
     "Hexalith.Tenants",
@@ -185,6 +192,14 @@ _ = parties
     .WithEnvironment("Tenants__CommandApiAppId", daprMtls?.AppId("eventstore") ?? "eventstore")
     .WithEnvironment("Tenants__PubSubName", "pubsub")
     .WithEnvironment("Tenants__TopicName", "system.tenants.events");
+#if HEXALITH_EVENTSTORE_CATALOG_HOSTS
+if (builder.ExecutionContext.IsRunMode && builder.Configuration.GetValue<bool>("Parties:Testing:UsePackagedGateway"))
+{
+    // Probe the actual receiver's readiness through its owned endpoint; business calls retain Dapr catalog admission.
+    _ = parties.WithEnvironment("Tenants__ReadinessBaseAddress", tenants.GetEndpoint("http"));
+}
+#endif
+
 
 // Tenants takes a direct WithReference(eventStore) here intentionally, diverging
 // from the canonical Hexalith.EventStore.AppHost sample where Tenants is a peer
