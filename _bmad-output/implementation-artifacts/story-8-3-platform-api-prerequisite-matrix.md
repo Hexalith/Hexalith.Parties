@@ -102,16 +102,16 @@ or grant publication, deployment, or rollback qualification.
 
 | Root dependency | Current source identity | Release use |
 | --- | --- | --- |
-| AI.Tools | `9b78aa008cfc62cd88ad0ea4b39b1f07311956ce` (`9b78aa00`) | Committed selection; qualification still requires its own executed proof. |
-| Builds | `df13d9d31f7ee1a1b0fb7eeac7e8b27b9a9f9fb0` (`v4.41.0-16-gdf13d9d3`) | Committed selection; qualification still requires its own executed proof. |
-| Commons | `bbbce518bcca9ca359762393688f02d142af1c61` (`v2.30.8`) | Committed selection; qualification still requires its own executed proof. |
-| EventStore | `ba4c5548ad260b049bda5a1c7def2e8af3484733` (`v3.130.2-63-gba4c5548`) | Committed selection; qualification still requires its own executed proof. |
-| FrontComposer | `c092e8f91ebb670fad4ab959f2d3c8e13d809e0f` (`v4.7.4-15-gc092e8f9`) | Committed selection; qualification still requires its own executed proof. |
-| McpCli | `3bc89642ad43305531c4018b75b5e1b9e0681e10` (`v1.1.0-57-g3bc8964`) | Committed selection; qualification still requires its own executed proof. |
-| Memories | `b93b32cf77f3d76e51d3221550eff99f4d1e93cb` (`v3.0.13-13-gb93b32cf`) | Committed selection; qualification still requires its own executed proof. |
+| AI.Tools | `1745b6663ad32bb1288167135ed0f979366c53a0` (`1745b666`) | Committed selection; qualification still requires its own executed proof. |
+| Builds | `d2a430c988462a634674a69c562ea4afd1f06ef4` (`v4.42.1-5-gd2a430c9`) | Committed selection; qualification still requires its own executed proof. |
+| Commons | `11555ace9efcae2928a00122dcba91243e5a8a1a` (`v2.30.10`) | Committed selection; qualification still requires its own executed proof. |
+| EventStore | `7c93a1234d14c66f5ee85ed48caaee1d30a671f3` (`v3.132.2`) | Committed selection; qualification still requires its own executed proof. |
+| FrontComposer | `07089dcbdad784a1d53037e9cea78d1d7becd8d6` (`v4.7.5`) | Committed selection; qualification still requires its own executed proof. |
+| McpCli | `3bc89642ad43305531c4018b75b5e1b9e0681e10` (`v1.1.0-57-g3bc89642`) | Committed selection; qualification still requires its own executed proof. |
+| Memories | `e8956eb5c1bd49297f86702f9606eb9b013bc2f1` (`v3.0.15`) | Committed selection; qualification still requires its own executed proof. |
 | Platform | `92f87e6a49e4357f91b2ffb821e044931291c0e6` (`v1.1.0-12-g92f87e6a`) | Committed selection; qualification still requires its own executed proof. |
-| PolymorphicSerializations | `821b784bb51483acefa9725acc6792d111304a4e` (`v1.19.7-1-g821b784b`) | Committed selection; qualification still requires its own executed proof. |
-| Tenants | `2d3fa6da2312c1b5cf7f5c9461cc2d0ffc995b43` (`v6.0.0-17-g2d3fa6da`) | Committed selection; qualification still requires its own executed proof. |
+| PolymorphicSerializations | `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`) | Committed selection; qualification still requires its own executed proof. |
+| Tenants | `4b3e431745550f8466f1ce0d70e6b507c747b59a` (`v6.0.0-52-g4b3e4317`) | Committed selection; qualification still requires its own executed proof. |
 
 ### Historical source observation — 2026-10-30
 
