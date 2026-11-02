@@ -2,7 +2,7 @@
 title: '8.10 Final readiness, documentation, and retirement gate'
 type: 'refactor'
 created: '2026-08-17'
-status: 'in-progress'
+status: 'in-review'
 baseline_commit: '37f4ec826c6f4aea4651cfbad94fb6ab7fc4f0a0'
 review_loop_iteration: 3
 context:
@@ -515,7 +515,7 @@ Acceptance for this section:
 **Commands:**
 - `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 && dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests` -- expected: build and closure fitness pass; repeat the assembly command for `DocumentationFitnessTests` and `PlatformApiPrerequisitesTests`.
 - `bash scripts/check-no-warning-override.sh && dotnet restore Hexalith.Parties.slnx && dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1` -- expected: pass.
-- `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults` -- expected: 15 projects pass; record topology skips.
+- `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults` -- expected: 16 projects pass; record topology skips.
 - `pkg_dir=$(mktemp -d /tmp/parties-810-packages.XXXXXX); consumer_dir=$(mktemp -d /tmp/parties-810-consumer.XXXXXX); python3 scripts/pack-release-packages.py "$pkg_dir" 0.0.0-story810 && python3 scripts/validate-nuget-packages.py "$pkg_dir" && python3 scripts/validate-consumer-package-references.py "$pkg_dir" --work-directory "$consumer_dir"` -- expected: package/API compatibility passes.
 - `npm ci --prefix tests/e2e && npm --prefix tests/e2e run typecheck && npm --prefix tests/e2e run test:a11y` -- expected: accessibility passes.
 
@@ -803,6 +803,18 @@ describes. They keep that row's verdict and route and are not patched again.
 Routing: there is no intent_gap or bad_spec entry. The eight patch entries go to
 the loop-3 implementation agent; DW-144 and DW-145 are appended. No owner
 commitment, release, dependency change, or deletion is authorized by this triage.
+
+### 2026-11-02 I16 receipt review
+
+| Finding | Verdict | Evidence and route |
+| --- | --- | --- |
+| Blind 1 — current prose calls all six receipts Unvalidated | medium | The spine's open condition and §7a were current claims, while the pinned `56fc3b73` lanes passed. Patched those claims to point at the live canonical table; dated approval rows remain historical. |
+| Blind 2 — receipt base obscured after main advanced | medium | `2905bf13` and `a419b53c` changed the live snapshot during qualification. Archived all six `56fc3b73` Pass rows with their exact stamp, and left current canonical rows Unvalidated until their own rerun. |
+| Blind 3 — Verification expects 15 projects | low | `scripts/test.ps1 -Lane all` ran 16 projects with 16 TRX files. Corrected the expected project count to 16. |
+| Edge 1 — stale Pass stamps fail on current main | medium | The open-story structural gate compares clean Pass rows to the live v2 snapshot. The pinned Pass rows are now historical; current rows require a current snapshot rerun before promotion. |
+
+Verification Gap Reviewer found no gap in the reviewed evidence diff. This
+review leaves the nine unchecked Round 8 patches and Story 8.10 closure open.
 
 ## EventStore Package Update — 2026-10-04
 
