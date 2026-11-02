@@ -2,6 +2,8 @@
 
 **Reviewable proposal; not implementation-ready.** User approval of A-01–A-06 text is complete. This run proposes concrete compatibility choices; no affected-owner approval of the new schemas or operational target is recorded. Decisions below route into the original five decisions without closing their Q/D/F/B obligations.
 
+The [2026-11-02 continuation](../../../docs/implementation/ext-parties-1-v2-continuation-2026-11-02/README.md) is the current feasibility and owner-return matrix. Fresh authenticated read-only observations confirm the installed OpenBao/Scaleway 31-day rule and local snapshot behavior; they do not close R3/R5/R6 or qualify V2. G01–G08 and every C01–C16 class remain open at the granularity required for installation. No missing owner fact is filled by this observation.
+
 ## Gates are separate
 
 | Gate | Present state | What can establish it |

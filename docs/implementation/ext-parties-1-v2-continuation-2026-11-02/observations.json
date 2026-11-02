@@ -1,0 +1,111 @@
+{
+  "classification": "Authenticated read-only observations; not owner acceptance, all-copy inventory, restore-cut proof or Level 4 qualification",
+  "observedFromUtc": "2026-11-02T15:11:18.155454+00:00",
+  "observedThroughUtc": "2026-11-02T15:11:29.948579+00:00",
+  "kubernetes": {
+    "endpoint": "https://192.168.1.30:6443",
+    "context": "jpiquot@local",
+    "kubeconfigReference": "/home/administrator/.kube/hexalith-production",
+    "operation": "GET only; no Secret values or pod exec",
+    "nodes": [
+      {
+        "name": "node1",
+        "uid": "46d8d528-420d-4501-a6d8-12680d8a6ac6",
+        "ready": "True"
+      }
+    ],
+    "openbao": {
+      "namespace": "openbao",
+      "statefulSet": {
+        "name": "hexalith-keys",
+        "uid": "df2bbbbe-1fe8-4e0b-a8a6-174bd3287806",
+        "resourceVersion": "22791138",
+        "readyReplicas": 3,
+        "image": "quay.io/openbao/openbao:2.6.2@sha256:11fd73a2102cda9c55d5d881a8c3210303146a7ec1e8ac76f526e175c6d24641"
+      },
+      "runningPodNodes": [
+        "node1",
+        "node1",
+        "node1"
+      ]
+    },
+    "snapshotCronJob": {
+      "name": "openbao-raft-snapshot",
+      "uid": "c10e477c-0f4b-49f1-bd8f-d36ed29d4e91",
+      "resourceVersion": "39497461",
+      "schedule": "30 0 * * *",
+      "commandSha256": "4ccc664a782b3678a49b5be3d89de8c1251cd1184cba4f2629539b21073815be",
+      "publishesUnboundedLatestOpenbaoSnap": true,
+      "datedCleanupUsesMtimePlus14": true,
+      "uploadsOffNode": false
+    },
+    "isolatedGenericRestoreTarget": {
+      "namespace": "recovery-4-0-bao",
+      "statefulSetUid": "d937b5e5-c0b7-4350-9994-36a8487b19d8",
+      "readyReplicas": 3,
+      "runningPodNodes": [
+        "node1",
+        "node1",
+        "node1"
+      ]
+    },
+    "snapshotPvc": {
+      "observedAtUtc": "2026-11-02T15:11:29.948579+00:00",
+      "uid": "da142de4-dec5-4519-880d-b7ede4000283",
+      "resourceVersion": "1194872",
+      "volumeName": "pvc-da142de4-dec5-4519-880d-b7ede4000283",
+      "storageClass": "openebs-hostpath-retain",
+      "pvReclaimPolicy": "Retain",
+      "pvNodeAffinity": {
+        "required": {
+          "nodeSelectorTerms": [
+            {
+              "matchExpressions": [
+                {
+                  "key": "kubernetes.io/hostname",
+                  "operator": "In",
+                  "values": [
+                    "node1"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scaleway": {
+    "endpoint": "https://s3.fr-par.scw.cloud",
+    "bucket": "hexalith-recovery-points",
+    "credentialReference": "~/.config/hexalith-recovery/validator.env",
+    "operation": "authenticated read-only GetBucketLifecycleConfiguration and GetObjectLockConfiguration",
+    "httpStatuses": {
+      "lifecycle": 200,
+      "objectLock": 200
+    },
+    "openbaoLifecycle": [
+      {
+        "id": "expire-openbao",
+        "prefix": "openbao/",
+        "status": "Enabled",
+        "expirationDays": 31,
+        "noncurrentDays": 1
+      }
+    ],
+    "objectLock": {
+      "ObjectLockEnabled": "Enabled",
+      "Rule": {
+        "DefaultRetention": {
+          "Mode": "COMPLIANCE",
+          "Days": 30
+        }
+      }
+    }
+  },
+  "limits": [
+    "Kubernetes observations establish current placement and snapshot command, not all file contents or copy disposal.",
+    "Bucket configuration is current at observation, but no atomic full version census, physical disposal or actor-unit E-relative proof was performed.",
+    "The isolated generic restore target is a current recovery-copy location to account for; no actor-history data or Parties qualification is inferred."
+  ]
+}

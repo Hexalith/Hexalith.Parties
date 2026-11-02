@@ -3,7 +3,7 @@ id: SPEC-ext-parties-1-contract-amendment
 status: proposed-compatibility-contract
 amendment_text_status: text-approved
 implementation_ready: false
-updated: 2026-10-26
+updated: 2026-11-02
 created: 2026-10-25
 approval_scope: amendment-text-only
 approval_record: approval.md
@@ -39,6 +39,8 @@ sources: []
 **PROPOSED FOR REVIEW; implementation readiness is blocked.** A-01–A-06 have [user text approval](approval.md); the schemas, API names, F1 representation and migration choices below are new proposals. This update preserves the approved clause bytes. It does not adopt a replacement commitment, select a backend, supply operational acceptance or qualify an installation. Historical draft labels in the retained companions describe their original revisions.
 
 This kernel and its companions define the proposed work. Read [brownfield.md](brownfield.md) for inspected source boundaries, [compatibility-contract.md](compatibility-contract.md) for assurance semantics, [api-schemas.md](api-schemas.md) for wire/API proposals, [implementation-plan.md](implementation-plan.md) for repository ownership and migration, [acceptance-tests.md](acceptance-tests.md) for future tests, and [readiness-decisions.md](readiness-decisions.md) for blocking decisions. The approved clauses and complete adopted identity contract remain load-bearing; historical hardware mechanisms and dates are superseded by the recorded direction.
+
+The [November 2 owner handoff](../../../docs/implementation/ext-parties-1-v2-continuation-2026-11-02/README.md) adds fresh read-only OpenBao/Scaleway observations and an exact G01–G08/C01–C16 blocker matrix. The installed 31-day `openbao/` rule, unbounded local latest snapshot and missing independent currentness/time proof leave feasibility unestablished. This continuation changes no approved A-01–A-06 clause bytes, V2 schema proposal, original null binding, accepted target/date or readiness status. A coordinated EventStore/Platform/Parties target and guarded Live installation plan wait for authenticated owner returns through the existing Platform form.
 
 ## Why
 
