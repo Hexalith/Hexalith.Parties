@@ -456,3 +456,10 @@ references/Hexalith.Builds|d2a430c988462a634674a69c562ea4afd1f06ef4|validated-ad
 references/Hexalith.PolymorphicSerializations|bce4eb9f45c6b131b960ab4fa39e50ff01e51960|validated-advance|origin/main@bce4eb9f45c6|jpiquot|2026-11-02
 references/Hexalith.McpCli|3bc89642ad43305531c4018b75b5e1b9e0681e10|validated-advance|origin/main@3bc89642ad43|jpiquot|2026-11-02
 references/Hexalith.Platform|92f87e6a49e4357f91b2ffb821e044931291c0e6|validated-advance|origin/main@92f87e6a49e4|jpiquot|2026-11-02
+
+# --- 2026-11-02 operator-requested repair of the Tenants synchronization.
+#     Preserve the local compatibility merge and the published upstream history.
+#     The reconciled main tree exactly matches upstream 964d64561b8f; both the
+#     checkpoint and its integration correction are incorporated. Source selection
+#     only: CI, release and historical parity proof remain separate.
+references/Hexalith.Tenants|4b3e431745550f8466f1ce0d70e6b507c747b59a|validated-advance|origin/main@4b3e43174555|jpiquot|2026-11-02
