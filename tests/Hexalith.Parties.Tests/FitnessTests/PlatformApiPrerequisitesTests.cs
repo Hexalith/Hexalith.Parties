@@ -74,7 +74,7 @@ public sealed class PlatformApiPrerequisitesTests
         ["references/Hexalith.Memories"] = "e8956eb5c1bd49297f86702f9606eb9b013bc2f1",
         ["references/Hexalith.Platform"] = "92f87e6a49e4357f91b2ffb821e044931291c0e6",
         ["references/Hexalith.PolymorphicSerializations"] = "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
-        ["references/Hexalith.Tenants"] = "4b3e431745550f8466f1ce0d70e6b507c747b59a",
+        ["references/Hexalith.Tenants"] = "4d0d599879767196928e1c265622483a62b457ae",
     };
 
     private static readonly IReadOnlyDictionary<string, string> CurrentSelectedSourceDescribes = new Dictionary<string, string>(StringComparer.Ordinal)
@@ -88,7 +88,7 @@ public sealed class PlatformApiPrerequisitesTests
         ["references/Hexalith.Memories"] = "v3.0.15",
         ["references/Hexalith.Platform"] = "v1.1.0-12-g92f87e6a",
         ["references/Hexalith.PolymorphicSerializations"] = "v1.19.8-1-gbce4eb9f",
-        ["references/Hexalith.Tenants"] = "v6.0.0-52-g4b3e4317",
+        ["references/Hexalith.Tenants"] = "v6.0.0-71-g4d0d5998",
     };
 
     private static readonly string[] RequiredAbsentPayloadProtectionPaths =
