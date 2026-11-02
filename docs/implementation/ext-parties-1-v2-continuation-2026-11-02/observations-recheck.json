@@ -1,0 +1,173 @@
+{
+  "classification": "Authenticated read-only service observations; no owner acceptance, all-copy census, unit-specific disposal, restore-cut proof, Human authority or Level 4 qualification",
+  "observedFromUtc": "2026-11-02T15:30:56.492969Z",
+  "observedThroughUtc": "2026-11-02T15:30:58.432200Z",
+  "kubernetes": {
+    "context": "jpiquot@local",
+    "endpoint": "https://192.168.1.30:6443",
+    "kubeconfigReference": "/home/administrator/.kube/hexalith-production",
+    "operation": "GET only; no Secret values, pod exec or mutation",
+    "openbaoStatefulSet": {
+      "name": "hexalith-keys",
+      "uid": "df2bbbbe-1fe8-4e0b-a8a6-174bd3287806",
+      "resourceVersion": "22791138",
+      "replicas": 3,
+      "readyReplicas": 3,
+      "images": [
+        "quay.io/openbao/openbao:2.6.2@sha256:11fd73a2102cda9c55d5d881a8c3210303146a7ec1e8ac76f526e175c6d24641"
+      ]
+    },
+    "openbaoPodNodes": [
+      "node1",
+      "node1",
+      "node1"
+    ],
+    "snapshotCronJob": {
+      "name": "openbao-raft-snapshot",
+      "uid": "c10e477c-0f4b-49f1-bd8f-d36ed29d4e91",
+      "resourceVersion": "39497461",
+      "schedule": "30 0 * * *",
+      "lastSuccessfulTime": "2026-11-02T00:30:04Z",
+      "commandSha256": "4ccc664a782b3678a49b5be3d89de8c1251cd1184cba4f2629539b21073815be",
+      "publishesUnboundedLatestOpenbaoSnap": true,
+      "datedCleanupUsesMtimePlus14": true,
+      "uploadsOffNode": false
+    },
+    "snapshotPvcAndPv": {
+      "pvcUid": "da142de4-dec5-4519-880d-b7ede4000283",
+      "pvcResourceVersion": "1194872",
+      "volumeName": "pvc-da142de4-dec5-4519-880d-b7ede4000283",
+      "storageClass": "openebs-hostpath-retain",
+      "pvUid": "24c7f826-7682-41d5-82ae-344c8c16d873",
+      "pvResourceVersion": "1194870",
+      "reclaimPolicy": "Retain",
+      "nodeAffinity": {
+        "required": {
+          "nodeSelectorTerms": [
+            {
+              "matchExpressions": [
+                {
+                  "key": "kubernetes.io/hostname",
+                  "operator": "In",
+                  "values": [
+                    "node1"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "genericRestoreTarget": {
+      "namespace": "recovery-4-0-bao",
+      "name": "bao-restore",
+      "uid": "d937b5e5-c0b7-4350-9994-36a8487b19d8",
+      "resourceVersion": "39333028",
+      "readyReplicas": 3
+    }
+  },
+  "scaleway": {
+    "endpoint": "https://s3.fr-par.scw.cloud",
+    "bucket": "hexalith-recovery-points",
+    "credentialReference": "~/.config/hexalith-recovery/validator.env",
+    "operation": "authenticated read-only lifecycle, object-lock and openbao-prefix version-list GETs; no object payloads",
+    "httpStatuses": {
+      "lifecycle": 200,
+      "objectLock": 200,
+      "openbaoVersions": 200
+    },
+    "openbaoLifecycle": {
+      "id": "expire-openbao",
+      "prefix": "openbao/",
+      "status": "Enabled",
+      "expirationDays": "31",
+      "noncurrentDays": "1"
+    },
+    "objectLock": {
+      "enabled": "Enabled",
+      "mode": "COMPLIANCE",
+      "days": "30"
+    },
+    "openbaoVersionList": {
+      "isTruncated": "false",
+      "entries": [
+        {
+          "kind": "DeleteMarker",
+          "key": "openbao/20260929t124806z/openbao-20260929T130445Z.snap",
+          "versionId": "1793443499525171",
+          "lastModified": "2026-10-31T10:44:59.000Z",
+          "isLatest": "true"
+        },
+        {
+          "kind": "Version",
+          "key": "openbao/20260929t124806z/openbao-20260929T130445Z.snap",
+          "versionId": "1790687096892113",
+          "lastModified": "2026-09-29T13:04:56.000Z",
+          "isLatest": "false"
+        },
+        {
+          "kind": "DeleteMarker",
+          "key": "openbao/20260929t124806z/openbao-20260929T130445Z.snap.sha256",
+          "versionId": "1793443499670726",
+          "lastModified": "2026-10-31T10:44:59.000Z",
+          "isLatest": "true"
+        },
+        {
+          "kind": "Version",
+          "key": "openbao/20260929t124806z/openbao-20260929T130445Z.snap.sha256",
+          "versionId": "1790687097324443",
+          "lastModified": "2026-09-29T13:04:57.000Z",
+          "isLatest": "false"
+        },
+        {
+          "kind": "Version",
+          "key": "openbao/20261001t061620z/openbao-20261001T072128Z.snap",
+          "versionId": "1790839296545309",
+          "lastModified": "2026-10-01T07:21:36.000Z",
+          "isLatest": "true"
+        },
+        {
+          "kind": "Version",
+          "key": "openbao/20261001t061620z/openbao-20261001T072128Z.snap.sha256",
+          "versionId": "1790839296980859",
+          "lastModified": "2026-10-01T07:21:36.000Z",
+          "isLatest": "true"
+        },
+        {
+          "kind": "Version",
+          "key": "openbao/20261014t112353z/openbao-20261014T145115Z.snap",
+          "versionId": "1791989522957565",
+          "lastModified": "2026-10-14T14:52:02.000Z",
+          "isLatest": "true"
+        },
+        {
+          "kind": "Version",
+          "key": "openbao/20261014t112353z/openbao-20261014T145115Z.snap.sha256",
+          "versionId": "1791989523140051",
+          "lastModified": "2026-10-14T14:52:03.000Z",
+          "isLatest": "true"
+        },
+        {
+          "kind": "Version",
+          "key": "openbao/20261101t131121z/openbao-20261101T162717Z.snap",
+          "versionId": "1793550456841851",
+          "lastModified": "2026-11-01T16:27:36.000Z",
+          "isLatest": "true"
+        },
+        {
+          "kind": "Version",
+          "key": "openbao/20261101t131121z/openbao-20261101T162717Z.snap.sha256",
+          "versionId": "1793550456956350",
+          "lastModified": "2026-11-01T16:27:36.000Z",
+          "isLatest": "true"
+        }
+      ]
+    }
+  },
+  "limits": [
+    "A prefix version listing is neither an atomic bucket-wide census nor evidence about node, seal, provider or exceptional copies.",
+    "Retention and lifecycle configuration do not prove E-relative actual disposal.",
+    "The generic restore target is a possible recovery-copy location; no Parties actor-history content or disposal is inferred."
+  ]
+}
