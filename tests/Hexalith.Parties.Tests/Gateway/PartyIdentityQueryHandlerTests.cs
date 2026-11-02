@@ -719,7 +719,7 @@ public sealed class PartyIdentityQueryHandlerTests
 
         PartyIdentityResult result = await fixture.Service.ResolveAsync(Envelope(new ResolvePartyIdentity("tenant-a", "party-1", Actor)), TestContext.Current.CancellationToken);
 
-        result.Outcome.ShouldBe(PartyIdentityOutcome.Unavailable);
+        result.Outcome.ShouldBe(PartyIdentityOutcome.Denied);
         result.Evidence.ShouldBeNull();
         await fixture.Reader.DidNotReceiveWithAnyArgs().ReadAsync(default!, default);
         await fixture.HistoryReader.DidNotReceiveWithAnyArgs().ReadAsync(default!, default!, default);
@@ -848,9 +848,27 @@ public sealed class PartyIdentityQueryHandlerTests
     {
         var fixture = Service(Events());
         var query = new ResolveHumanActorBindingAt("tenant-a", "party-1", Start, "01HX0000000000000000000002", 1);
-        (await fixture.Service.ResolveAtAsync(Envelope(query), TestContext.Current.CancellationToken)).Outcome.ShouldBe(HumanActorBindingOutcome.Unavailable);
+        (await fixture.Service.ResolveAtAsync(Envelope(query), TestContext.Current.CancellationToken)).Outcome.ShouldBe(HumanActorBindingOutcome.Denied);
         await fixture.Reader.DidNotReceiveWithAnyArgs().ReadAsync(default!, default);
         await fixture.HistoryReader.DidNotReceiveWithAnyArgs().ReadAsync(default!, default!, default);
+    }
+
+    /// <summary>A complete empty source is missing only while the exact admission remains current.</summary>
+    [Fact]
+    public async Task EmptyAuthoritativeSource_RequiresCurrentAdmissionForMissing()
+    {
+        var fixture = Service();
+        var query = Envelope(new ResolvePartyIdentity("tenant-a", "party-1"));
+        PartyIdentityResult missing = await fixture.Service.ResolveAsync(query, TestContext.Current.CancellationToken);
+        missing.Outcome.ShouldBe(PartyIdentityOutcome.Missing);
+        missing.Evidence.ShouldBeNull();
+
+        IdentityAdmissionEvidence admitted = fixture.Authority.Admit(query).Evidence!;
+        fixture.Authority.Admit(Arg.Any<QueryEnvelope>()).Returns(new PartyIdentityAdmissionResult(admitted, null),
+            new PartyIdentityAdmissionResult(null, "authority-withdrawn"));
+        PartyIdentityResult withdrawn = await fixture.Service.ResolveAsync(query, TestContext.Current.CancellationToken);
+        withdrawn.Outcome.ShouldBe(PartyIdentityOutcome.Unavailable);
+        withdrawn.Evidence.ShouldBeNull();
     }
 
     [Theory]

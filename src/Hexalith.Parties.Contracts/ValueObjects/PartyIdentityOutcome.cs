@@ -11,4 +11,8 @@ public enum PartyIdentityOutcome
     Ineligible,
     /// <summary>Conflict evidence.</summary>
     Conflict,
+    /// <summary>An authoritative source contains no created Party.</summary>
+    Missing,
+    /// <summary>The requested actor differs from the authenticated target.</summary>
+    Denied,
 }

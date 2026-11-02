@@ -61,11 +61,16 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
             }
 
             IdentityAdmissionEvidence? admitted = (await deadline.RunAsync(_ => authority.Admit(envelope)).ConfigureAwait(false)).Evidence;
-            if (admitted is null || reader is null
-                || query.ExpectedActorId is not null && admitted.TargetActorId != query.ExpectedActorId)
+            if (admitted is null || reader is null)
             {
                 deadline.ThrowIfCancellationRequested();
                 return new(PartyIdentityOutcome.Unavailable, null);
+            }
+
+            if (query.ExpectedActorId is not null && admitted.TargetActorId != query.ExpectedActorId)
+            {
+                deadline.ThrowIfCancellationRequested();
+                return new(PartyIdentityOutcome.Denied, null);
             }
 
             deadline.ThrowIfCancellationRequested();
@@ -81,8 +86,10 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
             PartyState state = await deadline.RunAsync(token => PartyIdentitySourceFold.Fold(read.Stream!, token)).ConfigureAwait(false);
             if (!state.HasBeenCreated)
             {
+                IdentityAdmissionEvidence? missingAuthority = (await deadline.RunAsync(_ => authority.Admit(envelope)).ConfigureAwait(false)).Evidence;
                 deadline.ThrowIfCancellationRequested();
-                return new(PartyIdentityOutcome.Unavailable, null);
+                return new(SameAuthority(admitted, missingAuthority, timeProvider.GetUtcNow())
+                    ? PartyIdentityOutcome.Missing : PartyIdentityOutcome.Unavailable, null);
             }
 
             PartyIdentityClassification classification = state.Type == PartyType.Person ? PartyIdentityClassification.Human
@@ -189,12 +196,17 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
             }
 
             IdentityAdmissionEvidence? admitted = (await deadline.RunAsync(_ => authority.Admit(envelope)).ConfigureAwait(false)).Evidence;
-            if (admitted is null
-                || admitted.TargetActorId != query.ExpectedActorId || historyReader is null || custody is null
+            if (admitted is null || historyReader is null || custody is null
                 || !await PolicyIsCurrentAsync(policy, deadline).ConfigureAwait(false))
             {
                 deadline.ThrowIfCancellationRequested();
                 return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
+            }
+
+            if (admitted.TargetActorId != query.ExpectedActorId)
+            {
+                deadline.ThrowIfCancellationRequested();
+                return HistoryFailure(query, HumanActorBindingOutcome.Denied);
             }
 
             deadline.ThrowIfCancellationRequested();

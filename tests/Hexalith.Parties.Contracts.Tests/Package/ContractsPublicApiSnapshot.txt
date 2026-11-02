@@ -1019,6 +1019,7 @@ type class Hexalith.Parties.Contracts.ValueObjects.EmailAddress interfaces:Syste
   property System.String Address required getset
 type enum Hexalith.Parties.Contracts.ValueObjects.HumanActorBindingOutcome base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
   enum Ambiguous=3
+  enum Denied=7
   enum Expired=6
   enum Gap=2
   enum Mismatch=4
@@ -1059,7 +1060,9 @@ type enum Hexalith.Parties.Contracts.ValueObjects.PartyIdentityClassification ba
   enum Unknown=0
 type enum Hexalith.Parties.Contracts.ValueObjects.PartyIdentityOutcome base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
   enum Conflict=3
+  enum Denied=5
   enum Ineligible=2
+  enum Missing=4
   enum Resolved=1
   enum Unavailable=0
 type enum Hexalith.Parties.Contracts.ValueObjects.PartyType base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable

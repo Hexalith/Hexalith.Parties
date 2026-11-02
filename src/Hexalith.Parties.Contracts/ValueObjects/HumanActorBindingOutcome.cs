@@ -17,4 +17,6 @@ public enum HumanActorBindingOutcome
     Revoked,
     /// <summary>Expired evidence.</summary>
     Expired,
+    /// <summary>The requested actor differs from the authenticated target.</summary>
+    Denied,
 }

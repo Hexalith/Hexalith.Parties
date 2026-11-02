@@ -194,7 +194,7 @@ public sealed class PartyIdentityPersistedVerifierTests
         DomainResult rejected = await lane.Dispatch(unsigned);
         Reason(rejected).ShouldBe("AuthorityUnavailable");
         lane.CommitRejection("tenant-a", partyId, rejected);
-        (await lane.Current("tenant-a", partyId, expectedActor: null)).Outcome.ShouldBe(PartyIdentityOutcome.Unavailable);
+        (await lane.Current("tenant-a", partyId, expectedActor: null)).Outcome.ShouldBe(PartyIdentityOutcome.Missing);
 
         CommandEnvelope provision = lane.Signed(
             new ProvisionAgentParty(new AgentPartyIdentity("tenant-a", AgentId, partyId, 1, "provision-valid", new string('a', 64), Started)),
@@ -315,7 +315,7 @@ public sealed class PartyIdentityPersistedVerifierTests
     public async Task P06_MissingInactiveRestrictedErasedAndUnreadableSourcesFailClosed()
     {
         using Lane lane = Lane.Open(registerHostSeams: true);
-        (await lane.Current("tenant-a", "missing-party", expectedActor: null)).Outcome.ShouldBe(PartyIdentityOutcome.Unavailable);
+        (await lane.Current("tenant-a", "missing-party", expectedActor: null)).Outcome.ShouldBe(PartyIdentityOutcome.Missing);
 
         const string inactiveId = "human-inactive";
         await lane.CreatePerson(inactiveId, "Grace", "Hopper");
@@ -382,7 +382,7 @@ public sealed class PartyIdentityPersistedVerifierTests
         mismatched.Evidence?.HumanBinding.ShouldBeNull();
         int reads = lane.Directory.AuthoritativeReads;
         PartyIdentityResult forgedActor = await lane.Current("tenant-a", humanId, ActorId, admittedActor: SuccessorId);
-        forgedActor.Outcome.ShouldBe(PartyIdentityOutcome.Unavailable);
+        forgedActor.Outcome.ShouldBe(PartyIdentityOutcome.Denied);
         lane.Directory.AuthoritativeReads.ShouldBe(reads);
         (await lane.Current("tenant-a", humanId, expectedActor: null)).Outcome.ShouldBe(PartyIdentityOutcome.Ineligible);
     }
