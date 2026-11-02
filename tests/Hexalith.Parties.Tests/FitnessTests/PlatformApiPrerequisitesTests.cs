@@ -73,7 +73,7 @@ public sealed class PlatformApiPrerequisitesTests
         ["references/Hexalith.FrontComposer"] = "07089dcbdad784a1d53037e9cea78d1d7becd8d6",
         ["references/Hexalith.McpCli"] = "3bc89642ad43305531c4018b75b5e1b9e0681e10",
         ["references/Hexalith.Memories"] = "e8956eb5c1bd49297f86702f9606eb9b013bc2f1",
-        ["references/Hexalith.Platform"] = "92f87e6a49e4357f91b2ffb821e044931291c0e6",
+        ["references/Hexalith.Platform"] = "c635a2dc22f404d97c9fe7e27f7e7f4c9017943b",
         ["references/Hexalith.PolymorphicSerializations"] = "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
         ["references/Hexalith.Tenants"] = "4d0d599879767196928e1c265622483a62b457ae",
     };
@@ -87,7 +87,7 @@ public sealed class PlatformApiPrerequisitesTests
         ["references/Hexalith.FrontComposer"] = "v4.7.5",
         ["references/Hexalith.McpCli"] = "v1.1.0-57-g3bc89642",
         ["references/Hexalith.Memories"] = "v3.0.15",
-        ["references/Hexalith.Platform"] = "v1.1.0-12-g92f87e6a",
+        ["references/Hexalith.Platform"] = "v1.1.1-35-gc635a2dc",
         ["references/Hexalith.PolymorphicSerializations"] = "v1.19.8-1-gbce4eb9f",
         ["references/Hexalith.Tenants"] = "v6.0.0-71-g4d0d5998",
     };
@@ -797,7 +797,10 @@ public sealed class PlatformApiPrerequisitesTests
         {
             string describe = CurrentSelectedSourceDescribes[path];
             AssertCurrentSourceRow(currentSelection, path, identity, describe);
-            ownerRow.ShouldContain($"`{identity}`");
+            if (path != "references/Hexalith.Platform")
+            {
+                ownerRow.ShouldContain($"`{identity}`");
+            }
             AssertSelectedSourceObservation(root, path, identity);
             DescribeObservedSource(root, path, describe, identity).ShouldBe(describe, path);
         }

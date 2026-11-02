@@ -103,6 +103,9 @@ effective Release package graph for current-selection assertions on 2026-11-02
 advanced Tenants, the owner approved its exact successor
 `4d0d599879767196928e1c265622483a62b457ae` for current-selection
 assertions and signoff. The other nine source identities are unchanged.
+The subsequent Platform source selection advances to `c635a2dc22f404d97c9fe7e27f7e7f4c9017943b`
+for the EventStore 3.133.0 scoped consumer. The earlier approval row remains dated
+history; this source update carries no new parity or release qualification.
 The graph selects EventStore package `3.132.2`, Commons
 `2.30.10`, PolymorphicSerializations `1.19.8`, FrontComposer `4.7.4`, Memories
 `3.0.13`, Tenants `6.0.0`, and McpCli `1.1.0`. The selected Builds catalog defaults
@@ -119,7 +122,7 @@ or grant publication, deployment, custody, or rollback qualification.
 | FrontComposer | `07089dcbdad784a1d53037e9cea78d1d7becd8d6` (`v4.7.5`) | Committed selection; qualification still requires its own executed proof. |
 | McpCli | `3bc89642ad43305531c4018b75b5e1b9e0681e10` (`v1.1.0-57-g3bc89642`) | Committed selection; qualification still requires its own executed proof. |
 | Memories | `e8956eb5c1bd49297f86702f9606eb9b013bc2f1` (`v3.0.15`) | Committed selection; qualification still requires its own executed proof. |
-| Platform | `92f87e6a49e4357f91b2ffb821e044931291c0e6` (`v1.1.0-12-g92f87e6a`) | Committed selection; qualification still requires its own executed proof. |
+| Platform | `c635a2dc22f404d97c9fe7e27f7e7f4c9017943b` (`v1.1.1-35-gc635a2dc`) | Committed successor source selection for the EventStore 3.133.0 scoped consumer; qualification still requires its own executed proof. |
 | PolymorphicSerializations | `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`) | Committed selection; qualification still requires its own executed proof. |
 | Tenants | `4d0d599879767196928e1c265622483a62b457ae` (`v6.0.0-71-g4d0d5998`) | Committed successor selection; qualification still requires its own executed proof. |
 
