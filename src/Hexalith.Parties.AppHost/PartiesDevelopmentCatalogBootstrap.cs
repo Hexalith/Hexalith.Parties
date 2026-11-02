@@ -11,6 +11,7 @@ using Aspire.Hosting.Lifecycle;
 using CommunityToolkit.Aspire.Hosting.Dapr;
 
 using Hexalith.EventStore.Aspire;
+using Hexalith.EventStore.Contracts.Routing;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -278,7 +279,8 @@ internal sealed class PartiesDevelopmentCatalogBootstrap : IDistributedApplicati
             _ = resource.WithEnvironment(prefix + "Directory", _directory).WithEnvironment(prefix + "HostId", host)
                 .WithEnvironment(prefix + "CoordinatorHostId", "eventstore").WithEnvironment(prefix + "AttemptId", _instance)
                 .WithEnvironment(prefix + "InstanceId", _instance).WithEnvironment(prefix + "CatalogPath", Path.Combine(_directory, "catalog.json"))
-                .WithEnvironment(prefix + "RootDigest", rootDigest).WithEnvironment(prefix + "ComponentPath", componentPath)
+                .WithEnvironment(prefix + "RootDigest", rootDigest).WithEnvironment(prefix + "BindingVersion", "2")
+                .WithEnvironment(prefix + "ComponentPath", componentPath)
                 .WithEnvironment(prefix + "AccessControlPath", acl).WithEnvironment(prefix + "DeclaredInvocations", profile.Invocations.ToJsonString())
                 .WithEnvironment("EventStore__RouteCatalog__StateStore", _componentName).WithEnvironment("EventStore__RouteCatalog__StateKey", _instance + "-authority")
                 .WithEnvironment("EventStore__DomainService__AppId", appId).WithEnvironment("EventStore__DomainService__ServiceVersion", "v1")
@@ -290,6 +292,10 @@ internal sealed class PartiesDevelopmentCatalogBootstrap : IDistributedApplicati
             {
                 _ = resource.WithEnvironment("ASPNETCORE_HOSTINGSTARTUPASSEMBLIES", "Hexalith.EventStore.ServiceDefaults")
                     .WithEnvironment(prefix + "Role", "aux-client");
+            }
+            if (host is "eventstore" or "eventstore-admin")
+            {
+                _ = resource.WithEnvironment(prefix + "ReceiverProfile", RouteCatalogTechnicalHttpPolicy.FenceVersion);
             }
             if (host == "eventstore-admin")
             {
