@@ -70,9 +70,9 @@ public sealed class PlatformApiPrerequisitesTests
         ["references/Hexalith.Commons"] = "bbbce518bcca9ca359762393688f02d142af1c61",
         ["references/Hexalith.EventStore"] = "ba4c5548ad260b049bda5a1c7def2e8af3484733",
         ["references/Hexalith.FrontComposer"] = "c092e8f91ebb670fad4ab959f2d3c8e13d809e0f",
-        ["references/Hexalith.McpCli"] = "17eb4fbbc151ca4b99dfa452e9f65655db2b402f",
+        ["references/Hexalith.McpCli"] = "3bc89642ad43305531c4018b75b5e1b9e0681e10",
         ["references/Hexalith.Memories"] = "b93b32cf77f3d76e51d3221550eff99f4d1e93cb",
-        ["references/Hexalith.Platform"] = "03799ed553a16c8a1528068ba4d95bb5509ea75e",
+        ["references/Hexalith.Platform"] = "92f87e6a49e4357f91b2ffb821e044931291c0e6",
         ["references/Hexalith.PolymorphicSerializations"] = "821b784bb51483acefa9725acc6792d111304a4e",
         ["references/Hexalith.Tenants"] = "2d3fa6da2312c1b5cf7f5c9461cc2d0ffc995b43",
     };
@@ -84,9 +84,9 @@ public sealed class PlatformApiPrerequisitesTests
         ["references/Hexalith.Commons"] = "v2.30.8",
         ["references/Hexalith.EventStore"] = "v3.130.2-63-gba4c5548",
         ["references/Hexalith.FrontComposer"] = "v4.7.4-15-gc092e8f9",
-        ["references/Hexalith.McpCli"] = "v1.1.0-55-g17eb4fbb",
+        ["references/Hexalith.McpCli"] = "v1.1.0-57-g3bc8964",
         ["references/Hexalith.Memories"] = "v3.0.13-13-gb93b32cf",
-        ["references/Hexalith.Platform"] = "v1.0.1-187-g03799ed5",
+        ["references/Hexalith.Platform"] = "v1.1.0-12-g92f87e6a",
         ["references/Hexalith.PolymorphicSerializations"] = "v1.19.7-1-g821b784b",
         ["references/Hexalith.Tenants"] = "v6.0.0-17-g2d3fa6da",
     };
@@ -2669,7 +2669,7 @@ public sealed class PlatformApiPrerequisitesTests
 
     private static string ReadCurrentSourceSelection(string matrix)
     {
-        const string currentHeading = "### Current source observation — 2026-11-01";
+        const string currentHeading = "### Current source observation — 2026-11-02";
         int currentStart = matrix.IndexOf(currentHeading, StringComparison.Ordinal);
         currentStart.ShouldBeGreaterThanOrEqualTo(0, currentHeading);
         int historicalStart = matrix.IndexOf("### Historical source observation", currentStart, StringComparison.Ordinal);
