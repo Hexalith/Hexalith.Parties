@@ -2792,8 +2792,10 @@ the six stamped parity surfaces or authorize publication, deployment, custody,
 or rollback deletion.
 
 The 2026-11-01 receipt table remains dated evidence of that run, including its
-two blocked lanes. The current 2026-11-02 canonical disposition follows. It
-records selection and build observations separately from I16 parity.
+two blocked lanes. The 2026-11-02 disposition at that point follows; it is
+superseded by the later sections, and the canonical table is always the last
+`### Validation receipts` heading in this file. It records selection and build
+observations separately from I16 parity.
 
 ### Validation receipts
 
@@ -2832,7 +2834,7 @@ No publication, deployment, custody, or rollback deletion is authorized.
 
 ### Pinned 56fc qualification receipts - 2026-11-02
 
-These six Pass results belong to detached Parties `56fc3b73ff26292791782be54df9af1f050464c5` only. The exact v2 tokens and temporary logs are retained in each row. Later main commits `2905bf13` and `a419b53c` changed the live snapshot, so these results do not qualify current main.
+These six Pass results ran on a detached checkout of Parties `56fc3b73ff26292791782be54df9af1f050464c5` with uncommitted record edits. Their stamp `c07155972705c6aa1e2459198cec0bfdcaed1c92ccbbaab243f4478345777bf9` is that working tree's snapshot, not the committed `56fc3b73` snapshot (`87212358c2de4d51b1a287e6051f336c92c44fab671fde8ffe73b8bde792b88d`), so no commit reproduces it. The exact v2 tokens and temporary logs are retained in each row. Later main commits `2905bf13` and `a419b53c` changed the live snapshot, so these results do not qualify current main.
 
 | Check | Result | Evidence |
 | --- | --- | --- |
@@ -2843,9 +2845,11 @@ These six Pass results belong to detached Parties `56fc3b73ff26292791782be54df9a
 | npm install and typecheck | Pass | Using Node `24.22.1` and npm `11.19.1`, `npm ci --prefix tests/e2e` and `npm --prefix tests/e2e run typecheck` exited 0; 9 packages installed, 0 audit vulnerabilities. Log: `/tmp/parties-810-56fc-npm-typecheck.log`. parties_snapshot=c07155972705c6aa1e2459198cec0bfdcaed1c92ccbbaab243f4478345777bf9 dependency_set=abbf5c289e3b66fbedc7d2d1b8c258bbaab7a1b79e5f6a391fb9ab763061cdd9 |
 | Playwright accessibility | Pass | `npm --prefix tests/e2e run test:a11y` exited 0: 17 passed, 0 failed/skipped. Selected FrontComposer source gitlink `07089dcbdad784a1d53037e9cea78d1d7becd8d6`; separate package selection `4.7.4`. Log: `/tmp/parties-810-56fc-playwright-a11y.log`. parties_snapshot=c07155972705c6aa1e2459198cec0bfdcaed1c92ccbbaab243f4478345777bf9 dependency_set=abbf5c289e3b66fbedc7d2d1b8c258bbaab7a1b79e5f6a391fb9ab763061cdd9 |
 
-Closure remains open. The nine unchecked Round 8 review patches in `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md:364-372` still require: stale qualification prose, closed-route gate coverage, done-epoch spec-edit and merge coverage, ambient package-evaluation refusal, shallow-history structural checks, live unchecked-task checks, broken-stdin diagnostics, DW-159 ledger completeness, and resolved FrontComposer path use in the history fixture. These six independently passing lane receipts do not discharge those tasks or authorize closure, publication, deployment, custody, or rollback deletion. Story 8.10 remains in review and Epic 8 remains in progress.
+Closure remains open. The nine unchecked Round 8 review patches in `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md:364-372` still require: stale qualification prose, closed-route gate coverage, done-epoch spec-edit and merge coverage, ambient package-evaluation refusal, shallow-history structural checks, live unchecked-task checks, broken-stdin diagnostics, DW-159 ledger completeness, and resolved FrontComposer path use in the history fixture. These six pinned 56fc receipts, and the pinned b029c62a-tree receipts below, do not discharge those tasks or authorize closure, publication, deployment, custody, or rollback deletion. `b029c62a` moved Story 8.10 to review; the spec 8.10 Round 9 review returned it to `in-progress`, and Epic 8 remains in progress.
 
-### Validation receipts
+### Pinned b029c62a-tree qualification receipts - 2026-11-02
+
+These six Pass results ran 17:18–17:24 on Parties `a419b53cc2087f6b99d301fb98852e72bd50c9fa` plus the uncommitted record edits later committed as `b029c62af85b140a78555da11e956094fd0c1529`. Their stamp `4504beb0cbd48460469194322b3509ff3db34748fef0e43fbc731dca851a0688` is the committed snapshot of `b029c62a`; the committed snapshot of `a419b53c` is `6abee60e7cf0931a054f0d87120af97b77c2fedfe72aa5854bf79ff8dffabc32`, so each row's "At Parties `a419b53c…`" names the base commit, not the stamped tree. The spec 8.10 Round 9 review moved these rows here because the nine Round 8 and the Round 9 patches were still open; recording that review changed the live snapshot, so these results do not qualify current main.
 
 The Platform scoped consumer source changed after these six receipts. Their
 recorded commands remain historical evidence; current qualification requires
@@ -2859,3 +2863,20 @@ a fresh run against the new dependency set.
 | Package/API and package-only consumers | Unvalidated | At Parties `a419b53cc2087f6b99d301fb98852e72bd50c9fa`, `python3 scripts/pack-release-packages.py /tmp/parties-810-final-receipts/packages 0.0.0-story810`, `python3 scripts/validate-nuget-packages.py /tmp/parties-810-final-receipts/packages`, and `python3 scripts/validate-consumer-package-references.py /tmp/parties-810-final-receipts/packages --work-directory /tmp/parties-810-final-receipts/consumers` exited 0. Eleven packages validated; isolated client and portal consumers built with 0 warnings/errors. Logs: `/tmp/parties-810-final-{pack,package-api,package-consumers}.log`. parties_snapshot=4504beb0cbd48460469194322b3509ff3db34748fef0e43fbc731dca851a0688 dependency_set=abbf5c289e3b66fbedc7d2d1b8c258bbaab7a1b79e5f6a391fb9ab763061cdd9 |
 | npm install and typecheck | Unvalidated | At Parties `a419b53cc2087f6b99d301fb98852e72bd50c9fa`, with `PATH=/home/administrator/.nvm/versions/node/v24.22.1/bin:$PATH`, `npm ci --prefix tests/e2e` and `npm --prefix tests/e2e run typecheck` exited 0 under Node `24.22.1` and npm `11.19.1`; 9 packages installed, 0 audit vulnerabilities. Logs: `/tmp/parties-810-final-npm-{install,typecheck}.log`. parties_snapshot=4504beb0cbd48460469194322b3509ff3db34748fef0e43fbc731dca851a0688 dependency_set=abbf5c289e3b66fbedc7d2d1b8c258bbaab7a1b79e5f6a391fb9ab763061cdd9 |
 | Playwright accessibility | Unvalidated | At Parties `a419b53cc2087f6b99d301fb98852e72bd50c9fa`, `PATH=/home/administrator/.nvm/versions/node/v24.22.1/bin:$PATH npm --prefix tests/e2e run test:a11y` exited 0: 17 passed, 0 failed/skipped. Selected FrontComposer source gitlink `07089dcbdad784a1d53037e9cea78d1d7becd8d6`; package `4.7.4` is a separate selection. Log: `/tmp/parties-810-final-playwright-a11y.log`. parties_snapshot=4504beb0cbd48460469194322b3509ff3db34748fef0e43fbc731dca851a0688 dependency_set=abbf5c289e3b66fbedc7d2d1b8c258bbaab7a1b79e5f6a391fb9ab763061cdd9 |
+
+## Story 8.10 Round 9 receipt demotion — 2026-11-02
+
+The spec 8.10 Round 9 review archived the b029c62a-tree receipts above as dated
+history. No current lane is qualified. Requalify all six lanes once, at the
+then-current tree, after the open Round 8 and Round 9 patches land.
+
+### Validation receipts
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Warning and nested-submodule policy | Unvalidated | Not rerun after the spec 8.10 Round 9 review; the pinned b029c62a-tree receipt above is dated history. |
+| Release solution build | Unvalidated | Not rerun after the spec 8.10 Round 9 review; the pinned b029c62a-tree receipt above is dated history. |
+| All .NET test projects | Unvalidated | Not rerun after the spec 8.10 Round 9 review; the pinned b029c62a-tree receipt above is dated history. |
+| Package/API and package-only consumers | Unvalidated | Not rerun after the spec 8.10 Round 9 review; the pinned b029c62a-tree receipt above is dated history. |
+| npm install and typecheck | Unvalidated | Not rerun after the spec 8.10 Round 9 review; the pinned b029c62a-tree receipt above is dated history. |
+| Playwright accessibility | Unvalidated | Not rerun after the spec 8.10 Round 9 review; the pinned b029c62a-tree receipt above is dated history. |

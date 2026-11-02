@@ -2092,7 +2092,7 @@ reason: Pre-existing and outside the reviewed diff. The row says Tenants package
 ### DW-202: Stop the solution build and the Admin UI TestHost from building one EventStore project two ways
 
 status: done 2026-11-02
-resolution: Removed the duplicate Admin.UI solution entry and aligned the EventStore package family to 3.132.2, matching the committed source at upstream v3.132.2 after user authorization. The focused TestHost and canonical Release solution restore/build pass with zero warnings/errors. Current all-lane I16 identity assertions still fail for independently advanced Platform/McpCli gitlinks and need owner reconciliation; this fix grants no current parity or release qualification.
+resolution: Removed the duplicate Admin.UI solution entry and aligned the EventStore package family to 3.132.2, matching the committed source at upstream v3.132.2 after user authorization. The focused TestHost and canonical Release solution restore/build pass with zero warnings/errors. At this fix, the all-lane I16 identity assertions still failed for independently advanced Platform/McpCli gitlinks pending owner reconciliation, which DW-182 completed on 2026-11-02 (`01c888e4`); this fix grants no current parity or release qualification.
 activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-build-and-governance-deferred-items.md`
 origin: Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-11-01), Round 8 decision (a)
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
@@ -2119,8 +2119,36 @@ exit_proof: `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Rel
 rollback: None required (test-only). Candidate fix: restore and pack with isolated `MSBuildProjectExtensionsPath`/`BaseIntermediateOutputPath` under the temporary work directory, or pack copies of the projects.
 evidence: Spec 8.10 Round 8 diagnosis, 2026-11-01; `/tmp/parties-810-qualification-6p4w60kn/all-tests.log` (MSB3106 then CS0234 at `EventIdentityValidator.cs:1`); reproduced `packageFolders` after `Hexalith.Parties.Client.Tests.dll -class Hexalith.Parties.Client.Tests.Package.ClientPackageTests`.
 
-- source_spec: `spec-five-build-and-governance-deferred-items.md`
-  summary: Reconcile the current I16 committed-selection assertions and obtain owner signoff for Platform and McpCli gitlinks before claiming current Epic 8 parity.
-  evidence: The 2026-11-02 all lane built and ran 16 test projects, but three PlatformApiPrerequisitesTests assertions still compare current Platform/McpCli gitlinks and the EventStore package to the older approved 2026-11-01 selection. These failures predate this correction; DW-182 already tracks the required owner selection. Do not update immutable expected identities or claim current parity without that decision.
-  status: done 2026-11-02
-  resolution: The owner approved all ten current committed gitlinks and the effective Release graph in `dw-182-i16-approval-comparison-2026-11-02.md`. The current-only guard matches the committed SHA, checkout, local describe, and effective graph. `dotnet restore Hexalith.Parties.Standalone.slnx`, `dotnet build Hexalith.Parties.Standalone.slnx --configuration Release --no-restore -m:1`, and `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release` exited 0; the build had zero warnings/errors and the lane passed 16 projects (6,483 succeeded, 0 failed, 26 skipped). The later Tenants successor `4d0d599879767196928e1c265622483a62b457ae` is approved for current-selection assertions and signed in `.gitlink-signoff.tsv`; the effective Tenants package remains `6.0.0`. The RC diff gate again passes all ten pointers. All six canonical I16 parity receipts remain Unvalidated; current Epic 8 parity is not claimed.
+### DW-204: Reconcile current I16 committed-selection assertions and Platform/McpCli gitlink signoff
+
+status: done 2026-11-02
+resolution: The owner approved all ten current committed gitlinks and the effective Release graph in `dw-182-i16-approval-comparison-2026-11-02.md`. The current-only guard matches the committed SHA, checkout, local describe, and effective graph. `dotnet restore Hexalith.Parties.Standalone.slnx`, `dotnet build Hexalith.Parties.Standalone.slnx --configuration Release --no-restore -m:1`, and `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release` exited 0; the build had zero warnings/errors and the lane passed 16 projects (6,483 succeeded, 0 failed, 26 skipped). The later Tenants successor `4d0d599879767196928e1c265622483a62b457ae` is approved for current-selection assertions and signed in `.gitlink-signoff.tsv`; the effective Tenants package remains `6.0.0`. The RC diff gate again passes all ten pointers. All six canonical I16 parity receipts remain Unvalidated; current Epic 8 parity is not claimed.
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-dw-182-i16-committed-selection-reconciliation.md`
+origin: Deferred from: implementation of spec-five-build-and-governance-deferred-items.md (2026-11-02); converted from an unnumbered bullet by the spec 8.10 Round 9 review
+source_spec: `_bmad-output/implementation-artifacts/spec-five-build-and-governance-deferred-items.md`
+location: `tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs` (`CommittedSelectionObservations_PreservePackageGraphAndImmutableConsumptionRefusals`); `.gitlink-signoff.tsv`
+severity: medium
+owner: Administrator / jpiquot (root gitlink and package selection)
+reason: Reconcile the current I16 committed-selection assertions and obtain owner signoff for Platform and McpCli gitlinks before claiming current Epic 8 parity. The 2026-11-02 all lane built and ran 16 test projects, but three PlatformApiPrerequisitesTests assertions still compare current Platform/McpCli gitlinks and the EventStore package to the older approved 2026-11-01 selection. These failures predate this correction; DW-182 already tracks the required owner selection. Do not update immutable expected identities or claim current parity without that decision.
+exit_proof: The committed-selection method passes against the owner-approved ten gitlinks and effective Release graph, and `bash scripts/gitlink-rc-gate.sh --diff v1.2.1` reports `BUMP ok` for all ten root pointers.
+rollback: Revert the reconciling commits `01c888e4` and `56fc3b73`; the dated approvals and selection constants remain in history. No source, package, or deployment state changes.
+
+### DW-205: Reconcile the DW-182 spec's bookkeeping with its review and successor history
+
+status: open
+origin: Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-11-02), Round 9
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+location: `_bmad-output/implementation-artifacts/spec-dw-182-i16-committed-selection-reconciliation.md:5`
+severity: low
+reason: The DW-182 spec says `status: 'done'` with `review_loop_iteration: 0`, although it records a six-finding review triage. Its `## Spec Change Log` is empty. A "Tenants successor after owner continuation" section was added after the spec was done; it extends the frozen ten-gitlink intent to Tenants `4d0d599879767196928e1c265622483a62b457ae`, and the related test changes (the `initialOwnerRows`/`ownerRow` assertions) have no recorded review. The fix edits another spec, so it is out of scope for an 8.10 code review. The approval question itself is the Round 9 decision in spec 8.10.
+
+### DW-206: Cover the caller-catalog branch of the root package fallbacks
+
+status: open
+origin: Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-11-02), Round 9 (reclassified from patch at owner direction)
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+location: `Directory.Packages.props:7-13`; `tests/PackageTests.Shared/EffectivePackageVersions.cs`
+severity: medium
+reason: `573fbb3f` added `and !Exists('$(Hexalith1BuildPackageProps)')` to the EventStore, Tenants, FrontComposer and Memories fallbacks. The property is defined later in the file, so the clause fires only when a caller passes it, as the Platform downstream SDK preflight does. With it, EventStore/FrontComposer/Memories evaluate to `3.132.1`/`4.7.5`/`3.0.15`; standalone they stay `3.132.2`/`4.7.4`/`3.0.13`. Every Parties test that evaluates MSBuild covers only the standalone case, so dropping or misspelling the clause still passes. This is an owner build change, not Story 8.10 closure scope.
+exit_proof: A fitness test evaluates a Parties consumer with `-p:Hexalith1BuildPackageProps=<temporary catalog with distinct family defaults>` and asserts that the caller defaults apply, that an explicit `-p:Hexalith*Version=` still wins over them, and that the standalone control keeps the root pins.
+rollback: None required (test-only).

@@ -394,6 +394,8 @@ public sealed class EpicEightClosureFitnessTests
         if (!string.Equals(normalizedStoryStatus, "done", StringComparison.Ordinal))
         {
             epicStatus.ShouldBe("in-progress");
+            DescribeOpenReviewTaskGaps(normalizedStoryStatus, spec).ShouldBeEmpty(
+                "A story in review cannot keep unchecked tasks or review findings.");
             return;
         }
 
@@ -1861,6 +1863,29 @@ public sealed class EpicEightClosureFitnessTests
                 .Contains(expectedFrontComposerSha, StringComparison.Ordinal)
             ? ["Playwright accessibility:frontcomposer-stamp"]
             : [];
+
+    /// <summary>Proves that a review status cannot hide unchecked tasks or review findings.</summary>
+    [Fact]
+    public void ReviewStatusRejectsUncheckedTasksAndFindings()
+    {
+        const string spec = "---\nstatus: 'in-review'\n---\n- [x] Completed task\n- [ ] [Review][Patch] Open finding [file.cs:1]\n";
+
+        DescribeOpenReviewTaskGaps("review", spec).ShouldHaveSingleItem().ShouldBe("- [ ] [Review][Patch] Open finding [file.cs:1]");
+        DescribeOpenReviewTaskGaps("in-progress", spec).ShouldBeEmpty();
+        DescribeOpenReviewTaskGaps("review", spec.Replace("- [ ]", "- [x]", StringComparison.Ordinal)).ShouldBeEmpty();
+    }
+
+    private static List<string> DescribeOpenReviewTaskGaps(string normalizedStatus, string spec)
+    {
+        List<string> gaps = [];
+        if (string.Equals(normalizedStatus, "review", StringComparison.Ordinal))
+        {
+            gaps.AddRange(Regex.Matches(spec, @"(?m)^[ \t]*- \[ \][^\r\n]*", RegexOptions.CultureInvariant)
+                .Select(static match => match.Value.Trim()));
+        }
+
+        return gaps;
+    }
 
     private static string NormalizeStoryStatus(string status)
     {

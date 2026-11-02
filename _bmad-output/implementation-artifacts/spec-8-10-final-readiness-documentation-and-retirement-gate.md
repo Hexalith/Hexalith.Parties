@@ -2,7 +2,7 @@
 title: '8.10 Final readiness, documentation, and retirement gate'
 type: 'refactor'
 created: '2026-08-17'
-status: 'in-review'
+status: 'in-progress'
 baseline_commit: '37f4ec826c6f4aea4651cfbad94fb6ab7fc4f0a0'
 review_loop_iteration: 3
 context:
@@ -388,6 +388,76 @@ Scope: `git diff f98e702a^ f98e702a` (14 files, +1,067/−190), the commit that 
 - `low` (Edge Case Hunter): an executable, symlinked or absent Builds catalog would diverge or throw — it is a regular `100644` blob at the selected Builds commit, and absence fails loudly.
 - `low` (Edge Case Hunter): an ignored root `*.props`/`*.targets` enters only the live `dependency_set` — none exists, and the ignored `*.nuget.props` pattern is generated under `obj/`.
 - `low` (Edge Case Hunter): a `160000` entry absent from `.gitmodules` enters only the committed manifest — the committed gitlinks equal the ten declared paths (also rejected in Round 7).
+
+#### Round 9 — code review of the 8.10-owned changes `f4285584..b029c62a`, 2026-11-02
+
+Scope: `git diff f4285584 b029c62a`, limited to the 8.10 evidence and dependency paths: `.gitlink-signoff.tsv`, `Directory.Packages.props`, `deferred-work.md`, both DW-182 artifacts, this spec, `sprint-status.yaml`, the 8.3 matrix, `tests/test-summary.md`, the spine, `PlatformApiPrerequisitesTests.cs` and the ten root gitlinks. That is 21 files, +458/−64. Excluded: `ac73ff3e` (five-deferred-items spec code), `515ff315` (party-identity feature), and the V2 custody docs `2905bf13`/`a419b53c`.
+
+All four layers ran and none failed. Checked at HEAD with the 17:08 Release test build:
+- `EpicEightClosureFitnessTests` passes 77/77.
+- The qualifying emitter yields `parties_snapshot=4504beb0…`/`dependency_set=abbf5c28…`, equal to the six canonical Pass stamps.
+- Reflected `ReadCommittedClosureIdentity` yields `4504beb0…` at HEAD, `6abee60e…` at `a419b53c` and `87212358…` at `56fc3b73`.
+- `git ls-remote` confirms `refs/tags/v3.132.2` = `7c93a123…`.
+
+The nine Round 8 patches remain unchecked. Recording this round edits a snapshot-bound file, so the six canonical Pass rows are stale from this edit on (first patch below).
+
+- [x] [Review][Decision] Confirm the Tenants successor approval. The I20 successor row, the comparison packet and the DW-182 resolution record the owner's approval of Tenants `4d0d599879767196928e1c265622483a62b457ae` as the reply "push all changes" to the presented SHA. Spine I20 says an approval is never inferred, and that rows are written by the human or the reviewer gate, never by the executor. Three further facts bear on this:
+  - `18579b62` advanced the gitlink and its guard constant before any approval or matrix record existed.
+  - Its subject, and the `.gitlink-signoff.tsv` comment (`:467`), call the successor "qualified". Tenants `4d0d5998` defaults `HexalithEventStoreVersion` to `3.133.0`. Correction (2026-11-02): Tenants `512209ad`, between `4b3e4317` and `4d0d5998`, qualified `3.132.2`, and the successor's CI tests the `3.129.0` floor and the `3.133.0` default, so "qualified" holds.
+  - The Tenants source/package difference is not recorded in the 8.3 matrix.
+
+  Options:
+  - (a) The owner confirms `4d0d5998` explicitly now. Record the confirmation in the I20 row and the packet, with this review as the reviewer gate, and drop "qualified" from the signoff comment.
+  - (b) Withhold confirmation, revert Tenants to the first-approved `4b3e431745550f8466f1ce0d70e6b507c747b59a` (Ask First: submodule change) and requalify.
+  - (c) Confirm the selection, but also record the `3.133.0` source default against Parties' EventStore `3.132.2` as an unvalidated I16 claim in the 8.3 matrix.
+
+  [_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md:1004] — resolved 2026-11-02: option (a). Presented the exact SHA and option (a), the owner replied "apply recommended". The confirmation is recorded in the I20 successor row and the packet, with this review as the reviewer gate. The signoff comment keeps "qualified" (see the correction). Option (c)'s fact is recorded as one plain sentence in the matrix's current observation, not as an I16 claim.
+- [x] [Review][Patch] Demote the six premature live-bound canonical Pass rows. `b029c62a` made the six `a419b53c` rows canonical while the nine Round 8 patches were still open. Round 7 requires those patches to be resolved before the receipts are requalified, and the checked Round 8 demotion patch fixed this same defect. The rows go stale on any tracked edit outside the receipt section and the status values: this review record, every Round 8 and Round 9 patch, or an unrelated docs commit (`2905bf13`/`a419b53c` did exactly this to the `56fc` rows). Any such edit changes `parties_snapshot` and turns `ValidationReceiptSectionResolvesToTheCurrentTableAndIsWellFormed` red in every lane. To fix:
+  - Move the six rows into a dated, pinned historical section with its own preamble, as was done for `56fc`.
+  - Reset the canonical rows to `Unvalidated`, without tokens.
+  - Requalify only after all Round 8 and Round 9 patches land.
+
+  This also fixes three presentation problems: the table has no preamble, it sits under the Tenants-successor section, whose prose says those checks "do not rerun the six stamped … parity surfaces", and the phrase "These six independently passing lane receipts" is ambiguous. [_bmad-output/implementation-artifacts/tests/test-summary.md:2848] — done 2026-11-02: the rows now sit under `### Pinned b029c62a-tree qualification receipts - 2026-11-02`, which has its own preamble; a new `## Story 8.10 Round 9 receipt demotion` section holds the canonical table with six `Unvalidated` rows and no tokens.
+- [x] [Review][Patch] Name the tree each receipt stamp actually binds. Every `a419b53c` row says "At Parties `a419b53c…`" but carries stamp `4504beb0…`, while `a419b53c`'s committed snapshot is `6abee60e…`. The lanes (logs 17:18–17:24) ran on `a419b53c` plus the uncommitted record edits later committed as `b029c62a`. The pinned section says its rows "belong to detached Parties `56fc3b73` only", yet stamps `c0715597…`, while `56fc3b73` commits `87212358…`. When archiving these rows, state the tree that was stamped: the `b029c62a` tree for the `a419b53c` rows, and `56fc3b73` plus uncommitted edits, which cannot be rebuilt from `56fc3b73`, for the pinned rows. [_bmad-output/implementation-artifacts/tests/test-summary.md:2833] — done 2026-11-02: folded into the demotion; both pinned preambles now name the stamped tree and the committed snapshot of the named commit.
+- [x] [Review][Patch] Correct the remaining stale state prose. These go beyond the open Round 8 stale-prose patch:
+  - (a) The DW-182 section calls its all-`Unvalidated` table "the current 2026-11-02 canonical disposition" (`:2795`), but the gate reads the last `### Validation receipts` heading. Label the table superseded.
+  - (b) DW-202's `done` resolution says the I16 assertions "still fail" (`deferred-work.md:2095`), which `01c888e4` fixed. Date that statement.
+  - (c) "Story 8.10 remains in review" (`:2846`) is wrong: the same commit moved the story to review, and this review returns it to `in-progress`.
+
+  After the demotion patch, the statements that the six canonical receipts "remain Unvalidated" become accurate again. They appear in DW-182, in the I16 bullet, in the packet, in both I20 rows, in the signoff comment and at `spec-dw-182-i16-committed-selection-reconciliation.md:112`; recheck each one. [_bmad-output/implementation-artifacts/tests/test-summary.md:2795] — done 2026-11-02: (a) through (c) are corrected. With the canonical table `Unvalidated` again, the rechecked "remain Unvalidated" statements are accurate.
+- [x] [Review][Patch] Retire the superseded current-selection records. The 8.3 matrix still has `### Current source observation — 2026-11-01` (`:51`), with the present-tense "EventStore package `3.130.2` … are selected", next to the 2026-11-02 section. Every earlier block was renamed `Historical`, and `ReadCurrentSourceSelection` reads only the 2026-11-02 heading. Spine §7 I4 (`ARCHITECTURE-SPINE.md:441`) still says "The current source/package set is approved … in the 2026-11-01 I20 row", which contradicts the amended frontmatter and §7a. Rename the heading to `Historical`, update the I4 row, and assert that exactly one `### Current source observation` heading exists. [_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md:51] — done 2026-11-02: the heading is now `Historical` and the I4 row points to the 2026-11-02 DW-182 I20 rows. The optional single-heading assertion was omitted under the owner's pragmatic plan.
+- [x] [Review][Patch] Restore the first DW-182 comparison table. `56fc3b73` rewrote the packet in place: its heading dropped "committed Parties `a92d1586…` (same ten gitlinks approved from `b51a9db0…`)", and the Tenants Current SHA changed from `4b3e4317…` to `4d0d5998…`. The initial I20 row still cites this file as its "exact comparison" and names Tenants `4b3e4317`, so the pointer leads to a table that no longer shows what was approved. Re-add the original table as a dated section and keep the successor table. [_bmad-output/implementation-artifacts/dw-182-i16-approval-comparison-2026-11-02.md:16] — done 2026-11-02: restored from `01c888e4` as `Initial comparison (dated history)`, above the successor table, along with the Round 9 confirmation paragraph.
+- [x] [Review][Defer] Cover the caller-catalog branch of `Directory.Packages.props`. `573fbb3f` added `and !Exists('$(Hexalith1BuildPackageProps)')` to the four family pins. The property is defined later in the file, so the branch fires only when a caller passes the property in, as the Platform downstream SDK preflight does. Evaluated with that property, EventStore/FrontComposer/Memories become `3.132.1`/`4.7.5`/`3.0.15`; standalone they stay `3.132.2`/`4.7.4`/`3.0.13`. Every test that evaluates MSBuild covers only the standalone case, so dropping or misspelling the clause still passes. Let `EffectivePackageVersions` accept extra global properties, then add a fitness test with three cases:
+  - a temp catalog with distinct family defaults wins when passed as `Hexalith1BuildPackageProps`;
+  - an explicit `-p:Hexalith*Version=` still wins over that catalog;
+  - the standalone evaluation is the control.
+
+  [Directory.Packages.props:7] — deferred as DW-206 (reclassified from patch at the owner's direction on 2026-11-02). It covers the owner build change `573fbb3f`, needs a test-helper extension, and does not affect Story 8.10 closure.
+- [x] [Review][Patch] Anchor the new matrix-sync assertions. Three gaps:
+  - `ownerRow.ShouldContain($"`{identity}`")` still passes if two dependency SHAs are swapped.
+  - The package regex scans the whole current section, which also holds the catalog-defaults sentence (EventStore `3.132.1`, FrontComposer `4.7.5`, Memories `3.0.15`). A stale "graph selects" sentence therefore still passes once a family moves to its catalog default.
+  - Nothing checks that the successor row names Parties `18579b62…`.
+
+  Assert `{label} `{sha}`` pairs, scope the regex to the "The graph selects" sentence, and check the row's Parties commit. [tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs:800] — done 2026-11-02: the owner row now has to pair each label with its SHA, and the package regex reads only the "The graph selects" sentence. The Parties-commit check was dropped under the pragmatic plan.
+- [x] [Review][Patch] Give the I16 deferral a DW entry. `ac73ff3e` appended this bullet and `01c888e4` closed it. It has no `### DW-N` heading, origin, location, owner, exit proof or rollback; its `source_spec` is a bare filename; and it has no `activated_by_spec` link to `spec-dw-182-i16-committed-selection-reconciliation.md`. Round 6 converted bullets like this into DW-125/DW-126. Convert it to the next free DW id with those fields. [_bmad-output/implementation-artifacts/deferred-work.md:2122] — done 2026-11-02: the bullet is now `### DW-204` (status `done`) with origin, full `source_spec`, location, owner, exit proof, rollback and `activated_by_spec`.
+- [x] [Review][Patch] Stop the gate from accepting review with open tasks. `ClosureStatusCannotBeDoneBeforeEveryTaskAndValidationReceiptExists` checks for unchecked boxes only when the status is `done`. That is how `b029c62a` moved the story to `in-review`/`review` with nine `- [ ] [Review][Patch]` items while the gate stayed green. When the normalized status is `review`, assert that no `- [ ]` line remains. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:382] — done 2026-11-02: added `DescribeOpenReviewTaskGaps`, called from the non-done branch, and the fixture fact `ReviewStatusRejectsUncheckedTasksAndFindings`.
+- [x] [Review][Defer] The DW-182 spec's bookkeeping does not match its history [_bmad-output/implementation-artifacts/spec-dw-182-i16-committed-selection-reconciliation.md:5] — deferred as DW-205, because the fix edits another spec. That spec is `status: 'done'` with `review_loop_iteration: 0` despite a six-finding triage. Its Spec Change Log is empty. A "Tenants successor" section added after it was done extends the frozen ten-gitlink intent, and no review of it is recorded.
+
+**Rejected (Round 9):**
+- Spec edit (Acceptance Auditor, Blind Hunter, Edge Case Hunter): the story was moved to `in-review`/`review` with nine open patches. True, but the fix edits this spec's status. This review returns spec and sprint to `in-progress`, and the gate patch above prevents a repeat.
+- Spec edit (Acceptance Auditor, Edge Case Hunter): the "2026-11-02 I16 receipt review" table says the current canonical rows were left Unvalidated, which contradicts the Pass table committed with it. The fix edits this spec, and the demotion patch makes the statement true again.
+- Spec edit (Acceptance Auditor): Verification's project count changed from 15 to 16 without a renegotiation. The fix edits this spec's human-owned Verification text.
+- `false` (Acceptance Auditor): `573fbb3f` violates Ask First. The owner authored it on `fix/caller-catalog-authority` and merged it via `/pushall`. Its departure from the dated test-summary record (`:1077`) is what that change set out to do; the untested branch is covered by the caller-catalog patch.
+- `false` (Edge Case Hunter): a caller catalog missing a family default yields `Version=''`. Restore fails loudly (NU1015) on an input no caller supplies, and the Builds catalog defines all four families.
+- `low` (Edge Case Hunter, Blind Hunter): callers using `Hexalith2/3BuildPackageProps` or `HexalithVersionsLoaded` keep the root pins. This is no regression, because the pins always applied before `573fbb3f`; caller authority is opt-in through `Hexalith1BuildPackageProps`.
+- `false` (Blind Hunter): the diff shows Tenants `2d3fa6da...4d0d5998 (commits not present)`. This is a local commit-graph read failure in the superproject's submodule diff (`error: hash mismatch 4d0d5998…`). The object reads cleanly in the submodule and is on `origin/main`.
+- `low` (Blind Hunter, Acceptance Auditor): the claim that `7c93a123` is `v3.132.2` is prose only. `git ls-remote` confirms it in two independent runs. The guard deliberately anchors on the locally present `v3.132.1` (DW-182 Blind 3), and a network check would add complexity.
+- `low` (Blind Hunter): no package audit covers the out-of-catalog EventStore `3.132.2` pin. Builds sets `NuGetAudit=true`/`NuGetAuditMode=all`, and the canonical restores ran without the opt-out. The Builds publication audit is in the owner repository's scope.
+- `low` (Blind Hunter): the pinned `56fc` rows omit the nested-declaration command, and their log mtimes do not prove lane order. These rows are archived, non-canonical history, and an mtime records the last write, not the start. `/tmp`-only evidence was already rejected in Round 8.
+- `low` (Edge Case Hunter): `CurrentSelectedEventStoreSha` is not tied to `CurrentSelectedGitlinks`. `AssertSelectedSourceObservation` already checks the committed EventStore gitlink; the separate constant only feeds a describe check.
+- `low` (Acceptance Auditor): the phrase checks on the I20 row cannot prove authorship. They guard that the row exists and keeps its scope wording; the SHA and version cross-checks are the substantive part.
+- `low` (Acceptance Auditor): the all-tests row gives only a skip count. It names the skip classes (owned-runtime/compatibility) and the per-project TRX location, and the next requalification can list them.
+- `low` (Blind Hunter): `currentEventStoreVersion.ShouldBe("3.132.2")` duplicates the graph check, and the initial-row check names only Tenants. Redundant but harmless; the Tenants SHA is the one value that tells the dated row apart.
 
 ### Working-tree identity reconciliation — 2026-10-04
 

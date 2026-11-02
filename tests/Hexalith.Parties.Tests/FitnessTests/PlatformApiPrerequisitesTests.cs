@@ -799,12 +799,15 @@ public sealed class PlatformApiPrerequisitesTests
             AssertCurrentSourceRow(currentSelection, path, identity, describe);
             if (path != "references/Hexalith.Platform")
             {
-                ownerRow.ShouldContain($"`{identity}`");
+                ownerRow.ShouldContain($"{path["references/Hexalith.".Length..]} `{identity}`");
             }
             AssertSelectedSourceObservation(root, path, identity);
             DescribeObservedSource(root, path, describe, identity).ShouldBe(describe, path);
         }
 
+        // Only the graph sentence names selected versions; the catalog-defaults sentence must not satisfy it.
+        Match graphSentence = Regex.Match(currentSelection, @"The graph selects[\s\S]*?\.(?=\s)", RegexOptions.CultureInvariant);
+        graphSentence.Success.ShouldBeTrue("Current matrix selection must state the evaluated package graph.");
         foreach ((string label, string package) in new[]
                  {
                      ("EventStore", "Hexalith.EventStore.Contracts"),
@@ -817,7 +820,7 @@ public sealed class PlatformApiPrerequisitesTests
                  })
         {
             string version = effectivePackages[package];
-            Regex.IsMatch(currentSelection, $@"\b{Regex.Escape(label)}(?: package)?\s+`{Regex.Escape(version)}`", RegexOptions.CultureInvariant)
+            Regex.IsMatch(graphSentence.Value, $@"\b{Regex.Escape(label)}(?: package)?\s+`{Regex.Escape(version)}`", RegexOptions.CultureInvariant)
                 .ShouldBeTrue($"Current matrix selection must name the evaluated {package} version.");
             ownerRow.ShouldContain($"{label} `{version}`");
         }
