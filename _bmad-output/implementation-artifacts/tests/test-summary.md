@@ -2552,9 +2552,11 @@ qualify. Other blocked stories and historical approvals keep their scope.
 
 ### Validation receipts
 
-Current canonical closure qualification, 2026-11-01. Round 7 implementation and
-all surviving review repairs are complete. Story 8.10 remains `in-review`
-(sprint `review`) and Epic 8 remains `in-progress`: mandatory build gates are
+Closure qualification recorded 2026-11-01, superseded: the canonical table is
+always the last `### Validation receipts` heading in this file. Round 7
+implementation and all surviving review repairs were complete. Commit `f98e702a`
+moved Story 8.10 to `in-review` (sprint `review`); the Round 8 review returned it
+to `in-progress`. Epic 8 remained `in-progress`: mandatory build gates were
 blocked. No row is a clean Pass: the Round 8 review demoted the pre-review
 warning-policy stamp, and blocked, unsuccessful and unrun lanes confer no
 qualification.
@@ -2578,8 +2580,9 @@ paths retain their scope, and DW-159 remains open.
 
 The bmad-build review step requires a halt when required verification fails and
 cannot be repaired within the approved story boundaries. This run stops at that
-verification gate before presentation/closure. No release, commit, push,
-submodule update or owner-repository edit occurred. Exact commands, process
+verification gate before presentation/closure. During this halted run, no
+release, commit, push, submodule update or owner-repository edit occurred.
+Exact commands, process
 results and outputs are retained under
 `/tmp/parties-810-qualification-6p4w60kn`; the earlier focused receipts remain
 historical and do not turn the unrun lanes into Pass.
@@ -2645,9 +2648,16 @@ the final tokens; only canonical receipt edits are exempt afterward.
 
 After all six lanes qualify, transition only the three normalized status values
 to `done`. Until that transition is committed, the gate still checks the live
-tree. Once committed, the first commit of that uninterrupted done epoch is the
-closure commit. The gate reads that commit's spec and canonical receipts, derives
-both v2 digests from its Git objects, and uses its selected FrontComposer gitlink.
+tree. Once committed, the first commit of that uninterrupted done epoch on the
+first-parent history is the closure commit; later spec edits that keep `done`,
+and merged branches with their own status history, do not move it. Land the
+done transition on first-parent history (fast-forward or rebase): a closure
+merged in as a second parent makes the merge commit the closure commit, whose
+tree carries the first parent's changes, so it fails and must be closed again. The gate
+reads that commit's canonical receipts, derives both v2 digests from its Git
+objects, and uses its selected FrontComposer gitlink. Open tasks always come from
+the live spec: an unchecked task or review finding added after closure without
+reopening fails the gate.
 Historical effective package versions are evaluated from exact binary Git-blob
 materializations of that Parties tree and its selected Builds tree. No archive
 export-ignore/export-subst or clean/smudge transformation applies. UTF-8 BOM
@@ -2660,6 +2670,8 @@ evidence or grant it new parity. Reopening Story 8.10 returns qualification to
 the live tree and a later committed closure starts a new done epoch. If shallow
 history cannot establish the closure commit, or its Builds object is unavailable,
 verification skips loudly with the missing history named; it grants no credit.
+The live canonical table's parse, required-row and non-empty checks run before
+the closure commit is resolved, so only identity and stamp verification can skip.
 
 Sort manifest entries by ordinal path. Hash UTF-8 `parties-snapshot-v2` and NUL,
 then `path`, NUL, `mode`, NUL, `entry digest`, NUL for every entry. Regular files
@@ -2688,7 +2700,11 @@ HEXALITH_EMIT_CLOSURE_IDENTITY=true dotnet tests/Hexalith.Parties.Tests/bin/Rele
 ```
 
 It emits `parties_snapshot=... dependency_set=... immutable_consumption=true`
-without assigning qualification. Without that explicit opt-in, the ordinary
+without assigning qualification. It refuses to emit when any ambient MSBuild
+property changes an evaluated package version relative to the
+environment-isolated evaluation that the closed route uses; the failure names
+each package with both values, so unset those overrides and collect again.
+Without that explicit opt-in, the ordinary
 fact emits only `diagnostic_parties_snapshot` / `diagnostic_dependency_set`
 under separate diagnostic domains and permits source observations; those values
 cannot qualify any closure lane. Never change a row to Pass merely to obtain
@@ -2708,8 +2724,9 @@ The direct router comment now describes its synthetic Received lifecycle rather
 than claiming to mirror EventStore SubmitCommandHandler. The spine and 8.3 I20
 row record the exact owner-approved set; no dependency or gitlink changed.
 
-Focused verification is recorded below before six-lane requalification. The six
-canonical rows remain Unvalidated. These focused checks do not establish complete
+Focused verification is recorded below before six-lane requalification. It
+qualifies no closure lane; the canonical table (the last `### Validation receipts`
+heading in this file) records each lane's status. These focused checks do not establish complete
 closure qualification, I13 discharge, external-runtime compile parity or deletion
 authority. Round 7 review precedes rerunning the six required lanes.
 
@@ -2872,11 +2889,45 @@ then-current tree, after the open Round 8 and Round 9 patches land.
 
 ### Validation receipts
 
+Requalified 2026-11-02 at Parties `046dd304cd0964429241a14dda267fe832c67bf6` plus
+the uncommitted Round 8 and Round 10 patch tree. This followed the spec 8.10 Round
+10 review and the owner's signoff of Platform
+`c635a2dc22f404d97c9fe7e27f7e7f4c9017943b`. Qualifying tokens were collected with
+`HEXALITH_EMIT_CLOSURE_IDENTITY=true` once before the lanes (21:11:33-21:11:44
++01:00) and once after them (21:21:07-21:21:16), and both collections emitted the
+same identity. The six lanes ran in sequence from 21:14:44 to 21:21:06. The earlier
+runs at snapshots `580eb573…` and `fe0cd893…` are superseded and qualify nothing
+(spec 8.10 Round 10 triage log). Logs are outside the repository under `/tmp/claude-1000/-home-administrator-projects-hexalith-parties/5efe26d2-74f2-4d49-be35-75eff4e79873/scratchpad/qualify3/`.
+
 | Check | Result | Evidence |
 | --- | --- | --- |
-| Warning and nested-submodule policy | Unvalidated | Not rerun after the spec 8.10 Round 9 review; the pinned b029c62a-tree receipt above is dated history. |
-| Release solution build | Unvalidated | Not rerun after the spec 8.10 Round 9 review; the pinned b029c62a-tree receipt above is dated history. |
-| All .NET test projects | Unvalidated | Not rerun after the spec 8.10 Round 9 review; the pinned b029c62a-tree receipt above is dated history. |
-| Package/API and package-only consumers | Unvalidated | Not rerun after the spec 8.10 Round 9 review; the pinned b029c62a-tree receipt above is dated history. |
-| npm install and typecheck | Unvalidated | Not rerun after the spec 8.10 Round 9 review; the pinned b029c62a-tree receipt above is dated history. |
-| Playwright accessibility | Unvalidated | Not rerun after the spec 8.10 Round 9 review; the pinned b029c62a-tree receipt above is dated history. |
+| Warning and nested-submodule policy | Pass | `bash scripts/check-no-warning-override.sh`, `bash scripts/gitlink-rc-gate.sh --diff v1.2.1`, `git -c core.whitespace=cr-at-eol diff --check` and `git submodule foreach --quiet 'git submodule status'` all exited 0. All 10 root pointers are signed (Platform `c635a2dc` by the 2026-11-02 Round 10 owner signoff); 76 nested declarations, 0 initialized. Log: `policy.log`. parties_snapshot=6d0c8958b09d8fceb39dacf4827f41e0334481306f4aba14cb7e2293eaf54c6f dependency_set=1d40c0e67aef05f31d686c016fb3200b66025ab65a819e749f306b34b5e01e8e |
+| Release solution build | Pass | `dotnet restore Hexalith.Parties.slnx` and `dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1` exited 0 with 0 warnings and 0 errors. Logs: `solution-restore.log`, `solution-build.log`. parties_snapshot=6d0c8958b09d8fceb39dacf4827f41e0334481306f4aba14cb7e2293eaf54c6f dependency_set=1d40c0e67aef05f31d686c016fb3200b66025ab65a819e749f306b34b5e01e8e |
+| All .NET test projects | Pass | `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory /tmp/claude-1000/-home-administrator-projects-hexalith-parties/5efe26d2-74f2-4d49-be35-75eff4e79873/scratchpad/qualify3/results` exited 0: 16 projects, 6,512 tests, 6,486 succeeded, 0 failed, 26 explicit owned-runtime/compatibility skips, 16 TRX files. The superseded `fe0cd893…` run failed once in the unchanged supervisor-fixture race filed as DW-207. Log: `all-tests.log`. parties_snapshot=6d0c8958b09d8fceb39dacf4827f41e0334481306f4aba14cb7e2293eaf54c6f dependency_set=1d40c0e67aef05f31d686c016fb3200b66025ab65a819e749f306b34b5e01e8e |
+| Package/API and package-only consumers | Pass | `python3 scripts/pack-release-packages.py /tmp/claude-1000/-home-administrator-projects-hexalith-parties/5efe26d2-74f2-4d49-be35-75eff4e79873/scratchpad/qualify3/packages 0.0.0-story810`, `python3 scripts/validate-nuget-packages.py /tmp/claude-1000/-home-administrator-projects-hexalith-parties/5efe26d2-74f2-4d49-be35-75eff4e79873/scratchpad/qualify3/packages` and `python3 scripts/validate-consumer-package-references.py /tmp/claude-1000/-home-administrator-projects-hexalith-parties/5efe26d2-74f2-4d49-be35-75eff4e79873/scratchpad/qualify3/packages --work-directory /tmp/claude-1000/-home-administrator-projects-hexalith-parties/5efe26d2-74f2-4d49-be35-75eff4e79873/scratchpad/qualify3/consumers` exited 0; 11 packages and their package-only consumers validated. Log: `packages.log`. parties_snapshot=6d0c8958b09d8fceb39dacf4827f41e0334481306f4aba14cb7e2293eaf54c6f dependency_set=1d40c0e67aef05f31d686c016fb3200b66025ab65a819e749f306b34b5e01e8e |
+| npm install and typecheck | Pass | With Node `24.22.1` and npm `11.19.1` first on `PATH`, `npm ci --prefix tests/e2e` and `npm --prefix tests/e2e run typecheck` exited 0; 9 packages installed, 0 vulnerabilities. Log: `npm-typecheck.log`. parties_snapshot=6d0c8958b09d8fceb39dacf4827f41e0334481306f4aba14cb7e2293eaf54c6f dependency_set=1d40c0e67aef05f31d686c016fb3200b66025ab65a819e749f306b34b5e01e8e |
+| Playwright accessibility | Pass | With Node `24.22.1` first on `PATH`, `npm --prefix tests/e2e run test:a11y` exited 0: 17 passed, 0 failed or skipped. Selected FrontComposer source gitlink `07089dcbdad784a1d53037e9cea78d1d7becd8d6`; package `4.7.4` is a separate selection. Log: `playwright-a11y.log`. parties_snapshot=6d0c8958b09d8fceb39dacf4827f41e0334481306f4aba14cb7e2293eaf54c6f dependency_set=1d40c0e67aef05f31d686c016fb3200b66025ab65a819e749f306b34b5e01e8e |
+
+## Story 8.10 Round 8 patch verification — 2026-11-02
+
+The nine Round 8 review patches are implemented at Parties `046dd304cd0964429241a14dda267fe832c67bf6`
+plus this uncommitted diff. Story 8.10 returns to `in-review` (sprint `review`)
+for review of this round; Epic 8 stays `in-progress`. These focused checks
+qualify no closure lane. The canonical table above stays `Unvalidated` until the
+six lanes are requalified once, at the then-current tree, after this round's
+review. No dependency, gitlink, owner repository, rollback path or Story 8.7-8.9
+status changed, and no tokens were recorded.
+
+| Focused check | Exact command | Result |
+| --- | --- | --- |
+| Package-mode Release service-test build | `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` | Exit 0; 0 warnings, 0 errors. The test projects that also compile the shared process runner each build with 0 warnings and 0 errors: `dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0`; `dotnet build tests/Hexalith.Parties.Aspire.Tests/Hexalith.Parties.Aspire.Tests.csproj -c Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0`; `dotnet build tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj -c Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0`; and `dotnet build tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj -c Release --no-restore --no-dependencies -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0`. |
+| Five affected fitness classes | `dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests -class Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests -class Hexalith.Parties.Tests.FitnessTests.RepositoryTestProcessTests -class Hexalith.Parties.Tests.FitnessTests.EffectivePackageVersionsTests` | Exit 0; 220 passed, 0 errors/failures/skips/not run (81.3 s). |
+| Shared process runner | `dotnet tests/Hexalith.Parties.Contracts.Tests/bin/Release/net10.0/Hexalith.Parties.Contracts.Tests.dll -class Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests` | Exit 0; 30 passed, 0 errors/failures/skips/not run, including the two new broken-pipe cases. |
+| Qualifying-token emitter | `HEXALITH_EMIT_CLOSURE_IDENTITY=true dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -method Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.CurrentClosureIdentityCanBeDerivedWithoutClaimingQualification -showLiveOutput` | Exit 0; 1 passed. The ambient and isolated package evaluations agree, so the emitter printed `immutable_consumption=true` tokens. They predate this record and were not recorded or reused. |
+| Mutation checks | Each mutation applied alone to the test sources, then the focused build and `-method '*ClosedIdentityUsesTheClosureCommitThroughLaterChangesAndReopening'` (or the two new runner tests) | All ten turn red: HEAD instead of closure-commit FrontComposer gitlink, live instead of closure identity, live summary in either gate, no `--first-parent`, newest `done` revision, closure-commit spec for the checkbox check, closure commit resolved before the structural check, no ambient refusal, and the previous stdin writer (`AggregateException: Broken pipe` in both runner tests). Sources were restored byte-for-byte and rebuilt. The structure-before-closure mutation first came back skipped, not red (`Skipped: 1` in `mutate-results.log`): the shallow-clone skip escaped the assertion. After the `Should.NotThrow` guard was added to that assertion, a rerun of that mutation alone turned red. |
+| Warning policy and whitespace | `bash scripts/check-no-warning-override.sh`; `git -c core.whitespace=cr-at-eol diff --check` | Exit 0 for each. |
+
+Logs are outside the repository under
+`/tmp/claude-1000/-home-administrator-projects-hexalith-parties/5efe26d2-74f2-4d49-be35-75eff4e79873/scratchpad/`
+(`final-build.log`, `final-fitness.log`, `process-tests-final.log`, `emitter.log`,
+`mutate-results.log`, `mut-*-test.log`, `process-mutant.log`).

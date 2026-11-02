@@ -2,7 +2,7 @@
 title: '8.10 Final readiness, documentation, and retirement gate'
 type: 'refactor'
 created: '2026-08-17'
-status: 'in-progress'
+status: 'done'
 baseline_commit: '37f4ec826c6f4aea4651cfbad94fb6ab7fc4f0a0'
 review_loop_iteration: 3
 context:
@@ -361,15 +361,15 @@ Scope: `git diff f98e702a^ f98e702a` (14 files, +1,067/−190), the commit that 
 - [x] [Review][Decision] The Release solution build and IntegrationTests lanes are recorded `Blocked` without a diagnosis or owner — `Hexalith.Parties.slnx` compiles EventStore source projects from `references/` and fails with 522 errors (CS0234/CS0246 in `Hexalith.EventStore.Admin.UI`); IntegrationTests fails with CS0234 (the Hexalith.Commons namespace is missing in the referenced `EventStore.Contracts`). The receipts record no dependency mode, package-mode control run or baseline comparison, and no DW entry names an owner, exit proof or rollback (the ledger ends at DW-201). CI builds `Hexalith.Parties.Standalone.slnx` in package mode and is green for the same commit, so the failure is either local source-mode drift or a regression at the approved identity set. Options: (a) diagnose and record — rerun both lanes with the dependency mode stated plus a package-mode control, classify each failure, and file a DW entry with owner, exit proof and rollback for whatever reproduces; the lanes stay `Blocked` and Epic 8 stays open; (b) redefine the Release-build lane to CI parity (`Standalone.slnx`, package mode), which renegotiates the human-owned Verification command; (c) change the dependency selection so the source build passes (Ask First). [_bmad-output/implementation-artifacts/tests/test-summary.md:2564] — resolved 2026-11-01: option (a), diagnose and record; patch below.
 - [x] [Review][Patch] (Decision) Diagnose and record the two blocked lanes — done 2026-11-01. Neither failure is an approved-identity regression; both come from recent Parties-owned changes made after the 2026-10-05 green qualification. Release solution build: reproduced (522 errors). `Hexalith.Parties.slnx` builds `Admin.UI.csproj` directly and, since `a3666267`, again through the TestHost's nested published-SDK `Restore;Build`, sharing one `obj/`; recorded as DW-202. IntegrationTests: `ClientPackageTests` (since `c1cf1cbb`) leaves EventStore.Contracts' shared `project.assets.json` pointing at its deleted temporary package folder (reproduced); the lane-order compile failure is traced through MSB3106 in the lane log but not re-run end to end; recorded as DW-203. Both receipt rows stay `Blocked` with the diagnosis; Epic 8 stays open. [_bmad-output/implementation-artifacts/deferred-work.md]
 - [x] [Review][Patch] Demote the premature live-bound Pass receipt — the warning-policy row is a clean `Pass` stamped with live v2 tokens while 8.10 is open and five lanes are unqualified. `ValidationReceiptSectionResolvesToTheCurrentTableAndIsWellFormed` runs in every lane and re-derives the live identity whenever any row passes, so any bound edit (this review record, the fixes below, a ledger note) turns `Hexalith.Parties.Tests` red, and the fact now also needs all ten root submodules clean. The closure procedure collects tokens only after the Round 7 review and stabilization. Set the row to `Unvalidated` and keep its command results as non-qualifying prose without the two tokens. [_bmad-output/implementation-artifacts/tests/test-summary.md:2563] — done 2026-11-01: row set to `Unvalidated` without tokens, intro sentence updated.
-- [ ] [Review][Patch] Correct the stale qualification-state prose — four bound records say all six receipts remain Unvalidated while the table shows one Pass, two Blocked and three Unvalidated rows: the spine `open-condition`, the new 8.3 I20 row (`story-8-3-platform-api-prerequisite-matrix.md:960`), the test-summary Round 7 patch verification (`test-summary.md:2711`) and this spec's Round 7 implementation log (`:821`, a record, not frozen intent). State that no closure lane is qualified and point to the canonical table. Also correct "Story 8.10 remains `in-review`" (this commit moved it there) and scope "No release, commit, push … occurred" to the halted run (`test-summary.md:2556,2580`). [_bmad-output/planning-artifacts/architecture/epic-8-domain-focus-2026-07-06/ARCHITECTURE-SPINE.md:10]
-- [ ] [Review][Patch] Exercise the gate facts' own closed route — both facts call `ReadClosureCommit`, read the closure summary, use `ReadClosureIdentity(root, closureCommit)` and pass the `closureCommit ?? "HEAD"` gitlink, but the real repository is open and the history fixture re-composes those calls inline. Reverting `:407`/`:421` to the live summary, dropping `closureCommit ?? "HEAD"`, or passing the live identity passes every test. Extract each fact body into a helper taking `root` and call it from `ClosedIdentityUsesTheClosureCommitThroughLaterChangesAndReopening`: no gaps after the later-changes commit, gaps after both rejected reclosures. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:400]
-- [ ] [Review][Patch] Cover a spec edit inside the done epoch and a merge in `ReadClosureCommit` — every spec-touching fixture commit flips the status, so returning the newest `done` revision or dropping `--first-parent` passes. Add a post-closure spec edit that keeps `done` (closure commit unchanged, closed receipts still verify) and a merge whose second parent carries a different status history. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:1348]
-- [ ] [Review][Patch] Refuse qualifying tokens when the environment changes package evaluation — the emitter and live gate evaluate `ReadPackages(root)` with the ambient environment, while the closed route uses `isolateEnvironment: true`; the history fixture itself shows an ambient `Hexalith*Version` changing the live `dependency_set`. Tokens stamped under such an override can never match after the done commit. In qualify mode, fail unless the ambient and isolated evaluations agree. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:1597]
-- [ ] [Review][Patch] Keep the structural receipt checks running on shallow history — `ValidationReceiptSectionResolvesToTheCurrentTableAndIsWellFormed` calls `ReadClosureCommit` first, which skips on a shallow clone once 8.10 is `done`, so the table checks documented as running "regardless of story status" skip too. `ci.yml` checks out at the default depth, so after closure both gate facts skip in every CI run. Run the parse and required-row checks on the live summary before resolving the closure commit; only the identity and stamp checks may skip. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:420]
-- [ ] [Review][Patch] Check the live spec for unchecked tasks after closure — the gate now swaps in the closure-commit spec before the `- [ ]` check, so a task added after closure without reopening (for example a later review finding) is invisible; before this change the gate rejected it. Keep the closure-commit spec for evidence only and run the checkbox check on the live spec. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:405]
-- [ ] [Review][Patch] Stop a broken stdin pipe from hiding the process result — `WaitForOutput` now waits on the stdin writer. When the child exits or is killed before reading all input, `Task.WaitAll` throws `AggregateException(IOException: Broken pipe)` in place of the `TimeoutException` diagnostic or the exit code and stderr (reproduced with 4 MiB stdin to `true`, and to `sleep 30` with a 2 s timeout). Treat a broken pipe in `WriteStandardInputAsync` as end of input and add a test with a child that ignores stdin. [tests/PackageTests.Shared/PackageTestProcess.cs:181]
-- [ ] [Review][Patch] Complete the reopened DW-159 entry — the active entry lacks the `location`, `severity` and `reason` fields that open entries carry (compare DW-199) and names no owner or rollback; the archive copy still reads `status: done 2026-10-21` with no reopen note. Restore those fields alongside the compile-level exit proof and add a reopened pointer to the archive entry. [_bmad-output/implementation-artifacts/deferred-work.md:1233]
-- [ ] [Review][Patch] Resolve FrontComposer one way in the history fixture — the fixture clones from `RepositoryDependencyPaths.Resolve(ownerRoot, composerPath)` but computes `laterComposer` with `git -C references/Hexalith.FrontComposer` on the literal path, which fails when the tool maps FrontComposer to an external source root and the in-repo submodule is not initialized. Use the resolved path for both. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:965]
+- [x] [Review][Patch] Correct the stale qualification-state prose — four bound records say all six receipts remain Unvalidated while the table shows one Pass, two Blocked and three Unvalidated rows: the spine `open-condition`, the new 8.3 I20 row (`story-8-3-platform-api-prerequisite-matrix.md:960`), the test-summary Round 7 patch verification (`test-summary.md:2711`) and this spec's Round 7 implementation log (`:821`, a record, not frozen intent). State that no closure lane is qualified and point to the canonical table. Also correct "Story 8.10 remains `in-review`" (this commit moved it there) and scope "No release, commit, push … occurred" to the halted run (`test-summary.md:2556,2580`). [_bmad-output/planning-artifacts/architecture/epic-8-domain-focus-2026-07-06/ARCHITECTURE-SPINE.md:10] — resolved 2026-11-02: the spine `open-condition`, the Round 7 I20 row, the test-summary Round 7 patch verification and this spec's Round 7 log now say that no closure lane is qualified and point to the last `### Validation receipts` table. The 2026-11-01 receipt preamble records that `f98e702a` moved the story to `in-review` and that Round 8 returned it to `in-progress`, and the "No release, commit, push …" sentence is scoped to the halted run.
+- [x] [Review][Patch] Exercise the gate facts' own closed route — both facts call `ReadClosureCommit`, read the closure summary, use `ReadClosureIdentity(root, closureCommit)` and pass the `closureCommit ?? "HEAD"` gitlink, but the real repository is open and the history fixture re-composes those calls inline. Reverting `:407`/`:421` to the live summary, dropping `closureCommit ?? "HEAD"`, or passing the live identity passes every test. Extract each fact body into a helper taking `root` and call it from `ClosedIdentityUsesTheClosureCommitThroughLaterChangesAndReopening`: no gaps after the later-changes commit, gaps after both rejected reclosures. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:400] — resolved 2026-11-02: the two fact bodies are now `DescribeClosureStatusGaps(root)` and `DescribeReceiptSectionGaps(root)`, which share `DescribeClosureEvidenceGaps`. The history fixture calls both after the later-changes commit, the done-epoch spec edit and the merge (no gaps), and after each rejected reclosure (six snapshot gaps, then the foreign-stamp gap). Reading the live summary, using the live identity or using the HEAD gitlink each fails the fixture.
+- [x] [Review][Patch] Cover a spec edit inside the done epoch and a merge in `ReadClosureCommit` — every spec-touching fixture commit flips the status, so returning the newest `done` revision or dropping `--first-parent` passes. Add a post-closure spec edit that keeps `done` (closure commit unchanged, closed receipts still verify) and a merge whose second parent carries a different status history. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:1348] — resolved 2026-11-02: the fixture commits a spec edit that keeps `done`, then merges a branch whose commit, dated 2099, keeps `in-review`. `ReadClosureCommit` still returns the original closure commit and both helpers report no gaps. Dropping `--first-parent` or returning the newest `done` revision fails the fixture.
+- [x] [Review][Patch] Refuse qualifying tokens when the environment changes package evaluation — the emitter and live gate evaluate `ReadPackages(root)` with the ambient environment, while the closed route uses `isolateEnvironment: true`; the history fixture itself shows an ambient `Hexalith*Version` changing the live `dependency_set`. Tokens stamped under such an override can never match after the done commit. In qualify mode, fail unless the ambient and isolated evaluations agree. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:1597] — resolved 2026-11-02: in qualify mode `EmitCurrentClosureIdentity` first compares the ambient and the environment-isolated `PackageVersion` evaluations and refuses with `<package>:ambient=<version>:isolated=<version>`. The fixture sets `HexalithClosureFixtureVersion=9.9.9` and asserts the refusal with no token emitted; the test-summary closure procedure documents it.
+- [x] [Review][Patch] Keep the structural receipt checks running on shallow history — `ValidationReceiptSectionResolvesToTheCurrentTableAndIsWellFormed` calls `ReadClosureCommit` first, which skips on a shallow clone once 8.10 is `done`, so the table checks documented as running "regardless of story status" skip too. `ci.yml` checks out at the default depth, so after closure both gate facts skip in every CI run. Run the parse and required-row checks on the live summary before resolving the closure commit; only the identity and stamp checks may skip. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:420] — resolved 2026-11-02: `DescribeReceiptSectionGaps` parses the live summary and checks required and non-empty rows before it resolves the closure commit; only the identity and stamp checks come after. On the fixture's shallow clone a malformed live table reports `Playwright accessibility:missing`, and a well-formed one reaches the loud `fetch-depth 0` skip.
+- [x] [Review][Patch] Check the live spec for unchecked tasks after closure — the gate now swaps in the closure-commit spec before the `- [ ]` check, so a task added after closure without reopening (for example a later review finding) is invisible; before this change the gate rejected it. Keep the closure-commit spec for evidence only and run the checkbox check on the live spec. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:405] — resolved 2026-11-02: once the story is done, `DescribeClosureStatusGaps` runs the checkbox check on the live spec and uses the closure commit only for receipts, digests and the FrontComposer gitlink. The fixture adds an uncommitted `- [ ] [Review][Patch]` line after closure and asserts that it is reported.
+- [x] [Review][Patch] Stop a broken stdin pipe from hiding the process result — `WaitForOutput` now waits on the stdin writer. When the child exits or is killed before reading all input, `Task.WaitAll` throws `AggregateException(IOException: Broken pipe)` in place of the `TimeoutException` diagnostic or the exit code and stderr (reproduced with 4 MiB stdin to `true`, and to `sleep 30` with a 2 s timeout). Treat a broken pipe in `WriteStandardInputAsync` as end of input and add a test with a child that ignores stdin. [tests/PackageTests.Shared/PackageTestProcess.cs:181] — resolved 2026-11-02: `WriteStandardInputAsync` treats an `IOException` from the write as end of input and closes stdin while tolerating the same broken pipe. `RunTreatsABrokenInputPipeAsEndOfInputWhenTheChildExits` (4 MiB to a child that exits 3) and `RunReportsTheTimeoutWhenAChildIgnoresItsInput` (4 MiB, a 30 s sleep, a 2 s deadline) pass; without the fix both fail.
+- [x] [Review][Patch] Complete the reopened DW-159 entry — the active entry lacks the `location`, `severity` and `reason` fields that open entries carry (compare DW-199) and names no owner or rollback; the archive copy still reads `status: done 2026-10-21` with no reopen note. Restore those fields alongside the compile-level exit proof and add a reopened pointer to the archive entry. [_bmad-output/implementation-artifacts/deferred-work.md:1233] — resolved 2026-11-02: the active DW-159 entry has `location`, `severity`, `owner`, `reason` (with the Tenants CS0246 case) and `rollback` beside its compile-level exit proof, and the archive entry has a `reopened:` pointer to it.
+- [x] [Review][Patch] Resolve FrontComposer one way in the history fixture — the fixture clones from `RepositoryDependencyPaths.Resolve(ownerRoot, composerPath)` but computes `laterComposer` with `git -C references/Hexalith.FrontComposer` on the literal path, which fails when the tool maps FrontComposer to an external source root and the in-repo submodule is not initialized. Use the resolved path for both. [tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs:965] — resolved 2026-11-02: the fixture resolves `composerSource` once with `RepositoryDependencyPaths.Resolve(ownerRoot, composerPath)` and uses it both for the clone and for `laterComposer`.
 
 **Rejected (Round 8):**
 - `false` (Acceptance Auditor, Blind Hunter): moving the story to `in-review` (sprint `review`) contradicts the halted run — Round 7 says to return it to `in-review` once its patches are resolved and before requalifying the receipts; only the "remains" wording is wrong (stale-prose patch).
@@ -644,6 +644,88 @@ intent, original baseline, and frontmatter status are preserved.
     - `AgentProvisioning` follows the amended decision 2.
 
 ## Review Triage Log
+
+### Round 10 review of the Round 8 patch delta - 2026-11-02
+
+Scope: the uncommitted delta from `046dd304cd0964429241a14dda267fe832c67bf6`
+(10 files, +379/−135), which implements the nine Round 8 patches. The
+original-baseline diff (about 1.09M lines) was not re-reviewed. Blind Hunter,
+Edge Case Hunter and Verification Gap all reported. Each finding is assessed
+below before grouping.
+
+| Finding | Verdict | Evidence and route |
+| --- | --- | --- |
+| Blind 1 - shallow history hides live closure-gate failures | medium | Confirmed: in the done branch, `DescribeClosureStatusGaps` collects the status-mismatch, live-checkbox and epic gaps, then calls `ReadClosureCommit`. On a default-depth (shallow) CI clone that call skips, and the collected gaps are lost. Group A. |
+| Blind 2 - live structural check binds a later `### Validation receipts` heading | low | Only Story 8.10 uses that heading (`test-summary.md` 2553/2814/2887). The documented rule already makes the last such heading canonical, and a later collision fails loudly. Rejected: unlikely, and scoping the parse adds branches. |
+| Blind 3 - receipt fact checks two tables after closure | false | `DescribeClosureStatusGaps` runs `DescribeReceiptGaps` on the closure commit's table, which reports missing rows and blank or non-Pass Results, so a closed table that lacks a row still fails the gate. |
+| Blind 4 - closure arriving as a merge's second parent | low | Confirmed: the first-parent walk then selects the merge commit. Its tree carries the first parent's changes, so the closed stamps cannot match and the gate fails loudly. Round 7 Blind 7 judged merge selection correct; this finding is about the stamp consequence. Patch the procedure text to require first-parent landing. Group B. |
+| Blind 5 - ambient refusal guards only the emitter | low | The live gate keeps ambient semantics by the Round 7 Blind 4 decision, and an override produces a loud `dependency_set` mismatch. Rejected: unlikely, and the fix reverses a logged decision. |
+| Blind 6 - FrontComposer resolution fixed a non-bug | low | Confirmed: `RepositoryTestProcess.Run` already maps every `git -C` path through `RepositoryDependencyPaths.Resolve` (`RepositoryTestProcess.cs:36-46`), so the change is a consistency refactor. Rejected: the only fix is to edit this spec's resolution note. |
+| Blind 7 - stdin writer catches every `IOException` | low | Real but negligible: in practice only a broken pipe reaches that catch, and the sole stdin caller (`git cat-file --batch`) validates its output. Rejected: unlikely, and filtering by platform error code or adding a result flag adds surface. |
+| Blind 8 - DW-159 `reason` understates the preflight | low | Confirmed: `reason` says the preflight "compares only the EventStore package version strings", but its own `progress` lists selection, reference-context and mapping checks. Direct correction. Group C. |
+| Blind 9 - DW-159 heading names the finished scope | low | Confirmed at `deferred-work.md:1233`: a ledger sweep can read the reopened item as resolved. Direct correction. Group C. |
+| Blind 10 - stale qualification prose remains | false | `test-summary.md:2862` and `:2885` are dated records that were accurate when written, and the new Round 8 verification section supersedes them. The 2026-11-02 I20 rows state a conditional rule ("until rerun") that still holds. |
+| Blind 11 - dated v2 rule section rewritten in place | false | No Story 8.10 epoch has closed under v2, so the earlier wording never verified a receipt. The stamp format is unchanged, and the new text governs only future closure. |
+| Blind 12 - verification record not reproducible | low | The method glob is valid xUnit v3 syntax, the count of ten is consistent, and `/tmp` log paths follow existing practice. Only the unstated sibling-build commands are real (Group D). The rest is rejected: unlikely, and the fixes are not direct corrections. |
+| Blind 13 - "Package-mode" label unsupported | false | The build output lists only Parties `src`/`tests` projects and no `references/` project, so no source dependency was compiled. |
+| Blind 14 - new gap strings unasserted | medium | Confirmed: `story-status:`, `epic-8:`, `test-summary:story-8.10-heading` and `:empty` occur only at their `gaps.Add` sites, and deleting any of them keeps every test green. Group E. |
+| Edge 1 - shallow clone drops live gaps | medium | Same outcome as Blind 1. Group A. |
+| Edge 2 - later story heading breaks the live parse | low | Same as Blind 2; rejected on the same grounds. |
+| Edge 3 - live summary read twice | low | Confirmed: with no closure commit, structure comes from one read and identity from a second. A concurrent edit is unlikely, but reusing the first read is a direct correction. Group F. |
+| Edge 4 - process disposed before the stdin writer finishes | low | When `Run` throws, the writer's `finally` reads `StandardInput` from a disposed `Process`, as it did before this change, and `Run`'s primary exception is still reported. Rejected: negligible, pre-existing, and the fix adds a guard. |
+| Edge 5 - truncated input indistinguishable | low | Same as Blind 7; rejected on the same grounds. |
+| Edge 6 - Builds-unavailable skip hides receipt gaps | medium | Confirmed: the done branch accumulates `DescribeReceiptGaps`, then reaches the Builds `SkipUnless` in `ReadCommittedClosureIdentity`. A Blocked row beside Pass rows now skips where the old fail-fast check failed. Group A. |
+| Edge 7 - status gate skips entirely on shallow history | medium | Same as Blind 1. Group A. |
+| Edge 8 - receipt helper not called after the done-epoch spec edit | low | Confirmed: only `DescribeClosureStatusGaps` runs after that commit. Adding the assertion is a direct correction. Group G. |
+| Verification 1 - nothing pins the live `:empty` check or its order | medium | Pre-verified regression gap with a `patch` disposition. Group E. |
+| Verification other - mutation record omits the rerun | low | Confirmed: `mutate-results.log` records `closure-before-structure` as skipped, and the red result comes from a rerun after the `Should.NotThrow` guard was added. Direct correction. Group D. |
+
+All surviving groups are patches. They add no public surface and address
+demonstrated states. There is no intent_gap or bad_spec entry.
+
+- **A (medium):** return accumulated live and receipt gaps before the steps that
+  can skip, and cover the shallow and Builds-unavailable cases.
+- **B (low):** require first-parent landing in the closure procedure.
+- **C (low):** retitle DW-159 and correct its `reason`.
+- **D (low):** name the sibling-build commands and record the mutation rerun.
+- **E (medium):** assert each new gap string, including `:empty` on shallow
+  history.
+- **F (low):** read the live summary once.
+- **G (low):** call the receipt helper after the done-epoch spec edit.
+
+Resolved 2026-11-02: the step-03 implementation subagent applied all seven groups.
+
+- `DescribeClosureStatusGaps` returns live gaps before `ReadClosureCommit`, and
+  returns receipt gaps before the identity evidence.
+- `DescribeReceiptSectionGaps` reads the live summary once.
+- The history fixture now asserts:
+  - each new gap string;
+  - the shallow-clone live task and the `:empty` row, without a skip;
+  - a non-Pass row while Builds is unavailable;
+  - the receipt helper after the done-epoch spec edit.
+- `test-summary.md` requires first-parent landing for the done transition. It also
+  names the four sibling-build commands and records the mutation rerun.
+- DW-159 has its compile-level heading and a corrected `reason`.
+
+After the last edit, the closure class passes 78/78 and the Release build has 0
+warnings and 0 errors. The six required lanes are then requalified once against
+a single snapshot. The canonical `tests/test-summary.md` table (the last
+`### Validation receipts` heading) records their results.
+
+Requalification gate, 2026-11-02: a first run at snapshot `580eb573…` passed five
+lanes. The policy lane failed only in `scripts/gitlink-rc-gate.sh --diff v1.2.1`,
+because Platform `c635a2dc22f404d97c9fe7e27f7e7f4c9017943b`, selected by
+`957111c5`, had no sign-off row. That run is superseded and qualifies nothing.
+Shown the exact SHA and the gate result, the owner chose "Sign off and requalify".
+The validated-advance row in `.gitlink-signoff.tsv`, the 8.3 I20 Platform successor
+row and the spine amendment record that decision. No other dependency input
+changed since Parties `18579b62ef9ac3c8780fc5e8ba26112d2665f566`.
+
+A second run at snapshot `fe0cd893…` passed the policy lane. In the all-tests lane,
+`SupervisorMissingStateDirectory_StillReapsOwnedFamily` failed once with an
+empty-input `FormatException`. The cause is a pre-existing ready-file race in an
+unchanged fixture (filed as DW-207), and that run is also superseded. Tokens are
+then collected once at the resulting tree, and all six lanes rerun against it.
 
 ### Round 7 resumed implementation review - 2026-11-01
 
@@ -934,5 +1016,33 @@ Review covers the resumed Round 7 delta from
 `ed3aecb41d5707d7572d776cdb0cf3a9e0c2d8d9`; the complete original-baseline diff
 is retained outside the repository, and earlier bounded reviews remain history.
 The concurrent documentation commit
-`e3c798b01bf656aa913183c281b8fb717876e85c` is preserved. All six canonical
-closure receipts remain Unvalidated pending review and final qualification.
+`e3c798b01bf656aa913183c281b8fb717876e85c` is preserved. This work qualifies no
+closure lane; the canonical `tests/test-summary.md` table (the last
+`### Validation receipts` heading) records each lane's status.
+
+## Round 8 implementation - 2026-11-02
+
+All nine Round 8 patches are implemented and ticked above. The frozen intent,
+original baseline and every recorded approval are unchanged. No dependency,
+gitlink, owner repository, rollback path or status of Stories 8.7-8.9 changed.
+
+- The two gate facts are now `DescribeClosureStatusGaps(root)` and
+  `DescribeReceiptSectionGaps(root)`. The history fixture drives both through
+  the closed route, a spec edit and a merge inside the done epoch, a task added
+  after closure, rejected reclosures and shallow history.
+- Open tasks always come from the live spec. The live table's structure is
+  checked before the closure commit is resolved, so on shallow history only the
+  identity and stamp checks can skip.
+- The qualifying emitter refuses tokens while an ambient MSBuild property changes
+  any evaluated package version. A broken stdin pipe no longer hides a child's
+  exit code or timeout. DW-159 has its missing ledger fields and an archive
+  pointer.
+
+Ten mutations of the new behavior (closure-commit gitlink, identity and summary;
+first-parent walk; first done revision; live-spec checkbox; structure before
+closure; ambient refusal; broken-pipe handling) each turn the focused tests red.
+Story 8.10 returns to `in-review` (sprint `review`) for review of this round
+before the six lanes are requalified. This work qualifies no closure lane; the
+canonical `tests/test-summary.md` table (the last `### Validation receipts`
+heading) records each lane's status. Verification is in
+`tests/test-summary.md#story-810-round-8-patch-verification--2026-11-02`.

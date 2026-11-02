@@ -1230,14 +1230,19 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
 archived: 2026-10-25
 
-### DW-159: Include external dynamically launched runtime project graphs in orchestration dependency verification.
+### DW-159: Detect external runtime roots that compile against contracts missing from their selected EventStore package
 
 status: open
 origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+location: `tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs` (external runtime project inventory: `ReadExternalRuntimeProjects`, `ReadExternalRuntimeGraphs`)
+severity: medium
+owner: Parties build and test maintainers (external-runtime preflight in `PlatformApiPrerequisitesTests`); Administrator / jpiquot reopened it
+reason: The 2026-10-21 preflight verifies graph selection for the AppHost's external runtime roots (package selection, reference contexts and missing mappings), but no compile-level or contract-availability check exists yet. An external runtime root that compiles against contracts missing from its selected published EventStore package therefore still passes, and the failure first appears at topology startup. The motivating case is the upstream Tenants source/package mismatch (`spec-fix-ci-and-publish-release.md:95`): CS0246 for `IDomainServiceAdministratorVerifier` / `DomainServiceAdministratorClaim` while EventStore `3.115.0` was selected on both sides.
 decision: Administrator / jpiquot reopened this item on 2026-11-01 (spec 8.10 Round 7 decision 4). Graph-selection verification is partial progress; equal package versions cannot establish compile compatibility.
 progress: The 2026-10-21 preflight inventories the seven external runtime roots and their transitive project closure, checking package selection, reference contexts and missing mappings in Debug/Release. The original completed receipt remains historical in deferred-work-archive.md.
 exit_proof: Detect an external runtime root that uses contracts absent from its selected published EventStore package before topology startup, including the motivating Tenants CS0246 case for IDomainServiceAdministratorVerifier / DomainServiceAdministratorClaim even when EventStore version strings match. Record the package-mode compile or equivalent discriminating contract-availability check and exact result; graph version equality alone cannot close this item.
+rollback: None required (test-only verification). The 2026-10-21 graph-selection preflight stays in place; a compile-level check is additive and can be reverted on its own.
 evidence: spec-fix-ci-and-publish-release.md:95; PlatformApiPrerequisitesTests.ReadExternalRuntimeGraphs; tests/five-verification-maintenance-deferred-items-2026-10-21/validation.json; spec-8-10-final-readiness-documentation-and-retirement-gate.md Round 7 decision 4.
 
 ### DW-160: Extend the existing gateway command test with a direct persisted-stream and aggregate identity read.
@@ -2151,4 +2156,15 @@ location: `Directory.Packages.props:7-13`; `tests/PackageTests.Shared/EffectiveP
 severity: medium
 reason: `573fbb3f` added `and !Exists('$(Hexalith1BuildPackageProps)')` to the EventStore, Tenants, FrontComposer and Memories fallbacks. The property is defined later in the file, so the clause fires only when a caller passes it, as the Platform downstream SDK preflight does. With it, EventStore/FrontComposer/Memories evaluate to `3.132.1`/`4.7.5`/`3.0.15`; standalone they stay `3.132.2`/`4.7.4`/`3.0.13`. Every Parties test that evaluates MSBuild covers only the standalone case, so dropping or misspelling the clause still passes. This is an owner build change, not Story 8.10 closure scope.
 exit_proof: A fitness test evaluates a Parties consumer with `-p:Hexalith1BuildPackageProps=<temporary catalog with distinct family defaults>` and asserts that the caller defaults apply, that an explicit `-p:Hexalith*Version=` still wins over them, and that the standalone control keeps the root pins.
+rollback: None required (test-only).
+
+### DW-207: Make the supervisor fixtures' ready-file handshake atomic
+
+status: open
+origin: Deferred from: spec-8-10-final-readiness-documentation-and-retirement-gate.md Round 10 requalification (2026-11-02); flaky verification, not a review finding
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+location: `tests/Hexalith.Parties.Contracts.Tests/Package/PackageTestProcessTests.cs` (`SupervisorMissingStateDirectory_StillReapsOwnedFamily` and the other supervisor facts that poll a `ready` file)
+severity: low
+reason: The child writes `ready` with `pathlib.Path.write_text`, which creates the file before writing it. The test polls `File.Exists` and then parses the content at once, so under load it can read an empty file. On 2026-11-02 the second `scripts/test.ps1 -Lane all` run failed once with `FormatException: The input string '' was not in a correct format`, while the first run and the focused 30/30 runs passed. The test code was unchanged and does not use the stdin path.
+exit_proof: The supervisor fixtures publish `ready` atomically (write a temporary file, then `os.replace`), or the reader waits for complete content, and the Contracts.Tests supervisor facts pass repeatedly under parallel CPU load.
 rollback: None required (test-only).

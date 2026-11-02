@@ -208,10 +208,38 @@ internal static class PackageTestProcess
         return string.Empty;
     }
 
+    /// <summary>
+    /// Writes the whole input, treating a broken pipe as end of input. A child may exit, or be
+    /// killed at the deadline, before it reads everything; its exit code, stderr or timeout
+    /// diagnostic must then remain the reported outcome rather than an <see cref="IOException"/>.
+    /// </summary>
     private static async Task WriteStandardInputAsync(Process process, string value)
     {
-        await process.StandardInput.WriteAsync(value).ConfigureAwait(false);
-        process.StandardInput.Close();
+        try
+        {
+            await process.StandardInput.WriteAsync(value).ConfigureAwait(false);
+        }
+        catch (IOException)
+        {
+            // The reader closed its end (EPIPE on Unix, ERROR_NO_DATA on Windows).
+        }
+        finally
+        {
+            CloseStandardInput(process);
+        }
+    }
+
+    /// <summary>Closes stdin; buffered input that can no longer reach a closed reader is discarded.</summary>
+    private static void CloseStandardInput(Process process)
+    {
+        try
+        {
+            process.StandardInput.Close();
+        }
+        catch (IOException)
+        {
+            // Flushing the remaining buffer hit the same broken pipe; the writer is disposed anyway.
+        }
     }
 
     /// <summary>Requests termination and waits only for the configured cleanup interval.</summary>

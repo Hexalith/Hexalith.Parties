@@ -132,6 +132,38 @@ public sealed class PackageTestProcessTests
         }
     }
 
+    /// <summary>A child that exits without reading input keeps its own exit code and stderr.</summary>
+    [Fact]
+    public void RunTreatsABrokenInputPipeAsEndOfInputWhenTheChildExits()
+    {
+        PackageTestProcessResult result = PackageTestProcess.Run(
+            "python3",
+            ["-c", "import sys; sys.stderr.write('ignored input'); sys.exit(3)"],
+            Directory.GetCurrentDirectory(),
+            processTimeoutMilliseconds: 10_000,
+            standardInput: new string('x', 4 * 1_048_576));
+
+        result.ExitCode.ShouldBe(3);
+        result.StandardError.ShouldBe("ignored input");
+    }
+
+    /// <summary>A child killed at the deadline before reading input still reports the timeout.</summary>
+    [Fact]
+    public void RunReportsTheTimeoutWhenAChildIgnoresItsInput()
+    {
+        TimeoutException exception = Should.Throw<TimeoutException>(() =>
+            PackageTestProcess.Run(
+                "python3",
+                ["-c", "import time; time.sleep(30)"],
+                Directory.GetCurrentDirectory(),
+                processTimeoutMilliseconds: 2_000,
+                postKillExitTimeoutMilliseconds: 2_000,
+                outputCaptureTimeoutMilliseconds: 2_000,
+                standardInput: new string('x', 4 * 1_048_576)));
+
+        exception.Message.ShouldContain("python3 exceeded the 2000 ms timeout");
+    }
+
     [Fact]
     public void DiagnosticFallsBackToStandardOutput()
     {

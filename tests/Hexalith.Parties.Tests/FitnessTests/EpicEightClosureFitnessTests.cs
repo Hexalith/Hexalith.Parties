@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -17,6 +18,7 @@ public sealed class EpicEightClosureFitnessTests
     private const string BaselineCommit = "37f4ec826c6f4aea4651cfbad94fb6ab7fc4f0a0";
     private const string DeferredWorkPath = "_bmad-output/implementation-artifacts/deferred-work.md";
     private const string EpicsPath = "_bmad-output/planning-artifacts/epics.md";
+    private const string FrontComposerPath = "references/Hexalith.FrontComposer";
     private const string PrdPath = "_bmad-output/planning-artifacts/parties-ui-prd.md";
     private const string SpecPath = "_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md";
     private const string SpinePath = "_bmad-output/planning-artifacts/architecture/epic-8-domain-focus-2026-07-06/ARCHITECTURE-SPINE.md";
@@ -380,72 +382,13 @@ public sealed class EpicEightClosureFitnessTests
 
     [Fact]
     public void ClosureStatusCannotBeDoneBeforeEveryTaskAndValidationReceiptExists()
-    {
-        string root = RepositoryRoot.Locate();
-        string spec = Read(root, SpecPath);
-        string sprintStatus = Read(root, SprintStatusPath);
-        string storyStatus = ReadFrontmatterValue(spec, "status");
-        string trackedStoryStatus = ReadYamlStatus(sprintStatus, "8-10-final-readiness-documentation-and-retirement-gate");
-        string epicStatus = ReadYamlStatus(sprintStatus, "epic-8");
-
-        string normalizedStoryStatus = NormalizeStoryStatus(storyStatus);
-        string normalizedTrackedStatus = NormalizeStoryStatus(trackedStoryStatus);
-        normalizedStoryStatus.ShouldBe(normalizedTrackedStatus);
-        if (!string.Equals(normalizedStoryStatus, "done", StringComparison.Ordinal))
-        {
-            epicStatus.ShouldBe("in-progress");
-            DescribeOpenReviewTaskGaps(normalizedStoryStatus, spec).ShouldBeEmpty(
-                "A story in review cannot keep unchecked tasks or review findings.");
-            return;
-        }
-
-        string? closureCommit = ReadClosureCommit(root);
-        if (closureCommit is not null)
-        {
-            spec = RunGit(root, "show", $"{closureCommit}:{SpecPath}");
-        }
-        Regex.Matches(spec, @"(?m)^\s*- \[ \]", RegexOptions.CultureInvariant).ShouldBeEmpty();
-        epicStatus.ShouldBe("done");
-        string summary = ReadClosureSummary(root, closureCommit);
-        summary.ShouldContain("Story 8.10 Final Readiness, Documentation, and Retirement Gate");
-        Dictionary<string, string> receipts = ParseValidationReceipts(summary);
-        DescribeReceiptGaps(receipts).ShouldBeEmpty();
-        DescribeCurrentReceiptIdentityGaps(summary, receipts, () => ReadClosureIdentity(root, closureCommit)).ShouldBeEmpty();
-        DescribeAccessibilityStampGaps(summary, receipts, ReadSelectedRootGitlinkSha(root, "references/Hexalith.FrontComposer", closureCommit ?? "HEAD"))
-            .ShouldBeEmpty();
-    }
+        => DescribeClosureStatusGaps(RepositoryRoot.Locate()).ShouldBeEmpty(
+            "Story 8.10 status, open tasks, receipts, identities and the FrontComposer stamp must agree.");
 
     [Fact]
     public void ValidationReceiptSectionResolvesToTheCurrentTableAndIsWellFormed()
-    {
-        string root = RepositoryRoot.Locate();
-        string? closureCommit = ReadClosureCommit(root);
-        string summary = ReadClosureSummary(root, closureCommit);
-        Dictionary<string, string> receipts = ParseValidationReceipts(summary);
-
-        // Deliberately exercised regardless of story status. The closure gate reads these receipts
-        // only once the story is already marked done, so a superseded or unparsable table would stay
-        // invisible until the moment someone attempts closure and the gate proves unpassable.
-        DescribeMissingReceiptGaps(receipts).ShouldBeEmpty(
-            "Every spec Verification lane requires its canonical receipt row.");
-
-        // Structural only -- deliberately NOT a greenness check. Greenness belongs to the closure
-        // gate above. Asserting Pass here would mean a genuinely red gate has to be written up as
-        // Pass to keep the normal test lane green, which is precisely the pressure that manufactures
-        // false receipts. A red receipt must be recordable as red without breaking the build.
-        foreach (KeyValuePair<string, string> receipt in receipts)
-        {
-            receipt.Value.ShouldNotBeNullOrWhiteSpace(receipt.Key);
-        }
-
-        DescribeCurrentReceiptIdentityGaps(summary, receipts, () => ReadClosureIdentity(root, closureCommit)).ShouldBeEmpty(
-            "Every clean Pass receipt must bind its qualifying Parties snapshot and dependency set.");
-        if (IsCleanPass(receipts["Playwright accessibility"]))
-        {
-            DescribeAccessibilityStampGaps(summary, receipts, ReadSelectedRootGitlinkSha(root, "references/Hexalith.FrontComposer", closureCommit ?? "HEAD"))
-                .ShouldBeEmpty("A clean Pass accessibility receipt must prove the selected FrontComposer source identity.");
-        }
-    }
+        => DescribeReceiptSectionGaps(RepositoryRoot.Locate()).ShouldBeEmpty(
+            "Every Verification lane needs a canonical row, and every clean Pass must bind its qualifying identity.");
 
     /// <summary>
     /// Verifies that only a clean Pass accessibility receipt must carry the selected FrontComposer
@@ -600,8 +543,7 @@ public sealed class EpicEightClosureFitnessTests
     [InlineData("Unvalidated")]
     public void NonPassingReceiptsDoNotRequireIdentityStamps(string status)
     {
-        string summary = "### Validation receipts\n\n| Check | Result | Evidence |\n| --- | --- | --- |\n"
-            + string.Join('\n', RequiredValidationReceiptChecks.Select(check => $"| {check} | {status} | Not qualified |"));
+        string summary = CreateUniformValidationSummary(status, "Not qualified");
 
         DescribeReceiptIdentityGaps(summary, ParseValidationReceipts(summary), new string('a', 64), new string('b', 64))
             .ShouldBeEmpty();
@@ -841,12 +783,17 @@ public sealed class EpicEightClosureFitnessTests
         }
     }
 
-    /// <summary>Exercises exact closed inputs, later changes, rejected receipts, reopening and shallow history.</summary>
+    /// <summary>
+    /// Drives both gate facts' own helpers through exact closed inputs, later changes, a spec edit and a
+    /// merge inside the done epoch, a task added after closure, ambient package overrides, rejected
+    /// reclosures, reopening and shallow history.
+    /// </summary>
     [Fact]
     public void ClosedIdentityUsesTheClosureCommitThroughLaterChangesAndReopening()
     {
         DirectoryInfo fixture = Directory.CreateTempSubdirectory("parties-closure-history-");
         const string versionProperty = "HexalithClosureFixtureVersion";
+        const string summaryHeading = "# Story 8.10 Final Readiness, Documentation, and Retirement Gate\n\n";
         string? originalVersion = Environment.GetEnvironmentVariable(versionProperty);
         try
         {
@@ -860,7 +807,9 @@ public sealed class EpicEightClosureFitnessTests
             RunGit(root, "config", "core.fileMode", "false");
             string ownerRoot = RepositoryRoot.Locate();
             const string buildsPath = "references/Hexalith.Builds";
-            const string composerPath = "references/Hexalith.FrontComposer";
+            const string composerPath = FrontComposerPath;
+            // One resolution for every FrontComposer read: the pinned tool may map it to an external source root.
+            string composerSource = RepositoryDependencyPaths.Resolve(ownerRoot, composerPath);
             string buildsRoot = Path.Combine(root, buildsPath);
             Directory.CreateDirectory(buildsRoot);
             RunGit(buildsRoot, "init");
@@ -873,8 +822,25 @@ public sealed class EpicEightClosureFitnessTests
                 Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
                 File.WriteAllText(fullPath, content, new UTF8Encoding(encoderShouldEmitUTF8Identifier: IsClosureBookkeepingPath(path)));
             }
+            // Every fixture summary keeps one heading outside the receipt section, so the normalized
+            // snapshot is unchanged by receipt edits and the closure gate finds its story heading.
+            void WriteSummary(string receipts)
+                => WriteFixture(TestSummaryPath, summaryHeading + receipts);
             void CommitFixture(string repository)
                 => RunGit(repository, "commit", "--allow-empty", "-m", "test: exercise closure identity");
+            void CommitFixtureAt(string repository, string date)
+            {
+                ProcessStartInfo commit = new("git");
+                foreach (string argument in new[] { "commit", "--allow-empty", "-m", "test: exercise closure identity" })
+                {
+                    commit.ArgumentList.Add(argument);
+                }
+
+                commit.Environment["GIT_AUTHOR_DATE"] = date;
+                commit.Environment["GIT_COMMITTER_DATE"] = date;
+                PackageTestProcessResult result = PackageTestProcess.Run(commit, repository, 30_000);
+                result.ExitCode.ShouldBe(0, result.Diagnostic);
+            }
             WriteFixture(buildsPath + "/.gitattributes", "Props/hidden.props export-ignore\nProps/substituted.props export-subst\nProps/Directory.Packages.props text eol=crlf\n");
             WriteFixture(buildsPath + "/Props/hidden.props", "<Project><PropertyGroup><HexalithClosureFixtureVersion Condition=\"'$(HexalithClosureFixtureVersion)' == ''\">1.0.0</HexalithClosureFixtureVersion></PropertyGroup></Project>");
             WriteFixture(buildsPath + "/Props/substituted.props", "<Project><PropertyGroup><Marker>$Format:%H$</Marker><HexalithClosureFixtureVersion Condition=\"'$(Marker)' != '&#36;Format:%H&#36;'\">8.8.8</HexalithClosureFixtureVersion></PropertyGroup></Project>");
@@ -883,7 +849,7 @@ public sealed class EpicEightClosureFitnessTests
             CommitFixture(buildsRoot);
             string builds = RunGit(buildsRoot, "rev-parse", "HEAD").Trim();
             string composer = ReadSelectedRootGitlinkSha(ownerRoot, composerPath);
-            RunGit(fixture.FullName, "clone", "--shared", "--no-checkout", "--", RepositoryDependencyPaths.Resolve(ownerRoot, composerPath), Path.Combine(root, composerPath));
+            RunGit(fixture.FullName, "clone", "--shared", "--no-checkout", "--", composerSource, Path.Combine(root, composerPath));
             RunGit(Path.Combine(root, composerPath), "sparse-checkout", "set", "--no-cone", "/README.md");
             RunGit(Path.Combine(root, composerPath), "checkout", "--detach", composer);
             WriteFixture(".gitmodules", $"[submodule \"Builds\"]\n path = {buildsPath}\n[submodule \"FrontComposer\"]\n path = {composerPath}\n");
@@ -892,7 +858,7 @@ public sealed class EpicEightClosureFitnessTests
             WriteFixture("src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj", "<Project><Import Project=\"../../Directory.Packages.props\" /></Project>");
             WriteFixture(SpecPath, "---\nstatus: 'in-review'\n---\nRequirements\n");
             WriteFixture(SprintStatusPath, "  epic-8: in-progress\n  8-10-final-readiness-documentation-and-retirement-gate: review\n");
-            WriteFixture(TestSummaryPath, "### Validation receipts\n\nOriginal evidence\n");
+            WriteSummary("### Validation receipts\n\nOriginal evidence\n");
             WriteFixture("retired.txt", "Removed before qualification\n");
             RunGit(root, "add", "--", ".gitmodules", "global.json", "Directory.Packages.props", "src", "_bmad-output", "retired.txt");
             RunGit(root, "update-index", "--add", "--cacheinfo", $"160000,{builds},{buildsPath}");
@@ -924,10 +890,14 @@ public sealed class EpicEightClosureFitnessTests
             DescribeReceiptIdentityGaps(diagnosticSummary, ParseValidationReceipts(diagnosticSummary), qualifying.Snapshot, qualifying.Dependencies).ShouldNotBeEmpty();
 
             string evidence = $"Original evidence parties_snapshot={qualifying.Snapshot} dependency_set={qualifying.Dependencies} FrontComposer {composer}";
-            WriteFixture(TestSummaryPath, CreateStampedValidationSummary("Release solution build", "Pass", evidence, evidence));
+            WriteSummary(CreateStampedValidationSummary("Release solution build", "Pass", evidence, evidence));
             WriteFixture(SpecPath, "---\nstatus: 'done'\n---\nRequirements\n");
             WriteFixture(SprintStatusPath, "  epic-8: done\n  8-10-final-readiness-documentation-and-retirement-gate: done\n");
             ReadClosureCommit(root).ShouldBeNull("An uncommitted done transition still qualifies the live tree.");
+            WriteFixture(TestSummaryPath, CreateStampedValidationSummary("Release solution build", "Pass", evidence, evidence));
+            DescribeClosureStatusGaps(root).ShouldBe(["test-summary:story-8.10-heading"], "A closure summary must carry the Story 8.10 heading.");
+            WriteSummary(CreateStampedValidationSummary("Release solution build", "Pass", evidence, evidence));
+            DescribeClosureStatusGaps(root).ShouldBeEmpty("The uncommitted done transition verifies its receipts against the live tree and HEAD gitlink.");
             RunGit(root, "add", "--", SpecPath, SprintStatusPath, TestSummaryPath);
             CommitFixture(root);
             string closure = RunGit(root, "rev-parse", "HEAD").Trim();
@@ -944,6 +914,10 @@ public sealed class EpicEightClosureFitnessTests
             EffectivePackageVersions.ReadPackages(root)["Example"].ShouldBe("9.9.9", "Live evaluation retains ambient overrides.");
             ReadCurrentClosureIdentity(root).Dependencies.ShouldNotBe(identity.Dependencies);
             ReadCommittedClosureIdentity(root, closure).ShouldBe(identity, "An ambient MSBuild override cannot rewrite historical qualification.");
+            emitted.Clear();
+            Should.Throw<ShouldAssertException>(() => EmitCurrentClosureIdentity(root, qualify: true, emitted.Add))
+                .Message.ShouldContain("Example:ambient=9.9.9:isolated=1.0.0");
+            emitted.ShouldBeEmpty("No qualifying token may be emitted while an ambient override changes package evaluation.");
             Environment.SetEnvironmentVariable(versionProperty, null);
 
             string movedBuilds = Path.Combine(fixture.FullName, "temporarily-unavailable-builds");
@@ -963,23 +937,59 @@ public sealed class EpicEightClosureFitnessTests
             string laterBuilds = RunGit(buildsRoot, "rev-parse", "HEAD").Trim();
             EffectivePackageVersions.ReadPackages(root)["Example"].ShouldBe("2.0.0");
             WriteFixture("later.txt", "Later unrelated work\n");
-            WriteFixture(TestSummaryPath, "### Validation receipts\n\nLater evidence\n");
-            string laterComposer = RunGit(ownerRoot, "-C", composerPath, "rev-parse", $"{composer}^").Trim();
+            WriteSummary(CreateUniformValidationSummary("Unvalidated", "Later evidence"));
+            string laterComposer = RunGit(composerSource, "rev-parse", $"{composer}^").Trim();
             RunGit(root, "add", "--", "later.txt", TestSummaryPath);
             RunGit(root, "update-index", "--cacheinfo", $"160000,{laterComposer},{composerPath}");
             RunGit(root, "update-index", "--cacheinfo", $"160000,{laterBuilds},{buildsPath}");
             CommitFixture(root);
             ReadClosureCommit(root).ShouldBe(closure);
-            ReadClosureIdentity(root, ReadClosureCommit(root)).ShouldBe(identity, "The original Builds import remains 1.0.0 despite the live 2.0.0 catalog and gitlink.");
-            string closedSummary = ReadClosureSummary(root, ReadClosureCommit(root));
-            Dictionary<string, string> closedReceipts = ParseValidationReceipts(closedSummary);
-            DescribeReceiptGaps(closedReceipts).ShouldBeEmpty();
-            DescribeCurrentReceiptIdentityGaps(closedSummary, closedReceipts, () => ReadClosureIdentity(root, ReadClosureCommit(root))).ShouldBeEmpty();
-            DescribeAccessibilityStampGaps(closedSummary, closedReceipts, ReadSelectedRootGitlinkSha(root, composerPath, ReadClosureCommit(root)!)).ShouldBeEmpty();
+            ReadClosureIdentity(root, closure).ShouldBe(identity, "The original Builds import remains 1.0.0 despite the live 2.0.0 catalog and gitlink.");
+            // The live summary is Unvalidated, and the live tree, catalog and FrontComposer gitlink all
+            // moved: only the closure commit's receipts, digests and gitlink can satisfy both gates.
+            DescribeClosureStatusGaps(root).ShouldBeEmpty("The closure gate verifies the closure commit, not later changes.");
+            DescribeReceiptSectionGaps(root).ShouldBeEmpty("The receipt gate verifies closed evidence from the closure commit.");
+            const string closedSprint = "  epic-8: done\n  8-10-final-readiness-documentation-and-retirement-gate: done\n";
+            WriteFixture(SprintStatusPath, closedSprint.Replace("gate: done", "gate: review", StringComparison.Ordinal));
+            DescribeClosureStatusGaps(root).ShouldBe(["story-status:spec=done:sprint=review"], "Spec and sprint status must agree.");
+            WriteFixture(SprintStatusPath, closedSprint.Replace("epic-8: done", "epic-8: in-progress", StringComparison.Ordinal));
+            DescribeClosureStatusGaps(root).ShouldBe(["epic-8:in-progress"], "A done story requires a done epic.");
+            WriteFixture(SprintStatusPath, closedSprint);
             ReadSelectedRootGitlinkSha(root, composerPath, closure).ShouldBe(composer);
             ReadSelectedRootGitlinkSha(root, composerPath).ShouldBe(laterComposer);
             ReadCommittedClosureIdentity(root, "HEAD").Snapshot.ShouldNotBe(identity.Snapshot);
             ReadCommittedClosureIdentity(root, "HEAD").Dependencies.ShouldNotBe(identity.Dependencies);
+
+            // A spec edit that keeps done stays inside the uninterrupted done epoch.
+            const string closedSpec = "---\nstatus: 'done'\n---\nRequirements\nPost-closure note\n";
+            WriteFixture(SpecPath, closedSpec);
+            RunGit(root, "add", "--", SpecPath);
+            CommitFixture(root);
+            ReadClosureCommit(root).ShouldBe(closure, "The first commit of the done epoch, not the newest done revision, is the closure commit.");
+            DescribeClosureStatusGaps(root).ShouldBeEmpty("Closed receipts still verify after a spec edit inside the done epoch.");
+            DescribeReceiptSectionGaps(root).ShouldBeEmpty();
+
+            // Open work added after closure without reopening stays visible through the live spec.
+            const string laterFinding = "- [ ] [Review][Patch] Later finding [file.cs:1]";
+            WriteFixture(SpecPath, closedSpec + laterFinding + "\n");
+            DescribeClosureStatusGaps(root).ShouldBe([laterFinding], "A task added after closure must not hide behind the closure-commit spec.");
+            WriteFixture(SpecPath, closedSpec);
+
+            // A merged branch with its own, later-dated status history cannot move the done epoch.
+            string side = Path.Combine(fixture.FullName, "side");
+            RunGit(root, "worktree", "add", "--detach", "--", side, $"{closure}^");
+            File.WriteAllText(Path.Combine(side, SpecPath), "---\nstatus: 'in-review'\n---\nRequirements\nSide note\n", new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+            RunGit(side, "add", "--", SpecPath);
+            CommitFixtureAt(side, "2099-01-01T00:00:00+00:00");
+            string sideCommit = RunGit(side, "rev-parse", "HEAD").Trim();
+            RunGit(root, "merge", "--no-ff", "--no-commit", "-s", "ours", sideCommit);
+            WriteFixture(SpecPath, closedSpec + "Side note\n");
+            RunGit(root, "add", "--", SpecPath);
+            CommitFixture(root);
+            RunGit(root, "rev-parse", "HEAD^2").Trim().ShouldBe(sideCommit, "The fixture commit is a merge whose second parent is the side branch.");
+            ReadClosureCommit(root).ShouldBe(closure, "Only first-parent history defines the done epoch.");
+            DescribeClosureStatusGaps(root).ShouldBeEmpty("Closed receipts still verify after merging a branch with another status history.");
+            DescribeReceiptSectionGaps(root).ShouldBeEmpty();
 
             foreach (bool corruptSnapshot in new[] { true, false })
             {
@@ -991,35 +1001,62 @@ public sealed class EpicEightClosureFitnessTests
                 string badSnapshot = corruptSnapshot ? new string('0', 64) : nextIdentity.Snapshot;
                 string stamp = corruptSnapshot ? laterComposer : composer;
                 string badEvidence = $"parties_snapshot={badSnapshot} dependency_set={nextIdentity.Dependencies} FrontComposer {stamp}";
-                WriteFixture(TestSummaryPath, CreateStampedValidationSummary("Release solution build", "Pass", badEvidence, badEvidence));
+                WriteSummary(CreateStampedValidationSummary("Release solution build", "Pass", badEvidence, badEvidence));
                 WriteFixture(SpecPath, "---\nstatus: 'done'\n---\nRequirements\n");
                 ReadClosureCommit(root).ShouldBeNull("A new uncommitted closure cannot reuse an earlier done epoch.");
                 RunGit(root, "add", "--", SpecPath, TestSummaryPath);
                 CommitFixture(root);
-                string rejectedClosure = ReadClosureCommit(root)!;
-                rejectedClosure.ShouldBe(RunGit(root, "rev-parse", "HEAD").Trim());
+                ReadClosureCommit(root).ShouldBe(RunGit(root, "rev-parse", "HEAD").Trim());
+                ReadClosureIdentity(root, ReadClosureCommit(root)).ShouldBe(nextIdentity);
+
+                // Valid live receipts cannot rescue the rejected closure commit's archived evidence.
                 string goodEvidence = $"parties_snapshot={nextIdentity.Snapshot} dependency_set={nextIdentity.Dependencies} FrontComposer {laterComposer}";
-                WriteFixture(TestSummaryPath, CreateStampedValidationSummary("Release solution build", "Pass", goodEvidence, goodEvidence));
-                string rejectedSummary = ReadClosureSummary(root, rejectedClosure);
-                Dictionary<string, string> rejectedReceipts = ParseValidationReceipts(rejectedSummary);
-                string[] identityGaps = DescribeCurrentReceiptIdentityGaps(rejectedSummary, rejectedReceipts, () => ReadClosureIdentity(root, rejectedClosure));
-                string[] accessibilityGaps = DescribeAccessibilityStampGaps(rejectedSummary, rejectedReceipts, ReadSelectedRootGitlinkSha(root, composerPath, rejectedClosure));
-                if (corruptSnapshot)
-                {
-                    identityGaps.ShouldNotBeEmpty("Corrupted archived snapshot tokens must fail despite valid live receipt edits.");
-                    accessibilityGaps.ShouldBeEmpty();
-                }
-                else
-                {
-                    identityGaps.ShouldBeEmpty();
-                    accessibilityGaps.ShouldBe(["Playwright accessibility:frontcomposer-stamp"], "A foreign historical FrontComposer stamp must fail through the closed route.");
-                }
+                WriteSummary(CreateStampedValidationSummary("Release solution build", "Pass", goodEvidence, goodEvidence));
+                string[] expected = corruptSnapshot
+                    ? [.. RequiredValidationReceiptChecks.Select(check => $"{check}:parties_snapshot:expected={nextIdentity.Snapshot}")]
+                    : ["Playwright accessibility:frontcomposer-stamp"];
+                DescribeClosureStatusGaps(root).ShouldBe(expected, corruptSnapshot
+                    ? "Corrupted archived snapshot tokens must fail despite valid live receipt edits."
+                    : "A foreign historical FrontComposer stamp must fail through the closed route.");
+                DescribeReceiptSectionGaps(root).ShouldBe(expected);
+            }
+
+            // A non-Pass closed row is reported before the identity check, which skips without Builds.
+            WriteFixture(SpecPath, "---\nstatus: 'in-review'\n---\nRequirements\n");
+            RunGit(root, "add", "--", SpecPath);
+            CommitFixture(root);
+            WriteSummary(CreateStampedValidationSummary("npm install and typecheck", "Unvalidated", "Not rerun", "Pass evidence"));
+            WriteFixture(SpecPath, "---\nstatus: 'done'\n---\nRequirements\n");
+            RunGit(root, "add", "--", SpecPath, TestSummaryPath);
+            CommitFixture(root);
+            Directory.Move(buildsRoot, movedBuilds);
+            try
+            {
+                Should.NotThrow(() => DescribeClosureStatusGaps(root), "A receipt gap must not hide behind the unavailable-Builds skip.")
+                    .ShouldBe(["npm install and typecheck:Unvalidated"]);
+            }
+            finally
+            {
+                Directory.Move(movedBuilds, buildsRoot);
             }
 
             string shallow = Path.Combine(fixture.FullName, "shallow");
             RunGit(fixture.FullName, "clone", "--depth=1", "--no-checkout", "--", new Uri(root + Path.DirectorySeparatorChar).AbsoluteUri, shallow);
-            RunGit(shallow, "restore", "--source=HEAD", "--worktree", "--", SpecPath);
+            RunGit(shallow, "restore", "--source=HEAD", "--worktree", "--", SpecPath, SprintStatusPath, TestSummaryPath);
             Should.Throw<Exception>(() => ReadClosureCommit(shallow)).Message.ShouldContain("fetch-depth 0");
+            // A well-formed live table reaches the closure commit, which shallow history skips loudly.
+            Should.Throw<Exception>(() => DescribeReceiptSectionGaps(shallow)).Message.ShouldContain("fetch-depth 0");
+            const string shallowFinding = "- [ ] [Review][Patch] Shallow finding [file.cs:1]";
+            File.WriteAllText(Path.Combine(shallow, SpecPath), "---\nstatus: 'done'\n---\nRequirements\n" + shallowFinding + "\n");
+            Should.NotThrow(() => DescribeClosureStatusGaps(shallow), "Live gaps are reported before shallow history can skip.")
+                .ShouldBe([shallowFinding]);
+            File.WriteAllText(Path.Combine(shallow, TestSummaryPath),
+                summaryHeading + CreateUniformValidationSummary("Pass", "Shallow evidence")
+                    .Replace("\n| Playwright accessibility | Pass | Shallow evidence |", string.Empty, StringComparison.Ordinal)
+                    .Replace("| npm install and typecheck | Pass |", "| npm install and typecheck |   |", StringComparison.Ordinal));
+            // NotThrow turns an escaping skip into a failure: structural checks must not hide behind it.
+            Should.NotThrow(() => DescribeReceiptSectionGaps(shallow), "Structural checks run on the live summary before shallow history can skip.")
+                .ShouldBe(["Playwright accessibility:missing", "npm install and typecheck:empty"]);
         }
         finally
         {
@@ -1080,6 +1117,14 @@ public sealed class EpicEightClosureFitnessTests
 
     private static void EmitCurrentClosureIdentity(string root, bool qualify, Action<string> output)
     {
+        if (qualify)
+        {
+            // Once closed, the gate evaluates packages without ambient MSBuild properties. A token
+            // stamped under an ambient override could therefore never verify after the done commit.
+            DescribeAmbientPackageOverrides(root).ShouldBeEmpty(
+                "Qualifying tokens require package evaluation that ignores the environment; unset these overrides and collect the tokens again.");
+        }
+
         (string snapshot, string dependencies) = ReadCurrentClosureIdentity(root, requireImmutableConsumption: qualify);
 
         Regex.IsMatch(snapshot, @"\A[0-9a-f]{64}\z", RegexOptions.CultureInvariant).ShouldBeTrue();
@@ -1087,6 +1132,22 @@ public sealed class EpicEightClosureFitnessTests
         string prefix = qualify ? string.Empty : "diagnostic_";
         output($"{prefix}parties_snapshot={snapshot} {prefix}dependency_set={dependencies} immutable_consumption={qualify.ToString().ToLowerInvariant()}");
     }
+
+    /// <summary>Names each package whose ambient evaluation differs from the environment-isolated one.</summary>
+    private static string[] DescribeAmbientPackageOverrides(string root)
+    {
+        IReadOnlyDictionary<string, string> ambient = EffectivePackageVersions.ReadPackages(root);
+        IReadOnlyDictionary<string, string> isolated = EffectivePackageVersions.ReadPackages(root, isolateEnvironment: true);
+        return ambient.Keys.Union(isolated.Keys, StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .Where(package => !string.Equals(ambient.GetValueOrDefault(package), isolated.GetValueOrDefault(package), StringComparison.Ordinal))
+            .Select(package => $"{package}:ambient={ambient.GetValueOrDefault(package) ?? "missing"}:isolated={isolated.GetValueOrDefault(package) ?? "missing"}")
+            .ToArray();
+    }
+
+    private static string CreateUniformValidationSummary(string status, string evidence)
+        => "### Validation receipts\n\n| Check | Result | Evidence |\n| --- | --- | --- |\n"
+            + string.Join('\n', RequiredValidationReceiptChecks.Select(check => $"| {check} | {status} | {evidence} |"));
 
     private static string CreateStampedValidationSummary(string changedCheck, string status, string evidence, string validEvidence)
         => "### Validation receipts\n\n| Check | Result | Evidence |\n| --- | --- | --- |\n"
@@ -1345,6 +1406,103 @@ public sealed class EpicEightClosureFitnessTests
             .Where(static receipt => !IsCleanPass(receipt.Value))
             .Select(static receipt => $"{receipt.Key}:{receipt.Value}"))
             .ToArray();
+
+    /// <summary>
+    /// Evaluates the closure gate for one repository. Status values and open tasks always come from
+    /// the live tree; once Story 8.10 is committed done, receipts, both digests and the FrontComposer
+    /// gitlink come from the commit that recorded that transition.
+    /// </summary>
+    private static string[] DescribeClosureStatusGaps(string root)
+    {
+        string spec = Read(root, SpecPath);
+        string sprintStatus = Read(root, SprintStatusPath);
+        string storyStatus = NormalizeStoryStatus(ReadFrontmatterValue(spec, "status"));
+        string trackedStatus = NormalizeStoryStatus(ReadYamlStatus(sprintStatus, "8-10-final-readiness-documentation-and-retirement-gate"));
+        string epicStatus = ReadYamlStatus(sprintStatus, "epic-8");
+        List<string> gaps = [];
+        if (!string.Equals(storyStatus, trackedStatus, StringComparison.Ordinal))
+        {
+            gaps.Add($"story-status:spec={storyStatus}:sprint={trackedStatus}");
+        }
+
+        if (!string.Equals(storyStatus, "done", StringComparison.Ordinal))
+        {
+            if (!string.Equals(epicStatus, "in-progress", StringComparison.Ordinal))
+            {
+                gaps.Add($"epic-8:{epicStatus}");
+            }
+
+            gaps.AddRange(DescribeOpenReviewTaskGaps(storyStatus, spec));
+            return [.. gaps];
+        }
+
+        // The live spec decides open work. A task or review finding added after closure without
+        // reopening must stay visible; the closure commit supplies only the evidence below.
+        gaps.AddRange(DescribeUncheckedTasks(spec));
+        if (!string.Equals(epicStatus, "done", StringComparison.Ordinal))
+        {
+            gaps.Add($"epic-8:{epicStatus}");
+        }
+
+        // Report live gaps before anything that can skip: shallow history skips ReadClosureCommit.
+        if (gaps.Count > 0)
+        {
+            return [.. gaps];
+        }
+
+        string? closureCommit = ReadClosureCommit(root);
+        string summary = ReadClosureSummary(root, closureCommit);
+        if (!summary.Contains("Story 8.10 Final Readiness, Documentation, and Retirement Gate", StringComparison.Ordinal))
+        {
+            gaps.Add("test-summary:story-8.10-heading");
+        }
+
+        Dictionary<string, string> receipts = ParseValidationReceipts(summary);
+        gaps.AddRange(DescribeReceiptGaps(receipts));
+        // Report receipt gaps before the identity check, which skips when the Builds repository is unavailable.
+        return gaps.Count > 0 ? [.. gaps] : DescribeClosureEvidenceGaps(root, closureCommit, summary, receipts);
+    }
+
+    /// <summary>
+    /// Checks the canonical receipt table regardless of story status, so a superseded or unparsable
+    /// table cannot stay invisible until closure is attempted. Structure is checked on the live summary
+    /// before the closure commit is resolved: on shallow history only identity and stamp checks skip.
+    /// </summary>
+    private static string[] DescribeReceiptSectionGaps(string root)
+    {
+        // Structural only -- deliberately NOT a greenness check. Greenness belongs to the closure gate.
+        // Asserting Pass here would mean a genuinely red gate has to be written up as Pass to keep the
+        // normal test lane green, which is precisely the pressure that manufactures false receipts.
+        string liveSummary = Read(root, TestSummaryPath);
+        Dictionary<string, string> liveReceipts = ParseValidationReceipts(liveSummary);
+        string[] structuralGaps =
+        [
+            .. DescribeMissingReceiptGaps(liveReceipts),
+            .. liveReceipts.Where(static receipt => string.IsNullOrWhiteSpace(receipt.Value)).Select(static receipt => $"{receipt.Key}:empty"),
+        ];
+        if (structuralGaps.Length > 0)
+        {
+            return structuralGaps;
+        }
+
+        string? closureCommit = ReadClosureCommit(root);
+        string summary = closureCommit is null ? liveSummary : ReadClosureSummary(root, closureCommit);
+        Dictionary<string, string> receipts = closureCommit is null ? liveReceipts : ParseValidationReceipts(summary);
+        return DescribeClosureEvidenceGaps(root, closureCommit, summary, receipts);
+    }
+
+    /// <summary>
+    /// Binds every clean Pass to its identity and a clean accessibility Pass to the selected
+    /// FrontComposer gitlink: the closure commit's once committed done, the live tree's and HEAD's before.
+    /// </summary>
+    private static string[] DescribeClosureEvidenceGaps(string root, string? closureCommit, string summary, IReadOnlyDictionary<string, string> receipts)
+    {
+        string[] identityGaps = DescribeCurrentReceiptIdentityGaps(summary, receipts, () => ReadClosureIdentity(root, closureCommit));
+        string[] stampGaps = receipts.TryGetValue("Playwright accessibility", out string? accessibility) && IsCleanPass(accessibility)
+            ? DescribeAccessibilityStampGaps(summary, receipts, ReadSelectedRootGitlinkSha(root, FrontComposerPath, closureCommit ?? "HEAD"))
+            : [];
+        return [.. identityGaps, .. stampGaps];
+    }
 
     /// <summary>Uses live evidence until closure is committed, then locates that done epoch's first commit.</summary>
     private static string? ReadClosureCommit(string root)
@@ -1875,17 +2033,13 @@ public sealed class EpicEightClosureFitnessTests
         DescribeOpenReviewTaskGaps("review", spec.Replace("- [ ]", "- [x]", StringComparison.Ordinal)).ShouldBeEmpty();
     }
 
-    private static List<string> DescribeOpenReviewTaskGaps(string normalizedStatus, string spec)
-    {
-        List<string> gaps = [];
-        if (string.Equals(normalizedStatus, "review", StringComparison.Ordinal))
-        {
-            gaps.AddRange(Regex.Matches(spec, @"(?m)^[ \t]*- \[ \][^\r\n]*", RegexOptions.CultureInvariant)
-                .Select(static match => match.Value.Trim()));
-        }
+    private static string[] DescribeOpenReviewTaskGaps(string normalizedStatus, string spec)
+        => string.Equals(normalizedStatus, "review", StringComparison.Ordinal) ? DescribeUncheckedTasks(spec) : [];
 
-        return gaps;
-    }
+    private static string[] DescribeUncheckedTasks(string spec)
+        => Regex.Matches(spec, @"(?m)^[ \t]*- \[ \][^\r\n]*", RegexOptions.CultureInvariant)
+            .Select(static match => match.Value.Trim())
+            .ToArray();
 
     private static string NormalizeStoryStatus(string status)
     {

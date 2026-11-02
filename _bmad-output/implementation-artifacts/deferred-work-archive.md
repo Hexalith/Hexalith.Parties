@@ -1602,6 +1602,7 @@ source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-rele
 reason: PlatformApiPrerequisitesTests inventories only owned src, samples, and tests projects, so it cannot detect the pre-existing upstream Tenants source/package mismatch before topology startup.
 status: done 2026-10-21
 archived: 2026-10-25
+reopened: 2026-11-01 by Administrator / jpiquot (spec 8.10 Round 7 decision 4). The active DW-159 entry in `deferred-work.md` is authoritative and open; this archived resolution is historical partial progress (graph selection only).
 resolution: Preflight inventories all seven AppHost external runtime roots and their 24-project closure in both Debug and Release, comparing EventStore packages against independently evaluated Parties selection. Missing references, package overrides, hidden source selection, unsupported edge contexts, unexpanded multi-target graphs and nonliteral resolver paths fail explicitly; cycles are bounded. This verifies graph selection, not compilation or runtime parity.
 verification: spec-five-verification-maintenance-deferred-items.md; tests/five-verification-maintenance-deferred-items-2026-10-21/validation.json. Both Debug builds are clean and 397 focused tests pass without skips; source/runtime qualification limits remain explicit.
 

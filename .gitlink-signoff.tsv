@@ -467,3 +467,7 @@ references/Hexalith.Tenants|4b3e431745550f8466f1ce0d70e6b507c747b59a|validated-a
 # --- 2026-11-02 owner continuation after Parties 18579b62 selected qualified Tenants.
 #     Exact Tenants successor selection/signoff only; six I16 receipts remain Unvalidated.
 references/Hexalith.Tenants|4d0d599879767196928e1c265622483a62b457ae|validated-advance|origin/main@4d0d59987976|jpiquot|2026-11-02
+
+# --- 2026-11-02 spec 8.10 Round 10 requalification: owner signoff of the Platform
+#     successor selected by 957111c5 (EventStore 3.133.0 scoped-consumer catalog).
+references/Hexalith.Platform|c635a2dc22f404d97c9fe7e27f7e7f4c9017943b|validated-advance|origin/main@c635a2dc22f4|jpiquot|2026-11-02
