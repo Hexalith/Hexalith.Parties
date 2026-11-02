@@ -1411,11 +1411,12 @@ archived: 2026-10-25
 
 ### DW-182: Obtain owner signoff for all root gitlinks changed since Parties v1.2.1 before another release.
 
+status: done 2026-11-02
+resolution: Administrator / jpiquot approved the ten exact committed root gitlinks and the independently evaluated Release package graph in `dw-182-i16-approval-comparison-2026-11-02.md` for current-selection assertions. `bash scripts/gitlink-rc-gate.sh --diff v1.2.1` exited 0 with all ten pointers marked `BUMP ok`. This closes source-selection signoff only; the six current I16 parity receipts remain Unvalidated and no publication, deployment, custody, or rollback deletion is authorized.
 origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
 location: scripts/gitlink-rc-gate.sh; root gitlinks changed since v1.2.1; release publication gate
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
-reason: `bash scripts/gitlink-rc-gate.sh --diff v1.2.1` exits 1 for Builds, Commons, EventStore, FrontComposer, McpCli, Memories, Platform, and Tenants; current release workflow blocks publication at that gate. These later pointers need a new owner selection.
-status: open
+reason: `bash scripts/gitlink-rc-gate.sh --diff v1.2.1` exited 1 before the 2026-11-02 owner decision for Builds, Commons, EventStore, FrontComposer, McpCli, Memories, Platform, and Tenants; the then-current release workflow blocked publication at that gate.
 
 ### DW-183: Test reason-only degraded admin search preserving last known rows.
 
@@ -2121,3 +2122,5 @@ evidence: Spec 8.10 Round 8 diagnosis, 2026-11-01; `/tmp/parties-810-qualificati
 - source_spec: `spec-five-build-and-governance-deferred-items.md`
   summary: Reconcile the current I16 committed-selection assertions and obtain owner signoff for Platform and McpCli gitlinks before claiming current Epic 8 parity.
   evidence: The 2026-11-02 all lane built and ran 16 test projects, but three PlatformApiPrerequisitesTests assertions still compare current Platform/McpCli gitlinks and the EventStore package to the older approved 2026-11-01 selection. These failures predate this correction; DW-182 already tracks the required owner selection. Do not update immutable expected identities or claim current parity without that decision.
+  status: done 2026-11-02
+  resolution: The owner approved all ten current committed gitlinks and the effective Release graph in `dw-182-i16-approval-comparison-2026-11-02.md`. The current-only guard matches the committed SHA, checkout, local describe, and effective graph. `dotnet restore Hexalith.Parties.Standalone.slnx`, `dotnet build Hexalith.Parties.Standalone.slnx --configuration Release --no-restore -m:1`, and `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release` exited 0; the build had zero warnings/errors and the lane passed 16 projects (6,483 succeeded, 0 failed, 26 skipped). All six canonical I16 parity receipts remain Unvalidated; current Epic 8 parity is not claimed.

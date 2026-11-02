@@ -2764,3 +2764,44 @@ Round 7 review and all eight surviving repairs are complete. The final six-lane
 qualification logs and package/consumer outputs remain outside the repository
 under `/tmp/parties-810-qualification-6p4w60kn`; only the canonical receipt section
 and the three normalized status values will change after collecting final tokens.
+
+## DW-182 / I16 committed-selection reconciliation — 2026-11-02
+
+Administrator / jpiquot approved the exact ten committed root gitlinks and the
+effective Release package graph in
+`dw-182-i16-approval-comparison-2026-11-02.md` for current-selection assertions.
+The EventStore gitlink is the upstream `v3.132.2` SHA; the locally available
+describe is `v3.132.1-2-g7c93a123` because the tag is absent locally. Evaluated
+Release packages are EventStore `3.132.2`, Commons `2.30.10`,
+PolymorphicSerializations `1.19.8`, FrontComposer `4.7.4`, Memories `3.0.13`,
+Tenants `6.0.0`, and McpCli `1.1.0`. The source/package differences remain
+explicit in the current 8.3 matrix and its fitness guard.
+
+| Check | Exact command | Result |
+| --- | --- | --- |
+| Standalone restore | `dotnet restore Hexalith.Parties.Standalone.slnx` | Exit 0; 36 projects evaluated, 23 already current. |
+| Release build | `dotnet build Hexalith.Parties.Standalone.slnx --configuration Release --no-restore -m:1` | Exit 0; 0 warnings, 0 errors. |
+| Current committed-selection guard | `dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -method Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.CommittedSelectionObservations_PreservePackageGraphAndImmutableConsumptionRefusals` | Exit 0; 1 passed, 0 failed/skipped. The full class also ran in the canonical all lane. |
+| Closure evidence fitness after ledger update | `dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests` | Exit 0; 77 passed, 0 failed/skipped/not run. |
+| All required .NET test projects | `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release` | Exit 0; 16 projects, 6,483 succeeded, 0 failed, 26 explicit skips. Log: `/tmp/dw-182-i16-all-tests-reviewed.log`. |
+| Signed gitlink diff | `bash scripts/gitlink-rc-gate.sh --diff v1.2.1` | Exit 0; all ten root pointers reported `BUMP ok`; gate PASS. |
+
+The six current canonical Story 8.10 parity receipts below remain **Unvalidated**. The
+focused guard, Release build, all-tests lane, and RC source gate do not rerun
+the six stamped parity surfaces or authorize publication, deployment, custody,
+or rollback deletion.
+
+The 2026-11-01 receipt table remains dated evidence of that run, including its
+two blocked lanes. The current 2026-11-02 canonical disposition follows. It
+records selection and build observations separately from I16 parity.
+
+### Validation receipts
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Warning and nested-submodule policy | Unvalidated | The signed `v1.2.1` gitlink diff passed for all ten pointers, but the complete warning and nested-submodule lane was not rerun with a current identity stamp. |
+| Release solution build | Unvalidated | The standalone Release restore and build passed with zero warnings/errors. The full Story 8.10 closure build and stamped parity surface were not rerun. The 2026-11-01 blocked result remains dated above. |
+| All .NET test projects | Unvalidated | The canonical Release all-tests lane passed 16 projects with 6,483 succeeded, 0 failed, and 26 skipped. It did not produce a qualifying I16 receipt at the current stamped identity; the 2026-11-01 blocked result remains dated above. |
+| Package/API and package-only consumers | Unvalidated | No current stamped package/API and package-only consumer parity rerun. |
+| npm install and typecheck | Unvalidated | No current stamped npm/typecheck parity rerun. |
+| Playwright accessibility | Unvalidated | No current stamped accessibility rerun at the selected FrontComposer gitlink; package `4.7.4` remains a separate selection. |

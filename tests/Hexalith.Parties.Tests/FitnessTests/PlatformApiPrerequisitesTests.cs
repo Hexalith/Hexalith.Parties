@@ -59,8 +59,9 @@ public sealed class PlatformApiPrerequisitesTests
 
     // Committed source observations are separate from historical migration/parity approvals.
     private const string CurrentSelectedEventStoreSha = "7c93a1234d14c66f5ee85ed48caaee1d30a671f3";
-    private const string CurrentSelectedEventStoreDescribe = "v3.132.2";
-    private const string CurrentSelectedEventStoreTag = "v3.132.2";
+    private const string CurrentSelectedEventStoreDescribe = "v3.132.1-2-g7c93a123";
+    // The selected SHA is the upstream v3.132.2 tag, but that tag is absent locally.
+    private const string CurrentSelectedEventStoreTag = "v3.132.1";
     // Current committed selections are observed independently of historical approvals
     // and executed parity receipts.
     private static readonly IReadOnlyDictionary<string, string> CurrentSelectedGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
@@ -82,7 +83,7 @@ public sealed class PlatformApiPrerequisitesTests
         ["references/Hexalith.AI.Tools"] = "1745b666",
         ["references/Hexalith.Builds"] = "v4.42.1-5-gd2a430c9",
         ["references/Hexalith.Commons"] = "v2.30.10",
-        ["references/Hexalith.EventStore"] = "v3.132.2",
+        ["references/Hexalith.EventStore"] = "v3.132.1-2-g7c93a123",
         ["references/Hexalith.FrontComposer"] = "v4.7.5",
         ["references/Hexalith.McpCli"] = "v1.1.0-57-g3bc89642",
         ["references/Hexalith.Memories"] = "v3.0.15",
@@ -777,15 +778,40 @@ public sealed class PlatformApiPrerequisitesTests
 
         string currentEventStoreVersion = EffectivePackageVersions.ReadProperty(root, "HexalithEventStoreVersion");
         IReadOnlyDictionary<string, string> effectivePackages = EffectivePackageVersions.ReadPackages(root);
+        currentEventStoreVersion.ShouldBe("3.132.2");
         string currentSelection = ReadCurrentSourceSelection(matrix);
-        currentSelection.ShouldContain($"EventStore package `{currentEventStoreVersion}`");
         currentSelection.ShouldContain("Selection does not revalidate historical parity receipts");
+        string[] ownerRows = matrix.Split('\n', StringSplitOptions.TrimEntries)
+            .Where(static row => row.StartsWith("| DW-182 / I16 current committed selection (2026-11-02) |", StringComparison.Ordinal))
+            .ToArray();
+        ownerRows.Length.ShouldBe(1, "The current I20 owner decision must have exactly one row.");
+        string ownerRow = ownerRows[0];
+        ownerRow.ShouldContain("Administrator / jpiquot");
+        ownerRow.ShouldContain("Approved current-selection assertions only");
         foreach ((string path, string identity) in CurrentSelectedGitlinks)
         {
             string describe = CurrentSelectedSourceDescribes[path];
             AssertCurrentSourceRow(currentSelection, path, identity, describe);
+            ownerRow.ShouldContain($"`{identity}`");
             AssertSelectedSourceObservation(root, path, identity);
             DescribeObservedSource(root, path, describe, identity).ShouldBe(describe, path);
+        }
+
+        foreach ((string label, string package) in new[]
+                 {
+                     ("EventStore", "Hexalith.EventStore.Contracts"),
+                     ("Commons", "Hexalith.Commons"),
+                     ("PolymorphicSerializations", "Hexalith.PolymorphicSerializations"),
+                     ("FrontComposer", "Hexalith.FrontComposer.Shell"),
+                     ("Memories", "Hexalith.Memories.Client.Rest"),
+                     ("Tenants", "Hexalith.Tenants.Client"),
+                     ("McpCli", "Hexalith.McpCli.Abstractions"),
+                 })
+        {
+            string version = effectivePackages[package];
+            Regex.IsMatch(currentSelection, $@"\b{Regex.Escape(label)}(?: package)?\s+`{Regex.Escape(version)}`", RegexOptions.CultureInvariant)
+                .ShouldBeTrue($"Current matrix selection must name the evaluated {package} version.");
+            ownerRow.ShouldContain($"{label} `{version}`");
         }
 
         RunGit(root, "-C", EventStoreRelativePath, "describe", "--tags", "--match", CurrentSelectedEventStoreTag, "--abbrev=8", CurrentSelectedEventStoreSha)
@@ -828,11 +854,18 @@ public sealed class PlatformApiPrerequisitesTests
             CurrentSelectedGitlinks["references/Hexalith.Builds"] + ":Props/Directory.Packages.props");
         effectivePackages["Hexalith.EventStore.Contracts"].ShouldBe(currentEventStoreVersion);
         effectivePackages["Hexalith.Commons"].ShouldBe("2.30.10");
+        effectivePackages["Hexalith.FrontComposer.Shell"].ShouldBe("4.7.4");
+        effectivePackages["Hexalith.McpCli.Abstractions"].ShouldBe("1.1.0");
+        effectivePackages["Hexalith.Memories.Client.Rest"].ShouldBe("3.0.13");
         effectivePackages["Hexalith.PolymorphicSerializations"].ShouldBe("1.19.8");
+        effectivePackages["Hexalith.Tenants.Client"].ShouldBe("6.0.0");
         catalog.ShouldContain("<PackageVersion Include=\"Hexalith.EventStore.Contracts\" Version=\"$(HexalithEventStoreVersion)\" Condition=\"'$(UseHexalithProjectReferences)' != 'true' or !$(MSBuildProjectName.StartsWith('Hexalith.Works'))\" />");
         catalog.ShouldContain("<HexalithCommonsVersion Condition=\"'$(HexalithCommonsVersion)' == ''\">2.30.10</HexalithCommonsVersion>");
+        catalog.ShouldContain("<HexalithEventStoreVersion Condition=\"'$(HexalithEventStoreVersion)' == ''\">3.132.1</HexalithEventStoreVersion>");
         catalog.ShouldContain("<HexalithFrontComposerVersion Condition=\"'$(HexalithFrontComposerVersion)' == ''\">4.7.5</HexalithFrontComposerVersion>");
+        catalog.ShouldContain("<HexalithMcpCliVersion Condition=\"'$(HexalithMcpCliVersion)' == ''\">1.1.0</HexalithMcpCliVersion>");
         catalog.ShouldContain("<HexalithMemoriesVersion Condition=\"'$(HexalithMemoriesVersion)' == ''\">3.0.15</HexalithMemoriesVersion>");
+        catalog.ShouldContain("<HexalithPolymorphicSerializationsVersion Condition=\"'$(HexalithPolymorphicSerializationsVersion)' == ''\">1.19.8</HexalithPolymorphicSerializationsVersion>");
         catalog.ShouldContain("<HexalithTenantsVersion Condition=\"'$(HexalithTenantsVersion)' == ''\">6.0.0</HexalithTenantsVersion>");
         catalog.ShouldContain("<HexalithPartiesVersion Condition=\"'$(HexalithPartiesVersion)' == ''\">3.0.0</HexalithPartiesVersion>");
         // The selected Builds catalog routes this version through a property whose unconditional value applies to
