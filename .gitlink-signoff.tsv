@@ -471,3 +471,10 @@ references/Hexalith.Tenants|4d0d599879767196928e1c265622483a62b457ae|validated-a
 # --- 2026-11-02 spec 8.10 Round 10 requalification: owner signoff of the Platform
 #     successor selected by 957111c5 (EventStore 3.133.0 scoped-consumer catalog).
 references/Hexalith.Platform|c635a2dc22f404d97c9fe7e27f7e7f4c9017943b|validated-advance|origin/main@c635a2dc22f4|jpiquot|2026-11-02
+
+# --- 2026-11-02 user-authorized agent selection of published dependency sources.
+#     Builds 4.43.2 and EventStore 4.0.0 have public signed NuGet packages;
+#     Platform 1.1.3 passed exact tuple and consumer CI. Parties CI remains required.
+references/Hexalith.Builds|6585f5860e87c146c26aa066d3a52b94eb56f271|validated-advance|v4.43.2|codex-agent|2026-11-02
+references/Hexalith.EventStore|653124dced81830e932edb7738a78ee61104d55a|validated-advance|v4.0.0|codex-agent|2026-11-02
+references/Hexalith.Platform|9274fb225541987221617006183bcc8bb9eb98c1|validated-advance|v1.1.3|codex-agent|2026-11-02
