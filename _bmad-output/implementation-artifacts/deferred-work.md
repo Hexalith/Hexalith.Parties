@@ -2081,3 +2081,29 @@ source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-do
 location: `docs/architecture.md:57`
 severity: low
 reason: Pre-existing and outside the reviewed diff. The row says Tenants package `5.11.1` "by default", while the effective Release graph (`dotnet msbuild src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj -p:Configuration=Release -getProperty:HexalithTenantsVersion`) selects `6.0.0`. `DocumentationFitnessTests.MaintainedTechnologyTablesMatchCentralPackageCatalog` has no assertion for this row, so it drifts silently.
+
+### DW-202: Stop the solution build and the Admin UI TestHost from building one EventStore project two ways
+
+status: open
+origin: Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-11-01), Round 8 decision (a)
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+location: `tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj` (`BuildNativeAdminUiArtifact`); `Hexalith.Parties.slnx`
+severity: medium
+owner: Parties build and test maintainers; introducing change `a3666267`
+reason: Blocks the canonical Story 8.10 Release solution build lane. Since `a3666267` (2026-11-01), `Hexalith.Parties.slnx` builds `references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj` twice in one session. It builds directly as a solution project with project references (listed since `7dd18054`), and again through the TestHost's nested `Restore;Build` with `HexalithUsePublishedSdkForHostedTests=true` (published 3.130.2 packages). Both builds share that project's `obj/` and `bin/`. The direct build succeeds; the nested restore then rewrites `project.assets.json` and the nested compile fails with 522 CS0234/CS0246 errors and 0 warnings. The focused TestHost build passes from a restored state, and CI's `Hexalith.Parties.Standalone.slnx` (no direct `references/` projects) is green, so this is not an approved-identity regression.
+exit_proof: `dotnet restore Hexalith.Parties.slnx && dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1` exits 0 with zero warnings at the approved identity set, and the focused TestHost build stays green.
+rollback: None required (build-only). Candidate fixes: give the nested native build its own intermediate and output paths, or stop listing `Admin.UI.csproj` directly in `Hexalith.Parties.slnx`.
+evidence: Spec 8.10 Round 8 diagnosis, 2026-11-01. A solution restore leaves Admin.UI with the project-reference graph; the lane command reproduces 522 errors right after the nested build logs "Restored …Hexalith.EventStore.Admin.UI.csproj"; the focused TestHost build passes before and after that restore; CI run `41335345599` is green for `f98e702a`.
+
+### DW-203: Keep ClientPackageTests from rewriting the shared restore state of in-repo dependency projects
+
+status: open
+origin: Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-11-01), Round 8 decision (a)
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+location: `tests/Hexalith.Parties.Client.Tests/Package/ClientPackageTests.cs:183-197`
+severity: medium
+owner: Parties test maintainers; introducing change `c1cf1cbb`
+reason: Leaves the canonical all-tests lane with IntegrationTests unbuilt. Since `c1cf1cbb` (2026-10-31), the test builds and packs in-repo dependency projects, including `references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts`, in place with `-p:RestorePackagesPath=<work>/packages -p:RestoreNoCache=true`, then deletes the work directory. The pack rewrites each project's shared `obj/project.assets.json`: after a reproduced run, Contracts' `packageFolders` pointed at the deleted `/tmp/hexalith-parties-client-package-*/packages`. In the 2026-11-01 `-Lane all` run, IntegrationTests then logged MSB3106 for `…/packages/hexalith.commons.uniqueids/2.30.8/…` under such a deleted folder, followed by CS0234 (`Hexalith.Commons`) in the source-built `EventStore.Contracts`. A focused IntegrationTests build, which did not recompile Contracts, passed; the end-to-end lane-order failure was not re-run.
+exit_proof: `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults` builds and runs IntegrationTests after Client.Tests, and after `ClientPackageTests` no in-repo project's `obj/project.assets.json` names a deleted temporary package folder.
+rollback: None required (test-only). Candidate fix: restore and pack with isolated `MSBuildProjectExtensionsPath`/`BaseIntermediateOutputPath` under the temporary work directory, or pack copies of the projects.
+evidence: Spec 8.10 Round 8 diagnosis, 2026-11-01; `/tmp/parties-810-qualification-6p4w60kn/all-tests.log` (MSB3106 then CS0234 at `EventIdentityValidator.cs:1`); reproduced `packageFolders` after `Hexalith.Parties.Client.Tests.dll -class Hexalith.Parties.Client.Tests.Package.ClientPackageTests`.
