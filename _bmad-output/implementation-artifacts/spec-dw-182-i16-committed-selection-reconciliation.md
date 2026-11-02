@@ -92,3 +92,24 @@ All six canonical parity receipts remain Unvalidated; no parity or release
 qualification is inferred from these checks.
 
 **Commit validation:** Exact candidate `test: reconcile approved committed selections` passed the repository-pinned `./node_modules/.bin/commitlint --edit /tmp/parties-dw182-i16-commit-message.txt` with exit 0; output is `/tmp/parties-dw182-i16-commitlint.txt`.
+
+## Tenants successor after owner continuation — 2026-11-02
+
+Remote Parties `18579b62ef9ac3c8780fc5e8ba26112d2665f566` selected Tenants
+`4d0d599879767196928e1c265622483a62b457ae` after the first owner
+approval. The exact successor and unchanged nine other gitlinks and seven
+Release package versions were presented. The owner replied "push all changes",
+authorizing the successor's current-selection assertion, source signoff,
+commit, and main push. The initial Tenants `4b3e431745550f8466f1ce0d70e6b507c747b59a`
+decision remains dated history.
+
+The signed `v1.2.1` root gitlink diff now passes all ten pointers. On the new
+Tenants selection, canonical restore and Release build exited 0 with zero
+warnings/errors; the committed-selection method passed 1/1. The canonical
+Release all-tests lane exited 0: 16 projects, 6,483 succeeded, 0 failed, and
+26 explicit skips (`/tmp/dw-182-i16-tenants-all-tests.log`). The
+post-evidence closure fitness class passed 77/77. The latest canonical
+test-summary section keeps all six I16 parity receipts Unvalidated.
+No parity, publication, deployment, custody, or rollback deletion follows.
+
+**Successor commit validation:** Exact candidate `fix(ci): sign off selected Tenants successor` passed the repository-pinned `./node_modules/.bin/commitlint --edit /tmp/parties-dw182-tenants-commit-message.txt --verbose` with zero problems and warnings.

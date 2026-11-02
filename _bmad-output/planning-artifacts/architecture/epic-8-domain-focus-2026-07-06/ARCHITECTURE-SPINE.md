@@ -4,10 +4,10 @@ epic: 8
 date: 2026-07-07
 updated: 2026-11-02
 status: final
-amendment: 2026-11-02 DW-182/I16 approved current committed source and effective Release package selection for assertions only; prior 2026-11-01 Round 7 approved then-current identity set, selected-gitlink accessibility stamps and closure-commit v2 evidence; prior 2026-10-05 final identity/approval reconciliation (Builds/Tenants selection, EventStore 3.113.0 package and source, I16 re-validation approved for the final set, I13/DW-111 accepted deferral — see §13), then the same-day DW-140/DW-141/DW-142 closure-blocker resolution and its review loop 3 correction (§13); prior 2026-10-04 identity/documentation reconciliation (Round 6, explicit three-pin approval, then working-tree five-pin approval); prior 2026-09-08 validation-driven (I19/I19a/I20 added; I1/I7/I10/I11/I14/I16 tightened; §2/§4/§5/§7 corrected; Inherited Invariants + Deferred added — see §10); prior 2026-08-18 amendment in §8
+amendment: 2026-11-02 Tenants successor 4d0d5998 approved for current-selection assertion and gitlink signoff only after Parties 18579b62; prior 2026-11-02 DW-182/I16 approved then-current committed source and effective Release package selection for assertions only; prior 2026-11-01 Round 7 approved then-current identity set, selected-gitlink accessibility stamps and closure-commit v2 evidence; prior 2026-10-05 final identity/approval reconciliation (Builds/Tenants selection, EventStore 3.113.0 package and source, I16 re-validation approved for the final set, I13/DW-111 accepted deferral — see §13), then the same-day DW-140/DW-141/DW-142 closure-blocker resolution and its review loop 3 correction (§13); prior 2026-10-04 identity/documentation reconciliation (Round 6, explicit three-pin approval, then working-tree five-pin approval); prior 2026-09-08 validation-driven (I19/I19a/I20 added; I1/I7/I10/I11/I14/I16 tightened; §2/§4/§5/§7 corrected; Inherited Invariants + Deferred added — see §10); prior 2026-08-18 amendment in §8
 classification: post-MVP maintenance (Class C) — zero new PRD FRs
 closes-blocker: "Story 8.1 preserved 'missing Epic 8 architecture spine' blocker"
-open-condition: "The 2026-11-02 committed ten-gitlink and effective Release package set at Parties a92d15866bbf4f49cefa6c03f4a9eeec442af1de is owner-approved for current-selection assertions (8.3 I20 table); the 2026-11-01 b6443b2475d3495b58358f84cdb161b05c62d0f9 approval is dated history. All six current closure receipts remain Unvalidated pending rerun at the v2 snapshot. I13 remains Deferred under accepted DW-111; DW-159 is open for compile-level external-runtime preflight."
+open-condition: "The 2026-11-02 ten-gitlink and effective Release package set at Parties 18579b62ef9ac3c8780fc5e8ba26112d2665f566 is owner-approved for current-selection assertions and Tenants gitlink signoff (8.3 I20 table); the a92d15866bbf4f49cefa6c03f4a9eeec442af1de and 2026-11-01 b6443b2475d3495b58358f84cdb161b05c62d0f9 approvals are dated history. All six current closure receipts remain Unvalidated pending rerun at the v2 snapshot. I13 remains Deferred under accepted DW-111; DW-159 is open for compile-level external-runtime preflight."
 related:
   - _bmad-output/planning-artifacts/sprint-change-proposal-2026-07-06.md
   - _bmad-output/planning-artifacts/sprint-change-proposal-2026-07-16-g7-g9-tenant-claims-ownership.md
@@ -488,8 +488,14 @@ fitness test parses.
   evaluated Release packages EventStore `3.132.2`, Commons `2.30.10`,
   PolymorphicSerializations `1.19.8`, FrontComposer `4.7.4`, Memories
   `3.0.13`, Tenants `6.0.0`, and McpCli `1.1.0` for current-selection
-  assertions only (8.3 I20 DW-182 row). All six current canonical receipts
-  remain Unvalidated until rerun at their stamped identities.
+  assertions only (8.3 I20 DW-182 row). Later the same day, Parties
+  `18579b62ef9ac3c8780fc5e8ba26112d2665f566` selected Tenants
+  `4d0d599879767196928e1c265622483a62b457ae`; the owner approved that
+  exact successor for current-selection assertions and gitlink signoff.
+  The initial Tenants `4b3e431745550f8466f1ce0d70e6b507c747b59a`
+  selection is dated history; the other nine gitlinks and effective package
+  graph remain selected. All six current canonical receipts remain Unvalidated
+  until rerun at their stamped identities.
   Every current clean Pass must bind the live v2 snapshot and dependency set.
   Once Story 8.10 is committed `done`, closure evidence, both digests and the
   FrontComposer gitlink are verified against the Git objects of the commit
@@ -537,10 +543,11 @@ evidence.
   and source, I16 identity re-validation for the final set, and the I13/DW-111
   accepted deferral), plus the 2026-11-01 Round 7 approval of the then-current
   set at Parties `b6443b2475d3495b58358f84cdb161b05c62d0f9` and the
-  selected-gitlink accessibility rule, and the 2026-11-02 DW-182 approval of
-  current committed selection at Parties
-  `a92d15866bbf4f49cefa6c03f4a9eeec442af1de`, are recorded with exact
-  scope and provenance. Other
+  selected-gitlink accessibility rule, the 2026-11-02 DW-182 approval of
+  the then-current committed selection at Parties
+  `a92d15866bbf4f49cefa6c03f4a9eeec442af1de`, and the Tenants successor
+  approval at Parties `18579b62ef9ac3c8780fc5e8ba26112d2665f566`,
+  are recorded with exact scope and provenance. Other
   applicable decision kinds remain pending. A populated selection row does not
   certify parity; under the approved I16 row only receipts rerun at the stamped
   identities count. Each applicable pending row needs its

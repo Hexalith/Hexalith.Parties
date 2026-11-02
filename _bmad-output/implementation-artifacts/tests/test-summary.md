@@ -2805,3 +2805,38 @@ records selection and build observations separately from I16 parity.
 | Package/API and package-only consumers | Unvalidated | No current stamped package/API and package-only consumer parity rerun. |
 | npm install and typecheck | Unvalidated | No current stamped npm/typecheck parity rerun. |
 | Playwright accessibility | Unvalidated | No current stamped accessibility rerun at the selected FrontComposer gitlink; package `4.7.4` remains a separate selection. |
+
+## DW-182 / I16 Tenants successor selection — 2026-11-02
+
+Parties `18579b62ef9ac3c8780fc5e8ba26112d2665f566` selected Tenants
+`4d0d599879767196928e1c265622483a62b457ae` after the first DW-182
+owner decision. Presented that exact successor, the owner replied "push all
+changes" and approved its current-selection assertion and source signoff.
+The other nine root gitlinks and the seven effective Release package versions
+recorded above did not change. The signed `v1.2.1` diff gate passes all ten
+pointers. The current guard matches the committed Tenants checkout and describe
+`v6.0.0-71-g4d0d5998`.
+
+| Check | Exact command | Result |
+| --- | --- | --- |
+| Standalone restore | `dotnet restore Hexalith.Parties.Standalone.slnx` | Exit 0; all projects up to date. |
+| Release build | `dotnet build Hexalith.Parties.Standalone.slnx --configuration Release --no-restore -m:1` | Exit 0; 0 warnings, 0 errors. |
+| Committed-selection guard | `dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -method Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.CommittedSelectionObservations_PreservePackageGraphAndImmutableConsumptionRefusals` | Exit 0; 1 passed, 0 failed/skipped. |
+| All required .NET test projects | `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release` | Exit 0; 16 projects, 6,483 succeeded, 0 failed, 26 explicit skips. Log: `/tmp/dw-182-i16-tenants-all-tests.log`. |
+| Signed gitlink diff | `bash scripts/gitlink-rc-gate.sh --diff v1.2.1` | Exit 0; all ten root pointers reported `BUMP ok`; gate PASS. |
+
+These checks establish current source selection and build/test behavior. They do
+not rerun the six stamped Story 8.10 parity surfaces. The earlier Tenants
+`4b3e431745550f8466f1ce0d70e6b507c747b59a` receipt remains dated history.
+No publication, deployment, custody, or rollback deletion is authorized.
+
+### Validation receipts
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Warning and nested-submodule policy | Unvalidated | The signed gitlink diff passed all ten current pointers; the complete stamped warning and nested-submodule parity lane was not rerun. |
+| Release solution build | Unvalidated | The standalone Release build passed with zero warnings/errors; the full Story 8.10 closure build and stamped parity surface were not rerun. |
+| All .NET test projects | Unvalidated | The canonical Release all-tests lane passed 16 projects with 6,483 succeeded, 0 failed, and 26 skipped; it did not produce a qualifying I16 receipt at the current stamped identity. |
+| Package/API and package-only consumers | Unvalidated | No current stamped package/API and package-only consumer parity rerun. |
+| npm install and typecheck | Unvalidated | No current stamped npm/typecheck parity rerun. |
+| Playwright accessibility | Unvalidated | No current stamped accessibility rerun at the selected FrontComposer source gitlink and separate package `4.7.4`. |

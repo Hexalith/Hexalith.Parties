@@ -781,13 +781,18 @@ public sealed class PlatformApiPrerequisitesTests
         currentEventStoreVersion.ShouldBe("3.132.2");
         string currentSelection = ReadCurrentSourceSelection(matrix);
         currentSelection.ShouldContain("Selection does not revalidate historical parity receipts");
-        string[] ownerRows = matrix.Split('\n', StringSplitOptions.TrimEntries)
+        string[] initialOwnerRows = matrix.Split('\n', StringSplitOptions.TrimEntries)
             .Where(static row => row.StartsWith("| DW-182 / I16 current committed selection (2026-11-02) |", StringComparison.Ordinal))
             .ToArray();
-        ownerRows.Length.ShouldBe(1, "The current I20 owner decision must have exactly one row.");
+        initialOwnerRows.Length.ShouldBe(1, "The initial I20 owner decision must remain as dated history.");
+        initialOwnerRows[0].ShouldContain("`4b3e431745550f8466f1ce0d70e6b507c747b59a`");
+        string[] ownerRows = matrix.Split('\n', StringSplitOptions.TrimEntries)
+            .Where(static row => row.StartsWith("| DW-182 / I16 Tenants successor selection (2026-11-02) |", StringComparison.Ordinal))
+            .ToArray();
+        ownerRows.Length.ShouldBe(1, "The superseding I20 owner decision must have exactly one row.");
         string ownerRow = ownerRows[0];
         ownerRow.ShouldContain("Administrator / jpiquot");
-        ownerRow.ShouldContain("Approved current-selection assertions only");
+        ownerRow.ShouldContain("Approved Tenants successor current-selection assertion and gitlink signoff only");
         foreach ((string path, string identity) in CurrentSelectedGitlinks)
         {
             string describe = CurrentSelectedSourceDescribes[path];

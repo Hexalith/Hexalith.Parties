@@ -463,3 +463,7 @@ references/Hexalith.Platform|92f87e6a49e4357f91b2ffb821e044931291c0e6|validated-
 #     checkpoint and its integration correction are incorporated. Source selection
 #     only: CI, release and historical parity proof remain separate.
 references/Hexalith.Tenants|4b3e431745550f8466f1ce0d70e6b507c747b59a|validated-advance|origin/main@4b3e43174555|jpiquot|2026-11-02
+
+# --- 2026-11-02 owner continuation after Parties 18579b62 selected qualified Tenants.
+#     Exact Tenants successor selection/signoff only; six I16 receipts remain Unvalidated.
+references/Hexalith.Tenants|4d0d599879767196928e1c265622483a62b457ae|validated-advance|origin/main@4d0d59987976|jpiquot|2026-11-02

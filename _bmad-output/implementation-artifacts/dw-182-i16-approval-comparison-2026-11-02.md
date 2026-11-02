@@ -1,13 +1,19 @@
 # DW-182 / I16 exact identity comparison
 
-Administrator / jpiquot approved the ten **current committed** root gitlinks in
-the table and the effective Release package graph below on 2026-11-02 for
-current-selection assertions only. The 2026-11-01 approved column is dated
-history. This approval does not validate I16 parity: all six current canonical
-receipts remain Unvalidated until rerun at their stamped identities. It grants
-no publication, deployment, custody, or rollback deletion authority.
+Administrator / jpiquot first approved the ten committed source identities at
+Parties `a92d15866bbf4f49cefa6c03f4a9eeec442af1de`, including Tenants
+`4b3e431745550f8466f1ce0d70e6b507c747b59a`, and the effective Release
+graph for current-selection assertions on 2026-11-02. That Tenants identity is
+dated history after Parties `18579b62ef9ac3c8780fc5e8ba26112d2665f566`
+selected `4d0d599879767196928e1c265622483a62b457ae`. Presented that exact
+successor SHA, the owner answered "push all changes" on 2026-11-02, approving
+its current-selection assertion and gitlink signoff. The other nine gitlinks
+and all seven effective package versions are unchanged. Both decisions are
+selection only: all six I16 receipts remain Unvalidated until rerun at their
+stamped identities; neither grants publication, deployment, custody, or
+rollback deletion authority.
 
-### Exact source identity change: 2026-11-01 approved -> committed Parties a92d15866bbf4f49cefa6c03f4a9eeec442af1de (same ten gitlinks approved from b51a9db03194f31afdb30a056c4116f2c755a0bf)
+### Exact source identity change: 2026-11-01 approved -> committed Parties 18579b62ef9ac3c8780fc5e8ba26112d2665f566
 
 | Root gitlink | Approved SHA | Current SHA |
 | --- | --- | --- |
@@ -20,6 +26,6 @@ no publication, deployment, custody, or rollback deletion authority.
 | Memories | `b93b32cf77f3d76e51d3221550eff99f4d1e93cb` | `e8956eb5c1bd49297f86702f9606eb9b013bc2f1` |
 | Platform | `03799ed553a16c8a1528068ba4d95bb5509ea75e` | `92f87e6a49e4357f91b2ffb821e044931291c0e6` |
 | PolymorphicSerializations | `821b784bb51483acefa9725acc6792d111304a4e` | `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` |
-| Tenants | `2d3fa6da2312c1b5cf7f5c9461cc2d0ffc995b43` | `4b3e431745550f8466f1ce0d70e6b507c747b59a` |
+| Tenants | `2d3fa6da2312c1b5cf7f5c9461cc2d0ffc995b43` | `4d0d599879767196928e1c265622483a62b457ae` |
 
 Effective Release package changes: EventStore `3.130.2 -> 3.132.2`, Commons `2.30.8 -> 2.30.10`, PolymorphicSerializations `1.19.7 -> 1.19.8`. FrontComposer `4.7.4`, Memories `3.0.13`, Tenants `6.0.0`, and McpCli `1.1.0` remain selected. The current Builds catalog defaults EventStore `3.132.1`, FrontComposer `4.7.5`, and Memories `3.0.15`; Parties root pins select the values above. EventStore source SHA is the remote `v3.132.2` tag; that tag is absent locally, where `git describe` gives `v3.132.1-2-g7c93a123`.
