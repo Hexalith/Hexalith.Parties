@@ -442,3 +442,17 @@ references/Hexalith.McpCli|17eb4fbbc151ca4b99dfa452e9f65655db2b402f|validated-ad
 references/Hexalith.Platform|03799ed553a16c8a1528068ba4d95bb5509ea75e|validated-advance|origin/main@03799ed553a1|jpiquot|2026-11-01
 references/Hexalith.Builds|426df281f7728ca971c21d1cf9b205f3a636910d|validated-advance|origin/main@426df281f772|jpiquot|2026-11-01
 references/Hexalith.Builds|df13d9d31f7ee1a1b0fb7eeac7e8b27b9a9f9fb0|validated-advance|origin/main@df13d9d31f7e|jpiquot|2026-11-01
+
+# --- 2026-11-02 operator-invoked /pushall synchronization.
+#     Select these exact published main revisions after dedicated submodule syncs.
+#     Tenants retains its recorded pointer because its local merge was not pushed.
+#     These entries record source selection; CI and release proof remain separate.
+references/Hexalith.EventStore|7c93a1234d14c66f5ee85ed48caaee1d30a671f3|validated-advance|origin/main@7c93a1234d14|jpiquot|2026-11-02
+references/Hexalith.Memories|e8956eb5c1bd49297f86702f9606eb9b013bc2f1|validated-advance|origin/main@e8956eb5c1bd|jpiquot|2026-11-02
+references/Hexalith.FrontComposer|07089dcbdad784a1d53037e9cea78d1d7becd8d6|validated-advance|origin/main@07089dcbdad7|jpiquot|2026-11-02
+references/Hexalith.AI.Tools|1745b6663ad32bb1288167135ed0f979366c53a0|validated-advance|origin/main@1745b6663ad3|jpiquot|2026-11-02
+references/Hexalith.Commons|11555ace9efcae2928a00122dcba91243e5a8a1a|validated-advance|origin/main@11555ace9efc|jpiquot|2026-11-02
+references/Hexalith.Builds|d2a430c988462a634674a69c562ea4afd1f06ef4|validated-advance|origin/main@d2a430c98846|jpiquot|2026-11-02
+references/Hexalith.PolymorphicSerializations|bce4eb9f45c6b131b960ab4fa39e50ff01e51960|validated-advance|origin/main@bce4eb9f45c6|jpiquot|2026-11-02
+references/Hexalith.McpCli|3bc89642ad43305531c4018b75b5e1b9e0681e10|validated-advance|origin/main@3bc89642ad43|jpiquot|2026-11-02
+references/Hexalith.Platform|92f87e6a49e4357f91b2ffb821e044931291c0e6|validated-advance|origin/main@92f87e6a49e4|jpiquot|2026-11-02
