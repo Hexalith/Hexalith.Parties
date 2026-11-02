@@ -111,7 +111,7 @@ or grant publication, deployment, or rollback qualification.
 | Memories | `e8956eb5c1bd49297f86702f9606eb9b013bc2f1` (`v3.0.15`) | Committed selection; qualification still requires its own executed proof. |
 | Platform | `92f87e6a49e4357f91b2ffb821e044931291c0e6` (`v1.1.0-12-g92f87e6a`) | Committed selection; qualification still requires its own executed proof. |
 | PolymorphicSerializations | `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`) | Committed selection; qualification still requires its own executed proof. |
-| Tenants | `4b3e431745550f8466f1ce0d70e6b507c747b59a` (`v6.0.0-52-g4b3e4317`) | Committed selection; qualification still requires its own executed proof. |
+| Tenants | `4d0d599879767196928e1c265622483a62b457ae` (`v6.0.0-71-g4d0d5998`) | Committed selection; qualification still requires its own executed proof. |
 
 ### Historical source observation — 2026-10-30
 
