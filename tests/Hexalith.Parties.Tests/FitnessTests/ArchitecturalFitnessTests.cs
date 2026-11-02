@@ -755,11 +755,39 @@ public sealed class ArchitecturalFitnessTests
                 .ShouldBeFalse($"'{Path.Combine(segments)}' is a rollback-only file retired by Story 8.6 after the SDK path proved parity; it must not be reintroduced.");
         }
 
+        // Keep the typed DI checks in ProjectionPlatformAdapterTests. A retired interface
+        // declared under a new filename must also fail the source-retirement guard.
+        string[] retiredInterfaces = ["IPartyProjectionPlatformAdapter", "IProjectionRebuildService"];
+        foreach (string file in Directory.EnumerateFiles(RepoPath("src"), "*.cs", SearchOption.AllDirectories)
+            .Where(static path => !path.Split(Path.DirectorySeparatorChar).Any(segment => segment is "obj" or "bin")))
+        {
+            string source = File.ReadAllText(file);
+            foreach (string retiredInterface in retiredInterfaces)
+            {
+                HasRetiredInterfaceDeclaration(source, retiredInterface)
+                    .ShouldBeFalse($"'{file}' redeclares the retired {retiredInterface} interface.");
+            }
+        }
+
         string detailSource = ReadRepoFile("src", "Hexalith.Parties.Projections", "Handlers", "PartyDetailSdkProjectionHandler.cs");
         string indexSource = ReadRepoFile("src", "Hexalith.Parties.Projections", "Handlers", "PartyIndexSdkProjectionHandler.cs");
 
         detailSource.ShouldContain("IAsyncDomainProjectionRebuildHandler");
         indexSource.ShouldContain("IAsyncDomainSharedProjectionRebuildCompletionHandler");
+    }
+
+    [Theory]
+    [InlineData("// interface IProjectionRebuildService {}", false)]
+    [InlineData("var text = \"interface IProjectionRebuildService\";", false)]
+    [InlineData("internal interface /* note */ IProjectionRebuildService {}", true)]
+    [InlineData("public interface IProjectionRebuildService {}", true)]
+    public void RetiredProjectionInterfaceDeclarationGuardDistinguishesSourceFromProse(string source, bool declaresInterface)
+        => HasRetiredInterfaceDeclaration(source, "IProjectionRebuildService").ShouldBe(declaresInterface);
+
+    private static bool HasRetiredInterfaceDeclaration(string source, string retiredInterface)
+    {
+        string declaration = $@"(?m)^[ \t]*(?:(?:public|internal|protected|private|partial|file|unsafe|new)\s+)*interface(?:\s|/\*[\s\S]*?\*/)+{Regex.Escape(retiredInterface)}\b";
+        return Regex.IsMatch(source, declaration);
     }
 
     private static string ReadRepoFile(params string[] segments)

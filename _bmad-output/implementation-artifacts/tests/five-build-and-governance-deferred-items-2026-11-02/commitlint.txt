@@ -1,0 +1,9 @@
+Commit message file: /tmp/parties-five-deferred-commit-message.txt
+Exact candidate: fix(build): close five deferred verification gaps
+Command: node_modules/.bin/commitlint --edit /tmp/parties-five-deferred-commit-message.txt --verbose
+Pinned CLI: @commitlint/cli@21.2.4
+Exit: 0
+Output:
+⧗   --- input ---
+fix(build): close five deferred verification gaps
+✔   found 0 problems, 0 warnings

@@ -181,6 +181,7 @@ public sealed class ClientPackageTests : IDisposable
                     new XElement("package", new XAttribute("pattern", "*")))))).Save(configPath);
         string restoreSources = $"--source \"{feedDirectory}\" --source \"https://api.nuget.org/v3/index.json\" "
             + $"-p:RestorePackagesPath=\"{Path.Combine(_workDirectory, "packages")}\" -p:RestoreNoCache=true -p:RestoreConfigFile=\"{configPath}\"";
+        string isolatedBuild = PackageTestProcess.CreateIsolatedSourceBuildProperty(_workDirectory);
         string eventStoreVersion = PackageTestProcess.ResolveMsbuildProperty(
             repoRoot,
             "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj",
@@ -190,19 +191,25 @@ public sealed class ClientPackageTests : IDisposable
         string commonsPackVersionProperties = $"-p:MinVerVersionOverride={commonsVersion} -p:PackageVersion={commonsVersion}";
         string uniqueIdsProject = RepositoryDependencyPaths.Resolve(repoRoot,
             "references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/Hexalith.Commons.UniqueIds.csproj");
+        string eventStoreProject = RepositoryDependencyPaths.Resolve(repoRoot,
+            "references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj");
+        string partiesContractsProject = Path.Combine(repoRoot, "src", "Hexalith.Parties.Contracts", "Hexalith.Parties.Contracts.csproj");
+        string partiesClientProject = Path.Combine(repoRoot, "src", "Hexalith.Parties.Client", "Hexalith.Parties.Client.csproj");
         // Pack actual owner prerequisites at the selected catalog versions. This is
         // fixture validation, with no claim about published same-version bytes.
-        RunDotnet("build", $"\"{uniqueIdsProject}\" --configuration {PackageTestProcess.ProbeConfiguration} -m:1 {commonsPackVersionProperties}", repoRoot);
-        RunDotnet("pack", $"\"{uniqueIdsProject}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} {commonsPackVersionProperties}", repoRoot);
-        RunDotnet("pack", $"\"{RepositoryDependencyPaths.Resolve(repoRoot, "references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj")}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} -p:MinVerVersionOverride={eventStoreVersion} -p:PackageVersion={eventStoreVersion}", repoRoot);
+        RunDotnet("build", $"\"{uniqueIdsProject}\" --configuration {PackageTestProcess.ProbeConfiguration} -m:1 {isolatedBuild} {commonsPackVersionProperties}", repoRoot);
+        RunDotnet("pack", $"\"{uniqueIdsProject}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} {isolatedBuild} {commonsPackVersionProperties}", repoRoot);
+        RunDotnet("pack", $"\"{eventStoreProject}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} {isolatedBuild} -p:MinVerVersionOverride={eventStoreVersion} -p:PackageVersion={eventStoreVersion}", repoRoot);
         RunDotnet(
             "pack",
-            $"\"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Contracts", "Hexalith.Parties.Contracts.csproj")}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} {LocalPackVersionProperties}",
+            $"\"{partiesContractsProject}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} {isolatedBuild} {LocalPackVersionProperties}",
             repoRoot);
         RunDotnet(
             "pack",
-            $"\"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Client", "Hexalith.Parties.Client.csproj")}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} {LocalPackVersionProperties}",
+            $"\"{partiesClientProject}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} {isolatedBuild} {LocalPackVersionProperties}",
             repoRoot);
+        PackageTestProcess.AssertSharedAssetsDoNotUseFixture(
+            _workDirectory, uniqueIdsProject, eventStoreProject, partiesContractsProject, partiesClientProject);
 
         string clientPackagePath = Directory
             .GetFiles(feedDirectory, "Hexalith.Parties.Client.*.nupkg", SearchOption.TopDirectoryOnly)

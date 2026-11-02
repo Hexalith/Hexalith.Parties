@@ -2057,7 +2057,9 @@ verification_final: `tests/five-processing-and-memories-erasure-2026-10-25/`; sp
 
 ### DW-199: Bring the five-verification maintenance spec under the spine I17 six-clause gate
 
-status: open
+status: done 2026-11-02
+resolution: Added the six required retrospective §4 clauses with the original dependency evidence, bounded rollback exercise and current parity limits. The isolated parent tree built cleanly and passed 338 selected main/CI tests; historical closure remains historical.
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-build-and-governance-deferred-items.md`
 origin: Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-11-01)
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 location: `_bmad-output/implementation-artifacts/spec-five-verification-maintenance-deferred-items.md`
@@ -2066,7 +2068,9 @@ reason: Spine I17 lets an Epic 8 ledger item be worked only through a spec that 
 
 ### DW-200: Decide whether executed DI exclusions should guard the retired projection interfaces again
 
-status: open
+status: done 2026-11-02
+resolution: Retained the DW-33 typed SDK registration decision and added a source-wide retired-interface declaration guard, including ordinary comments/strings and comment-separated declaration controls. Focused architecture and projection tests passed.
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-build-and-governance-deferred-items.md`
 origin: Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-11-01)
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 location: `tests/Hexalith.Parties.Tests/Projections/ProjectionPlatformAdapterTests.cs:39`
@@ -2075,7 +2079,9 @@ reason: `fb07a6cf` removed the `ServiceType.FullName` exclusions for `Hexalith.P
 
 ### DW-201: Reconcile the stale Tenants row in the architecture technology table
 
-status: open
+status: done 2026-11-02
+resolution: The maintained row now names the effective HexalithTenantsVersion property and its selected 6.0.0 package; a documentation fitness assertion binds the row to the evaluated catalog value. Historical gitlink evidence stays dated.
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-build-and-governance-deferred-items.md`
 origin: Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-11-01)
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 location: `docs/architecture.md:57`
@@ -2084,7 +2090,9 @@ reason: Pre-existing and outside the reviewed diff. The row says Tenants package
 
 ### DW-202: Stop the solution build and the Admin UI TestHost from building one EventStore project two ways
 
-status: open
+status: done 2026-11-02
+resolution: Removed the duplicate Admin.UI solution entry and aligned the EventStore package family to 3.132.2, matching the committed source at upstream v3.132.2 after user authorization. The focused TestHost and canonical Release solution restore/build pass with zero warnings/errors. Current all-lane I16 identity assertions still fail for independently advanced Platform/McpCli gitlinks and need owner reconciliation; this fix grants no current parity or release qualification.
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-build-and-governance-deferred-items.md`
 origin: Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-11-01), Round 8 decision (a)
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 location: `tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj` (`BuildNativeAdminUiArtifact`); `Hexalith.Parties.slnx`
@@ -2097,7 +2105,9 @@ evidence: Spec 8.10 Round 8 diagnosis, 2026-11-01. A solution restore leaves Adm
 
 ### DW-203: Keep ClientPackageTests from rewriting the shared restore state of in-repo dependency projects
 
-status: open
+status: done 2026-11-02
+resolution: Client and Contracts source package probes now isolate all source project intermediate/output paths and assert their shared assets do not name the temporary fixture. The canonical all lane built and ran IntegrationTests after Client.Tests (207 passed, zero failed, opt-in skips); affected package classes pass 7/7 after the review patch.
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-build-and-governance-deferred-items.md`
 origin: Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-11-01), Round 8 decision (a)
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 location: `tests/Hexalith.Parties.Client.Tests/Package/ClientPackageTests.cs:183-197`
@@ -2107,3 +2117,7 @@ reason: Leaves the canonical all-tests lane with IntegrationTests unbuilt. Since
 exit_proof: `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults` builds and runs IntegrationTests after Client.Tests, and after `ClientPackageTests` no in-repo project's `obj/project.assets.json` names a deleted temporary package folder.
 rollback: None required (test-only). Candidate fix: restore and pack with isolated `MSBuildProjectExtensionsPath`/`BaseIntermediateOutputPath` under the temporary work directory, or pack copies of the projects.
 evidence: Spec 8.10 Round 8 diagnosis, 2026-11-01; `/tmp/parties-810-qualification-6p4w60kn/all-tests.log` (MSB3106 then CS0234 at `EventIdentityValidator.cs:1`); reproduced `packageFolders` after `Hexalith.Parties.Client.Tests.dll -class Hexalith.Parties.Client.Tests.Package.ClientPackageTests`.
+
+- source_spec: `spec-five-build-and-governance-deferred-items.md`
+  summary: Reconcile the current I16 committed-selection assertions and obtain owner signoff for Platform and McpCli gitlinks before claiming current Epic 8 parity.
+  evidence: The 2026-11-02 all lane built and ran 16 test projects, but three PlatformApiPrerequisitesTests assertions still compare current Platform/McpCli gitlinks and the EventStore package to the older approved 2026-11-01 selection. These failures predate this correction; DW-182 already tracks the required owner selection. Do not update immutable expected identities or claim current parity without that decision.

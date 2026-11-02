@@ -23,6 +23,36 @@ internal static class PackageTestProcess
         string propertyName)
         => EffectivePackageVersions.ReadProperty(repositoryRoot, propertyName, projectRelativePath);
 
+    /// <summary>Separates every source project's restore and build outputs for a package fixture.</summary>
+    internal static string CreateIsolatedSourceBuildProperty(string workingDirectory)
+    {
+        string path = Path.Combine(workingDirectory, "IsolatedSourceBuild.props");
+        File.WriteAllText(path, """
+            <Project>
+              <PropertyGroup>
+                <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)artifacts/obj/$(MSBuildProjectName)/</BaseIntermediateOutputPath>
+                <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+                <BaseOutputPath>$(MSBuildThisFileDirectory)artifacts/bin/$(MSBuildProjectName)/</BaseOutputPath>
+                <DefaultItemExcludes>$(DefaultItemExcludes);$(MSBuildProjectDirectory)/obj/**;$(MSBuildProjectDirectory)/bin/**</DefaultItemExcludes>
+              </PropertyGroup>
+            </Project>
+            """);
+        return $"-p:CustomBeforeDirectoryBuildProps=\"{path}\"";
+    }
+
+    /// <summary>Ensures a package probe did not point an in-repo project's normal restore state at its temporary cache.</summary>
+    internal static void AssertSharedAssetsDoNotUseFixture(string fixtureDirectory, params string[] sourceProjects)
+    {
+        foreach (string project in sourceProjects)
+        {
+            string assetsPath = Path.Combine(Path.GetDirectoryName(project)!, "obj", "project.assets.json");
+            if (File.Exists(assetsPath) && File.ReadAllText(assetsPath).Contains(fixtureDirectory, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException($"Package probe rewrote shared restore state for {project} with {fixtureDirectory}.");
+            }
+        }
+    }
+
     internal static PackageTestProcessResult RunDotnet(string arguments, string workingDirectory)
     {
         PackageTestProcessResult result = Run("dotnet", arguments, workingDirectory);

@@ -4,7 +4,7 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
     <!-- Standalone family fallbacks defer to an existing caller-selected catalog. -->
     <!-- User-selected EventStore package family; mapped source builds retain tool authority. -->
-    <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == '' and !Exists('$(Hexalith1BuildPackageProps)')">3.130.2</HexalithEventStoreVersion>
+    <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == '' and !Exists('$(Hexalith1BuildPackageProps)')">3.132.2</HexalithEventStoreVersion>
     <!-- Latest compatible published Tenants family, before the shared catalog defaults. -->
     <HexalithTenantsVersion Condition="'$(HexalithTenantsVersion)' == '' and !Exists('$(Hexalith1BuildPackageProps)')">6.0.0</HexalithTenantsVersion>
     <!-- Shared theme accessibility correction, qualified through the package browser gate. -->

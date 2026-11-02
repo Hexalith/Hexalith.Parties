@@ -474,6 +474,7 @@ public sealed class AspireRuntimePreparationTests
     [InlineData("3.130.0", false, true, true)]
     [InlineData("3.130.1", false, true, true)]
     [InlineData("3.130.2", false, true, true)]
+    [InlineData("3.132.2", false, true, true)]
     [InlineData("3.130.3", false, false, false)]
     [InlineData("3.131.0", false, false, false)]
     [InlineData("3.128.4", true, true, true)]

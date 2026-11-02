@@ -384,6 +384,7 @@ public sealed class ContractsPackageFixture : IDisposable
         // catalog version already exists with published bytes in the global NuGet cache.
         string restoreSources = $"--source \"{feedDirectory}\" --source \"https://api.nuget.org/v3/index.json\" "
             + $"-p:RestorePackagesPath=\"{Path.Combine(workingDirectory, "packages")}\" -p:RestoreNoCache=true -p:RestoreConfigFile=\"{configPath}\"";
+        string isolatedBuild = PackageTestProcess.CreateIsolatedSourceBuildProperty(workingDirectory);
         string eventStoreVersion = PackageTestProcess.ResolveMsbuildProperty(
             repoRoot,
             "src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj",
@@ -399,19 +400,24 @@ public sealed class ContractsPackageFixture : IDisposable
             $"-p:MinVerVersionOverride={eventStoreVersion} -p:PackageVersion={eventStoreVersion}";
         string uniqueIdsProject = RepositoryDependencyPaths.Resolve(repoRoot,
             "references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/Hexalith.Commons.UniqueIds.csproj");
+        string eventStoreProject = RepositoryDependencyPaths.Resolve(repoRoot,
+            "references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj");
+        string partiesContractsProject = Path.Combine(repoRoot, "src", "Hexalith.Parties.Contracts", "Hexalith.Parties.Contracts.csproj");
 
         ContractsPackageTests.RunDotnet(
-            $"build \"{uniqueIdsProject}\" --configuration {PackageTestProcess.ProbeConfiguration} -m:1 {commonsPackVersionProperties}",
+            $"build \"{uniqueIdsProject}\" --configuration {PackageTestProcess.ProbeConfiguration} -m:1 {isolatedBuild} {commonsPackVersionProperties}",
             repoRoot);
         ContractsPackageTests.RunDotnet(
-            $"pack \"{uniqueIdsProject}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} {commonsPackVersionProperties}",
+            $"pack \"{uniqueIdsProject}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} {isolatedBuild} {commonsPackVersionProperties}",
             repoRoot);
         ContractsPackageTests.RunDotnet(
-            $"pack \"{RepositoryDependencyPaths.Resolve(repoRoot, "references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj")}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} {eventStorePackVersionProperties}",
+            $"pack \"{eventStoreProject}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} {isolatedBuild} {eventStorePackVersionProperties}",
             repoRoot);
         ContractsPackageTests.RunDotnet(
-            $"pack \"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Contracts", "Hexalith.Parties.Contracts.csproj")}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} {ContractsPackageTests.LocalPackVersionProperties}",
+            $"pack \"{partiesContractsProject}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} {isolatedBuild} {ContractsPackageTests.LocalPackVersionProperties}",
             repoRoot);
+        PackageTestProcess.AssertSharedAssetsDoNotUseFixture(
+            workingDirectory, uniqueIdsProject, eventStoreProject, partiesContractsProject);
 
         string partiesPackage = Directory
             .GetFiles(feedDirectory, "Hexalith.Parties.Contracts.*.nupkg")

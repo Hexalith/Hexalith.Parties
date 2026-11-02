@@ -81,6 +81,19 @@ do not qualify these newer source selections or the Platform runtime.
 | PolymorphicSerializations | `821b784bb51483acefa9725acc6792d111304a4e` (`v1.19.7-1-g821b784b`) | Approved selection (2026-11-01 Round 7 decision 3); qualification still requires its own executed proof. |
 | Tenants | `2d3fa6da2312c1b5cf7f5c9461cc2d0ffc995b43` (`v6.0.0-17-g2d3fa6da`) | Approved selection (2026-11-01 Round 7 decision 3); qualification still requires its own executed proof. |
 
+### EventStore package/source alignment observation — 2026-11-02
+
+The user authorized alignment to the latest EventStore release for the Parties
+Admin UI build fix. The selected EventStore package family is `3.132.2` in
+`Directory.Packages.props`; the already committed root EventStore gitlink is
+`7c93a1234d14c66f5ee85ed48caaee1d30a671f3`, the upstream `v3.132.2` tag.
+No root gitlink changed in this correction. The 2026-11-01 table and I20 row
+above remain dated approved selections. Other root gitlinks have advanced since
+that approval, so the current I16 committed-selection tests are red pending
+owner reconciliation (DW-182). Matching package/source versions and a clean
+build do not grant current parity, deployment, or rollback qualification or
+promote any other 8.3 row.
+
 ### Historical source observation — 2026-10-30
 
 Observed from committed Parties `f9757d94a9e3f144d250b21f295b903c00d5f412` selections.

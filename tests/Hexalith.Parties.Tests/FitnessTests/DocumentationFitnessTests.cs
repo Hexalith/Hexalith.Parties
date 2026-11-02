@@ -221,8 +221,10 @@ public sealed class DocumentationFitnessTests
         }
 
         architecture.ShouldContain("package selected by `HexalithEventStoreVersion`");
+        architecture.ShouldContain("| Tenancy | Hexalith.Tenants | package selected by `HexalithTenantsVersion`");
         Read(root, "docs/ci.md").ShouldContain("package graph selects EventStore through `HexalithEventStoreVersion`");
         Version("Hexalith.EventStore.Contracts").ShouldBe(EffectivePackageVersions.ReadProperty(root, "HexalithEventStoreVersion"));
+        Version("Hexalith.Tenants.Contracts").ShouldBe(EffectivePackageVersions.ReadProperty(root, "HexalithTenantsVersion"));
     }
 
     [Fact]
