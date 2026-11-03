@@ -497,18 +497,18 @@ references/Hexalith.Builds|26991e8c542704be44cd8d9f58084d56fa627adb|validated-ad
 references/Hexalith.Platform|bf101b9d5f19ba741852b0230e526d1f01422022|validated-advance|v1.1.5|codex-agent|2026-11-03
 
 # --- 2026-11-03 owner-approved /pushall advance (Administrator / jpiquot).
-#     /pushall advanced seven root gitlinks to their reviewed origin/main tips in
-#     Parties f7ef3e23; Builds then advanced to 72575407, which removes the
-#     duplicate Azure.Security.KeyVault.Keys catalog pin (NU1506) at 090797e3.
-#     Shown the gitlink-rc-gate BUMP UNVALIDATED results and the revert option,
-#     the owner chose "keep bumps". Current-selection assertions and gitlink
-#     signoff only; no parity, publication, deployment or rollback authority.
-references/Hexalith.Builds|725754075e1d6369430a3adf94d46fb71e6eaf9e|validated-advance|v4.43.5-11-g72575407|jpiquot|2026-11-03
+#     /pushall advanced root gitlinks to their reviewed origin/main tips in
+#     Parties f7ef3e23. Shown the gitlink-rc-gate BUMP UNVALIDATED results and
+#     the revert option, the owner chose "keep bumps" for the five rows below.
+#     The untagged Platform 1080e92c / Builds 72575407 advances are withdrawn:
+#     prepare-module-build needs a released tuple (HXW011/HXW009), so the owner
+#     chose the released Platform v1.1.6 / Builds v4.43.5 rows that follow.
+#     Current-selection assertions and gitlink signoff only; no parity,
+#     publication, deployment or rollback authority.
 references/Hexalith.EventStore|a9205f511b4f96b5daf94d65369d6dee63e0c623|validated-advance|v4.0.4-11-ga9205f51|jpiquot|2026-11-03
 references/Hexalith.FrontComposer|fbe01c913cb863abb0fd4a317d370d36fff593b3|validated-advance|v4.7.5-19-gfbe01c91|jpiquot|2026-11-03
 references/Hexalith.McpCli|2e80701c31aafdf00abee05ac469a45ed76dfdf5|validated-advance|v2.0.0-26-g2e80701c|jpiquot|2026-11-03
 references/Hexalith.Memories|d959bdae5af9c22f53573eda71c091cb5c0aae4c|validated-advance|v3.0.18-8-gd959bdae|jpiquot|2026-11-03
-references/Hexalith.Platform|1080e92c0eedfd5cbb048871da475eb0a6c71c86|validated-advance|v1.1.5-3-g1080e92c|jpiquot|2026-11-03
 references/Hexalith.Tenants|33835a03e92579a26400e7cb7cf68d666c715b3e|validated-advance|v7.0.0-18-g33835a03|jpiquot|2026-11-03
 
 # --- 2026-11-03 released Platform tuple repair after Parties HXW011.
