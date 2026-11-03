@@ -41,7 +41,7 @@ public sealed class LifecycleQualificationTests(PlatformEnvironmentFixture fixtu
             if (action == "pass")
             {
                 bound.Token.ThrowIfCancellationRequested();
-                await new PartyEnvironmentTests(fixture, output).RealDependencies_CreateQueryAndPersistMatchingPartyEvents().ConfigureAwait(true);
+                await new PartyPersistenceAssertions(fixture, output).RecheckAsync().ConfigureAwait(true);
                 return;
             }
 

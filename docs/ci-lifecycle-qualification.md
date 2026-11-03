@@ -26,7 +26,11 @@ credentials are not used.
 
 The dedicated fixture reuses `PartyEnvironmentTests`' existing real persistence
 assertions. Missing descriptors or explicit controls fail, never skip. A passing
-release of the active peer reruns persistence assertions. The declared execution
+release of the active peer reruns the full real dependency, command, query and
+exact-stream assertions. Only the initial call emits the canonical functional
+observation with CreateNew; rechecks require that first file and never overwrite
+or emit it again. Local filesystem controls reproduce duplicate-write refusal
+and byte preservation without supplying native/hosted credit. The declared execution
 limit is 300 seconds, fixture bound 240 seconds and production stop limit remains
 90 seconds. Slow startup or a missed window fails explicitly; no retry-to-green
 or timeout extension supplies credit.

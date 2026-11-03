@@ -59,7 +59,10 @@ class WorkflowBoundaryTests(unittest.TestCase):
         source = (ROOT / 'tests/Hexalith.Parties.Platform.LifecycleTests/LifecycleQualificationTests.cs').read_text()
         assertion = 'RealDependencies_CreateQueryAndPersistMatchingPartyEvents()'
         self.assertLess(source.index(assertion), source.index('realPersistenceAssertionsPassed = true'))
-        self.assertEqual(source.count(assertion), 2)
+        self.assertEqual(source.count(assertion), 1)
+        recheck = 'new PartyPersistenceAssertions(fixture, output).RecheckAsync()'
+        self.assertEqual(source.count(recheck), 1)
+        self.assertGreater(source.index(recheck), source.index('if (action == "pass")'))
         self.assertNotIn('Skip', source)
 
 
