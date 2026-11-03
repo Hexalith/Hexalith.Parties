@@ -206,6 +206,11 @@ def validate_event_store_support_packages(package_directory: Path, event_store_v
 
 def run_dotnet(args: list[str], working_directory: Path) -> None:
     env = os.environ.copy()
+    # These are independent package consumers, outside the parent's sealed mapping.
+    for key in ("CustomBeforeDirectoryBuildProps", "CustomAfterMicrosoftCommonProps",
+                "CustomBeforeDirectoryBuildTargets", "CustomAfterDirectoryBuildTargets",
+                "AfterMicrosoftNETSdkTargets", "HEXALITH_SOURCE_MAPPING_HASH", "Configuration"):
+        env.pop(key, None)
     env.setdefault("DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER", "1")
     env.setdefault("MSBUILDDISABLENODEREUSE", "1")
     env["NUGET_PACKAGES"] = str(working_directory.parent / ".nuget" / "packages")

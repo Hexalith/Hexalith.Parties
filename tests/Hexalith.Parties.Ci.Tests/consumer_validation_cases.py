@@ -164,6 +164,26 @@ class RestoredVersions(unittest.TestCase):
 class RestoreIsolation(unittest.TestCase):
     """Run NuGet against poisoned parent settings and fresh private caches."""
 
+    def test_independent_consumer_does_not_inherit_parent_mapping(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            project_dir = root / 'consumer'
+            project_dir.mkdir()
+            project = project_dir / 'Consumer.csproj'
+            project.write_text('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>')
+            CONSUMER.write_nuget_config(root, [], [])
+            keys = ('CustomBeforeDirectoryBuildProps', 'CustomAfterMicrosoftCommonProps',
+                    'CustomBeforeDirectoryBuildTargets', 'CustomAfterDirectoryBuildTargets',
+                    'AfterMicrosoftNETSdkTargets', 'HEXALITH_SOURCE_MAPPING_HASH', 'Configuration')
+            inherited = {key: str(root / 'unavailable-parent-mapping') for key in keys}
+            with patch.dict(os.environ, inherited):
+                CONSUMER.run_dotnet(['restore', str(project), '-p:NuGetAudit=false'], project_dir)
+                CONSUMER.run_dotnet(['build', str(project), '--no-restore', '--configuration', 'Release'], project_dir)
+                self.assertTrue(all(os.environ[key] == value for key, value in inherited.items()))
+            assets = json.loads((project_dir / 'obj' / 'project.assets.json').read_text())
+            self.assertEqual({str(Path(folder)) for folder in assets['packageFolders']}, {str(root / '.nuget' / 'packages')})
+            self.assertTrue((project_dir / 'bin' / 'Release' / 'net10.0' / 'Consumer.dll').is_file())
+
     def test_inherited_fallback_and_disabled_sources(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
