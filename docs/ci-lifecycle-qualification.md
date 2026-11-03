@@ -49,7 +49,12 @@ the live job and its wait step. Execution readiness must include the fixture's
 real persistence marker and the unexpired original admission. Only the parent
 operator may call GitHub's normal cancel API for that exact ready run. Save the
 API request/response and actual UTC request time separately; the controller does
-not cancel workflows. A missing readiness artifact, expired hold or already
+not cancel workflows. After the actual signal, the controller snapshots only the
+current receipt/job-bound owner state before any resume or forwarded signal.
+Startup credit requires actual Starting; execution credit requires Ready with
+the same live native process and original active finite admission. Missing or
+mismatched snapshots refuse credit after unconditional exact cleanup. A missing
+readiness artifact, expired hold or already
 terminal owner means no cancellation credit.
 
 The wait step permits 120 seconds for actual SIGINT/SIGTERM. It saves observed
@@ -65,7 +70,7 @@ Cancellation requires actual `cancelled`/`Cancelled` terminal status/outcome and
 UTC time after the observed signal, original execution admission, durable
 `ci-job-cancelled` withdrawal before its original expiry, then identical first
 outcome/time and withdrawal/expiry through exact-owner retry. A pre-existing
-product failure is preserved and reported as preceding the observed signal;
+product failure is preserved with its actual terminal time and observed signal;
 it supplies no cancellation credit. Join its actual terminal time with the
 parent's API receipt to establish whether it truly preceded cancellation.
 Missing timing, changed first fields, unknown discovery or leftovers fails.

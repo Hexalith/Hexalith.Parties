@@ -184,6 +184,48 @@ def same_expiry(first, observed):
     require(all(first.get(key) == observed.get(key) for key in keys), 'Attachment lineage or original expiry changed')
 
 
+def owned_native_process(pid, run_id):
+    require(isinstance(pid, int) and pid > 1, 'Native checkpoint has no actual process identity')
+    started = birth(pid)
+    require(started is not None and ('HEXALITH_G4_RUN_ID=' + run_id).encode()
+            in Path(f'/proc/{pid}/environ').read_bytes().split(b'\0'), 'Native execution is absent, reused or not owned')
+    return {'processId': pid, 'birth': started}
+
+
+def cancellation_phase(item, owner, context):
+    snapshot = item.get('cancellationSnapshot')
+    require(isinstance(snapshot, dict) and 'failureType' not in snapshot, 'Actual signal-time owner snapshot is unavailable')
+    require(all(snapshot.get(key) == owner[key] for key in ('runId', 'attemptId', 'environmentId'))
+            and snapshot.get('executionContext') == owner['executionContext'] == context, 'Signal-time owner/job binding differs')
+    received = min(utc(value['observedAtUtc']) for value in item['cancellationSignals'])
+    observed = utc(snapshot['observedAtUtc'])
+    require(utc(item['cancellationReadyAtUtc']) <= received <= utc(snapshot['readStartedAtUtc']) <= observed,
+            'Owner snapshot was not observed after the actual external signal')
+    require(utc(snapshot['stateUpdatedAtUtc']) <= observed, 'Owner state time is ahead of the actual snapshot')
+    require('firstOutcome' in snapshot and 'stateTestTerminal' in snapshot
+            and snapshot['firstOutcome'] is None and snapshot['stateTestTerminal'] is None,
+            'Owner had a terminal outcome at the cancellation phase observation')
+    if item['cancellationPhase'] == 'startup':
+        require(snapshot.get('status') == 'Starting' and snapshot.get('nativeExecution') is None,
+                'Requested startup cancellation was not observed in actual Starting state')
+        return
+    require(item['cancellationPhase'] == 'execution' and snapshot.get('status') == 'Ready',
+            'Requested execution cancellation was not observed in an active Ready owner')
+    checkpoint = item['executionCheckpoint']
+    require(checkpoint.get('runId') == owner['runId'] and checkpoint.get('realPersistenceAssertionsPassed') is True
+            and snapshot.get('nativeExecution') == {key: checkpoint[key] for key in ('processId', 'birth')},
+            'Original native execution is no longer running in the signal-time snapshot')
+    admitted, active = item['admission'], snapshot['admission']
+    same_expiry(admitted, active)
+    require(active.get('ownerRunId') == owner['runId'] and active.get('environmentId') == owner['environmentId']
+            and active.get('requestedHoldSeconds') == active.get('effectiveHoldSeconds') == 240
+            and active.get('endedAtUtc') is None and active.get('outcome') is None,
+            'Signal-time admission is not the actual active original finite hold')
+    require(utc(active['acceptedAtUtc']) <= received <= observed < utc(active['expiresAtUtc'])
+            and utc(active['expiresAtUtc']) - utc(active['acceptedAtUtc']) == timedelta(seconds=240),
+            'Original finite hold was not active at the actual signal and snapshot')
+
+
 class Qualification:
     """Own only receipt-issued siblings from the current real GitHub job."""
 
@@ -418,11 +460,48 @@ class Qualification:
                     return False
                 require(value.get('runId') == self.issued(item)['runId'] and value.get('realPersistenceAssertionsPassed') is True,
                         'Fixture checkpoint is missing its actual owner or real persistence assertion')
+                item['executionCheckpoint'] = {**value, **owned_native_process(value['processId'], self.issued(item)['runId'])}
+                self.save()
                 write(self.evidence / (label + '-execution-ready.json'), value)
                 return True
             self.poll(item, executing, 900)
             self.record_images(item)
         return item
+
+    def cancellation_snapshot(self, item):
+        snapshot = {'readStartedAtUtc': now()}
+        try:
+            owner = self.issued(item)
+            # Only current tracked state can classify a signal; the archived initial owner is never a fallback.
+            state = read(Path(owner['stateDirectory']) / (owner['runId'] + '.json'))
+            require(isinstance(state, dict), 'Current cancellation owner state is malformed')
+            require(all(state.get(key) == owner[key] for key in ('runId', 'attemptId', 'environmentId', 'executionContext'))
+                    and state['executionContext'] == self.context, 'Current cancellation state lost its real owner/job binding')
+            snapshot.update({key: state[key] for key in ('runId', 'attemptId', 'environmentId', 'executionContext', 'status')})
+            snapshot['stateUpdatedAtUtc'] = state['updatedAt']
+            snapshot['stateTestTerminal'] = first_outcome(state['testRun']) if state.get('testRun') is not None else None
+            terminal = self.diagnostics(item) / 'selected-test.json'
+            snapshot['firstOutcome'] = first_outcome(read(terminal)) if terminal.exists() else None
+            snapshot['nativeExecution'] = None
+            if item.get('executionCheckpoint'):
+                snapshot['nativeExecution'] = owned_native_process(item['executionCheckpoint']['processId'], owner['runId'])
+            if item['cancellationPhase'] == 'execution':
+                admitted = item['admission']
+                document = read(self.diagnostics(item) / 'attachments.json')
+                require(isinstance(document, dict) and isinstance(document.get('attachments'), list),
+                        'Current cancellation admissions are malformed')
+                active = next((value for value in document['attachments']
+                               if isinstance(value, dict) and value.get('attachedRunId') == admitted['attachedRunId']), None)
+                require(active is not None, 'The actual admitted hold is missing at cancellation')
+                active_attachment(active, owner['runId'])
+                same_expiry(admitted, active)
+                snapshot['admission'] = active
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            snapshot['failureType'] = type(error).__name__
+        snapshot['observedAtUtc'] = now()
+        item['cancellationSnapshot'] = snapshot
+        self.save()
+        self.observe('actual-cancellation-state-snapshot', snapshot=snapshot)
 
     def capture_result(self, item):
         child = self.children.get(item['label'])
@@ -669,6 +748,7 @@ class Qualification:
         require(not prior_error, 'The pre-cleanup first outcome could not be verified')
         require(resume_failure is None, 'Exact cleanup ran, but owned host resume bookkeeping remains unverified')
         if item.get('cancellationPhase'):
+            cancellation_phase(item, owner, self.context)
             self.finalize_cancellation(item, item.get('terminalBeforeSignalForward', prior), job_status)
         return True
 
@@ -720,6 +800,7 @@ def main():
             time.sleep(0.2)
         require(CANCELLED, 'No real external cancellation arrived; this is not cancellation evidence')
         item['cancellationSignals'] = list(CANCELLED)
+        qualification.cancellation_snapshot(item)
         terminal = qualification.diagnostics(item) / 'selected-test.json'
         if terminal.exists():
             item['terminalBeforeSignalForward'] = first_outcome(read(terminal))
