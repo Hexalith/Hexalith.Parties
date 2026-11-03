@@ -32,8 +32,8 @@ dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tes
 CI runs on pushes and pull requests to `main`, scheduled nightly runs, and Pact Broker `repository_dispatch` events with type `contract_requiring_verification_published`.
 
 The v2 workflow uses the exact published module CLI 4.43.6 and genuine Platform
-v1.1.6 (`8ea8fe092f8abb5c932a61830aae16051d442463`) with the matching recorded
-Builds catalog `89f62052c932d054bda2b435bdfef60d96e77612`. Supported package-mode
+v1.1.8 (`e2cc081e539942563ec0d6a243b308b4cab77898`) with the matching recorded
+Builds catalog `725754075e1d6369430a3adf94d46fb71e6eaf9e`. Supported package-mode
 preparation generates verified runtime-free Release imports before restore/build
 of `Hexalith.Parties.Standalone.slnx` and package consumer validation.
 
