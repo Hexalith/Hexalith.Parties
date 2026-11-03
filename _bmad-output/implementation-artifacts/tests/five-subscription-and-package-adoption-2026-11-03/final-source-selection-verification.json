@@ -1,0 +1,94 @@
+{
+  "scope": "Pre-push validation of the committed source selection; historical approvals remain immutable. Source code/owned runtime checks are in final-lanes.json.",
+  "consumerCommit": "26f58424400e3f72fdb9c7d572d098ae701206ce",
+  "sourceSelectionCommit": "7d17c3d5df4254e98965bcf53fe176a2fb4925d7",
+  "incomingPartiesMain": "7d3bc8879c39d32f34866df5098a0d369821db03",
+  "selectedEventStoreSource": "f213e4115ec23cb736e8aa0113f61b9d4854480c",
+  "publishedOwnerMain": "342664954389359a3ad4ec979a8a503f923798ef",
+  "selectionBuildCommand": [
+    "dotnet",
+    "build",
+    "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+    "-c",
+    "Debug",
+    "-m:1",
+    "--nologo"
+  ],
+  "selectionBuildExitCode": 0,
+  "selectionTestCommand": [
+    "dotnet",
+    "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+    "-method",
+    "*CommittedSelectionObservations_PreservePackageGraphAndImmutableConsumptionRefusals",
+    "-method",
+    "*CommittedSourceSelections_RecordOverridesAndRefuseInvalidImmutableConsumption",
+    "-method",
+    "*NonConsumedSourceRowsRequireUniqueExactIdentityReceipts",
+    "-result-xml",
+    "/tmp/final-source-selection.xml"
+  ],
+  "selectionTestExitCode": 0,
+  "summary": [
+    {
+      "environment": "64-bit (x64) .NET 10.0.14 [collection-per-class, parallel (collections, 14 threads)]",
+      "id": "5e4292ab-e1ae-4ae7-8d47-642be7c2e925",
+      "name": "${REPO}/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "run-date": "2026-11-03",
+      "run-time": "22:30:36",
+      "start-rtf": "2026-11-03T22:30:36.3981991+00:00",
+      "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+      "target-framework": ".NETCoreApp,Version=v10.0",
+      "errors": "0",
+      "failed": "0",
+      "finish-rtf": "2026-11-03T22:31:10.9723288+00:00",
+      "not-run": "0",
+      "passed": "21",
+      "skipped": "0",
+      "time": "34.576",
+      "time-rtf": "00:00:34.5760000",
+      "total": "21"
+    }
+  ],
+  "assemblySha256": "f3bea7ce79915ea365274d144d03c6ae62b61918e98b6cf360efe0f360cfb199",
+  "gates": [
+    {
+      "command": [
+        "bash",
+        "scripts/gitlink-rc-gate.sh",
+        "--diff",
+        "v1.2.1"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/gitlink-rc-gate.sh",
+        "--push-range",
+        "7d3bc8879c39d32f34866df5098a0d369821db03"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "commitlintRange": {
+    "command": [
+      "node_modules/.bin/commitlint",
+      "--from",
+      "origin/main",
+      "--to",
+      "HEAD",
+      "--verbose"
+    ],
+    "exitCode": 0,
+    "messagesValidated": [
+      "fix: qualify reconciliation and refresh controls",
+      "build: select subscription safety source"
+    ],
+    "candidateEvidence": "commitlint-validation.json"
+  },
+  "nestedSubmodulesInitialized": false,
+  "historicalApprovalsPreserved": true,
+  "publicPackageVersionsChanged": false,
+  "broaderMemoriesQualified": false,
+  "remoteCiSuccessClaimed": false
+}
