@@ -829,11 +829,22 @@ public sealed class PlatformApiPrerequisitesTests
         subscriptionRow.ShouldContain("codex-agent (explicit user delegation)");
         subscriptionRow.ShouldContain("Source-selection and executed transport proof only");
         subscriptionRow.ShouldContain("Package versions unchanged");
+        string[] alignmentRows = matrix.Split('\n', StringSplitOptions.TrimEntries)
+            .Where(static row => row.StartsWith("| Package catalog alignment (2026-11-04) |", StringComparison.Ordinal)).ToArray();
+        alignmentRows.Length.ShouldBe(1, "The current Platform and Builds catalog alignment must have one dated row.");
+        string alignmentRow = alignmentRows[0];
+        alignmentRow.ShouldContain("codex-agent (explicit user delegation)");
+        alignmentRow.ShouldContain("Source-selection and CI repair only");
         foreach ((string path, string identity) in CurrentSelectedGitlinks)
         {
             string describe = CurrentSelectedSourceDescribes[path];
             AssertCurrentSourceRow(currentSelection, path, identity, describe);
-            string selectionRow = path == EventStoreRelativePath ? subscriptionRow : advanceRow;
+            string selectionRow = path switch
+            {
+                EventStoreRelativePath => subscriptionRow,
+                "references/Hexalith.Builds" or "references/Hexalith.Platform" => alignmentRow,
+                _ => advanceRow,
+            };
             selectionRow.ShouldContain($"{path["references/Hexalith.".Length..]} `{identity}`");
             AssertSelectedSourceObservation(root, path, identity);
             DescribeObservedSource(root, path, describe, identity).ShouldBe(describe, path);
@@ -2754,7 +2765,7 @@ public sealed class PlatformApiPrerequisitesTests
 
     private static string ReadCurrentSourceSelection(string matrix)
     {
-        const string currentHeading = "### Current source observation — 2026-11-03";
+        const string currentHeading = "### Current source observation — 2026-11-04";
         int currentStart = matrix.IndexOf(currentHeading, StringComparison.Ordinal);
         currentStart.ShouldBeGreaterThanOrEqualTo(0, currentHeading);
         int historicalStart = matrix.IndexOf("### Historical source observation", currentStart, StringComparison.Ordinal);
