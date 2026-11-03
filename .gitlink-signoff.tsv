@@ -478,3 +478,20 @@ references/Hexalith.Platform|c635a2dc22f404d97c9fe7e27f7e7f4c9017943b|validated-
 references/Hexalith.Builds|6585f5860e87c146c26aa066d3a52b94eb56f271|validated-advance|v4.43.2|codex-agent|2026-11-02
 references/Hexalith.EventStore|653124dced81830e932edb7738a78ee61104d55a|validated-advance|v4.0.0|codex-agent|2026-11-02
 references/Hexalith.Platform|9274fb225541987221617006183bcc8bb9eb98c1|validated-advance|v1.1.3|codex-agent|2026-11-02
+
+# --- 2026-11-03 user-delegated Story 2.8 source-selection proposal.
+#     codex-agent records the exact CI-qualified Builds main source selected by
+#     the active release 41625705717. Publication is still pending; no human
+#     ratification, Parties parity, package/runtime acceptance or release approval
+#     is claimed. Final merge/adoption remains held for publication, compatibility
+#     and full normal gates. Follows the existing user-authorized codex-agent
+#     source-only entries above; preserves all other root selections.
+references/Hexalith.Builds|26991e8c542704be44cd8d9f58084d56fa627adb|validated-advance|main@26991e8c542704be44cd8d9f58084d56fa627adb|codex-agent|2026-11-03
+
+# --- 2026-11-03 user-delegated Story 2.8 Platform source selection.
+#     Select genuine Platform v1.1.5 with its verified Builds269/CLI4.43.4 tuple.
+#     codex-agent records source selection only under the active user delegation,
+#     following the existing source-only precedent above. No human ratification,
+#     Parties package/runtime parity, release approval or hosted lifecycle
+#     acceptance is claimed. Normal compatibility and merge gates remain required.
+references/Hexalith.Platform|bf101b9d5f19ba741852b0230e526d1f01422022|validated-advance|v1.1.5|codex-agent|2026-11-03

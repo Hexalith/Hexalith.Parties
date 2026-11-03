@@ -19,11 +19,11 @@ permissions:
 
 jobs:
   ci:
-    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@df13d9d31f7ee1a1b0fb7eeac7e8b27b9a9f9fb0
+    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@26991e8c542704be44cd8d9f58084d56fa627adb
     with:
       solution: Hexalith.Parties.Standalone.slnx
-      dapr-version: '1.18.0'
-      dapr-runtime-version: '1.18.2'
+      module-manifest: module/hexalith.module-manifest.v2.json
+      integration-test-profiles: platform-package
       test-platform: microsoft-testing-platform
       run-consumer-validation: true
       run-coverage-gate: false
@@ -40,17 +40,13 @@ jobs:
         tests/Hexalith.Parties.UI.Tests
         tests/Hexalith.Parties.Picker.Tests
         tests/Hexalith.Parties.Mcp.Tests
-      integration-test-projects: |
         tests/Hexalith.Parties.Tests
         tests/Hexalith.Parties.Sample.Tests
         tests/Hexalith.Parties.Ci.Tests
-      aspire-test-project: tests/Hexalith.Parties.IntegrationTests
-      aspire-timeout-minutes: 30
-      aspire-prepare-script: scripts/prepare-aspire-tier.sh
-      aspire-prepare-timeout-minutes: 10
-      aspire-continue-on-error: false
-      # Package-profile enrollment remains staged until its workflow/tool handoff is qualified.
       build-timeout-minutes: 60
+    secrets:
+      registry-pull-username: ${{ secrets.HEXALITH_CI_REGISTRY_USERNAME }}
+      registry-pull-password: ${{ secrets.HEXALITH_CI_REGISTRY_PASSWORD }}
 
   eventstore-404-package-cohort:
     name: EventStore 4.0.4 package cohort (offline)
@@ -104,6 +100,53 @@ jobs:
             --no-build --no-restore --configuration Release "${package_properties[@]}" \
             --filter-method Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.CatalogApiAvailabilityDoesNotSelectNativeHosts \
             --minimum-expected-tests 22 --fail-skips on
+
+  memories-3018-package-protocol:
+    name: Memories 3.0.18 package protocol
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: false
+          fetch-depth: 1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - name: Initialize recorded package inputs
+        run: |
+          git -c submodule.recurse=false submodule update --init --depth 1 --checkout -- references/Hexalith.Builds references/Hexalith.EventStore
+          git submodule status -- references/Hexalith.Builds references/Hexalith.EventStore
+      - name: Qualify Memories 3.0.18 refresh and durable recovery
+        shell: bash
+        env:
+          NUGET_PACKAGES: ${{ runner.temp }}/hexalith-memories-3018-nuget
+          NUGET_HTTP_CACHE_PATH: ${{ runner.temp }}/hexalith-memories-3018-http
+        run: |
+          set -euo pipefail
+          package_properties=(
+            -p:HexalithEventStoreVersion=4.0.4
+            -p:HexalithTenantsVersion=7.0.0
+            -p:HexalithMemoriesVersion=3.0.18
+            -p:UseHexalithProjectReferences=false
+            -p:UseNuGetDeps=true
+            -p:EventStoreFromSource=false
+            -p:HexalithEventStoreFromSource=false
+            -p:HexalithTenantsFromSource=false
+            -p:HexalithMemoriesFromSource=false
+            -p:HexalithCommonsFromSource=false
+            -p:HexalithCommonsHttpFromSource=false
+            -p:HexalithMcpCliFromSource=false
+            -p:RestoreSources=https://api.nuget.org/v3/index.json
+          )
+          # Use the published client with controlled HTTP replies; no private runtime is started.
+          dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj \
+            --configuration Release --disable-build-servers -m:1 -warnaserror "${package_properties[@]}"
+          dotnet test --project tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj \
+            --no-build --no-restore --configuration Release "${package_properties[@]}" \
+            --filter-class Hexalith.Parties.Tests.Search.PartyMemoryRestClientRecoveryTests \
+            --filter-class Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests \
+            --minimum-expected-tests 52 --fail-skips on
 
   owner-publish:
     name: Owner publisher qualification

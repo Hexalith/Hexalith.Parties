@@ -308,7 +308,7 @@ The suite observes real Tenants through its declared REST interface, reads the s
 tenant through its declared REST interface, creates and queries a Party, and verifies persisted
 aggregate metadata and every event envelope in the run-owned state store.
 
-From the Platform checkout, use the locally built `hexalith-module` candidate:
+From the Platform checkout, use the exact published module CLI 4.43.4 restored from its local tool manifest:
 
 ```bash
 hexalith-module test --manifest references/Hexalith.Parties/module/hexalith.module-manifest.v2.json --profile platform-source --mode source
@@ -318,9 +318,10 @@ hexalith-module test --manifest references/Hexalith.Parties/module/hexalith.modu
 The renderer owns both explicit suite declarations. Package execution requires authoritative
 publications of the migrated EventStore testing packages; Debug source validation grants no package
 acceptance. It also requires Platform's native owner preparation (the synthetic tenant and membership,
-the native scope and the private Memories invocation channel), which currently compiles only for
-source-mode compositions. Until that preparation supports package mode, the `platform-package` suite
-refuses its missing Memories binding and cannot pass. The existing `Hexalith.Parties.IntegrationTests` topology and infrastructure-control tests
+the native scope and the private Memories invocation channel), now enabled for the selected
+Release/package cohort. CI selects the declared package suite through the pinned v2 workflow
+after all fifteen isolated projects pass. Actual native service and cleanup qualification
+remain required; source/model/protocol results do not establish hosted lifecycle acceptance. The existing `Hexalith.Parties.IntegrationTests` topology and infrastructure-control tests
 remain a frozen compatibility lane. Unit and isolated integration projects retain their test-only
 doubles and run without Platform/domain servers. `scripts/test.ps1` inventories the new project but
 leaves its environment-owning execution to the declared runner suite. Attached execution, expiry

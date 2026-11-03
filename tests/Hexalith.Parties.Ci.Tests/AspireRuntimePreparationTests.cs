@@ -6,6 +6,8 @@ using System.Text.RegularExpressions;
 using System.Text.Json;
 using System.Xml.Linq;
 
+using Hexalith.Parties.PackageTests;
+
 namespace Hexalith.Parties.Ci.Tests;
 
 /// <summary>Executes runtime preparation with a recording compiler to verify explicit package runtime selection.</summary>
@@ -238,6 +240,7 @@ public sealed class AspireRuntimePreparationTests
             string project = Path.Combine(projectDirectory, hostName + ".csproj");
             File.Copy(CiTestPaths.RepoFile($"tests/{hostName}/{hostName}.csproj"), project);
             var start = new ProcessStartInfo("dotnet") { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
+            PackageTestProcess.RemoveSourceMappingEnvironment(start);
             foreach (string argument in new[] { "msbuild", project, $"-target:Validate{kind}SettingsRoot,ComputeRunArguments", "-getItem:Content,Compile",
                 $"-getProperty:_{kind}EventStoreRoot,HexalithEventStoreFromSource,UseHexalithProjectReferences,RunWorkingDirectory,TargetDir" }) { start.ArgumentList.Add(argument); }
             if (layout == "explicit") { start.ArgumentList.Add("-p:HexalithEventStoreRoot=" + selected); }
@@ -557,6 +560,7 @@ public sealed class AspireRuntimePreparationTests
     private static async Task<(int ExitCode, string Output, string Error)> RunDotnetAsync(string directory, params string[] arguments)
     {
         var start = new ProcessStartInfo("dotnet") { WorkingDirectory = directory, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
+        PackageTestProcess.RemoveSourceMappingEnvironment(start);
         foreach (string argument in arguments) { start.ArgumentList.Add(argument); }
         using Process process = Process.Start(start)!;
         Task<string> output = process.StandardOutput.ReadToEndAsync(TestContext.Current.CancellationToken);

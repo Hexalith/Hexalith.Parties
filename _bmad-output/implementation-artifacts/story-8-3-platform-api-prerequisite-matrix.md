@@ -95,7 +95,37 @@ resolve source selection only. Matching package/source versions and a clean
 build do not grant current parity, deployment, or rollback qualification or
 promote any other 8.3 row.
 
-### Current source observation — 2026-11-02
+### Current source observation — 2026-11-03
+
+The active user's explicit Story 2.8 authorization delegates this source selection
+to codex-agent. Builds v4.43.4 at `26991e8c542704be44cd8d9f58084d56fa627adb` and
+genuine Platform v1.1.5 at `bf101b9d5f19ba741852b0230e526d1f01422022` form the
+proposed package-mode source/catalog identity. Other root selections are unchanged.
+The graph selects EventStore package `4.0.4`, Commons `2.30.10`,
+PolymorphicSerializations `1.19.8`, FrontComposer `4.7.5`, Memories `3.0.18`,
+Tenants `7.0.0`, and McpCli `2.0.0`. These values were evaluated using the actual
+published CLI's supported package preparation and the recorded catalog, after
+correcting the fallback path declaration order. No package version override is
+used. The same selected catalog defaults now govern those families.
+Selection does not revalidate historical parity receipts or grant publication,
+deployment, custody, rollback deletion, runtime or candidate acceptance. All dated
+jpiquot decisions and their original source/package values remain below as
+history; this continuation does not impersonate another approval.
+
+| Root dependency | Current source identity | Release use |
+| --- | --- | --- |
+| AI.Tools | `1745b6663ad32bb1288167135ed0f979366c53a0` (`1745b666`) | Committed selection; qualification still requires its own executed proof. |
+| Builds | `26991e8c542704be44cd8d9f58084d56fa627adb` (`v4.43.4`) | Committed selection; qualification still requires its own executed proof. |
+| Commons | `11555ace9efcae2928a00122dcba91243e5a8a1a` (`v2.30.10`) | Committed selection; qualification still requires its own executed proof. |
+| EventStore | `7c93a1234d14c66f5ee85ed48caaee1d30a671f3` (`v3.132.1-2-g7c93a123`) | Committed selection; description remains anchored to `v3.132.1`. Qualification still requires its own executed proof. |
+| FrontComposer | `07089dcbdad784a1d53037e9cea78d1d7becd8d6` (`v4.7.5`) | Committed selection; qualification still requires its own executed proof. |
+| McpCli | `3bc89642ad43305531c4018b75b5e1b9e0681e10` (`v1.1.0-57-g3bc89642`) | Committed selection; qualification still requires its own executed proof. |
+| Memories | `e8956eb5c1bd49297f86702f9606eb9b013bc2f1` (`v3.0.15`) | Committed selection; qualification still requires its own executed proof. |
+| Platform | `bf101b9d5f19ba741852b0230e526d1f01422022` (`v1.1.5`) | User-delegated source-only selection of genuine Platform v1.1.5; qualification still requires its own executed proof. |
+| PolymorphicSerializations | `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`) | Committed selection; qualification still requires its own executed proof. |
+| Tenants | `4d0d599879767196928e1c265622483a62b457ae` (`v6.0.0-71-g4d0d5998`) | Committed successor selection; qualification still requires its own executed proof. |
+
+### Historical source observation — 2026-11-02
 
 Administrator / jpiquot approved the ten committed root gitlinks below and the
 effective Release package graph for current-selection assertions on 2026-11-02
@@ -1010,6 +1040,7 @@ The original selection row transcribes the Round 6 reviewer-recorded decision in
 | DW-182 / I16 current committed selection (2026-11-02) | Parties `a92d15866bbf4f49cefa6c03f4a9eeec442af1de`: AI.Tools `1745b6663ad32bb1288167135ed0f979366c53a0`; Builds `d2a430c988462a634674a69c562ea4afd1f06ef4`; Commons `11555ace9efcae2928a00122dcba91243e5a8a1a`; EventStore `7c93a1234d14c66f5ee85ed48caaee1d30a671f3`; FrontComposer `07089dcbdad784a1d53037e9cea78d1d7becd8d6`; McpCli `3bc89642ad43305531c4018b75b5e1b9e0681e10`; Memories `e8956eb5c1bd49297f86702f9606eb9b013bc2f1`; Platform `92f87e6a49e4357f91b2ffb821e044931291c0e6`; PolymorphicSerializations `bce4eb9f45c6b131b960ab4fa39e50ff01e51960`; Tenants `4b3e431745550f8466f1ce0d70e6b507c747b59a` and effective Release packages EventStore `3.132.2`, Commons `2.30.10`, PolymorphicSerializations `1.19.8`, FrontComposer `4.7.4`, Memories `3.0.13`, Tenants `6.0.0`, McpCli `1.1.0`; exact comparison in `dw-182-i16-approval-comparison-2026-11-02.md`. | Administrator / jpiquot | 2026-11-02 | **Approved current-selection assertions only.** The 2026-11-01 approval and earlier receipts remain dated history; all six canonical parity receipts stay Unvalidated until rerun at their stamped identities. No publication, deployment, custody, or rollback deletion authority follows. |
 | DW-182 / I16 Tenants successor selection (2026-11-02) | Parties `18579b62ef9ac3c8780fc5e8ba26112d2665f566`: AI.Tools `1745b6663ad32bb1288167135ed0f979366c53a0`; Builds `d2a430c988462a634674a69c562ea4afd1f06ef4`; Commons `11555ace9efcae2928a00122dcba91243e5a8a1a`; EventStore `7c93a1234d14c66f5ee85ed48caaee1d30a671f3`; FrontComposer `07089dcbdad784a1d53037e9cea78d1d7becd8d6`; McpCli `3bc89642ad43305531c4018b75b5e1b9e0681e10`; Memories `e8956eb5c1bd49297f86702f9606eb9b013bc2f1`; Platform `92f87e6a49e4357f91b2ffb821e044931291c0e6`; PolymorphicSerializations `bce4eb9f45c6b131b960ab4fa39e50ff01e51960`; Tenants `4d0d599879767196928e1c265622483a62b457ae` and effective Release packages EventStore `3.132.2`, Commons `2.30.10`, PolymorphicSerializations `1.19.8`, FrontComposer `4.7.4`, Memories `3.0.13`, Tenants `6.0.0`, McpCli `1.1.0`; exact comparison in `dw-182-i16-approval-comparison-2026-11-02.md`. | Administrator / jpiquot | 2026-11-02 | **Approved Tenants successor current-selection assertion and gitlink signoff only.** This supersedes the initial 2026-11-02 Tenants `4b3e431745550f8466f1ce0d70e6b507c747b59a` selection; the other nine gitlinks and effective package versions are unchanged. All six canonical parity receipts stay Unvalidated until rerun at their stamped identities. No publication, deployment, custody, or rollback deletion authority follows. Explicitly confirmed on 2026-11-02 at the spec 8.10 Round 9 review (reviewer gate): presented the exact SHA and the option to confirm it explicitly, the owner replied "apply recommended". |
 | DW-182 / I16 Platform successor selection (2026-11-02) | Platform `c635a2dc22f404d97c9fe7e27f7e7f4c9017943b` (`v1.1.1-35-gc635a2dc`, on Platform `origin/main`), selected by Parties `957111c5a516b7fa7c2fe19eaadf3ae09522e792` and recorded by `fa9d6286a16fc725acb45215b3bebec202c7a78e`. Since Parties `18579b62ef9ac3c8780fc5e8ba26112d2665f566` no other root gitlink, `.gitmodules`, `global.json`, top-level `.props`/`.targets` or Client project input changed, so the other nine gitlinks and the effective Release package selection of the Tenants successor row stand. | Administrator / jpiquot | 2026-11-02 | **Approved Platform successor gitlink signoff only.** This supersedes Platform `92f87e6a49e4357f91b2ffb821e044931291c0e6` for current-selection assertions. The owner confirmed it explicitly on 2026-11-02 during the spec 8.10 Round 10 requalification: shown the exact SHA and the failing `gitlink-rc-gate` result, they chose "Sign off and requalify". The validated-advance row is in `.gitlink-signoff.tsv`. This approval qualifies no closure lane; the canonical `tests/test-summary.md` table (the last `### Validation receipts` heading) records each lane's status. No publication, deployment, custody, or rollback deletion authority follows. |
+| Story 2.8 delegated selection (2026-11-03) | Builds `26991e8c542704be44cd8d9f58084d56fa627adb`; Platform `bf101b9d5f19ba741852b0230e526d1f01422022`; effective prepared Release packages EventStore `4.0.4`, Commons `2.30.10`, PolymorphicSerializations `1.19.8`, FrontComposer `4.7.5`, Memories `3.0.18`, Tenants `7.0.0`, McpCli `2.0.0`. Other root source selections are unchanged. | codex-agent (explicit user delegation) | 2026-11-03 | **Source-selection only.** Historical jpiquot approvals and all six Unvalidated parity receipts remain unchanged; no package/runtime parity, publication, deployment, custody, rollback deletion or candidate acceptance is claimed. |
 | I17 activation handover | Any second activation of an accepted closure deferral | Pending — named accountable owner | Pending | Pending; no approval inferred from routing, source presence, or compile. |
 | I18 successor tests | Any baseline-test replacement | Pending — named accountable owner | Pending | Pending; no approval inferred from routing, source presence, or compile. |
 | I19 store reclassification / class-(b) test set | Touched stores, semantics, and approved consistency tests | Pending — named accountable owner | Pending | Pending; no approval inferred from routing, source presence, or compile. |

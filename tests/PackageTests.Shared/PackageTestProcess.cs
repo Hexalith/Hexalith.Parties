@@ -60,6 +60,17 @@ internal static class PackageTestProcess
         return result;
     }
 
+    /// <summary>Prevents an independent fixture from inheriting another workspace's generated mapping.</summary>
+    internal static void RemoveSourceMappingEnvironment(ProcessStartInfo startInfo)
+    {
+        foreach (string key in new[] { "CustomBeforeDirectoryBuildProps", "CustomAfterMicrosoftCommonProps",
+            "CustomBeforeDirectoryBuildTargets", "CustomAfterDirectoryBuildTargets", "AfterMicrosoftNETSdkTargets",
+            "HEXALITH_SOURCE_MAPPING_HASH", "Configuration" })
+        {
+            startInfo.Environment.Remove(key);
+        }
+    }
+
     private static void EnsureSuccess(PackageTestProcessResult result, string operation)
     {
         if (result.ExitCode != 0)
@@ -123,12 +134,7 @@ internal static class PackageTestProcess
         // must not rewrite those PackageReferences or force its Debug graph into the probe.
         if (string.Equals(startInfo.FileName, "dotnet", StringComparison.Ordinal))
         {
-            foreach (string key in new[] { "CustomBeforeDirectoryBuildProps", "CustomAfterMicrosoftCommonProps",
-                "CustomBeforeDirectoryBuildTargets", "CustomAfterDirectoryBuildTargets", "AfterMicrosoftNETSdkTargets",
-                "HEXALITH_SOURCE_MAPPING_HASH", "Configuration" })
-            {
-                startInfo.Environment.Remove(key);
-            }
+            RemoveSourceMappingEnvironment(startInfo);
         }
         startInfo.WorkingDirectory = workingDirectory;
         startInfo.RedirectStandardError = true;
