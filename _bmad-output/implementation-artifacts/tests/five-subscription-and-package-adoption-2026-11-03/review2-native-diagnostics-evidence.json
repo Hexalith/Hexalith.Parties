@@ -1,0 +1,44 @@
+{
+  "buildCommand": [
+    "dotnet",
+    "build",
+    "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+    "-c",
+    "Debug",
+    "-m:1",
+    "--nologo"
+  ],
+  "buildExitCode": 0,
+  "command": [
+    "dotnet",
+    "${REPO}/tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+    "-class",
+    "*MemoriesAuthoritativePersistenceTests",
+    "-result-xml",
+    "/tmp/review2-native-diagnostics.xml"
+  ],
+  "exitCode": 0,
+  "summary": [
+    {
+      "environment": "64-bit (x64) .NET 10.0.14 [collection-per-class, parallel (collections, 14 threads)]",
+      "id": "f2581b83-aca5-40fd-941d-582ddce0dc99",
+      "name": "${REPO}/tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+      "run-date": "2026-11-03",
+      "run-time": "21:44:37",
+      "start-rtf": "2026-11-03T21:44:37.9085793+00:00",
+      "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+      "target-framework": ".NETCoreApp,Version=v10.0",
+      "errors": "0",
+      "failed": "0",
+      "finish-rtf": "2026-11-03T21:44:38.0279182+00:00",
+      "not-run": "0",
+      "passed": "3",
+      "skipped": "0",
+      "time": "0.120",
+      "time-rtf": "00:00:00.1200000",
+      "total": "3"
+    }
+  ],
+  "assemblySha256": "6548c9c3d23fb25ad9ada84e4b80918a9241201a68b0390ba6f5c88c046a09e9",
+  "scope": "Final diagnostic helper refactor and three actual persistence/cancellation controls. The earlier owned-runtime pass/refusal retain their original executed wrapper and source identities in review2-runtime-source-identities.json; the full wrapper was not rerun after this helper-only extraction."
+}

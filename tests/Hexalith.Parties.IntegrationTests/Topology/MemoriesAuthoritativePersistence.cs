@@ -53,8 +53,32 @@ internal static class MemoriesAuthoritativePersistence
                 .AddEventStoreGatewayWorkloadTransport(domain, fixture.Session.AppId("eventstore"))
                 .AddEventStoreDaprServiceInvocation(fixture.Session.AppId("eventstore"), apiToken);
             using IHost host = builder.Build();
-            StreamReadPage page = await host.Services.GetRequiredService<IEventStoreGatewayClient>().ReadWorkloadStreamAsync(
-                new StreamReadRequest(tenant, domain, aggregate, PageSize: 100) { RequireNativeProof = true }, cancellationToken).ConfigureAwait(false);
+            StreamReadPage page;
+            try
+            {
+                page = await host.Services.GetRequiredService<IEventStoreGatewayClient>().ReadWorkloadStreamAsync(
+                    new StreamReadRequest(tenant, domain, aggregate, PageSize: 100) { RequireNativeProof = true }, cancellationToken).ConfigureAwait(false);
+            }
+            catch (EventStoreGatewayException exception)
+            {
+                var diagnostics = new List<object> { new { exception.StatusCode, exception.Title, exception.Detail, exception.Code,
+                    exception.Reason, exception.ReasonCode, exception.Category, exception.ClientAction, exception.Extensions } };
+                await CaptureNativeRefusalAsync(exception, async diagnosticToken =>
+                {
+                    AggregateIdentity identity = new(tenant, domain, aggregate);
+                    var persisted = await fixture.ReadStoredStreamAsync(identity, diagnosticToken).ConfigureAwait(false);
+                    diagnostics.Add(new { PersistedMetadata = persisted.Metadata, EventCount = persisted.Events.Length });
+                    using HttpClient actor = fixture.CreateSidecarClient("eventstore");
+                    using HttpResponseMessage inspected = await actor.PutAsync("/v1.0/actors/AggregateActor/" + Uri.EscapeDataString(identity.ActorId)
+                        + "/method/InspectSourceProofAsync", null, diagnosticToken).ConfigureAwait(false);
+                    diagnostics.Add(new { InspectionStatus = (int)inspected.StatusCode, InspectionBody = await inspected.Content.ReadAsStringAsync(diagnosticToken).ConfigureAwait(false) });
+                }, async (captureFailure, diagnosticToken) =>
+                {
+                    if (captureFailure is not null) { diagnostics.Add(new { DiagnosticFailure = captureFailure.ToString() }); }
+                    await File.WriteAllTextAsync(Path.Combine(privateRoot, "native-proof-refusal.json"), JsonSerializer.Serialize(diagnostics), diagnosticToken).ConfigureAwait(false);
+                }).ConfigureAwait(false);
+                throw;
+            }
             page.Tenant.ShouldBe(tenant); page.Domain.ShouldBe(domain); page.AggregateId.ShouldBe(aggregate);
             page.Metadata.IsTruncated.ShouldBeFalse(); page.Metadata.NativeProof.ShouldNotBeNull().Erased.ShouldBeFalse();
             page.Events.ShouldNotBeEmpty();
@@ -98,6 +122,28 @@ internal static class MemoriesAuthoritativePersistence
             reread.Events.Select(item => item.MessageId).ShouldBe(stored.Events.Select(item => item.MessageId));
         }
         await File.WriteAllTextAsync(Path.Combine(privateRoot, "authoritative-persistence.json"), JsonSerializer.Serialize(observations), cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Requests bounded cooperative capture cancellation, awaits its cleanup, then gives persistence a fresh lifetime while preserving the refusal.</summary>
+    internal static async Task CaptureNativeRefusalAsync(Exception primaryFailure, Func<CancellationToken, Task> capture,
+        Func<Exception?, CancellationToken, Task> persist, TimeSpan? captureBudget = null)
+    {
+        using var captureDeadline = new CancellationTokenSource(captureBudget ?? TimeSpan.FromSeconds(15));
+        Exception? captureFailure = null;
+        // The I/O delegates must cooperate with cancellation. Await their actual completion,
+        // including finally cleanup, instead of detaching them when the deadline expires.
+        try { await capture(captureDeadline.Token).ConfigureAwait(false); }
+        catch (Exception exception) { captureFailure = exception; }
+        using var persistenceDeadline = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        try { await persist(captureFailure, persistenceDeadline.Token).ConfigureAwait(false); }
+        catch (Exception receiptFailure)
+        {
+            List<Exception> failures = [primaryFailure];
+            if (captureFailure is not null) { failures.Add(captureFailure); }
+            failures.Add(receiptFailure);
+            throw new AggregateException("Native proof refused and diagnostic capture failed.", failures);
+        }
+        System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(primaryFailure).Throw();
     }
 
     private sealed class OwnedProof(string caller, string privateKey) : IEventStoreGatewayStreamReadProofSource

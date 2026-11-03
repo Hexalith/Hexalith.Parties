@@ -1,0 +1,9 @@
+{
+  "disposition": "Failed qualification; topology disposed, session directory absent; synthetic state handles retained privately, no production mutation.",
+  "privateFileSha256": {
+    "/tmp/five-subscriptions-owned-runtime.log": "10e6211228bdc5cd36374e00424eedecee9b435811d12742c0877a41fb05b673",
+    "${PRIVATE_RUNTIME_FIRST}/runtime.json": "7ff8a56241be0f6e5fe9c04c22e8e6a5264954a4f002a402c3c17442cfa19622",
+    "${PRIVATE_RUNTIME_FIRST}/phase.json": "0528e5c45374a7a9808cb608ec5cc78344e746ba72c7f3a7de87935f35e4ccdb",
+    "${PRIVATE_RUNTIME_FIRST}/executed-identities.json": "fb868bdf21c1044aba7b31900524728113177dd2921d075a1a9e213ba0fedc89"
+  }
+}

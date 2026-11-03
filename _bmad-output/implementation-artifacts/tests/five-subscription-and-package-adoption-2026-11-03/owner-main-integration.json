@@ -1,0 +1,127 @@
+{
+  "qualifiedTaskCommit": "f213e4115ec23cb736e8aa0113f61b9d4854480c",
+  "incomingMain": "c58eb1ac0fe3380ec10cad685877a8072a5fcda4",
+  "integratedMain": "342664954389359a3ad4ec979a8a503f923798ef",
+  "reason": "Preserve immutable qualified source cohort for Parties while retaining all incoming owner main work. Nested submodules remain uninitialized.",
+  "commands": [
+    {
+      "label": "commitlint",
+      "command": [
+        "node_modules/.bin/commitlint",
+        "--last",
+        "--verbose"
+      ],
+      "exitCode": 0,
+      "seconds": 0.194
+    },
+    {
+      "label": "diff-check",
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "origin/main..HEAD"
+      ],
+      "exitCode": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "client-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.EventStore.SignalR.Tests/Hexalith.EventStore.SignalR.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--nologo"
+      ],
+      "exitCode": 0,
+      "seconds": 2.227
+    },
+    {
+      "label": "client",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.EventStore.SignalR.Tests/bin/Debug/net10.0/Hexalith.EventStore.SignalR.Tests.dll",
+        "-class",
+        "*EventStoreSignalRClientTests",
+        "-result-xml",
+        "/tmp/final-owner-integration-client.xml"
+      ],
+      "exitCode": 0,
+      "seconds": 0.822,
+      "summary": [
+        {
+          "environment": "64-bit (x64) .NET 10.0.14 [collection-per-class, parallel (collections, 14 threads)]",
+          "id": "0603fb0d-80e1-465b-88c1-f1cc74e02b1a",
+          "name": "${REPO}/references/Hexalith.EventStore/tests/Hexalith.EventStore.SignalR.Tests/bin/Debug/net10.0/Hexalith.EventStore.SignalR.Tests.dll",
+          "run-date": "2026-11-03",
+          "run-time": "22:27:44",
+          "start-rtf": "2026-11-03T22:27:44.3938091+00:00",
+          "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+          "target-framework": ".NETCoreApp,Version=v10.0",
+          "errors": "0",
+          "failed": "0",
+          "finish-rtf": "2026-11-03T22:27:45.0495275+00:00",
+          "not-run": "0",
+          "passed": "63",
+          "skipped": "0",
+          "time": "0.656",
+          "time-rtf": "00:00:00.6560000",
+          "total": "63"
+        }
+      ]
+    },
+    {
+      "label": "server-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.EventStore.Server.Tests/Hexalith.EventStore.Server.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--nologo"
+      ],
+      "exitCode": 0,
+      "seconds": 13.869
+    },
+    {
+      "label": "server",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.EventStore.Server.Tests/bin/Debug/net10.0/Hexalith.EventStore.Server.Tests.dll",
+        "-class",
+        "*ProjectionChangedHubTests",
+        "-class",
+        "*ProjectionMembershipTransportTests",
+        "-result-xml",
+        "/tmp/final-owner-integration-server.xml"
+      ],
+      "exitCode": 0,
+      "seconds": 32.441,
+      "summary": [
+        {
+          "environment": "64-bit (x64) .NET 10.0.14 [collection-per-class, non-parallel]",
+          "id": "bc663f10-5f49-4a96-8125-da0736670a2a",
+          "name": "${REPO}/references/Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/bin/Debug/net10.0/Hexalith.EventStore.Server.Tests.dll",
+          "run-date": "2026-11-03",
+          "run-time": "22:27:59",
+          "start-rtf": "2026-11-03T22:27:59.3886578+00:00",
+          "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+          "target-framework": ".NETCoreApp,Version=v10.0",
+          "errors": "0",
+          "failed": "0",
+          "finish-rtf": "2026-11-03T22:28:31.3490584+00:00",
+          "not-run": "0",
+          "passed": "68",
+          "skipped": "0",
+          "time": "31.962",
+          "time-rtf": "00:00:31.9620000",
+          "total": "68"
+        }
+      ]
+    }
+  ]
+}

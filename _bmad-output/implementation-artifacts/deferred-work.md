@@ -748,6 +748,8 @@ remaining_gate_2026_10_30: Publish and explicitly adopt exact compatible FrontCo
 verification_2026_10_30: `spec-five-causal-reconciliation-deferred-items.md`; `tests/five-causal-reconciliation-2026-10-30/README.md`.
 
 
+adoption_2026_11_03: The already selected FrontComposer 4.7.5 and EventStore 4.0.4 cohorts now enable the existing shared readiness/witness/retry/generation and cancellation branches. Registered execution is checked inside the actual producer assembly; unregistered and older-package local rollback remains available. Source callback draining and acknowledged membership are separately qualified owner worktree changes, not features invented for the existing 4.0.4 package. No dependency selection changed. Named owner acceptance and transport publication/adoption remain open; G4/Story 8.9 are not promoted. Evidence: `tests/five-subscription-and-package-adoption-2026-11-03/`.
+
 ### DW-101: Consolidate Admin and Consumer exports onto the approved FrontComposer browser-download service after G4-D delivery
 
 origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
@@ -1804,6 +1806,8 @@ archived: 2026-10-21
   review_loop_1_2026_10_24: Canonical revision is required before reservation/submission. Lost-ack recovery requires exact tenant/source/authority/token plus durable explicit-refresh protocol/revision/body binding and independent terminal success. Redis publication retains durable graph repair authority; graph reads reject overlapping publication, and retired neighbor metadata is filtered. Both revision orders, actual semantic caller, graph denial/restart repair and alias/deletion convergence pass; source/package/deployed boundaries remain separate. Final evidence: `tests/five-memories-inventory-and-publication-2026-10-24/review1-verification.json`.
   review_loop_2_2026_10_24: Consumer reservations retain the original protocol/revision/body digest before admission. Canonical JSON redelivery recovers that persisted identity without resubmission or unproved legacy adoption; a proven unsubmitted successor binds its own actual body. Modern refresh uses bounded key provenance, incomplete legacy registration is rediscovered natively before sealing, and actual NL TopK/current publication controls remain required. Final evidence is retained separately in the loop2 receipt.
 
+  qualification_2026_11_03: Matching Debug wrapper/child configuration, selected family versions, mapping identity and shared producer bytes are now enforced before runtime mutation. Two focused authenticated child runs pass same-URI revision/current-content, both-output erasure, terminal mapping/intent and unrelated-case byte-preservation assertions. Full malformed-PDF cleanup still refuses with inventory HTTP 409; the focused wrapper still refuses native gateway proof with HTTP 503 despite later Available actor inspection. Both broader gates and all production/history acceptance remain open. Evidence: `tests/five-subscription-and-package-adoption-2026-11-03/README.md`.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-memories-recovery-deferred-items.md`
   summary: Qualify whether ingestion-inventory persistence needs a separate health capability probe.
   severity: medium
@@ -2059,14 +2063,23 @@ verification_final: `tests/five-processing-and-memories-erasure-2026-10-25/`; sp
 - source_spec: `spec-five-causal-reconciliation-deferred-items.md`
   summary: Qualify revocation and draining of raw synchronous callbacks already executing when transport removal begins.
   evidence: Review BH-03/EC-03; the original raw Action dispatch and the new revocation check both allow a delegate already inside Invoke to finish after removal. Captured-but-not-started registrations and Parties-owned asynchronous read effects are separate qualified boundaries. Stronger arbitrary delegate quiescence needs a reentrancy-safe owner protocol and deterministic concurrent proof.
+  status: done 2026-11-03
+  resolution: Registration entry and revocation share a gate; external removal retains and drains entered calls, including after cancellation or earlier self-removal. Group-wide concurrent self-removals return without mutual waits. Ordinary/scoped controls execute on the actual client.
+  verification: `spec-five-subscription-and-package-adoption-deferred-items.md`; `tests/five-subscription-and-package-adoption-2026-11-03/`. Qualification is source-only; publication/adoption and deployed guarantees remain separate.
 
 - source_spec: `spec-five-causal-reconciliation-deferred-items.md`
   summary: Serialize remote group leave and replacement join operations without evicting surviving subscribers.
   evidence: Review BH-04; baseline removal and the current client release local registration ownership before the remote leave, allowing a newer join to precede the older leave. Qualify actual server delivery with concurrent group operations; local callback fencing alone does not settle remote membership ordering.
+  status: done 2026-11-03
+  resolution: New clients negotiate full connection-local generation-ordered snapshots. Production hub/client tests reorder leave/replacement, preserve same-group and unrelated survivors, replace at quota, and reconnect with and without negotiation.
+  verification: `spec-five-subscription-and-package-adoption-deferred-items.md`; `tests/five-subscription-and-package-adoption-2026-11-03/`. Qualification is source-only; publication/adoption and deployed guarantees remain separate.
 
 - source_spec: `spec-five-causal-reconciliation-deferred-items.md`
   summary: Reconcile uncertain remote group joins after cancellation or lost acknowledgement without removing surviving subscribers.
   evidence: Review BH-05; baseline JoinGroup failure rollback and current cancellation can revoke local authority while a server join still finishes later. Source client invocation cancellation does not certify remote group absence. Require an owner-supported acknowledgement/reconciliation protocol and actual remote-membership evidence.
+  status: done 2026-11-03
+  resolution: Full snapshots retain canceled/lost-ack intent until reconciliation or connection termination. Protocol-owned server inventory retains applied-but-unacknowledged adds and failed removals; real backend fault controls verify repaired raw membership. Legacy ordinary acknowledged leaves retire bookkeeping, while uncertain legacy operations remain explicitly unqualified until connection termination.
+  verification: `spec-five-subscription-and-package-adoption-deferred-items.md`; `tests/five-subscription-and-package-adoption-2026-11-03/`. Qualification is source-only; publication/adoption and deployed guarantees remain separate.
 
 ### DW-199: Bring the five-verification maintenance spec under the spine I17 six-clause gate
 
@@ -2184,3 +2197,25 @@ severity: low
 reason: The child writes `ready` with `pathlib.Path.write_text`, which creates the file before writing it. The test polls `File.Exists` and then parses the content at once, so under load it can read an empty file. On 2026-11-02 the second `scripts/test.ps1 -Lane all` run failed once with `FormatException: The input string '' was not in a correct format`, while the first run and the focused 30/30 runs passed. The test code was unchanged and does not use the stdin path.
 exit_proof: The supervisor fixtures publish `ready` atomically (write a temporary file, then `os.replace`), or the reader waits for complete content, and the Contracts.Tests supervisor facts pass repeatedly under parallel CPU load.
 rollback: None required (test-only).
+
+- source_spec: `spec-five-subscription-and-package-adoption-deferred-items.md`
+  summary: Reconcile failed-ingestion source inventory after payload cleanup before certifying complete Memories erasure.
+  evidence: Two actual owned runs retain one failed-unit record after sourcePayloads and retainedPayloadReferences reach zero; producer inventory returns HTTP 409 INVENTORY_INCOMPLETE. The endpoint hides the underlying InvalidOperationException. Preserve cleanup refusal and determine the exact producer guard with fault-level diagnostics; no attestation or policy override is authorized.
+  status: open
+
+- source_spec: `spec-five-subscription-and-package-adoption-deferred-items.md`
+  summary: Resolve native gateway stream-read refusal when direct actor inspection reports an available matching source proof.
+  evidence: Two focused owned wrappers fail RequireNativeProof stream reads with bare HTTP 503. The diagnostic run independently reads matching persisted proof at head 3, erased false, and authenticated InspectSourceProofAsync returns Available for the same identity. Native batch/remoting/gateway cause remains unproved. Keep native proof and authoritative replay assertions enabled.
+  status: open
+
+- source_spec: `spec-five-subscription-and-package-adoption-deferred-items.md`
+  summary: Qualify physical termination or stronger repair for canceled joins against legacy membership peers.
+  evidence: Review pass 2 BH2-01; the legacy wire has no generation fence, so an older join can apply after a repair leave. This predates the task and remains explicitly unqualified; retained bookkeeping must not be interpreted as remote absence. Matching protocol-1 producer/client evidence is separate.
+
+- source_spec: `spec-five-subscription-and-package-adoption-deferred-items.md`
+  summary: Guarantee standalone runtime-child teardown when final authority receipt persistence fails.
+  evidence: Review pass 2 BH2-07; baseline writes runtime.authority.json before both teardown calls in the same finally. A filesystem failure skips child-level teardown. The owned wrapper independently disposes its topology, but standalone configured runs need nested cleanup/failure preservation.
+
+- source_spec: `spec-five-subscription-and-package-adoption-deferred-items.md`
+  summary: Extend authoritative native stream and replay qualification to every recorded canonical Memories output.
+  evidence: Review pass 2 BH2-08; the baseline helper selects UnitIds.Last although refresh records multiple canonical outputs. Both-output qualified REST absence is now tested; native gateway proof/replay remains unqualified due HTTP 503 and needs complete per-output expectations after that refusal is resolved.

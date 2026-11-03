@@ -1,0 +1,48 @@
+{
+  "owners": {
+    "Parties": {
+      "baseline": "6795536e3fe5fd4cf44eb5f4c67e69f3374532b4",
+      "sourceSha256": {
+        "Directory.Build.targets": "579ffd596268055e890f3dd4b2ba708bf79ab8b32d605b08428b7773de27fe7f",
+        "scripts/prepare-aspire-runtime-hosts.sh": "70acd269543bc5c58c08a0f6b3f6b01383790868e27244513e0c8c457f8e5bf0",
+        "src/Hexalith.Parties.UI/Services/EventStoreSignalRProjectionStream.cs": "31d36379836b91463684c307c461f263e0e5ccf4e6fe01037aea92be35302110",
+        "src/Hexalith.Parties.UI/Services/OptimisticReconcile.cs": "a7ab0367281c1ba940a8cf4402fba828fb4697b91f11c206d1a6645a153a9c2e",
+        "tests/Hexalith.Parties.Ci.Tests/AspireRuntimePreparationTests.cs": "6164305676b62e3b180db562d6dd2e797e4c58ce2f7cb77be7425d996e583972",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj": "fae66b831940c2c1213ea48291358043891b8556f3b0748686e65a08e0e8fc9e",
+        "tests/Hexalith.Parties.IntegrationTests/Topology/MemoriesAuthoritativePersistence.cs": "58caed465aa38fc8fc638040f37217703a545e4df6ee4c639b5aa126527c71ae",
+        "tests/Hexalith.Parties.IntegrationTests/Topology/MemoryRuntimeIdentity.cs": "061414cb1a4201b56cbd08c9d0d7595eb6c7514480ecbfda9efe2aaa8fb98c65",
+        "tests/Hexalith.Parties.IntegrationTests/Topology/MemoryRuntimeIdentityTests.cs": "5bb9c865ca30a95119bb4a8db5c5c8a75831255c563a9d86078af32470405aa2",
+        "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs": "d82a7145dff8daf08e5d87d9baf72b68f9f4fdab780e36a4006e6efa6c1aec67",
+        "tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeIngestionObservation.cs": "e135304379f4936fabb7fb3be95250bf7ddb257251bdd4be85ef2b96b6aabfd5",
+        "tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeIngestionObserver.cs": "f4ca14f221ce02c3a4805b6b286acdcc2e244d920e4769fa092564e29851eb08",
+        "tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeTests.cs": "711bca1cc6e4b08e9bc01ff5bb3fd3da2be426e4146ae3c74e9b52530347c11a",
+        "tests/Hexalith.Parties.UI.Tests/OptimisticReconcileTests.cs": "4ea57b540a581474b0ffd18ce0cbd1c8e5924625562d54032bdb0ccec8f69bfe",
+        "tests/Hexalith.Parties.UI.Tests/PackageProjectionBarrier.cs": "def0ae72f2a21f55ec5298fd1647faf0fc4f083fae7a5a844db752db02f0775c",
+        "tests/Hexalith.Parties.UI.Tests/PackageProjectionHub.cs": "adee77adf509b6ab59bee23dea0dbb7e9e135af97599a006aa7950a5cd58b187",
+        "tests/Hexalith.Parties.UI.Tests/ProjectionTransportPackageTests.cs": "98ee7688d39a0683b915131a4795399e0a56b84c75c2af72fd5a748a39fe2b06"
+      }
+    },
+    "Hexalith.EventStore": {
+      "baseline": "a9205f511b4f96b5daf94d65369d6dee63e0c623",
+      "sourceSha256": {
+        "src/Hexalith.EventStore.SignalR/EventStoreSignalRClient.cs": "c986246917779e6d98a7e95f6360df8c03fe531e16407d947e1a93806b5097cc",
+        "src/Hexalith.EventStore.SignalR/IProjectionCallback.cs": "db9ffd3755e292d7a7ebf0d460c5dcf521bf4138609b12b23db86e0cec80a721",
+        "src/Hexalith.EventStore.SignalR/ProjectionCallback.cs": "1335642e6a4b6ae9d9992920a1ac6d8165fb61240c498c0d742a2fd81a84bc61",
+        "src/Hexalith.EventStore/SignalRHub/ProjectionChangedHub.cs": "13da2e40e46a08a59f30a27c400db3d55dd0374ce82e6393c9e346285b20670a",
+        "src/Hexalith.EventStore/SignalRHub/ProjectionMembershipState.cs": "e791b068073c4e2dd3fbf784b4c2897ef7018ef35bf296e26cee9a3f4c00b44a",
+        "tests/Hexalith.EventStore.Server.Tests/Hexalith.EventStore.Server.Tests.csproj": "19eec457f80f8153a50aea7258c756aa785ae7904228ec0f3f47bbc430b8d2f8",
+        "tests/Hexalith.EventStore.Server.Tests/SignalR/FaultingProjectionGroupManager.cs": "95ca87bea98d5caee7533c340cb9a530ed709e1bf8bcea93ed5081e075ff23b2",
+        "tests/Hexalith.EventStore.Server.Tests/SignalR/ProjectionChangedHubTests.cs": "0dda0c85cdab2cf257848ff1d54c49d1cfb4fb974efb25cf86ae98b13bac684e",
+        "tests/Hexalith.EventStore.Server.Tests/SignalR/ProjectionGroupFailure.cs": "eb4f94c87daf51f5fcfc5b6cc83f9d4845748aaf8f0bb11981f12a8431592792",
+        "tests/Hexalith.EventStore.Server.Tests/SignalR/ProjectionMembershipBarrier.cs": "c0d3b1cbe9b4e74d0b1c79b1ca1be2c5675ad8b275c954554f05979d05ecf82f",
+        "tests/Hexalith.EventStore.Server.Tests/SignalR/ProjectionMembershipRecoveryControl.cs": "1440d1fdd86e513440a501d0d810857da53a7c3a8e283568c7dc77c3558fe7fe",
+        "tests/Hexalith.EventStore.Server.Tests/SignalR/ProjectionMembershipTransportTests.cs": "77e8a0fd4d3427e6c127f13344785310bdd44bb73a63961f0ca85ac99b65e8d3",
+        "tests/Hexalith.EventStore.SignalR.Tests/EventStoreSignalRClientTests.cs": "350594a3b5c44c99c9f4311e7f090078f122e1a6391b7f432adaa70029cc3e96"
+      }
+    }
+  },
+  "readOnlyOwners": {
+    "Hexalith.FrontComposer": "",
+    "Hexalith.Memories": ""
+  }
+}

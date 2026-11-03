@@ -1,0 +1,13 @@
+{
+  "frozenIntentMatchesApprovedStagedBlock": true,
+  "frozenIntentSha256": "2763811444710fa8d76acba604a13f08b60f16a6803123cdec9332840d1fb79d",
+  "publicPackageVersionFilesChanged": [],
+  "Hexalith.Memories": {
+    "head": "d959bdae5af9c22f53573eda71c091cb5c0aae4c",
+    "clean": true
+  },
+  "Hexalith.FrontComposer": {
+    "head": "fbe01c913cb863abb0fd4a317d370d36fff593b3",
+    "clean": true
+  }
+}

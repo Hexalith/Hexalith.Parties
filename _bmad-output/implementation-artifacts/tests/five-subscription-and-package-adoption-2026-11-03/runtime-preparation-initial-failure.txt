@@ -1,0 +1,7 @@
+Observed failure excerpt (full initial compiler log was superseded by the rerun):
+Command: bash scripts/prepare-aspire-runtime-hosts.sh --configuration Debug --include-memory-qualification true
+All individual compiler invocations completed successfully. Completion manifest refused:
+Runtime SDK qualification failed: Prepared runtime file drifted after completed build: ${REPO}/tests/Hexalith.Parties.EventStoreAdminUI.TestHost/bin/Debug/net10.0/Hexalith.Parties.EventStoreAdminUI.TestHost.staticwebassets.endpoints.json
+
+Cause: adding the wrapper/child builds legitimately rebuilt earlier host dependencies after their first receipt.
+Correction: retain immediate per-project compiler/cohort validation, then revalidate and bind final bytes after every compiler succeeds, preserving each original rebuild-start timestamp and exact cohort checks before completion. No completed manifest was emitted by the failed attempt.

@@ -21,6 +21,7 @@ public sealed class AspireRuntimePreparationTests
     [Theory]
     [InlineData("", false, false, "valid")]
     [InlineData("packaged", false, false, "valid")]
+    [InlineData("packaged-qualification", false, false, "valid")]
     [InlineData("native", false, false, "valid")]
     [InlineData("invalid", false, false, "valid")]
     [InlineData("missing-value", false, false, "valid")]
@@ -57,13 +58,15 @@ public sealed class AspireRuntimePreparationTests
         const string PackageAdminUi = "tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj";
         const string PackageHost = "tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj";
         const string NativeHost = "references/Hexalith.EventStore/src/Hexalith.EventStore/Hexalith.EventStore.csproj";
+        string[] qualificationProjects = profile == "packaged-qualification" ? ["tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+            "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj"] : [];
         try
         {
             File.Copy(CiTestPaths.RepoFile("scripts/prepare-aspire-runtime-hosts.sh"), script);
             File.Copy(CiTestPaths.RepoFile("scripts/validate-aspire-runtime-cohort.py"), Path.Combine(root, "scripts", "validate-aspire-runtime-cohort.py"));
             string[] catalogProjects = profile == "native" ? [] : ["src/Hexalith.Parties/Hexalith.Parties.csproj",
                 "src/Hexalith.Parties.EventStoreExtensions/Hexalith.Parties.EventStoreExtensions.csproj"];
-            foreach (string relative in commonHosts.Concat(catalogProjects).Append(NativeHost).Append(NativeSample).Append(PackageSample).Append(PackageAdminUi)
+            foreach (string relative in commonHosts.Concat(qualificationProjects).Concat(catalogProjects).Append(NativeHost).Append(NativeSample).Append(PackageSample).Append(PackageAdminUi)
                 .Concat(missingHost ? [] : new[] { PackageHost }).Distinct(StringComparer.Ordinal)
                 .Where(relative => !missingSample || relative != PackageSample))
             {
@@ -144,6 +147,11 @@ public sealed class AspireRuntimePreparationTests
             {
                 start.ArgumentList.Add("--gateway-profile"); start.ArgumentList.Add("packaged"); start.ArgumentList.Add("extra");
             }
+            else if (profile == "packaged-qualification")
+            {
+                start.ArgumentList.Add("--gateway-profile"); start.ArgumentList.Add("packaged");
+                start.ArgumentList.Add("--include-memory-qualification"); start.ArgumentList.Add("true");
+            }
             else if (profile.Length > 0) { start.ArgumentList.Add("--gateway-profile"); start.ArgumentList.Add(profile); }
             start.Environment["PATH"] = Path.GetDirectoryName(compiler) + Path.PathSeparator + start.Environment["PATH"];
             start.Environment["PARTIES_COMPILER_CALLS"] = calls;
@@ -174,12 +182,12 @@ public sealed class AspireRuntimePreparationTests
             process.ExitCode.ShouldBe(0, diagnostics);
             string[] selectedCommonHosts = commonHosts.Select(path => profile != "native" && path.EndsWith("Hexalith.EventStore.Admin.UI.csproj", StringComparison.Ordinal)
                 ? PackageAdminUi : path).ToArray();
-            builds.Select(call => call[1]).ShouldBe(new[] { profile == "native" ? NativeHost : PackageHost }.Concat(selectedCommonHosts).Concat(catalogProjects));
+            builds.Select(call => call[1]).ShouldBe(new[] { profile == "native" ? NativeHost : PackageHost }.Concat(selectedCommonHosts).Concat(qualificationProjects).Concat(catalogProjects));
             builds.ShouldAllBe(call => call.Contains("Release") && call.Contains("-warnaserror") && call.Contains("-m:1"));
             if (profile != "native")
             {
                 builds.ShouldAllBe(call => call.Contains("-p:HexalithEventStoreVersion=3.130.2") && call.Contains("-p:HexalithUsePublishedSdkForHostedTests=true"));
-                arguments.Count(call => call.Any(argument => argument.StartsWith("-getProperty:TargetPath,", StringComparison.Ordinal))).ShouldBe(10);
+                arguments.Count(call => call.Any(argument => argument.StartsWith("-getProperty:TargetPath,", StringComparison.Ordinal))).ShouldBe(10 + qualificationProjects.Length);
                 builds.ShouldAllBe(call => call.Contains("-t:Rebuild") && call.Contains("-p:HexalithFrontComposerVersion=4.7.4")
                     && call.Contains("-p:HexalithTenantsVersion=6.0.0") && call.Contains("-p:HexalithMemoriesVersion=3.0.13"));
                 File.Exists(Path.Combine(root, "artifacts", "runtime-profile", "Release", "prepared.json")).ShouldBeTrue();

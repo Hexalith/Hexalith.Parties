@@ -25,6 +25,36 @@ public sealed class OptimisticReconcileTests
     private const string ProjectionType = PartyProjectionNames.Detail;
     private const string Tenant = "tenant-a";
 
+#if HFC_SHARED_RECONCILE_READINESS
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task RegisteredReconciliationActuallyExecutesTheSelectedSharedAssembly(bool shared)
+    {
+        FakeProjectionStream stream = NewStream(connected: false);
+        bool invokedShared = false;
+        bool applied = false;
+        var recorder = new Recorder();
+        OptimisticReconcileRequest request = recorder.BuildRequest(
+            _ => Task.FromResult(CommandAcceptance.Accepted),
+            _ => Task.FromResult(ProjectionFreshnessStatus.Current)) with
+        {
+            ApplyOptimistic = () =>
+            {
+                applied = true;
+                System.Reflection.Assembly sharedAssembly = typeof(Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler).Assembly;
+                invokedShared = new System.Diagnostics.StackTrace().GetFrames()
+                    .Select(frame => frame.GetMethod()?.Module.Assembly)
+                    .FirstOrDefault(assembly => assembly == sharedAssembly || assembly == typeof(OptimisticReconcile).Assembly) == sharedAssembly;
+            },
+        };
+        await NewPrimitive(stream, shared: shared).ExecuteAsync(request, TestContext.Current.CancellationToken);
+        applied.ShouldBeTrue();
+        invokedShared.ShouldBe(shared, "Registration must execute the restored producer's actual reconciler.");
+        stream.Subscriptions.ShouldBeEmpty();
+    }
+#endif
+
     [Fact]
     public async Task HappyPath_ViaFreshnessCurrent_AppliesOptimistic_AnnouncesSaving_ThenReconcilesPolitely()
     {

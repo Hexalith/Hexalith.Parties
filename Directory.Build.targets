@@ -26,19 +26,18 @@
     <AssemblyMetadata Include="HexalithTestRoot:Hexalith.Memories" Value="$(HexalithMemoriesRoot)" />
     <AssemblyMetadata Include="HexalithTestRoot:Hexalith.Tenants" Value="$(HexalithTenantsRoot)" />
   </ItemGroup>
-  <!-- Approved shared primitives are published in Shell/Contracts.UI 4.7.1.
-       Registration remains opt-in; the package reconciler lacks registration readiness. -->
+  <!-- Shared registration remains opt-in. Qualify exact package API cohorts. -->
   <Target Name="ConfigureFrontComposerFeedbackCandidate" BeforeTargets="PrepareForBuild;CoreCompile">
-    <PropertyGroup Condition="'$(HexalithEventStoreFromSource)' == 'true'">
+    <PropertyGroup Condition="'$(HexalithEventStoreFromSource)' == 'true' or '$(HexalithEventStoreVersion)' == '4.0.4'">
       <DefineConstants>$(DefineConstants);HES_CANCELLABLE_PROJECTIONS</DefineConstants>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(HexalithFrontComposerFromSource)' == 'true' or '$(HexalithFrontComposerVersion)' == '4.7.1' or '$(HexalithFrontComposerVersion)' == '4.7.3' or '$(HexalithFrontComposerVersion)' == '4.7.4' or '$(HexalithFrontComposerVersion)' == '4.7.5'">
       <DefineConstants>$(DefineConstants);HFC_SHARED_UI</DefineConstants>
     </PropertyGroup>
-    <!-- The selected producer source supplies the corrected readiness/acceptance contract.
-         Keep package orchestration local until a separately approved publication/adoption. -->
-    <PropertyGroup Condition="'$(HexalithFrontComposerFromSource)' == 'true'">
+    <!-- 4.7.5 publishes readiness, operation witnesses, retry clocks and recovery generations.
+         Older or unknown packages retain local reconciliation. -->
+    <PropertyGroup Condition="'$(HexalithFrontComposerFromSource)' == 'true' or '$(HexalithFrontComposerVersion)' == '4.7.5'">
       <DefineConstants>$(DefineConstants);HFC_SHARED_RECONCILE_READINESS</DefineConstants>
     </PropertyGroup>
   </Target>
@@ -61,6 +60,37 @@
   <ItemGroup Condition="'$(MSBuildProjectName)' == 'Hexalith.Parties.Tests'">
     <AssemblyMetadata Include="HexalithSourceMappingMode" Value="$(HexalithSourceMappingMode)" />
   </ItemGroup>
+  <Target Name="ResolveMemoryRuntimeChildTargetPath" BeforeTargets="ConfigureMemoryRuntimeIdentity"
+          DependsOnTargets="PrepareProjectReferences" Condition="'$(MSBuildProjectName)' == 'Hexalith.Parties.IntegrationTests'">
+    <ItemGroup>
+      <_MemoryRuntimeChildReference Include="@(_MSBuildProjectReferenceExistent)"
+          Condition="'%(_MSBuildProjectReferenceExistent.Filename)' == 'Hexalith.Parties.Tests'" />
+    </ItemGroup>
+    <!-- Ask the actual referenced project, preserving SDK artifact/output/RID settings and reference metadata. -->
+    <MSBuild Projects="@(_MemoryRuntimeChildReference)" Targets="GetTargetPath" BuildInParallel="false"
+        Properties="%(_MemoryRuntimeChildReference.SetConfiguration);%(_MemoryRuntimeChildReference.SetPlatform);%(_MemoryRuntimeChildReference.SetTargetFramework);%(_MemoryRuntimeChildReference.AdditionalProperties)"
+        RemoveProperties="%(_MemoryRuntimeChildReference.GlobalPropertiesToRemove);$(_GlobalPropertiesToRemoveFromProjectReferences)">
+      <Output TaskParameter="TargetOutputs" ItemName="_MemoryRuntimeChildTargetPath" />
+    </MSBuild>
+    <Error Condition="'@(_MemoryRuntimeChildTargetPath->Count())' != '1'" Text="Exactly one evaluated runtime child TargetPath is required." />
+    <PropertyGroup>
+      <_MemoryRuntimeChildPath>@(_MemoryRuntimeChildTargetPath->'%(FullPath)')</_MemoryRuntimeChildPath>
+    </PropertyGroup>
+  </Target>
+  <Target Name="ConfigureMemoryRuntimeIdentity" BeforeTargets="GetAssemblyAttributes"
+          Condition="'$(MSBuildProjectName)' == 'Hexalith.Parties.Tests' or '$(MSBuildProjectName)' == 'Hexalith.Parties.IntegrationTests'">
+    <ItemGroup>
+      <AssemblyMetadata Include="HexalithRuntimeConfiguration" Value="$(Configuration)" />
+      <AssemblyMetadata Include="HexalithRuntimeTargetFramework" Value="$(TargetFramework)" />
+      <AssemblyMetadata Include="HexalithRuntimeMappingMode" Value="$(HexalithSourceMappingMode)" />
+      <AssemblyMetadata Include="HexalithRuntimeMappingHash" Value="$(HexalithSourceMappingHash)" />
+      <AssemblyMetadata Include="HexalithRuntimeEventStoreVersion" Value="$(HexalithEventStoreVersion)" />
+      <AssemblyMetadata Include="HexalithRuntimeMemoriesVersion" Value="$(HexalithMemoriesVersion)" />
+      <AssemblyMetadata Include="HexalithRuntimeFrontComposerVersion" Value="$(HexalithFrontComposerVersion)" />
+      <AssemblyMetadata Include="HexalithRuntimeRuntimeIdentifier" Value="$(RuntimeIdentifier)" />
+      <AssemblyMetadata Include="HexalithRuntimeChildPath" Value="$(_MemoryRuntimeChildPath)" Condition="'$(MSBuildProjectName)' == 'Hexalith.Parties.IntegrationTests'" />
+    </ItemGroup>
+  </Target>
   <!-- Published EventStore 3.128.0 supplies recovery and generation APIs in both dependency modes. -->
   <PropertyGroup Condition="('$(MSBuildProjectName)' == 'Hexalith.Parties.Projections' or '$(MSBuildProjectName)' == 'Hexalith.Parties.Projections.Tests' or '$(MSBuildProjectName)' == 'Hexalith.Parties.Tests')">
     <DefineConstants>$(DefineConstants);HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY</DefineConstants>

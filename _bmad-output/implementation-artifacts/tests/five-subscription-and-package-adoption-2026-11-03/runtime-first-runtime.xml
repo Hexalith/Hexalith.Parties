@@ -1,0 +1,25 @@
+<assemblies schema-version="3" id="3b82f49f-d4aa-44ad-bbbd-8f1f86926844" computer="DESKTOP-VIOG240" user="administrator" start-rtf="2026-11-03T20:22:55.2880430+00:00" finish-rtf="2026-11-03T20:24:46.4803504+00:00" timestamp="11/03/2026 21:24:46"><assembly environment="64-bit (x64) .NET 10.0.14 [collection-per-class, parallel (collections, 14 threads)]" id="15e3392f-6c19-4086-b959-dbf815ebfa20" name="${REPO}/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll" run-date="2026-11-03" run-time="20:22:55" start-rtf="2026-11-03T20:22:55.2880430+00:00" test-framework="xUnit.net v3 4.0.2+0c7aa4991f" target-framework=".NETCoreApp,Version=v10.0" errors="0" failed="1" finish-rtf="2026-11-03T20:24:46.4803504+00:00" not-run="0" passed="0" skipped="0" time="111.197" time-rtf="00:01:51.1970000" total="1"><collection name="Test collection for Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests (id: 1c1c72f7a87e9b4cb57afcd0f51d805067ae167b60bb01f00cb1cb08db0161ba)" id="d19a5656-2db4-4bba-b89a-e0c20ec112d2" failed="1" not-run="0" passed="0" skipped="0" time="111.105" time-rtf="00:01:51.1050000" total="1"><test id="b84b5c75-f493-4096-8aad-461d637ad756" name="Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests.SelectedMemoriesIngestionAndCleanupPersistAcrossRestart" result="Fail" time="111.105" time-rtf="00:01:51.1050000" start-rtf="2026-11-03T20:22:55.3586284+00:00" finish-rtf="2026-11-03T20:24:46.4668383+00:00" type="Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests" method="SelectedMemoriesIngestionAndCleanupPersistAcrossRestart" source-file="${REPO}/tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeTests.cs" source-line="29"><output>Synthetic runtime cleanup is incomplete; operator cleanup is required using the private provisioning/teardown handles.
+</output><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : new PartyMemoryIngestionIntentStore(sdk, stateOptions);
+        PartyMemoryCleanupResult? cleanup = null;
+        for (int attempt = 0; attempt &lt; 120; attempt++)
+        {
+            cleanup = await new PartyMemoryCleanupService(owner, mappings, NullLogger&lt;PartyMemoryCleanupService&gt;.Instance, intents)
+                .DeleteByPartyAsync(tenant, caseId, party, token).ConfigureAwait(true);
+            if (cleanup.Cleaned) { break; }
+            await Task.Delay(250, token).ConfigureAwait(true);
+        }
+        cleanup.ShouldNotBeNull().Cleaned
+    should be
+True
+    but was
+False</message><stack-trace>   at Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests.QualifyFailedProducerCleanupAsync(PartyMemoryRuntimeConfiguration config, HttpClient owner, MemoriesClient client, String tenant, String caseId, IOptions`1 stateOptions, CancellationToken token) in ${REPO}/tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeTests.cs:line 356
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+   at Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests.SelectedMemoriesIngestionAndCleanupPersistAcrossRestart() in ${REPO}/tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeTests.cs:line 230
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests.SelectedMemoriesIngestionAndCleanupPersistAcrossRestart() in ${REPO}/tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeTests.cs:line 279
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test></collection></assembly></assemblies>

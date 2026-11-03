@@ -1,0 +1,104 @@
+[
+  {
+    "id": "BH-01",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "Cross-group callback-specific removals can mutually await completions because reentrancy checks only target retired callbacks; source and the reviewer probe establish the cycle."
+  },
+  {
+    "id": "BH-02",
+    "verdict": "medium",
+    "route": "bad_spec",
+    "evidence": "Background repair supplies only the disposal token to a shared-gate RPC. Heartbeats can keep a stalled invocation alive indefinitely, blocking later membership changes. The plan omitted a finite attempt/recovery boundary."
+  },
+  {
+    "id": "BH-03",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "Legacy rejected joins abort the new full iteration; only protocol 1 has pruning, whereas the prior legacy loop pruned and continued. Authorized later groups can remain unjoined."
+  },
+  {
+    "id": "BH-04",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "Exceptions thrown inside the protocol-1 catch body bypass subsequent catch clauses; probe/retry failures therefore escape without scheduling owned repair."
+  },
+  {
+    "id": "BH-05",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "GetOrAdd precedes WaitAsync and the try/finally. An already canceled connection token throws before cleanup, retaining the newly inserted static membership state."
+  },
+  {
+    "id": "BH-06",
+    "verdict": "low",
+    "route": "reject",
+    "evidence": "The demonstrated mixed-wire sequence is possible for a custom caller, but the qualified client selects one negotiated protocol and never sends legacy mutations in protocol 1. The acknowledgement names the last applied snapshot generation; arbitrary mixed-wire ownership is unqualified. Adding a new protocol-mode guard is disproportionate for this unsupported caller."
+  },
+  {
+    "id": "BH-07",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "The child path reconstructs default bin layout. Supported SDK artifacts/RID/output overrides can select a missing or stale default child; use the referenced project evaluated TargetPath."
+  },
+  {
+    "id": "BH-08",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "Only the second canonical output receives a direct qualified absence read. Both-output erasure needs explicit reads for every recorded authority output."
+  },
+  {
+    "id": "BH-09",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "Both survivor cases are empty, so unchanged case bytes cannot detect unrelated memory-unit or derived-content deletion. Populate both survivor scopes before cleanup."
+  },
+  {
+    "id": "BH-10",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "The receipt exports the terminal main-unit absence flag as SurvivorsVerified before survivor assertions run. A failed assertion can leave a false positive flag."
+  },
+  {
+    "id": "BH-11",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "Native-refusal diagnostic I/O uses the primary operation token and the final write can replace the original exception. Use a bounded independent capture lifetime and preserve both failures."
+  },
+  {
+    "id": "EC-01",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "Same verified legacy authorization-pruning regression as BH-03; preserve authorized later rejoin delivery."
+  },
+  {
+    "id": "EC-02",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "Same verified protocol-1 fallback exception boundary as BH-04; a second backend failure can escape repair scheduling."
+  },
+  {
+    "id": "EC-03",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "Same verified cross-group/callback-specific wait cycle as BH-01; identify execution across callbacks owned by this client."
+  },
+  {
+    "id": "VG-01",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "Pre-verified regression gap: all snapshot transport inputs are authorized acme; legacy authorization tests do not detect bypassed snapshot authorization or partial mutation."
+  },
+  {
+    "id": "VG-02",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "Pre-verified regression gap: reconnect tests retain tenant grants or dispatch locally; real partial revocation must prove valid survivor delivery and revoked absence."
+  },
+  {
+    "id": "VG-03",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "Verified Other finding: duplicate legacy authorization regression, independently traced against the prior per-group catch/prune behavior."
+  }
+]

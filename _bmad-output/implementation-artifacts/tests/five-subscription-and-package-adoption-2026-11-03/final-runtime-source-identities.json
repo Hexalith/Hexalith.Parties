@@ -1,0 +1,44 @@
+{
+  ".": {
+    "baseline": "6795536e3fe5fd4cf44eb5f4c67e69f3374532b4",
+    "files": {
+      "Directory.Build.targets": "579ffd596268055e890f3dd4b2ba708bf79ab8b32d605b08428b7773de27fe7f",
+      "scripts/prepare-aspire-runtime-hosts.sh": "70acd269543bc5c58c08a0f6b3f6b01383790868e27244513e0c8c457f8e5bf0",
+      "src/Hexalith.Parties.UI/Services/EventStoreSignalRProjectionStream.cs": "31d36379836b91463684c307c461f263e0e5ccf4e6fe01037aea92be35302110",
+      "src/Hexalith.Parties.UI/Services/OptimisticReconcile.cs": "a7ab0367281c1ba940a8cf4402fba828fb4697b91f11c206d1a6645a153a9c2e",
+      "tests/Hexalith.Parties.Ci.Tests/AspireRuntimePreparationTests.cs": "6164305676b62e3b180db562d6dd2e797e4c58ce2f7cb77be7425d996e583972",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj": "fae66b831940c2c1213ea48291358043891b8556f3b0748686e65a08e0e8fc9e",
+      "tests/Hexalith.Parties.IntegrationTests/Topology/MemoriesAuthoritativePersistence.cs": "bd94b91619aa30cfc2be20e48c4c56c55112dcaef8484c098ffcb8fca93e02c3",
+      "tests/Hexalith.Parties.IntegrationTests/Topology/MemoriesAuthoritativePersistenceTests.cs": "cfac108fbe4be83b9766f4502e2985b4890bda36bc3866fecf107acbde98564a",
+      "tests/Hexalith.Parties.IntegrationTests/Topology/MemoryRuntimeIdentity.cs": "061414cb1a4201b56cbd08c9d0d7595eb6c7514480ecbfda9efe2aaa8fb98c65",
+      "tests/Hexalith.Parties.IntegrationTests/Topology/MemoryRuntimeIdentityTests.cs": "5bb9c865ca30a95119bb4a8db5c5c8a75831255c563a9d86078af32470405aa2",
+      "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs": "2eadd27996c817917ad8dc3ed3792fef49b6e9a4b76f209b093dde3a1509d191",
+      "tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeIngestionObservation.cs": "e135304379f4936fabb7fb3be95250bf7ddb257251bdd4be85ef2b96b6aabfd5",
+      "tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeIngestionObserver.cs": "f4ca14f221ce02c3a4805b6b286acdcc2e244d920e4769fa092564e29851eb08",
+      "tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeTests.cs": "4c86a108f8acbfed9e4fd61f931d5bc4a0dee70c6c5f67c95e5c189de0c58788",
+      "tests/Hexalith.Parties.UI.Tests/OptimisticReconcileTests.cs": "4ea57b540a581474b0ffd18ce0cbd1c8e5924625562d54032bdb0ccec8f69bfe",
+      "tests/Hexalith.Parties.UI.Tests/PackageProjectionBarrier.cs": "2a626137dfbde18c564b62a23d897a293acc549d189d06773da00f82365d275d",
+      "tests/Hexalith.Parties.UI.Tests/PackageProjectionHub.cs": "00507a6fb395d96d69857ebd343af32105185b48cf4e51fca097a190023f346d",
+      "tests/Hexalith.Parties.UI.Tests/ProjectionTransportPackageTests.cs": "025d7afd4d8d6e0e49a8e510ae7a74fdad619453ee9f08821e896e2cccfe8e68",
+      "tests/README.md": "ad7b91bcb9887cd02a242b5b7939a5748dfe73a81471dafb5b2ee4ea4a29b068"
+    }
+  },
+  "references/Hexalith.EventStore": {
+    "baseline": "a9205f511b4f96b5daf94d65369d6dee63e0c623",
+    "files": {
+      "references/Hexalith.EventStore/src/Hexalith.EventStore.SignalR/EventStoreSignalRClient.cs": "1c5f23a2c6c4a94f449c1182bb49fb16dc759cc8d81c1b52bc3513066761243b",
+      "references/Hexalith.EventStore/src/Hexalith.EventStore.SignalR/IProjectionCallback.cs": "db9ffd3755e292d7a7ebf0d460c5dcf521bf4138609b12b23db86e0cec80a721",
+      "references/Hexalith.EventStore/src/Hexalith.EventStore.SignalR/ProjectionCallback.cs": "1335642e6a4b6ae9d9992920a1ac6d8165fb61240c498c0d742a2fd81a84bc61",
+      "references/Hexalith.EventStore/src/Hexalith.EventStore/SignalRHub/ProjectionChangedHub.cs": "13da2e40e46a08a59f30a27c400db3d55dd0374ce82e6393c9e346285b20670a",
+      "references/Hexalith.EventStore/src/Hexalith.EventStore/SignalRHub/ProjectionMembershipState.cs": "e791b068073c4e2dd3fbf784b4c2897ef7018ef35bf296e26cee9a3f4c00b44a",
+      "references/Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/Hexalith.EventStore.Server.Tests.csproj": "19eec457f80f8153a50aea7258c756aa785ae7904228ec0f3f47bbc430b8d2f8",
+      "references/Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/SignalR/FaultingProjectionGroupManager.cs": "95ca87bea98d5caee7533c340cb9a530ed709e1bf8bcea93ed5081e075ff23b2",
+      "references/Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/SignalR/ProjectionChangedHubTests.cs": "0dda0c85cdab2cf257848ff1d54c49d1cfb4fb974efb25cf86ae98b13bac684e",
+      "references/Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/SignalR/ProjectionGroupFailure.cs": "eb4f94c87daf51f5fcfc5b6cc83f9d4845748aaf8f0bb11981f12a8431592792",
+      "references/Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/SignalR/ProjectionMembershipBarrier.cs": "c0d3b1cbe9b4e74d0b1c79b1ca1be2c5675ad8b275c954554f05979d05ecf82f",
+      "references/Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/SignalR/ProjectionMembershipRecoveryControl.cs": "fae3003bd429d2cfe7531c8d7a34105fe4d46f9afe3e3fbeaf268aebd40c77d1",
+      "references/Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/SignalR/ProjectionMembershipTransportTests.cs": "29f8b1b1708fc68d41dd5e265331b63f1275893222d5dee4829e6611c0028c0c",
+      "references/Hexalith.EventStore/tests/Hexalith.EventStore.SignalR.Tests/EventStoreSignalRClientTests.cs": "350594a3b5c44c99c9f4311e7f090078f122e1a6391b7f432adaa70029cc3e96"
+    }
+  }
+}

@@ -1,0 +1,180 @@
+{
+  "rows": [
+    {
+      "row": "Callback",
+      "receipt": "client.xml",
+      "tests": [
+        "Hexalith.EventStore.SignalR.Tests.EventStoreSignalRClientTests.ExternalRemovalDrainsAnEnteredCallbackEvenWhenCancelled(detail: False)",
+        "Hexalith.EventStore.SignalR.Tests.EventStoreSignalRClientTests.ExternalRemovalDrainsAnEnteredCallbackEvenWhenCancelled(detail: True)"
+      ],
+      "result": "pass"
+    },
+    {
+      "row": "Callback",
+      "receipt": "client.xml",
+      "tests": [
+        "Hexalith.EventStore.SignalR.Tests.EventStoreSignalRClientTests.ConcurrentGroupSelfRemovalReturnsAndExternalRemovalStillDrains(detail: False)",
+        "Hexalith.EventStore.SignalR.Tests.EventStoreSignalRClientTests.ConcurrentGroupSelfRemovalReturnsAndExternalRemovalStillDrains(detail: True)"
+      ],
+      "result": "pass"
+    },
+    {
+      "row": "Callback",
+      "receipt": "client.xml",
+      "tests": [
+        "Hexalith.EventStore.SignalR.Tests.EventStoreSignalRClientTests.RealCallbackSelfDisposalReturnsAndExternalDisposalDrainsOwnedShutdown"
+      ],
+      "result": "pass"
+    },
+    {
+      "row": "Replacement",
+      "receipt": "server.xml",
+      "tests": [
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: False, race: 0, skipNegotiation: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: True, race: 0, skipNegotiation: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: False, race: 1, skipNegotiation: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: True, race: 1, skipNegotiation: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: False, race: 2, skipNegotiation: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: True, race: 2, skipNegotiation: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: False, race: 3, skipNegotiation: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: True, race: 3, skipNegotiation: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: False, race: 0, skipNegotiation: True)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: True, race: 1, skipNegotiation: True)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: False, race: 4, skipNegotiation: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: True, race: 4, skipNegotiation: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: False, race: 5, skipNegotiation: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: True, race: 5, skipNegotiation: False)"
+      ],
+      "result": "pass"
+    },
+    {
+      "row": "Replacement",
+      "receipt": "server.xml",
+      "tests": [
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionChangedHubTests.AcknowledgedSnapshotReplacesAtQuotaAndIgnoresOlderIntent(scoped: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionChangedHubTests.AcknowledgedSnapshotReplacesAtQuotaAndIgnoresOlderIntent(scoped: True)"
+      ],
+      "result": "pass"
+    },
+    {
+      "row": "Uncertain join",
+      "receipt": "server.xml",
+      "tests": [
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: False, race: 0, skipNegotiation: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: True, race: 0, skipNegotiation: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: False, race: 1, skipNegotiation: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: True, race: 1, skipNegotiation: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: False, race: 2, skipNegotiation: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: True, race: 2, skipNegotiation: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: False, race: 3, skipNegotiation: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: True, race: 3, skipNegotiation: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: False, race: 0, skipNegotiation: True)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: True, race: 1, skipNegotiation: True)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: False, race: 4, skipNegotiation: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: True, race: 4, skipNegotiation: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: False, race: 5, skipNegotiation: False)",
+        "Hexalith.EventStore.Server.Tests.SignalR.ProjectionMembershipTransportTests.ReorderedLeaveAndUncertainJoinConvergeWithoutEvictingSurvivors(scoped: True, race: 5, skipNegotiation: False)"
+      ],
+      "result": "pass"
+    },
+    {
+      "row": "Packages",
+      "receipt": "package-ui.xml",
+      "tests": [
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.RegisteredReconciliationActuallyExecutesTheSelectedSharedAssembly(shared: False)",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.RegisteredReconciliationActuallyExecutesTheSelectedSharedAssembly(shared: True)"
+      ],
+      "result": "pass"
+    },
+    {
+      "row": "Packages",
+      "receipt": "package-ui.xml",
+      "tests": [
+        "Hexalith.Parties.UI.Tests.ProjectionTransportPackageTests.SelectedTransportCancelsAStalledJoinThroughTheProductionAdapter"
+      ],
+      "result": "pass"
+    },
+    {
+      "row": "Packages",
+      "receipt": "legacy-ui.xml",
+      "tests": [
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.UnrequestedCancellationOrTimeout_MapsToTransientFailureAssertively",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.DelayedRegistration_RecoversOnlyEarlyConfirmation_AndDrainsTeardown",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.CleanupCancellationFailureStillAwaitsUnsubscription",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ReconcileReturningNonCurrent_AnnouncesDegradedPolitely_KeepsWaiting_ThenReconcilesOnceWhenCurrent",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.Cancellation_WhileAwaitingTheSignalRConfirm_DropsSilently_NoRevertNoFailure",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ReconcileReadThrowsTransiently_IsRetriedOnTheNextConfirm_NoRevert",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.Rejection_ClientValidationException_RevertsAndAnnouncesAssertively",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.MissingWitnessCannotCertifyCurrent(shared: False)",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.MissingWitnessCannotCertifyCurrent(shared: True)",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.DuplicateOrLateConfirm_RunsReconcileExactlyOnce",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.AnnounceNotSteal_OptimisticSignalIsPolite_AndOnlyTheAnnounceDelegateIsUsed",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.SoleConfirmationRetriesUntilOperationWitness(shared: False, failFirst: False)",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.SoleConfirmationRetriesUntilOperationWitness(shared: False, failFirst: True)",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.SoleConfirmationRetriesUntilOperationWitness(shared: True, failFirst: False)",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.SoleConfirmationRetriesUntilOperationWitness(shared: True, failFirst: True)",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.HappyPath_ViaFreshnessCurrent_AppliesOptimistic_AnnouncesSaving_ThenReconcilesPolitely",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.Rejection_GdprNonAcceptedOutcome_RevertsAndAnnouncesAssertively",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ExecuteWaitsForDelayedUnsubscription(cancel: False)",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ExecuteWaitsForDelayedUnsubscription(cancel: True)",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.RegisteredFeedbackWaitsForReadinessAndAcceptanceWithEarlyConfirmation(cancel: False)",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.RegisteredFeedbackWaitsForReadinessAndAcceptanceWithEarlyConfirmation(cancel: True)",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.SubIntervalOutageDuringAcceptanceTriggersCatchUp(shared: False)",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.SubIntervalOutageDuringAcceptanceTriggersCatchUp(shared: True)",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.HappyPath_ViaSignalRConfirm_RunsReconcileOnceOnTheConfirm",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.SubscriptionAcquisitionFailure_RevertsOnceOrSilentlyAbandonsBeforeDispatch(cancel: False)",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.SubscriptionAcquisitionFailure_RevertsOnceOrSilentlyAbandonsBeforeDispatch(cancel: True)",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.EarlyConfirmationCannotReconcileRejectedOrCancelledCommand(cancel: False)",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.EarlyConfirmationCannotReconcileRejectedOrCancelledCommand(cancel: True)",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.UserInitiatedCancellation_IsDroppedSilently_NoRevertNoFailure",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.ConcurrentConfirmations_SerializeReads_AndIgnoreLateCurrentAfterCancellation",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.OfflineConnectionFailure_RetainsAcceptedCommandPollingFallback(transportTimeout: False)",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.OfflineConnectionFailure_RetainsAcceptedCommandPollingFallback(transportTimeout: True)",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.RepeatedDisconnects_ResumePolling_AndCompletionReleasesAllWork",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.OperationWitnessRejectsAnotherPartyAndAnOldCheckpoint(shared: False)",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.OperationWitnessRejectsAnotherPartyAndAnOldCheckpoint(shared: True)",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.CancellationDuringDelayedRegistration_DrainsLateRegistrationWithoutFeedback",
+        "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.Rejection_TenantWarmingUp403_RevertsAndAnnouncesTenantUnavailablePolitely"
+      ],
+      "result": "pass"
+    },
+    {
+      "row": "Refresh",
+      "receipt": "identities.xml",
+      "tests": [
+        "Hexalith.Parties.IntegrationTests.Topology.MemoryRuntimeIdentityTests.MismatchedChildSelectionRefusesBeforeRuntimeMutation(field: \\\"Configuration\\\")",
+        "Hexalith.Parties.IntegrationTests.Topology.MemoryRuntimeIdentityTests.MismatchedChildSelectionRefusesBeforeRuntimeMutation(field: \\\"TargetFramework\\\")",
+        "Hexalith.Parties.IntegrationTests.Topology.MemoryRuntimeIdentityTests.MismatchedChildSelectionRefusesBeforeRuntimeMutation(field: \\\"MappingMode\\\")",
+        "Hexalith.Parties.IntegrationTests.Topology.MemoryRuntimeIdentityTests.MismatchedChildSelectionRefusesBeforeRuntimeMutation(field: \\\"MappingHash\\\")",
+        "Hexalith.Parties.IntegrationTests.Topology.MemoryRuntimeIdentityTests.MismatchedChildSelectionRefusesBeforeRuntimeMutation(field: \\\"EventStoreVersion\\\")",
+        "Hexalith.Parties.IntegrationTests.Topology.MemoryRuntimeIdentityTests.MismatchedChildSelectionRefusesBeforeRuntimeMutation(field: \\\"MemoriesVersion\\\")",
+        "Hexalith.Parties.IntegrationTests.Topology.MemoryRuntimeIdentityTests.MismatchedChildSelectionRefusesBeforeRuntimeMutation(field: \\\"FrontComposerVersion\\\")"
+      ],
+      "result": "pass"
+    },
+    {
+      "row": "Refresh",
+      "receipt": "identities.xml",
+      "tests": [
+        "Hexalith.Parties.IntegrationTests.Topology.MemoryRuntimeIdentityTests.MismatchedExecutedProducerBytesRefuseBeforeRuntimeMutation"
+      ],
+      "result": "pass"
+    },
+    {
+      "row": "Refresh",
+      "receipt": "runtime-focused-final-runtime.xml",
+      "tests": [
+        "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests.SelectedMemoriesRefreshAndCleanupPersistAcrossRestart"
+      ],
+      "result": "pass"
+    }
+  ],
+  "qualifiedRows": [
+    "Callback",
+    "Packages",
+    "Refresh",
+    "Replacement",
+    "Uncertain join"
+  ],
+  "broaderRuntimeQualified": false
+}

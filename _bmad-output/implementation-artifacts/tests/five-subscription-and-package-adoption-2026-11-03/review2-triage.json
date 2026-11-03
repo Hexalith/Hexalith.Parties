@@ -1,0 +1,82 @@
+[
+  {
+    "id": "BH2-01",
+    "verdict": "medium",
+    "route": "defer",
+    "evidence": "Legacy canceled joins can outlive a later legacy leave; this predates the task and is explicitly unqualified without the generation-aware peer. The new client retains that uncertainty until connection termination; no legacy remote-absence guarantee is claimed."
+  },
+  {
+    "id": "BH2-02",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "Three offline subscriptions against a two-group peer produce an invalid full snapshot. Generic catches currently swallow/retry the unchanged invalid intent, rather than surfacing a permanent rejection.",
+    "resolution": "Fixed by the continued implementation agent; primary rerun passes. See final-matrix-audit.json and final-lanes.json."
+  },
+  {
+    "id": "BH2-03",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "The new repair loop retries all fast failures every 100 ms. Backend unavailability across circuit-scoped clients can produce sustained RPC/log load; bound transient retry frequency and stop terminal-invalid retries.",
+    "resolution": "Fixed by the continued implementation agent; primary rerun passes. See final-matrix-audit.json and final-lanes.json."
+  },
+  {
+    "id": "BH2-04",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "Manual recovery increments generation before replacement startup but not after membership rejoins. A consumer sampling during the acknowledgement gap can miss the final catch-up transition promised by the property contract.",
+    "resolution": "Fixed by the continued implementation agent; primary rerun passes. See final-matrix-audit.json and final-lanes.json."
+  },
+  {
+    "id": "BH2-05",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "Capture timeout exhausts the shared deadline, causing receipt persistence to inherit cancellation even with a healthy filesystem. Give persistence a fresh bounded lifetime.",
+    "resolution": "Fixed by the continued implementation agent; primary rerun passes. See final-matrix-audit.json and final-lanes.json."
+  },
+  {
+    "id": "BH2-06",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "WaitAsync can stop awaiting capture before its cancellation cleanup settles. Keep the qualified cooperative capture task owned until completion and prove delayed cancellation cleanup; do not replace primary refusal or claim arbitrary noncooperative work quiescence.",
+    "resolution": "Fixed by the continued implementation agent; primary rerun passes. See final-matrix-audit.json and final-lanes.json."
+  },
+  {
+    "id": "BH2-07",
+    "verdict": "medium",
+    "route": "defer",
+    "evidence": "The authority-file write preceding teardown exists unchanged in the baseline finally block. Receipt I/O failure can skip child-level tenant teardown; wrapper-owned topology disposal is independent, but standalone child cleanup remains a pre-existing follow-up."
+  },
+  {
+    "id": "BH2-08",
+    "verdict": "medium",
+    "route": "defer",
+    "evidence": "The baseline authoritative helper already selected UnitIds.Last while the control recorded multiple outputs. Earlier-unit stream/replay coverage remains a broader pre-existing gap; the current task directly proves all-output REST absence and explicitly leaves native proof/replay unqualified."
+  },
+  {
+    "id": "BH2-09",
+    "verdict": "low",
+    "route": "patch",
+    "evidence": "The newly introduced focused name AcrossRestart can suggest service restart although it recreates clients/adapters. Rename only the new focused fact and document client recreation; preserve the original full gate name.",
+    "resolution": "Fixed by the continued implementation agent; primary rerun passes. See final-matrix-audit.json and final-lanes.json."
+  },
+  {
+    "id": "BH2-10",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "The package capability fence newly forwards real unsubscribe cancellation and recovery generation, but actual adapter verification only stalls join. Add real leave cancellation and disconnect/rejoin generation/delivery controls.",
+    "resolution": "Fixed by the continued implementation agent; primary rerun passes. See final-matrix-audit.json and final-lanes.json."
+  },
+  {
+    "id": "BH2-11",
+    "verdict": "maybe-false",
+    "route": "reject",
+    "evidence": "No disappearing-frame failure is demonstrated for the qualified .NET 10 runtime; the actual Release package test passes and the large shared async state machine supplies the execution frame. A different JIT/runtime would need to remove every shared frame to establish this low test-portability claim. Replacing it with a new production instrumentation surface is disproportionate."
+  },
+  {
+    "id": "VG2-01",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "Pre-verified regression gap: FakeProjectionStream removal tests bypass the actual adapter; forwarding CancellationToken.None from the package unsubscribe overload would pass current checks. Add actual selected-package LeaveGroup cancellation coverage.",
+    "resolution": "Fixed by the continued implementation agent; primary rerun passes. See final-matrix-audit.json and final-lanes.json."
+  }
+]

@@ -22,6 +22,10 @@ namespace Hexalith.Parties.UI.Services;
 /// polling fallback owns refresh.
 /// </para>
 /// <para>
+/// Qualified package cohorts forward the producer's cancellation and recovery-generation APIs.
+/// These APIs do not certify newer source-only callback draining or acknowledged remote membership.
+/// </para>
+/// <para>
 /// <strong>Lifetime.</strong> Scoped (per circuit — ADR-030). Each circuit owns its own connection so a
 /// process-wide Singleton can never share one tenant/token across users (the multi-tenant BFF reason the
 /// admin-tool Singleton precedent does <em>not</em> apply here). <see cref="DisposeAsync"/> tears the

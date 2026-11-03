@@ -29,6 +29,8 @@ namespace Hexalith.Parties.UI.Services;
 /// Story 1.6 deferred (<see cref="StatusPresentation.FromException"/> only ever sees an <em>un-requested</em>
 /// cancellation = a timeout → <see cref="StatusKind.TransientFailure"/>).
 /// </para>
+/// <para>Explicit shared registration uses the qualified selected producer's readiness/witness/retry contract.
+/// Unregistered services and older package cohorts retain the local orchestration below.</para>
 /// <para><strong>Lifetime.</strong> Scoped (per circuit — ADR-030).</para>
 /// </remarks>
 public sealed class OptimisticReconcile(

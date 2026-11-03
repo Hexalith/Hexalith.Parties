@@ -113,14 +113,17 @@ image update command. See [the visual contract and exact build commands](../docs
 
 ## Published FrontComposer UI qualification (DW-91/100/101/102/112)
 
-The selected Shell and Contracts.UI 4.7.1 packages publish the approved freshness,
+The selected Shell and Contracts.UI 4.7.5 packages publish the approved freshness,
 live-region, download, typed-confirmation and shell keyboard capabilities.
 `Parties:FrontComposer:UseSharedUiPrimitives=true` enables the shared components
 and download service; the option still defaults to false. Both paths retain
 Parties labels, status mappings, safe filenames and domain authorization guards.
-Package reconciliation stays on the corrected local orchestration because 4.7.1
-lacks the registration-readiness contract. DW-100 therefore stays open for adoption
-of a separately qualified fixed-reconciler package. G4 and Story 8.9 stay blocked.
+The exact 4.7.5 cohort also enables shared reconciliation with registration readiness,
+operation witnesses, configured retry clocks and recovery generations. Existing 4.0.4
+EventStore packages enable their cancellation-aware adapter APIs. Older package cohorts
+and unregistered services retain local reconciliation. Source transport drain/membership
+repairs require separate publication/adoption; named owner acceptance, G4 and Story 8.9
+remain separate gates. See the [2026-11-03 receipt](../_bmad-output/implementation-artifacts/tests/five-subscription-and-package-adoption-2026-11-03/README.md).
 
 `npm run test:ui` owns its Debug server locally and runs forward Tab after cold,
 hydrated and client navigation, phone/tablet/desktop resize, typed confirmation,
@@ -802,3 +805,28 @@ verifier or installed. Input completion alone cannot enable qualification. The
 [bounded receipt](../_bmad-output/implementation-artifacts/tests/five-data-lifecycle-qualification-2026-10-28/README.md)
 records commands and the outstanding DW-50/82/168/130/149 external gates. Dated
 earlier receipts retain their original scope.
+
+## Subscription safety and runtime identity qualification (2026-11-03)
+
+Build owning projects individually and run built xUnit assemblies. The dated receipt
+records exact commands, source/binary hashes and source/package distinctions. New source
+EventStore clients negotiate full generation-ordered membership snapshots; old servers
+retain compatible RPCs and uncertainty for canceled operations. Ordinary acknowledged
+legacy leaves retire bookkeeping. External callback removal drains entered invocations;
+self-removal revokes and returns, with retired invocations still owned for later external
+draining. Real production-hub controls cover scoped/ordinary groups, backend mutation
+acknowledgement faults, replacement, survivors and reconnect, including skipped negotiation.
+
+`bash scripts/prepare-aspire-runtime-hosts.sh --configuration Debug --include-memory-qualification true`
+prepares the existing selected package hosts plus matching wrapper and child projects.
+Immediate compiler/cohort validation stays enabled; a final validation binds any legitimate
+transitive rebuilds before emitting the completion manifest. The owned runtime wrapper
+selects the child through build metadata, refuses differing configuration/selection/shared
+producer bytes, and records actual executed file hashes. Enable its existing explicit
+`PARTIES_MEMORIES_OWNED_RUNTIME=1` opt-in only for the owned isolated topology. Runtime
+failures, cleanup, publication and external acceptance are recorded independently; a failed
+or skipped control supplies no refresh or erasure acceptance.
+
+The focused runtime child is `SelectedMemoriesRefreshAndCleanupPersistAcrossClientRecreation`.
+It recreates clients and adapters while the selected services remain running. The original
+full/default `SelectedMemoriesIngestionAndCleanupPersistAcrossRestart` fact is unchanged.

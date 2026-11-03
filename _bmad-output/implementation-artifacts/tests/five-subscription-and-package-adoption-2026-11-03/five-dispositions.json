@@ -1,0 +1,50 @@
+[
+  {
+    "entry": "Raw synchronous callback drain",
+    "status": "source implementation resolved",
+    "evidence": [
+      "final-client.xml",
+      "final-lanes.json"
+    ],
+    "remaining": "Package publication/adoption and deployed qualification"
+  },
+  {
+    "entry": "Remote leave/replacement ordering",
+    "status": "source implementation resolved",
+    "evidence": [
+      "final-server.xml",
+      "final-lanes.json"
+    ],
+    "remaining": "Package publication/adoption and deployed qualification"
+  },
+  {
+    "entry": "Uncertain remote join reconciliation",
+    "status": "source implementation resolved",
+    "evidence": [
+      "final-server.xml",
+      "final-lanes.json"
+    ],
+    "remaining": "Package publication/adoption; legacy physical membership remains unqualified"
+  },
+  {
+    "entry": "DW-100",
+    "status": "advanced; remains open",
+    "evidence": [
+      "final-package-ui.xml",
+      "final-source-ui.xml",
+      "final-legacy-ui.xml",
+      "final-lanes.json"
+    ],
+    "remaining": "Named owner acceptance, new transport publication/adoption and deployed parity"
+  },
+  {
+    "entry": "Unchanged canonical URI refresh",
+    "status": "advanced; remains open",
+    "evidence": [
+      "final-focused-runtime.xml",
+      "final-focused-executed-identities.json",
+      "final-focused-runtime.authority.json"
+    ],
+    "remaining": "Full failed-ingestion cleanup, native-proof/replay, producer/deployed acceptance and historical completeness"
+  }
+]

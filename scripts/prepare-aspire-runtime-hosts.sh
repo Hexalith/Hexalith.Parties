@@ -6,19 +6,22 @@ script_directory="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repository_root="$(cd -- "${script_directory}/.." && pwd)"
 gateway_profile="packaged"
 configuration="Release"
+include_memory_qualification="false"
 while (( $# > 0 )); do
     if (( $# < 2 )); then
-        printf 'Usage: %s [--gateway-profile packaged|native] [--configuration Release|Debug]\n' "$0" >&2
+        printf 'Usage: %s [--gateway-profile packaged|native] [--configuration Release|Debug] [--include-memory-qualification true|false]\n' "$0" >&2
         exit 2
     fi
     case "$1" in
         --gateway-profile) gateway_profile="$2" ;;
         --configuration) configuration="$2" ;;
+        --include-memory-qualification) include_memory_qualification="$2" ;;
         *) printf 'Unsupported runtime preparation option: %s\n' "$1" >&2; exit 2 ;;
     esac
     shift 2
 done
 case "$configuration" in Release|Debug) ;; *) printf 'Unsupported configuration: %s\n' "$configuration" >&2; exit 2 ;; esac
+case "$include_memory_qualification" in true|false) ;; *) printf 'Unsupported memory qualification selection: %s\n' "$include_memory_qualification" >&2; exit 2 ;; esac
 case "$gateway_profile" in
     packaged)
         gateway_project=tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj
@@ -39,6 +42,11 @@ runtime_hosts=(
     references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample.BlazorUI/Hexalith.EventStore.Sample.BlazorUI.csproj
 )
 
+if [[ "$include_memory_qualification" == true ]]; then
+    runtime_hosts+=(tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj
+        tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj)
+fi
+
 catalog_artifacts=()
 if [[ "$gateway_profile" == packaged ]]; then
     runtime_hosts+=(src/Hexalith.Parties/Hexalith.Parties.csproj)
@@ -56,6 +64,11 @@ done
 cd -- "$repository_root"
 cohort_arguments=()
 receipts=()
+receipt_projects=()
+receipt_metadata=()
+receipt_started=()
+receipt_roles=()
+receipt_paths=()
 if [[ "$gateway_profile" == packaged ]]; then
     sdk_version="$(dotnet msbuild "$gateway_project" -nologo -getProperty:HexalithEventStoreVersion)"
     if [[ ! "$sdk_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -96,6 +109,11 @@ for project in "${runtime_hosts[@]}" "${catalog_artifacts[@]}"; do
         for artifact in "${catalog_artifacts[@]}"; do [[ "$project" != "$artifact" ]] || role=catalog; done
         python3 "$script_directory/validate-aspire-runtime-cohort.py" --record "$receipt" --project "$project" \
             --metadata-json "$metadata" --configuration "$configuration" --version "$sdk_version" --build-started-ns "$started_ns" --role "$role" --families-json "$families_json"
+        receipt_projects+=("$project")
+        receipt_metadata+=("$metadata")
+        receipt_started+=("$started_ns")
+        receipt_roles+=("$role")
+        receipt_paths+=("$receipt")
         receipts+=(--receipt "$receipt")
     else
         dotnet build "$project" --configuration "$configuration" --disable-build-servers \
@@ -103,6 +121,13 @@ for project in "${runtime_hosts[@]}" "${catalog_artifacts[@]}"; do
     fi
 done
 if [[ "$gateway_profile" == packaged ]]; then
+    # Referencing qualification projects can rebuild earlier host dependencies. Bind final
+    # bytes only after every compiler has succeeded, retaining each original rebuild start.
+    for index in "${!receipt_projects[@]}"; do
+        python3 "$script_directory/validate-aspire-runtime-cohort.py" --record "${receipt_paths[$index]}" --project "${receipt_projects[$index]}" \
+            --metadata-json "${receipt_metadata[$index]}" --configuration "$configuration" --version "$sdk_version" \
+            --build-started-ns "${receipt_started[$index]}" --role "${receipt_roles[$index]}" --families-json "$families_json"
+    done
     python3 "$script_directory/validate-aspire-runtime-cohort.py" --complete-manifest "$receipt_directory/prepared.json" \
         --configuration "$configuration" --version "$sdk_version" --families-json "$families_json" "${receipts[@]}" --archive-cache "$receipt_directory/public-archives" \
         --public-package "Hexalith.Tenants.Contracts=$tenants_version" --public-package "Hexalith.Tenants.Server=$tenants_version" \
