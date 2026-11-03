@@ -58,9 +58,9 @@ public sealed class PlatformApiPrerequisitesTests
     ];
 
     // Committed source observations are separate from historical migration/parity approvals.
-    private const string CurrentSelectedEventStoreSha = "a9205f511b4f96b5daf94d65369d6dee63e0c623";
-    private const string CurrentSelectedEventStoreDescribe = "v4.0.4-11-ga9205f51";
-    // The selected SHA is 11 commits past the upstream v4.0.4 release tag.
+    private const string CurrentSelectedEventStoreSha = "f213e4115ec23cb736e8aa0113f61b9d4854480c";
+    private const string CurrentSelectedEventStoreDescribe = "v4.0.4-12-gf213e411";
+    // The selected SHA is 12 commits past the upstream v4.0.4 release tag.
     private const string CurrentSelectedEventStoreTag = "v4.0.4";
     // Current committed selections are observed independently of historical approvals
     // and executed parity receipts.
@@ -69,7 +69,7 @@ public sealed class PlatformApiPrerequisitesTests
         ["references/Hexalith.AI.Tools"] = "1745b6663ad32bb1288167135ed0f979366c53a0",
         ["references/Hexalith.Builds"] = "89f62052c932d054bda2b435bdfef60d96e77612",
         ["references/Hexalith.Commons"] = "11555ace9efcae2928a00122dcba91243e5a8a1a",
-        ["references/Hexalith.EventStore"] = "a9205f511b4f96b5daf94d65369d6dee63e0c623",
+        ["references/Hexalith.EventStore"] = "f213e4115ec23cb736e8aa0113f61b9d4854480c",
         ["references/Hexalith.FrontComposer"] = "fbe01c913cb863abb0fd4a317d370d36fff593b3",
         ["references/Hexalith.McpCli"] = "2e80701c31aafdf00abee05ac469a45ed76dfdf5",
         ["references/Hexalith.Memories"] = "d959bdae5af9c22f53573eda71c091cb5c0aae4c",
@@ -83,7 +83,7 @@ public sealed class PlatformApiPrerequisitesTests
         ["references/Hexalith.AI.Tools"] = "1745b666",
         ["references/Hexalith.Builds"] = "v4.43.5",
         ["references/Hexalith.Commons"] = "v2.30.10",
-        ["references/Hexalith.EventStore"] = "v4.0.4-11-ga9205f51",
+        ["references/Hexalith.EventStore"] = "v4.0.4-12-gf213e411",
         ["references/Hexalith.FrontComposer"] = "v4.7.5-19-gfbe01c91",
         ["references/Hexalith.McpCli"] = "v2.0.0-26-g2e80701c",
         ["references/Hexalith.Memories"] = "v3.0.18-8-gd959bdae",
@@ -820,11 +820,21 @@ public sealed class PlatformApiPrerequisitesTests
         advanceRow.ShouldContain("Administrator / jpiquot");
         advanceRow.ShouldContain("Approved current-selection assertions and gitlink signoff only");
         advanceRow.ShouldContain("Unvalidated");
+        advanceRow.ShouldContain("EventStore `a9205f511b4f96b5daf94d65369d6dee63e0c623`");
+        string[] subscriptionRows = matrix.Split('\n', StringSplitOptions.TrimEntries)
+            .Where(static row => row.StartsWith("| Subscription safety delegated source (2026-11-03) |", StringComparison.Ordinal))
+            .ToArray();
+        subscriptionRows.Length.ShouldBe(1, "The delegated transport selection must have exactly one row.");
+        string subscriptionRow = subscriptionRows[0];
+        subscriptionRow.ShouldContain("codex-agent (explicit user delegation)");
+        subscriptionRow.ShouldContain("Source-selection and executed transport proof only");
+        subscriptionRow.ShouldContain("Package versions unchanged");
         foreach ((string path, string identity) in CurrentSelectedGitlinks)
         {
             string describe = CurrentSelectedSourceDescribes[path];
             AssertCurrentSourceRow(currentSelection, path, identity, describe);
-            advanceRow.ShouldContain($"{path["references/Hexalith.".Length..]} `{identity}`");
+            string selectionRow = path == EventStoreRelativePath ? subscriptionRow : advanceRow;
+            selectionRow.ShouldContain($"{path["references/Hexalith.".Length..]} `{identity}`");
             AssertSelectedSourceObservation(root, path, identity);
             DescribeObservedSource(root, path, describe, identity).ShouldBe(describe, path);
         }

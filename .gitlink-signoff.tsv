@@ -522,3 +522,4 @@ references/Hexalith.Platform|8ea8fe092f8abb5c932a61830aae16051d442463|validated-
 #     independently verified; Platform v1.1.6 pins that exact catalog commit.
 #     This records tuple source selection only; Parties CI remains the qualifier.
 references/Hexalith.Builds|89f62052c932d054bda2b435bdfef60d96e77612|validated-advance|v4.43.5|codex-agent|2026-11-03
+references/Hexalith.EventStore|f213e4115ec23cb736e8aa0113f61b9d4854480c|validated-advance|v4.0.4-12-gf213e411|codex-agent|2026-11-03
