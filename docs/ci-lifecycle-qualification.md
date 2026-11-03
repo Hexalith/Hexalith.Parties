@@ -1,17 +1,18 @@
 # Disposable CI lifecycle qualification
 
-This manual workflow is a dependent, **baseline-only** diagnostic proposal for
+This registered manual workflow remains a **baseline-only** diagnostic for
 Story 2.8. It grants no candidate acceptance or loaded-backend identity credit.
-The current 4.43.4/269 workflow/tool pins are deliberately unchanged. Published
-4.43.4 and 4.43.5 cannot allocate in the required direct-only checkout because of
-HXP020. A normally published corrected producer, qualified official archives,
-coherent genuinely released Platform tuple and normal owner adoption are required
-before dispatch. Preserve incoming root gitlinks; source preparation is not tuple
-qualification. Never initialize nested dependencies or substitute source runtime.
+The ordinary and manual baseline callers select the same reviewed Builds
+`725754075e1d6369430a3adf94d46fb71e6eaf9e` with published tool 4.43.6 and
+genuine Platform v1.1.7 (`ed1560a57f4d4cb55b6b03f485cbfa01316837a7`).
+The old 4.43.4 and 4.43.5 HXP020 refusals remain historical evidence.
+Normal exact-source owner gates and real reference native qualification are still
+required before dispatch. Preserve incoming root gitlinks; source preparation
+is not runtime qualification. Never initialize nested dependencies or substitute
+source runtime.
 
-The workflow must first be registered through normal main/source gates. After
-registration, the operator checks all normal exact-source CI gates, dispatches
-`.github/workflows/ci-lifecycle-qualification.yml` on that exact reviewed source,
+After those gates, the parent operator dispatches
+`.github/workflows/ci-lifecycle-qualification.yml` on the exact reviewed source
 and records repository, revision, run, attempt and qualification job identities.
 The baseline job retains all 15 isolated projects, package consumers and required
 `platform-package` real-service suite. Its failure prevents the qualification job.

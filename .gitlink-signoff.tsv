@@ -522,3 +522,12 @@ references/Hexalith.Platform|8ea8fe092f8abb5c932a61830aae16051d442463|validated-
 #     independently verified; Platform v1.1.6 pins that exact catalog commit.
 #     This records tuple source selection only; Parties CI remains the qualifier.
 references/Hexalith.Builds|89f62052c932d054bda2b435bdfef60d96e77612|validated-advance|v4.43.5|codex-agent|2026-11-03
+
+# --- 2026-11-03 Story 2.8 genuine Platform v1.1.7 continuation.
+#     codex-agent records source selection under explicit user delegation only.
+#     Published Platform v1.1.7/ed1560a5 and Builds v4.43.6/72575407 were
+#     independently qualified before selection. Parties native/hosted results,
+#     human ratification, parity and candidate acceptance remain unclaimed.
+#     All existing human rows and historical observation bodies remain intact.
+references/Hexalith.Platform|ed1560a57f4d4cb55b6b03f485cbfa01316837a7|validated-advance|v1.1.7|codex-agent|2026-11-03
+references/Hexalith.Builds|725754075e1d6369430a3adf94d46fb71e6eaf9e|validated-advance|v4.43.6|codex-agent|2026-11-03

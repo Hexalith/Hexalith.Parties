@@ -97,6 +97,35 @@ promote any other 8.3 row.
 
 ### Current source observation — 2026-11-03
 
+The active user's explicit Story 2.8 delegation selects genuine Platform v1.1.7
+at `ed1560a57f4d4cb55b6b03f485cbfa01316837a7` and its exact published
+Builds v4.43.6 source `725754075e1d6369430a3adf94d46fb71e6eaf9e`.
+This is codex-agent source-selection bookkeeping, not a new human approval.
+The published CLI, ordinary CI and registered manual baseline select that same
+Builds revision. All other incoming root selections remain unchanged.
+The graph selects EventStore package `4.0.4`, Commons `2.30.10`,
+PolymorphicSerializations `1.19.8`, FrontComposer `4.7.5`, Memories `3.0.18`,
+Tenants `7.0.0`, and McpCli `2.0.0`.
+Selection does not revalidate historical parity receipts or grant publication,
+deployment, custody, rollback deletion, runtime or candidate acceptance.
+Every prior human decision and historical observation body is preserved below;
+all six canonical parity receipts remain Unvalidated until actually rerun.
+
+| Root dependency | Current source identity | Release use |
+| --- | --- | --- |
+| AI.Tools | `1745b6663ad32bb1288167135ed0f979366c53a0` (`1745b666`) | Committed selection; qualification still requires its own executed proof. |
+| Builds | `725754075e1d6369430a3adf94d46fb71e6eaf9e` (`v4.43.6`) | Released catalog pinned by Platform v1.1.7; qualification still requires its own executed proof. |
+| Commons | `11555ace9efcae2928a00122dcba91243e5a8a1a` (`v2.30.10`) | Committed selection; qualification still requires its own executed proof. |
+| EventStore | `a9205f511b4f96b5daf94d65369d6dee63e0c623` (`v4.0.4-11-ga9205f51`) | Owner-approved advance; qualification still requires its own executed proof. |
+| FrontComposer | `fbe01c913cb863abb0fd4a317d370d36fff593b3` (`v4.7.5-19-gfbe01c91`) | Owner-approved advance; qualification still requires its own executed proof. |
+| McpCli | `2e80701c31aafdf00abee05ac469a45ed76dfdf5` (`v2.0.0-26-g2e80701c`) | Owner-approved advance; qualification still requires its own executed proof. |
+| Memories | `d959bdae5af9c22f53573eda71c091cb5c0aae4c` (`v3.0.18-8-gd959bdae`) | Owner-approved advance; qualification still requires its own executed proof. |
+| Platform | `ed1560a57f4d4cb55b6b03f485cbfa01316837a7` (`v1.1.7`) | Released Platform tuple; qualification still requires its own executed proof. |
+| PolymorphicSerializations | `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`) | Committed selection; qualification still requires its own executed proof. |
+| Tenants | `33835a03e92579a26400e7cb7cf68d666c715b3e` (`v7.0.0-18-g33835a03`) | Owner-approved advance; qualification still requires its own executed proof. |
+
+### Historical source observation — 2026-11-03 (owner-approved v1.1.6 selection)
+
 Administrator / jpiquot approved on 2026-11-03 keeping the EventStore,
 FrontComposer, McpCli, Memories and Tenants gitlinks that `/pushall` advanced to
 their reviewed `origin/main` tips in Parties
@@ -1076,6 +1105,7 @@ The original selection row transcribes the Round 6 reviewer-recorded decision in
 | DW-182 / I16 Platform successor selection (2026-11-02) | Platform `c635a2dc22f404d97c9fe7e27f7e7f4c9017943b` (`v1.1.1-35-gc635a2dc`, on Platform `origin/main`), selected by Parties `957111c5a516b7fa7c2fe19eaadf3ae09522e792` and recorded by `fa9d6286a16fc725acb45215b3bebec202c7a78e`. Since Parties `18579b62ef9ac3c8780fc5e8ba26112d2665f566` no other root gitlink, `.gitmodules`, `global.json`, top-level `.props`/`.targets` or Client project input changed, so the other nine gitlinks and the effective Release package selection of the Tenants successor row stand. | Administrator / jpiquot | 2026-11-02 | **Approved Platform successor gitlink signoff only.** This supersedes Platform `92f87e6a49e4357f91b2ffb821e044931291c0e6` for current-selection assertions. The owner confirmed it explicitly on 2026-11-02 during the spec 8.10 Round 10 requalification: shown the exact SHA and the failing `gitlink-rc-gate` result, they chose "Sign off and requalify". The validated-advance row is in `.gitlink-signoff.tsv`. This approval qualifies no closure lane; the canonical `tests/test-summary.md` table (the last `### Validation receipts` heading) records each lane's status. No publication, deployment, custody, or rollback deletion authority follows. |
 | Story 2.8 delegated selection (2026-11-03) | Builds `26991e8c542704be44cd8d9f58084d56fa627adb`; Platform `bf101b9d5f19ba741852b0230e526d1f01422022`; effective prepared Release packages EventStore `4.0.4`, Commons `2.30.10`, PolymorphicSerializations `1.19.8`, FrontComposer `4.7.5`, Memories `3.0.18`, Tenants `7.0.0`, McpCli `2.0.0`. Other root source selections are unchanged. | codex-agent (explicit user delegation) | 2026-11-03 | **Source-selection only.** Historical jpiquot approvals and all six Unvalidated parity receipts remain unchanged; no package/runtime parity, publication, deployment, custody, rollback deletion or candidate acceptance is claimed. |
 | DW-182 / I16 owner-approved /pushall advance (2026-11-03) | Parties `f7ef3e23561b58c3dca38c787258e5b2d5fa0d86` with the released Platform v1.1.6 / Builds v4.43.5 tuple: AI.Tools `1745b6663ad32bb1288167135ed0f979366c53a0`; Builds `89f62052c932d054bda2b435bdfef60d96e77612`; Commons `11555ace9efcae2928a00122dcba91243e5a8a1a`; EventStore `a9205f511b4f96b5daf94d65369d6dee63e0c623`; FrontComposer `fbe01c913cb863abb0fd4a317d370d36fff593b3`; McpCli `2e80701c31aafdf00abee05ac469a45ed76dfdf5`; Memories `d959bdae5af9c22f53573eda71c091cb5c0aae4c`; Platform `8ea8fe092f8abb5c932a61830aae16051d442463`; PolymorphicSerializations `bce4eb9f45c6b131b960ab4fa39e50ff01e51960`; Tenants `33835a03e92579a26400e7cb7cf68d666c715b3e` and effective Release packages EventStore `4.0.4`, Commons `2.30.10`, PolymorphicSerializations `1.19.8`, FrontComposer `4.7.5`, Memories `3.0.18`, Tenants `7.0.0`, McpCli `2.0.0`. | Administrator / jpiquot | 2026-11-03 | **Approved current-selection assertions and gitlink signoff only.** This supersedes the Story 2.8 delegated Builds/Platform selection and the 2026-11-02 Tenants and Platform successor rows for current-selection assertions; those rows remain dated history. The owner confirmed it explicitly on 2026-11-03: presented with the seven advanced gitlinks, the expected fitness and `gitlink-rc-gate` failures and the revert alternative, they chose "keep bumps". After `prepare-module-build` refused the untagged Platform/Builds pair (HXW011/HXW009), the owner chose "Pin released tuple", and the untagged Platform and Builds advances were withdrawn. The validated-advance rows are in `.gitlink-signoff.tsv`. All six canonical parity receipts stay Unvalidated until rerun at their stamped identities. No publication, deployment, custody, or rollback deletion authority follows. |
+| Story 2.8 released tuple continuation (2026-11-03) | Builds `725754075e1d6369430a3adf94d46fb71e6eaf9e` (`v4.43.6`); Platform `ed1560a57f4d4cb55b6b03f485cbfa01316837a7` (`v1.1.7`); effective Release packages EventStore `4.0.4`, Commons `2.30.10`, PolymorphicSerializations `1.19.8`, FrontComposer `4.7.5`, Memories `3.0.18`, Tenants `7.0.0`, McpCli `2.0.0`. All other incoming source selections are unchanged. | codex-agent (explicit user delegation) | 2026-11-03 | **Source-selection only.** Every dated human approval and all six Unvalidated parity receipts remain unchanged. Actual Parties native/hosted qualification is pending; no new human ratification, package/runtime parity, publication, deployment, custody, rollback deletion or candidate acceptance is claimed. |
 | I17 activation handover | Any second activation of an accepted closure deferral | Pending — named accountable owner | Pending | Pending; no approval inferred from routing, source presence, or compile. |
 | I18 successor tests | Any baseline-test replacement | Pending — named accountable owner | Pending | Pending; no approval inferred from routing, source presence, or compile. |
 | I19 store reclassification / class-(b) test set | Touched stores, semantics, and approved consistency tests | Pending — named accountable owner | Pending | Pending; no approval inferred from routing, source presence, or compile. |
