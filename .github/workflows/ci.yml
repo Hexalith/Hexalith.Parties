@@ -105,10 +105,25 @@ jobs:
             --filter-method Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.CatalogApiAvailabilityDoesNotSelectNativeHosts \
             --minimum-expected-tests 22 --fail-skips on
 
-      - name: Initialize recorded SDK configuration input
+  memories-3018-package-protocol:
+    name: Memories 3.0.18 package protocol
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      NUGET_PACKAGES: ${{ runner.temp }}/hexalith-memories-3018-nuget
+      NUGET_HTTP_CACHE_PATH: ${{ runner.temp }}/hexalith-memories-3018-http
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: false
+          fetch-depth: 1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - name: Initialize recorded package inputs
         run: |
-          git -c submodule.recurse=false submodule update --init --depth 1 --checkout -- references/Hexalith.EventStore
-          git submodule status -- references/Hexalith.EventStore
+          git -c submodule.recurse=false submodule update --init --depth 1 --checkout -- references/Hexalith.Builds references/Hexalith.EventStore
+          git submodule status -- references/Hexalith.Builds references/Hexalith.EventStore
       - name: Qualify Memories 3.0.18 refresh and durable recovery
         shell: bash
         run: |
