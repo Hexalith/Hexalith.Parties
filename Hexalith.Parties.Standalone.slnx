@@ -23,6 +23,7 @@
     <Project Path="tests/Hexalith.Parties.Aspire.Tests/Hexalith.Parties.Aspire.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Authentication.Tests/Hexalith.Parties.Authentication.Tests.csproj" />
+    <Project Path="tests/Hexalith.Parties.Catalog.Tests/Hexalith.Parties.Catalog.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj" />

@@ -115,7 +115,7 @@ See the [Getting Started Guide](docs/getting-started.md) for the full EventStore
 ## Project Structure
 
 The repository contains exactly **15 projects under `src` plus one sample
-project**, **16 runnable .NET test projects plus three support hosts and one contracts artifact**
+project**, **17 runnable .NET test projects plus three support hosts and one contracts artifact**
 (`Hexalith.Parties.EventStoreGateway.TestHost`, `Hexalith.Parties.EventStoreAdminUI.TestHost`, `Hexalith.Parties.EventStoreSample.TestHost`
 and `Hexalith.Parties.EventStoreSample.Contracts.TestArtifact`), with Playwright e2e coverage
 alongside them. Adopter-facing packages (left column) are the only modules

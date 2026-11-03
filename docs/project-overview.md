@@ -14,7 +14,7 @@ Public command and query traffic goes through **Hexalith.EventStore**; the `part
 |---|---|
 | **Domain** | Party records (Person / Organization), contact channels, identifiers, GDPR consent & erasure |
 | **Style** | Event sourcing + CQRS + EventStore SDK domain/projection/query handlers, fronted by the EventStore gateway |
-| **Repository** | Monolith - exactly 15 projects under `src` plus one sample project, 16 runnable .NET test projects plus two support hosts and one contracts artifact, and Playwright e2e |
+| **Repository** | Monolith - exactly 15 projects under `src` plus one sample project, 17 runnable .NET test projects plus three support hosts and one contracts artifact, and Playwright e2e |
 | **Language / runtime** | C# / **.NET 10** (SDK `10.0.403`) |
 | **Orchestration** | .NET Aspire 13.6.4 (`dotnet aspire run`) |
 | **Eventing** | DAPR pub/sub — CloudEvents 1.0 on `{tenant}.parties.events` (Redis local; Kafka/RabbitMQ/Service Bus in prod) |

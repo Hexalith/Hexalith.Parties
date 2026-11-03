@@ -53,6 +53,7 @@ public sealed class DocumentationFitnessTests
         "Hexalith.Parties.AdminPortal.Tests",
         "Hexalith.Parties.Aspire.Tests",
         "Hexalith.Parties.Authentication.Tests",
+        "Hexalith.Parties.Catalog.Tests",
         "Hexalith.Parties.Ci.Tests",
         "Hexalith.Parties.Client.Tests",
         "Hexalith.Parties.ConsumerPortal.Tests",
@@ -123,7 +124,7 @@ public sealed class DocumentationFitnessTests
             string normalizedDocumentation = Regex.Replace(documentation, @"\s+", " ", RegexOptions.CultureInvariant);
             normalizedDocumentation.ShouldContain("15 projects under `src`", Case.Insensitive, relativePath);
             normalizedDocumentation.ShouldContain("one sample project", Case.Insensitive, relativePath);
-            documentation.ShouldContain("16 runnable", Case.Insensitive, relativePath);
+            documentation.ShouldContain("17 runnable", Case.Insensitive, relativePath);
             documentation.ShouldContain("Platform", Case.Sensitive, relativePath);
             documentation.ShouldContain("support host", Case.Insensitive, relativePath);
         }

@@ -9,7 +9,7 @@
 - **Architecture:** Event sourcing + CQRS + EventStore SDK domain/projection/query handlers, fronted by the **Hexalith.EventStore** gateway
 - **Orchestration:** .NET Aspire 13.6.4 (`dotnet aspire run --project src/Hexalith.Parties.AppHost`)
 - **Public surface:** EventStore `POST /api/v1/commands` & `/api/v1/queries` (`Domain="party"`); typed .NET client; `parties-mcp` (5 tools)
-- **Scale:** exactly 15 projects under `src` plus one sample project, 16 runnable .NET test projects plus two support hosts and one contracts artifact, and Playwright e2e — roughly 408 source `.cs`, 231 test `.cs`, and 36 `.razor` files (counts as of 2026-08-19; indicative, not gated)
+- **Scale:** exactly 15 projects under `src` plus one sample project, 17 runnable .NET test projects plus three support hosts and one contracts artifact, and Playwright e2e — roughly 408 source `.cs`, 231 test `.cs`, and 36 `.razor` files (counts as of 2026-08-19; indicative, not gated)
 
 ## Quick reference
 
