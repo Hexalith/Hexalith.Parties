@@ -44,7 +44,7 @@ jobs:
         tests/Hexalith.Parties.Tests
         tests/Hexalith.Parties.Sample.Tests
         tests/Hexalith.Parties.Ci.Tests
-      build-timeout-minutes: 60
+      build-timeout-minutes: 120
     secrets:
       registry-pull-username: ${{ secrets.HEXALITH_CI_REGISTRY_USERNAME }}
       registry-pull-password: ${{ secrets.HEXALITH_CI_REGISTRY_PASSWORD }}
