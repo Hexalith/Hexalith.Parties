@@ -622,6 +622,22 @@ class Qualification:
                      parentApiReceiptRequired=True, candidateAcceptance=False)
         require(classification == 'cancelled', 'Preserved prior product failure supplies no cancellation qualification')
 
+    def cleanup_owned(self, item, owner, job_status):
+        resume_failure = None
+        try:
+            self.resume_host(item)
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            resume_failure = {'failureType': type(error).__name__, 'failureObservedAtUtc': now()}
+        try:
+            self.down(item, 'independent-finalizer', job_status=job_status)
+        finally:
+            try:
+                HELPER.retain_artifacts(owner, private_directory(self.evidence / item['label']))
+            finally:
+                if resume_failure is not None:
+                    self.observe('owned-host-resume-unverified', ownerRunId=owner['runId'], **resume_failure)
+        return resume_failure
+
     def finalize_owner(self, item, job_status, issued):
         launch_error = None
         if not Path(item['receipt']).exists():
@@ -647,12 +663,11 @@ class Qualification:
                 self.observe('terminal-before-independent-finalization', ownerRunId=owner['runId'], firstOutcome=prior)
             except (OSError, ValueError, KeyError, TypeError):
                 prior_error = True
-        self.resume_host(item)
-        self.down(item, 'independent-finalizer', job_status=job_status)
-        HELPER.retain_artifacts(owner, private_directory(self.evidence / item['label']))
+        resume_failure = self.cleanup_owned(item, owner, job_status)
         require(launch_error is None, 'Exact receipt cleanup ran, but launch process recovery remains unverified')
         self.settled_child(item)
         require(not prior_error, 'The pre-cleanup first outcome could not be verified')
+        require(resume_failure is None, 'Exact cleanup ran, but owned host resume bookkeeping remains unverified')
         if item.get('cancellationPhase'):
             self.finalize_cancellation(item, item.get('terminalBeforeSignalForward', prior), job_status)
         return True

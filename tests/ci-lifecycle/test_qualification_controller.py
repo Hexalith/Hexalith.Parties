@@ -191,6 +191,60 @@ class ControllerSafetyTests(unittest.TestCase):
                 self.assertEqual(controller.finalize('cancelled'), 1)
                 self.assertEqual(down.call_count, 2)
 
+    def test_resume_failure_still_cleans_every_valid_unit_owner_and_retains_uncertainty(self):
+        # Explicit result-field/unit receipt doubles; no actual CI identity or native owner is created.
+        for failure in (ProcessLookupError('unit exit-before-SIGCONT race'), KeyError('unit malformed pause'),
+                        ValueError('unit unsafe pause bookkeeping')):
+            with self.subTest(failure=type(failure).__name__), tempfile.TemporaryDirectory() as temporary:
+                controller = object.__new__(Q.Qualification)
+                directory = Path(temporary)
+                receipt = directory / 'unit-receipt'
+                receipt.write_text('unit double, not a CI receipt')
+                controller.journal = {'owners': [{'label': 'passing', 'receipt': str(receipt)},
+                                                 {'label': 'peer', 'receipt': str(receipt)}]}
+                controller.evidence = directory
+                controller.issued = lambda _: {'runId': 'a' * 32}
+                controller.diagnostics = lambda _: directory
+                controller.recover_launch = lambda _: None
+                controller.settled_child = lambda _: None
+                observations = []
+                controller.observe = lambda kind, **value: observations.append({'kind': kind, **value})
+                with patch.object(controller, 'resume_host', side_effect=failure), \
+                     patch.object(controller, 'down') as down, patch.object(Q.HELPER, 'retain_artifacts') as retain:
+                    self.assertEqual(controller.finalize('cancelled'), 1)
+                self.assertEqual(down.call_count, 2)
+                self.assertEqual(retain.call_count, 2)
+                resumes = [value for value in observations if value['kind'] == 'owned-host-resume-unverified']
+                self.assertEqual(len(resumes), 2)
+                self.assertTrue(all(value['failureType'] == type(failure).__name__ for value in resumes))
+                self.assertEqual(observations[-1]['issuedOwners'], 2)
+                self.assertEqual(len(observations[-1]['failures']), 2)
+                self.assertFalse(observations[-1]['issuedOwnersCleanupVerified'])
+                self.assertFalse(observations[-1]['candidateAcceptance'])
+
+    def test_resume_and_down_failures_still_retain_artifacts_for_each_valid_unit_owner(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            controller = object.__new__(Q.Qualification)
+            directory = Path(temporary)
+            receipt = directory / 'unit-receipt'
+            receipt.write_text('unit double, not a CI receipt')
+            controller.journal = {'owners': [{'label': 'passing', 'receipt': str(receipt)},
+                                             {'label': 'peer', 'receipt': str(receipt)}]}
+            controller.evidence = directory
+            controller.issued = lambda _: {'runId': 'a' * 32}
+            controller.diagnostics = lambda _: directory
+            controller.recover_launch = lambda _: None
+            observations = []
+            controller.observe = lambda kind, **value: observations.append({'kind': kind, **value})
+            with patch.object(controller, 'resume_host', side_effect=ProcessLookupError('unit vanished process')), \
+                 patch.object(controller, 'down', side_effect=ValueError('unit exact down refusal')) as down, \
+                 patch.object(Q.HELPER, 'retain_artifacts') as retain:
+                self.assertEqual(controller.finalize('cancelled'), 1)
+            self.assertEqual(down.call_count, 2)
+            self.assertEqual(retain.call_count, 2)
+            self.assertEqual(len([value for value in observations if value['kind'] == 'owned-host-resume-unverified']), 2)
+            self.assertFalse(observations[-1]['issuedOwnersCleanupVerified'])
+
     def test_finite_admission_and_retry_cannot_replace_the_original_expiry(self):
         accepted = datetime.now(timezone.utc)
         attachment = {'ownerRunId': 'a' * 32, 'attachedRunId': 'b' * 32,
