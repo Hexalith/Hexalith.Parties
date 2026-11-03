@@ -7,7 +7,7 @@ namespace Hexalith.Parties.Ci.Tests;
 public sealed class PartiesContainerPublishWorkflowTests
 {
     private const int ExpectedPackageCount = 11;
-    private const string BuildsCiSha = "df13d9d31f7ee1a1b0fb7eeac7e8b27b9a9f9fb0";
+    private const string BuildsCiSha = "26991e8c542704be44cd8d9f58084d56fa627adb";
     private const string BuildsValidationSha = "332b2c144defba546fe0a09626a4a72f2340e22f";
     private const string BuildsExecutionSha = "11a3a79cfac4bba9548c6364a17a01ee9b561370";
     private static readonly TimeSpan WorkflowReadTimeout = TimeSpan.FromSeconds(10);
@@ -79,7 +79,7 @@ public sealed class PartiesContainerPublishWorkflowTests
     {
         string workflow = CiTestPaths.ReadRepoFile(".github/workflows/ci.yml");
 
-        workflow.ShouldContain($"Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@{BuildsCiSha}");
+        workflow.ShouldContain($"Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@{BuildsCiSha}");
         workflow.ShouldContain("solution: Hexalith.Parties.Standalone.slnx");
         workflow.ShouldContain("test-platform: microsoft-testing-platform");
         workflow.ShouldContain("run-consumer-validation: true");
@@ -98,10 +98,21 @@ public sealed class PartiesContainerPublishWorkflowTests
         workflow.ShouldContain("tests/Hexalith.Parties.Tests");
         workflow.ShouldContain("tests/Hexalith.Parties.Sample.Tests");
         workflow.ShouldContain("tests/Hexalith.Parties.Ci.Tests");
-        workflow.ShouldContain("aspire-test-project: tests/Hexalith.Parties.IntegrationTests");
-        workflow.ShouldContain("aspire-continue-on-error: false");
-        workflow.ShouldContain("aspire-prepare-script: scripts/prepare-aspire-tier.sh");
-        workflow.ShouldContain("aspire-prepare-timeout-minutes: 10");
+        string caller = ReadWorkflowJob(workflow, "ci");
+        caller.ShouldContain("module-manifest: module/hexalith.module-manifest.v2.json");
+        caller.ShouldContain("integration-test-profiles: platform-package");
+        caller.ShouldContain("registry-pull-username: ${{ secrets.HEXALITH_CI_REGISTRY_USERNAME }}");
+        caller.ShouldContain("registry-pull-password: ${{ secrets.HEXALITH_CI_REGISTRY_PASSWORD }}");
+        caller.ShouldContain("tests/Hexalith.Parties.Aspire.Tests");
+        caller.Split('\n').Count(line => line.StartsWith("        tests/", StringComparison.Ordinal)).ShouldBe(15);
+        foreach (string retired in new[] { "integration-test-projects:", "aspire-test-project:", "aspire-prepare-script:", "aspire-continue-on-error:", "dapr-version:", "dapr-runtime-version:", "secrets: inherit" })
+        {
+            caller.ShouldNotContain(retired);
+        }
+        using JsonDocument tools = JsonDocument.Parse(CiTestPaths.ReadRepoFile(".config/dotnet-tools.json"));
+        JsonElement tool = tools.RootElement.GetProperty("tools").GetProperty("hexalith.builds.module.cli");
+        tool.GetProperty("version").GetString().ShouldBe("4.43.4");
+        tool.GetProperty("rollForward").GetBoolean().ShouldBeFalse();
         workflow.ShouldNotContain("submodules: recursive");
 
         string packageCohort = ReadWorkflowJob(workflow, "eventstore-404-package-cohort");
@@ -119,7 +130,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         string focusedRuns = packageCohort[packageCohort.IndexOf("dotnet test --project ", StringComparison.Ordinal)..];
         focusedRuns.ShouldNotContain("-m:1");
 
-        string sharedWorkflow = ReadPinnedBuildsWorkflow("domain-ci.yml");
+        string sharedWorkflow = ReadPinnedBuildsWorkflow("domain-ci-v2.yml");
         sharedWorkflow.ShouldContain("default: 'vstest'");
         sharedWorkflow.ShouldContain("inputs.test-platform == 'microsoft-testing-platform'");
         sharedWorkflow.ShouldContain("--report-xunit-trx");
@@ -426,7 +437,7 @@ public sealed class PartiesContainerPublishWorkflowTests
             string workflow = CiTestPaths.ReadRepoFile(path).Replace("\r\n", "\n");
             string triggers = workflow[..workflow.IndexOf("\nconcurrency:", StringComparison.Ordinal)];
             triggers.ShouldContain("on:\n  push:\n    branches: [main]\n");
-            string sharedWorkflow = path == ".github/workflows/ci.yml" ? "domain-ci.yml" : "codeql.yml";
+            string sharedWorkflow = path == ".github/workflows/ci.yml" ? "domain-ci-v2.yml" : "codeql.yml";
             string job = path == ".github/workflows/ci.yml" ? "ci" : "codeql";
             string sourceSha = path == ".github/workflows/ci.yml" ? BuildsCiSha : BuildsValidationSha;
             workflow.ShouldContain($"\njobs:\n  {job}:\n    uses: Hexalith/Hexalith.Builds/.github/workflows/{sharedWorkflow}@{sourceSha}\n");
@@ -787,7 +798,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         string ci = CiTestPaths.ReadRepoFile("docs/ci.md");
         string secrets = CiTestPaths.ReadRepoFile("docs/ci-secrets-checklist.md");
 
-        ci.ShouldContain($"Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@{BuildsCiSha}");
+        ci.ShouldContain($"Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@{BuildsCiSha}");
         ci.ShouldContain($"Hexalith/Hexalith.Builds/Github/prepare-domain-release@{BuildsExecutionSha}");
         ci.ShouldContain("workflow_dispatch");
         ci.ShouldContain("successful exact-source push run of `ci.yml`");
@@ -818,7 +829,7 @@ public sealed class PartiesContainerPublishWorkflowTests
     /// </summary>
     private static string ReadPinnedBuildsWorkflow(string workflow)
     {
-        string sourceSha = workflow == "domain-ci.yml" ? BuildsCiSha : BuildsValidationSha;
+        string sourceSha = workflow == "domain-ci-v2.yml" ? BuildsCiSha : BuildsValidationSha;
         ProcessStartInfo start = new("git")
         {
             WorkingDirectory = CiTestPaths.RepoFile("references/Hexalith.Builds"),

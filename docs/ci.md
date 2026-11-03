@@ -4,7 +4,7 @@ Hexalith.Parties uses GitHub Actions with shared Hexalith.Builds workflows and a
 
 ## Workflows
 
-- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@df13d9d31f7ee1a1b0fb7eeac7e8b27b9a9f9fb0`.
+- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@26991e8c542704be44cd8d9f58084d56fa627adb`.
 - `.github/workflows/release.yml` is a manual `workflow_dispatch` workflow with a protected, caller-owned release job. It uses `Hexalith/Hexalith.Builds/Github/prepare-domain-release@11a3a79cfac4bba9548c6364a17a01ee9b561370` and takes the nested publisher from that same immutable Builds checkout.
 - `.github/workflows/commitlint.yml` delegates Conventional Commit validation to the retained immutable Builds revision `332b2c144defba546fe0a09626a4a72f2340e22f`, for pull requests and main pushes.
 - `.github/workflows/dependency-review.yml` delegates dependency review for pull requests.
@@ -31,11 +31,34 @@ dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tes
 
 CI runs on pushes and pull requests to `main`, scheduled nightly runs, and Pact Broker `repository_dispatch` events with type `contract_requiring_verification_published`.
 
-The shared CI workflow restores and builds `Hexalith.Parties.slnx`, initializes only root-declared submodules, runs package consumer validation, and executes the configured test tiers:
+The v2 workflow uses the exact published module CLI 4.43.4 and genuine Platform
+v1.1.5 (`bf101b9d5f19ba741852b0230e526d1f01422022`) with the matching recorded
+Builds catalog `26991e8c542704be44cd8d9f58084d56fa627adb`. Supported package-mode
+preparation generates verified runtime-free Release imports before restore/build
+of `Hexalith.Parties.Standalone.slnx` and package consumer validation.
 
-- Tier 1: unit, UI, package, and boundary tests.
-- Tier 2: integration and CI contract tests.
-- Tier 3: Aspire topology tests through `tests/Hexalith.Parties.IntegrationTests`.
+All twelve prior isolated projects and the whole `Parties.Tests`, `Sample.Tests`
+and `Ci.Tests` projects run in the isolated list without trait filters. Their
+self-contained doubles and model tests do not provision Platform/domain servers.
+Only after isolated success does the declared `platform-package` suite in
+`module/hexalith.module-manifest.v2.json` require real runner-owned services.
+The retired direct integration/Aspire/performance inputs and Dapr overrides are
+absent; the verified producer catalog selects the toolchain. The retained Aspire
+topology project and scripts remain a separate diagnostic compatibility surface.
+
+The caller maps only `HEXALITH_CI_REGISTRY_USERNAME` and
+`HEXALITH_CI_REGISTRY_PASSWORD` to `registry-pull-username/password`; secret
+inheritance, provider credentials and publisher credentials are absent. The
+runner records ownership before allocation, withdraws active same-job attachments
+before stopping, and uses a bounded unconditional exact-owner finalizer after
+success, failure, cancellation or partial startup. Unknown cleanup or owned
+leftovers fails; classified diagnostics survive workspace deletion. Same/cross-job
+admission and native lifecycle acceptance still require actual hosted evidence.
+
+All independent jobs remain blocking and unchanged, including the original offline
+cohort and the separate 52-case actual-client protocol job with private caches.
+Source selection is user-delegated `codex-agent` bookkeeping, not human
+ratification, package/runtime parity or candidate acceptance.
 
 The blocking `ui-a11y` job retains its **UI accessibility** check name and runs on every CI trigger without path filters or
 failure suppression. It installs Node 24, the SDK from `global.json`, locked
@@ -416,7 +439,7 @@ The optional mapped shared-download cancellation qualification lives in
 mapped source UI build; it fails if the required source capability is absent.
 The required package portal specs contain no skip or optional capability gate.
 
-Aspire CI runs `scripts/prepare-aspire-tier.sh` before its test process.
+The retained legacy Aspire topology procedure runs `scripts/prepare-aspire-tier.sh` before its test process; v2 does not invoke it.
 The ten-minute preparation budget includes HTTPS trust and serial Release builds
 of the eight selected runtime hosts. This lane checks package compatibility:
 package-built sessions explicitly select `Parties:Testing:UsePackagedGateway=true`

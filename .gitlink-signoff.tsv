@@ -487,3 +487,11 @@ references/Hexalith.Platform|9274fb225541987221617006183bcc8bb9eb98c1|validated-
 #     and full normal gates. Follows the existing user-authorized codex-agent
 #     source-only entries above; preserves all other root selections.
 references/Hexalith.Builds|26991e8c542704be44cd8d9f58084d56fa627adb|validated-advance|main@26991e8c542704be44cd8d9f58084d56fa627adb|codex-agent|2026-11-03
+
+# --- 2026-11-03 user-delegated Story 2.8 Platform source selection.
+#     Select genuine Platform v1.1.5 with its verified Builds269/CLI4.43.4 tuple.
+#     codex-agent records source selection only under the active user delegation,
+#     following the existing source-only precedent above. No human ratification,
+#     Parties package/runtime parity, release approval or hosted lifecycle
+#     acceptance is claimed. Normal compatibility and merge gates remain required.
+references/Hexalith.Platform|bf101b9d5f19ba741852b0230e526d1f01422022|validated-advance|v1.1.5|codex-agent|2026-11-03
