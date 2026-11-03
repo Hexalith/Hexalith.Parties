@@ -115,7 +115,7 @@ jobs:
           set -euo pipefail
           package_properties=(
             -p:HexalithEventStoreVersion=4.0.4
-            -p:HexalithTenantsVersion=6.0.0
+            -p:HexalithTenantsVersion=7.0.0
             -p:HexalithMemoriesVersion=3.0.18
             -p:UseHexalithProjectReferences=false
             -p:UseNuGetDeps=true
