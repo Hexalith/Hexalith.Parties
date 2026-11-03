@@ -58,38 +58,38 @@ public sealed class PlatformApiPrerequisitesTests
     ];
 
     // Committed source observations are separate from historical migration/parity approvals.
-    private const string CurrentSelectedEventStoreSha = "7c93a1234d14c66f5ee85ed48caaee1d30a671f3";
-    private const string CurrentSelectedEventStoreDescribe = "v3.132.1-2-g7c93a123";
-    // The selected SHA is the upstream v3.132.2 tag, but that tag is absent locally.
-    private const string CurrentSelectedEventStoreTag = "v3.132.1";
+    private const string CurrentSelectedEventStoreSha = "a9205f511b4f96b5daf94d65369d6dee63e0c623";
+    private const string CurrentSelectedEventStoreDescribe = "v4.0.4-11-ga9205f51";
+    // The selected SHA is 11 commits past the upstream v4.0.4 release tag.
+    private const string CurrentSelectedEventStoreTag = "v4.0.4";
     // Current committed selections are observed independently of historical approvals
     // and executed parity receipts.
     private static readonly IReadOnlyDictionary<string, string> CurrentSelectedGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["references/Hexalith.AI.Tools"] = "1745b6663ad32bb1288167135ed0f979366c53a0",
-        ["references/Hexalith.Builds"] = "26991e8c542704be44cd8d9f58084d56fa627adb",
+        ["references/Hexalith.Builds"] = "725754075e1d6369430a3adf94d46fb71e6eaf9e",
         ["references/Hexalith.Commons"] = "11555ace9efcae2928a00122dcba91243e5a8a1a",
-        ["references/Hexalith.EventStore"] = "7c93a1234d14c66f5ee85ed48caaee1d30a671f3",
-        ["references/Hexalith.FrontComposer"] = "07089dcbdad784a1d53037e9cea78d1d7becd8d6",
-        ["references/Hexalith.McpCli"] = "3bc89642ad43305531c4018b75b5e1b9e0681e10",
-        ["references/Hexalith.Memories"] = "e8956eb5c1bd49297f86702f9606eb9b013bc2f1",
-        ["references/Hexalith.Platform"] = "bf101b9d5f19ba741852b0230e526d1f01422022",
+        ["references/Hexalith.EventStore"] = "a9205f511b4f96b5daf94d65369d6dee63e0c623",
+        ["references/Hexalith.FrontComposer"] = "fbe01c913cb863abb0fd4a317d370d36fff593b3",
+        ["references/Hexalith.McpCli"] = "2e80701c31aafdf00abee05ac469a45ed76dfdf5",
+        ["references/Hexalith.Memories"] = "d959bdae5af9c22f53573eda71c091cb5c0aae4c",
+        ["references/Hexalith.Platform"] = "1080e92c0eedfd5cbb048871da475eb0a6c71c86",
         ["references/Hexalith.PolymorphicSerializations"] = "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
-        ["references/Hexalith.Tenants"] = "4d0d599879767196928e1c265622483a62b457ae",
+        ["references/Hexalith.Tenants"] = "33835a03e92579a26400e7cb7cf68d666c715b3e",
     };
 
     private static readonly IReadOnlyDictionary<string, string> CurrentSelectedSourceDescribes = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["references/Hexalith.AI.Tools"] = "1745b666",
-        ["references/Hexalith.Builds"] = "v4.43.4",
+        ["references/Hexalith.Builds"] = "v4.43.5-11-g72575407",
         ["references/Hexalith.Commons"] = "v2.30.10",
-        ["references/Hexalith.EventStore"] = "v3.132.1-2-g7c93a123",
-        ["references/Hexalith.FrontComposer"] = "v4.7.5",
-        ["references/Hexalith.McpCli"] = "v1.1.0-57-g3bc89642",
-        ["references/Hexalith.Memories"] = "v3.0.15",
-        ["references/Hexalith.Platform"] = "v1.1.5",
+        ["references/Hexalith.EventStore"] = "v4.0.4-11-ga9205f51",
+        ["references/Hexalith.FrontComposer"] = "v4.7.5-19-gfbe01c91",
+        ["references/Hexalith.McpCli"] = "v2.0.0-26-g2e80701c",
+        ["references/Hexalith.Memories"] = "v3.0.18-8-gd959bdae",
+        ["references/Hexalith.Platform"] = "v1.1.5-3-g1080e92c",
         ["references/Hexalith.PolymorphicSerializations"] = "v1.19.8-1-gbce4eb9f",
-        ["references/Hexalith.Tenants"] = "v6.0.0-71-g4d0d5998",
+        ["references/Hexalith.Tenants"] = "v7.0.0-18-g33835a03",
     };
 
     private static readonly string[] RequiredAbsentPayloadProtectionPaths =
@@ -805,16 +805,21 @@ public sealed class PlatformApiPrerequisitesTests
         continuation.ShouldContain("codex-agent (explicit user delegation)");
         continuation.ShouldContain("Source-selection only");
         continuation.ShouldContain("Unvalidated");
-        continuation.ShouldContain($"Builds `{CurrentSelectedGitlinks["references/Hexalith.Builds"]}`");
-        continuation.ShouldContain($"Platform `{CurrentSelectedGitlinks["references/Hexalith.Platform"]}`");
+        continuation.ShouldContain("Builds `26991e8c542704be44cd8d9f58084d56fa627adb`");
+        continuation.ShouldContain("Platform `bf101b9d5f19ba741852b0230e526d1f01422022`");
+        string[] advanceRows = matrix.Split('\n', StringSplitOptions.TrimEntries)
+            .Where(static row => row.StartsWith("| DW-182 / I16 owner-approved /pushall advance (2026-11-03) |", StringComparison.Ordinal))
+            .ToArray();
+        advanceRows.Length.ShouldBe(1, "The current owner-approved selection must have exactly one row.");
+        string advanceRow = advanceRows[0];
+        advanceRow.ShouldContain("Administrator / jpiquot");
+        advanceRow.ShouldContain("Approved current-selection assertions and gitlink signoff only");
+        advanceRow.ShouldContain("Unvalidated");
         foreach ((string path, string identity) in CurrentSelectedGitlinks)
         {
             string describe = CurrentSelectedSourceDescribes[path];
             AssertCurrentSourceRow(currentSelection, path, identity, describe);
-            if (path is not ("references/Hexalith.Platform" or "references/Hexalith.Builds"))
-            {
-                ownerRow.ShouldContain($"{path["references/Hexalith.".Length..]} `{identity}`");
-            }
+            advanceRow.ShouldContain($"{path["references/Hexalith.".Length..]} `{identity}`");
             AssertSelectedSourceObservation(root, path, identity);
             DescribeObservedSource(root, path, describe, identity).ShouldBe(describe, path);
         }
@@ -837,6 +842,7 @@ public sealed class PlatformApiPrerequisitesTests
             Regex.IsMatch(graphSentence.Value, $@"\b{Regex.Escape(label)}(?: package)?\s+`{Regex.Escape(version)}`", RegexOptions.CultureInvariant)
                 .ShouldBeTrue($"Current matrix selection must name the evaluated {package} version.");
             continuation.ShouldContain($"{label} `{version}`");
+            advanceRow.ShouldContain($"{label} `{version}`");
         }
 
         RunGit(root, "-C", EventStoreRelativePath, "describe", "--tags", "--match", CurrentSelectedEventStoreTag, "--abbrev=8", CurrentSelectedEventStoreSha)
