@@ -1,0 +1,172 @@
+name: Disposable CI lifecycle qualification
+
+on:
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: Explicit real-service scenario; cancellation is performed by the operator
+        required: true
+        type: choice
+        options: [matrix, cancel-startup, cancel-execution]
+
+permissions:
+  contents: read
+
+# Every dispatch is a separate observation. Never cancel another qualification owner implicitly.
+concurrency:
+  group: lifecycle-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  baseline:
+    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@26991e8c542704be44cd8d9f58084d56fa627adb
+    with:
+      solution: Hexalith.Parties.Standalone.slnx
+      module-manifest: module/hexalith.module-manifest.v2.json
+      integration-test-profiles: platform-package
+      test-platform: microsoft-testing-platform
+      run-consumer-validation: true
+      run-coverage-gate: false
+      unit-test-projects: |
+        tests/Hexalith.Parties.Aspire.Tests
+        tests/Hexalith.Parties.Contracts.Tests
+        tests/Hexalith.Parties.Authentication.Tests
+        tests/Hexalith.Parties.Client.Tests
+        tests/Hexalith.Parties.Server.Tests
+        tests/Hexalith.Parties.Projections.Tests
+        tests/Hexalith.Parties.Security.Tests
+        tests/Hexalith.Parties.AdminPortal.Tests
+        tests/Hexalith.Parties.ConsumerPortal.Tests
+        tests/Hexalith.Parties.UI.Tests
+        tests/Hexalith.Parties.Picker.Tests
+        tests/Hexalith.Parties.Mcp.Tests
+        tests/Hexalith.Parties.Tests
+        tests/Hexalith.Parties.Sample.Tests
+        tests/Hexalith.Parties.Ci.Tests
+      build-timeout-minutes: 60
+    secrets:
+      registry-pull-username: ${{ secrets.HEXALITH_CI_REGISTRY_USERNAME }}
+      registry-pull-password: ${{ secrets.HEXALITH_CI_REGISTRY_PASSWORD }}
+
+  qualification:
+    needs: baseline
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: false
+      - name: Initialize only direct owner dependencies
+        run: git -c submodule.recurse=false submodule update --init --depth 1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - name: Prepare the actual pinned package tool and catalog
+        run: python3 -B references/Hexalith.Builds/Github/prepare-module-build/prepare_module_build.py --manifest module/hexalith.module-manifest.v2.json
+      - name: Build the explicit declared lifecycle suite
+        run: dotnet build tests/Hexalith.Parties.Platform.LifecycleTests/Hexalith.Parties.Platform.LifecycleTests.csproj --configuration Release -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true
+      - name: Read verified catalog toolchain versions
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from xml.etree import ElementTree as ET
+          root = ET.parse('references/Hexalith.Builds/Props/Directory.Packages.props').getroot()
+          with Path(os.environ['GITHUB_ENV']).open('a') as output:
+              for name, property_name in [('CI_ASPIRE_VERSION', 'HexalithAspireAppHostSdkVersion'), ('CI_DAPR_CLI_VERSION', 'HexalithDaprCliVersion'), ('CI_DAPR_RUNTIME_VERSION', 'HexalithDaprRuntimeVersion')]:
+                  value = root.find('.//' + property_name).text
+                  if not value or any(character not in '0123456789.-abcdefghijklmnopqrstuvwxyz' for character in value):
+                      raise ValueError('Invalid verified catalog toolchain version')
+                  output.write(name + '=' + value + '\n')
+          PY
+      - name: Install toolchain without provisioning services
+        run: |
+          set -euo pipefail
+          tools="$RUNNER_TEMP/hexalith-lifecycle-tools"
+          dapr_home="$RUNNER_TEMP/hexalith-lifecycle-dapr"
+          mkdir -p "$tools" "$dapr_home/tools" "$dapr_home/.dapr/bin"
+          dotnet tool install --tool-path "$tools" Aspire.Cli --version "$CI_ASPIRE_VERSION"
+          curl --fail --location --proto '=https' --proto-redir '=https' "https://github.com/dapr/cli/releases/download/v$CI_DAPR_CLI_VERSION/dapr_linux_amd64.tar.gz" -o "$RUNNER_TEMP/lifecycle-dapr-cli.tar.gz"
+          tar -xzf "$RUNNER_TEMP/lifecycle-dapr-cli.tar.gz" -C "$dapr_home/tools" dapr
+          for binary in daprd placement scheduler; do
+            curl --fail --location --proto '=https' --proto-redir '=https' "https://github.com/dapr/dapr/releases/download/v$CI_DAPR_RUNTIME_VERSION/${binary}_linux_amd64.tar.gz" -o "$RUNNER_TEMP/lifecycle-$binary.tar.gz"
+            tar -xzf "$RUNNER_TEMP/lifecycle-$binary.tar.gz" -C "$dapr_home/.dapr/bin" "$binary"
+          done
+          echo "$tools" >> "$GITHUB_PATH"
+          echo "HEXALITH_DAPR_HOME=$dapr_home" >> "$GITHUB_ENV"
+      - name: Configure only the dedicated pull reader
+        env:
+          REGISTRY_READER_USERNAME: ${{ secrets.HEXALITH_CI_REGISTRY_USERNAME }}
+          REGISTRY_READER_PASSWORD: ${{ secrets.HEXALITH_CI_REGISTRY_PASSWORD }}
+        run: |
+          python3 - <<'PY'
+          import base64
+          import json
+          import os
+          import tempfile
+          from pathlib import Path
+          username, password = (os.environ[key] for key in ['REGISTRY_READER_USERNAME', 'REGISTRY_READER_PASSWORD'])
+          if not username or not password:
+              raise ValueError('Dedicated pull-only reader is required')
+          directory = Path(tempfile.mkdtemp(prefix='hexalith-lifecycle-registry.', dir=Path(os.environ['RUNNER_TEMP']).resolve(strict=True)))
+          with Path(os.environ['GITHUB_ENV']).open('a') as output:
+              output.write(f'DOCKER_CONFIG={directory}\nHEXALITH_LIFECYCLE_REGISTRY_CONFIG={directory}\n')
+          token = base64.b64encode((username + ':' + password).encode()).decode()
+          descriptor = os.open(directory / 'config.json', os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+          with os.fdopen(descriptor, 'w') as output:
+              json.dump({'auths': {'registry.hexalith.com': {'auth': token}}}, output)
+          PY
+      - name: Exercise real passing failing partial-startup and exact retry scenarios
+        if: ${{ inputs.scenario == 'matrix' }}
+        run: python3 -B scripts/qualify-disposable-ci.py matrix
+      - name: Observe actual startup cancellation readiness
+        if: ${{ inputs.scenario == 'cancel-startup' }}
+        run: python3 -B scripts/qualify-disposable-ci.py start-cancellation --phase startup
+      - name: Observe actual execution cancellation readiness and active hold
+        if: ${{ inputs.scenario == 'cancel-execution' }}
+        run: python3 -B scripts/qualify-disposable-ci.py start-cancellation --phase execution
+      - name: Publish the actual ready owner before operator cancellation
+        if: ${{ inputs.scenario != 'matrix' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: lifecycle-cancellation-ready
+          path: TestResults/ci-lifecycle
+          if-no-files-found: error
+          retention-days: 14
+      - name: Await parent cancellation of this exact ready run
+        if: ${{ inputs.scenario != 'matrix' }}
+        run: python3 -B scripts/qualify-disposable-ci.py wait-cancellation
+      - name: Independently finalize every exact same-job owner
+        if: always()
+        env:
+          ACTUAL_JOB_STATUS: ${{ job.status }}
+        run: |
+          if [ -f "$RUNNER_TEMP/hexalith-ci-qualification/journal.json" ]; then
+            python3 -B scripts/qualify-disposable-ci.py finalize --job-status "$ACTUAL_JOB_STATUS"
+          fi
+      - name: Remove the private reader file
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          value = os.environ.get('HEXALITH_LIFECYCLE_REGISTRY_CONFIG')
+          if value:
+              path = Path(value)
+              root = Path(os.environ['RUNNER_TEMP']).resolve(strict=True)
+              if path.parent != root or not path.name.startswith('hexalith-lifecycle-registry.') or path.is_symlink():
+                  raise ValueError('Refusing a foreign credential directory')
+              config = path / 'config.json'
+              if config.is_symlink():
+                  raise ValueError('Refusing a linked credential file')
+              config.unlink(missing_ok=True)
+              path.rmdir()
+          PY
+      - name: Retain classified lifecycle observations
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ci-lifecycle-observations
+          path: TestResults/ci-lifecycle
+          if-no-files-found: warn
+          retention-days: 14

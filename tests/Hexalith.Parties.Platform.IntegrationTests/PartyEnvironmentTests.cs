@@ -24,8 +24,18 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, IT
         Converters = { new JsonStringEnumConverter() },
     };
 
+    /// <summary>Exercises the full real persistence path and writes its canonical observation once.</summary>
+    /// <returns>The bounded real-service assertions and single canonical observation.</returns>
     [Fact]
-    public async Task RealDependencies_CreateQueryAndPersistMatchingPartyEvents()
+    public Task RealDependencies_CreateQueryAndPersistMatchingPartyEvents() =>
+        ExerciseRealDependenciesAsync(recordCanonicalObservation: true);
+
+    /// <summary>Rechecks the full real persistence path after a qualification hold without rewriting the first observation.</summary>
+    /// <returns>The bounded real-service command, query and exact-stream assertions.</returns>
+    internal Task RecheckRealDependenciesAsync() =>
+        ExerciseRealDependenciesAsync(recordCanonicalObservation: false);
+
+    private async Task ExerciseRealDependenciesAsync(bool recordCanonicalObservation)
     {
         using var bound = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         bound.CancelAfter(TimeSpan.FromSeconds(120));
@@ -104,7 +114,7 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, IT
             tenantsNativeQueryObserved = tenantDocument.RootElement.GetProperty("tenantId").GetString() == tenant,
             memoriesRegistryObserved = memoriesDocument.RootElement.GetProperty("id").GetString() == tenant
                 && memoriesDocument.RootElement.GetProperty("status").GetString() == "active",
-        }, token).ConfigureAwait(true);
+        }, recordCanonicalObservation, token).ConfigureAwait(true);
     }
 
     /// <summary>Requires the currently observed registry tenant to be the active run tenant.</summary>
@@ -116,32 +126,10 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, IT
         tenant.GetProperty("status").GetString().ShouldBe("active");
     }
 
-    private static async Task WritePersistenceObservationsAsync<T>(T observation, CancellationToken token)
-    {
-        string? descriptor = System.Environment.GetEnvironmentVariable("HEXALITH_TEST_ENVIRONMENT_PATH");
-        string? report = System.Environment.GetEnvironmentVariable("HEXALITH_G4_TEST_REPORT_PATH");
-        if (string.IsNullOrWhiteSpace(descriptor) || string.IsNullOrWhiteSpace(report)
-            || !Path.IsPathFullyQualified(descriptor) || !Path.IsPathFullyQualified(report))
-            throw new InvalidOperationException("The explicit owning native observation binding is unavailable.");
-        string workspace = Path.GetDirectoryName(Path.GetFullPath(descriptor))!;
-        string directory = Path.Combine(workspace, "native-tests");
-        if (Path.GetDirectoryName(Path.GetFullPath(report)) != directory || Path.GetFileName(report) != "native.trx"
-            || !Directory.Exists(directory))
-            throw new InvalidOperationException("The native report differs from the descriptor-owned output directory.");
-        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(observation, SerializerOptions);
-        if (bytes.Length > 65536) throw new InvalidOperationException("The native observation exceeds its bounded output contract.");
-        var options = new FileStreamOptions
-        {
-            Mode = FileMode.CreateNew, Access = FileAccess.Write, Share = FileShare.None, Options = FileOptions.Asynchronous,
-        };
-        if (!OperatingSystem.IsWindows()) options.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
-        FileStream stream = new(Path.Combine(directory, "functional-observations.json"), options);
-        await using (stream.ConfigureAwait(false))
-        {
-            await stream.WriteAsync(bytes, token).ConfigureAwait(false);
-            await stream.FlushAsync(token).ConfigureAwait(false);
-        }
-    }
+    private static Task WritePersistenceObservationsAsync<T>(T observation, bool recordCanonicalObservation, CancellationToken token) =>
+        FunctionalObservationWriter.WriteAsync(JsonSerializer.SerializeToUtf8Bytes(observation, SerializerOptions),
+            System.Environment.GetEnvironmentVariable("HEXALITH_TEST_ENVIRONMENT_PATH"),
+            System.Environment.GetEnvironmentVariable("HEXALITH_G4_TEST_REPORT_PATH"), recordCanonicalObservation, token);
 
     private async Task<JsonDocument> PollStatusAsync(string commandId, CancellationToken token)
     {
