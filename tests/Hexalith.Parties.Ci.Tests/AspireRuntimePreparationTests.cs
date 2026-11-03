@@ -477,6 +477,18 @@ public sealed class AspireRuntimePreparationTests
     [InlineData("3.132.2", false, true, true)]
     [InlineData("3.130.3", false, false, false)]
     [InlineData("3.131.0", false, false, false)]
+    [InlineData("4.0.3", false, false, false)]
+    [InlineData("4.0.4", false, true, true)]
+    [InlineData("4.0.5", false, false, false)]
+    [InlineData("4.1.0", false, false, false)]
+    [InlineData("4.0.4-preview.1", false, false, false)]
+    [InlineData("4.0.4+build.1", false, false, false)]
+    [InlineData("4.0.4.0", false, false, false)]
+    [InlineData("v4.0.4", false, false, false)]
+    [InlineData("4.0", false, false, false)]
+    [InlineData("invalid", false, false, false)]
+    [InlineData("", false, false, false)]
+    [InlineData("4.0.5", true, true, true)]
     [InlineData("3.128.4", true, true, true)]
     public async Task CatalogApiAvailabilityDoesNotSelectNativeHosts(string version, bool source, bool available, bool hostsAvailable)
     {
@@ -490,9 +502,14 @@ public sealed class AspireRuntimePreparationTests
                     new XElement("HexalithEventStoreVersion", version), new XElement("HexalithEventStoreFromSource", source.ToString().ToLowerInvariant())),
                 new XElement("Import", new XAttribute("Project", CiTestPaths.RepoFile("Directory.Build.targets")))))
                 .Save(project);
-            var result = await RunDotnetAsync(workspace, "msbuild", project, "-nologo", "-getProperty:DefineConstants").ConfigureAwait(true);
+            var result = await RunDotnetAsync(workspace, "msbuild", project, "-nologo",
+                "-getProperty:DefineConstants,HexalithEventStoreCatalogApiSupported,HexalithEventStoreCatalogHostsSupported").ConfigureAwait(true);
             result.ExitCode.ShouldBe(0, result.Output + result.Error);
-            string[] constants = result.Output.Trim().Split(';');
+            using JsonDocument evaluation = JsonDocument.Parse(result.Output);
+            JsonElement properties = evaluation.RootElement.GetProperty("Properties");
+            properties.GetProperty("HexalithEventStoreCatalogApiSupported").GetString().ShouldBe(available ? "true" : string.Empty);
+            properties.GetProperty("HexalithEventStoreCatalogHostsSupported").GetString().ShouldBe(hostsAvailable ? "true" : string.Empty);
+            string[] constants = properties.GetProperty("DefineConstants").GetString()!.Split(';');
             constants.Contains("HEXALITH_EVENTSTORE_CATALOG_API", StringComparer.Ordinal).ShouldBe(available);
             constants.Contains("HEXALITH_EVENTSTORE_CATALOG_HOSTS", StringComparer.Ordinal).ShouldBe(hostsAvailable);
             constants.Contains("HEXALITH_DEVELOPMENT_CATALOG_SOURCE", StringComparer.Ordinal).ShouldBe(source);

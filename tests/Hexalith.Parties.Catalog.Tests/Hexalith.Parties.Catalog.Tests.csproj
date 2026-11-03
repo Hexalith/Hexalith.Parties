@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj" />
+    <ProjectReference Include="../../src/Hexalith.Parties.EventStoreExtensions/Hexalith.Parties.EventStoreExtensions.csproj" />
+    <!-- Reuse the existing catalog owner tests without the unrelated legacy hosting harness. -->
+    <Compile Include="../Hexalith.Parties.Contracts.Tests/PartiesCatalogTests.cs" Link="PartiesCatalogTests.cs" />
+    <Compile Include="../Hexalith.Parties.Contracts.Tests/PartiesCatalogAdapterTests.cs" Link="PartiesCatalogAdapterTests.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="Shouldly" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

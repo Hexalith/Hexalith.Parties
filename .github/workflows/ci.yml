@@ -52,6 +52,55 @@ jobs:
       # Package-profile enrollment remains staged until its workflow/tool handoff is qualified.
       build-timeout-minutes: 60
 
+  eventstore-404-package-cohort:
+    name: EventStore 4.0.4 package cohort (offline)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: false
+          fetch-depth: 1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - name: Initialize only the recorded package catalog input
+        run: |
+          git -c submodule.recurse=false submodule update --init --depth 1 --checkout -- references/Hexalith.Builds
+          git submodule status -- references/Hexalith.Builds
+      - name: Build public packages and run focused catalog qualification
+        shell: bash
+        run: |
+          package_properties=(
+            -p:HexalithEventStoreVersion=4.0.4
+            -p:HexalithTenantsVersion=5.11.2
+            -p:HexalithMemoriesVersion=3.0.11
+            -p:UseHexalithProjectReferences=false
+            -p:UseNuGetDeps=true
+            -p:EventStoreFromSource=false
+            -p:HexalithEventStoreFromSource=false
+            -p:HexalithTenantsFromSource=false
+            -p:HexalithMemoriesFromSource=false
+            -p:HexalithCommonsFromSource=false
+            -p:HexalithCommonsHttpFromSource=false
+            -p:HexalithMcpCliFromSource=false
+            -p:RestoreSources=https://api.nuget.org/v3/index.json
+          )
+          # Compile the actual owners; this job never starts a private runtime or topology.
+          for project in \
+            src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj \
+            src/Hexalith.Parties.EventStoreExtensions/Hexalith.Parties.EventStoreExtensions.csproj \
+            src/Hexalith.Parties/Hexalith.Parties.csproj \
+            tests/Hexalith.Parties.Catalog.Tests/Hexalith.Parties.Catalog.Tests.csproj \
+            tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj; do
+            dotnet build "$project" --configuration Release --disable-build-servers -m:1 -warnaserror "${package_properties[@]}"
+          done
+          dotnet tests/Hexalith.Parties.Catalog.Tests/bin/Release/net10.0/Hexalith.Parties.Catalog.Tests.dll \
+            -class Hexalith.Parties.Contracts.Tests.PartiesCatalogTests \
+            -class Hexalith.Parties.Contracts.Tests.PartiesCatalogAdapterTests -failSkips
+          dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll \
+            -method '*CatalogApiAvailabilityDoesNotSelectNativeHosts' -failSkips
+
   owner-publish:
     name: Owner publisher qualification
     runs-on: ubuntu-24.04
