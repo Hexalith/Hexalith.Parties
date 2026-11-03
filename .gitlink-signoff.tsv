@@ -516,3 +516,9 @@ references/Hexalith.Tenants|33835a03e92579a26400e7cb7cf68d666c715b3e|validated-a
 #     matrix passed hosted runs 41661999418 and 41664086169. This source-only
 #     signoff records the reviewed tag identity without claiming Parties CI pass.
 references/Hexalith.Platform|8ea8fe092f8abb5c932a61830aae16051d442463|validated-advance|v1.1.6|codex-agent|2026-11-03
+
+# --- 2026-11-03 align the catalog to Platform v1.1.6's exact Builds source.
+#     Builds v4.43.5 is published at 89f62052 with its two NuGet CLI packages
+#     independently verified; Platform v1.1.6 pins that exact catalog commit.
+#     This records tuple source selection only; Parties CI remains the qualifier.
+references/Hexalith.Builds|89f62052c932d054bda2b435bdfef60d96e77612|validated-advance|v4.43.5|codex-agent|2026-11-03
