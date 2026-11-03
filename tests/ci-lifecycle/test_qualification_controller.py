@@ -184,6 +184,7 @@ class ControllerSafetyTests(unittest.TestCase):
             controller.issued = lambda _: {'runId': 'a' * 32}
             controller.diagnostics = lambda _: directory
             controller.resume_host = lambda _: None
+            controller.recover_launch = lambda _: None
             controller.settled_child = lambda _: None
             controller.observe = lambda *args, **kwargs: None
             with patch.object(controller, 'down') as down, patch.object(Q.HELPER, 'retain_artifacts'):

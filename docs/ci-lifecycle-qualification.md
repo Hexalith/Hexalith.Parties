@@ -31,6 +31,17 @@ limit is 300 seconds, fixture bound 240 seconds and production stop limit remain
 90 seconds. Slow startup or a missed window fails explicitly; no retry-to-green
 or timeout extension supplies credit.
 
+Every owner role and exact receipt/launch-record location is journaled before
+process creation. A test-controller child writes its actual PID, kernel birth and
+process group, then waits at most 30 seconds at a pipe gate. Only a successful
+durable parent bookkeeping save releases the unchanged public CLI command. Parent
+interruption closes the gate without native allocation. The independent finalizer
+recovers from the original intent and actual child record, including a constructor
+that never returned. Missing process proof or a released child without a receipt
+returns explicit unverified/non-success. A valid receipt still gets exact cleanup
+when process/result metadata is malformed; no uncertain launch verifies cleanup.
+Safe recovery observations remain outside the removed native workspaces.
+
 For each cancellation dispatch, fetch **that run's**
 `lifecycle-cancellation-ready` artifact before cancelling. Verify actual source,
 repository/run/attempt/job, issued owner identity, phase and timestamps against

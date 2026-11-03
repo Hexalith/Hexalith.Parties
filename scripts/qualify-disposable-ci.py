@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import re
+import select
 import signal
 import stat
 import subprocess
@@ -72,9 +73,44 @@ def write(path, value):
 
 def birth(pid):
     try:
-        return Path(f'/proc/{pid}/stat').read_text().rpartition(')')[2].split()[19]
+        fields = Path(f'/proc/{pid}/stat').read_text().rpartition(')')[2].split()
+        return None if fields[0] == 'Z' else fields[19]
     except (FileNotFoundError, ProcessLookupError):
         return None
+
+
+def gated_exec(item, command):
+    """Test-controller handshake only; no CLI can execute before its real process record is durable."""
+    pid = os.getpid()
+    record = {key: item[key] for key in ('label', 'receipt', 'publicResult')}
+    record.update(pid=pid, birth=birth(pid), processGroup=os.getpgrp(), gateStatus='waiting', observedAtUtc=now())
+    require(record['birth'] is not None and record['processGroup'] == pid, 'Launch child is not its own actual process group')
+    write(item['launchRecord'], record)
+    readable, _, _ = select.select([sys.stdin.buffer], [], [], 30)
+    if not readable or sys.stdin.buffer.read(1) != b'1':
+        write(item['launchRecord'], {**record, 'gateStatus': 'closed', 'closedAtUtc': now()})
+        return 1
+    write(item['launchRecord'], {**record, 'gateStatus': 'released', 'releasedAtUtc': now()})
+    with open(os.devnull, 'rb') as empty:
+        os.dup2(empty.fileno(), sys.stdin.fileno())
+    os.execvp(command[0], command)
+
+
+def launch_owner(label):
+    context = HELPER.ci_context()
+    require(ROOT == HELPER.job_root('GITHUB_WORKSPACE'), 'Launch child must use the actual checkout root')
+    temporary = HELPER.job_root('RUNNER_TEMP') / 'hexalith-ci-qualification'
+    journal = read(temporary / 'journal.json')
+    require(journal['executionContext'] == context and journal['source'] == os.environ.get('GITHUB_SHA'),
+            'Launch intent belongs to another job or revision')
+    matches = [item for item in journal['owners'] if item['label'] == label]
+    require(label in ('passing', 'failing', 'peer', 'retry', 'partial', 'cancel') and len(matches) == 1,
+            'Launch child has no unique durable controller role')
+    item = matches[0]
+    for key, filename in [('receipt', 'receipt.json'), ('launchRecord', 'launch.json'), ('publicResult', 'public-result.json')]:
+        require(Path(item[key]) == temporary / label / filename, 'Launch intent escaped its exact controller role')
+    return gated_exec(item, TOOL + ['test', '--manifest=' + MANIFEST, '--mode=package', '--profile=' + PROFILE,
+                                  '--ci-owner-receipt=' + item['receipt'], '--output=json'])
 
 
 def first_outcome(record):
@@ -296,24 +332,72 @@ class Qualification:
             time.sleep(0.1)
         raise TimeoutError('Required real lifecycle checkpoint was not observed within its finite bound')
 
+    def recover_launch(self, item):
+        require(item.get('label') in ('passing', 'failing', 'peer', 'retry', 'partial', 'cancel'), 'Unknown launch recovery role')
+        for key, filename in [('receipt', 'receipt.json'), ('publicResult', 'public-result.json')]:
+            require(Path(item[key]) == self.temporary / item['label'] / filename, 'Launch recovery escaped its exact receipt/output role')
+        expected = self.temporary / item['label'] / 'launch.json'
+        require(Path(item['launchRecord']) == expected, 'Launch record escaped its exact controller role')
+        private_directory(expected.parent)
+        deadline = time.monotonic() + 5
+        while not expected.exists() and time.monotonic() < deadline:
+            time.sleep(0.05)
+        record = read(expected)
+        require(isinstance(record, dict), 'Launch process record is malformed')
+        require(all(record.get(key) == item[key] for key in ('label', 'receipt', 'publicResult')),
+                'Launch process record differs from its durable role/receipt intent')
+        require(isinstance(record.get('pid'), int) and record['pid'] > 1
+                and record.get('processGroup') == record['pid']
+                and isinstance(record.get('birth'), str) and record['birth'].isdigit()
+                and record.get('gateStatus') in ('waiting', 'closed', 'released'), 'Actual launch process identity is unavailable')
+        if birth(record['pid']) == record['birth']:
+            require(os.getpgid(record['pid']) == record['processGroup'], 'Launch process group changed')
+        item.update({key: record[key] for key in ('pid', 'birth', 'processGroup')})
+        item['launchGateStatus'] = record['gateStatus']
+        return record
+
+    def launch(self, item):
+        require(not Path(item['launchRecord']).exists(), 'Do not replace a previous launch process record')
+        descriptor = os.open(item['publicResult'], os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+        child = None
+        try:
+            with os.fdopen(descriptor, 'w') as stream:
+                child = subprocess.Popen([sys.executable, '-B', str(Path(__file__).resolve()), '--launch-owner', item['label']],
+                                         cwd=ROOT, stdin=subprocess.PIPE, stdout=stream, stderr=subprocess.DEVNULL,
+                                         start_new_session=True, bufsize=0)
+            self.children[item['label']] = child
+            record = self.recover_launch(item)
+            require(child.pid == record['pid'] and birth(child.pid) == record['birth'] and record['gateStatus'] == 'waiting',
+                    'Launch gate is not waiting in its actual created child')
+            self.save()
+            require(child.stdin.write(b'1') == 1, 'Launch gate was not released')
+        finally:
+            if child is not None and child.stdin is not None:
+                child.stdin.close()
+
+    def finish_unissued_launch(self, item):
+        record = self.recover_launch(item)
+        if birth(record['pid']) == record['birth']:
+            self.process_signal(item, signal.SIGINT)
+            self.settled_child(item)
+        if Path(item['receipt']).exists():
+            return False
+        record = self.recover_launch(item)
+        require(birth(record['pid']) != record['birth'], 'Unissued launch child is still able to execute')
+        require(record['gateStatus'] in ('waiting', 'closed'), 'Released launch lacks a recoverable receipt; allocation is uncertain')
+        self.observe('not-allocated-before-launch-gate', label=item['label'], actualProcessId=record['pid'], gateStatus=record['gateStatus'])
+        return True
+
     def start(self, label, startup=False, cancellation_phase=None):
         require(label not in [item['label'] for item in self.journal['owners']], 'Do not replace an existing owner attempt')
         directory = private_directory(self.temporary / label)
-        receipt = directory / 'receipt.json'
-        output = directory / 'public-result.json'
-        descriptor = os.open(output, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
-        with os.fdopen(descriptor, 'w') as stream:
-            child = subprocess.Popen(TOOL + ['test', '--manifest=' + MANIFEST, '--mode=package', '--profile=' + PROFILE,
-                                     '--ci-owner-receipt=' + str(receipt), '--output=json'], cwd=ROOT,
-                                     stdin=subprocess.DEVNULL, stdout=stream, stderr=subprocess.DEVNULL, start_new_session=True)
-        item = {'label': label, 'receipt': str(receipt), 'pid': child.pid, 'birth': birth(child.pid),
-                'processGroup': os.getpgid(child.pid), 'publicResult': str(output)}
-        require(item['birth'] is not None and item['processGroup'] == item['pid'], 'Cannot establish owned controller child')
+        item = {'label': label, 'receipt': str(directory / 'receipt.json'),
+                'launchRecord': str(directory / 'launch.json'), 'publicResult': str(directory / 'public-result.json')}
         if cancellation_phase is not None:
             item['cancellationPhase'] = cancellation_phase
-        self.children[label] = child
         self.journal['owners'].append(item)
         self.save()
+        self.launch(item)
         self.poll(item, lambda: self.state(item).get('workspace') is not None, 600)
         controls = self.control(item, 'wait')
         if startup:
@@ -538,44 +622,52 @@ class Qualification:
                      parentApiReceiptRequired=True, candidateAcceptance=False)
         require(classification == 'cancelled', 'Preserved prior product failure supplies no cancellation qualification')
 
+    def finalize_owner(self, item, job_status, issued):
+        launch_error = None
+        if not Path(item['receipt']).exists():
+            try:
+                if self.finish_unissued_launch(item):
+                    return False
+            except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
+                launch_error = error
+        if not Path(item['receipt']).exists():
+            raise ValueError('Launch or allocation remains unverified') from launch_error
+        owner = self.issued(item)
+        item['runId'] = owner['runId']
+        issued.append(owner['runId'])
+        try:
+            self.recover_launch(item)
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            launch_error = error
+        prior, prior_error = None, False
+        terminal = self.diagnostics(item) / 'selected-test.json'
+        if item.get('cancellationPhase') and terminal.exists():
+            try:
+                prior = first_outcome(read(terminal))
+                self.observe('terminal-before-independent-finalization', ownerRunId=owner['runId'], firstOutcome=prior)
+            except (OSError, ValueError, KeyError, TypeError):
+                prior_error = True
+        self.resume_host(item)
+        self.down(item, 'independent-finalizer', job_status=job_status)
+        HELPER.retain_artifacts(owner, private_directory(self.evidence / item['label']))
+        require(launch_error is None, 'Exact receipt cleanup ran, but launch process recovery remains unverified')
+        self.settled_child(item)
+        require(not prior_error, 'The pre-cleanup first outcome could not be verified')
+        if item.get('cancellationPhase'):
+            self.finalize_cancellation(item, item.get('terminalBeforeSignalForward', prior), job_status)
+        return True
+
     def finalize(self, job_status):
         failures = []
-        issued_owners = 0
+        issued = []
         for item in reversed(self.journal['owners']):
             try:
-                if not Path(item['receipt']).exists() and birth(item['pid']) == item['birth']:
-                    self.process_signal(item, signal.SIGINT)
-                    deadline = time.monotonic() + 90
-                    while birth(item['pid']) == item['birth'] and time.monotonic() < deadline:
-                        time.sleep(0.1)
-                    require(birth(item['pid']) != item['birth'], 'Unissued owned child has not stopped')
-                if not Path(item['receipt']).exists():
-                    self.observe('not-allocated', label=item['label'])
-                    continue
-                owner = self.issued(item)
-                item['runId'] = owner['runId']
-                issued_owners += 1
-                prior = None
-                prior_error = False
-                terminal = self.diagnostics(item) / 'selected-test.json'
-                if item.get('cancellationPhase') and terminal.exists():
-                    try:
-                        prior = first_outcome(read(terminal))
-                        self.observe('terminal-before-independent-finalization', ownerRunId=owner['runId'], firstOutcome=prior)
-                    except (OSError, ValueError, KeyError, TypeError):
-                        prior_error = True
-                self.resume_host(item)
-                self.down(item, 'independent-finalizer', job_status=job_status)
-                HELPER.retain_artifacts(owner, private_directory(self.evidence / item['label']))
-                self.settled_child(item)
-                require(not prior_error, 'The pre-cleanup first outcome could not be verified')
-                if item.get('cancellationPhase'):
-                    self.finalize_cancellation(item, item.get('terminalBeforeSignalForward', prior), job_status)
+                self.finalize_owner(item, job_status, issued)
             except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
                 failures.append({'label': item['label'], 'failureType': type(error).__name__})
-        self.observe('finalizer-result', failures=failures, issuedOwners=issued_owners,
-                     allocationStatus='allocated' if issued_owners else 'not-allocated',
-                     issuedOwnersCleanupVerified=issued_owners > 0 and not failures, candidateAcceptance=False)
+        self.observe('finalizer-result', failures=failures, issuedOwners=len(issued),
+                     allocationStatus='allocated' if issued else 'unverified' if failures else 'not-allocated',
+                     issuedOwnersCleanupVerified=bool(issued) and not failures, candidateAcceptance=False)
         return 1 if failures else 0
 
 
@@ -635,7 +727,7 @@ def main():
 
 if __name__ == '__main__':
     try:
-        raise SystemExit(main())
+        raise SystemExit(launch_owner(sys.argv[2]) if len(sys.argv) == 3 and sys.argv[1] == '--launch-owner' else main())
     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
         # No private descriptor, credential, arbitrary exception payload or raw child stderr is published.
         print('Lifecycle qualification refused: ' + type(error).__name__, file=sys.stderr)
