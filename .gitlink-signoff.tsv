@@ -510,3 +510,9 @@ references/Hexalith.McpCli|2e80701c31aafdf00abee05ac469a45ed76dfdf5|validated-ad
 references/Hexalith.Memories|d959bdae5af9c22f53573eda71c091cb5c0aae4c|validated-advance|v3.0.18-8-gd959bdae|jpiquot|2026-11-03
 references/Hexalith.Platform|1080e92c0eedfd5cbb048871da475eb0a6c71c86|validated-advance|v1.1.5-3-g1080e92c|jpiquot|2026-11-03
 references/Hexalith.Tenants|33835a03e92579a26400e7cb7cf68d666c715b3e|validated-advance|v7.0.0-18-g33835a03|jpiquot|2026-11-03
+
+# --- 2026-11-03 released Platform tuple repair after Parties HXW011.
+#     Platform v1.1.6 points exactly to 8ea8fe09; its exact tuple and tag catalog
+#     matrix passed hosted runs 41661999418 and 41664086169. This source-only
+#     signoff records the reviewed tag identity without claiming Parties CI pass.
+references/Hexalith.Platform|8ea8fe092f8abb5c932a61830aae16051d442463|validated-advance|v1.1.6|codex-agent|2026-11-03
