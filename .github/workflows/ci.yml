@@ -95,11 +95,15 @@ jobs:
             tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj; do
             dotnet build "$project" --configuration Release --disable-build-servers -m:1 -warnaserror "${package_properties[@]}"
           done
-          dotnet tests/Hexalith.Parties.Catalog.Tests/bin/Release/net10.0/Hexalith.Parties.Catalog.Tests.dll \
-            -class Hexalith.Parties.Contracts.Tests.PartiesCatalogTests \
-            -class Hexalith.Parties.Contracts.Tests.PartiesCatalogAdapterTests -failSkips
-          dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll \
-            -method '*CatalogApiAvailabilityDoesNotSelectNativeHosts' -failSkips
+          dotnet test --project tests/Hexalith.Parties.Catalog.Tests/Hexalith.Parties.Catalog.Tests.csproj \
+            --no-build --no-restore --configuration Release "${package_properties[@]}" \
+            --filter-class Hexalith.Parties.Contracts.Tests.PartiesCatalogTests \
+            --filter-class Hexalith.Parties.Contracts.Tests.PartiesCatalogAdapterTests \
+            --minimum-expected-tests 3 --fail-skips on
+          dotnet test --project tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj \
+            --no-build --no-restore --configuration Release "${package_properties[@]}" \
+            --filter-method Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.CatalogApiAvailabilityDoesNotSelectNativeHosts \
+            --minimum-expected-tests 22 --fail-skips on
 
   owner-publish:
     name: Owner publisher qualification

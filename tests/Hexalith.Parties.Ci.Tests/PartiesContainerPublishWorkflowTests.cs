@@ -104,6 +104,21 @@ public sealed class PartiesContainerPublishWorkflowTests
         workflow.ShouldContain("aspire-prepare-timeout-minutes: 10");
         workflow.ShouldNotContain("submodules: recursive");
 
+        string packageCohort = ReadWorkflowJob(workflow, "eventstore-404-package-cohort");
+        packageCohort.ShouldContain(
+            "dotnet test --project tests/Hexalith.Parties.Catalog.Tests/Hexalith.Parties.Catalog.Tests.csproj \\\n" +
+            "            --no-build --no-restore --configuration Release \"${package_properties[@]}\" \\\n" +
+            "            --filter-class Hexalith.Parties.Contracts.Tests.PartiesCatalogTests \\\n" +
+            "            --filter-class Hexalith.Parties.Contracts.Tests.PartiesCatalogAdapterTests \\\n" +
+            "            --minimum-expected-tests 3 --fail-skips on");
+        packageCohort.ShouldContain(
+            "dotnet test --project tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj \\\n" +
+            "            --no-build --no-restore --configuration Release \"${package_properties[@]}\" \\\n" +
+            "            --filter-method Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.CatalogApiAvailabilityDoesNotSelectNativeHosts \\\n" +
+            "            --minimum-expected-tests 22 --fail-skips on");
+        string focusedRuns = packageCohort[packageCohort.IndexOf("dotnet test --project ", StringComparison.Ordinal)..];
+        focusedRuns.ShouldNotContain("-m:1");
+
         string sharedWorkflow = ReadPinnedBuildsWorkflow("domain-ci.yml");
         sharedWorkflow.ShouldContain("default: 'vstest'");
         sharedWorkflow.ShouldContain("inputs.test-platform == 'microsoft-testing-platform'");
