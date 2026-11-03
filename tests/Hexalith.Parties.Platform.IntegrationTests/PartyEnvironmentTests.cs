@@ -94,6 +94,7 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, IT
         created.CreatedAt.ShouldBeGreaterThan(DateTimeOffset.UtcNow.AddMinutes(-5));
         created.CreatedAt.ShouldBeLessThanOrEqualTo(createdEnvelope.Timestamp);
         detail.CreatedAt.ShouldBe(createdEnvelope.Timestamp);
+        if (recordCanonicalObservation) NativeAssemblyObservations.Write(output, fixture.Descriptor.RunId);
         output.WriteLine($"Persisted synthetic stream: {events.Length} exact event envelopes; tenant={tenant}; domain={identity.Domain}; aggregate={partyId}; command={commandId}; metadataSequence={metadata.CurrentSequence}; createdEnvelopeTimestamp={createdEnvelope.Timestamp:O}; Tenants and Memories returned the run tenant.");
         await WritePersistenceObservationsAsync(new
         {

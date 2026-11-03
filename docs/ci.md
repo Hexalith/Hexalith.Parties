@@ -491,3 +491,14 @@ steps and checks that the certificate is trusted. Real UI redirects to HTTPS
 retain normal certificate and host validation; no certificate bypass is used.
 
 The trust-directory setup follows [Microsoft’s Linux OpenSSL guidance](https://learn.microsoft.com/aspnet/core/security/enforcing-ssl?view=aspnetcore-10.0#openssl-trust).
+
+Native SDK diagnostics use the published G4 handoff, verified source mapping, and exact
+descriptor/plan/owner state. After the real persistence assertions, they separately measure
+assemblies already loaded in the native test process and SDK DLLs actually copied into the plan-
+bound native composition output; reading copied-file metadata does not load those DLLs or claim
+host-process loading. The bounded private single-write JSON is retained in the existing classified
+caller artifact directory: ordinary integration verifies `invocation.json`, while lifecycle
+qualification verifies its actual journal and unique issued owner receipt. No GitHub environment is
+forwarded into the scrubbed native process, and canonical functional observations remain unchanged.
+These measurements and local boundary controls grant no native, lifecycle, parity, human approval,
+or candidate acceptance by themselves.
