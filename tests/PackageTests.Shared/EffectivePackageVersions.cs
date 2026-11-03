@@ -10,14 +10,14 @@ internal static class EffectivePackageVersions
     private const string DefaultProject = "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj";
 
     /// <summary>Evaluates one concrete version property in the selected package configuration.</summary>
-    internal static string ReadProperty(string repositoryRoot, string propertyName, string projectRelativePath = DefaultProject, string configuration = "Release")
+    internal static string ReadProperty(string repositoryRoot, string propertyName, string projectRelativePath = DefaultProject, string configuration = "Release", IReadOnlyDictionary<string, string>? globalProperties = null)
     {
         if (!Regex.IsMatch(propertyName, @"\A[A-Za-z_][A-Za-z0-9_]*\z", RegexOptions.CultureInvariant))
         {
             throw new ArgumentException("An MSBuild property name is required.", nameof(propertyName));
         }
 
-        string value = Query(repositoryRoot, projectRelativePath, $"-getProperty:{propertyName}", configuration);
+        string value = Query(repositoryRoot, projectRelativePath, $"-getProperty:{propertyName}", configuration, globalProperties: globalProperties);
         // MSBuild appends one line ending; any additional CR/LF belongs to the value and is invalid.
         value = value.EndsWith("\r\n", StringComparison.Ordinal) ? value[..^2]
             : value.EndsWith('\n') ? value[..^1] : value;
@@ -25,9 +25,9 @@ internal static class EffectivePackageVersions
     }
 
     /// <summary>Evaluates central package items after all applicable root pins, imports, and assignments.</summary>
-    internal static IReadOnlyDictionary<string, string> ReadPackages(string repositoryRoot, string projectRelativePath = DefaultProject, string configuration = "Release", bool isolateEnvironment = false)
+    internal static IReadOnlyDictionary<string, string> ReadPackages(string repositoryRoot, string projectRelativePath = DefaultProject, string configuration = "Release", bool isolateEnvironment = false, IReadOnlyDictionary<string, string>? globalProperties = null)
     {
-        string output = Query(repositoryRoot, projectRelativePath, "-getItem:PackageVersion", configuration, isolateEnvironment);
+        string output = Query(repositoryRoot, projectRelativePath, "-getItem:PackageVersion", configuration, isolateEnvironment, globalProperties);
         using JsonDocument document = JsonDocument.Parse(output);
         return document.RootElement.GetProperty("Items").GetProperty("PackageVersion").EnumerateArray()
             .ToDictionary(
@@ -36,7 +36,7 @@ internal static class EffectivePackageVersions
                 StringComparer.Ordinal);
     }
 
-    private static string Query(string repositoryRoot, string projectRelativePath, string query, string configuration, bool isolateEnvironment = false)
+    private static string Query(string repositoryRoot, string projectRelativePath, string query, string configuration, bool isolateEnvironment = false, IReadOnlyDictionary<string, string>? globalProperties = null)
     {
         string projectFile = Path.GetFullPath(Path.Combine(repositoryRoot, projectRelativePath));
         if (!File.Exists(projectFile))
@@ -48,6 +48,23 @@ internal static class EffectivePackageVersions
         foreach (string argument in new[] { "msbuild", projectFile, "-nologo", $"-p:Configuration={configuration}", query })
         {
             startInfo.ArgumentList.Add(argument);
+        }
+        if (globalProperties is not null)
+        {
+            foreach ((string name, string value) in globalProperties)
+            {
+                if (!Regex.IsMatch(name, @"\A[A-Za-z_][A-Za-z0-9_]*\z", RegexOptions.CultureInvariant))
+                {
+                    throw new ArgumentException("An MSBuild property name is required.", nameof(globalProperties));
+                }
+
+                // A property is one process argument; escape MSBuild's own property-list
+                // separators as well, including when they occur in a catalog path.
+                string escaped = value.Replace("%", "%25", StringComparison.Ordinal)
+                    .Replace(";", "%3B", StringComparison.Ordinal)
+                    .Replace(",", "%2C", StringComparison.Ordinal);
+                startInfo.ArgumentList.Add($"-p:{name}={escaped}");
+            }
         }
         if (isolateEnvironment)
         {

@@ -1,0 +1,1 @@
+test: strengthen deferred work qualification

@@ -6,6 +6,50 @@ EventStore SDK dispatchers and an in-memory implementation of their persisted
 batch and staging contracts. It does not execute a production migration, qualify
 a deployed state provider, or authorize retiring actor rollback data.
 
+`PartyLegacyReadModelBackfillRuntimeTests` adds an opt-in rehearsal against the
+actual SDK `DaprReadModelStore` and an explicitly owned disposable Redis/Dapr
+provider. Aggregate rebuilds use the supported one-shot dispatcher and fresh
+persisted reads; the shared index uses its stage/commit/verify lifecycle. Every
+operation constructs fresh clients, stores and handlers. The controls inspect persisted detail/processing/index
+contents, erased-owner suppression, exact actor/foreign-tenant survivor bytes,
+and replacement of existing ETag-bearing canonical models. Actual competing SDK
+clients write one detail, processing or index key after batch preparation and
+before staging; exact conflict outcomes and every winner/sibling byte are checked
+for initially absent and existing models. The test decorator always forwards to
+the real SDK staging store and returns no synthetic status.
+Recreating clients and handlers does not restart Redis or Dapr and supplies no
+aggregate staged-resume, deployed-provider, writer-drain, historical-completeness
+or cutover approval. Guarded aggregate stage/resume needs its separate owner
+catalog/source protocol qualification; unguarded raw handlers do not retain that
+admitted plan across re-preparation.
+
+Supply a private JSON file through `PARTIES_BACKFILL_STATE_RUNTIME_CONFIG` with
+`daprAppId`, `daprHttpEndpoint`, `daprGrpcEndpoint`, `daprApiToken`,
+`redisEndpoint`, `stateStoreName` and `ownedDisposableStore: true`. Dapr endpoints must use loopback
+HTTP, the unique app ID must begin `parties-backfill-rehearsal-`, and the state
+component must begin `backfill-`. Before writing, the fixture checks the actual
+Dapr metadata over both HTTP and the actual configured gRPC client for the exact
+app identity and selected Redis component. A unique non-domain probe written by
+the SDK must also appear under that app's exact Redis backing key, independently
+binding the inspected Redis endpoint to the selected component. The probe is
+deleted through Dapr after inspection.
+The Redis endpoint must also be loopback and point to that exclusively owned
+container. Independent test setup and inspection use raw Redis hashes only for
+the six representative actor rollback keys, which Dapr's ordinary state API
+rejects because they contain actor delimiters. All backfill operations and SDK
+model reads use the EventStore SDK; no production persistence path is introduced.
+The flag is an owner attestation: use a newly created private Redis container,
+never a shared store or a forwarded deployed endpoint. Each test uses a fresh
+synthetic tenant. Keep credentials/configuration outside the repository.
+
+After building `Hexalith.Parties.Tests`, invoke its test assembly with
+`-class Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests`.
+An absent configuration skips this explicitly opt-in lane; skipped execution is
+not qualification. Preserve the command, selected package/provider identities,
+test XML and the owned-resource cleanup result. Destroy the exclusively owned
+container and sidecar after the run; do not enumerate or delete SDK recovery
+keys individually. The ordinary source rehearsal remains available independently.
+
 ## Prerequisites and source authority
 
 Record the exact Parties, EventStore and deployment image identities, effective

@@ -1,0 +1,119 @@
+Preparing Aspire runtime/artifact: tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj
+  Determining projects to restore...
+  Restored ${REPOSITORY_ROOT}/tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj (in 222 ms).
+  Hexalith.Parties.EventStoreGateway.TestHost -> ${REPOSITORY_ROOT}/tests/Hexalith.Parties.EventStoreGateway.TestHost/bin/Release/net10.0/Hexalith.Parties.EventStoreGateway.TestHost.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.69
+Preparing Aspire runtime/artifact: references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server.Host/Hexalith.EventStore.Admin.Server.Host.csproj
+  Determining projects to restore...
+  Restored ${REPOSITORY_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server.Host/Hexalith.EventStore.Admin.Server.Host.csproj (in 4.29 sec).
+  Hexalith.EventStore.Admin.Server.Host -> ${REPOSITORY_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server.Host/bin/Release/net10.0/Hexalith.EventStore.Admin.Server.Host.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.53
+Preparing Aspire runtime/artifact: tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj
+  Determining projects to restore...
+  Restored ${REPOSITORY_ROOT}/tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj (in 1.27 sec).
+  Determining projects to restore...
+  Restored ${REPOSITORY_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj (in 42 ms).
+  Hexalith.EventStore.Admin.UI -> ${REPOSITORY_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/bin/Release/net10.0/Hexalith.EventStore.Admin.UI.dll
+  Hexalith.Parties.EventStoreAdminUI.TestHost -> ${REPOSITORY_ROOT}/tests/Hexalith.Parties.EventStoreAdminUI.TestHost/bin/Release/net10.0/Hexalith.Parties.EventStoreAdminUI.TestHost.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:10.47
+Preparing Aspire runtime/artifact: references/Hexalith.Tenants/src/Hexalith.Tenants/Hexalith.Tenants.csproj
+  Determining projects to restore...
+  Restored ${REPOSITORY_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/Hexalith.Tenants.csproj (in 391 ms).
+  Hexalith.Tenants -> ${REPOSITORY_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Release/net10.0/Hexalith.Tenants.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.43
+Preparing Aspire runtime/artifact: references/Hexalith.Memories/src/Hexalith.Memories.Server/Hexalith.Memories.Server.csproj
+  Determining projects to restore...
+  Restored ${REPOSITORY_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Contracts/Hexalith.Memories.AccessTelemetry.Contracts.csproj (in 360 ms).
+  Restored ${REPOSITORY_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/Hexalith.Memories.Server.csproj (in 846 ms).
+  Hexalith.Memories.AccessTelemetry.Contracts -> ${REPOSITORY_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Contracts/bin/Release/net10.0/Hexalith.Memories.AccessTelemetry.Contracts.dll
+  Hexalith.Memories.Server -> ${REPOSITORY_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Release/net10.0/Hexalith.Memories.Server.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:10.87
+Preparing Aspire runtime/artifact: references/Hexalith.Memories/src/Hexalith.Memories.DomainService/Hexalith.Memories.DomainService.csproj
+  Determining projects to restore...
+  Restored ${REPOSITORY_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.DomainService/Hexalith.Memories.DomainService.csproj (in 712 ms).
+  Hexalith.Memories.DomainService -> ${REPOSITORY_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.DomainService/bin/Release/net10.0/Hexalith.Memories.DomainService.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.44
+Preparing Aspire runtime/artifact: tests/Hexalith.Parties.EventStoreSample.TestHost/Hexalith.Parties.EventStoreSample.TestHost.csproj
+  Determining projects to restore...
+  Restored ${REPOSITORY_ROOT}/tests/Hexalith.Parties.EventStoreSample.Contracts.TestArtifact/Hexalith.Parties.EventStoreSample.Contracts.TestArtifact.csproj (in 227 ms).
+  Restored ${REPOSITORY_ROOT}/tests/Hexalith.Parties.EventStoreSample.TestHost/Hexalith.Parties.EventStoreSample.TestHost.csproj (in 231 ms).
+  Hexalith.Parties.EventStoreSample.Contracts.TestArtifact -> ${REPOSITORY_ROOT}/tests/Hexalith.Parties.EventStoreSample.Contracts.TestArtifact/bin/Release/net10.0/Hexalith.EventStore.Sample.Contracts.dll
+  Hexalith.Parties.EventStoreSample.TestHost -> ${REPOSITORY_ROOT}/tests/Hexalith.Parties.EventStoreSample.TestHost/bin/Release/net10.0/Hexalith.Parties.EventStoreSample.TestHost.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.04
+Preparing Aspire runtime/artifact: references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample.BlazorUI/Hexalith.EventStore.Sample.BlazorUI.csproj
+  Determining projects to restore...
+  Restored ${REPOSITORY_ROOT}/references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample.Contracts/Hexalith.EventStore.Sample.Contracts.csproj (in 206 ms).
+  Restored ${REPOSITORY_ROOT}/references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample.BlazorUI/Hexalith.EventStore.Sample.BlazorUI.csproj (in 211 ms).
+  Hexalith.EventStore.Sample.Contracts -> ${REPOSITORY_ROOT}/references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample.Contracts/bin/Release/net10.0/Hexalith.EventStore.Sample.Contracts.dll
+  Hexalith.EventStore.Sample.BlazorUI -> ${REPOSITORY_ROOT}/references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample.BlazorUI/bin/Release/net10.0/Hexalith.EventStore.Sample.BlazorUI.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.82
+Preparing Aspire runtime/artifact: src/Hexalith.Parties/Hexalith.Parties.csproj
+  Determining projects to restore...
+  Restored ${REPOSITORY_ROOT}/src/Hexalith.Parties.Authentication/Hexalith.Parties.Authentication.csproj (in 236 ms).
+  Restored ${REPOSITORY_ROOT}/src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj (in 244 ms).
+  Restored ${REPOSITORY_ROOT}/src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj (in 237 ms).
+  Restored ${REPOSITORY_ROOT}/src/Hexalith.Parties/Hexalith.Parties.csproj (in 302 ms).
+  1 of 5 projects are up-to-date for restore.
+  Hexalith.Parties.Contracts -> ${REPOSITORY_ROOT}/src/Hexalith.Parties.Contracts/bin/Release/net10.0/Hexalith.Parties.Contracts.dll
+  Hexalith.Parties.Authentication -> ${REPOSITORY_ROOT}/src/Hexalith.Parties.Authentication/bin/Release/net10.0/Hexalith.Parties.Authentication.dll
+  Hexalith.Parties.Projections -> ${REPOSITORY_ROOT}/src/Hexalith.Parties.Projections/bin/Release/net10.0/Hexalith.Parties.Projections.dll
+  Hexalith.Parties.Security -> ${REPOSITORY_ROOT}/src/Hexalith.Parties.Security/bin/Release/net10.0/Hexalith.Parties.Security.dll
+  Hexalith.Parties -> ${REPOSITORY_ROOT}/src/Hexalith.Parties/bin/Release/net10.0/Hexalith.Parties.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:10.51
+Preparing Aspire runtime/artifact: src/Hexalith.Parties.EventStoreExtensions/Hexalith.Parties.EventStoreExtensions.csproj
+  Determining projects to restore...
+  Restored ${REPOSITORY_ROOT}/src/Hexalith.Parties.EventStoreExtensions/Hexalith.Parties.EventStoreExtensions.csproj (in 368 ms).
+  1 of 2 projects are up-to-date for restore.
+  Hexalith.Parties.Contracts -> ${REPOSITORY_ROOT}/src/Hexalith.Parties.Contracts/bin/Release/net10.0/Hexalith.Parties.Contracts.dll
+  Hexalith.Parties.EventStoreExtensions -> ${REPOSITORY_ROOT}/src/Hexalith.Parties.EventStoreExtensions/bin/Release/net10.0/Hexalith.Parties.EventStoreExtensions.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.72

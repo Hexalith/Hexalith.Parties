@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "completed": true,
+  "configuration": "Release",
+  "sdkVersion": "4.0.4",
+  "completedNs": 1793729580700547447,
+  "familyVersions": {
+    "HexalithTenantsVersion": "7.0.0",
+    "HexalithMemoriesVersion": "3.0.18",
+    "HexalithFrontComposerVersion": "4.7.5"
+  },
+  "projects": {
+    "${REPOSITORY_ROOT}/tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj": {
+      "receipt": "${REPOSITORY_ROOT}/artifacts/runtime-profile/Release/406b9c9e7bf9c8f7b8e9a0936337c700fd81fb583c2a5df56fa8583cc9d48d74.json",
+      "sha256": "b9d3f03b26bd81e4bc20efb0471b653ab511caa01552be191ea6270ea3f6d76d"
+    },
+    "${REPOSITORY_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server.Host/Hexalith.EventStore.Admin.Server.Host.csproj": {
+      "receipt": "${REPOSITORY_ROOT}/artifacts/runtime-profile/Release/c4cd929b00f7f23d0930f918c845c9f0e1367883598a269604d63aa1ed0055b6.json",
+      "sha256": "f3454d6d06f0a48dbc2fb0606657fe54b0b28df5a884d3af0cf37f150d66cfb3"
+    },
+    "${REPOSITORY_ROOT}/tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj": {
+      "receipt": "${REPOSITORY_ROOT}/artifacts/runtime-profile/Release/eb1b8c4fdb3cc8f47454f15c88a21c9af3a73e7fd180eabcdb2e3a754d93adfc.json",
+      "sha256": "1f50a53aeb3e82a94e51bd4989e7e09c7a1d1885dc96c553f2a2c16930d6bc2e"
+    },
+    "${REPOSITORY_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/Hexalith.Tenants.csproj": {
+      "receipt": "${REPOSITORY_ROOT}/artifacts/runtime-profile/Release/bb8fd8f78f62a23053137dbc2319530918b59b62025d0cfe4cd4e9df10fe9bcc.json",
+      "sha256": "c7a2bca9ef3a5cdfeeddc8bdb8fcacb37c69892ea9bce450ff92e42609fedf52"
+    },
+    "${REPOSITORY_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/Hexalith.Memories.Server.csproj": {
+      "receipt": "${REPOSITORY_ROOT}/artifacts/runtime-profile/Release/a0be3bb39998b81d3d8cba5be4241be3804436148e23f48f2cf89cd13cedf7b6.json",
+      "sha256": "c2c0a1d796a173e82d58c7cc3641ed655f3a67e98df67f0fbd519eca51e1bb61"
+    },
+    "${REPOSITORY_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.DomainService/Hexalith.Memories.DomainService.csproj": {
+      "receipt": "${REPOSITORY_ROOT}/artifacts/runtime-profile/Release/4b87a578f16b91637231ba4c74619e3efba021b75fab894c043815bd60cdce38.json",
+      "sha256": "0f98930a2ae2067ca500514e6f9c64e6d500fd5e78944ed7b6e3144a6f9bdff5"
+    },
+    "${REPOSITORY_ROOT}/tests/Hexalith.Parties.EventStoreSample.TestHost/Hexalith.Parties.EventStoreSample.TestHost.csproj": {
+      "receipt": "${REPOSITORY_ROOT}/artifacts/runtime-profile/Release/e9a8fac1f7691556f15d4247ffbc7ae6691fd7a8d01cb1d14b45c28af3202fef.json",
+      "sha256": "74da7a6b33891b9fee4107b890989152c02b3c6992e9cc4bfc6927b37301c33c"
+    },
+    "${REPOSITORY_ROOT}/references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample.BlazorUI/Hexalith.EventStore.Sample.BlazorUI.csproj": {
+      "receipt": "${REPOSITORY_ROOT}/artifacts/runtime-profile/Release/757f44c407f739691bb4519c9f37283216b0ba4a661524fc489dddcfa8feeb76.json",
+      "sha256": "16195649646d76085daf48183778149964a118ece478f381c99ecc1e654862ab"
+    },
+    "${REPOSITORY_ROOT}/src/Hexalith.Parties/Hexalith.Parties.csproj": {
+      "receipt": "${REPOSITORY_ROOT}/artifacts/runtime-profile/Release/a7ce49c66998300ff5f059bd4a65d14f3ef0666f1ccec6f5f2e6113fa3773475.json",
+      "sha256": "c1a9ef2518ee49f989efd4a360c10113087a430b07e1a0214d4d8abca51792de"
+    },
+    "${REPOSITORY_ROOT}/src/Hexalith.Parties.EventStoreExtensions/Hexalith.Parties.EventStoreExtensions.csproj": {
+      "receipt": "${REPOSITORY_ROOT}/artifacts/runtime-profile/Release/f41f30223f0fd0526d1d01a004f84bb9e6a658924f68e39de7ea4dca17db88a7.json",
+      "sha256": "d2db278c1c18937e47d8051c2191cf130100fba41589b329efb92130a5023c08"
+    }
+  },
+  "publicArchives": [
+    {
+      "path": "${REPOSITORY_ROOT}/artifacts/runtime-profile/Release/public-archives/hexalith.tenants.contracts.7.0.0.nupkg",
+      "sha256": "e21f5ac7b5f332f1921f70a249ab2032b9978d56ffdd6641a0a4b94d04850bdc",
+      "id": "Hexalith.Tenants.Contracts",
+      "version": "7.0.0",
+      "repository": "https://github.com/Hexalith/Hexalith.Tenants",
+      "commit": "1b2c71b0e3cc5b16745f87aa7f1bc2c0ac8ffc27"
+    },
+    {
+      "path": "${REPOSITORY_ROOT}/artifacts/runtime-profile/Release/public-archives/hexalith.tenants.server.7.0.0.nupkg",
+      "sha256": "9cf820339470711db992d83f0478fd07d02a77b449225f4f49764dd1e728f975",
+      "id": "Hexalith.Tenants.Server",
+      "version": "7.0.0",
+      "repository": "https://github.com/Hexalith/Hexalith.Tenants",
+      "commit": "1b2c71b0e3cc5b16745f87aa7f1bc2c0ac8ffc27"
+    },
+    {
+      "path": "${REPOSITORY_ROOT}/artifacts/runtime-profile/Release/public-archives/hexalith.memories.eventstore.3.0.18.nupkg",
+      "sha256": "59d0eebdef8fba1ecceaa179086467e85341ba288d924115e08be201ff81fac8",
+      "id": "Hexalith.Memories.EventStore",
+      "version": "3.0.18",
+      "repository": "https://github.com/Hexalith/Hexalith.Memories",
+      "commit": "66822bc5bc4858c824f17b7d093f5f0f676b03ea"
+    },
+    {
+      "path": "${REPOSITORY_ROOT}/artifacts/runtime-profile/Release/public-archives/hexalith.memories.eventstoreextensions.3.0.18.nupkg",
+      "sha256": "52b6ec131e15a3c5e15fa3c6276b7747ca619f79d6fd010ee4be6ef109984772",
+      "id": "Hexalith.Memories.EventStoreExtensions",
+      "version": "3.0.18",
+      "repository": "https://github.com/Hexalith/Hexalith.Memories",
+      "commit": "66822bc5bc4858c824f17b7d093f5f0f676b03ea"
+    }
+  ]
+}

@@ -337,6 +337,16 @@ project-reference property modifiers fail with an explicit diagnostic until thei
 contexts are qualified. Removing an unset SDK publish-profile property is the
 only supported no-op modifier.
 
+`scripts/prepare-aspire-runtime-hosts.sh --gateway-profile packaged` additionally
+rebuilds each selected runtime against the evaluated published package cohort
+before writing its completion manifest. A compiler failure stops preparation and
+invalidates any earlier completed manifest. `ExternalRuntimeCompilationTests`
+exercises this boundary using real locally packed SDK fixtures and the native
+Tenants administrator verifier sources: equal version strings with missing
+administrator contracts produce CS0246, while the compatible package completes.
+This compiler regression control is separate from current-runtime preparation
+and deployed topology qualification.
+
 The owned central catalog pins `Microsoft.AspNetCore.SignalR.Common` to `10.0.13`
 for GHSA-334f-vvp4-7g6p, with its required Options and
 DependencyInjection.Abstractions floors aligned to `10.0.13`. NuGet audit stays

@@ -1,0 +1,133 @@
+{
+  "baseRevision": "708f4308b3c67157137b728374b97b1890778c49",
+  "finalTestResults": {
+    "ci-final": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0
+    },
+    "supervisor-1": {
+      "total": 30,
+      "passed": 30,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0
+    },
+    "supervisor-2": {
+      "total": 30,
+      "passed": 30,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0
+    },
+    "supervisor-3": {
+      "total": 30,
+      "passed": 30,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0
+    },
+    "contracts-package": {
+      "total": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0
+    },
+    "parties-reviewed": {
+      "total": 26,
+      "passed": 26,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0
+    },
+    "selection": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0
+    }
+  },
+  "sourceSha256": {
+    "_bmad-output/implementation-artifacts/deferred-work.md": "bc87163abc8f7cca2428bebf237c453075a3d33cf5bca9ba76d16e009c8d2ffd",
+    "_bmad-output/implementation-artifacts/spec-dw-182-i16-committed-selection-reconciliation.md": "d7e09f0ee078a7f6fa66886e64e3bebdb16c19977c18f6bacf864dbad78515b8",
+    "docs/ci.md": "5329dddeded30b8c2261d5462b530807255118ed39912ed8b07f2367fb22bbbe",
+    "docs/read-model-migration.md": "aed9d7740b103456db33357d0319986ddc45ba03ea9ada4834fd8aef19842ba8",
+    "tests/Hexalith.Parties.Contracts.Tests/Package/PackageTestProcessTests.cs": "24171449c2f1a5fe71ce948f9c7ea977ce7193551fd8ea72b857c5ce31948e91",
+    "tests/PackageTests.Shared/EffectivePackageVersions.cs": "15dd37169fb1e02afe0b6d576f10ac9af8c4f97392b3077667c67009633b4dac",
+    "_bmad-output/implementation-artifacts/spec-five-preflight-and-migration-qualification-deferred-items.md": "01021acfbd2a3d254898ffbdfb19b5252627e1dbd7f8e99ebf74307022a67bff",
+    "tests/Hexalith.Parties.Ci.Tests/ExternalRuntimeCompilationTests.cs": "19351c3a30da5d09a8a58bfde3848f90d29e75c136d67577ff678e05195ae877",
+    "tests/Hexalith.Parties.Tests/FitnessTests/PackageCatalogFallbackTests.cs": "90dbb1fd81fd0690f167cb86114c211ca59447c91e82853ac4f518a163ab8b1a",
+    "tests/Hexalith.Parties.Tests/Projections/PartyLegacyBackfillCompetingWriterStore.cs": "088aa328218c4d4059ab6bbcb5c92385d1ac15243de866736b56f34bd1c9477d",
+    "tests/Hexalith.Parties.Tests/Projections/PartyLegacyBackfillRuntimeConfiguration.cs": "07c52dcf0c565367e989c699658fdd03c0cd53083289d2e4ed25c451ee43a207",
+    "tests/Hexalith.Parties.Tests/Projections/PartyLegacyBackfillRuntimeFixture.cs": "77eb1833546bfb166071ccbe50904a021591ecc5847f2ad786b233a95d698c3e",
+    "tests/Hexalith.Parties.Tests/Projections/PartyLegacyReadModelBackfillRuntimeTests.cs": "e555b396ffa299becd0e2b93a3c796bc81fe4d4c3ce46ceb6a625663110e4f4c"
+  },
+  "assemblySha256": {
+    "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll": "141395402142f4059bb401dda9eae6b9cc426d1db32574cd1e9ef829b9cfb095",
+    "tests/Hexalith.Parties.Contracts.Tests/bin/Release/net10.0/Hexalith.Parties.Contracts.Tests.dll": "b833f8dd8e7fd9928d3f8d1c38c9d0fe408fea5ce3b0f54eefb0edd1c7790925",
+    "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll": "84d1450a679b6ffdb6a21a41ffda2297c82885c9abf75e7bda656526792e5369"
+  },
+  "providerPackageProvenance": {
+    "Hexalith.EventStore.Client/4.0.4": {
+      "nupkgSha256": "d0ee0a075c60ee69b37c53a11844ac3dd238a77038dfdf650ce8c24dee562f71",
+      "assemblyEntry": "lib/net10.0/Hexalith.EventStore.Client.dll",
+      "loadedAssemblySha256": "0bca680b2fc475720a113e05a73d328f01f7a7a37e98fb2babc94a35532e0e9c",
+      "matchesArchiveBytes": true
+    },
+    "Hexalith.EventStore.Contracts/4.0.4": {
+      "nupkgSha256": "9ec69a9b44fd7f5ba42a8469cba1fa03cdca327cb97b7985625972a1323df5b5",
+      "assemblyEntry": "lib/net10.0/Hexalith.EventStore.Contracts.dll",
+      "loadedAssemblySha256": "5680933ce8003475a3c323ddd48f299be0eeac52810424814ca6e39bab763d53",
+      "matchesArchiveBytes": true
+    },
+    "Hexalith.EventStore.DomainService/4.0.4": {
+      "nupkgSha256": "5ce256c9c62b16185742de531abb0b549b3096e0e4e5d1aba97fe6703b96d097",
+      "assemblyEntry": "lib/net10.0/Hexalith.EventStore.DomainService.dll",
+      "loadedAssemblySha256": "f35786f3df58263d34e60ddfa83844cb43b2e7ac345420cb901f9ef49b7e3eb8",
+      "matchesArchiveBytes": true
+    }
+  },
+  "originalRuntimeManifestSha256": "54c354ff1799969e450bf3e01fd200e848b47a732833c637802e66f900c5e701",
+  "receiptSha256": {
+    "selection.txt": "d04bdad1fda8295a083572ef899b80f4fc990d26c35bd5ba660b2f4fdfd36657",
+    "parties-reviewed.txt": "a06e6fde3c372bce55dc1d5bdd19d45b178ec8b6d394deac434d2d9de9842352",
+    "parties-build-final.txt": "6a0bd02ad54f466d64ace8954b765f563ec452848d72edc4c7ab93cddf4c261f",
+    "ci-final.xml": "a0ef2471d6079a2cab41caebf48a02ed44c6aa9689bdfd9fb13360781616f2ba",
+    "parties-final.xml": "30e8178973c2a2e9696e840837492e385ad24e2f0208870998e49b538f273f17",
+    "parties-build.txt": "5e069655aa7d2e921eb2b04b0ee1b484d22ac98ca2e3da63d8dd92b76904bc99",
+    "identities.json": "a4f48bb115817f047a3c5b1548a9c30ae2300c566c1dd16ac26ac3c81165b5bc",
+    "parties-build-initial.txt": "a4b084a099c933360a46d84cb1069bead22aba33e2c1f9394ee914efb081a3b2",
+    "ci-build.txt": "7eec0687393da7481d3e412b1bc451878f27ace54be1fd0146ce3b9a6417ab84",
+    "ci-build-final.txt": "e998297e638f9b0cce20f6a1c5d8ee2d8908025fc298f041e5a403646a2e584f",
+    "ci-tests.xml": "858c51772d6654c5180b2c5b5f390e11fedfdd3054fd8d2ad8cbd348465d37f3",
+    "parties-tests.xml": "278ac9d48aafbeb545e3ce9c8853805d68301518dec681244a64040acbf63995",
+    "parties-classes.xml": "e8a8d706a2e495d15d290aa7fe9697db9f29892f88a00beaa1d9bbccf273216c",
+    "ci-tests.txt": "b48eba2db8be7c142f5dcb9f1a6d68a37630850511f51ede0f6c36322e03fc25",
+    "selection.xml": "ac4923def1d62f7c88d8b125c27ec33f500fba739eeed10d1cbedd627f493044",
+    "ci-final.txt": "6e01e293ca5a5eadf0cc80cab4869c1c402c89db14389c7160a8bc78a166fbee",
+    "contracts-package.xml": "9143d401aa963d6bfaef4edb2d1705dde11acdf9c10bcb16377b2af833b3c4c9",
+    "supervisor-3.xml": "2fc4bdfe1d118931b0e16e6e1e6853b1dc7eebffd68b3ca43f6d36ce0c0c600b",
+    "commitlint.txt": "f4d3bbcbeacd35ebbd814a8ad0098ef3e0efd16cc721098276af1704004f0f7c",
+    "provider.json": "1600f2d6de978f53e206a3849a6e10a05582be2b75a0ce8dab3c1c981c61309c",
+    "parties-tests.txt": "7f7b64c3f41d894c76c6d41514981395a7bcb9d1ca09c982828e1f080ff0c1bd",
+    "supervisor-3.txt": "c0d2fc56ca42a9a3372d5ff1f1c71ae983f79570f7bafd70aa161a3c84ff233b",
+    "README.md": "49b7b74c5a55e121dd671883506cfb60c1002c260ed835a846f7ed744193daaa",
+    "current-runtime.txt": "d07e940be29bc294c578fe0abace4f9e2b0d48a5c217754f9917a266a8213dfb",
+    "parties-classes.txt": "f89e2ae2a30517dddf2c95a10170712e017d977a3867c09eba9fecfd1ee82eaf",
+    "supervisor-1.xml": "3144487953789d97394d0a4e43861868f6cf47d410f47952f6572fe0f78bb434",
+    "parties-build-reviewed.txt": "e0c3b313d1316ec7e80e1cc3bc3a24985f581214251c895626b6507f093c4cb1",
+    "contracts-package.txt": "d92e69937a8dca8c6154b5fa1e776ca266d1192061228d12c027345ea690cdac",
+    "supervisor-2.xml": "e008a048454e37868a7823b0e98f8fffa4cd23a9d2ecb4cb55a082d733f1a22c",
+    "parties-final.txt": "bf2dd2ab2ccbf5b042ef54f9b81e75f2062ec1bb8de89d9340d614d4bc92d4b4",
+    "supervisor-2.txt": "aab3c787ef18b4755beddac13aa1142c592421f05e6530dd4631df0610f4e2b8",
+    "contracts-build.txt": "ceaa3811388ce62fcf3ab31b1b2c5b5e17a2280ed30d114819f3647f5de24749",
+    "commit-message.txt": "0f6d86cb48165d43139ceb14c95e3fd3e2d47fd82b0db60a59047cae54c9ce10",
+    "parties-reviewed.xml": "26b26ee73a10db73fd9a34551e19327ba790f05529bc11131cd155377d3e2b61",
+    "supervisor-1.txt": "f5e2cd5a69a78f3f0384b72f7db24f5ae250ee45fab952f966730b694e6ec197",
+    "current-runtime-prepared.json": "bbf33b35fa4c2e32d974f84471e20b08b55921cfd13c45d86673a31817487db4"
+  }
+}

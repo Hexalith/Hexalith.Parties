@@ -1,0 +1,22 @@
+{
+  "startingRevision": "f1f33f8de655d9aa9307bafba128b0c7ea5c2570",
+  "currentBaseRevision": "708f4308b3c67157137b728374b97b1890778c49",
+  "effectivePackages": {
+    "HexalithEventStoreVersion": "4.0.4",
+    "HexalithTenantsVersion": "7.0.0",
+    "HexalithFrontComposerVersion": "4.7.5",
+    "HexalithMemoriesVersion": "3.0.18"
+  },
+  "rootGitlinks": {
+    "references/Hexalith.AI.Tools": "1745b6663ad32bb1288167135ed0f979366c53a0",
+    "references/Hexalith.Builds": "89f62052c932d054bda2b435bdfef60d96e77612",
+    "references/Hexalith.Commons": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+    "references/Hexalith.EventStore": "a9205f511b4f96b5daf94d65369d6dee63e0c623",
+    "references/Hexalith.FrontComposer": "fbe01c913cb863abb0fd4a317d370d36fff593b3",
+    "references/Hexalith.McpCli": "2e80701c31aafdf00abee05ac469a45ed76dfdf5",
+    "references/Hexalith.Memories": "d959bdae5af9c22f53573eda71c091cb5c0aae4c",
+    "references/Hexalith.Platform": "8ea8fe092f8abb5c932a61830aae16051d442463",
+    "references/Hexalith.PolymorphicSerializations": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+    "references/Hexalith.Tenants": "33835a03e92579a26400e7cb7cf68d666c715b3e"
+  }
+}

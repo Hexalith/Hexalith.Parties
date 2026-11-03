@@ -4,7 +4,7 @@ type: 'bugfix'
 created: '2026-11-02'
 status: 'done'
 route: 'dispatch'
-review_loop_iteration: 0
+review_loop_iteration: 2
 baseline_commit: 'a92d15866bbf4f49cefa6c03f4a9eeec442af1de'
 context: []
 ---
@@ -64,6 +64,29 @@ context: []
 
 ## Spec Change Log
 
+- **2026-11-02 — initial correction and review:** Commit
+  `01c888e465d9f907a91b27aac2347e38732c3b51` delivered the owner-approved
+  current-selection correction and the first review round recorded below.
+  Four of its six blind-review findings required patches; the other two,
+  the edge-case finding and the verification-gap assessment are retained
+  with their original dispositions. The empty change log and zero review
+  counter were bookkeeping omissions, not evidence that review was skipped.
+- **2026-11-02 — owner-authorized successor:** Commit
+  `56fc3b73ff26292791782be54df9af1f050464c5` recorded the separately approved
+  Tenants successor after Parties
+  `18579b62ef9ac3c8780fc5e8ba26112d2665f566`. Its additional section is a
+  continuation record outside the original frozen intent. The initial
+  ten-gitlink decision remains dated history; the successor did not amend
+  that frozen block or approve parity. Its assertion changes had no recorded
+  independent review at delivery.
+- **2026-11-03 — DW-205 bookkeeping and retrospective review:** Restored
+  the first-round count and recorded a second, retrospective review of the
+  successor's assertion changes below. The counter is now two: the original
+  review plus this successor review. This repairs the record without
+  rewriting either owner decision or recertifying historical test results.
+  Later 2026-11-03 selection records in the prerequisite matrix govern the
+  present graph; the 2026-11-02 results below remain historical.
+
 ## Review Triage Log
 
 - **Blind 1 — medium, patch:** The spine frontmatter and I16 disposition still call the 2026-11-01 b6443b24 set current. Reviewers can read the wrong I16 identity from the authoritative spine; date that history and state the approved 2026-11-02 selection and six Unvalidated receipts.
@@ -113,3 +136,34 @@ test-summary section keeps all six I16 parity receipts Unvalidated.
 No parity, publication, deployment, custody, or rollback deletion follows.
 
 **Successor commit validation:** Exact candidate `fix(ci): sign off selected Tenants successor` passed the repository-pinned `./node_modules/.bin/commitlint --edit /tmp/parties-dw182-tenants-commit-message.txt --verbose` with zero problems and warnings.
+
+
+## Retrospective successor review — 2026-11-03 (round 2 / DW-205)
+
+**Reviewed scope:** The `initialOwnerRows` / `ownerRow` changes in
+`56fc3b73ff26292791782be54df9af1f050464c5`, their two dated I20 matrix rows,
+the comparison packet, and the accompanying Tenants source-signoff record.
+This review compares the committed successor change with its parent and
+checks its surviving historical assertions in the current test source.
+It does not rerun or restamp the 2026-11-02 build evidence.
+
+**Disposition — no actionable successor defect:** The initial owner row is
+required exactly once and retains Tenants
+`4b3e431745550f8466f1ce0d70e6b507c747b59a`. The separately named successor
+row is also required exactly once, identifies Administrator / jpiquot and
+limits approval to current-selection assertions and source signoff. At the
+successor commit, the existing loop still bound all ten source observations
+and seven independently evaluated package versions to that successor row.
+The committed signoff names the same successor
+`4d0d599879767196928e1c265622483a62b457ae`. Both historical rows explicitly
+retain six Unvalidated parity receipts and withhold publication, deployment,
+custody and rollback-deletion authority. The matrix now also records the
+owner's explicit confirmation in the Story 8.10 Round 9 review; no approval
+is inferred from this retrospective review.
+
+**Current-source boundary:** Later selection advances preserve the two old
+rows as history and assert the current identities against their separately
+approved 2026-11-03 row. This review does not promote the Tenants successor
+back to the current graph. New focused execution belongs to the five-item
+batch's verification record; the original all-tests counts above remain
+attached to their original selections.

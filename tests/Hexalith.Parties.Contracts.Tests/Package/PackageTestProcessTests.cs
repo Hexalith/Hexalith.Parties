@@ -439,7 +439,7 @@ public sealed class PackageTestProcessTests
         if (!OperatingSystem.IsLinux()) { Assert.Skip("Linux exclusive subreaper controls."); }
         string directory = Path.Combine(Path.GetTempPath(), $"parties-signal-control-{Guid.NewGuid():N}");
         Directory.CreateDirectory(directory);
-        const string script = "import os,pathlib,subprocess,sys,threading; child=subprocess.Popen([sys.executable,'-c','import threading; threading.Event().wait()'],start_new_session=True); pathlib.Path(sys.argv[1]).write_text(str(os.getpid())+' '+str(child.pid)); threading.Event().wait()";
+        const string script = "import os,pathlib,subprocess,sys,threading; child=subprocess.Popen([sys.executable,'-c','import threading; threading.Event().wait()'],start_new_session=True); pathlib.Path(sys.argv[1]+'.tmp').write_text(str(os.getpid())+' '+str(child.pid)); os.replace(sys.argv[1]+'.tmp',sys.argv[1]); threading.Event().wait()";
         var command = new ProcessStartInfo("python3") { WorkingDirectory = Directory.GetCurrentDirectory(), ArgumentList = { "-c", script, Path.Combine(directory, "ready") } };
         using var supervisor = new PackageTestProcessSupervisor(command, 2_000);
         if (duringCleanup)
@@ -500,7 +500,7 @@ public sealed class PackageTestProcessTests
         if (!OperatingSystem.IsLinux()) { Assert.Skip("Linux exclusive subreaper control."); }
         string directory = Path.Combine(Path.GetTempPath(), $"parties-missing-state-{Guid.NewGuid():N}");
         Directory.CreateDirectory(directory);
-        const string script = "import os,pathlib,subprocess,sys,threading; child=subprocess.Popen(['sleep','3600'],start_new_session=True); pathlib.Path(sys.argv[1]).write_text(str(os.getpid())+' '+str(child.pid)); threading.Event().wait()";
+        const string script = "import os,pathlib,subprocess,sys,threading; child=subprocess.Popen(['sleep','3600'],start_new_session=True); pathlib.Path(sys.argv[1]+'.tmp').write_text(str(os.getpid())+' '+str(child.pid)); os.replace(sys.argv[1]+'.tmp',sys.argv[1]); threading.Event().wait()";
         var command = new ProcessStartInfo("python3") { WorkingDirectory = Directory.GetCurrentDirectory(), ArgumentList = { "-c", script, Path.Combine(directory, "ready") } };
         using var supervisor = new PackageTestProcessSupervisor(command, 2_000);
         using Process process = Process.Start(supervisor.StartInfo).ShouldNotBeNull();
@@ -530,10 +530,10 @@ public sealed class PackageTestProcessTests
         if (!OperatingSystem.IsLinux()) { Assert.Skip("Linux caller identity and exclusive subreaper control."); }
         string directory = Path.Combine(Path.GetTempPath(), $"parties-caller-control-{Guid.NewGuid():N}");
         Directory.CreateDirectory(directory);
-        const string work = "import os,pathlib,subprocess,sys,threading; child=subprocess.Popen([sys.executable,'-c','import threading; threading.Event().wait()'],start_new_session=True); pathlib.Path(sys.argv[1]).write_text(str(os.getpid())+' '+str(child.pid)); threading.Event().wait()";
+        const string work = "import os,pathlib,subprocess,sys,threading; child=subprocess.Popen([sys.executable,'-c','import threading; threading.Event().wait()'],start_new_session=True); pathlib.Path(sys.argv[1]+'.tmp').write_text(str(os.getpid())+' '+str(child.pid)); os.replace(sys.argv[1]+'.tmp',sys.argv[1]); threading.Event().wait()";
         var command = new ProcessStartInfo("python3") { WorkingDirectory = Directory.GetCurrentDirectory(), ArgumentList = { "-c", work, Path.Combine(directory, "ready") } };
         using var supervisor = new PackageTestProcessSupervisor(command, 2_000);
-        const string caller = "import json,os,pathlib,subprocess,sys,threading; args=json.loads(sys.argv[1]); stat=pathlib.Path('/proc/self/stat').read_text(); args[4]=str(os.getpid()); args[5]=stat[stat.rfind(')')+2:].split()[19]; child=subprocess.Popen(['python3']+args); pathlib.Path(sys.argv[2]).write_text(str(os.getpid())+' '+str(child.pid)); threading.Event().wait()";
+        const string caller = "import json,os,pathlib,subprocess,sys,threading; args=json.loads(sys.argv[1]); stat=pathlib.Path('/proc/self/stat').read_text(); args[4]=str(os.getpid()); args[5]=stat[stat.rfind(')')+2:].split()[19]; child=subprocess.Popen(['python3']+args); pathlib.Path(sys.argv[2]+'.tmp').write_text(str(os.getpid())+' '+str(child.pid)); os.replace(sys.argv[2]+'.tmp',sys.argv[2]); threading.Event().wait()";
         const string controller = """
             import ctypes, os, subprocess, sys, threading
             ctypes.CDLL(None).prctl(36, 1, 0, 0, 0)
@@ -565,7 +565,7 @@ public sealed class PackageTestProcessTests
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(8));
         await WithFixtureCleanupAsync(async () =>
         {
-            while (!File.Exists(Path.Combine(directory, "ready"))) { await Task.Delay(5, deadline.Token).ConfigureAwait(true); }
+            while (!File.Exists(Path.Combine(directory, "ready")) || !File.Exists(Path.Combine(directory, "caller"))) { await Task.Delay(5, deadline.Token).ConfigureAwait(true); }
             int[] family = File.ReadAllText(Path.Combine(directory, "ready")).Split(' ').Select(value => int.Parse(value, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
             int[] callers = File.ReadAllText(Path.Combine(directory, "caller")).Split(' ').Select(value => int.Parse(value, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
             using Process callerProcess = Process.GetProcessById(callers[0]);
@@ -594,7 +594,7 @@ public sealed class PackageTestProcessTests
         var command = new ProcessStartInfo("python3")
         {
             WorkingDirectory = Directory.GetCurrentDirectory(),
-            ArgumentList = { "-c", "import os,pathlib,sys,threading; pathlib.Path(sys.argv[1]).write_text(str(os.getpid())); threading.Event().wait()", ready },
+            ArgumentList = { "-c", "import os,pathlib,sys,threading; pathlib.Path(sys.argv[1]+'.tmp').write_text(str(os.getpid())); os.replace(sys.argv[1]+'.tmp',sys.argv[1]); threading.Event().wait()", ready },
         };
         using var supervisor = new PackageTestProcessSupervisor(command, 2_000);
         using Process process = Process.Start(supervisor.StartInfo).ShouldNotBeNull();

@@ -417,11 +417,15 @@ location: Dapr-actor to SDK read-model deployment migration
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: Story File List deletes actor projection paths without an AppHost/deploy cutover that migrates existing actor state into SDK keys.
 status: open
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-preflight-and-migration-qualification-deferred-items.md`
 
 implementation_2026_10_28: Six synthetic actor-to-SDK rehearsal controls now execute the actual SDK detail/shared rebuild protocols, recreate stores/workloads, inspect persisted detail/processing/index and preserve actor/foreign-tenant bytes. Incomplete/unreadable history and competing canonical writes refuse publication. A discovered shared-index Commit/Verify identity conflict is fixed by retaining the admitted conditional write policy. The migration handoff documents source-head/key completeness, writer drain, erasure, verification and rollback.
 remaining_gate_2026_10_28: DW-58 remains open. In-memory persistence/source protocol evidence does not qualify a deployed provider, production capture, writer drain, runtime authorization or cutover.
 verification_2026_10_28: `tests/five-reconciliation-and-migration-2026-10-28/`; `docs/read-model-migration.md`.
 
+qualification_2026_11_03: Eight opt-in controls executed actual EventStore 4.0.4 DaprReadModelStore against owned disposable Redis/Dapr. Supported aggregate one-shot rebuilds and shared staged lifecycle preserve persisted detail/processing/index, erasure and nine actor/foreign-tenant survivors across fresh SDK clients/handler graphs. Absent/existing ETags and isolated detail/processing/index competing writes are covered with exact refusal outcomes; both transports and the raw Redis backend are bound before seeding. Owned resources were removed.
+remaining_gate_2026_11_03: DW-58 stays open. This synthetic disposable-provider run does not qualify process restart, aggregate staged resume, a deployed provider/workload, writer drain, production history/key completeness, cutover or rollback acceptance. Preserve all earlier deployment gates.
+verification_2026_11_03: `tests/five-preflight-and-migration-qualification-2026-11-03/` (26/26 focused tests, including 8/8 provider controls; zero skips).
 
 ### DW-59: Preserve mappings when unit ID and source URI match different rows
 
@@ -1232,7 +1236,10 @@ archived: 2026-10-25
 
 ### DW-159: Detect external runtime roots that compile against contracts missing from their selected EventStore package
 
-status: open
+status: done 2026-11-03
+resolution: The existing runtime preparation compiler gate now has real local-package regression controls using native Tenants verifier source. Matching version strings with missing administrator contracts produce CS0246 and stop later roots/completion; the compatible control passes with isolated environments/caches. Actual current package preparation rebuilt all ten selected runtime/artifact projects successfully.
+verification: `tests/five-preflight-and-migration-qualification-2026-11-03/`
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-preflight-and-migration-qualification-deferred-items.md`
 origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
 location: `tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs` (external runtime project inventory: `ReadExternalRuntimeProjects`, `ReadExternalRuntimeGraphs`)
@@ -2140,7 +2147,10 @@ rollback: Revert the reconciling commits `01c888e4` and `56fc3b73`; the dated ap
 
 ### DW-205: Reconcile the DW-182 spec's bookkeeping with its review and successor history
 
-status: open
+status: done 2026-11-03
+resolution: Recovered the original review round, recorded the owner-authorized Tenants successor history and independently reviewed its assertions. The spec counter and change log distinguish the original review, retrospective successor review and later current-selection advances without changing frozen approvals.
+verification: `tests/five-preflight-and-migration-qualification-2026-11-03/`
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-preflight-and-migration-qualification-deferred-items.md`
 origin: Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-11-02), Round 9
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 location: `_bmad-output/implementation-artifacts/spec-dw-182-i16-committed-selection-reconciliation.md:5`
@@ -2149,7 +2159,10 @@ reason: The DW-182 spec says `status: 'done'` with `review_loop_iteration: 0`, a
 
 ### DW-206: Cover the caller-catalog branch of the root package fallbacks
 
-status: open
+status: done 2026-11-03
+resolution: Executed MSBuild consumer controls cover a distinct caller catalog, explicit family overrides, unchanged standalone selection, and missing-first-catalog fallbacks. The current default is EventStore 4.0.4 / Tenants 7.0.0 / FrontComposer 4.7.5 / Memories 3.0.18; the older pins remain only the absent-catalog fallbacks.
+verification: `tests/five-preflight-and-migration-qualification-2026-11-03/`
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-preflight-and-migration-qualification-deferred-items.md`
 origin: Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-11-02), Round 9 (reclassified from patch at owner direction)
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 location: `Directory.Packages.props:7-13`; `tests/PackageTests.Shared/EffectivePackageVersions.cs`
@@ -2160,7 +2173,10 @@ rollback: None required (test-only).
 
 ### DW-207: Make the supervisor fixtures' ready-file handshake atomic
 
-status: open
+status: done 2026-11-03
+resolution: All five supervisor PID publishers now replace same-directory temporary files atomically, and caller-loss waits for both ready and caller files. Three executions under two CPU load workers passed 30/30 each, zero failures/skips.
+verification: `tests/five-preflight-and-migration-qualification-2026-11-03/`
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-preflight-and-migration-qualification-deferred-items.md`
 origin: Deferred from: spec-8-10-final-readiness-documentation-and-retirement-gate.md Round 10 requalification (2026-11-02); flaky verification, not a review finding
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 location: `tests/Hexalith.Parties.Contracts.Tests/Package/PackageTestProcessTests.cs` (`SupervisorMissingStateDirectory_StillReapsOwnedFamily` and the other supervisor facts that poll a `ready` file)

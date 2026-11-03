@@ -1,0 +1,53 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.14)
+  Discovering: Hexalith.Parties.Tests
+  Discovered:  Hexalith.Parties.Tests
+  Starting:    Hexalith.Parties.Tests
+    Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests.ActualProviderRebuildPersistsAcrossFreshClientsAndPreservesErasureAndRollbackBytes [FAIL]
+      Dapr.DaprException : State operation failed: the Dapr endpoint indicated a failure. See InnerException for details.
+      ---- Grpc.Core.RpcException : Status(StatusCode="InvalidArgument", Detail="input key/keyPrefix 'parties||PartyIndexProjectionActor||synthetic-backfill-6ee55169e7444a91a2402861099b893b:party-index:all||synthetic-backfill-6ee55169e7444a91a2402861099b893b:party-index:all' can't contain '||'")
+      Stack Trace:
+           at Dapr.Client.DaprClientGrpc.MakeSaveByteStateCallAsync(String storeName, String key, ByteString value, String etag, StateOptions stateOptions, IReadOnlyDictionary`2 metadata, CancellationToken cancellationToken)
+           at Dapr.Client.DaprClientGrpc.SaveByteStateAsync(String storeName, String key, ReadOnlyMemory`1 value, StateOptions stateOptions, IReadOnlyDictionary`2 metadata, CancellationToken cancellationToken)
+        tests/Hexalith.Parties.Tests/Projections/PartyLegacyBackfillRuntimeFixture.cs(94,0): at Hexalith.Parties.Tests.Projections.PartyLegacyBackfillRuntimeFixture.SeedAsync(CancellationToken token)
+        tests/Hexalith.Parties.Tests/Projections/PartyLegacyReadModelBackfillRuntimeTests.cs(17,0): at Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests.ActualProviderRebuildPersistsAcrossFreshClientsAndPreservesErasureAndRollbackBytes()
+        --- End of stack trace from previous location ---
+        ----- Inner Stack Trace -----
+           at Dapr.Client.DaprClientGrpc.MakeSaveByteStateCallAsync(String storeName, String key, ByteString value, String etag, StateOptions stateOptions, IReadOnlyDictionary`2 metadata, CancellationToken cancellationToken)
+    Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests.ActualProviderCompetingCanonicalWriteRefusesCommitAndPreservesWinnerBytes(shared: False) [FAIL]
+      Dapr.DaprException : State operation failed: the Dapr endpoint indicated a failure. See InnerException for details.
+      ---- Grpc.Core.RpcException : Status(StatusCode="InvalidArgument", Detail="input key/keyPrefix 'parties||PartyIndexProjectionActor||synthetic-backfill-321c538fb1974e1bb7675bbaabdd5b78:party-index:all||synthetic-backfill-321c538fb1974e1bb7675bbaabdd5b78:party-index:all' can't contain '||'")
+      Stack Trace:
+           at Dapr.Client.DaprClientGrpc.MakeSaveByteStateCallAsync(String storeName, String key, ByteString value, String etag, StateOptions stateOptions, IReadOnlyDictionary`2 metadata, CancellationToken cancellationToken)
+           at Dapr.Client.DaprClientGrpc.SaveByteStateAsync(String storeName, String key, ReadOnlyMemory`1 value, StateOptions stateOptions, IReadOnlyDictionary`2 metadata, CancellationToken cancellationToken)
+        tests/Hexalith.Parties.Tests/Projections/PartyLegacyBackfillRuntimeFixture.cs(94,0): at Hexalith.Parties.Tests.Projections.PartyLegacyBackfillRuntimeFixture.SeedAsync(CancellationToken token)
+        tests/Hexalith.Parties.Tests/Projections/PartyLegacyReadModelBackfillRuntimeTests.cs(84,0): at Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests.ActualProviderCompetingCanonicalWriteRefusesCommitAndPreservesWinnerBytes(Boolean shared)
+        --- End of stack trace from previous location ---
+        ----- Inner Stack Trace -----
+           at Dapr.Client.DaprClientGrpc.MakeSaveByteStateCallAsync(String storeName, String key, ByteString value, String etag, StateOptions stateOptions, IReadOnlyDictionary`2 metadata, CancellationToken cancellationToken)
+    Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests.ActualProviderCompetingCanonicalWriteRefusesCommitAndPreservesWinnerBytes(shared: True) [FAIL]
+      Dapr.DaprException : State operation failed: the Dapr endpoint indicated a failure. See InnerException for details.
+      ---- Grpc.Core.RpcException : Status(StatusCode="InvalidArgument", Detail="input key/keyPrefix 'parties||PartyIndexProjectionActor||synthetic-backfill-fa9fd2aee8a84fc192129176369119d1:party-index:all||synthetic-backfill-fa9fd2aee8a84fc192129176369119d1:party-index:all' can't contain '||'")
+      Stack Trace:
+           at Dapr.Client.DaprClientGrpc.MakeSaveByteStateCallAsync(String storeName, String key, ByteString value, String etag, StateOptions stateOptions, IReadOnlyDictionary`2 metadata, CancellationToken cancellationToken)
+           at Dapr.Client.DaprClientGrpc.SaveByteStateAsync(String storeName, String key, ReadOnlyMemory`1 value, StateOptions stateOptions, IReadOnlyDictionary`2 metadata, CancellationToken cancellationToken)
+        tests/Hexalith.Parties.Tests/Projections/PartyLegacyBackfillRuntimeFixture.cs(94,0): at Hexalith.Parties.Tests.Projections.PartyLegacyBackfillRuntimeFixture.SeedAsync(CancellationToken token)
+        tests/Hexalith.Parties.Tests/Projections/PartyLegacyReadModelBackfillRuntimeTests.cs(84,0): at Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests.ActualProviderCompetingCanonicalWriteRefusesCommitAndPreservesWinnerBytes(Boolean shared)
+        --- End of stack trace from previous location ---
+        ----- Inner Stack Trace -----
+           at Dapr.Client.DaprClientGrpc.MakeSaveByteStateCallAsync(String storeName, String key, ByteString value, String etag, StateOptions stateOptions, IReadOnlyDictionary`2 metadata, CancellationToken cancellationToken)
+    Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests.SourceAndTestProjectInventoryIsDocumentedExactly [FAIL]
+      Shouldly.ShouldAssertException : string[] expectedTestProjects = [.. ExpectedRunnableProjects, "Hexalith.Parties.Platform.IntegrationTests", "Hexalith.Parties.EventStoreGateway.TestHost", "Hexalith.Parties.EventStoreAdminUI.TestHost", "Hexalith.Parties.EventStoreSample.Contracts.TestArtifact", "Hexalith.Parties.EventStoreSample.TestHost"];
+              testProjects
+          should be
+      ["Hexalith.Parties.AdminPortal.Tests", "Hexalith.Parties.Aspire.Tests", "Hexalith.Parties.Authentication.Tests", "Hexalith.Parties.Catalog.Tests", "Hexalith.Parties.Ci.Tests", "Hexalith.Parties.Client.Tests", "Hexalith.Parties.ConsumerPortal.Tests", "Hexalith.Parties.Contracts.Tests", "Hexalith.Parties.EventStoreAdminUI.TestHost", "Hexalith.Parties.EventStoreGateway.TestHost", "Hexalith.Parties.EventStoreSample.Contracts.TestArtifact", "Hexalith.Parties.EventStoreSample.TestHost", "Hexalith.Parties.IntegrationTests", "Hexalith.Parties.Mcp.Tests", "Hexalith.Parties.Picker.Tests", "Hexalith.Parties.Platform.IntegrationTests", "Hexalith.Parties.Projections.Tests", "Hexalith.Parties.Sample.Tests", "Hexalith.Parties.Security.Tests", "Hexalith.Parties.Server.Tests", "Hexalith.Parties.Tests", "Hexalith.Parties.UI.Tests"]
+          but was (case sensitive comparison)
+      ["Hexalith.Parties.AdminPortal.Tests", "Hexalith.Parties.Aspire.Tests", "Hexalith.Parties.Authentication.Tests", "Hexalith.Parties.Catalog.Tests", "Hexalith.Parties.Ci.Tests", "Hexalith.Parties.Client.Tests", "Hexalith.Parties.ConsumerPortal.Tests", "Hexalith.Parties.Contracts.Tests", "Hexalith.Parties.EventStoreAdminUI.TestHost", "Hexalith.Parties.EventStoreGateway.TestHost", "Hexalith.Parties.EventStoreSample.Contracts.TestArtifact", "Hexalith.Parties.EventStoreSample.TestHost", "Hexalith.Parties.IntegrationTests", "Hexalith.Parties.Mcp.Tests", "Hexalith.Parties.Picker.Tests", "Hexalith.Parties.Platform.IntegrationTests", "Hexalith.Parties.Platform.LifecycleTests", "Hexalith.Parties.Projections.Tests", "Hexalith.Parties.Sample.Tests", "Hexalith.Parties.Security.Tests", "Hexalith.Parties.Server.Tests", "Hexalith.Parties.Tests", "Hexalith.Parties.UI.Tests"]
+          difference
+      ["Hexalith.Parties.AdminPortal.Tests", "Hexalith.Parties.Aspire.Tests", "Hexalith.Parties.Authentication.Tests", "Hexalith.Parties.Catalog.Tests", "Hexalith.Parties.Ci.Tests", "Hexalith.Parties.Client.Tests", "Hexalith.Parties.ConsumerPortal.Tests", "Hexalith.Parties.Contracts.Tests", "Hexalith.Parties.EventStoreAdminUI.TestHost", "Hexalith.Parties.EventStoreGateway.TestHost", "Hexalith.Parties.EventStoreSample.Contracts.TestArtifact", "Hexalith.Parties.EventStoreSample.TestHost", "Hexalith.Parties.IntegrationTests", "Hexalith.Parties.Mcp.Tests", "Hexalith.Parties.Picker.Tests", "Hexalith.Parties.Platform.IntegrationTests", *"Hexalith.Parties.Platform.LifecycleTests"*, *"Hexalith.Parties.Projections.Tests"*, *"Hexalith.Parties.Sample.Tests"*, *"Hexalith.Parties.Security.Tests"*, *"Hexalith.Parties.Server.Tests"*, *"Hexalith.Parties.Tests"*, *"Hexalith.Parties.UI.Tests"*]
+      Stack Trace:
+        tests/Hexalith.Parties.Tests/FitnessTests/DocumentationFitnessTests.cs(103,0): at Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests.SourceAndTestProjectInventoryIsDocumentedExactly()
+           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+           at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Finished:    Hexalith.Parties.Tests (ID = '2bb5d4d40fa5e5c74ccb63f43e26ac34db7945db1c1453a699311dae6526e17b')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Tests  Total: 21, Errors: 0, Failed: 4, Skipped: 0, Not Run: 0, Time: 4.520s

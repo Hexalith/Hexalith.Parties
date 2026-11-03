@@ -1,0 +1,13 @@
+{
+  "image": "redis@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf",
+  "daprVersion": "1.18.7",
+  "daprdSha256": "e988a6f53abec017fc9ebcb4f89de9bed11bce005eb49bd8e85e8d3d6adbf488",
+  "ownedDisposableStore": true,
+  "freshClientsAndHandlers": true,
+  "providerProcessesRestarted": false,
+  "cleanup": {
+    "sidecarStopped": true,
+    "containerRemoved": true
+  },
+  "independentlyConfirmedAbsent": true
+}

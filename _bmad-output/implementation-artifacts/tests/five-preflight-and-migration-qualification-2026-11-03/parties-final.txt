@@ -1,0 +1,48 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.14)
+  Discovering: Hexalith.Parties.Tests
+  Discovered:  Hexalith.Parties.Tests
+  Starting:    Hexalith.Parties.Tests
+    Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests.ActualProviderRebuildPersistsAcrossFreshClientsAndPreservesErasureAndRollbackBytes [FAIL]
+      Shouldly.ShouldAssertException : (await fixture.DetailAsync(history, operation, "verify", token)).Outcomes.ShouldHaveSingleItem().Status
+          should be
+      ProjectionDispatchStatus.Completed
+          but was
+      ProjectionDispatchStatus.Failed
+      Stack Trace:
+        tests/Hexalith.Parties.Tests/Projections/PartyLegacyReadModelBackfillRuntimeTests.cs(32,0): at Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests.ActualProviderRebuildPersistsAcrossFreshClientsAndPreservesErasureAndRollbackBytes()
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests.ActualProviderCompetingCanonicalWriteRefusesCommitAndPreservesWinnerBytes(shared: False) [FAIL]
+      Dapr.DaprException : State operation failed: the Dapr endpoint indicated a failure. See InnerException for details.
+      ---- Grpc.Core.RpcException : Status(StatusCode="Internal", Detail="failed saving state in state store backfill-0f33e858172745e8b50023bae88a4ff5: failed to set key parties-backfill-rehearsal-0f33e858172745e8b50023bae88a4ff5||readmodel:synthetic-backfill-4b9b9350da21467690365d4567389c02:party:party-detail:party-live:detail: ERR user_script:14: failed to set key parties-backfill-rehearsal-0f33e858172745e8b50023bae88a4ff5||readmodel:synthetic-backfill-4b9b9350da21467690365d4567389c02:party:party-detail:party-live:detail script: d908b9553add63a82e03589b5c6d01a7654ef0f2, on @user_script:14.")
+      Stack Trace:
+           at Dapr.Client.DaprClientGrpc.MakeSaveStateCallAsync[TValue](String storeName, String key, TValue value, String etag, StateOptions stateOptions, IReadOnlyDictionary`2 metadata, CancellationToken cancellationToken)
+           at Dapr.Client.DaprClientGrpc.SaveStateAsync[TValue](String storeName, String key, TValue value, StateOptions stateOptions, IReadOnlyDictionary`2 metadata, CancellationToken cancellationToken)
+           at Hexalith.EventStore.Contracts.Routing.RouteCatalogRemoteExecution.InvokeAsync(Func`1 invoke, CancellationToken cancellationToken)
+           at Hexalith.EventStore.Client.Projections.DaprReadModelStore.SaveAsync[TValue](String storeName, String key, TValue value, CancellationToken cancellationToken)
+        tests/Hexalith.Parties.Tests/Projections/PartyLegacyBackfillRuntimeFixture.cs(148,0): at Hexalith.Parties.Tests.Projections.PartyLegacyBackfillRuntimeFixture.SaveAsync[TValue](String key, TValue value, CancellationToken token)
+        tests/Hexalith.Parties.Tests/Projections/PartyLegacyReadModelBackfillRuntimeTests.cs(108,0): at Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests.ActualProviderCompetingCanonicalWriteRefusesCommitAndPreservesWinnerBytes(Boolean shared)
+        --- End of stack trace from previous location ---
+        ----- Inner Stack Trace -----
+           at Dapr.Client.DaprClientGrpc.MakeSaveStateCallAsync[TValue](String storeName, String key, TValue value, String etag, StateOptions stateOptions, IReadOnlyDictionary`2 metadata, CancellationToken cancellationToken)
+    Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests.ActualProviderCompetingCanonicalWriteRefusesCommitAndPreservesWinnerBytes(shared: True) [FAIL]
+      Dapr.DaprException : State operation failed: the Dapr endpoint indicated a failure. See InnerException for details.
+      ---- Grpc.Core.RpcException : Status(StatusCode="Internal", Detail="failed saving state in state store backfill-0f33e858172745e8b50023bae88a4ff5: failed to set key parties-backfill-rehearsal-0f33e858172745e8b50023bae88a4ff5||readmodel:synthetic-backfill-876689732e7a426a9642f447ee0a94c8:party:party-index:parties:index: ERR user_script:14: failed to set key parties-backfill-rehearsal-0f33e858172745e8b50023bae88a4ff5||readmodel:synthetic-backfill-876689732e7a426a9642f447ee0a94c8:party:party-index:parties:index script: d908b9553add63a82e03589b5c6d01a7654ef0f2, on @user_script:14.")
+      Stack Trace:
+           at Dapr.Client.DaprClientGrpc.MakeSaveStateCallAsync[TValue](String storeName, String key, TValue value, String etag, StateOptions stateOptions, IReadOnlyDictionary`2 metadata, CancellationToken cancellationToken)
+           at Dapr.Client.DaprClientGrpc.SaveStateAsync[TValue](String storeName, String key, TValue value, StateOptions stateOptions, IReadOnlyDictionary`2 metadata, CancellationToken cancellationToken)
+           at Hexalith.EventStore.Contracts.Routing.RouteCatalogRemoteExecution.InvokeAsync(Func`1 invoke, CancellationToken cancellationToken)
+           at Hexalith.EventStore.Client.Projections.DaprReadModelStore.SaveAsync[TValue](String storeName, String key, TValue value, CancellationToken cancellationToken)
+        tests/Hexalith.Parties.Tests/Projections/PartyLegacyBackfillRuntimeFixture.cs(148,0): at Hexalith.Parties.Tests.Projections.PartyLegacyBackfillRuntimeFixture.SaveAsync[TValue](String key, TValue value, CancellationToken token)
+        tests/Hexalith.Parties.Tests/Projections/PartyLegacyReadModelBackfillRuntimeTests.cs(93,0): at Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests.ActualProviderCompetingCanonicalWriteRefusesCommitAndPreservesWinnerBytes(Boolean shared)
+        --- End of stack trace from previous location ---
+        ----- Inner Stack Trace -----
+           at Dapr.Client.DaprClientGrpc.MakeSaveStateCallAsync[TValue](String storeName, String key, TValue value, String etag, StateOptions stateOptions, IReadOnlyDictionary`2 metadata, CancellationToken cancellationToken)
+  Finished:    Hexalith.Parties.Tests (ID = '2bb5d4d40fa5e5c74ccb63f43e26ac34db7945db1c1453a699311dae6526e17b')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Tests  Total: 21, Errors: 0, Failed: 3, Skipped: 0, Not Run: 0, Time: 2.912s
