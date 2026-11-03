@@ -3,13 +3,13 @@ story_key: 8-7-data-protection-extraction
 story_id: "8.7"
 epic: "8"
 created: 2026-07-16T00:23:38+02:00
-revalidated: 2026-10-10
+revalidated: 2026-11-03
 source_status: backlog
 target_status: blocked
 baseline_commit_at_story_start: a35b151
-baseline_commit_at_revalidation: 56cb4401c4179d431385ad3d931fefa402e4fc5a
-eventstore_root_pin_at_revalidation: 785260fa233880e403bf80bd1bc2f1d53b1f4836
-eventstore_checkout_at_revalidation: 785260fa233880e403bf80bd1bc2f1d53b1f4836
+baseline_commit_at_revalidation: fcf7cbc86076ce43f0982e4959da9691feaf2d3a
+eventstore_root_pin_at_revalidation: 7c93a1234d14c66f5ee85ed48caaee1d30a671f3
+eventstore_checkout_at_revalidation: 7c93a1234d14c66f5ee85ed48caaee1d30a671f3
 ---
 
 # Story 8.7: Data-protection extraction
@@ -18,7 +18,36 @@ Status: blocked
 
 <!-- This story is complete enough for workflow intake, but production source migration is hard-gated by the Story 8.3 G5 row and the authoritative Epic 8 sequence. -->
 
-## Current Gate Revalidation — 2026-10-10
+## Current Gate Revalidation — 2026-11-03
+
+G5 remains `needs-additive-api`; Story 8.7 remains `blocked`. At Parties
+`fcf7cbc86076ce43f0982e4959da9691feaf2d3a`, the committed root gitlinks
+match clean checkouts: EventStore `7c93a1234d14c66f5ee85ed48caaee1d30a671f3`
+and Builds `d2a430c988462a634674a69c562ea4afd1f06ef4`. The effective default
+Release package is EventStore `3.132.2`; Builds defaults to `3.132.1`.
+These observations do not grant G5 availability or adoption approval.
+
+EventStore 8.1–8.4 are `done`; 8.5 key lifecycle is `in-progress`;
+8.6–8.11 remain `backlog`. The cryptographic core is still non-packable,
+Server still registers the no-op, and the AzureKeyVault project and engine
+catalog/release enrollment are absent. Missing receipts remain: approved
+consumable runtime/backend and persistence integration, named owner/security
+availability approval, I2/I19a policy-hook classification, dual-provider GDPR
+parity, the seven deletion proofs, post-v2 switch-back, and owner 8.11 closure.
+Production KMS remains a separate release gate.
+
+All 32 recorded G5 structural checks passed; all 24 MOVE/KEEP/adapter files,
+the local compatibility harness, and four local DI registrations remain.
+The pinned-tool Debug source build of `Hexalith.Parties.Tests` failed with
+15 CS0234/CS0246 errors in `Hexalith.Tenants.Client`: its checkpointed projection
+APIs are absent from the selected EventStore source. The focused xUnit method
+therefore did not run. No runtime, dual-provider, GDPR, post-v2 rollback, or KMS
+test is credited. Exact commands and output are in
+`tests/story-8-7-g5-2026-11-03/` and `tests/test-summary.md`.
+Production, public APIs, dependencies, gitlinks, local DI, rollback files, and
+the blocked sprint status are retained.
+
+## Historical Gate Revalidation — 2026-10-10
 
 G5 remains `needs-additive-api`; Story 8.7 remains `blocked`. At Parties
 `56cb4401c4179d431385ad3d931fefa402e4fc5a`, matching clean root

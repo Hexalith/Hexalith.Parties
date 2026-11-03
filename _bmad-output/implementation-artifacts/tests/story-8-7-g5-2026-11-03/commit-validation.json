@@ -1,0 +1,17 @@
+{
+  "date": "2026-11-03",
+  "command": [
+    "./node_modules/.bin/commitlint",
+    "--edit",
+    "/tmp/parties-story-8-7-approved-commit-message.txt",
+    "--verbose"
+  ],
+  "message": "docs: record story 8.7 prerequisite evidence\n\nRecord the closed G5 prerequisite and retained local protection.\nKeep extraction blocked until owner delivery and parity proof.\n",
+  "pinned_versions": {
+    "@commitlint/cli": "21.2.4",
+    "@commitlint/config-conventional": "21.2.4"
+  },
+  "exit_code": 0,
+  "stdout": "\u29d7   --- input ---\ndocs: record story 8.7 prerequisite evidence\n\nRecord the closed G5 prerequisite and retained local protection.\nKeep extraction blocked until owner delivery and parity proof.\n\u2714   found 0 problems, 0 warnings\n",
+  "stderr": ""
+}

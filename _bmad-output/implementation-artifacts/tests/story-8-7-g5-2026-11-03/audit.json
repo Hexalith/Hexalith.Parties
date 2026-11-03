@@ -1,0 +1,266 @@
+{
+  "date": "2026-11-03",
+  "parties_commit": "fcf7cbc86076ce43f0982e4959da9691feaf2d3a",
+  "retention_baseline": "fcf7cbc86076ce43f0982e4959da9691feaf2d3a",
+  "gate": "needs-additive-api",
+  "story_status": "blocked",
+  "policy_hook_classification": "pending",
+  "policy_hook_decision": "Pending; no approval inferred from routing, source presence, or compile.",
+  "source_identities": {
+    "Hexalith.AI.Tools": {
+      "root_gitlink": "1745b6663ad32bb1288167135ed0f979366c53a0",
+      "checkout": "1745b6663ad32bb1288167135ed0f979366c53a0",
+      "clean": true
+    },
+    "Hexalith.Builds": {
+      "root_gitlink": "d2a430c988462a634674a69c562ea4afd1f06ef4",
+      "checkout": "d2a430c988462a634674a69c562ea4afd1f06ef4",
+      "clean": true
+    },
+    "Hexalith.Commons": {
+      "root_gitlink": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+      "checkout": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+      "clean": true
+    },
+    "Hexalith.EventStore": {
+      "root_gitlink": "7c93a1234d14c66f5ee85ed48caaee1d30a671f3",
+      "checkout": "7c93a1234d14c66f5ee85ed48caaee1d30a671f3",
+      "clean": true
+    },
+    "Hexalith.FrontComposer": {
+      "root_gitlink": "07089dcbdad784a1d53037e9cea78d1d7becd8d6",
+      "checkout": "07089dcbdad784a1d53037e9cea78d1d7becd8d6",
+      "clean": true
+    },
+    "Hexalith.McpCli": {
+      "root_gitlink": "3bc89642ad43305531c4018b75b5e1b9e0681e10",
+      "checkout": "3bc89642ad43305531c4018b75b5e1b9e0681e10",
+      "clean": true
+    },
+    "Hexalith.Memories": {
+      "root_gitlink": "e8956eb5c1bd49297f86702f9606eb9b013bc2f1",
+      "checkout": "e8956eb5c1bd49297f86702f9606eb9b013bc2f1",
+      "clean": true
+    },
+    "Hexalith.Platform": {
+      "root_gitlink": "c635a2dc22f404d97c9fe7e27f7e7f4c9017943b",
+      "checkout": "c635a2dc22f404d97c9fe7e27f7e7f4c9017943b",
+      "clean": true
+    },
+    "Hexalith.PolymorphicSerializations": {
+      "root_gitlink": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+      "checkout": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+      "clean": true
+    },
+    "Hexalith.Tenants": {
+      "root_gitlink": "4d0d599879767196928e1c265622483a62b457ae",
+      "checkout": "4d0d599879767196928e1c265622483a62b457ae",
+      "clean": true
+    }
+  },
+  "source_mapping_content_hash": "85abceed351e6c74267f582bac8849146847f991a503657beb12c18ddff68f63",
+  "source_mapping_file_sha256": "05616c07731507de3becd507cd9a64c3af4b0600041fa8cecd4010eff28a1bf4",
+  "package_selectors": {
+    "Directory.Packages.props": "3.132.2",
+    "references/Hexalith.Builds/Props/Directory.Packages.props": "3.132.1"
+  },
+  "matrix_checks": [
+    {
+      "command": "rg -n -F 'IEventPayloadProtectionService' references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Security/IEventPayloadProtectionService.cs",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F 'NoOpEventPayloadProtectionService' references/Hexalith.EventStore/src/Hexalith.EventStore.Server/Events/NoOpEventPayloadProtectionService.cs",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F 'TryAddSingleton<IEventPayloadProtectionService, NoOpEventPayloadProtectionService>' references/Hexalith.EventStore/src/Hexalith.EventStore.Server/Configuration/ServiceCollectionExtensions.cs",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F 'IPersonalDataPolicy' references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Security/IPersonalDataPolicy.cs",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F 'IErasureStateProvider' references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Security/IErasureStateProvider.cs",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F 'status: approved-authorized' references/Hexalith.EventStore/_bmad-output/implementation-artifacts/spec-shared-payload-protection-engine.md",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F 'decision: adopted-amendment' references/Hexalith.EventStore/_bmad-output/implementation-artifacts/spec-shared-payload-protection-engine.md",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F 'story_8_2_authorized: true' references/Hexalith.EventStore/_bmad-output/implementation-artifacts/spec-shared-payload-protection-engine.md",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F 'Hexalith.EventStore.PayloadProtection' references/Hexalith.EventStore/_bmad-output/implementation-artifacts/spec-shared-payload-protection-engine.md",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F 'Hexalith.EventStore.PayloadProtection.AzureKeyVault' references/Hexalith.EventStore/_bmad-output/implementation-artifacts/spec-shared-payload-protection-engine.md",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F 'pdenc-v2' references/Hexalith.EventStore/_bmad-output/implementation-artifacts/spec-shared-payload-protection-engine.md",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F 'json+pdenc-v1' references/Hexalith.EventStore/_bmad-output/implementation-artifacts/spec-shared-payload-protection-engine.md",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F 'IPersonalDataPolicy' references/Hexalith.EventStore/_bmad-output/implementation-artifacts/spec-shared-payload-protection-engine.md",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F 'IErasureStateProvider' references/Hexalith.EventStore/_bmad-output/implementation-artifacts/spec-shared-payload-protection-engine.md",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F '8-1-shared-payload-protection-security-spec-and-adr: done' references/Hexalith.EventStore/_bmad-output/implementation-artifacts/sprint-status.yaml",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F '8-2-payload-protection-contracts-and-golden-vectors: done' references/Hexalith.EventStore/_bmad-output/implementation-artifacts/sprint-status.yaml",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F '8-3-pdenc-v2-core-cryptographic-engine: done' references/Hexalith.EventStore/_bmad-output/implementation-artifacts/sprint-status.yaml",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F '8-4-compatibility-readers-and-mixed-history-routing: done' references/Hexalith.EventStore/_bmad-output/implementation-artifacts/sprint-status.yaml",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F '8-5-policy-and-key-lifecycle-mechanics: in-progress' references/Hexalith.EventStore/_bmad-output/implementation-artifacts/sprint-status.yaml",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F '8-6-azure-key-vault-production-adapter-conformance: backlog' references/Hexalith.EventStore/_bmad-output/implementation-artifacts/sprint-status.yaml",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F '8-7-server-persistence-and-snapshot-integration: backlog' references/Hexalith.EventStore/_bmad-output/implementation-artifacts/sprint-status.yaml",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F '8-8-package-and-release-integration: backlog' references/Hexalith.EventStore/_bmad-output/implementation-artifacts/sprint-status.yaml",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F '8-9-parties-dual-provider-parity: backlog' references/Hexalith.EventStore/_bmad-output/implementation-artifacts/sprint-status.yaml",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F '8-10-post-v2-write-rollback-rehearsal: backlog' references/Hexalith.EventStore/_bmad-output/implementation-artifacts/sprint-status.yaml",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F '8-11-g5-evidence-and-approval-closure: backlog' references/Hexalith.EventStore/_bmad-output/implementation-artifacts/sprint-status.yaml",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F 'only this story can record' references/Hexalith.EventStore/_bmad-output/planning-artifacts/story-id-migration-2026-08-01.md",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "test ! -f references/Hexalith.EventStore/_bmad-output/implementation-artifacts/8-11-g5-evidence-and-approval-closure.md",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "test ! -f references/Hexalith.EventStore/src/Hexalith.EventStore.PayloadProtection.AzureKeyVault/Hexalith.EventStore.PayloadProtection.AzureKeyVault.csproj",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F 'Hexalith.EventStore.PayloadProtection' references/Hexalith.Builds/Props/Directory.Packages.props",
+      "expected_exit": 1,
+      "actual_exit": 1
+    },
+    {
+      "command": "rg -n -F 'Hexalith.EventStore.PayloadProtection' references/Hexalith.EventStore/tools/release-packages.json",
+      "expected_exit": 1,
+      "actual_exit": 1
+    },
+    {
+      "command": "rg -n -F 'PartyPayloadProtectionService' src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "command": "rg -n -F 'EventStorePartyPayloadProtectionAdapter' src/Hexalith.Parties.Security/EventStorePartyPayloadProtectionAdapter.cs",
+      "expected_exit": 0,
+      "actual_exit": 0
+    }
+  ],
+  "retained_files": {
+    "src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs": "aff078913a6a9b4025574d3a01813f8916ad9d2e567c221ad330e8adb8e6232e",
+    "src/Hexalith.Parties.Security/PartyKeyManagementService.cs": "e63fefbe63c0dd98802c3d641ee94c81f9a96c81c6b4c45dd9674047b8550492",
+    "src/Hexalith.Parties.Security/CachedPartyKeyManagementService.cs": "e3832e6830cba0f64958b7f317fce21b9510661d06ce46c5d1d2882bb3a47910",
+    "src/Hexalith.Parties.Security/PartyKeyLifecycleService.cs": "7f85e1a22e2dc3390b1e3df8847c2644ca5291ca998d78ba72f076b2eb8002d8",
+    "src/Hexalith.Parties.Security/IPartyKeyRetryScheduler.cs": "bdacaa6451ae3e6f645cdced84fdf5b25159eafa129cf33417ba8613d02878c8",
+    "src/Hexalith.Parties.Security/ActorBackedPartyKeyRetryScheduler.cs": "fa1b7c64413afd2d3d77d6dfbb510664c4ab008e58f32b44a501c08a9f1597f4",
+    "src/Hexalith.Parties.Security/PartyKeyRetryActor.cs": "e12f1c972cd29009a93616831ee0d0e80e1a03877ea597b7a28844655dab770a",
+    "src/Hexalith.Parties.Security/IPartyKeyRetryActor.cs": "cf361be969b6d931edc02950c5c9c26692ff482a3d52c21e96e00eef945609dd",
+    "src/Hexalith.Parties.Security/DecryptionCircuitBreaker.cs": "9de312fc3494d14bf35ebe4a7eed487dcf3b42818adf7c4a6aa12c9d38ccceca",
+    "src/Hexalith.Parties.Security/DecryptionCircuitOpenException.cs": "779776ff30e230f7329947ffe86eb6c3b79b72f1a8565468ccabd74ba5692b21",
+    "src/Hexalith.Parties.Security/KeyOperationAuditService.cs": "67102f2b456a926cf08ac7a3dde7f23167c03a24219366ca003b4ff910474f60",
+    "src/Hexalith.Parties.Security/TenantKeyRotationService.cs": "66961e553a11a8a51a9e02779cf2ed0ff4a918568d19cdca18a685d86263ceec",
+    "src/Hexalith.Parties.Security/TenantKeyRotationProgress.cs": "1bd74e21abadc8680da087656ae9a69c83e1179e317d15e01e887d1f76e32497",
+    "src/Hexalith.Parties.Security/TenantKeyRotationProgressConflictException.cs": "fb91aae9b69c025d5937257e77c41b8931280020a91771db03cea830ef30ab95",
+    "src/Hexalith.Parties.Security/ITenantKeyRotationCacheInvalidator.cs": "66466a482d5f338ea67172c4cadb94c9b55cae5b92a5d9232e0a664aa758d09d",
+    "src/Hexalith.Parties.Security/LocalDevKeyStorageBackend.cs": "d18ed94d1a36b380938dc021d05d52fe7b2fbe3d10e83bfeb8668ad06b87c2a8",
+    "src/Hexalith.Parties.Security/PartyEncryptionKeyDestroyedException.cs": "675fa0c82943ae30c791715617a0ee3c765628bcd9b88b76af5782022930879a",
+    "src/Hexalith.Parties.Security/CryptoPendingRecord.cs": "6002fbd92a7e98e02b32bd6e961c3f435c06bc202c64d7781b46502c5eb61d42",
+    "src/Hexalith.Parties.Security/PartyErasureOrchestrator.cs": "6a15ce7fcaf6cbaed932c028e787bdeab7ab3404f1a5822cabaa6f73996e8e67",
+    "src/Hexalith.Parties.Security/ErasureVerificationService.cs": "94e99c6d90c843eccf2de72f060760a43bd348c0c1b72dd8aed4dc228d4de233",
+    "src/Hexalith.Parties.Security/PartyErasureRecordStore.cs": "8c394d86ac32426c9c79e3df53deaff0dd76fdf46a337a78470189731714b81f",
+    "src/Hexalith.Parties.Security/PartyPersonalDataCommandGuard.cs": "fb2cdf59940335b5bdf314a983829960007d07e0cd5fedd83a6f799a2ceb3a03",
+    "src/Hexalith.Parties.Security/PersonalDataGraphInspector.cs": "20b27c8aa15681a23ec35553c6a4d6130e4d0b3ad7e68e99067e508f9ac87ce4",
+    "src/Hexalith.Parties.Security/EventStorePartyPayloadProtectionAdapter.cs": "0e0d890f498efa9b92c6206747ddc119eb0901642e2c644ae7e014b725ad7e49"
+  },
+  "baseline_unchanged_harness_and_di": {
+    "tests/Hexalith.Parties.Security.Tests/CryptoKeyManagementCompatibilityHarnessTests.cs": "d126ab8eb52bd3650d43c10703d19e3beb756835b9aba5a12b3e3fcac4716070",
+    "src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs": "dca2ac9e7b36345061f851308f1ad6affe24f6bdedc6f641e4577e159f7ec940"
+  },
+  "local_di_markers": [
+    "AddSingleton<IKeyStorageBackend, LocalDevKeyStorageBackend>()",
+    "AddSingleton<PartyPayloadProtectionService>()",
+    "AddSingleton<EventStorePartyPayloadProtectionAdapter>()",
+    "AddSingleton<IEventPayloadProtectionService>(sp => sp.GetRequiredService<EventStorePartyPayloadProtectionAdapter>())"
+  ],
+  "product_or_dual_provider_parity_credited": false
+}

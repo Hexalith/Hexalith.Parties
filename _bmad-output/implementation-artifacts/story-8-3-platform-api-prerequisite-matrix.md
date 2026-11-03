@@ -1046,6 +1046,31 @@ The original selection row transcribes the Round 6 reviewer-recorded decision in
 | I19 store reclassification / class-(b) test set | Touched stores, semantics, and approved consistency tests | Pending — named accountable owner | Pending | Pending; no approval inferred from routing, source presence, or compile. |
 | §2 divergence from Epic 7 | G7/G9 historical SCP and 2026-09-27 McpCli course correction: authority backfill required | Pending — named accountable owner | Pending | Pending; no approval inferred from routing, source presence, or compile. |
 
+### Story 8.7 G5 gate revalidation — 2026-11-03
+
+At Parties `fcf7cbc86076ce43f0982e4959da9691feaf2d3a`, EventStore
+`7c93a1234d14c66f5ee85ed48caaee1d30a671f3` and Builds
+`d2a430c988462a634674a69c562ea4afd1f06ef4` match clean committed root
+checkouts. Default Release consumption evaluates to EventStore `3.132.2`;
+Builds defaults to `3.132.1`. This is prerequisite inspection, not G5 approval
+or a new source/package selection.
+
+Owner 8.1–8.4 are done, 8.5 is in progress, and 8.6–8.11 remain backlog.
+The core is non-packable, Server defaults to the no-op, and the AzureKeyVault
+project, engine catalog/release enrollment, and 8.11 closure packet are absent.
+I2/I19a classification, named G5/security approval, consumable runtime/backend
+and persistence integration, dual-provider GDPR parity, seven deletion proofs,
+and post-v2 rollback remain missing. G5 stays `needs-additive-api`; Parties 8.7
+stays `blocked`; the crypto-retention action stays open.
+
+The unchanged G5 row's 32 structural commands pass, and all 24 retained files,
+the local harness, and four local DI registrations remain. The focused Debug
+source test-project build is blocked by 15 Tenants CS0234/CS0246 errors for
+missing EventStore checkpointed projection APIs; no focused xUnit execution or
+provider parity is credited. See `tests/story-8-7-g5-2026-11-03/` and the dated
+`tests/test-summary.md` entry. Production, dependencies, gitlinks, rollback,
+and approval-table decisions are unchanged.
+
 ### Story 8.7 G5 gate revalidation — 2026-10-10
 
 At Parties `56cb4401c4179d431385ad3d931fefa402e4fc5a`, clean root

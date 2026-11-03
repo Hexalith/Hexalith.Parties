@@ -2931,3 +2931,43 @@ Logs are outside the repository under
 `/tmp/claude-1000/-home-administrator-projects-hexalith-parties/5efe26d2-74f2-4d49-be35-75eff4e79873/scratchpad/`
 (`final-build.log`, `final-fitness.log`, `process-tests-final.log`, `emitter.log`,
 `mutate-results.log`, `mut-*-test.log`, `process-mutant.log`).
+
+
+## Story 8.7 G5 prerequisite revalidation — 2026-11-03
+
+Story 8.7 remains `blocked`; G5 remains `needs-additive-api`. At Parties
+`fcf7cbc86076ce43f0982e4959da9691feaf2d3a`, EventStore
+`7c93a1234d14c66f5ee85ed48caaee1d30a671f3` and Builds
+`d2a430c988462a634674a69c562ea4afd1f06ef4` match clean committed root
+checkouts. Default Release evaluation selects EventStore `3.132.2`; Builds
+defaults to `3.132.1`. These observations grant no G5 approval or parity.
+
+The [reproducible command receipt](story-8-7-g5-2026-11-03/README.md) retains
+commands, the [structural audit](story-8-7-g5-2026-11-03/audit.json), and
+[raw source-build output](story-8-7-g5-2026-11-03/source-build.log.txt).
+
+| Check | Result |
+| --- | --- |
+| `python3 _bmad-output/implementation-artifacts/tests/story-8-7-g5-2026-11-03/audit.py` | Exit 0: all 32 G5 matrix commands, 24 retained-file hashes, local harness and four local DI registrations, matching clean source identities, expected package selectors and blocked status. |
+| `dotnet msbuild tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -p:Configuration=Release -getProperty:HexalithEventStoreVersion,HexalithEventStoreFromSource,UseHexalithProjectReferences` | Exit 0; EventStore `3.132.2`; source selectors empty. |
+| `dotnet tool run hexalith-module -- prepare-build --manifest module/hexalith.module-manifest.v2.json --workspace /tmp/parties-story-8-7-g5-source-20261103 --mode source --output json` | Exit 0 with HXW009/HXW010/HXW011 advisories; exact mapping environment and hash are recorded in the receipt. |
+| Mapped `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:NuGetAudit=false --verbosity minimal` | Exit 1; 0 warnings, 15 errors. Tenants Client requires missing EventStore `Checkpointed` projection APIs (CS0234/CS0246); no fresh test assembly produced. |
+| Direct xUnit `Matrix_ValidationEvidenceCommandsAreReproducible` | Not run because the focused test-project build failed; no pass credited. |
+| `bash scripts/check-no-warning-override.sh` | Exit 0. |
+
+Owner 8.1–8.4 are done, 8.5 is in progress, and 8.6–8.11 are backlog.
+Missing receipts: consumable runtime/backend and persistence integration,
+AzureKeyVault project, engine package/release enrollment, named G5/security
+approval, I2/I19a classification, dual-provider GDPR parity, seven deletion
+proofs, post-v2 switch-back, and owner 8.11 closure. The core remains
+non-packable; Server still registers its no-op. Production KMS remains a
+separate release gate. No product, shared-provider, GDPR, rollback, or KMS test
+is credited; the local implementation and blocked sprint status remain intact.
+
+Independent review corrected nine evidence/context issues without changing the
+G5 decision. The final audit additionally compares the 24 retained files,
+compatibility harness and DI source byte-for-byte against the baseline, checks
+the I2/I19a decision cell, and records all ten mapped dependency gitlinks and
+clean checkouts. The original `source-mapping.json` and its hashes are retained
+with the build log. The strengthened audit passes; no review finding remains
+open, and no additional runtime or parity test is credited.
