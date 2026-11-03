@@ -95,6 +95,11 @@ public sealed class PlatformApiPrerequisitesTests
     private static readonly string[] RequiredAbsentPayloadProtectionPaths =
     [
         "references/Hexalith.EventStore/_bmad-output/implementation-artifacts/8-11-g5-evidence-and-approval-closure.md",
+    ];
+
+    // Story 8.6 delivered the isolated adapter project; it must stay non-packable until G5 closure.
+    private static readonly string[] RequiredNonPackablePayloadProtectionProjects =
+    [
         "references/Hexalith.EventStore/src/Hexalith.EventStore.PayloadProtection.AzureKeyVault/Hexalith.EventStore.PayloadProtection.AzureKeyVault.csproj",
     ];
 
@@ -133,8 +138,8 @@ public sealed class PlatformApiPrerequisitesTests
         "8-2-payload-protection-contracts-and-golden-vectors: done",
         "8-3-pdenc-v2-core-cryptographic-engine: done",
         "8-4-compatibility-readers-and-mixed-history-routing: done",
-        "8-5-policy-and-key-lifecycle-mechanics: in-progress",
-        "8-6-azure-key-vault-production-adapter-conformance: backlog",
+        "8-5-policy-and-key-lifecycle-mechanics: done",
+        "8-6-azure-key-vault-production-adapter-conformance: in-progress",
         "8-7-server-persistence-and-snapshot-integration: backlog",
         "8-8-package-and-release-integration: backlog",
         "8-9-parties-dual-provider-parity: backlog",
@@ -2543,6 +2548,12 @@ public sealed class PlatformApiPrerequisitesTests
         {
             row.ValidationEvidence.ShouldContain($"`test ! -f {path}`");
             File.Exists(Path.Combine(root, path)).ShouldBeFalse(path);
+        }
+
+        foreach (string path in RequiredNonPackablePayloadProtectionProjects)
+        {
+            HasPositiveFixedStringCommand(commands, "<IsPackable>false</IsPackable>", path)
+                .ShouldBeTrue($"{path} must stay non-packable until G5 closure.");
         }
 
         File.ReadAllText(RepositoryDependencyPaths.Resolve(root, "references/Hexalith.Builds/Props/Directory.Packages.props"))
