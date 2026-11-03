@@ -134,8 +134,8 @@ public sealed class PartiesContainerPublishWorkflowTests
         sharedWorkflow.ShouldContain("default: 'vstest'");
         sharedWorkflow.ShouldContain("inputs.test-platform == 'microsoft-testing-platform'");
         sharedWorkflow.ShouldContain("--report-xunit-trx");
-        sharedWorkflow.ShouldContain("--filter-not-trait");
-        sharedWorkflow.ShouldContain("--filter-trait");
+        sharedWorkflow.ShouldNotContain("--filter-not-trait");
+        sharedWorkflow.ShouldNotContain("--filter-trait");
     }
 
     [Fact]
