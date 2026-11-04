@@ -458,3 +458,6 @@ _bmad/render/
 
 # Generated exact native Admin UI asset staging for the private fixture host.
 tests/Hexalith.Parties.EventStoreAdminUI.TestHost/wwwroot/
+
+# Workflow-owned immutable Builds preparation/helper checkout, separate from caller source.
+/.hexalith/builds-execution/
