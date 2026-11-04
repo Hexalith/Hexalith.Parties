@@ -539,3 +539,11 @@ references/Hexalith.EventStore|f213e4115ec23cb736e8aa0113f61b9d4854480c|validate
 #     NuGet packages were verified. Parties package integration remains a CI gate.
 references/Hexalith.Platform|e2cc081e539942563ec0d6a243b308b4cab77898|validated-advance|v1.1.8|codex-agent|2026-11-04
 references/Hexalith.Builds|725754075e1d6369430a3adf94d46fb71e6eaf9e|validated-advance|v4.43.6|codex-agent|2026-11-04
+
+# --- 2026-11-04 Story 2.8 genuine full Parties released tuple adoption.
+#     Source-selection only under explicit user delegation. Platform v1.3.0
+#     and signed Builds v4.44.2 passed their exact-source publication gates.
+#     Parties hosted/native/manual lifecycle and all historical parity remain
+#     unvalidated; no human ratification or candidate acceptance is inferred.
+references/Hexalith.Platform|338a6afc31850761f49c0de7d399266dd15cfe84|validated-advance|v1.3.0|codex-agent|2026-11-04
+references/Hexalith.Builds|ae68c59bd2f4145a23ccf68c3711f98eaf62195f|validated-advance|v4.44.2|codex-agent|2026-11-04

@@ -4,7 +4,7 @@ Hexalith.Parties uses GitHub Actions with shared Hexalith.Builds workflows and a
 
 ## Workflows
 
-- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@725754075e1d6369430a3adf94d46fb71e6eaf9e`.
+- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@ae68c59bd2f4145a23ccf68c3711f98eaf62195f`.
 - `.github/workflows/release.yml` is a manual `workflow_dispatch` workflow with a protected, caller-owned release job. It uses `Hexalith/Hexalith.Builds/Github/prepare-domain-release@11a3a79cfac4bba9548c6364a17a01ee9b561370` and takes the nested publisher from that same immutable Builds checkout.
 - `.github/workflows/commitlint.yml` delegates Conventional Commit validation to the retained immutable Builds revision `332b2c144defba546fe0a09626a4a72f2340e22f`, for pull requests and main pushes.
 - `.github/workflows/dependency-review.yml` delegates dependency review for pull requests.
@@ -23,17 +23,17 @@ transitive action used by Builds. Validate an update with:
 
 ```bash
 actionlint .github/workflows/ci.yml .github/workflows/codeql.yml
-dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false
-dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests
+dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Release -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true
+dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests
 ```
 
 ## CI
 
 CI runs on pushes and pull requests to `main`, scheduled nightly runs, and Pact Broker `repository_dispatch` events with type `contract_requiring_verification_published`.
 
-The v2 workflow uses the exact published module CLI 4.43.6 and genuine Platform
-v1.1.7 (`ed1560a57f4d4cb55b6b03f485cbfa01316837a7`) with the matching recorded
-Builds catalog `725754075e1d6369430a3adf94d46fb71e6eaf9e`. Supported package-mode
+The v2 workflow uses the exact published module CLI 4.44.2 and genuine Platform
+v1.3.0 (`338a6afc31850761f49c0de7d399266dd15cfe84`) with the matching recorded
+Builds catalog `ae68c59bd2f4145a23ccf68c3711f98eaf62195f`. Supported package-mode
 preparation generates verified runtime-free Release imports before restore/build
 of `Hexalith.Parties.Standalone.slnx` and package consumer validation.
 
@@ -278,8 +278,8 @@ They use isolated temporary Git histories and loopback HTTP registries; they
 never publish. Check executed and skipped counts when assessing local evidence.
 
 ```bash
-dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false
-dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests -class Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests -class Hexalith.Parties.Ci.Tests.GitlinkGateWorkflowTests
+dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Release -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true
+dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests -class Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests -class Hexalith.Parties.Ci.Tests.GitlinkGateWorkflowTests
 ```
 
 The release workflow does not apply runtime deployment manifests and does not publish EventStore, Tenants, Memories, Sample, Redis, or FalkorDB images. Runtime deployment orchestration is owned outside this repository and consumes immutable release tags from Zot.
