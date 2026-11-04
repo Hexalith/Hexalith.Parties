@@ -547,3 +547,17 @@ references/Hexalith.Builds|725754075e1d6369430a3adf94d46fb71e6eaf9e|validated-ad
 #     unvalidated; no human ratification or candidate acceptance is inferred.
 references/Hexalith.Platform|338a6afc31850761f49c0de7d399266dd15cfe84|validated-advance|v1.3.0|codex-agent|2026-11-04
 references/Hexalith.Builds|ae68c59bd2f4145a23ccf68c3711f98eaf62195f|validated-advance|v4.44.2|codex-agent|2026-11-04
+
+# --- 2026-11-04 user-requested synchronization after /pushall.
+#     codex-agent records the seven exact fetched main source selections
+#     under the explicit sync request. Each contains the prior Parties
+#     selection; incoming Parties main changes are preserved by rebase.
+#     Source selection only; package/runtime compatibility, human
+#     ratification and release acceptance remain separate validation.
+references/Hexalith.Builds|06a51f55bfe2e03a06e1121d94a41e98f1e3e251|validated-advance|origin/main@06a51f55bfe2|codex-agent|2026-11-04
+references/Hexalith.EventStore|1be8dcf43347efaf007538f1cd652fc5488bc6e6|validated-advance|origin/main@1be8dcf43347|codex-agent|2026-11-04
+references/Hexalith.FrontComposer|b70627f649826b1a2338ccc13295ba02b71f7424|validated-advance|origin/main@b70627f64982|codex-agent|2026-11-04
+references/Hexalith.McpCli|add6e2079a2446fc764f95b4add87d49cda430a8|validated-advance|origin/main@add6e2079a24|codex-agent|2026-11-04
+references/Hexalith.Memories|4dac7decfdd33b3d048de3c77e9cb1562bb95c6f|validated-advance|origin/main@4dac7decfdd3|codex-agent|2026-11-04
+references/Hexalith.Platform|aaa30aff1038688a921494a78c9fc53fc5eb8836|validated-advance|origin/main@aaa30aff1038|codex-agent|2026-11-04
+references/Hexalith.Tenants|143cec60a3f5bb1831fa57f35c510880ceb788d8|validated-advance|origin/main@143cec60a3f5|codex-agent|2026-11-04
