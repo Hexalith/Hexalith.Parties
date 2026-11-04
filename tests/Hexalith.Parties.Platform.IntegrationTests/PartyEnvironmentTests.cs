@@ -30,6 +30,19 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, IT
     public Task RealDependencies_CreateQueryAndPersistMatchingPartyEvents() =>
         ExerciseRealDependenciesAsync(recordCanonicalObservation: true);
 
+    /// <summary>Verifies the live full Parties gateway rejects an anonymous command-status request.</summary>
+    /// <returns>The real gateway authorization check on the issued environment.</returns>
+    [Fact]
+    public async Task GatewayRefusesAnonymousCommandStatusAsync()
+    {
+        using CancellationTokenSource bound = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken, fixture.Descriptor.RequestCancellation);
+        bound.CancelAfter(TimeSpan.FromSeconds(30));
+        Uri endpoint = fixture.Descriptor.GetEndpoint("eventstore", "eventstore", "http");
+        using HttpClient anonymous = new(new SocketsHttpHandler { AllowAutoRedirect = false, UseProxy = false }) { BaseAddress = endpoint };
+        using HttpResponseMessage response = await anonymous.GetAsync("/api/v1/commands/status/01J00000000000000000000000", bound.Token).ConfigureAwait(true);
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
     /// <summary>Rechecks the full real persistence path after a qualification hold without rewriting the first observation.</summary>
     /// <returns>The bounded real-service command, query and exact-stream assertions.</returns>
     internal Task RecheckRealDependenciesAsync() =>

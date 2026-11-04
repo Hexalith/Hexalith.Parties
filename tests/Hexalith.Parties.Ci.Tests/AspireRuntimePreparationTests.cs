@@ -528,6 +528,52 @@ public sealed class AspireRuntimePreparationTests
         finally { Directory.Delete(workspace, recursive: true); }
     }
 
+    /// <summary>Evaluates exact published UI and readiness capabilities without accepting unknown packages.</summary>
+    /// <param name="version">The isolated candidate package selection.</param>
+    /// <param name="source">The existing source selector branch.</param>
+    /// <param name="sharedUi">Whether shared UI APIs are enabled.</param>
+    /// <param name="readiness">Whether shared reconciliation readiness is enabled.</param>
+    [Theory]
+    [InlineData("4.7.1", false, true, false)]
+    [InlineData("4.7.3", false, true, false)]
+    [InlineData("4.7.4", false, true, false)]
+    [InlineData("4.7.5", false, true, true)]
+    [InlineData("4.7.6", false, true, true)]
+    [InlineData("4.7.0", false, false, false)]
+    [InlineData("4.7.2", false, false, false)]
+    [InlineData("4.7.7", false, false, false)]
+    [InlineData("4.8.0", false, false, false)]
+    [InlineData("4.7.6-preview.1", false, false, false)]
+    [InlineData("invalid", false, false, false)]
+    [InlineData("", false, false, false)]
+    [InlineData("4.7.0", true, true, true)]
+    [InlineData("", true, true, true)]
+    public async Task FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(
+        string version, bool source, bool sharedUi, bool readiness)
+    {
+        string workspace = Directory.CreateTempSubdirectory("parties-feedback-capability-").FullName;
+        try
+        {
+            string project = Path.Combine(workspace, "Capability.csproj");
+            new XDocument(new XElement("Project",
+                new XElement("PropertyGroup", new XElement("DefineConstants", "UNCHANGED"),
+                    new XElement("HexalithEventStoreVersion", "4.0.4"),
+                    new XElement("HexalithFrontComposerVersion", version),
+                    new XElement("HexalithFrontComposerFromSource", source.ToString().ToLowerInvariant())),
+                new XElement("Import", new XAttribute("Project", CiTestPaths.RepoFile("Directory.Build.targets")))))
+                .Save(project);
+            var result = await RunDotnetAsync(workspace, "msbuild", project, "-nologo",
+                "-target:ConfigureFrontComposerFeedbackCandidate", "-getProperty:DefineConstants").ConfigureAwait(true);
+            result.ExitCode.ShouldBe(0, result.Output + result.Error);
+            string[] symbols = result.Output.Trim().Split(';');
+            symbols.ShouldContain("UNCHANGED");
+            symbols.ShouldContain("HES_CANCELLABLE_PROJECTIONS");
+            symbols.Contains("HFC_SHARED_UI", StringComparer.Ordinal).ShouldBe(sharedUi);
+            symbols.Contains("HFC_SHARED_RECONCILE_READINESS", StringComparer.Ordinal).ShouldBe(readiness);
+        }
+        finally { Directory.Delete(workspace, recursive: true); }
+    }
+
     private static string[] RepresentativeSampleSources(string owner) => [.. new[]
     {
         "samples/Hexalith.EventStore.Sample/Program.cs",
