@@ -1,17 +1,18 @@
 # Disposable CI lifecycle qualification
 
-This manual workflow is a dependent, **baseline-only** diagnostic proposal for
+This registered manual workflow remains a **baseline-only** diagnostic for
 Story 2.8. It grants no candidate acceptance or loaded-backend identity credit.
-The current 4.43.4/269 workflow/tool pins are deliberately unchanged. Published
-4.43.4 and 4.43.5 cannot allocate in the required direct-only checkout because of
-HXP020. A normally published corrected producer, qualified official archives,
-coherent genuinely released Platform tuple and normal owner adoption are required
-before dispatch. Preserve incoming root gitlinks; source preparation is not tuple
-qualification. Never initialize nested dependencies or substitute source runtime.
+The ordinary and manual baseline callers select the same reviewed Builds
+`ae68c59bd2f4145a23ccf68c3711f98eaf62195f` with published tool 4.44.2 and
+genuine Platform v1.3.0 (`338a6afc31850761f49c0de7d399266dd15cfe84`).
+The old 4.43.4 and 4.43.5 HXP020 refusals remain historical evidence.
+Normal exact-source owner gates and real reference native qualification are still
+required before dispatch. Preserve incoming root gitlinks; source preparation
+is not runtime qualification. Never initialize nested dependencies or substitute
+source runtime.
 
-The workflow must first be registered through normal main/source gates. After
-registration, the operator checks all normal exact-source CI gates, dispatches
-`.github/workflows/ci-lifecycle-qualification.yml` on that exact reviewed source,
+After those gates, the parent operator dispatches
+`.github/workflows/ci-lifecycle-qualification.yml` on the exact reviewed source
 and records repository, revision, run, attempt and qualification job identities.
 The baseline job retains all 15 isolated projects, package consumers and required
 `platform-package` real-service suite. Its failure prevents the qualification job.
@@ -99,3 +100,14 @@ preparation, using Release/package imports. Both ordinary solution builds keep
 this opt-in qualification project excluded. Record every genuine first outcome,
 including dependency or public API refusals. No schema, production fault hook,
 local retention policy, accepted pin or attached-suite execution is introduced.
+
+Native SDK diagnostics use the published G4 handoff, verified source mapping, and exact
+descriptor/plan/owner state. After the real persistence assertions, they separately measure
+assemblies already loaded in the native test process and SDK DLLs actually copied into the plan-
+bound native composition output; reading copied-file metadata does not load those DLLs or claim
+host-process loading. The bounded private single-write JSON is retained in the existing classified
+caller artifact directory: ordinary integration verifies `invocation.json`, while lifecycle
+qualification verifies its actual journal and unique issued owner receipt. No GitHub environment is
+forwarded into the scrubbed native process, and canonical functional observations remain unchanged.
+These measurements and local boundary controls grant no native, lifecycle, parity, human approval,
+or candidate acceptance by themselves.

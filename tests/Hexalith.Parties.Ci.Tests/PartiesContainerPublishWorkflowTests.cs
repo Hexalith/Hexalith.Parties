@@ -7,7 +7,7 @@ namespace Hexalith.Parties.Ci.Tests;
 public sealed class PartiesContainerPublishWorkflowTests
 {
     private const int ExpectedPackageCount = 11;
-    private const string BuildsCiSha = "26991e8c542704be44cd8d9f58084d56fa627adb";
+    private const string BuildsCiSha = "ae68c59bd2f4145a23ccf68c3711f98eaf62195f";
     private const string BuildsValidationSha = "332b2c144defba546fe0a09626a4a72f2340e22f";
     private const string BuildsExecutionSha = "11a3a79cfac4bba9548c6364a17a01ee9b561370";
     private static readonly TimeSpan WorkflowReadTimeout = TimeSpan.FromSeconds(10);
@@ -80,6 +80,8 @@ public sealed class PartiesContainerPublishWorkflowTests
         string workflow = CiTestPaths.ReadRepoFile(".github/workflows/ci.yml");
 
         workflow.ShouldContain($"Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@{BuildsCiSha}");
+        string manual = CiTestPaths.ReadRepoFile(".github/workflows/ci-lifecycle-qualification.yml");
+        manual.ShouldContain($"Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@{BuildsCiSha}");
         workflow.ShouldContain("solution: Hexalith.Parties.Standalone.slnx");
         workflow.ShouldContain("test-platform: microsoft-testing-platform");
         workflow.ShouldContain("run-consumer-validation: true");
@@ -111,7 +113,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         }
         using JsonDocument tools = JsonDocument.Parse(CiTestPaths.ReadRepoFile(".config/dotnet-tools.json"));
         JsonElement tool = tools.RootElement.GetProperty("tools").GetProperty("hexalith.builds.module.cli");
-        tool.GetProperty("version").GetString().ShouldBe("4.43.6");
+        tool.GetProperty("version").GetString().ShouldBe("4.44.2");
         tool.GetProperty("rollForward").GetBoolean().ShouldBeFalse();
         workflow.ShouldNotContain("submodules: recursive");
 

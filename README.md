@@ -308,7 +308,7 @@ The suite observes real Tenants through its declared REST interface, reads the s
 tenant through its declared REST interface, creates and queries a Party, and verifies persisted
 aggregate metadata and every event envelope in the run-owned state store.
 
-From the Platform checkout, use the exact published module CLI 4.43.6 restored from its local tool manifest:
+From the Platform checkout, use the exact published module CLI 4.44.2 restored from its local tool manifest:
 
 ```bash
 hexalith-module test --manifest references/Hexalith.Parties/module/hexalith.module-manifest.v2.json --profile platform-source --mode source
