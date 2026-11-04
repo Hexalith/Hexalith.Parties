@@ -1,0 +1,389 @@
+[
+  {
+    "label": "source-ui-build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+      "-c",
+      "Debug",
+      "-m:1",
+      "--nologo"
+    ],
+    "cwd": "${REPO}",
+    "exitCode": 0,
+    "seconds": 8.263,
+    "sha256": {}
+  },
+  {
+    "label": "source-ui",
+    "command": [
+      "dotnet",
+      "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll",
+      "-class",
+      "*OptimisticReconcileTests",
+      "-class",
+      "*PartiesProjectionSubscriptionTests",
+      "-class",
+      "*ProjectionFreshnessFallbackTests",
+      "-class",
+      "*ProjectionTransportPackageTests",
+      "-result-xml",
+      "/tmp/review2-source-ui.xml"
+    ],
+    "cwd": "${REPO}",
+    "exitCode": 0,
+    "seconds": 5.388,
+    "sha256": {
+      "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll": "c33d03662af25574f100dc61fd1fa888596cc45ea89d61df66452f99f0e5a506",
+      "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.dll": "a62e7ade8a3b600e0ae777cf1d4715fb36dde49c73e303b88de1294dfec437f1",
+      "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.FrontComposer.Shell.dll": "0cbcd40a38fcabf96d8047d158fea9e2f13eaf1ac8dd83486ac00817dbbe9b6a",
+      "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.FrontComposer.Contracts.UI.dll": "5ad50cb2565e08adcdc8bbb06bbec043ae19a01a174ab93aa0e98d4696935ed0",
+      "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.EventStore.SignalR.dll": "8fef7863816deae1f0e9c59c95008e2824e230db1a809e3b90b3b84ee18f06a0",
+      "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.deps.json": "40f7e8cf64aa9cb0e2e0cac9ec54bf28966dacefe7c5220ca7c394fa6b295ba2"
+    },
+    "summary": [
+      {
+        "environment": "64-bit (x64) .NET 10.0.14 [collection-per-class, parallel (collections, 14 threads)]",
+        "id": "585b8452-caba-4113-9a18-dc24ee00e29e",
+        "name": "${REPO}/tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll",
+        "run-date": "2026-11-03",
+        "run-time": "21:36:31",
+        "start-rtf": "2026-11-03T21:36:31.6239869+00:00",
+        "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+        "target-framework": ".NETCoreApp,Version=v10.0",
+        "errors": "0",
+        "failed": "0",
+        "finish-rtf": "2026-11-03T21:36:36.8091168+00:00",
+        "not-run": "0",
+        "passed": "53",
+        "skipped": "0",
+        "time": "5.185",
+        "time-rtf": "00:00:05.1849999",
+        "total": "53"
+      }
+    ],
+    "dependencyTypes": {
+      "Hexalith.EventStore.Client/4.0.4": "project",
+      "Hexalith.EventStore.Contracts/4.0.4": "project",
+      "Hexalith.EventStore.SignalR/4.0.4": "project",
+      "Hexalith.FrontComposer.Contracts/1.0.0": "project",
+      "Hexalith.FrontComposer.Contracts.UI/1.0.0": "project",
+      "Hexalith.FrontComposer.Mcp/1.0.0": "project",
+      "Hexalith.FrontComposer.Schema/1.0.0": "project",
+      "Hexalith.FrontComposer.Shell/1.0.0": "project"
+    }
+  },
+  {
+    "label": "package-ui-build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--nologo"
+    ],
+    "cwd": "${REPO}",
+    "exitCode": 0,
+    "seconds": 3.796,
+    "sha256": {}
+  },
+  {
+    "label": "package-ui",
+    "command": [
+      "dotnet",
+      "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll",
+      "-class",
+      "*OptimisticReconcileTests",
+      "-class",
+      "*PartiesProjectionSubscriptionTests",
+      "-class",
+      "*ProjectionFreshnessFallbackTests",
+      "-class",
+      "*ProjectionTransportPackageTests",
+      "-result-xml",
+      "/tmp/review2-package-ui.xml"
+    ],
+    "cwd": "${REPO}",
+    "exitCode": 0,
+    "seconds": 5.407,
+    "sha256": {
+      "tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll": "ec6d5448fb48d01272227416a9cd8f11a7d5e0b102069856328771d8b870569d",
+      "tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.dll": "35ff52b103f99c08f0739252ffccbd96e71d40d4ddd6d330dcaba39cd71a9b4f",
+      "tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.FrontComposer.Shell.dll": "411e79c4fdf3ffdc8ff69a0df92a0a5e4ffff557c1faf130cbef5573270377cc",
+      "tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.FrontComposer.Contracts.UI.dll": "0443c05b19e6a3c77b25a9402bb095edb332e2ea59f620cbf6035118935c249d",
+      "tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.EventStore.SignalR.dll": "f38387b37c0446195635be0e194dc2d5f61a0c471b4dbf86f9764a01b922eae9",
+      "tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.deps.json": "5a0c467b57caa35702c7141db44487d0bda99ef7fdff357696d0bab73f188ae5"
+    },
+    "summary": [
+      {
+        "environment": "64-bit (x64) .NET 10.0.14 [collection-per-class, parallel (collections, 14 threads)]",
+        "id": "3e41e14b-c6e3-4401-b6c9-243bc5327447",
+        "name": "${REPO}/tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll",
+        "run-date": "2026-11-03",
+        "run-time": "21:36:40",
+        "start-rtf": "2026-11-03T21:36:40.8156057+00:00",
+        "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+        "target-framework": ".NETCoreApp,Version=v10.0",
+        "errors": "0",
+        "failed": "0",
+        "finish-rtf": "2026-11-03T21:36:46.0132017+00:00",
+        "not-run": "0",
+        "passed": "53",
+        "skipped": "0",
+        "time": "5.197",
+        "time-rtf": "00:00:05.1970000",
+        "total": "53"
+      }
+    ],
+    "dependencyTypes": {
+      "Hexalith.EventStore.Client/4.0.4": "package",
+      "Hexalith.EventStore.Contracts/4.0.4": "package",
+      "Hexalith.EventStore.SignalR/4.0.4": "package",
+      "Hexalith.FrontComposer.Contracts/4.7.5": "package",
+      "Hexalith.FrontComposer.Contracts.UI/4.7.5": "package",
+      "Hexalith.FrontComposer.Mcp/4.7.5": "package",
+      "Hexalith.FrontComposer.Schema/4.7.5": "package",
+      "Hexalith.FrontComposer.Shell/4.7.5": "package"
+    }
+  },
+  {
+    "label": "ci-build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+      "-c",
+      "Debug",
+      "-m:1",
+      "--nologo"
+    ],
+    "cwd": "${REPO}",
+    "exitCode": 0,
+    "seconds": 1.092,
+    "sha256": {}
+  },
+  {
+    "label": "ci",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+      "-class",
+      "*AspireRuntimePreparationTests",
+      "-result-xml",
+      "/tmp/review2-ci.xml"
+    ],
+    "cwd": "${REPO}",
+    "exitCode": 0,
+    "seconds": 26.378,
+    "sha256": {},
+    "summary": [
+      {
+        "environment": "64-bit (x64) .NET 10.0.14 [collection-per-class, parallel (collections, 14 threads)]",
+        "id": "6b1d2758-441f-43cb-a00f-de718c78df21",
+        "name": "${REPO}/tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "run-date": "2026-11-03",
+        "run-time": "21:36:47",
+        "start-rtf": "2026-11-03T21:36:47.3126735+00:00",
+        "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+        "target-framework": ".NETCoreApp,Version=v10.0",
+        "errors": "0",
+        "failed": "0",
+        "finish-rtf": "2026-11-03T21:37:13.4948900+00:00",
+        "not-run": "0",
+        "passed": "57",
+        "skipped": "0",
+        "time": "26.184",
+        "time-rtf": "00:00:26.1840000",
+        "total": "57"
+      }
+    ]
+  },
+  {
+    "label": "runtime-preparation",
+    "command": [
+      "bash",
+      "scripts/prepare-aspire-runtime-hosts.sh",
+      "--gateway-profile",
+      "packaged",
+      "--configuration",
+      "Debug",
+      "--include-memory-qualification",
+      "true"
+    ],
+    "cwd": "${REPO}",
+    "exitCode": 0,
+    "seconds": 101.54,
+    "sha256": {}
+  },
+  {
+    "label": "identities",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "*MemoryRuntimeIdentityTests",
+      "-class",
+      "*PartyMemoryOwnedCleanupTests",
+      "-result-xml",
+      "/tmp/review2-identities.xml"
+    ],
+    "cwd": "${REPO}",
+    "exitCode": 0,
+    "seconds": 0.421,
+    "sha256": {},
+    "summary": [
+      {
+        "environment": "64-bit (x64) .NET 10.0.14 [collection-per-class, parallel (collections, 14 threads)]",
+        "id": "5943d23b-d021-41e2-a607-81fa9e4abe9d",
+        "name": "${REPO}/tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "run-date": "2026-11-03",
+        "run-time": "21:38:55",
+        "start-rtf": "2026-11-03T21:38:55.2373043+00:00",
+        "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+        "target-framework": ".NETCoreApp,Version=v10.0",
+        "errors": "0",
+        "failed": "0",
+        "finish-rtf": "2026-11-03T21:38:55.4584972+00:00",
+        "not-run": "0",
+        "passed": "12",
+        "skipped": "0",
+        "time": "0.222",
+        "time-rtf": "00:00:00.2220000",
+        "total": "12"
+      }
+    ]
+  },
+  {
+    "label": "focused-wrapper",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+      "-method",
+      "*ActualSelectedMemoriesRefreshErasureAndReplayControl",
+      "-result-xml",
+      "/tmp/review2-focused-wrapper.xml"
+    ],
+    "cwd": "${REPO}",
+    "exitCode": 1,
+    "seconds": 112.777,
+    "sha256": {},
+    "summary": [
+      {
+        "environment": "64-bit (x64) .NET 10.0.14 [collection-per-class, parallel (collections, 14 threads)]",
+        "id": "4e9893d3-f3c9-44ee-b467-b259861ac16c",
+        "name": "${REPO}/tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "run-date": "2026-11-03",
+        "run-time": "21:38:55",
+        "start-rtf": "2026-11-03T21:38:55.6414677+00:00",
+        "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+        "target-framework": ".NETCoreApp,Version=v10.0",
+        "errors": "0",
+        "failed": "1",
+        "finish-rtf": "2026-11-03T21:40:48.1828736+00:00",
+        "not-run": "0",
+        "passed": "0",
+        "skipped": "0",
+        "time": "112.546",
+        "time-rtf": "00:01:52.5460000",
+        "total": "1"
+      }
+    ]
+  },
+  {
+    "label": "legacy-ui-build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--nologo",
+      "-p:HexalithFrontComposerVersion=4.7.4",
+      "-p:HexalithEventStoreVersion=3.132.2",
+      "-p:HexalithTenantsVersion=6.0.0"
+    ],
+    "cwd": "${REPO}",
+    "exitCode": 0,
+    "seconds": 4.061,
+    "sha256": {}
+  },
+  {
+    "label": "legacy-ui",
+    "command": [
+      "dotnet",
+      "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll",
+      "-class",
+      "*OptimisticReconcileTests",
+      "-class",
+      "*PartiesProjectionSubscriptionTests",
+      "-class",
+      "*ProjectionFreshnessFallbackTests",
+      "-class",
+      "*ProjectionTransportPackageTests",
+      "-result-xml",
+      "/tmp/review2-legacy-ui.xml"
+    ],
+    "cwd": "${REPO}",
+    "exitCode": 0,
+    "seconds": 5.362,
+    "sha256": {
+      "tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll": "c36b96e6966bfdf868b6e251e96c076964eb41dfd3314171a478fa1d0ef1dcd1",
+      "tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.dll": "0c1861b8da529d7f8e99b7a4894efcfd6d37e57018cc800d5a915b53d5cb6b3d",
+      "tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.FrontComposer.Shell.dll": "d58a17e6dc7ceff32c5c39132b09ef92fd5ac64859e263b2dd5cf6fedee5ddd5",
+      "tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.FrontComposer.Contracts.UI.dll": "c74720a331cbc1859aa73fc2141f768a5e5dbb761dffdc7cb004f3d23a08c7b3",
+      "tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.EventStore.SignalR.dll": "700b2dacfdeb3863fbf3e4221082d8927367363aa595553ecea2ac6c9b703725",
+      "tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.deps.json": "d768d7ea204fe395776b2ffd8990aa9e2d269e94bcfc9cf4905c15eca02e758b"
+    },
+    "summary": [
+      {
+        "environment": "64-bit (x64) .NET 10.0.14 [collection-per-class, parallel (collections, 14 threads)]",
+        "id": "92ae8b0b-adee-4ec3-9bb4-eee00b73825c",
+        "name": "${REPO}/tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll",
+        "run-date": "2026-11-03",
+        "run-time": "21:42:14",
+        "start-rtf": "2026-11-03T21:42:14.0558205+00:00",
+        "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+        "target-framework": ".NETCoreApp,Version=v10.0",
+        "errors": "0",
+        "failed": "0",
+        "finish-rtf": "2026-11-03T21:42:19.2261271+00:00",
+        "not-run": "0",
+        "passed": "50",
+        "skipped": "0",
+        "time": "5.172",
+        "time-rtf": "00:00:05.1720000",
+        "total": "50"
+      }
+    ],
+    "dependencyTypes": {
+      "Hexalith.EventStore.Client/3.132.2": "package",
+      "Hexalith.EventStore.Contracts/3.132.2": "package",
+      "Hexalith.EventStore.SignalR/3.132.2": "package",
+      "Hexalith.FrontComposer.Contracts/4.7.4": "package",
+      "Hexalith.FrontComposer.Contracts.UI/4.7.4": "package",
+      "Hexalith.FrontComposer.Mcp/4.7.4": "package",
+      "Hexalith.FrontComposer.Schema/4.7.4": "package",
+      "Hexalith.FrontComposer.Shell/4.7.4": "package"
+    }
+  },
+  {
+    "label": "package-ui-restored-build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--nologo"
+    ],
+    "cwd": "${REPO}",
+    "exitCode": 0,
+    "seconds": 3.781,
+    "sha256": {}
+  }
+]

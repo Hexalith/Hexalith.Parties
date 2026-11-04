@@ -21,11 +21,17 @@ namespace Hexalith.Parties.IntegrationTests.Topology;
 public sealed class PartyMemoryOwnedRuntimeTests
 {
     [Fact(Timeout = 600000)]
-    public async Task ActualSelectedMemoriesRunsTheRecoveryAndPhysicalErasureControl()
+    public Task ActualSelectedMemoriesRunsTheRecoveryAndPhysicalErasureControl() => ExecuteOwnedRuntimeAsync(focused: false, TestContext.Current.CancellationToken);
+
+    /// <summary>Qualifies bounded unchanged-URI refresh, erasure, survivors and authoritative replay independently of the broader failed-producer gate.</summary>
+    [Fact(Timeout = 600000)]
+    public Task ActualSelectedMemoriesRefreshErasureAndReplayControl() => ExecuteOwnedRuntimeAsync(focused: true, TestContext.Current.CancellationToken);
+
+    private static async Task ExecuteOwnedRuntimeAsync(bool focused, CancellationToken token)
     {
         Assert.SkipUnless(Environment.GetEnvironmentVariable("PARTIES_MEMORIES_OWNED_RUNTIME") == "1",
             "Set PARTIES_MEMORIES_OWNED_RUNTIME=1 to start the owned authenticated source topology.");
-        CancellationToken token = TestContext.Current.CancellationToken;
+        string child = MemoryRuntimeIdentity.SelectChild(typeof(PartyMemoryOwnedRuntimeTests).Assembly);
         PartiesTopologySession session = PartiesTopologySession.Create(isolatedIdentities: true);
         string appToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
         string apiToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
@@ -168,9 +174,12 @@ public sealed class PartyMemoryOwnedRuntimeTests
             }), token).ConfigureAwait(true);
             string root = ResolveRoot();
             var start = new ProcessStartInfo("dotnet") { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, WorkingDirectory = root };
-            foreach (string argument in new[] { Path.Combine(root, "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll"),
-                "-method", "*SelectedMemoriesIngestionAndCleanupPersistAcrossRestart", "-result-xml", Path.Combine(privateRoot, "runtime.xml") }) { start.ArgumentList.Add(argument); }
+            string provenance = Path.Combine(privateRoot, "executed-identities.json");
+            await File.WriteAllTextAsync(provenance, JsonSerializer.Serialize(MemoryRuntimeIdentity.Files(typeof(PartyMemoryOwnedRuntimeTests).Assembly, child)), token).ConfigureAwait(true);
+            foreach (string argument in new[] { child,
+                "-method", focused ? "*SelectedMemoriesRefreshAndCleanupPersistAcrossClientRecreation" : "*SelectedMemoriesIngestionAndCleanupPersistAcrossRestart", "-result-xml", Path.Combine(privateRoot, "runtime.xml") }) { start.ArgumentList.Add(argument); }
             start.Environment["PARTIES_MEMORIES_RUNTIME_CONFIG"] = configPath;
+            start.Environment["PARTIES_MEMORIES_RUNTIME_PROVENANCE"] = provenance;
             using Process process = Process.Start(start) ?? throw new InvalidOperationException("The owned runtime qualification process did not start.");
             Task<string> output = process.StandardOutput.ReadToEndAsync(token), error = process.StandardError.ReadToEndAsync(token);
             try { await process.WaitForExitAsync(deadline.Token).ConfigureAwait(true); }

@@ -1,0 +1,19 @@
+<assemblies schema-version="3" id="03eb9b94-0a50-4bba-807a-bf814a1db2f7" computer="DESKTOP-VIOG240" user="administrator" start-rtf="2026-11-03T20:33:12.5158186+00:00" finish-rtf="2026-11-03T20:35:09.4737413+00:00" timestamp="11/03/2026 21:35:09"><assembly environment="64-bit (x64) .NET 10.0.14 [collection-per-class, parallel (collections, 14 threads)]" id="f3fcd290-2e08-4c83-816f-ff7feda106b6" name="${REPO}/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll" run-date="2026-11-03" run-time="20:33:12" start-rtf="2026-11-03T20:33:12.5158186+00:00" test-framework="xUnit.net v3 4.0.2+0c7aa4991f" target-framework=".NETCoreApp,Version=v10.0" errors="0" failed="1" finish-rtf="2026-11-03T20:35:09.4737413+00:00" not-run="0" passed="0" skipped="0" time="116.964" time-rtf="00:01:56.9640000" total="1"><collection name="Test collection for Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests (id: 1c1c72f7a87e9b4cb57afcd0f51d805067ae167b60bb01f00cb1cb08db0161ba)" id="1124e0ad-6e54-4773-a0ea-8d7d43625870" failed="1" not-run="0" passed="0" skipped="0" time="116.879" time-rtf="00:01:56.8790000" total="1"><test id="e04f5046-1e74-40e5-9d80-b15ef7f004cd" name="Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests.SelectedMemoriesIngestionAndCleanupPersistAcrossRestart" result="Fail" time="116.879" time-rtf="00:01:56.8790000" start-rtf="2026-11-03T20:33:12.5744522+00:00" finish-rtf="2026-11-03T20:35:09.4584225+00:00" type="Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests" method="SelectedMemoriesIngestionAndCleanupPersistAcrossRestart" source-file="${REPO}/tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeTests.cs" source-line="29"><output>Synthetic runtime cleanup is incomplete; operator cleanup is required using the private provisioning/teardown handles.
+</output><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : cleanup.ShouldNotBeNull().Cleaned
+    should be
+True
+    but was
+False
+
+Additional Info:
+    Memories cleanup partially failed (0 of 0 units deleted): Memories cleanup retained incomplete remote source inventory.</message><stack-trace>   at Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests.QualifyFailedProducerCleanupAsync(PartyMemoryRuntimeConfiguration config, HttpClient owner, MemoriesClient client, String tenant, String caseId, IOptions`1 stateOptions, CancellationToken token) in ${REPO}/tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeTests.cs:line 385
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+   at Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests.SelectedMemoriesIngestionAndCleanupPersistAcrossRestart() in ${REPO}/tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeTests.cs:line 238
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests.SelectedMemoriesIngestionAndCleanupPersistAcrossRestart() in ${REPO}/tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeTests.cs:line 289
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test></collection></assembly></assemblies>

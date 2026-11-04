@@ -1,0 +1,29 @@
+{
+  "scope": "Focused unchanged-URI refresh/erasure and client recreation, all recorded output absence and populated survivor preservation. Native proof/replay remains separately required.",
+  "child": [
+    {
+      "environment": "64-bit (x64) .NET 10.0.14 [collection-per-class, parallel (collections, 14 threads)]",
+      "id": "6b8b1160-fb37-45c5-8702-790512759925",
+      "name": "${REPO}/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "run-date": "2026-11-03",
+      "run-time": "22:25:08",
+      "start-rtf": "2026-11-03T22:25:08.1643681+00:00",
+      "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+      "target-framework": ".NETCoreApp,Version=v10.0",
+      "errors": "0",
+      "failed": "0",
+      "finish-rtf": "2026-11-03T22:26:11.0491583+00:00",
+      "not-run": "0",
+      "passed": "1",
+      "skipped": "0",
+      "time": "62.887",
+      "time-rtf": "00:01:02.8870000",
+      "total": "1"
+    }
+  ],
+  "ownedTopologyDisposed": true,
+  "sessionDirectoryExists": false,
+  "phase": "authoritative-stream-and-domain-replay",
+  "broaderNativeReplayQualified": false,
+  "privateEvidence": "${PRIVATE_RUNTIME}"
+}

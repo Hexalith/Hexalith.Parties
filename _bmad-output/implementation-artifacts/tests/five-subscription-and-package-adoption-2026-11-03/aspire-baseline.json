@@ -1,0 +1,150 @@
+{
+  "command": "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --isolated --non-interactive --format Json",
+  "exitCode": 0,
+  "resources": [
+    {
+      "name": "eventstore-admin-dapr-cli-cwsfjcwt",
+      "displayName": "eventstore-admin-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Waiting",
+      "waitingFor": [
+        "security"
+      ]
+    },
+    {
+      "name": "eventstore-admin-egrucwsv",
+      "displayName": "eventstore-admin",
+      "resourceType": "Project",
+      "state": "Waiting",
+      "waitingFor": [
+        "security"
+      ]
+    },
+    {
+      "name": "eventstore-admin-ui-dapr-cli-xqzgczdy",
+      "displayName": "eventstore-admin-ui-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Waiting",
+      "waitingFor": [
+        "eventstore-admin",
+        "security"
+      ]
+    },
+    {
+      "name": "eventstore-admin-ui-mdjtqgjf",
+      "displayName": "eventstore-admin-ui",
+      "resourceType": "Project",
+      "state": "NotStarted",
+      "waitingFor": null
+    },
+    {
+      "name": "eventstore-app-api-token",
+      "displayName": "eventstore-app-api-token",
+      "resourceType": "Parameter",
+      "state": "Running",
+      "waitingFor": null
+    },
+    {
+      "name": "eventstore-dapr-cli-fwtnhdnr",
+      "displayName": "eventstore-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Waiting",
+      "waitingFor": [
+        "security"
+      ]
+    },
+    {
+      "name": "eventstore-pnqxkajf",
+      "displayName": "eventstore",
+      "resourceType": "Project",
+      "state": "Waiting",
+      "waitingFor": [
+        "security"
+      ]
+    },
+    {
+      "name": "parties-dapr-cli-fmawgaqw",
+      "displayName": "parties-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Waiting",
+      "waitingFor": [
+        "eventstore",
+        "tenants",
+        "security"
+      ]
+    },
+    {
+      "name": "parties-euzwhxjb",
+      "displayName": "parties",
+      "resourceType": "Project",
+      "state": "Waiting",
+      "waitingFor": [
+        "eventstore",
+        "tenants",
+        "security"
+      ]
+    },
+    {
+      "name": "parties-mcp-nqcyfjzc",
+      "displayName": "parties-mcp",
+      "resourceType": "Project",
+      "state": "NotStarted",
+      "waitingFor": null
+    },
+    {
+      "name": "parties-ui-auwrafvg",
+      "displayName": "parties-ui",
+      "resourceType": "Project",
+      "state": "Waiting",
+      "waitingFor": [
+        "eventstore",
+        "tenants",
+        "security"
+      ]
+    },
+    {
+      "name": "security-eventstore-client-password",
+      "displayName": "security-eventstore-client-password",
+      "resourceType": "Parameter",
+      "state": "Running",
+      "waitingFor": null
+    },
+    {
+      "name": "security-eventstore-client-username",
+      "displayName": "security-eventstore-client-username",
+      "resourceType": "Parameter",
+      "state": "Running",
+      "waitingFor": null
+    },
+    {
+      "name": "security-xxesavhz",
+      "displayName": "security",
+      "resourceType": "Container",
+      "state": "Starting",
+      "waitingFor": null
+    },
+    {
+      "name": "tenants-dapr-cli-yywzaaga",
+      "displayName": "tenants-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Waiting",
+      "waitingFor": [
+        "eventstore",
+        "security"
+      ]
+    },
+    {
+      "name": "tenants-srregjma",
+      "displayName": "tenants",
+      "resourceType": "Project",
+      "state": "Waiting",
+      "waitingFor": [
+        "eventstore",
+        "security"
+      ]
+    }
+  ],
+  "qualification": "startup and state inspection only; resources were not awaited to readiness",
+  "stopCommand": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+  "stopExitCode": 0
+}

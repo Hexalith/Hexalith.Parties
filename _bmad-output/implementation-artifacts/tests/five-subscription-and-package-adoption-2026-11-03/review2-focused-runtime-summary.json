@@ -1,0 +1,49 @@
+{
+  "childSummary": [
+    {
+      "environment": "64-bit (x64) .NET 10.0.14 [collection-per-class, parallel (collections, 14 threads)]",
+      "id": "856d511b-357b-434a-bb6f-80f132232599",
+      "name": "${REPO}/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "run-date": "2026-11-03",
+      "run-time": "21:39:10",
+      "start-rtf": "2026-11-03T21:39:10.8724350+00:00",
+      "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+      "target-framework": ".NETCoreApp,Version=v10.0",
+      "errors": "0",
+      "failed": "0",
+      "finish-rtf": "2026-11-03T21:40:18.8399809+00:00",
+      "not-run": "0",
+      "passed": "1",
+      "skipped": "0",
+      "time": "67.972",
+      "time-rtf": "00:01:07.9720000",
+      "total": "1"
+    }
+  ],
+  "wrapperSummary": [
+    {
+      "environment": "64-bit (x64) .NET 10.0.14 [collection-per-class, parallel (collections, 14 threads)]",
+      "id": "4e9893d3-f3c9-44ee-b467-b259861ac16c",
+      "name": "${REPO}/tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+      "run-date": "2026-11-03",
+      "run-time": "21:38:55",
+      "start-rtf": "2026-11-03T21:38:55.6414677+00:00",
+      "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+      "target-framework": ".NETCoreApp,Version=v10.0",
+      "errors": "0",
+      "failed": "1",
+      "finish-rtf": "2026-11-03T21:40:48.1828736+00:00",
+      "not-run": "0",
+      "passed": "0",
+      "skipped": "0",
+      "time": "112.546",
+      "time-rtf": "00:01:52.5460000",
+      "total": "1"
+    }
+  ],
+  "survivorsVerified": true,
+  "ownedTopologyDisposed": true,
+  "sessionDirectoryExists": false,
+  "nativeProofStatus": 503,
+  "fullMalformedPdfGate": "Original full/default controls retained; prior two failures are recorded in owned-runtime-second.xml and runtime-second-runtime.failed-producer.json; not requalified by this focused child."
+}

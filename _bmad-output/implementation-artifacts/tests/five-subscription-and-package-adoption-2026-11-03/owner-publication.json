@@ -1,0 +1,17 @@
+{
+  "qualifiedSourceCommit": "f213e4115ec23cb736e8aa0113f61b9d4854480c",
+  "pushedMain": "342664954389359a3ad4ec979a8a503f923798ef",
+  "remoteConfirmed": "342664954389359a3ad4ec979a8a503f923798ef",
+  "incomingMain": "c58eb1ac0fe3380ec10cad685877a8072a5fcda4",
+  "command": [
+    "git",
+    "push",
+    "--no-recurse-submodules",
+    "origin",
+    "main:main"
+  ],
+  "exitCode": 0,
+  "remoteNotice": "GitHub permitted direct main publication while reporting its pull-request rule and seven expected status checks. No remote CI success is claimed.",
+  "consumerSelection": "The exact qualified task commit, reachable from published main; unrelated upstream changes are retained on owner main without advancing Parties to them.",
+  "nestedSubmodulesInitialized": false
+}

@@ -1,0 +1,46 @@
+[
+  {
+    "label": "warning-policy",
+    "cwd": ".",
+    "command": [
+      "bash",
+      "scripts/check-no-warning-override.sh"
+    ],
+    "exitCode": 0
+  },
+  {
+    "label": "parties-crlf-whitespace",
+    "cwd": ".",
+    "command": [
+      "git",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "diff",
+      "--check",
+      "HEAD"
+    ],
+    "exitCode": 0
+  },
+  {
+    "label": "parties-plain-whitespace",
+    "cwd": ".",
+    "command": [
+      "git",
+      "diff",
+      "--check",
+      "HEAD"
+    ],
+    "exitCode": 2
+  },
+  {
+    "label": "eventstore-whitespace",
+    "cwd": "references/Hexalith.EventStore",
+    "command": [
+      "git",
+      "diff",
+      "--check",
+      "HEAD"
+    ],
+    "exitCode": 0
+  }
+]

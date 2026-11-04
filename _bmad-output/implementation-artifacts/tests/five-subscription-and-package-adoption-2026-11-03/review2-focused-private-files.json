@@ -1,0 +1,58 @@
+{
+  "authentication-negative-controls.json": {
+    "sha256": "faee449dea64192e904f9b0c5551255021f8981a0c999d0d5901c77666cc9602",
+    "bytes": 185
+  },
+  "domain-service-acl-negative-controls.json": {
+    "sha256": "7de61975d02c66c3f62973568695eda8f51a01b567a28e98a9b39e17e16b7af3",
+    "bytes": 986
+  },
+  "endpoint-binding.json": {
+    "sha256": "66e4b357de19375dd5021e050f9f4985fddf74cb5109d6922b174b1c774fecbf",
+    "bytes": 145
+  },
+  "executed-identities.json": {
+    "sha256": "358f5d07c591cfe5087fac3c36f02ece8f31e9c5a9fc900437ffca607bc73aea",
+    "bytes": 1762
+  },
+  "native-proof-refusal.json": {
+    "sha256": "a26ed2da59d2e7553373cab4d15168e794555137a034f22dffe68e746beb3dd2",
+    "bytes": 1450
+  },
+  "ownership.json": {
+    "sha256": "fb369df4feca256593032ae0c14ad12ed766456ae1b7c08dcb34839bcee19e59",
+    "bytes": 1778
+  },
+  "phase.json": {
+    "sha256": "80c289c3ede647001da395410ecc309b78a086e4b81d7b15fd8d4ea6e45fd184",
+    "bytes": 6995
+  },
+  "runtime.authority.json": {
+    "sha256": "e19055b0aff5df7a4cbbf16251015246c0625b6fc9fa4ccc00276fb1e570361c",
+    "bytes": 970
+  },
+  "runtime.json": {
+    "sha256": "25ed3c1e4aba65172eb5887fc4dbba6cecba224152db9944a44da183a5d48dd2",
+    "bytes": 537
+  },
+  "runtime.log": {
+    "sha256": "ed8faf04fe756b413a353da9d17c244ba539a48ffe4d9d2c3ba4276f92ecbfe0",
+    "bytes": 425
+  },
+  "runtime.provisioning.json": {
+    "sha256": "f73738c2c7dcfd9597ea1fb3750aa146e74d1d6441e25c1b919db7e9d1803076",
+    "bytes": 461
+  },
+  "runtime.provisioning.survivor.teardown.json": {
+    "sha256": "4914a7e2758211014d44e1224aa9ca5a48cee9b7f0f891ca6fc56dd4562cb840",
+    "bytes": 822
+  },
+  "runtime.provisioning.teardown.json": {
+    "sha256": "5d2da94d9c42860bf603622e05ad2d201a9148628f4ef981a4d3d78aeb681f0c",
+    "bytes": 834
+  },
+  "runtime.xml": {
+    "sha256": "f274b3d6de8bf9a3dcc7f59759d8aa916162cc2b16cf13a94f1302c6deee2aa0",
+    "bytes": 1780
+  }
+}

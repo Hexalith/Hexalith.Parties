@@ -1,0 +1,24 @@
+{
+  "status": "prepared",
+  "outcome": {
+    "exitCode": "Success",
+    "phase": "None",
+    "category": "None",
+    "ruleId": null
+  },
+  "diagnostics": [],
+  "buildPreparation": {
+    "workspace": "/tmp/parties-five-subscriptions-source-20261103",
+    "mode": "source",
+    "mappingHash": "b195574773cc2050f85ce2cdf4c0d7ced36cd83782a9912fadc777e2e13b58bd",
+    "environment": {
+      "CustomBeforeDirectoryBuildProps": "/tmp/parties-five-subscriptions-source-20261103/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "/tmp/parties-five-subscriptions-source-20261103/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "/tmp/parties-five-subscriptions-source-20261103/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "/tmp/parties-five-subscriptions-source-20261103/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "/tmp/parties-five-subscriptions-source-20261103/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "b195574773cc2050f85ce2cdf4c0d7ced36cd83782a9912fadc777e2e13b58bd",
+      "Configuration": "Debug"
+    }
+  }
+}

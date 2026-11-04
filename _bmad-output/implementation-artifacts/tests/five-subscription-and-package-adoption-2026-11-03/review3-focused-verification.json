@@ -1,0 +1,197 @@
+{
+  "scope": "Focused review corrections only. No full matrix or live runtime was executed in this correction pass; primary owns full verification/publication.",
+  "lanes": [
+    {
+      "label": "membership-final",
+      "cwd": "${REPO}/references/Hexalith.EventStore",
+      "command": [
+        "dotnet",
+        "${REPO}/references/Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/bin/Debug/net10.0/Hexalith.EventStore.Server.Tests.dll",
+        "-class",
+        "*ProjectionMembershipTransportTests",
+        "-result-xml",
+        "/tmp/review3-membership-final.xml"
+      ],
+      "exitCode": 0,
+      "summary": [
+        {
+          "environment": "64-bit (x64) .NET 10.0.14 [collection-per-class, non-parallel]",
+          "id": "670d02e9-6930-4d7c-af69-88a3b85b1b52",
+          "name": "${REPO}/references/Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/bin/Debug/net10.0/Hexalith.EventStore.Server.Tests.dll",
+          "run-date": "2026-11-03",
+          "run-time": "22:19:30",
+          "start-rtf": "2026-11-03T22:19:30.3124325+00:00",
+          "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+          "target-framework": ".NETCoreApp,Version=v10.0",
+          "errors": "0",
+          "failed": "0",
+          "finish-rtf": "2026-11-03T22:20:01.8748549+00:00",
+          "not-run": "0",
+          "passed": "31",
+          "skipped": "0",
+          "time": "31.563",
+          "time-rtf": "00:00:31.5630000",
+          "total": "31"
+        }
+      ],
+      "fileSha256": {
+        "references/Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/bin/Debug/net10.0/Hexalith.EventStore.Server.Tests.dll": "50ff3dc0117d7e39bc51e8d8179fefcda963ce0bf20101f4c841cec101dc1143",
+        "references/Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/bin/Debug/net10.0/Hexalith.EventStore.SignalR.dll": "2d9307cbde3a0cc48e03d72d0af0d5f2635fe95583a44c359fa8f0443f62e5f6",
+        "references/Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/bin/Debug/net10.0/Hexalith.EventStore.dll": "eb4619539f2927eca5374ee170a2bfe596806b9aadccbfdb151832c4aeec610e"
+      }
+    },
+    {
+      "label": "client-final",
+      "cwd": "${REPO}/references/Hexalith.EventStore",
+      "command": [
+        "dotnet",
+        "${REPO}/references/Hexalith.EventStore/tests/Hexalith.EventStore.SignalR.Tests/bin/Debug/net10.0/Hexalith.EventStore.SignalR.Tests.dll",
+        "-class",
+        "*EventStoreSignalRClientTests",
+        "-result-xml",
+        "/tmp/review3-client-final.xml"
+      ],
+      "exitCode": 0,
+      "summary": [
+        {
+          "environment": "64-bit (x64) .NET 10.0.14 [collection-per-class, parallel (collections, 14 threads)]",
+          "id": "4eb7d881-3dcd-466a-abf2-e7c341193ffa",
+          "name": "${REPO}/references/Hexalith.EventStore/tests/Hexalith.EventStore.SignalR.Tests/bin/Debug/net10.0/Hexalith.EventStore.SignalR.Tests.dll",
+          "run-date": "2026-11-03",
+          "run-time": "22:19:59",
+          "start-rtf": "2026-11-03T22:19:59.8108754+00:00",
+          "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+          "target-framework": ".NETCoreApp,Version=v10.0",
+          "errors": "0",
+          "failed": "0",
+          "finish-rtf": "2026-11-03T22:20:00.4507365+00:00",
+          "not-run": "0",
+          "passed": "63",
+          "skipped": "0",
+          "time": "0.640",
+          "time-rtf": "00:00:00.6400000",
+          "total": "63"
+        }
+      ],
+      "fileSha256": {
+        "references/Hexalith.EventStore/tests/Hexalith.EventStore.SignalR.Tests/bin/Debug/net10.0/Hexalith.EventStore.SignalR.Tests.dll": "9bdacb41d163cc57c36753b06aa503019200e486cf0e5f1b9d81902499923cc4",
+        "references/Hexalith.EventStore/tests/Hexalith.EventStore.SignalR.Tests/bin/Debug/net10.0/Hexalith.EventStore.SignalR.dll": "2d9307cbde3a0cc48e03d72d0af0d5f2635fe95583a44c359fa8f0443f62e5f6"
+      }
+    },
+    {
+      "label": "diagnostics",
+      "cwd": "${REPO}",
+      "command": [
+        "dotnet",
+        "${REPO}/tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "*MemoriesAuthoritativePersistenceTests",
+        "-result-xml",
+        "/tmp/review3-diagnostics.xml"
+      ],
+      "exitCode": 0,
+      "summary": [
+        {
+          "environment": "64-bit (x64) .NET 10.0.14 [collection-per-class, parallel (collections, 14 threads)]",
+          "id": "34c8bbc2-8abd-44e1-9567-ce4604f9b390",
+          "name": "${REPO}/tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+          "run-date": "2026-11-03",
+          "run-time": "22:17:19",
+          "start-rtf": "2026-11-03T22:17:19.6109033+00:00",
+          "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+          "target-framework": ".NETCoreApp,Version=v10.0",
+          "errors": "0",
+          "failed": "0",
+          "finish-rtf": "2026-11-03T22:17:19.7908498+00:00",
+          "not-run": "0",
+          "passed": "4",
+          "skipped": "0",
+          "time": "0.180",
+          "time-rtf": "00:00:00.1800000",
+          "total": "4"
+        }
+      ],
+      "fileSha256": {
+        "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll": "aa6781636b053d5b4e996ba3897ad40dcfe6c12dffa2c7f1468548153254a710",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.EventStore.SignalR.dll": "f38387b37c0446195635be0e194dc2d5f61a0c471b4dbf86f9764a01b922eae9"
+      }
+    },
+    {
+      "label": "package-transport-final",
+      "cwd": "${REPO}",
+      "command": [
+        "dotnet",
+        "${REPO}/tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll",
+        "-class",
+        "*ProjectionTransportPackageTests",
+        "-result-xml",
+        "/tmp/review3-package-transport-final.xml"
+      ],
+      "exitCode": 0,
+      "summary": [
+        {
+          "environment": "64-bit (x64) .NET 10.0.14 [collection-per-class, parallel (collections, 14 threads)]",
+          "id": "46d43d44-9077-4935-8e57-c2f0709913b1",
+          "name": "${REPO}/tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll",
+          "run-date": "2026-11-03",
+          "run-time": "22:19:50",
+          "start-rtf": "2026-11-03T22:19:50.3978703+00:00",
+          "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+          "target-framework": ".NETCoreApp,Version=v10.0",
+          "errors": "0",
+          "failed": "0",
+          "finish-rtf": "2026-11-03T22:19:50.8177356+00:00",
+          "not-run": "0",
+          "passed": "3",
+          "skipped": "0",
+          "time": "0.420",
+          "time-rtf": "00:00:00.4200000",
+          "total": "3"
+        }
+      ],
+      "fileSha256": {
+        "tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll": "7312e563053e2e4cf91e61b3b3faef6c001d4ed7244d37dc4aae03dc4d707e36",
+        "tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.EventStore.SignalR.dll": "f38387b37c0446195635be0e194dc2d5f61a0c471b4dbf86f9764a01b922eae9",
+        "tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.dll": "35ff52b103f99c08f0739252ffccbd96e71d40d4ddd6d330dcaba39cd71a9b4f"
+      },
+      "dependencyTypes": {
+        "Hexalith.EventStore.Client/4.0.4": "package",
+        "Hexalith.EventStore.Contracts/4.0.4": "package",
+        "Hexalith.EventStore.SignalR/4.0.4": "package",
+        "Hexalith.FrontComposer.Contracts/4.7.5": "package",
+        "Hexalith.FrontComposer.Contracts.UI/4.7.5": "package",
+        "Hexalith.FrontComposer.Mcp/4.7.5": "package",
+        "Hexalith.FrontComposer.Schema/4.7.5": "package",
+        "Hexalith.FrontComposer.Shell/4.7.5": "package"
+      }
+    }
+  ],
+  "sourceSha256": {
+    "references/Hexalith.EventStore/src/Hexalith.EventStore.SignalR/EventStoreSignalRClient.cs": "1c5f23a2c6c4a94f449c1182bb49fb16dc759cc8d81c1b52bc3513066761243b",
+    "references/Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/SignalR/ProjectionMembershipRecoveryControl.cs": "fae3003bd429d2cfe7531c8d7a34105fe4d46f9afe3e3fbeaf268aebd40c77d1",
+    "references/Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/SignalR/ProjectionMembershipTransportTests.cs": "29f8b1b1708fc68d41dd5e265331b63f1275893222d5dee4829e6611c0028c0c",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/MemoriesAuthoritativePersistence.cs": "bd94b91619aa30cfc2be20e48c4c56c55112dcaef8484c098ffcb8fca93e02c3",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/MemoriesAuthoritativePersistenceTests.cs": "cfac108fbe4be83b9766f4502e2985b4890bda36bc3866fecf107acbde98564a",
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeTests.cs": "4c86a108f8acbfed9e4fd61f931d5bc4a0dee70c6c5f67c95e5c189de0c58788",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs": "2eadd27996c817917ad8dc3ed3792fef49b6e9a4b76f209b093dde3a1509d191",
+    "tests/Hexalith.Parties.UI.Tests/ProjectionTransportPackageTests.cs": "025d7afd4d8d6e0e49a8e510ae7a74fdad619453ee9f08821e896e2cccfe8e68",
+    "tests/Hexalith.Parties.UI.Tests/PackageProjectionHub.cs": "00507a6fb395d96d69857ebd343af32105185b48cf4e51fca097a190023f346d",
+    "tests/Hexalith.Parties.UI.Tests/PackageProjectionBarrier.cs": "2a626137dfbde18c564b62a23d897a293acc549d189d06773da00f82365d275d",
+    "tests/README.md": "ad7b91bcb9887cd02a242b5b7939a5748dfe73a81471dafb5b2ee4ea4a29b068"
+  },
+  "runtimeDiscovery": {
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "-list",
+      "tests",
+      "-method",
+      "*SelectedMemories*"
+    ],
+    "exitCode": 0,
+    "originalFullFact": "SelectedMemoriesIngestionAndCleanupPersistAcrossRestart",
+    "focusedFact": "SelectedMemoriesRefreshAndCleanupPersistAcrossClientRecreation"
+  },
+  "supersededPackageControl": "HubCallerContext.Abort sent a terminal close; the initial reconnect control timed out. The fixture now aborts the actual HTTP transport, and all three final published-package controls pass.",
+  "diagnosticContract": "Capture cancellation is cooperative. Actual capture completion/cleanup is awaited before receipt persistence receives a fresh cancellation budget; arbitrary uncooperative delegates are not claimed to terminate."
+}

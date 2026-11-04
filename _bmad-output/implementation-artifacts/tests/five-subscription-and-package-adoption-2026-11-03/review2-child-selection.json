@@ -1,0 +1,74 @@
+[
+  {
+    "label": "sdk-artifacts-rid",
+    "evaluations": [
+      {
+        "command": [
+          "dotnet",
+          "msbuild",
+          "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+          "-nologo",
+          "-p:Configuration=Debug",
+          "-p:UseArtifactsOutput=true",
+          "-p:ArtifactsPath=/tmp/rederive-custom-artifacts",
+          "-p:RuntimeIdentifier=linux-x64",
+          "-t:ResolveMemoryRuntimeChildTargetPath",
+          "-getProperty:_MemoryRuntimeChildPath"
+        ],
+        "exitCode": 0,
+        "output": "/tmp/rederive-custom-artifacts/bin/Hexalith.Parties.Tests/debug_linux-x64/Hexalith.Parties.Tests.dll"
+      },
+      {
+        "command": [
+          "dotnet",
+          "msbuild",
+          "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+          "-nologo",
+          "-p:Configuration=Debug",
+          "-p:UseArtifactsOutput=true",
+          "-p:ArtifactsPath=/tmp/rederive-custom-artifacts",
+          "-p:RuntimeIdentifier=linux-x64",
+          "-t:GetTargetPath",
+          "-getProperty:TargetPath"
+        ],
+        "exitCode": 0,
+        "output": "/tmp/rederive-custom-artifacts/bin/Hexalith.Parties.Tests/debug_linux-x64/Hexalith.Parties.Tests.dll"
+      }
+    ],
+    "matches": true
+  },
+  {
+    "label": "output-path",
+    "evaluations": [
+      {
+        "command": [
+          "dotnet",
+          "msbuild",
+          "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+          "-nologo",
+          "-p:Configuration=Debug",
+          "-p:OutputPath=/tmp/rederive-child-output/",
+          "-t:ResolveMemoryRuntimeChildTargetPath",
+          "-getProperty:_MemoryRuntimeChildPath"
+        ],
+        "exitCode": 0,
+        "output": "/tmp/rederive-child-output/Hexalith.Parties.Tests.dll"
+      },
+      {
+        "command": [
+          "dotnet",
+          "msbuild",
+          "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+          "-nologo",
+          "-p:Configuration=Debug",
+          "-p:OutputPath=/tmp/rederive-child-output/",
+          "-t:GetTargetPath",
+          "-getProperty:TargetPath"
+        ],
+        "exitCode": 0,
+        "output": "/tmp/rederive-child-output/Hexalith.Parties.Tests.dll"
+      }
+    ],
+    "matches": true
+  }
+]

@@ -5,6 +5,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Hexalith.Parties\Hexalith.Parties.csproj" />
+    <ProjectReference Include="../Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\src\Hexalith.Parties.Client\Hexalith.Parties.Client.csproj" />
     <ProjectReference Include="..\..\src\Hexalith.Parties.Testing\Hexalith.Parties.Testing.csproj" />
     <ProjectReference Include="../Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj" Aliases="adminui" />

@@ -1,0 +1,47 @@
+[
+  {
+    "label": "warning-policy",
+    "command": [
+      "bash",
+      "scripts/check-no-warning-override.sh"
+    ],
+    "cwd": "${REPO}",
+    "exitCode": 0,
+    "outputLines": 1
+  },
+  {
+    "label": "parties-plain-whitespace",
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "cwd": "${REPO}",
+    "exitCode": 2,
+    "outputLines": 474
+  },
+  {
+    "label": "parties-crlf-whitespace",
+    "command": [
+      "git",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "diff",
+      "--check"
+    ],
+    "cwd": "${REPO}",
+    "exitCode": 0,
+    "outputLines": 0
+  },
+  {
+    "label": "eventstore-whitespace",
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "cwd": "${REPO}/references/Hexalith.EventStore",
+    "exitCode": 0,
+    "outputLines": 0
+  }
+]

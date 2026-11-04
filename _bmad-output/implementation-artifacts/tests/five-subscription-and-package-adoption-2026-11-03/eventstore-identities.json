@@ -1,0 +1,25 @@
+{
+  "ownerBaseCommit": "a9205f511b4f96b5daf94d65369d6dee63e0c623",
+  "qualification": "Uncommitted owner worktree; actual executed Debug test-output binaries; no transport publication claim.",
+  "sourceSha256": {
+    "src/Hexalith.EventStore.SignalR/EventStoreSignalRClient.cs": "c5041a75f5de418fcbfa7a9ec6066cadc953c4d5be251c9364474e98cbda6bc3",
+    "src/Hexalith.EventStore.SignalR/ProjectionCallback.cs": "1335642e6a4b6ae9d9992920a1ac6d8165fb61240c498c0d742a2fd81a84bc61",
+    "src/Hexalith.EventStore/SignalRHub/ProjectionChangedHub.cs": "dda7336badfd98232af49cf15c7ab61dc642f26b20840a5b3a41aebb192b33c9",
+    "tests/Hexalith.EventStore.Server.Tests/Hexalith.EventStore.Server.Tests.csproj": "19eec457f80f8153a50aea7258c756aa785ae7904228ec0f3f47bbc430b8d2f8",
+    "tests/Hexalith.EventStore.Server.Tests/SignalR/ProjectionChangedHubTests.cs": "665a7f5b2fabccbb5961c550e21da45d607fb64253be6cf5c65cd73e63a543ac",
+    "tests/Hexalith.EventStore.SignalR.Tests/EventStoreSignalRClientTests.cs": "c131cdafbcdb9a015e7c3d307a25c3914d8572a617005de20e0a43ae979a232c",
+    "src/Hexalith.EventStore.SignalR/IProjectionCallback.cs": "db9ffd3755e292d7a7ebf0d460c5dcf521bf4138609b12b23db86e0cec80a721",
+    "src/Hexalith.EventStore/SignalRHub/ProjectionMembershipState.cs": "e791b068073c4e2dd3fbf784b4c2897ef7018ef35bf296e26cee9a3f4c00b44a",
+    "tests/Hexalith.EventStore.Server.Tests/SignalR/FaultingProjectionGroupManager.cs": "95ca87bea98d5caee7533c340cb9a530ed709e1bf8bcea93ed5081e075ff23b2",
+    "tests/Hexalith.EventStore.Server.Tests/SignalR/ProjectionGroupFailure.cs": "eb4f94c87daf51f5fcfc5b6cc83f9d4845748aaf8f0bb11981f12a8431592792",
+    "tests/Hexalith.EventStore.Server.Tests/SignalR/ProjectionMembershipBarrier.cs": "c0d3b1cbe9b4e74d0b1c79b1ca1be2c5675ad8b275c954554f05979d05ecf82f",
+    "tests/Hexalith.EventStore.Server.Tests/SignalR/ProjectionMembershipTransportTests.cs": "2721e4b85abc6669fb50888ab7e4757756940d8c0c44bb6cdd97a96dd6ada819"
+  },
+  "executedBinariesSha256": {
+    "references/Hexalith.EventStore/tests/Hexalith.EventStore.SignalR.Tests/bin/Debug/net10.0/Hexalith.EventStore.SignalR.Tests.dll": "b2983ee6a21a7ec8f050c330e0ce22e47bc337c919c038da07a2b849276e72be",
+    "references/Hexalith.EventStore/tests/Hexalith.EventStore.SignalR.Tests/bin/Debug/net10.0/Hexalith.EventStore.SignalR.dll": "fcff0935eb75a2ed8faa9907bbc7f416dc0ec7e1f7c9a94501e492334b6c1a2e",
+    "references/Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/bin/Debug/net10.0/Hexalith.EventStore.Server.Tests.dll": "63db3fb4f45e954bde2cbbde5e0fc3cf05be9b3e9a43a33754486f29bc4e82ae",
+    "references/Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/bin/Debug/net10.0/Hexalith.EventStore.SignalR.dll": "fcff0935eb75a2ed8faa9907bbc7f416dc0ec7e1f7c9a94501e492334b6c1a2e",
+    "references/Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/bin/Debug/net10.0/Hexalith.EventStore.Gateway.dll": "f5f0db8d4b23a9ee0e9e8f05c7342d1c78c047e6b74f296471d96baac12aeba4"
+  }
+}

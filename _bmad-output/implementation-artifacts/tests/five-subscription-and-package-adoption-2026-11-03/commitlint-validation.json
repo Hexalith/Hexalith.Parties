@@ -1,0 +1,67 @@
+[
+  {
+    "label": "owner",
+    "cwd": "references/Hexalith.EventStore",
+    "command": [
+      "node_modules/.bin/commitlint",
+      "--edit",
+      "/tmp/final-five-owner-message.txt",
+      "--verbose"
+    ],
+    "candidate": "fix(signalr): reconcile subscription membership\n",
+    "exitCode": 0,
+    "output": "\u29d7   --- input ---\nfix(signalr): reconcile subscription membership\n\u2714   found 0 problems, 0 warnings\n"
+  },
+  {
+    "label": "owner-integration",
+    "cwd": "references/Hexalith.EventStore",
+    "command": [
+      "node_modules/.bin/commitlint",
+      "--edit",
+      "/tmp/final-five-owner-integration-message.txt",
+      "--verbose"
+    ],
+    "candidate": "fix(signalr): integrate membership repair on main\n",
+    "exitCode": 0,
+    "output": "\u29d7   --- input ---\nfix(signalr): integrate membership repair on main\n\u2714   found 0 problems, 0 warnings\n"
+  },
+  {
+    "label": "consumer",
+    "cwd": ".",
+    "command": [
+      "node_modules/.bin/commitlint",
+      "--edit",
+      "/tmp/final-five-consumer-message.txt",
+      "--verbose"
+    ],
+    "candidate": "fix: qualify reconciliation and refresh controls\n",
+    "exitCode": 0,
+    "output": "\u29d7   --- input ---\nfix: qualify reconciliation and refresh controls\n\u2714   found 0 problems, 0 warnings\n"
+  },
+  {
+    "label": "source-selection",
+    "cwd": ".",
+    "command": [
+      "node_modules/.bin/commitlint",
+      "--edit",
+      "/tmp/final-five-source-selection-message.txt",
+      "--verbose"
+    ],
+    "candidate": "build: select subscription safety source\n",
+    "exitCode": 0,
+    "output": "\u29d7   --- input ---\nbuild: select subscription safety source\n\u2714   found 0 problems, 0 warnings\n"
+  },
+  {
+    "label": "completion",
+    "cwd": ".",
+    "command": [
+      "node_modules/.bin/commitlint",
+      "--edit",
+      "/tmp/final-five-completion-message.txt",
+      "--verbose"
+    ],
+    "candidate": "docs: record subscription verification results\n",
+    "exitCode": 0,
+    "output": "\u29d7   --- input ---\ndocs: record subscription verification results\n\u2714   found 0 problems, 0 warnings\n"
+  }
+]
