@@ -592,3 +592,10 @@ references/Hexalith.EventStore|d9498bb15dd80de84941a43db4d42b583600904b|validate
 references/Hexalith.Memories|a2f1d6a883ce592499638abad11cf9770090ad7f|validated-advance|origin/main@a2f1d6a883ce|codex-agent|2026-11-05
 references/Hexalith.Platform|692cd6d025032f04f68ce302f02839d746f85ee9|validated-advance|origin/main@692cd6d02503|codex-agent|2026-11-05
 references/Hexalith.Tenants|8e20524574901d71ad5f4876804c64c3c6c87b88|validated-advance|origin/main@8e2052457490|codex-agent|2026-11-05
+
+# --- 2026-11-05 released composition tuple and reconciled owner tests.
+#     These are exact pushed source selections. Platform v1.4.1 passed
+#     347/347 tuple cases; later documentation-only main692cd6d0 remains
+#     preserved on its branch. Runtime and publication checks stay required.
+references/Hexalith.EventStore|0245c39c2884d4859cb4bce75aeeb209ef70ec74|validated-advance|origin/main@0245c39c2884|codex-agent|2026-11-05
+references/Hexalith.Platform|4afa0421794f7e6f3fcbd5d84664eae206e9daa5|validated-advance|v1.4.1@4afa0421794f|codex-agent|2026-11-05

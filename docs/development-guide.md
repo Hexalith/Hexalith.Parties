@@ -64,7 +64,7 @@ Wait for the tool to report all seven servers ready: `parties`, `eventstore`,
 exact run with `dotnet tool run hexalith-module -- down --manifest module/hexalith.module-manifest.v2.json --run-id <run-id>`.
 
 Set `HEXALITH_DAPR_HOME` to a prepared absolute isolated Dapr home as described in
-the [pinned Platform prerequisites](https://github.com/Hexalith/Hexalith.Platform/blob/ae7516ee6961dd31a5e319be59ead76449ab04a0/README.md#run-and-debug-a-technical-module).
+the [pinned Platform v1.4.1 prerequisites](https://github.com/Hexalith/Hexalith.Platform/blob/4afa0421794f7e6f3fcbd5d84664eae206e9daa5/README.md#run-and-debug-a-technical-module).
 An unset or unprepared home is refused before launch. Public traffic enters through
 EventStore; service health endpoints remain `/ready`, `/health` and `/alive`.
 
