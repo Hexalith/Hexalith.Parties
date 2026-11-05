@@ -64,7 +64,7 @@ Wait for the tool to report all seven servers ready: `parties`, `eventstore`,
 exact run with `dotnet tool run hexalith-module -- down --manifest module/hexalith.module-manifest.v2.json --run-id <run-id>`.
 
 Set `HEXALITH_DAPR_HOME` to a prepared absolute isolated Dapr home as described in
-the [pinned Platform prerequisites](https://github.com/Hexalith/Hexalith.Platform/blob/17179e59843ee8cfb35892a74a2c18d3136fc9cf/README.md#run-and-debug-a-technical-module).
+the [pinned Platform prerequisites](https://github.com/Hexalith/Hexalith.Platform/blob/ae7516ee6961dd31a5e319be59ead76449ab04a0/README.md#run-and-debug-a-technical-module).
 An unset or unprepared home is refused before launch. Public traffic enters through
 EventStore; service health endpoints remain `/ready`, `/health` and `/alive`.
 
@@ -267,7 +267,7 @@ commit's Builds gitlink. Stage selected source checkouts consistently and commit
 the Platform selection before retrying a stale-catalog diagnostic. Runtime
 topology qualification remains separate from successful build preparation.
 
-Use pinned module tool 4.41.1 with Aspire CLI 13.6.4 from an independent Parties
+Use pinned module tool 4.44.3 with Aspire CLI 13.6.4 from an independent Parties
 checkout. Initialize only its direct references, including Platform, Memories and McpCli. The tool selects the
 seven-server dependency closure and emits a run ID, mapping and diagnostics.
 Break in `MvpComplianceWarningMiddleware.InvokeAsync` on `/ready`; a disposable
