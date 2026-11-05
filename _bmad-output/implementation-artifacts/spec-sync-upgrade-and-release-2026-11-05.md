@@ -194,6 +194,19 @@ All three context-free layers launched before collection; all completed before t
 
 The edge-case layer returned no additional findings. Shared helper/test/production/workflow/docs changes still require a new real L and M before hosted verification; no passing257/349 or runtime acceptance is inferred from local fixtures.
 
+### McpCli catalog-reader closure review (three independent layers, 2026-11-05)
+
+All three context-free layers were launched before collection and completed before this triage. Blind reported six findings; edge-case and verification-gap layers returned none. The exact reviewed diff is 30,063 bytes, SHA256 `64041e3c68ba16c804aca4f4cb476f2f31960a698431ee1c1f225a378ee6bb20`. Later clarification establishes that the blind compiler probes used generic SDK projects rather than the actual fresh Release reader path.
+
+- MCB-01: medium / patch — On Linux the new `*.cs` enumeration misses uppercase `.CS`, while MSBuild's default compile glob includes it. This is the same extra-source mutation domain the new guard/tests already claim to refuse. Enumerate extensions case-insensitively and exercise the actual preparation guard with an uppercase extra source.
+- MCB-02: false — The reported prepopulated `obj/Debug` compiler probe does not enter `GenerateAsync`: its private reader directory must be newly created, occupied directories are refused, ordinary restore does not generate stale compiler input, and the real build uses Release. The reviewer explicitly confirmed no actual-reader reproduction or normal input-producing operation. Authenticated SDK/package generation is an existing trust boundary; do not add a generic generated-code attestation subsystem for this unestablished path.
+- MCB-03: medium / patch — The copied input baseline is read after writes and is compared with itself, rather than requiring Program/cohort/global-policy bytes to equal their authenticated sources. Keep expected digests from immutable in-memory source/transformation bytes and compare actual copies to them before compilation; include generated project/bindings instead of blessing an altered copy during baseline capture.
+- MCB-04: medium / patch — The claim about arbitrary changed NuGet targets is refuted by `RequireCoverage`, which verifies every cached archive entry and consumed build/target asset after restore; canonical Python preparation also seals its selected catalog and overlay. A bounded reader-local gap remains: its root props can resolve a different sibling Builds catalog, and inherited extension/ancestry imports are not locally bound. Add the actual direct recorded Builds catalog to reader provenance, force that selected path, and isolate unnecessary private-reader extension/automatic ancestry hooks. Preserve the existing authenticated package graph; no broad compiler-hermeticity redesign is required.
+- MCB-05: medium / patch — An altered source introduced by the build can reach generation before the final refusal. Repeat the immutable input/extra-source check immediately after build and before launching the reader, and assert that a build-phase mutation never reaches generation.
+- MCB-06: false — The controlled success fixture intentionally tests input/hash/evidence behavior and makes no actual compiler or runtime acceptance claim. The existing mandatory native 21-vector and independent Aspire lanes invoke the actual `GenerateAsync`/dotnet path with the real templates; those remain required on final adopted source. Verification-gap review independently found those controls present. A focused measured compile smoke may validate new import-isolation flags, but no duplicate unit fixture is required to pretend the already-pending live qualification has happened.
+
+The same coding child will patch the four verified groups. The public Parties identity/adoption remains dependent on genuine publication; no artifact approval, conformance or runtime result is inferred here.
+
 ## Verification
 
 - Official Microsoft SDK metadata, NuGet flat-container indexes and npm registry audit.
@@ -208,3 +221,121 @@ The edge-case layer returned no additional findings. Shared helper/test/producti
 - Same changed-code legacy source `0b6635d97c4959b09ba90b8c2df8c48f40525691` differs only in the eight permitted metadata paths; actual Git-source equivalence was verified. Its full hosted run passed 349/349 with zero failures or skips in run 42091454297. Genuine Platform v1.5.0 was then created and its exact tag/source verified at `8946209702a6c1c48239f206dd452ae7d729a307`.
 - Root adoption preparation passed 70 workflow tests and 18 source-selection/refusal controls; both relevant Release builds had zero warnings or errors. Three HEAD-bound fitness checks require the actual atomic pointer commit.
 - External Builds source `c58c3cb78de3cb6cc10ff2924c56e7f70f359997` remains preserved upstream. Release 42085923924 correctly refused because another session moved main back to the released source during qualification, then restored it. No 4.44.5 tag or publication was inferred, and no source guard was weakened.
+
+### McpCli catalog-reader closure preparation (2026-11-05)
+
+- Frozen nine-file owning McpCli patch at baseline `aa2845edbea23444a1d362060b8d0f5dc05a132e` copies the real selected `PublishedCatalogArtifactCohort.cs` alongside Program/project, binds all three original templates through the online audit inputs, verifies original/copied bytes before compilation and after generation, rejects additional C# sources, and retains the source digests in safe preparation evidence.
+- The ordinary reader request still omits private-purpose/proof and public full-cohort authority. All 47 existing dependency/adoption/vector/plan/policy inputs remain byte-identical; future Parties publication/adoption and actual 21-vector plus independent Aspire smoke validation remain pending.
+- Relevant Release build had zero warnings/errors, 42 .NET controls and 3 focused Python controls passed. Evidence: `mcpcli-catalog-closure-receipt.json`; reviewed immutable diff SHA256 `64041e3c68ba16c804aca4f4cb476f2f31960a698431ee1c1f225a378ee6bb20`. These local controls do not claim final public-artifact or runtime qualification.
+
+### Native startup diagnosis and genuine Memories prerequisite (2026-11-05)
+
+- Root adoption `5c11935f2241d46838a482939bc9a3ae06cda86f` passed its actual three HEAD-bound fitness cases and both gitlink gates before push. Hosted CI42095967132 then exposed a real verifier-fixture timing defect: parent10s/child15s/completion20s clocks conflicted during parallel PowerShell startup. The unchanged binary deterministically failed both original contention cases under an11s delayed peer.
+- Root repair `b74a12c54162dbc890accb483c6f97e3bf618eab` uses one bounded startup deadline and begins completion timing after release. Its affected class18/18 and repeated delayed contention6/6 passed locally; fresh CI42099216118 verified all581 Ci.Tests cases, including the three reservation cases. All seven independent jobs, CodeQL, commitlint and range gate passed. Native integration correctly refused startup after600s; no native success or functional credit was inferred.
+- Exact clean R5 local reproduction measured both pinned Memories3.0.23 hosts failing at full-catalog decode with `RouteCatalogValidationException` / `invalid-json-or-closed-schema`. Both actual dependency files select SDK3.132.2, whose closed schema lacks the three `execution.compatibilityProjectionActorTypes` fields emitted by the SDK4.1 Parties declarations. Activation v2 support alone was insufficient. The measured receipt is `runtime-r5-diagnosis-cleanup-receipt.json`; exact down verified every owned inventory empty, no unverified discovery and all five ambient containers preserved. The independent failed local attempt also cleaned up exactly.
+- Genuine Memories3.0.24 at source `859680b38a77f04cc8f81ab7a5fe7f40a617cc2a` completed release42108808279 at21:17:03Z after exact-source CI/protection preflight. The actual protected production deployment was approved under explicit user authorization; all automated gates remained enabled. All ten public NuGet indexes, downloads, signatures and repository commits were independently verified. All five actual OCI indexes, both Linux architectures and source/version labels were independently verified against the immutable published evidence. SDK measurements inside the two new core images remain pending before tuple adoption.
+- The new release does not change any old signed artifact or historical image map. Next adoption must add its real catalog/source/snapshot authority, qualify the exact next producer, and update only the current reference cohort while retaining the original349-case same-code legacy lane. Parties publication remains pending fresh native/effects/cleanup success.
+
+
+### Published reference refresh after the native startup diagnosis
+
+The native Parties startup failure was traced to the published Memories
+3.0.23 images: their SDK 3.132.2 closed-schema reader rejected the actual
+SDK 4.1 catalog field. Both owned diagnostic runs were cleaned up; no
+passing native qualification was claimed from those failed runs.
+
+- Genuine Memories v3.0.24 at
+  `859680b38a77f04cc8f81ab7a5fe7f40a617cc2a` was published by run
+  `42108808279`. All ten signed public NuGets and five dual-architecture
+  images were independently verified. Both core images contain SDK 4.1.0;
+  eight DLL bodies match the official SDK archives. Inspection containers
+  were never started and were removed; five pre-existing containers remain.
+- Genuine McpCli v2.0.1 at
+  `aa2845edbea23444a1d362060b8d0f5dc05a132e` is independently indexed,
+  downloaded, source-checked and signature-verified for both packages. The
+  actual API comparison against Abstractions 2.0.0 reports no API changes.
+- Genuine Builds v4.44.5 at
+  `afb2d4fd556b5d30a92734d21cb62bfe946ae958` passed exact-source CI
+  `42115650268` and release `42118761518`. Both signed NuGets, catalog,
+  inventory and paired Tooling/AppHost bodies were independently verified.
+  Family-local live audits preserve unrelated package rows and history.
+- Incoming EventStore changes were integrated, then the test-only ephemeral
+  credential repair was pushed at
+  `eff9f6947a3762da61d10642f20d002123ccbe6a`. The unchanged secrets scanner
+  passed 274 cases, native-source admission passed 11 cases, and its main
+  CI `42116940835` and integration `42116939556` passed. All eight
+  exact-source workflows are verified successful.
+- Incoming Tenants changes were integrated. A rerun isolated an incorrect
+  production dependency assertion; source qualification and all seven
+  independent jobs passed on the unchanged incoming source. The subsequent
+  two-test-file repair at `cf36618a2c27b5722a1ff811cfbbce4528c3c105`
+  validates the exact Debug/source/private-opt-in helper edge and selects
+  that same source helper in its test project only under the exact opt-in.
+  Governance 485/485, default Debug/source boundaries 2/2, explicit private
+  boundaries 3/3, and five actual MSBuild selection variants passed. Full
+  CI `42121395272` and source qualification `42121394551` remain pending.
+- Platform current source `f756111d2ed0f414268e882deb5c6da7a924576a`
+  and same-code historical source
+  `dd54773c34cfb55b96c4ea0680eb1f2e9ecf691a` are committed and pushed.
+  Source equivalence passed with exactly eight permitted metadata paths;
+  the original 349-control manifest bytes remain unchanged. The current
+  private purpose selects measured Memories 3.0.24/McpCli 2.0.1 bodies
+  and genuine Builds 4.44.5, preserving every older public cohort and
+  producer pair. Component 14/14, tuple 19/19 and helper 9/9 checks passed.
+  Current/legacy CI `42122962231` and catalog CI `42122962229` are pending;
+  the two actual reader controls will be verified from the hosted current
+  artifact rather than initializing additional local nested checkouts.
+
+The original nine-file McpCli closure repair remains preserved while the
+actual new Parties publication is pending. Parties has no new release or
+NuGet publication yet at this checkpoint. The remaining acceptance still
+requires the genuine qualified Platform release, atomic root adoption,
+passing native cases with persisted effects and cleanup, actual Parties
+release/publication verification, and the planned public consumer refresh.
+
+
+### Owner build catalog consistency follow-up
+
+Platform run `42122962231` failed after 244 passing cases. Both exact
+current reader cases failed in the owner Release build before proof or
+reader issuance; their detailed temporary build logs had been removed.
+No actual HXW012 code was retained, so that code is not claimed as an
+observed CI diagnostic. The published catalog matrix passed all five rows.
+
+The private build omitted the existing early catalog flag used for model
+builds. The new single functional argument makes owner runtime/package
+preparation consume the same pinned catalog. Bounded finite phase/status
+and diagnostic-code output now survives a preparation failure without
+exposing private paths or raw process output. Component 15/15 and helper
+9/9 checks pass; Release has zero warnings. One independent diagnostic
+fact raises current controls to 259; historical controls remain 349 with
+the same original manifest bytes.
+
+Current source `7122fa4d056f0f9edb74f98d66aa41115cfdc702` and historical
+source `9eb0521db5e9895cc126baa545f350031d6cd374` are pushed, with exact
+eight-path source equivalence verified. Tuple run `42126815045` and
+catalog run `42126815444` are pending; both actual reader cases must pass
+in that hosted run before any Platform release.
+
+Tenants source `cf36618a2c27b5722a1ff811cfbbce4528c3c105` now has all
+five exact-source workflows verified successful, including full main CI,
+Aspire and source-reference qualification. The optional performance job
+was skipped by its existing condition; no performance execution is claimed.
+
+
+### Qualified Platform publication for final root adoption
+
+Run `42126815045` passed both actual source-bound reader cases and all
+259 current controls, followed by the original 349 historical controls.
+Both independently downloaded artifact digests, every result group,
+source/run/attempt bindings, immutable legacy manifest and eight-path
+source equivalence are verified. Catalog run `42126815444` passed all five
+rows. The early catalog argument resolves the observed owner preparation
+failures; no unretained specific compiler/error code is claimed.
+
+Genuine Platform v1.5.1 was published at 2026-11-05T23:29:08Z and its tag
+was independently resolved to `7122fa4d056f0f9edb74f98d66aa41115cfdc702`.
+Final root adoption uses this qualified publication with Builds v4.44.5,
+SDK 4.1.0, Tenants 7.0.4, Memories 3.0.24 and McpCli.Abstractions 2.0.1.
+Root native qualification, actual Parties release and eleven-package
+publication verification remain pending at this checkpoint.

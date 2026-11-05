@@ -616,3 +616,23 @@ references/Hexalith.Memories|859680b38a77f04cc8f81ab7a5fe7f40a617cc2a|validated-
 references/Hexalith.Platform|8946209702a6c1c48239f206dd452ae7d729a307|validated-advance|v1.5.0|codex-agent|2026-11-05
 references/Hexalith.PolymorphicSerializations|bce4eb9f45c6b131b960ab4fa39e50ff01e51960|validated-advance|v1.19.8-1-gbce4eb9f|codex-agent|2026-11-05
 references/Hexalith.Tenants|8e20524574901d71ad5f4876804c64c3c6c87b88|validated-advance|v7.0.4|codex-agent|2026-11-05
+
+# --- 2026-11-06 genuine reference-runtime tuple adoption.
+#     codex-agent records all ten measured source selections under explicit user
+#     delegation. Platform v1.5.1 / Builds v4.44.5 use actual published Memory
+#     v3.0.24 (SDK 4.1) and McpCli v2.0.1 references. Tuple CI 42126815045
+#     passed 259 current and 349 same-code legacy controls; catalog CI
+#     42126815444 passed all five rows.
+#     Source selection grants no human ratification, native runtime, candidate,
+#     historical parity, custody or rollback acceptance. Parties release remains
+#     pending its own exact-source full CI, native effects and verified cleanup.
+references/Hexalith.AI.Tools|1745b6663ad32bb1288167135ed0f979366c53a0|validated-advance|1745b666|codex-agent|2026-11-06
+references/Hexalith.Builds|afb2d4fd556b5d30a92734d21cb62bfe946ae958|validated-advance|v4.44.5|codex-agent|2026-11-06
+references/Hexalith.Commons|11555ace9efcae2928a00122dcba91243e5a8a1a|validated-advance|v2.30.10|codex-agent|2026-11-06
+references/Hexalith.EventStore|eff9f6947a3762da61d10642f20d002123ccbe6a|validated-advance|v4.1.0-31-geff9f694|codex-agent|2026-11-06
+references/Hexalith.FrontComposer|a1155aecb636348ce11de2d78e5b7a071a8c9c64|validated-advance|v4.7.6-7-ga1155aec|codex-agent|2026-11-06
+references/Hexalith.McpCli|0b526ab0efea4c4bfcc817d9009a4d4fddb1a7a8|validated-advance|v2.0.1-1-g0b526ab0|codex-agent|2026-11-06
+references/Hexalith.Memories|859680b38a77f04cc8f81ab7a5fe7f40a617cc2a|validated-advance|v3.0.24|codex-agent|2026-11-06
+references/Hexalith.Platform|7122fa4d056f0f9edb74f98d66aa41115cfdc702|validated-advance|v1.5.1|codex-agent|2026-11-06
+references/Hexalith.PolymorphicSerializations|bce4eb9f45c6b131b960ab4fa39e50ff01e51960|validated-advance|v1.19.8-1-gbce4eb9f|codex-agent|2026-11-06
+references/Hexalith.Tenants|cf36618a2c27b5722a1ff811cfbbce4528c3c105|validated-advance|v7.0.4-8-gcf36618a|codex-agent|2026-11-06

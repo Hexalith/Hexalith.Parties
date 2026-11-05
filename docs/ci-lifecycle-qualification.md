@@ -3,10 +3,13 @@
 This registered manual workflow remains a **baseline-only** diagnostic for
 Story 2.8. It grants no candidate acceptance or loaded-backend identity credit.
 The ordinary and manual baseline callers select the same reviewed Builds
-`5fa2b97c8b22047c2c33e2c9f7017fd5d604c9ef` with genuine published tool 4.44.4
-and genuine released Platform v1.5.0 at
-`8946209702a6c1c48239f206dd452ae7d729a307`. Atomic root adoption still requires
-matching committed gitlinks. The
+`afb2d4fd556b5d30a92734d21cb62bfe946ae958` with genuine published tool 4.44.5
+and genuine released Platform v1.5.1 at
+`7122fa4d056f0f9edb74f98d66aa41115cfdc702`. Atomic root adoption still requires
+matching committed gitlinks. Exact-source Platform tuple CI 42126815045
+passed 259 current and 349 same-source legacy controls, and catalog CI
+42126815444 passed all five rows before publication. These results do not
+qualify a manual lifecycle run. The
 ordinary public `platform-package` baseline remains held until genuine new
 Parties publication and finite public Parties/Tenants7.0.4 cohort admission;
 the separate current-owner purpose cannot substitute for that authority.

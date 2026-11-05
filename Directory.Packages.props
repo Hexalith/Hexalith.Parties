@@ -14,7 +14,7 @@
     <!-- Shared theme accessibility correction, qualified through the package browser gate. -->
     <HexalithFrontComposerVersion Condition="'$(HexalithFrontComposerVersion)' == '' and !Exists('$(Hexalith1BuildPackageProps)')">4.7.6</HexalithFrontComposerVersion>
     <!-- Published recovery/catalog compatibility fixes, before shared defaults. -->
-    <HexalithMemoriesVersion Condition="'$(HexalithMemoriesVersion)' == '' and !Exists('$(Hexalith1BuildPackageProps)')">3.0.23</HexalithMemoriesVersion>
+    <HexalithMemoriesVersion Condition="'$(HexalithMemoriesVersion)' == '' and !Exists('$(Hexalith1BuildPackageProps)')">3.0.24</HexalithMemoriesVersion>
   </PropertyGroup>
   <!-- Import the required Hexalith.Packages.props file. -->
   <Import Project="$(Hexalith1BuildPackageProps)" Condition="Exists('$(Hexalith1BuildPackageProps)') And '$(HexalithVersionsLoaded)' != 'true'" />

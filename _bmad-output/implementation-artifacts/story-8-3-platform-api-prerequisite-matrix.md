@@ -130,15 +130,27 @@ all six canonical parity receipts remain Unvalidated until actually rerun.
 
 ### Current source observation — 2026-11-05
 
-The active user's synchronization and release request selects genuine released
-Platform v1.5.0 at `8946209702a6c1c48239f206dd452ae7d729a307` with Builds
-v4.44.4 catalog `5fa2b97c8b22047c2c33e2c9f7017fd5d604c9ef` and module CLI
-4.44.4. Builds release 42077837054 and exact-source CI 42073886800 succeeded.
-Platform exact tuple CI 42091454297 passed all 258 current and 349 same-code
-legacy cases with zero skips; catalog CI 42091454274 passed all five rows. These
-owner gates and genuine publication do not replace Parties' own required native
-persisted-effects and cleanup evidence or its atomic root adoption.
-The graph selects EventStore package `4.1.0`, Commons `2.30.10`, PolymorphicSerializations `1.19.8`, FrontComposer `4.7.6`, Memories `3.0.23`, Tenants `7.0.4`, and McpCli `2.0.0`.
+The active user's synchronization and release request prepares genuine Builds
+v4.44.5 catalog `afb2d4fd556b5d30a92734d21cb62bfe946ae958` and module CLI
+4.44.5. Builds release 42118761518 and exact-source CI 42115650268 succeeded.
+Genuine Platform v1.5.1 at
+`7122fa4d056f0f9edb74f98d66aa41115cfdc702` was published on
+2026-11-05 at 23:29:08 UTC after exact-source tuple CI 42126815045 passed
+259 current and 349 same-code legacy controls with zero skips. Catalog CI
+42126815444 passed all five rows. The legacy source
+`9eb0521db5e9895cc126baa545f350031d6cd374` retains the original profile
+`61689f1598dac43a9fa28dcf5319008059e0fea0f1018209b1a8e79e4f63d7b0`;
+source equivalence permits exactly eight metadata paths and grants no binary
+or candidate qualification credit.
+The preceding Platform v1.5.0 at
+`8946209702a6c1c48239f206dd452ae7d729a307` used Builds v4.44.4
+`5fa2b97c8b22047c2c33e2c9f7017fd5d604c9ef`. Its Builds release
+42077837054, source CI 42073886800, Platform tuple CI 42091454297
+(258 current / 349 legacy) and five-row catalog CI 42091454274 remain
+historical receipts; they do not qualify the new reference selection.
+Parties' own required native persisted-effects, cleanup and atomic root adoption
+remain separate obligations.
+The graph selects EventStore package `4.1.0`, Commons `2.30.10`, PolymorphicSerializations `1.19.8`, FrontComposer `4.7.6`, Memories `3.0.24`, Tenants `7.0.4`, and McpCli `2.0.1`.
 The explicit `platform-current-package` purpose measures active Parties Release
 artifacts and genuine public reference families without public-consumer or
 candidate qualification credit. The old ordinary public Parties `3.0.0` /
@@ -155,15 +167,15 @@ all six canonical parity receipts remain Unvalidated until actually rerun.
 | Root dependency | Current source identity | Release use |
 | --- | --- | --- |
 | AI.Tools | `1745b6663ad32bb1288167135ed0f979366c53a0` (`1745b666`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
-| Builds | `5fa2b97c8b22047c2c33e2c9f7017fd5d604c9ef` (`v4.44.4`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| Builds | `afb2d4fd556b5d30a92734d21cb62bfe946ae958` (`v4.44.5`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
 | Commons | `11555ace9efcae2928a00122dcba91243e5a8a1a` (`v2.30.10`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
-| EventStore | `0245c39c2884d4859cb4bce75aeeb209ef70ec74` (`v4.1.0-29-g0245c39c`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| EventStore | `eff9f6947a3762da61d10642f20d002123ccbe6a` (`v4.1.0-31-geff9f694`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
 | FrontComposer | `a1155aecb636348ce11de2d78e5b7a071a8c9c64` (`v4.7.6-7-ga1155aec`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
-| McpCli | `aa2845edbea23444a1d362060b8d0f5dc05a132e` (`v2.0.0-49-gaa2845ed`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
-| Memories | `859680b38a77f04cc8f81ab7a5fe7f40a617cc2a` (`v3.0.23-7-g859680b3`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
-| Platform | `8946209702a6c1c48239f206dd452ae7d729a307` (`v1.5.0`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| McpCli | `0b526ab0efea4c4bfcc817d9009a4d4fddb1a7a8` (`v2.0.1-1-g0b526ab0`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| Memories | `859680b38a77f04cc8f81ab7a5fe7f40a617cc2a` (`v3.0.24`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| Platform | `7122fa4d056f0f9edb74f98d66aa41115cfdc702` (`v1.5.1`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
 | PolymorphicSerializations | `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
-| Tenants | `8e20524574901d71ad5f4876804c64c3c6c87b88` (`v7.0.4`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| Tenants | `cf36618a2c27b5722a1ff811cfbbce4528c3c105` (`v7.0.4-8-gcf36618a`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
 
 ### Historical source observation — 2026-11-04 (full Parties released tuple)
 
@@ -1304,7 +1316,7 @@ The original selection row transcribes the Round 6 reviewer-recorded decision in
 | Subscription safety delegated source (2026-11-03) | EventStore `f213e4115ec23cb736e8aa0113f61b9d4854480c` (`v4.0.4-12-gf213e411`); published EventStore package `4.0.4`. Other root selections and the effective package graph remain as in the preceding owner decision. | codex-agent (explicit user delegation) | 2026-11-03 | **Source-selection and executed transport proof only. Package versions unchanged.** Authorized by the active request to implement five deferred items and push main, then approve and continue. The dated subscription receipt records the scoped tests. Selection does not revalidate historical parity receipts or grant release, deployment, custody, rollback deletion, native replay or full Memories acceptance. |
 | Story 2.8 full Parties released tuple (2026-11-04) | Builds `ae68c59bd2f4145a23ccf68c3711f98eaf62195f` (`v4.44.2`); Platform `338a6afc31850761f49c0de7d399266dd15cfe84` (`v1.3.0`); effective Release packages EventStore `4.0.4`, Commons `2.30.10`, PolymorphicSerializations `1.19.8`, FrontComposer `4.7.6`, Memories `3.0.23`, Tenants `7.0.0`, McpCli `2.0.0`. All other incoming source selections are unchanged. | codex-agent (explicit user delegation) | 2026-11-04 | **Source-selection only.** Every dated human approval and all six Unvalidated parity receipts remain unchanged. Actual Parties native/hosted and manual lifecycle qualification is pending; no new human ratification, package/runtime parity, publication, deployment, custody, rollback deletion or candidate acceptance is claimed. |
 | Synchronized release source selection (2026-11-05) | AI.Tools `1745b6663ad32bb1288167135ed0f979366c53a0` (`1745b666`); Builds `fc2122240a39f03628c04fa8433e5eece90b8b4c` (`v4.44.3`); Commons `11555ace9efcae2928a00122dcba91243e5a8a1a` (`v2.30.10`); EventStore `0245c39c2884d4859cb4bce75aeeb209ef70ec74` (`v4.1.0-29-g0245c39c`); FrontComposer `4c24c287cde520631e960a322413bee804f7c3d4` (`v4.7.6-3-g4c24c287`); McpCli `f24266b628a2abcfbdc9f0d064e0e4c324d8e7c8` (`v2.0.0-45-gf24266b6`); Memories `a2f1d6a883ce592499638abad11cf9770090ad7f` (`v3.0.23-6-ga2f1d6a8`); Platform `4afa0421794f7e6f3fcbd5d84664eae206e9daa5` (`v1.4.1`); PolymorphicSerializations `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`); Tenants `8e20524574901d71ad5f4876804c64c3c6c87b88` (`v7.0.3-2-g8e205245`); effective Release packages EventStore `4.1.0`, Commons `2.30.10`, PolymorphicSerializations `1.19.8`, FrontComposer `4.7.6`, Memories `3.0.23`, Tenants `7.0.2`, and McpCli `2.0.0`. | codex-agent (explicit user delegation) | 2026-11-05 | **Source-selection and CI repair only.** The user requested synchronization, CI repairs and a complete release. This records current selections without refreshing any dated human decision, approval or historical receipt. All six canonical parity receipts remain Unvalidated; publication, hosted/native/manual lifecycle, custody and rollback acceptance require their own exact evidence. |
-| Current-owner package source selection (2026-11-05) | AI.Tools `1745b6663ad32bb1288167135ed0f979366c53a0` (`1745b666`); Builds `5fa2b97c8b22047c2c33e2c9f7017fd5d604c9ef` (`v4.44.4`); Commons `11555ace9efcae2928a00122dcba91243e5a8a1a` (`v2.30.10`); EventStore `0245c39c2884d4859cb4bce75aeeb209ef70ec74` (`v4.1.0-29-g0245c39c`); FrontComposer `a1155aecb636348ce11de2d78e5b7a071a8c9c64` (`v4.7.6-7-ga1155aec`); McpCli `aa2845edbea23444a1d362060b8d0f5dc05a132e` (`v2.0.0-49-gaa2845ed`); Memories `859680b38a77f04cc8f81ab7a5fe7f40a617cc2a` (`v3.0.23-7-g859680b3`); Platform `8946209702a6c1c48239f206dd452ae7d729a307` (`v1.5.0`); PolymorphicSerializations `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`); Tenants `8e20524574901d71ad5f4876804c64c3c6c87b88` (`v7.0.4`); effective Release packages EventStore `4.1.0`, Commons `2.30.10`, PolymorphicSerializations `1.19.8`, FrontComposer `4.7.6`, Memories `3.0.23`, Tenants `7.0.4`, and McpCli `2.0.0`. | codex-agent (explicit user delegation) | 2026-11-05 | **Source-selection and CI repair only.** Root atomic adoption and actual Parties native effects and cleanup remain separately gated. Historical decisions and all six canonical parity receipts remain Unvalidated until rerun; no human ratification, candidate, runtime, custody or rollback acceptance follows. |
+| Current-owner package source selection (2026-11-05) | AI.Tools `1745b6663ad32bb1288167135ed0f979366c53a0` (`1745b666`); Builds `afb2d4fd556b5d30a92734d21cb62bfe946ae958` (`v4.44.5`); Commons `11555ace9efcae2928a00122dcba91243e5a8a1a` (`v2.30.10`); EventStore `eff9f6947a3762da61d10642f20d002123ccbe6a` (`v4.1.0-31-geff9f694`); FrontComposer `a1155aecb636348ce11de2d78e5b7a071a8c9c64` (`v4.7.6-7-ga1155aec`); McpCli `0b526ab0efea4c4bfcc817d9009a4d4fddb1a7a8` (`v2.0.1-1-g0b526ab0`); Memories `859680b38a77f04cc8f81ab7a5fe7f40a617cc2a` (`v3.0.24`); Platform `7122fa4d056f0f9edb74f98d66aa41115cfdc702` (`v1.5.1`); PolymorphicSerializations `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`); Tenants `cf36618a2c27b5722a1ff811cfbbce4528c3c105` (`v7.0.4-8-gcf36618a`); effective Release packages EventStore `4.1.0`, Commons `2.30.10`, PolymorphicSerializations `1.19.8`, FrontComposer `4.7.6`, Memories `3.0.24`, Tenants `7.0.4`, and McpCli `2.0.1`. | codex-agent (explicit user delegation) | 2026-11-05 | **Source-selection and CI repair only.** Root atomic adoption and actual Parties native effects and cleanup remain separately gated. Historical decisions and all six canonical parity receipts remain Unvalidated until rerun; no human ratification, candidate, runtime, custody or rollback acceptance follows. |
 | I17 activation handover | Any second activation of an accepted closure deferral | Pending — named accountable owner | Pending | Pending; no approval inferred from routing, source presence, or compile. |
 | I18 successor tests | Any baseline-test replacement | Pending — named accountable owner | Pending | Pending; no approval inferred from routing, source presence, or compile. |
 | I19 store reclassification / class-(b) test set | Touched stores, semantics, and approved consistency tests | Pending — named accountable owner | Pending | Pending; no approval inferred from routing, source presence, or compile. |
