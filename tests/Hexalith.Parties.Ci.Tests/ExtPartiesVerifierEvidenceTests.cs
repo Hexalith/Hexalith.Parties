@@ -9,10 +9,12 @@ namespace Hexalith.Parties.Ci.Tests;
 public sealed class ExtPartiesVerifierEvidenceTests(ITestOutputHelper output)
 {
     private const string AttemptMarker = ".ext-parties-1-attempt";
+    private const int ProcessTimeoutSeconds = 20;
     private const string Harness = """
         param([string]$Script, [string]$Mode, [string]$EvidenceDirectory,
             [string]$DependencyRegisterPath, [string]$Fixture, [string]$Participant,
-            [switch]$Synchronize, [string]$LocalGraphCase, [string]$EventStoreRoot)
+            [switch]$Synchronize, [string]$LocalGraphCase, [string]$EventStoreRoot,
+            [string]$ReservationDeadlineUtc, [int]$StartupDelayMilliseconds)
         $ErrorActionPreference = 'Stop'
         $lookupLog = Join-Path $Fixture ($Participant + '.lookups')
         $writeLog = Join-Path $Fixture ($Participant + '.writes')
@@ -58,6 +60,8 @@ public sealed class ExtPartiesVerifierEvidenceTests(ITestOutputHelper output)
             Microsoft.PowerShell.Management\Set-Content @PSBoundParameters
         }
         if ($Synchronize) {
+            [IO.File]::WriteAllText((Join-Path $Fixture ($Participant + '.started')), 'started')
+            if ($StartupDelayMilliseconds -gt 0) { [Threading.Thread]::Sleep($StartupDelayMilliseconds) }
             function New-Item {
                 [CmdletBinding()]
                 param([string]$ItemType, [string]$Path)
@@ -68,9 +72,11 @@ public sealed class ExtPartiesVerifierEvidenceTests(ITestOutputHelper output)
                 # either directory creation returns. Model the nonexclusive API
                 # returning success to both contenders, independent of scheduling.
                 [IO.File]::WriteAllText((Join-Path $Fixture ($Participant + '.ready')), 'ready')
-                $deadline = [DateTime]::UtcNow.AddSeconds(15)
+                # All contenders use the parent's startup deadline, not a timer
+                # that can expire independently while a peer starts PowerShell.
+                $deadline = [DateTimeOffset]::Parse($ReservationDeadlineUtc, [Globalization.CultureInfo]::InvariantCulture)
                 while (-not [IO.File]::Exists((Join-Path $Fixture 'release'))) {
-                    if ([DateTime]::UtcNow -ge $deadline) { throw 'Reservation barrier timed out.' }
+                    if ([DateTimeOffset]::UtcNow -ge $deadline) { throw 'Reservation barrier timed out.' }
                     [Threading.Thread]::Sleep(10)
                 }
                 [IO.Directory]::CreateDirectory($Path)
@@ -200,25 +206,43 @@ public sealed class ExtPartiesVerifierEvidenceTests(ITestOutputHelper output)
     [Theory]
     [InlineData("Live")]
     [InlineData("DirectReadiness")]
-    public async Task SynchronizedReservations_AdmitExactlyOneWriter(string mode)
+    public Task SynchronizedReservations_AdmitExactlyOneWriter(string mode)
+        => VerifySynchronizedReservationsAsync(mode);
+
+    /// <summary>A peer that starts after the old ten-second barrier still competes through the real exclusive marker.</summary>
+    [Fact]
+    public Task SynchronizedReservations_WaitForDelayedPeerBeforeCompletingStartup()
+        => VerifySynchronizedReservationsAsync("Live", secondStartupDelayMilliseconds: 11_000);
+
+    private async Task VerifySynchronizedReservationsAsync(string mode, int secondStartupDelayMilliseconds = 0)
     {
         string fixture = CreateFixture();
         string evidence = Path.Combine(fixture, "evidence");
-        using Process first = Start(fixture, evidence, "first", mode, synchronize: true);
-        using Process second = Start(fixture, evidence, "second", mode, synchronize: true);
-        Task<(int ExitCode, string Error)> firstResult = CompleteAsync(first, fixture, "first");
-        Task<(int ExitCode, string Error)> secondResult = CompleteAsync(second, fixture, "second");
+        DateTimeOffset startupDeadline = DateTimeOffset.UtcNow.AddSeconds(ProcessTimeoutSeconds);
+        using var startup = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        startup.CancelAfter(TimeSpan.FromSeconds(ProcessTimeoutSeconds));
+        using Process first = Start(fixture, evidence, "first", mode, synchronize: true, reservationDeadlineUtc: startupDeadline);
+        using Process second = Start(fixture, evidence, "second", mode, synchronize: true, reservationDeadlineUtc: startupDeadline,
+            startupDelayMilliseconds: secondStartupDelayMilliseconds);
+        var released = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task<(int ExitCode, string Error)> firstResult = CompleteAsync(first, fixture, "first", released.Task);
+        Task<(int ExitCode, string Error)> secondResult = CompleteAsync(second, fixture, "second", released.Task);
+        Exception? failure = null;
         try
         {
-            using var barrier = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
-            barrier.CancelAfter(TimeSpan.FromSeconds(10));
             while (!File.Exists(Path.Combine(fixture, "first.ready")) || !File.Exists(Path.Combine(fixture, "second.ready")))
             {
-                await Task.Delay(10, barrier.Token).ConfigureAwait(true);
+                if (first.HasExited || second.HasExited)
+                    throw new InvalidOperationException("A reservation contender exited before release: " + ReservationState(fixture, first, second));
+                await Task.Delay(10, startup.Token).ConfigureAwait(false);
             }
-
+            startup.Token.ThrowIfCancellationRequested();
+            if (first.HasExited || second.HasExited)
+                throw new InvalidOperationException("A reservation contender exited before release: " + ReservationState(fixture, first, second));
+            output.WriteLine("Reservation startup before release: " + ReservationState(fixture, first, second));
             Directory.Exists(evidence).ShouldBeFalse("Both children must pass the existing-directory check before either creates it.");
             File.WriteAllText(Path.Combine(fixture, "release"), "release");
+            released.SetResult();
             (int ExitCode, string Error)[] results = await Task.WhenAll(firstResult, secondResult).ConfigureAwait(true);
             results.ShouldAllBe(result => result.ExitCode != 0);
             string refusal = mode == "Live" ? "Missing live inputs:" : "Missing read-only";
@@ -234,12 +258,46 @@ public sealed class ExtPartiesVerifierEvidenceTests(ITestOutputHelper output)
             }
             Directory.GetFiles(evidence).Length.ShouldBe(mode == "Live" ? 2 : 1);
         }
+        catch (OperationCanceledException original) when (!TestContext.Current.CancellationToken.IsCancellationRequested)
+        {
+            failure = new TimeoutException("Reservation startup exceeded its shared bounded deadline: " + ReservationState(fixture, first, second), original);
+            throw failure;
+        }
+        catch (Exception original)
+        {
+            failure = original;
+            throw;
+        }
         finally
         {
-            Stop(first);
-            Stop(second);
+            var cleanupFailures = new List<Exception>();
+            foreach (Process child in new[] { first, second })
+            {
+                try { Stop(child); }
+                catch (Exception cleanupFailure) { cleanupFailures.Add(cleanupFailure); }
+            }
+            released.TrySetResult();
+            try { await Task.WhenAll(firstResult, secondResult).ConfigureAwait(false); }
+            catch (Exception cleanupFailure) { cleanupFailures.Add(cleanupFailure); }
+            if (cleanupFailures.Count > 0)
+            {
+                if (failure is null) { throw new AggregateException("Verifier child cleanup failed.", cleanupFailures); }
+                failure.Data["VerifierChildCleanupFailures"] = string.Join(",", cleanupFailures.Select(item => item.GetType().Name));
+            }
         }
     }
+
+    private static string ReservationState(string fixture, Process first, Process second)
+        => JsonSerializer.Serialize(new[] { (Name: "first", Child: first), (Name: "second", Child: second) }.Select(item => new
+        {
+            participant = item.Name,
+            started = File.Exists(Path.Combine(fixture, item.Name + ".started")),
+            ready = File.Exists(Path.Combine(fixture, item.Name + ".ready")),
+            readyAtUtc = File.Exists(Path.Combine(fixture, item.Name + ".ready"))
+                ? (DateTimeOffset?)File.GetLastWriteTimeUtc(Path.Combine(fixture, item.Name + ".ready")) : null,
+            exited = item.Child.HasExited,
+            exitCode = item.Child.HasExited ? (int?)item.Child.ExitCode : null,
+        }));
 
     private string CreateFixture()
     {
@@ -251,7 +309,8 @@ public sealed class ExtPartiesVerifierEvidenceTests(ITestOutputHelper output)
     }
 
     private static Process Start(string fixture, string evidence, string participant, string mode,
-        bool completeInputs = false, bool synchronize = false, string? localGraphCase = null)
+        bool completeInputs = false, bool synchronize = false, string? localGraphCase = null,
+        DateTimeOffset? reservationDeadlineUtc = null, int startupDelayMilliseconds = 0)
     {
         string? configuredRoot = Environment.GetEnvironmentVariable("HEXALITH_PARTIES_SOURCE_ROOT");
         string repository = string.IsNullOrWhiteSpace(configuredRoot) ? CiTestPaths.RepositoryRoot : configuredRoot;
@@ -294,7 +353,15 @@ public sealed class ExtPartiesVerifierEvidenceTests(ITestOutputHelper output)
         {
             start.ArgumentList.Add(argument);
         }
-        if (synchronize) { start.ArgumentList.Add("-Synchronize"); }
+        if (synchronize)
+        {
+            start.ArgumentList.Add("-Synchronize");
+            start.ArgumentList.Add("-ReservationDeadlineUtc");
+            start.ArgumentList.Add((reservationDeadlineUtc ?? throw new InvalidOperationException("A shared reservation deadline is required."))
+                .ToString("O", System.Globalization.CultureInfo.InvariantCulture));
+            start.ArgumentList.Add("-StartupDelayMilliseconds");
+            start.ArgumentList.Add(startupDelayMilliseconds.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
         if (localGraphCase is not null)
         {
             start.ArgumentList.Add("-LocalGraphCase");
@@ -307,12 +374,16 @@ public sealed class ExtPartiesVerifierEvidenceTests(ITestOutputHelper output)
         return Process.Start(start) ?? throw new InvalidOperationException("Verifier fixture could not start.");
     }
 
-    private static async Task<(int ExitCode, string Error)> CompleteAsync(Process process, string fixture, string participant)
+    private static async Task<(int ExitCode, string Error)> CompleteAsync(Process process, string fixture, string participant,
+        Task? reservationReleased = null)
     {
         Task<string> stdout = process.StandardOutput.ReadToEndAsync();
         Task<string> stderr = process.StandardError.ReadToEndAsync();
+        // Drain startup output immediately; measure script completion only after
+        // the parent releases both reservation contenders into the real scripts.
+        if (reservationReleased is not null) { await reservationReleased.ConfigureAwait(false); }
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
-        deadline.CancelAfter(TimeSpan.FromSeconds(20));
+        deadline.CancelAfter(TimeSpan.FromSeconds(ProcessTimeoutSeconds));
         try
         {
             await process.WaitForExitAsync(deadline.Token).ConfigureAwait(false);
