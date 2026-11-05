@@ -583,3 +583,12 @@ references/Hexalith.EventStore|cb0dbeeb2fd18e844710fa93f1ab838de6ddafd3|validate
 references/Hexalith.Memories|0eb7185fe4b14f226f7b5b77513e09114e41b33a|validated-advance|origin/main@0eb7185fe4b1|codex-agent|2026-11-05
 references/Hexalith.Platform|db816425ff2b9e8e07af79257b01d3520782f46a|validated-advance|origin/main@db816425ff2b|codex-agent|2026-11-05
 references/Hexalith.Tenants|f4129cfe0a44b079a4f11f9cfb1374aed915f243|validated-advance|origin/main@f4129cfe0a44|codex-agent|2026-11-05
+
+# --- 2026-11-05 user-requested source synchronization.
+#     Record exact published main selections after preserving local test edits
+#     and reconciling incoming upstream work. Source selection only; human
+#     ratification, full runtime qualification and release acceptance remain separate.
+references/Hexalith.EventStore|d9498bb15dd80de84941a43db4d42b583600904b|validated-advance|origin/main@d9498bb15dd8|codex-agent|2026-11-05
+references/Hexalith.Memories|a2f1d6a883ce592499638abad11cf9770090ad7f|validated-advance|origin/main@a2f1d6a883ce|codex-agent|2026-11-05
+references/Hexalith.Platform|692cd6d025032f04f68ce302f02839d746f85ee9|validated-advance|origin/main@692cd6d02503|codex-agent|2026-11-05
+references/Hexalith.Tenants|8e20524574901d71ad5f4876804c64c3c6c87b88|validated-advance|origin/main@8e2052457490|codex-agent|2026-11-05
