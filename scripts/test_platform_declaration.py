@@ -38,6 +38,7 @@ class PlatformDeclarationTests(unittest.TestCase):
         self.assertEqual([(s["name"], s["mode"], s["entry"]) for s in suites],
                          [("platform-source", "source", integration_entry),
                           ("platform-package", "package", integration_entry),
+                          ("platform-current-package", "package", integration_entry),
                           ("lifecycle-package", "package", lifecycle_entry)])
         for suite in suites:
             self.assertEqual(suite["executor"], "mtp")
@@ -47,7 +48,7 @@ class PlatformDeclarationTests(unittest.TestCase):
             self.assertNotIn("AppHost", text)
             self.assertNotIn("Aspire.Hosting", text)
             self.assertNotIn("NSubstitute", text)
-            if suite["name"] in ("platform-source", "platform-package"):
+            if suite["name"] in ("platform-source", "platform-package", "platform-current-package"):
                 self.assertIn("Hexalith.EventStore.Testing.Integration", text)
             else:
                 self.assertEqual(suite["name"], "lifecycle-package")

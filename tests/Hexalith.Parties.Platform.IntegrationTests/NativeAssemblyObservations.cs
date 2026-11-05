@@ -37,6 +37,7 @@ internal static class NativeAssemblyObservations
         string observation = JsonSerializer.Serialize(new
         {
             kind = "real-native-sdk-assemblies",
+            profile = binding.Profile,
             ownerRunId,
             ownerAttemptId = binding.AttemptId,
             environmentId = binding.EnvironmentId,

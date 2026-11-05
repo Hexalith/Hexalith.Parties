@@ -312,6 +312,8 @@ From the Platform checkout, use the exact published module CLI 4.44.3 restored f
 
 ```bash
 hexalith-module test --manifest references/Hexalith.Parties/module/hexalith.module-manifest.v2.json --profile platform-source --mode source
+hexalith-module test --manifest references/Hexalith.Parties/module/hexalith.module-manifest.v2.json --profile platform-current-package --mode package
+# Separate published-consumer purpose, after its public cohort is admitted:
 hexalith-module test --manifest references/Hexalith.Parties/module/hexalith.module-manifest.v2.json --profile platform-package --mode package
 ```
 

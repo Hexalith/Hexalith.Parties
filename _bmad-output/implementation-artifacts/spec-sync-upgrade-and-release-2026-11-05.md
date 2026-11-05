@@ -5,7 +5,7 @@ created: '2026-11-05'
 status: 'in-review'
 baseline_commit: 'bb2783120c0eed620e3d4f52a2ebaf6aa510126f'
 route: 'dispatch'
-review_loop_iteration: 0
+review_loop_iteration: 1
 context: []
 ---
 
@@ -88,7 +88,15 @@ Parties'15 isolated hosted test reports pass, but runtime CI42022130363 exitsHXR
 
 The shared NuGet cache contains an unrelated local McpCli.Abstractions2.0.0 build from `/tmp/story-2-14-packages`; it is preserved. Public artifact checks use a private cache and verify the existing signed artifact hashes. McpCli's live21-vector/independent-smoke lane requires genuine newly published Parties artifacts plus Tenants7.0.3 and SDK4.1.0; prospective artifact hashes or frozen operation changes are not authorized substitutes.
 
+**Current-owner runtime qualification correction:** Hosted Parties CI42039092601 and the isolated original-engine run33e0140c confirm an immutable-artifact mismatch: published Parties3.0.0 embeds SDK3.130.2 and cannot verify the current v2 technical HTTP activation digest. Infrastructure is healthy; the owner bootstrap stops its host. Publishing a new image requires successful current-source CI, so the existing public-image profile creates a publication cycle.
+
+Add an explicit `platform-current-package` purpose for the current committed active Parties owner, built in Release with its own measured private package/runtime artifacts. All reference-owner libraries, SDK and images remain the pinned public package cohort. This is an active-owner build already admitted as source in package mapping, never dependency source fallback. Preserve published-consumer profile semantics and historical receipts. A new private in-memory proof must bind actual source/run/manifest/project/archive/loaded-body identities; no version-only or caller-provided artifact authority is accepted. No public artifact/version is replaced, no reserved candidate-policy acceptance is asserted, and qualificationCredit stays false.
+
+Because CLI4.44.3 only makes functional observations mandatory for its older profile names, a separate required root CI job must validate this same run's content-addressed native/functional evidence, exact source/profile/SDK/loaded current-owner proofs, both actual native cases, persisted effects and complete owned cleanup. Missing or changed evidence fails CI. After green exact-source CI, use the existing release workflow, then measure and admit the genuine new public image and verify published-consumer runtime independently. KEEP all verified source fixes, old/public cohort guards, immutable snapshot protection, latest compatible dependency versions and all previous tests.
+
 ## Spec Change Log
+
+- Loop1: correct the non-frozen plan for the immutable Parties3.0.0/SDK3.130.2 activation mismatch. Add explicit current-owner Release/package integration and a mandatory evidence gate; preserve the published-image purpose and qualify the genuine new image after publication. All earlier tested fixes and user changes are KEEP inputs; no code or history is reverted.
 
 - Review pass 1: preserve the working tuple/ledger updates and all concurrent edits; patch exact newer-API guards, retained old/new package lanes, current fitness observations and unconditional capability proof. Preserve every historical qualification boundary. User explicitly confirmed integration of all current edits.
 

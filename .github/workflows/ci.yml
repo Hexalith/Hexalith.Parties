@@ -23,7 +23,7 @@ jobs:
     with:
       solution: Hexalith.Parties.Standalone.slnx
       module-manifest: module/hexalith.module-manifest.v2.json
-      integration-test-profiles: platform-package
+      integration-test-profiles: platform-current-package
       package-prepare-script: scripts/prepare-ci-package-dependencies.sh
       test-platform: microsoft-testing-platform
       run-consumer-validation: true
@@ -48,6 +48,35 @@ jobs:
     secrets:
       registry-pull-username: ${{ secrets.HEXALITH_CI_REGISTRY_USERNAME }}
       registry-pull-password: ${{ secrets.HEXALITH_CI_REGISTRY_PASSWORD }}
+
+  verify-current-owner-integration:
+    needs: ci
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require the owning integration job to pass
+        env:
+          CI_RESULT: ${{ needs.ci.result }}
+        run: test "$CI_RESULT" = success
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          submodules: false
+      - name: Test evidence refusal controls
+        run: python3 -m unittest discover -s scripts -p test_current_owner_integration.py
+      - name: Download this workflow's required integration evidence
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: module-integration-diagnostics
+          path: TestResults/current-owner-evidence
+      - name: Require real current-owner native effects and complete cleanup
+        shell: bash
+        run: |
+          platform_sha=$(git rev-parse HEAD:references/Hexalith.Platform)
+          builds_sha=$(git rev-parse HEAD:references/Hexalith.Builds)
+          python3 scripts/verify-current-owner-integration.py TestResults/current-owner-evidence \
+            --source "$GITHUB_SHA" --platform "$platform_sha" --builds "$builds_sha"
 
   eventstore-404-package-cohort:
     name: EventStore 4.0.4 package cohort (offline)

@@ -109,9 +109,14 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, IT
         detail.CreatedAt.ShouldBe(createdEnvelope.Timestamp);
         if (recordCanonicalObservation) NativeAssemblyObservations.Write(output, fixture.Descriptor.RunId);
         output.WriteLine($"Persisted synthetic stream: {events.Length} exact event envelopes; tenant={tenant}; domain={identity.Domain}; aggregate={partyId}; command={commandId}; metadataSequence={metadata.CurrentSequence}; createdEnvelopeTimestamp={createdEnvelope.Timestamp:O}; Tenants and Memories returned the run tenant.");
+        NativeDiagnosticBinding observationBinding = NativeDiagnosticBinding.Read(fixture.Descriptor.RunId);
         await WritePersistenceObservationsAsync(new
         {
             runId = fixture.Descriptor.RunId,
+            attemptId = observationBinding.AttemptId, environmentId = observationBinding.EnvironmentId,
+            profile = observationBinding.Profile, revision = observationBinding.Revision, mappingHash = observationBinding.MappingHash,
+            executionContext = observationBinding.ExecutionContext,
+            currentOwner = observationBinding.ReadCurrentOwnerObservation(),
             status = "functional-observations-passed",
             qualificationCredit = false,
             observedAtUtc = DateTimeOffset.UtcNow,

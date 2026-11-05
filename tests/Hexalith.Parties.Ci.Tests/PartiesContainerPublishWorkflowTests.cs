@@ -64,6 +64,21 @@ public sealed class PartiesContainerPublishWorkflowTests
     }
 
     [Fact]
+    public void CurrentOwnerEvidenceGateRequiresTheSameWorkflowArtifactAfterSuccessfulCi()
+    {
+        string job = ReadWorkflowJob(CiTestPaths.ReadRepoFile(".github/workflows/ci.yml"), "verify-current-owner-integration");
+        job.ShouldContain("needs: ci");
+        job.ShouldContain("if: always()");
+        job.ShouldContain("CI_RESULT: ${{ needs.ci.result }}");
+        job.ShouldContain("test \"$CI_RESULT\" = success");
+        job.ShouldContain("actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c");
+        job.ShouldContain("name: module-integration-diagnostics");
+        job.ShouldContain("scripts/verify-current-owner-integration.py");
+        job.ShouldContain("--source \"$GITHUB_SHA\"");
+        foreach (string bypass in new[] { "continue-on-error:", "run-id:", "github-token:", "merge-multiple:" }) job.ShouldNotContain(bypass);
+    }
+
+    [Fact]
     public void CommitlintWorkflowUsesTheReviewedValidationRevision()
     {
         string workflow = CiTestPaths.ReadRepoFile(".github/workflows/commitlint.yml");
@@ -102,7 +117,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         workflow.ShouldContain("tests/Hexalith.Parties.Ci.Tests");
         string caller = ReadWorkflowJob(workflow, "ci");
         caller.ShouldContain("module-manifest: module/hexalith.module-manifest.v2.json");
-        caller.ShouldContain("integration-test-profiles: platform-package");
+        caller.ShouldContain("integration-test-profiles: platform-current-package");
         caller.ShouldContain("registry-pull-username: ${{ secrets.HEXALITH_CI_REGISTRY_USERNAME }}");
         caller.ShouldContain("registry-pull-password: ${{ secrets.HEXALITH_CI_REGISTRY_PASSWORD }}");
         caller.ShouldContain("tests/Hexalith.Parties.Aspire.Tests");

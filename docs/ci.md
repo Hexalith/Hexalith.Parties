@@ -40,7 +40,7 @@ of `Hexalith.Parties.Standalone.slnx` and package consumer validation.
 All twelve prior isolated projects and the whole `Parties.Tests`, `Sample.Tests`
 and `Ci.Tests` projects run in the isolated list without trait filters. Their
 self-contained doubles and model tests do not provision Platform/domain servers.
-Only after isolated success does the declared `platform-package` suite in
+Only after isolated success does the declared `platform-current-package` suite in
 `module/hexalith.module-manifest.v2.json` require real runner-owned services.
 The retired direct integration/Aspire/performance inputs and Dapr overrides are
 absent; the verified producer catalog selects the toolchain. The retained Aspire
@@ -514,3 +514,18 @@ Release tooling uses the four explicit plugins in `release.config.cjs`. The unus
 default npm publisher is excluded from the installed dependency closure through
 the same override pattern used by Memories; this NuGet-only release does not
 load that plugin. The refreshed locked tooling passes `npm audit` without findings.
+
+The current-owner package suite builds the committed Parties owner in Release
+with public catalog-pinned reference packages and digest-pinned reference images.
+Its Contracts and EventStoreExtensions packages are private measured run artifacts;
+they are never published as the catalog's nominal Parties version. The separate
+`platform-package` purpose consumes genuinely published Parties packages/image;
+its historical Parties 3.0.0 image does not qualify the current SDK 4.1 topology.
+
+`verify-current-owner-integration` is required after the reusable CI job. It reads
+only this workflow run's `module-integration-diagnostics` artifact and requires
+both unchanged real native cases, persisted stream/projection/reference-owner
+observations, exact source/runtime/catalog/SDK identities and complete owned
+cleanup. Missing evidence fails CI. This remains `baseline-only` with
+`qualificationCredit: false`; it grants no candidate-policy or public-consumer
+acceptance. A genuine later publication requires separate public cohort admission.
