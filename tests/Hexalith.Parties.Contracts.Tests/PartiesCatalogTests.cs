@@ -80,5 +80,28 @@ public class PartiesCatalogTests
             RouteCatalogQuerySelectorPolicy.Matches(route, "PartyIndexProjectionQueryActor").ShouldBeFalse();
         }
     }
+    /// <summary>Canonical producer bytes retain exact selector authority through encoding and decoding.</summary>
+    [Theory]
+    [InlineData("PartyDetail", "PartyDetailProjectionQueryActor")]
+    [InlineData("PartyIndex", "PartyIndexProjectionQueryActor")]
+    [InlineData("PartySearch", "PartyIndexProjectionQueryActor")]
+    public void OwnerSelectorsSurviveCanonicalCatalogSerialization(string wireType, string selector)
+    {
+        var route = PartiesCatalogDeclarations.Queries.Single(query => query.MessageType == wireType);
+        var catalog = RouteCatalogCodec.Seal(new(2, 1, "Development", false, [route],
+            [new(route.RouteId, 1, RouteCatalogCodec.ComputeDeclarationDigest(route), "parties", "query", "v1",
+                route.CredentialKind, route.Operation, false, "tenant-a")], [], "", ""));
+        byte[] bytes = RouteCatalogCodec.Encode(catalog);
+        var decoded = RouteCatalogCodec.Decode(bytes, RouteCatalogCodec.ComputeRootDigest(catalog));
+        RouteCatalogCodec.Encode(decoded).ShouldBe(bytes);
+        var restored = decoded.Declarations.ShouldHaveSingleItem();
+        restored.Execution!.CompatibilityProjectionActorTypes.ShouldBe([selector]);
+        RouteCatalogCodec.ComputeDeclarationDigest(restored).ShouldBe(RouteCatalogCodec.ComputeDeclarationDigest(route));
+        RouteCatalogQuerySelectorPolicy.Matches(restored, selector).ShouldBeTrue();
+        RouteCatalogQuerySelectorPolicy.Matches(restored, "ForeignQueryActor").ShouldBeFalse();
+        var foreign = restored with { Execution = restored.Execution with { CompatibilityProjectionActorTypes = ["ForeignQueryActor"] } };
+        RouteCatalogCodec.ComputeDeclarationDigest(foreign).ShouldNotBe(RouteCatalogCodec.ComputeDeclarationDigest(restored));
+        Should.Throw<RouteCatalogValidationException>(() => RouteCatalogCodec.Seal(decoded with { Declarations = [foreign] }));
+    }
 #endif
 }

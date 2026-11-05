@@ -531,6 +531,45 @@ public sealed class AspireRuntimePreparationTests
         finally { Directory.Delete(workspace, recursive: true); }
     }
 
+    /// <summary>Unconditionally evaluates the real transport target and the separate selector fence, even when guarded callers compile away.</summary>
+    /// <param name="version">The exact selected EventStore package.</param>
+    /// <param name="source">Whether the tool selected current source.</param>
+    /// <param name="transport">Whether cancellable projections are qualified.</param>
+    /// <param name="selectors">Whether compatibility selectors are qualified.</param>
+    [Theory]
+    [InlineData("3.132.2", false, false, false)]
+    [InlineData("4.0.4", false, true, false)]
+    [InlineData("4.1.0", false, true, true)]
+    [InlineData("4.1.1", false, false, false)]
+    [InlineData("4.1.0-preview.1", false, false, false)]
+    [InlineData("4.1.0+build.1", false, false, false)]
+    [InlineData("4.1.0.0", false, false, false)]
+    [InlineData("v4.1.0", false, false, false)]
+    [InlineData("", false, false, false)]
+    [InlineData("4.1.1", true, true, true)]
+    public async Task EventStoreTransportAndSelectorCapabilitiesRequireExactQualification(string version, bool source, bool transport, bool selectors)
+    {
+        string workspace = Directory.CreateTempSubdirectory("parties-eventstore-capability-").FullName;
+        try
+        {
+            string project = Path.Combine(workspace, "Capability.csproj");
+            new XDocument(new XElement("Project",
+                new XElement("PropertyGroup", new XElement("DefineConstants", "UNCHANGED"),
+                    new XElement("HexalithEventStoreVersion", version),
+                    new XElement("HexalithEventStoreFromSource", source.ToString().ToLowerInvariant())),
+                new XElement("Import", new XAttribute("Project", CiTestPaths.RepoFile("Directory.Build.targets")))))
+                .Save(project);
+            var result = await RunDotnetAsync(workspace, "msbuild", project, "-nologo",
+                "-target:ConfigureFrontComposerFeedbackCandidate", "-getProperty:DefineConstants").ConfigureAwait(true);
+            result.ExitCode.ShouldBe(0, result.Output + result.Error);
+            string[] symbols = result.Output.Trim().Split(';');
+            symbols.ShouldContain("UNCHANGED");
+            symbols.Contains("HES_CANCELLABLE_PROJECTIONS", StringComparer.Ordinal).ShouldBe(transport);
+            symbols.Contains("HEXALITH_EVENTSTORE_QUERY_SELECTOR_BINDINGS", StringComparer.Ordinal).ShouldBe(selectors);
+        }
+        finally { Directory.Delete(workspace, recursive: true); }
+    }
+
     /// <summary>Evaluates exact published UI and readiness capabilities without accepting unknown packages.</summary>
     /// <param name="version">The isolated candidate package selection.</param>
     /// <param name="source">The existing source selector branch.</param>

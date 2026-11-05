@@ -3,8 +3,8 @@
 This registered manual workflow remains a **baseline-only** diagnostic for
 Story 2.8. It grants no candidate acceptance or loaded-backend identity credit.
 The ordinary and manual baseline callers select the same reviewed Builds
-`ae68c59bd2f4145a23ccf68c3711f98eaf62195f` with published tool 4.44.2 and
-genuine Platform v1.3.0 (`338a6afc31850761f49c0de7d399266dd15cfe84`).
+`fc2122240a39f03628c04fa8433e5eece90b8b4c` with published tool 4.44.3 and
+genuine Platform v1.4.0 (`ae7516ee6961dd31a5e319be59ead76449ab04a0`).
 The old 4.43.4 and 4.43.5 HXP020 refusals remain historical evidence.
 Normal exact-source owner gates and real reference native qualification are still
 required before dispatch. Preserve incoming root gitlinks; source preparation

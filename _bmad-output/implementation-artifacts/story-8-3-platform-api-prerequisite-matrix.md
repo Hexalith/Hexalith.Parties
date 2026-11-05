@@ -95,7 +95,36 @@ resolve source selection only. Matching package/source versions and a clean
 build do not grant current parity, deployment, or rollback qualification or
 promote any other 8.3 row.
 
-### Current source observation — 2026-11-04
+### Current source observation — 2026-11-05
+
+The active user's synchronization and release request selects genuine Platform
+v1.4.0 at `ae7516ee6961dd31a5e319be59ead76449ab04a0` with its matching published
+Builds v4.44.3 catalog `fc2122240a39f03628c04fa8433e5eece90b8b4c` and module CLI
+4.44.3. The six behind clean root checkouts fast-forwarded to their fetched
+`origin/main` tips; all ten exact selections are recorded below. Platform exact
+tuple preflight 42014821187 passed before its real v1.4.0 release. Parties
+hosted/native, manual lifecycle and publication results remain separate gates.
+The graph selects EventStore package `4.1.0`, Commons `2.30.10`, PolymorphicSerializations `1.19.8`, FrontComposer `4.7.6`, Memories `3.0.23`, Tenants `7.0.2`, and McpCli `2.0.0`.
+Selection does not revalidate historical parity receipts or grant publication,
+deployment, custody, rollback deletion, runtime or candidate acceptance.
+This is codex-agent source-selection bookkeeping under explicit user delegation,
+not a new human approval. Every earlier observation and approval body is retained;
+all six canonical parity receipts remain Unvalidated until actually rerun.
+
+| Root dependency | Current source identity | Release use |
+| --- | --- | --- |
+| AI.Tools | `1745b6663ad32bb1288167135ed0f979366c53a0` (`1745b666`) | `git ls-tree HEAD references/Hexalith.AI.Tools` -> `160000 commit 1745b6663ad32bb1288167135ed0f979366c53a0 references/Hexalith.AI.Tools`; synchronized source selection; qualification still requires its own executed proof. |
+| Builds | `fc2122240a39f03628c04fa8433e5eece90b8b4c` (`v4.44.3`) | `git ls-tree HEAD references/Hexalith.Builds` -> `160000 commit fc2122240a39f03628c04fa8433e5eece90b8b4c references/Hexalith.Builds`; synchronized source selection; qualification still requires its own executed proof. |
+| Commons | `11555ace9efcae2928a00122dcba91243e5a8a1a` (`v2.30.10`) | `git ls-tree HEAD references/Hexalith.Commons` -> `160000 commit 11555ace9efcae2928a00122dcba91243e5a8a1a references/Hexalith.Commons`; synchronized source selection; qualification still requires its own executed proof. |
+| EventStore | `2dca77cc2f22a9b85e4fcc3f8e18cbcaa532b135` (`v4.1.0-20-g2dca77cc`) | `git ls-tree HEAD references/Hexalith.EventStore` -> `160000 commit 2dca77cc2f22a9b85e4fcc3f8e18cbcaa532b135 references/Hexalith.EventStore`; synchronized source selection; qualification still requires its own executed proof. |
+| FrontComposer | `4c24c287cde520631e960a322413bee804f7c3d4` (`v4.7.6-3-g4c24c287`) | `git ls-tree HEAD references/Hexalith.FrontComposer` -> `160000 commit 4c24c287cde520631e960a322413bee804f7c3d4 references/Hexalith.FrontComposer`; synchronized source selection; qualification still requires its own executed proof. |
+| McpCli | `f24266b628a2abcfbdc9f0d064e0e4c324d8e7c8` (`v2.0.0-45-gf24266b6`) | `git ls-tree HEAD references/Hexalith.McpCli` -> `160000 commit f24266b628a2abcfbdc9f0d064e0e4c324d8e7c8 references/Hexalith.McpCli`; synchronized source selection; qualification still requires its own executed proof. |
+| Memories | `ea334b6456e079e181b9d78552d4f340c891b2ff` (`v3.0.23-2-gea334b64`) | `git ls-tree HEAD references/Hexalith.Memories` -> `160000 commit ea334b6456e079e181b9d78552d4f340c891b2ff references/Hexalith.Memories`; synchronized source selection; qualification still requires its own executed proof. |
+| Platform | `ae7516ee6961dd31a5e319be59ead76449ab04a0` (`v1.4.0`) | `git ls-tree HEAD references/Hexalith.Platform` -> `160000 commit ae7516ee6961dd31a5e319be59ead76449ab04a0 references/Hexalith.Platform`; synchronized source selection; qualification still requires its own executed proof. |
+| PolymorphicSerializations | `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`) | `git ls-tree HEAD references/Hexalith.PolymorphicSerializations` -> `160000 commit bce4eb9f45c6b131b960ab4fa39e50ff01e51960 references/Hexalith.PolymorphicSerializations`; synchronized source selection; qualification still requires its own executed proof. |
+| Tenants | `143cec60a3f5bb1831fa57f35c510880ceb788d8` (`v7.0.2`) | `git ls-tree HEAD references/Hexalith.Tenants` -> `160000 commit 143cec60a3f5bb1831fa57f35c510880ceb788d8 references/Hexalith.Tenants`; synchronized source selection; qualification still requires its own executed proof. |
+
+### Historical source observation — 2026-11-04 (full Parties released tuple)
 
 The active user's explicit Story 2.8 delegation selects genuine Platform v1.3.0
 at `338a6afc31850761f49c0de7d399266dd15cfe84` and its exact published
@@ -1233,6 +1262,7 @@ The original selection row transcribes the Round 6 reviewer-recorded decision in
 | Package catalog alignment (2026-11-04) | Parties direct Platform `8ea8fe092f8abb5c932a61830aae16051d442463` (v1.1.6) and Builds `89f62052c932d054bda2b435bdfef60d96e77612` (v4.43.5) gitlinks; effective package graph unchanged. | codex-agent (explicit user delegation) | 2026-11-04 | **Source-selection and CI repair only.** The user explicitly requested pushing the existing working-tree selections. This supersedes the earlier package catalog alignment for current-selection assertions and retains the existing release signoffs. Historical parity receipts and publication, deployment and rollback authority remain unchanged. |
 | Subscription safety delegated source (2026-11-03) | EventStore `f213e4115ec23cb736e8aa0113f61b9d4854480c` (`v4.0.4-12-gf213e411`); published EventStore package `4.0.4`. Other root selections and the effective package graph remain as in the preceding owner decision. | codex-agent (explicit user delegation) | 2026-11-03 | **Source-selection and executed transport proof only. Package versions unchanged.** Authorized by the active request to implement five deferred items and push main, then approve and continue. The dated subscription receipt records the scoped tests. Selection does not revalidate historical parity receipts or grant release, deployment, custody, rollback deletion, native replay or full Memories acceptance. |
 | Story 2.8 full Parties released tuple (2026-11-04) | Builds `ae68c59bd2f4145a23ccf68c3711f98eaf62195f` (`v4.44.2`); Platform `338a6afc31850761f49c0de7d399266dd15cfe84` (`v1.3.0`); effective Release packages EventStore `4.0.4`, Commons `2.30.10`, PolymorphicSerializations `1.19.8`, FrontComposer `4.7.6`, Memories `3.0.23`, Tenants `7.0.0`, McpCli `2.0.0`. All other incoming source selections are unchanged. | codex-agent (explicit user delegation) | 2026-11-04 | **Source-selection only.** Every dated human approval and all six Unvalidated parity receipts remain unchanged. Actual Parties native/hosted and manual lifecycle qualification is pending; no new human ratification, package/runtime parity, publication, deployment, custody, rollback deletion or candidate acceptance is claimed. |
+| Synchronized release source selection (2026-11-05) | AI.Tools `1745b6663ad32bb1288167135ed0f979366c53a0` (`1745b666`); Builds `fc2122240a39f03628c04fa8433e5eece90b8b4c` (`v4.44.3`); Commons `11555ace9efcae2928a00122dcba91243e5a8a1a` (`v2.30.10`); EventStore `2dca77cc2f22a9b85e4fcc3f8e18cbcaa532b135` (`v4.1.0-20-g2dca77cc`); FrontComposer `4c24c287cde520631e960a322413bee804f7c3d4` (`v4.7.6-3-g4c24c287`); McpCli `f24266b628a2abcfbdc9f0d064e0e4c324d8e7c8` (`v2.0.0-45-gf24266b6`); Memories `ea334b6456e079e181b9d78552d4f340c891b2ff` (`v3.0.23-2-gea334b64`); Platform `ae7516ee6961dd31a5e319be59ead76449ab04a0` (`v1.4.0`); PolymorphicSerializations `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`); Tenants `143cec60a3f5bb1831fa57f35c510880ceb788d8` (`v7.0.2`); effective Release packages EventStore `4.1.0`, Commons `2.30.10`, PolymorphicSerializations `1.19.8`, FrontComposer `4.7.6`, Memories `3.0.23`, Tenants `7.0.2`, and McpCli `2.0.0`. | codex-agent (explicit user delegation) | 2026-11-05 | **Source-selection and CI repair only.** The user requested synchronization, CI repairs and a complete release. This records current selections without refreshing any dated human decision, approval or historical receipt. All six canonical parity receipts remain Unvalidated; publication, hosted/native/manual lifecycle, custody and rollback acceptance require their own exact evidence. |
 | I17 activation handover | Any second activation of an accepted closure deferral | Pending — named accountable owner | Pending | Pending; no approval inferred from routing, source presence, or compile. |
 | I18 successor tests | Any baseline-test replacement | Pending — named accountable owner | Pending | Pending; no approval inferred from routing, source presence, or compile. |
 | I19 store reclassification / class-(b) test set | Touched stores, semantics, and approved consistency tests | Pending — named accountable owner | Pending | Pending; no approval inferred from routing, source presence, or compile. |

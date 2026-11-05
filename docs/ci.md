@@ -55,11 +55,13 @@ success, failure, cancellation or partial startup. Unknown cleanup or owned
 leftovers fails; classified diagnostics survive workspace deletion. Same/cross-job
 admission and native lifecycle acceptance still require actual hosted evidence.
 
-All independent jobs remain blocking. The offline EventStore cohort now selects
-public 4.1.0 and requires all seven catalog cases, including the exact owner-declared
-legacy selectors for PartyDetail, PartyIndex and PartySearch and refusal of foreign
-selectors. The separate 52-case actual-client protocol job also uses that SDK with
-its existing private caches and unchanged Memories 3.0.18 selection.
+All independent jobs remain blocking. The original offline EventStore 4.0.4 /
+Tenants 5.11.2 / Memories 3.0.11 cohort retains its three catalog cases. A separate
+4.1.0 / 7.0.2 / 3.0.23 cohort requires ten catalog cases, canonical selector
+serialization, 33 unconditional capability evaluations and six actual gateway
+router boundary cases, including foreign-selector refusal. The original 52-case
+Memories 3.0.18 actual-client protocol job keeps SDK 4.0.4, Tenants 7.0.0 and its
+private caches. These offline checks provide no hosted lifecycle acceptance.
 Source selection is user-delegated `codex-agent` bookkeeping, not human
 ratification, package/runtime parity or candidate acceptance.
 

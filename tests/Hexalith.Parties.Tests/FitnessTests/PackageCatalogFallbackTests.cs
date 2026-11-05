@@ -11,10 +11,10 @@ public sealed class PackageCatalogFallbackTests
 {
     private static readonly (string Property, string Package, string Caller, string Override, string Fallback)[] Families =
     [
-        ("HexalithEventStoreVersion", "Hexalith.EventStore.Contracts", "90.1.1", "91.1.1", "3.132.2"),
-        ("HexalithTenantsVersion", "Hexalith.Tenants.Contracts", "90.2.1", "91.2.1", "6.0.0"),
-        ("HexalithFrontComposerVersion", "Hexalith.FrontComposer.Shell", "90.3.1", "91.3.1", "4.7.4"),
-        ("HexalithMemoriesVersion", "Hexalith.Memories.Client.Rest", "90.4.1", "91.4.1", "3.0.13"),
+        ("HexalithEventStoreVersion", "Hexalith.EventStore.Contracts", "90.1.1", "91.1.1", "4.1.0"),
+        ("HexalithTenantsVersion", "Hexalith.Tenants.Contracts", "90.2.1", "91.2.1", "7.0.2"),
+        ("HexalithFrontComposerVersion", "Hexalith.FrontComposer.Shell", "90.3.1", "91.3.1", "4.7.6"),
+        ("HexalithMemoriesVersion", "Hexalith.Memories.Client.Rest", "90.4.1", "91.4.1", "3.0.23"),
     ];
 
     /// <summary>The default catalog, caller-selected catalog and explicit family versions retain their precedence.</summary>

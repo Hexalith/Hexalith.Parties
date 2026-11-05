@@ -49,8 +49,8 @@ jobs:
       registry-pull-username: ${{ secrets.HEXALITH_CI_REGISTRY_USERNAME }}
       registry-pull-password: ${{ secrets.HEXALITH_CI_REGISTRY_PASSWORD }}
 
-  eventstore-410-package-cohort:
-    name: EventStore 4.1.0 package cohort (offline)
+  eventstore-404-package-cohort:
+    name: EventStore 4.0.4 package cohort (offline)
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -69,7 +69,7 @@ jobs:
         shell: bash
         run: |
           package_properties=(
-            -p:HexalithEventStoreVersion=4.1.0
+            -p:HexalithEventStoreVersion=4.0.4
             -p:HexalithTenantsVersion=5.11.2
             -p:HexalithMemoriesVersion=3.0.11
             -p:UseHexalithProjectReferences=false
@@ -96,11 +96,70 @@ jobs:
             --no-build --no-restore --configuration Release "${package_properties[@]}" \
             --filter-class Hexalith.Parties.Contracts.Tests.PartiesCatalogTests \
             --filter-class Hexalith.Parties.Contracts.Tests.PartiesCatalogAdapterTests \
-            --minimum-expected-tests 7 --fail-skips on
+            --minimum-expected-tests 3 --fail-skips on
           dotnet test --project tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj \
             --no-build --no-restore --configuration Release "${package_properties[@]}" \
             --filter-method Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.CatalogApiAvailabilityDoesNotSelectNativeHosts \
             --minimum-expected-tests 23 --fail-skips on
+
+  eventstore-410-package-cohort:
+    name: EventStore 4.1.0 package cohort (offline)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: false
+          fetch-depth: 1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - name: Initialize only the recorded package catalog input
+        run: |
+          git -c submodule.recurse=false submodule update --init --depth 1 --checkout -- references/Hexalith.Builds
+          git submodule status -- references/Hexalith.Builds
+      - name: Build public packages and run focused catalog qualification
+        shell: bash
+        run: |
+          package_properties=(
+            -p:HexalithEventStoreVersion=4.1.0
+            -p:HexalithTenantsVersion=7.0.2
+            -p:HexalithMemoriesVersion=3.0.23
+            -p:UseHexalithProjectReferences=false
+            -p:UseNuGetDeps=true
+            -p:EventStoreFromSource=false
+            -p:HexalithEventStoreFromSource=false
+            -p:HexalithTenantsFromSource=false
+            -p:HexalithMemoriesFromSource=false
+            -p:HexalithCommonsFromSource=false
+            -p:HexalithCommonsHttpFromSource=false
+            -p:HexalithMcpCliFromSource=false
+            -p:RestoreSources=https://api.nuget.org/v3/index.json
+          )
+          # Compile the actual owners; this job never starts a private runtime or topology.
+          for project in \
+            src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj \
+            src/Hexalith.Parties.EventStoreExtensions/Hexalith.Parties.EventStoreExtensions.csproj \
+            src/Hexalith.Parties/Hexalith.Parties.csproj \
+            tests/Hexalith.Parties.Catalog.Tests/Hexalith.Parties.Catalog.Tests.csproj \
+            tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj \
+            tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj; do
+            dotnet build "$project" --configuration Release --disable-build-servers -m:1 -warnaserror "${package_properties[@]}"
+          done
+          dotnet test --project tests/Hexalith.Parties.Catalog.Tests/Hexalith.Parties.Catalog.Tests.csproj \
+            --no-build --no-restore --configuration Release "${package_properties[@]}" \
+            --filter-class Hexalith.Parties.Contracts.Tests.PartiesCatalogTests \
+            --filter-class Hexalith.Parties.Contracts.Tests.PartiesCatalogAdapterTests \
+            --minimum-expected-tests 10 --fail-skips on
+          dotnet test --project tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj \
+            --no-build --no-restore --configuration Release "${package_properties[@]}" \
+            --filter-method Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.CatalogApiAvailabilityDoesNotSelectNativeHosts \
+            --filter-method Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.EventStoreTransportAndSelectorCapabilitiesRequireExactQualification \
+            --minimum-expected-tests 33 --fail-skips on
+          dotnet test --project tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj \
+            --no-build --no-restore --configuration Release "${package_properties[@]}" \
+            --filter-class Hexalith.Parties.Tests.Gateway.PartiesCatalogGatewaySelectorTests \
+            --minimum-expected-tests 6 --fail-skips on
 
   memories-3018-package-protocol:
     name: Memories 3.0.18 package protocol
@@ -126,7 +185,7 @@ jobs:
         run: |
           set -euo pipefail
           package_properties=(
-            -p:HexalithEventStoreVersion=4.1.0
+            -p:HexalithEventStoreVersion=4.0.4
             -p:HexalithTenantsVersion=7.0.0
             -p:HexalithMemoriesVersion=3.0.18
             -p:UseHexalithProjectReferences=false

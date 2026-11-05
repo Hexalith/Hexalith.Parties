@@ -117,20 +117,30 @@ public sealed class PartiesContainerPublishWorkflowTests
         tool.GetProperty("rollForward").GetBoolean().ShouldBeFalse();
         workflow.ShouldNotContain("submodules: recursive");
 
-        string packageCohort = ReadWorkflowJob(workflow, "eventstore-410-package-cohort");
-        packageCohort.ShouldContain(
-            "dotnet test --project tests/Hexalith.Parties.Catalog.Tests/Hexalith.Parties.Catalog.Tests.csproj \\\n" +
-            "            --no-build --no-restore --configuration Release \"${package_properties[@]}\" \\\n" +
-            "            --filter-class Hexalith.Parties.Contracts.Tests.PartiesCatalogTests \\\n" +
-            "            --filter-class Hexalith.Parties.Contracts.Tests.PartiesCatalogAdapterTests \\\n" +
-            "            --minimum-expected-tests 7 --fail-skips on");
-        packageCohort.ShouldContain(
-            "dotnet test --project tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj \\\n" +
-            "            --no-build --no-restore --configuration Release \"${package_properties[@]}\" \\\n" +
-            "            --filter-method Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.CatalogApiAvailabilityDoesNotSelectNativeHosts \\\n" +
-            "            --minimum-expected-tests 23 --fail-skips on");
-        string focusedRuns = packageCohort[packageCohort.IndexOf("dotnet test --project ", StringComparison.Ordinal)..];
-        focusedRuns.ShouldNotContain("-m:1");
+        foreach (var cohort in new[] { (Job: "eventstore-404-package-cohort", Version: "4.0.4", Tenants: "5.11.2", Memories: "3.0.11", CatalogCount: 3, CapabilityCount: 23),
+            (Job: "eventstore-410-package-cohort", Version: "4.1.0", Tenants: "7.0.2", Memories: "3.0.23", CatalogCount: 10, CapabilityCount: 33) })
+        {
+            string packageCohort = ReadWorkflowJob(workflow, cohort.Job);
+            packageCohort.ShouldContain("-p:HexalithEventStoreVersion=" + cohort.Version);
+            packageCohort.ShouldContain("-p:HexalithTenantsVersion=" + cohort.Tenants);
+            packageCohort.ShouldContain("-p:HexalithMemoriesVersion=" + cohort.Memories);
+            packageCohort.ShouldContain("--filter-class Hexalith.Parties.Contracts.Tests.PartiesCatalogTests");
+            packageCohort.ShouldContain("--filter-class Hexalith.Parties.Contracts.Tests.PartiesCatalogAdapterTests");
+            packageCohort.ShouldContain($"--minimum-expected-tests {cohort.CatalogCount} --fail-skips on");
+            packageCohort.ShouldContain("--filter-method Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.CatalogApiAvailabilityDoesNotSelectNativeHosts");
+            packageCohort.ShouldContain($"--minimum-expected-tests {cohort.CapabilityCount} --fail-skips on");
+            string focusedRuns = packageCohort[packageCohort.IndexOf("dotnet test --project ", StringComparison.Ordinal)..];
+            focusedRuns.ShouldNotContain("-m:1");
+        }
+        string latestCohort = ReadWorkflowJob(workflow, "eventstore-410-package-cohort");
+        latestCohort.ShouldContain("--filter-method Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.EventStoreTransportAndSelectorCapabilitiesRequireExactQualification");
+        latestCohort.ShouldContain("--filter-class Hexalith.Parties.Tests.Gateway.PartiesCatalogGatewaySelectorTests");
+        latestCohort.ShouldContain("--minimum-expected-tests 6 --fail-skips on");
+        string legacyProtocol = ReadWorkflowJob(workflow, "memories-3018-package-protocol");
+        legacyProtocol.ShouldContain("-p:HexalithEventStoreVersion=4.0.4");
+        legacyProtocol.ShouldContain("-p:HexalithTenantsVersion=7.0.0");
+        legacyProtocol.ShouldContain("-p:HexalithMemoriesVersion=3.0.18");
+        legacyProtocol.ShouldContain("--minimum-expected-tests 52 --fail-skips on");
 
         string sharedWorkflow = ReadPinnedBuildsWorkflow("domain-ci-v2.yml");
         sharedWorkflow.ShouldContain("default: 'vstest'");
