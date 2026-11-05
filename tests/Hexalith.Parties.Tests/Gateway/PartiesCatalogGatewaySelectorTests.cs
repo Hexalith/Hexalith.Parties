@@ -43,6 +43,9 @@ public sealed class PartiesCatalogGatewaySelectorTests
     [InlineData("PartyDetail", "ForeignQueryActor", false)]
     [InlineData("PartyIndex", "ForeignQueryActor", false)]
     [InlineData("PartySearch", "ForeignQueryActor", false)]
+    [InlineData("PartyDetail", "PartyIndexProjectionQueryActor", false)]
+    [InlineData("PartyIndex", "PartyDetailProjectionQueryActor", false)]
+    [InlineData("PartySearch", "PartyDetailProjectionQueryActor", false)]
     public async Task CanonicalPartySelectorsEnforceTheActualGatewayBoundary(string wireType, string selector, bool accepted)
     {
         var declaration = PartiesCatalogDeclarations.Queries.Single(query => query.MessageType == wireType);
