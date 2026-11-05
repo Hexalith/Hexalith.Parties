@@ -574,3 +574,12 @@ references/Hexalith.EventStore|2dca77cc2f22a9b85e4fcc3f8e18cbcaa532b135|validate
 references/Hexalith.Memories|ea334b6456e079e181b9d78552d4f340c891b2ff|validated-advance|origin/main@ea334b6456e0|codex-agent|2026-11-05
 references/Hexalith.FrontComposer|4c24c287cde520631e960a322413bee804f7c3d4|validated-advance|origin/main@4c24c287cde5|codex-agent|2026-11-05
 references/Hexalith.McpCli|f24266b628a2abcfbdc9f0d064e0e4c324d8e7c8|validated-advance|origin/main@f24266b628a2|codex-agent|2026-11-05
+
+# --- 2026-11-05 operator-invoked /pushall source synchronization.
+#     codex-agent records the exact published main revisions selected after
+#     dedicated submodule syncs. Source selection only under the user request;
+#     human ratification, runtime parity and release acceptance are not claimed.
+references/Hexalith.EventStore|cb0dbeeb2fd18e844710fa93f1ab838de6ddafd3|validated-advance|origin/main@cb0dbeeb2fd1|codex-agent|2026-11-05
+references/Hexalith.Memories|0eb7185fe4b14f226f7b5b77513e09114e41b33a|validated-advance|origin/main@0eb7185fe4b1|codex-agent|2026-11-05
+references/Hexalith.Platform|db816425ff2b9e8e07af79257b01d3520782f46a|validated-advance|origin/main@db816425ff2b|codex-agent|2026-11-05
+references/Hexalith.Tenants|f4129cfe0a44b079a4f11f9cfb1374aed915f243|validated-advance|origin/main@f4129cfe0a44|codex-agent|2026-11-05
