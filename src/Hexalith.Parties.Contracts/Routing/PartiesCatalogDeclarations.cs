@@ -125,10 +125,10 @@ public static class PartiesCatalogDeclarations
 
     /// <summary>Existing wire query identities, including internal computed authority queries.</summary>
     public static IReadOnlyList<RouteContractDeclaration> Queries { get; } = [
-        Query("detail", "PartyDetail", typeof(GetParty).FullName!, "party-detail"),
+        Query("detail", "PartyDetail", typeof(GetParty).FullName!, "party-detail", compatibilityActorType: "PartyDetailProjectionQueryActor"),
         Query("get-party", "GetParty", typeof(GetParty).FullName!, "party-detail"),
-        Query("index", "PartyIndex", typeof(ListParties).FullName!, "party-index"),
-        Query("search", "PartySearch", typeof(SearchParties).FullName!, "party-index"),
+        Query("index", "PartyIndex", typeof(ListParties).FullName!, "party-index", compatibilityActorType: "PartyIndexProjectionQueryActor"),
+        Query("search", "PartySearch", typeof(SearchParties).FullName!, "party-index", compatibilityActorType: "PartyIndexProjectionQueryActor"),
         Query("export", "ExportPartyData", "Hexalith.Parties.Queries.ExportPartyDataQueryHandler", "party-detail"),
         Query("processing-records", "GetProcessingRecords", typeof(GetProcessingRecords).FullName!, "party-detail"),
         Query("erasure-status", "GetErasureStatus", "Hexalith.Parties.Queries.GetErasureStatusQueryHandler", "party-detail"),
@@ -159,9 +159,13 @@ public static class PartiesCatalogDeclarations
             IdempotencyReplayRetentionTier.Mutation, subject);
     }
 
-    private static RouteContractDeclaration Query(string id, string wire, string handler, string? projection, bool delegated = false) =>
+    private static RouteContractDeclaration Query(string id, string wire, string handler, string? projection, bool delegated = false, string? compatibilityActorType = null) =>
         new("party-query-" + id, "query", "party", wire, projection, "v1", null, "workload", EventStoreOperationIdentifiers.DomainServiceQuery,
-            null, [], new(handler, "exact", [wire], "domain-service", projection is null ? "computed" : "projection", [], RequiresDelegatedContext: delegated));
+            null, [], new(handler, "exact", [wire], "domain-service", projection is null ? "computed" : "projection", [], RequiresDelegatedContext: delegated)
+#if HEXALITH_EVENTSTORE_QUERY_SELECTOR_BINDINGS
+            { CompatibilityProjectionActorTypes = compatibilityActorType is null ? null : [compatibilityActorType] }
+#endif
+            );
 
     private static RouteContractDeclaration Projection(string name, string handler) => new(name + "-projection", "projection", "party",
         null, name, "v1", null, "workload", EventStoreOperationIdentifiers.DomainServiceProject, null, [],
