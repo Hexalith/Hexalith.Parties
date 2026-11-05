@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   ci:
-    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@fc2122240a39f03628c04fa8433e5eece90b8b4c
+    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@5fa2b97c8b22047c2c33e2c9f7017fd5d604c9ef
     with:
       solution: Hexalith.Parties.Standalone.slnx
       module-manifest: module/hexalith.module-manifest.v2.json
@@ -188,7 +188,7 @@ jobs:
           dotnet test --project tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj \
             --no-build --no-restore --configuration Release "${package_properties[@]}" \
             --filter-class Hexalith.Parties.Tests.Gateway.PartiesCatalogGatewaySelectorTests \
-            --minimum-expected-tests 6 --fail-skips on
+            --minimum-expected-tests 9 --fail-skips on
 
   memories-3018-package-protocol:
     name: Memories 3.0.18 package protocol

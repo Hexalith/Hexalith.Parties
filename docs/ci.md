@@ -4,7 +4,7 @@ Hexalith.Parties uses GitHub Actions with shared Hexalith.Builds workflows and a
 
 ## Workflows
 
-- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@fc2122240a39f03628c04fa8433e5eece90b8b4c`.
+- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@5fa2b97c8b22047c2c33e2c9f7017fd5d604c9ef`.
 - `.github/workflows/release.yml` is a manual `workflow_dispatch` workflow with a protected, caller-owned release job. It uses `Hexalith/Hexalith.Builds/Github/prepare-domain-release@11a3a79cfac4bba9548c6364a17a01ee9b561370` and takes the nested publisher from that same immutable Builds checkout.
 - `.github/workflows/commitlint.yml` delegates Conventional Commit validation to the retained immutable Builds revision `332b2c144defba546fe0a09626a4a72f2340e22f`, for pull requests and main pushes.
 - `.github/workflows/dependency-review.yml` delegates dependency review for pull requests.
@@ -31,9 +31,13 @@ dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.T
 
 CI runs on pushes and pull requests to `main`, scheduled nightly runs, and Pact Broker `repository_dispatch` events with type `contract_requiring_verification_published`.
 
-The v2 workflow uses the exact published module CLI 4.44.3 and genuine Platform
-v1.4.1 (`4afa0421794f7e6f3fcbd5d84664eae206e9daa5`) with the matching recorded
-Builds catalog `fc2122240a39f03628c04fa8433e5eece90b8b4c`. Supported package-mode
+The v2 workflow uses the genuine published module CLI 4.44.4 and prepares exact
+genuine released Platform v1.5.0 at
+`8946209702a6c1c48239f206dd452ae7d729a307` with the matching published Builds
+catalog `5fa2b97c8b22047c2c33e2c9f7017fd5d604c9ef`. Atomic root adoption and
+actual Parties native effects and cleanup retain their own required proof. Release execution remains pinned to
+`11a3a79cfac4bba9548c6364a17a01ee9b561370`; commitlint/CodeQL validation remains
+`332b2c144defba546fe0a09626a4a72f2340e22f`. Supported package-mode
 preparation generates verified runtime-free Release imports before restore/build
 of `Hexalith.Parties.Standalone.slnx` and package consumer validation.
 
@@ -58,7 +62,7 @@ admission and native lifecycle acceptance still require actual hosted evidence.
 All independent jobs remain blocking. The original offline EventStore 4.0.4 /
 Tenants 5.11.2 / Memories 3.0.11 cohort retains its three catalog cases. A separate
 4.1.0 / 7.0.2 / 3.0.23 cohort requires ten catalog cases, canonical selector
-serialization, 33 unconditional capability evaluations and six actual gateway
+serialization, 33 unconditional capability evaluations and nine actual gateway
 router boundary cases, including foreign-selector refusal. This lane also checks
 out the recorded EventStore configuration files required by its private test
 hosts; SDK dependencies still come from NuGet. The original 52-case

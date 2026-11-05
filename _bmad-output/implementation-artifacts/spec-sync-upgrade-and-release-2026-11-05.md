@@ -100,6 +100,9 @@ Because CLI4.44.3 only makes functional observations mandatory for its older pro
 
 - Review pass 1: preserve the working tuple/ledger updates and all concurrent edits; patch exact newer-API guards, retained old/new package lanes, current fitness observations and unconditional capability proof. Preserve every historical qualification boundary. User explicitly confirmed integration of all current edits.
 
+- 2026-11-05 authenticated tuple data preparation: preserve all production/test/helper/workflow/docs bytes between M and L; allow exactly one additional metadata path, declaration provenance, alongside the original seven tuple paths. Require the original L provenance Git-body hash3e9b04109c5ddb34a0ac6801f5cdb36e1cbc102c65bfccb54b77c4d408091a61 and permit only the already published Tenants7.0.4 version/source pair change in M. This prevents relabeling historical dependency authority.
+- 2026-11-05 honest suite selection: M uses253 current controls; remove only nine historical reader cases that otherwise return early under7.0.4. Keep their actual7.0.2 positives in the unchanged349-case L manifest (raw hash61689f1598dac43a9fa28dcf5319008059e0fea0f1018209b1a8e79e4f63d7b0), and retain the two real current-owner reader cases and reference checks. Exact committed253/349 runs and runtime effects remain pending.
+
 ## Review Triage Log
 
 - BH-01: medium / patch — The submitted compatibility property and matcher are absent from supported 4.0.4/3.x Contracts; guard production and tests with a separately qualified 4.1/source symbol.
@@ -130,13 +133,6 @@ Because CLI4.44.3 only makes functional observations mandatory for its older pro
 
 - RP-01: medium / patch — Parent tracing found a concrete restoration race: after a fresh retry publishes a newer failure, a late scheduling error restores the original claim over it. Three real-Redis/Dapr-payload-adapter controls failed before the correction. An internal conditional restore now keeps the newer hash/index untouched after tenant and tombstone checks; 30 affected controls pass with primary/restoration error evidence preserved.
 
-## Verification
-
-- Official Microsoft SDK metadata, NuGet flat-container indexes and npm registry audit.
-- Owning focused builds/tests and repository guard scripts; complete hosted CI on final source.
-- Pinned commitlint CLI for each exact commit candidate, with retained output.
-- GitHub release workflow and complete manifest-based NuGet package download/index verification.
-
 ### Current-owner review (three independent layers, 2026-11-05)
 
 All three layers were launched before collection; all reported before this triage. The reviewed source was frozen, with actual publication/legacy-commit bindings explicitly pending. User authorization preserves every current edit and bypasses human checkpoints; no source/history rollback is permitted.
@@ -160,3 +156,55 @@ All three layers were launched before collection; all reported before this triag
 - CV-03: high / patch (parent) — The optional dispatch assertion cannot replace the committed null legacy identity. Same root cause as CB-01; fill the real descriptor before M's automatic source qualification.
 
 KEEP: old public cohort hashes/receipts and all349 original controls; new measured private-owner authority and false qualification credit; source-equivalence enforcement; both unchanged native case names and persisted assertions; unchanged O5/ring checks, deterministic RED and60 passing repaired browser runs; all user/external edits. Add new current-only cases in separate classes so the immutable legacy349 selection remains exact. Full actual reader/native/hosted acceptance remains pending and is not inferred from local fixtures.
+
+### Builds release recovery review (three independent layers, 2026-11-05)
+
+All three layers launched before collection; all completed before this triage. The source diff includes preserved external release optimization and the reviewed nine-file repair.
+
+- BB-01: false — Updating the finite catalog deliberately requires a matching Platform declaration and measured producer tuple. This is already the pending CB-02 adoption and the recorded post-publication plan; current Parties still records the old released tuple. Refusal of a mixed old Platform/new catalog is required behavior, not evidence that Builds should mislabel Tenants7.0.4 as7.0.2. Parent must refresh actual declaration provenance when qualifying the matching Platform source.
+- BB-02: medium / patch — The installed semantic-release runs generateNotes and prepare after verifyRelease. Add the final qualified-source check as the last existing prepare hook, retaining actual-version qualification in verifyRelease and the publisher check; test real wrapper success/refusal.
+- BB-03: medium / patch — A correctly rejected post-tag publication can leave a tag without complete public artifacts. Document additive recovery using a newly qualified current source/version, preserving old tags and partial registry history; do not add a gate-bypassing same-version publication shortcut.
+- BB-04: medium / patch — The late shell guard can fall back to another successful run after the recorded attempt begins rerunning. Require the late selected run and attempt to equal the inventory proof, with a real fallback refusal fixture; retain initial dispatch selection behavior.
+- BB-05: false — The publication workflow has a finite job timeout, and API failures correctly refuse authority. The claimed indefinite release has no reachable unbounded execution beyond that job limit. No observed transport stall establishes a need for a new retry/deadline subsystem; do not turn unavailable identity evidence into acceptance.
+- BB-06: medium / patch — Failed API lookups discard the CLI exit status and safe HTTP category, making existing release diagnosis ambiguous. Retain bounded exit/status classification without raw credential-bearing CLI output, and test redaction/refusal.
+- BB-07: false — The thrown lookup error already names the selected source CI run, and same-run workflow logs plus producer-attempt identity retain the release source/run context. The alleged untraceable lookup is therefore disproved; BB-06 improves safe cause classification without inventing a separate evidence authority.
+- BB-08: medium / patch — Successful tests manually construct the CI inventory, so deleting the real qualifier's SourceCiRun forwarding does not fail them. Exercise successful real qualification and inspect its emitted mode/result/proof/eligibility, retaining honest fixture ineligibility and actual controls. Same root cause as BV-01.
+- BB-09: low / patch — Add the direct CI-backed prerelease publisher combination to the existing harness, retaining exact branch/run identity, GitHub credential/destination and mismatch refusal. This is a direct test addition to existing cases, with no production branch or public option.
+- BB-10: medium / patch — Text positions and direct helper tests do not prove the real pre-tag wrapper propagates late refusal after successful qualification/archive. Execute the real wrapper in an isolated controlled dependency layout and assert success/refusal order. Same root cause as BV-02.
+- BV-01: medium / patch — Preverified inventory-producer gap: removing SourceCiRun forwarding leaves existing tests green and breaks real release inventory validation. Add the actual successful producer case, grouped with BB-08.
+- BV-02: medium / patch — Preverified caller-propagation gap: suppressing the final guard's exception can evade textual tests. Add executable real-wrapper controls, grouped with BB-10 and covering the new final prepare check from BB-02.
+
+The edge-case layer returned no additional findings. Independent hosted failure BCI-01 also reveals one more stale Release placement assertion in the prepare-module-build helper contract; validate its mandatory exact-source CI chain and preserved Node/contract ordering.
+
+- FCI-01: medium / patch — Hosted FrontComposer Quality6341/6342 identifies a state-only pending registration wait attached to a fixed CascadingValue wrapper. Pinned bUnit2.13.3 waits only on that component's OnAfterRender; the failed assertion executed once with zero renders. Pre-subscribe to pending.Changed, check synchronous completion, await with the original one-second bound/cancellation, and unsubscribe in finally; preserve actual generated form submission, Pending state, subsequent PollOnce and already-rendered grid outcomes. The one-file correction passes100/100 cases across50 class runs with owning recorded catalog06a51 and zero-warning Release; fresh exact-source hosted Quality remains required.
+
+- PFCI-01: medium / patch — Exact-source Platform CI passed the first160 controls, then one of28 qualification controls failed during test setup: the near-miss mutation still searched for7.0.2 although the canonical current fixture uses7.0.4. Derive its source version from fixture provenance and replace the complete XML value with a distinct unsupported version. Preserve names/counts, actual changed bytes and refusal-before-effects assertions. The same changed test passes28/28 with current704 and28/28 with authentic old702 component data; each Release build has zero warnings/errors. Full exact committed253/349 remains required.
+
+### Source-inventory repair review (three independent layers, 2026-11-05)
+
+All three context-free layers launched before collection; all completed before triage. The reviewed patch follows the demonstrated717711-byte tracked listing failure against the public65536-character capture limit. Current preparation has257 cases including four real-Git controls; the original349-case legacy manifest remains immutable.
+
+- IB-01: medium / patch (parent) — New shared inventory/proof/test/doc bytes differ from the current recorded L32ffe802. Create and push the actual new same-code L, then record its real SHA before committing/qualifying M. This is a fresh occurrence of the already recorded binding obligation, not permission to relax the eight-path comparator.
+- IB-02: medium / patch — The inventory's independent60-second budget ignores a shorter remaining StartupDeadlineUtc, so it can continue after the declared startup window while subsequent build/reader calls already honor that window. Bound enumeration by the earlier deadline and keep per-command/overall limits, with an expired-deadline control.
+- IB-03: low / patch — A literal valid U+FFFD filename is incorrectly treated as a decoding error. Use strict UTF-8 for the metadata process output and reject actual decode failures while preserving valid literal names; extend the existing literal-name control. This directly corrects an existing decoder-refusal condition rather than widening accepted malformed metadata.
+- IB-04: low / patch — All inventory positives currently pass HEAD, so ignoring the supplied immutable revision would evade them. Extend an existing real-Git control with a later committed file and prove the earlier revision's exact inventory remains selected.
+- IB-05: low / rejected — Exhaustive4096-process/32768-entry/60-second threshold fixtures concern capacity limits well above the actual1138-directory/8202-entry owner and would require substantial fixtures or a new injectable limit subsystem. Existing truncation/depth/failed-child tests plus the independently bounded whole operation remain required; add the directly relevant startup-deadline test from IB-02. No observed current input loses completeness or evades the implemented finite limits.
+- IB-06: medium / patch — The new inventory collapses truncated output, Git failures and exhausted budgets into one refusal, making a real qualification failure ambiguous. Include only a safe operation/limit/exit classification; omit raw Git stderr, environment and source-path contents. Cover representative classifications in existing negatives.
+- IV-01: medium / patch — Preverified creation-boundary regression gap: removing the new revision comparisons permits a clean empty commit during preparation to bind a later parent proof to the earlier artifact receipt. Existing source-drift tests mutate after issuance or are Platform-owned, and do not exercise this standalone creation window. Add a controlled clean-HEAD advance during current-owner preparation, including final reader/issuance, asserting refusal before resource effects without synthetic qualification authority.
+
+The edge-case layer returned no additional findings. Shared helper/test/production/workflow/docs changes still require a new real L and M before hosted verification; no passing257/349 or runtime acceptance is inferred from local fixtures.
+
+## Verification
+
+- Official Microsoft SDK metadata, NuGet flat-container indexes and npm registry audit.
+- Owning focused builds/tests and repository guard scripts; complete hosted CI on final source.
+- Pinned commitlint CLI for each exact commit candidate, with retained output.
+- GitHub release workflow and complete manifest-based NuGet package download/index verification.
+
+### Current-source verification checkpoint (2026-11-05)
+
+- Genuine Builds 4.44.4 at `5fa2b97c8b22047c2c33e2c9f7017fd5d604c9ef` completed release run 42077837054. Both public tool packages were independently indexed, downloaded and signature/source verified.
+- Platform current source `8946209702a6c1c48239f206dd452ae7d729a307` passed all 258 required cases with zero failures or skips in run 42091454297. Both real current-owner package-reader cases passed, including the production final-revision-guard reach assertion. All five catalog-binding rows passed in run 42091454274.
+- Same changed-code legacy source `0b6635d97c4959b09ba90b8c2df8c48f40525691` differs only in the eight permitted metadata paths; actual Git-source equivalence was verified. Its full hosted run passed 349/349 with zero failures or skips in run 42091454297. Genuine Platform v1.5.0 was then created and its exact tag/source verified at `8946209702a6c1c48239f206dd452ae7d729a307`.
+- Root adoption preparation passed 70 workflow tests and 18 source-selection/refusal controls; both relevant Release builds had zero warnings or errors. Three HEAD-bound fitness checks require the actual atomic pointer commit.
+- External Builds source `c58c3cb78de3cb6cc10ff2924c56e7f70f359997` remains preserved upstream. Release 42085923924 correctly refused because another session moved main back to the released source during qualification, then restored it. No 4.44.5 tag or publication was inferred, and no source guard was weakened.

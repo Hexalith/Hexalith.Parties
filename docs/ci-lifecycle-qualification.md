@@ -3,8 +3,13 @@
 This registered manual workflow remains a **baseline-only** diagnostic for
 Story 2.8. It grants no candidate acceptance or loaded-backend identity credit.
 The ordinary and manual baseline callers select the same reviewed Builds
-`fc2122240a39f03628c04fa8433e5eece90b8b4c` with published tool 4.44.3 and
-genuine Platform v1.4.1 (`4afa0421794f7e6f3fcbd5d84664eae206e9daa5`).
+`5fa2b97c8b22047c2c33e2c9f7017fd5d604c9ef` with genuine published tool 4.44.4
+and genuine released Platform v1.5.0 at
+`8946209702a6c1c48239f206dd452ae7d729a307`. Atomic root adoption still requires
+matching committed gitlinks. The
+ordinary public `platform-package` baseline remains held until genuine new
+Parties publication and finite public Parties/Tenants7.0.4 cohort admission;
+the separate current-owner purpose cannot substitute for that authority.
 The old 4.43.4 and 4.43.5 HXP020 refusals remain historical evidence.
 Normal exact-source owner gates and real reference native qualification are still
 required before dispatch. Preserve incoming root gitlinks; source preparation

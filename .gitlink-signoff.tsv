@@ -599,3 +599,20 @@ references/Hexalith.Tenants|8e20524574901d71ad5f4876804c64c3c6c87b88|validated-a
 #     preserved on its branch. Runtime and publication checks stay required.
 references/Hexalith.EventStore|0245c39c2884d4859cb4bce75aeeb209ef70ec74|validated-advance|origin/main@0245c39c2884|codex-agent|2026-11-05
 references/Hexalith.Platform|4afa0421794f7e6f3fcbd5d84664eae206e9daa5|validated-advance|v1.4.1@4afa0421794f|codex-agent|2026-11-05
+
+# --- 2026-11-05 current-owner tuple adoption preparation.
+#     Explicit user delegation records exact source selections only; no historical
+#     human ratification, native/manual parity or release acceptance is refreshed.
+#     Builds4.44.4/5fa and Platformv1.5.0/89462097 are genuine releases.
+#     Parent commits matching root pointers atomically; native/manual acceptance
+#     still requires its own executed proof.
+references/Hexalith.AI.Tools|1745b6663ad32bb1288167135ed0f979366c53a0|validated-advance|1745b666|codex-agent|2026-11-05
+references/Hexalith.Builds|5fa2b97c8b22047c2c33e2c9f7017fd5d604c9ef|validated-advance|v4.44.4|codex-agent|2026-11-05
+references/Hexalith.Commons|11555ace9efcae2928a00122dcba91243e5a8a1a|validated-advance|v2.30.10|codex-agent|2026-11-05
+references/Hexalith.EventStore|0245c39c2884d4859cb4bce75aeeb209ef70ec74|validated-advance|v4.1.0-29-g0245c39c|codex-agent|2026-11-05
+references/Hexalith.FrontComposer|a1155aecb636348ce11de2d78e5b7a071a8c9c64|validated-advance|v4.7.6-7-ga1155aec|codex-agent|2026-11-05
+references/Hexalith.McpCli|aa2845edbea23444a1d362060b8d0f5dc05a132e|validated-advance|v2.0.0-49-gaa2845ed|codex-agent|2026-11-05
+references/Hexalith.Memories|859680b38a77f04cc8f81ab7a5fe7f40a617cc2a|validated-advance|v3.0.23-7-g859680b3|codex-agent|2026-11-05
+references/Hexalith.Platform|8946209702a6c1c48239f206dd452ae7d729a307|validated-advance|v1.5.0|codex-agent|2026-11-05
+references/Hexalith.PolymorphicSerializations|bce4eb9f45c6b131b960ab4fa39e50ff01e51960|validated-advance|v1.19.8-1-gbce4eb9f|codex-agent|2026-11-05
+references/Hexalith.Tenants|8e20524574901d71ad5f4876804c64c3c6c87b88|validated-advance|v7.0.4|codex-agent|2026-11-05

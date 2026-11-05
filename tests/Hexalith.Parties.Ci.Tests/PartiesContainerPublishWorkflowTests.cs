@@ -7,7 +7,7 @@ namespace Hexalith.Parties.Ci.Tests;
 public sealed class PartiesContainerPublishWorkflowTests
 {
     private const int ExpectedPackageCount = 11;
-    private const string BuildsCiSha = "fc2122240a39f03628c04fa8433e5eece90b8b4c";
+    private const string BuildsCiSha = "5fa2b97c8b22047c2c33e2c9f7017fd5d604c9ef";
     private const string BuildsValidationSha = "332b2c144defba546fe0a09626a4a72f2340e22f";
     private const string BuildsExecutionSha = "11a3a79cfac4bba9548c6364a17a01ee9b561370";
     private static readonly TimeSpan WorkflowReadTimeout = TimeSpan.FromSeconds(10);
@@ -128,7 +128,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         }
         using JsonDocument tools = JsonDocument.Parse(CiTestPaths.ReadRepoFile(".config/dotnet-tools.json"));
         JsonElement tool = tools.RootElement.GetProperty("tools").GetProperty("hexalith.builds.module.cli");
-        tool.GetProperty("version").GetString().ShouldBe("4.44.3");
+        tool.GetProperty("version").GetString().ShouldBe("4.44.4");
         tool.GetProperty("rollForward").GetBoolean().ShouldBeFalse();
         workflow.ShouldNotContain("submodules: recursive");
 
@@ -150,7 +150,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         string latestCohort = ReadWorkflowJob(workflow, "eventstore-410-package-cohort");
         latestCohort.ShouldContain("--filter-method Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.EventStoreTransportAndSelectorCapabilitiesRequireExactQualification");
         latestCohort.ShouldContain("--filter-class Hexalith.Parties.Tests.Gateway.PartiesCatalogGatewaySelectorTests");
-        latestCohort.ShouldContain("--minimum-expected-tests 6 --fail-skips on");
+        latestCohort.ShouldContain("--minimum-expected-tests 9 --fail-skips on");
         string legacyProtocol = ReadWorkflowJob(workflow, "memories-3018-package-protocol");
         legacyProtocol.ShouldContain("-p:HexalithEventStoreVersion=4.0.4");
         legacyProtocol.ShouldContain("-p:HexalithTenantsVersion=7.0.0");
