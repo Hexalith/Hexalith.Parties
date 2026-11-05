@@ -40,6 +40,7 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
             configuration="Release", qualificationCredit=False, committedCatalogValidated=True, sdkVersion="4.1.0", tenantsVersion="7.0.4",
             platform=dict(commit=self.expected["platform"], compositionCommit=self.expected["platform"], checkoutCommit=self.expected["platform"], catalogCommit=self.expected["builds"]),
             sdkBodies=verify.SDK.copy(), runtimeBodies={name: str(index) * 64 for index, name in enumerate(("Hexalith.Parties", "Hexalith.Parties.Contracts", "Hexalith.Parties.Projections", "Hexalith.Parties.Authentication", "Hexalith.Parties.Security"), 1)},
+            packageArchives={"Hexalith.Parties.Contracts.3.0.0.nupkg": "7" * 64, "Hexalith.Parties.EventStoreExtensions.3.0.0.nupkg": "8" * 64},
             catalogBodies={"Hexalith.Parties.Contracts": "2" * 64, "Hexalith.Parties.EventStoreExtensions": "6" * 64},
             observedExecutableOwners={"Hexalith.Parties, Version=1.0.0.0": "1" * 64}, routingCatalogRoot="e" * 64)
         self.loaded = dict(kind="real-native-sdk-assemblies", profile=verify.PROFILE, ownerRunId=self.owner["runId"], ownerAttemptId=self.owner["attemptId"],
@@ -76,7 +77,7 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
         self.assertFalse(self.check()["qualificationCredit"])
 
     def test_changed_semantic_boundaries_are_refused_after_valid_content_hashes(self):
-        for mutation in ("profile", "source", "run", "attempt", "sdk", "runtime", "public", "projection", "event", "memories", "platform", "builds", "catalog"):
+        for mutation in ("profile", "source", "run", "attempt", "sdk", "runtime", "public", "projection", "event", "memories", "platform", "builds", "catalog", "archives"):
             with self.subTest(mutation=mutation):
                 original = copy.deepcopy(self.functional)
                 if mutation == "profile": self.functional["profile"] = "platform-package"
@@ -93,6 +94,7 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
                 if mutation == "memories": self.functional["memoriesRegistryObserved"] = False
                 if mutation in ("platform", "builds"):
                     self.functional["currentOwner"]["platform"]["commit" if mutation == "platform" else "catalogCommit"] = "f" * 40
+                if mutation == "archives": self.functional["currentOwner"]["packageArchives"] = {}
                 if mutation == "catalog": self.functional["currentOwner"]["committedCatalogValidated"] = False
                 self.seal()
                 with self.assertRaises(ValueError): self.check()

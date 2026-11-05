@@ -144,6 +144,9 @@ def validate(directory: Path, *, repository: str, run: str, attempt: int, source
     identity = current["platform"]
     require(all(identity.get(key) == platform for key in ("commit", "compositionCommit", "checkoutCommit")) and identity.get("catalogCommit") == builds, "foreign Platform/catalog identity")
     require(current.get("sdkBodies") == SDK, "actual runtime SDK bodies differ")
+    archives = current.get("packageArchives")
+    require(isinstance(archives, dict) and set(archives) == {"Hexalith.Parties.Contracts.3.0.0.nupkg", "Hexalith.Parties.EventStoreExtensions.3.0.0.nupkg"}
+            and all(isinstance(value, str) and HEX.fullmatch(value) for value in archives.values()), "private source packages were not measured")
     runtime, catalog = current["runtimeBodies"], current["catalogBodies"]
     require(set(catalog) == {"Hexalith.Parties.Contracts", "Hexalith.Parties.EventStoreExtensions"}
             and all(isinstance(body, str) and HEX.fullmatch(body) for body in (*runtime.values(), *catalog.values())), "incomplete measured owner bodies")
