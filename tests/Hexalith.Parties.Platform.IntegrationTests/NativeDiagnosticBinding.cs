@@ -83,8 +83,10 @@ internal sealed record NativeDiagnosticBinding(string RunId, string AttemptId, s
         {
             using JsonDocument invocation = ReadDocument(Path.Combine(ArtifactDirectory, "invocation.json"));
             RequireEqual(invocation.RootElement.GetProperty("classification").GetString(), "baseline-only");
-            if (!JsonElement.DeepEquals(ExecutionContext, invocation.RootElement.GetProperty("executionContext"))
-                || !invocation.RootElement.GetProperty("profiles").EnumerateArray().Select(value => value.GetString()).SequenceEqual(new[] { Profile }, StringComparer.Ordinal))
+            string?[] profiles = invocation.RootElement.GetProperty("profiles").EnumerateArray().Select(value => value.GetString()).ToArray();
+            bool matches = Profile == "platform-current-package" ? profiles.SequenceEqual(new[] { Profile }, StringComparer.Ordinal)
+                : profiles.Contains(Profile, StringComparer.Ordinal) && !profiles.Contains("platform-current-package", StringComparer.Ordinal);
+            if (!JsonElement.DeepEquals(ExecutionContext, invocation.RootElement.GetProperty("executionContext")) || !matches)
                 throw new InvalidDataException("Native diagnostics differ from the original caller artifact invocation.");
             return;
         }

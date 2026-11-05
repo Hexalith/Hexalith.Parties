@@ -3,6 +3,9 @@ import copy
 import hashlib
 import importlib.util
 import json
+import os
+import time
+from unittest import mock
 from pathlib import Path
 import tempfile
 import unittest
@@ -48,7 +51,7 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
         assemblies = [dict(identity=name + ", Version=4.1.0.0, Culture=neutral, PublicKeyToken=null", sha256=digest) for name, digest in verify.SDK.items()]
         self.loaded.update(loaded=assemblies, copied=copy.deepcopy(assemblies))
         self.write("loaded-assemblies-" + self.owner["runId"] + ".json", self.loaded)
-        self.native = ('<TestRun><Results>' + ''.join('<UnitTestResult testName="Hexalith.Parties.Platform.IntegrationTests.' + name + '" outcome="Passed"/>' for name in sorted(verify.CASES))
+        self.native = ('<TestRun><Results>' + ''.join('<UnitTestResult testName="' + name + '" outcome="Passed"/>' for name in sorted(verify.CASES))
                        + '</Results><ResultSummary><Counters total="2" executed="2" passed="2" failed="0"/></ResultSummary></TestRun>').encode()
         self.seal()
 
@@ -110,6 +113,61 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
                 self.seal()
                 with self.assertRaises(ValueError): self.check()
         self.native = original
+
+    def test_counterfeit_fully_qualified_case_identities_are_refused_with_valid_hashes(self):
+        original = self.native
+        for fake in ("Counterfeit.Hexalith.Parties.Platform.IntegrationTests.PartyEnvironmentTests", "Hexalith.Parties.Platform.IntegrationTests.CounterfeitPartyEnvironmentTests"):
+            with self.subTest(fake=fake):
+                self.native = original.replace(b"Hexalith.Parties.Platform.IntegrationTests.PartyEnvironmentTests", fake.encode())
+                self.seal()
+                with self.assertRaises(ValueError): self.check()
+
+    def test_missing_null_untyped_or_invalid_creation_timestamps_are_refused_with_valid_hashes(self):
+        for value in (None, 0, "not-a-date", "2026-11-05T10:00:00", "2026-13-05T10:00:00Z", "missing"):
+            with self.subTest(value=value):
+                self.functional["events"][0]["timestamp"] = value
+                self.functional["projection"]["createdAt"] = value
+                if value == "missing":
+                    del self.functional["events"][0]["timestamp"]
+                    del self.functional["projection"]["createdAt"]
+                self.seal()
+                with self.assertRaises(ValueError): self.check()
+
+    def test_fifo_and_raced_file_or_directory_links_are_refused_without_blocking(self):
+        filename = self.result["diagnostics"][0]["reference"]
+        path = self.root / filename
+        body = path.read_bytes()
+        path.unlink()
+        os.mkfifo(path)
+        started = time.monotonic()
+        with self.assertRaises(ValueError): self.check()
+        self.assertLess(time.monotonic() - started, 1)
+        path.unlink()
+        path.write_bytes(body)
+        outside = Path(self.temp.name).with_name(Path(self.temp.name).name + "-outside")
+        outside.mkdir()
+        self.addCleanup(lambda: __import__("shutil").rmtree(outside))
+        (outside / filename).write_bytes(body)
+        original_open = os.open
+        def race_file(name, flags, *args, **kwargs):
+            if name == filename:
+                path.unlink()
+                path.symlink_to(outside / filename)
+            return original_open(name, flags, *args, **kwargs)
+        with mock.patch.object(verify.os, "open", side_effect=race_file), self.assertRaises(ValueError): self.check()
+        path.unlink()
+        path.write_bytes(body)
+        original_root = self.root.with_name(self.root.name + "-held")
+        def race_directory(name, flags, *args, **kwargs):
+            if name == self.root.name:
+                self.root.rename(original_root)
+                self.root.symlink_to(outside, target_is_directory=True)
+            return original_open(name, flags, *args, **kwargs)
+        try:
+            with mock.patch.object(verify.os, "open", side_effect=race_directory), self.assertRaises(ValueError): self.check()
+        finally:
+            self.root.unlink()
+            original_root.rename(self.root)
 
     def test_missing_mandatory_diagnostic_or_changed_bytes_are_refused(self):
         self.result["diagnostics"] = self.result["diagnostics"][:1]

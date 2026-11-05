@@ -87,6 +87,7 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, IT
         detail.PersonDetails.ShouldBe(command.PersonDetails);
         detail.IsActive.ShouldBeTrue();
         detail.Freshness.ShouldNotBeNull().Status.ShouldBe(ProjectionFreshnessStatus.Current);
+        await AssertLiveSelectorCompatibilityAsync(partyId, token).ConfigureAwait(true);
         (AggregateMetadata metadata, EventEnvelope[] events) = await fixture.ReadStoredStreamAsync(identity, token).ConfigureAwait(true);
         metadata.CurrentSequence.ShouldBe(events.LongLength);
         events.ShouldNotBeEmpty();
@@ -130,6 +131,7 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, IT
                 envelope.Identity, envelope.SequenceNumber, envelope.EventTypeName, envelope.Timestamp,
                 envelope.CorrelationId, envelope.CausationId, envelope.UserId, envelope.SerializationFormat,
             }).ToArray(),
+            selectorCompatibilityObserved = true,
             tenantsNativeQueryObserved = tenantDocument.RootElement.GetProperty("tenantId").GetString() == tenant,
             memoriesRegistryObserved = memoriesDocument.RootElement.GetProperty("id").GetString() == tenant
                 && memoriesDocument.RootElement.GetProperty("status").GetString() == "active",
@@ -161,6 +163,49 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, IT
             if (outcome is "Completed" or "Rejected" or "PublishFailed" or "TimedOut") { return status; }
             status.Dispose();
             await Task.Delay(TimeSpan.FromMilliseconds(250), token).ConfigureAwait(true);
+        }
+    }
+
+    private async Task AssertLiveSelectorCompatibilityAsync(string partyId, CancellationToken token)
+    {
+        foreach (var route in new[]
+        {
+            (Wire: "PartyDetail", Projection: "party-detail", Actor: "PartyDetailProjectionQueryActor", Aggregate: partyId, Payload: JsonSerializer.SerializeToElement(new GetParty { PartyId = partyId }, SerializerOptions)),
+            (Wire: "PartyIndex", Projection: "party-index", Actor: "PartyIndexProjectionQueryActor", Aggregate: "parties", Payload: JsonSerializer.SerializeToElement(new { }, SerializerOptions)),
+            (Wire: "PartySearch", Projection: "party-index", Actor: "PartyIndexProjectionQueryActor", Aggregate: "parties", Payload: JsonSerializer.SerializeToElement(new { Query = "Synthetic first" }, SerializerOptions)),
+        })
+        {
+            while (true)
+            {
+                using HttpResponseMessage response = await SubmitAsync(route.Actor).ConfigureAwait(true);
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    using JsonDocument result = JsonDocument.Parse(await response.Content.ReadAsStringAsync(token).ConfigureAwait(true));
+                    JsonElement payload = result.RootElement.GetProperty("payload");
+                    bool containsParty = route.Wire == "PartyDetail" ? payload.GetProperty("id").GetString() == partyId
+                        : payload.GetProperty("items").EnumerateArray().Any(item => (route.Wire == "PartySearch" ? item.GetProperty("party") : item).GetProperty("id").GetString() == partyId);
+                    if (containsParty && payload.GetProperty("freshness").Deserialize<ProjectionFreshnessMetadata>(SerializerOptions) is { Status: ProjectionFreshnessStatus.Current }) break;
+                }
+                else response.StatusCode.ShouldBeOneOf(HttpStatusCode.NotFound, HttpStatusCode.ServiceUnavailable);
+                await Task.Delay(TimeSpan.FromMilliseconds(250), token).ConfigureAwait(true);
+            }
+            string otherRoute = route.Wire == "PartyDetail" ? "PartyIndexProjectionQueryActor" : "PartyDetailProjectionQueryActor";
+            foreach (string foreign in new[] { "ForeignQueryActor", otherRoute })
+            {
+                using HttpResponseMessage refused = await SubmitAsync(foreign).ConfigureAwait(true);
+                refused.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
+                using JsonDocument problem = JsonDocument.Parse(await refused.Content.ReadAsStringAsync(token).ConfigureAwait(true));
+                problem.RootElement.GetProperty("status").GetInt32().ShouldBe(503);
+                problem.RootElement.GetProperty("detail").GetString().ShouldBe("Catalog authority cannot safely admit this operation.");
+                problem.RootElement.GetRawText().ShouldNotContain(foreign);
+            }
+
+            Task<HttpResponseMessage> SubmitAsync(string selector) => fixture.Gateway.PostAsJsonAsync("/api/v1/queries", new
+            {
+                tenant = fixture.Descriptor.SyntheticTenantId, domain = "party", aggregateId = route.Aggregate,
+                queryType = route.Wire, projectionType = route.Projection, projectionActorType = selector,
+                entityId = route.Wire == "PartyDetail" ? partyId : null, payload = route.Payload,
+            }, SerializerOptions, token);
         }
     }
 

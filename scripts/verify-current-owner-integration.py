@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
+from datetime import datetime
 import hashlib
 import json
 import os
@@ -13,8 +15,8 @@ import xml.etree.ElementTree as ET
 
 PROFILE = "platform-current-package"
 CASES = {
-    "PartyEnvironmentTests.RealDependencies_CreateQueryAndPersistMatchingPartyEvents",
-    "PartyEnvironmentTests.GatewayRefusesAnonymousCommandStatusAsync",
+    "Hexalith.Parties.Platform.IntegrationTests.PartyEnvironmentTests.RealDependencies_CreateQueryAndPersistMatchingPartyEvents",
+    "Hexalith.Parties.Platform.IntegrationTests.PartyEnvironmentTests.GatewayRefusesAnonymousCommandStatusAsync",
 }
 SDK = {
     "Hexalith.EventStore.Contracts": "f3f2d7f6e7edf54e187af15edec8b4f13bf7e255b186b999efa0836a0c86a739",
@@ -44,18 +46,57 @@ def decode(body: bytes):
     return json.loads(body, object_pairs_hook=unique, parse_constant=lambda _: (_ for _ in ()).throw(ValueError("nonfinite JSON")))
 
 
-def read(root: Path, name: str, limit: int = 4194304) -> bytes:
-    require(re.fullmatch(r"[A-Za-z0-9_.-]+", name, re.ASCII) is not None, "unsafe evidence filename")
-    path = root / name
-    require(all(not part.is_symlink() for part in (path, *path.parents)), "linked evidence path")
-    with path.open("rb") as stream:
-        before = os.fstat(stream.fileno())
+@contextmanager
+def held_directory(root: Path):
+    path = root.absolute()
+    require(".." not in path.parts, "evidence path cannot traverse parents")
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC
+    descriptor = os.open(path.anchor, flags)
+    try:
+        for component in path.parts[1:]:
+            child = os.open(component, flags, dir_fd=descriptor)
+            os.close(descriptor)
+            descriptor = child
+        require(stat.S_ISDIR(os.fstat(descriptor).st_mode), "invalid evidence directory")
+        yield descriptor
+    except OSError as error:
+        raise ValueError("evidence directory cannot follow links or unavailable paths") from error
+    finally:
+        os.close(descriptor)
+
+
+def read(root: Path | int, name: str, limit: int = 4194304) -> bytes:
+    require(re.fullmatch(r"[A-Za-z0-9_.-]+", name, re.ASCII) is not None and name not in (".", ".."), "unsafe evidence filename")
+    if isinstance(root, Path):
+        with held_directory(root) as descriptor:
+            return read(descriptor, name, limit)
+    descriptor = None
+    try:
+        descriptor = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC, dir_fd=root)
+        before = os.fstat(descriptor)
         require(stat.S_ISREG(before.st_mode) and 0 < before.st_size <= limit, "invalid evidence file")
-        body = stream.read(limit + 1)
-        after = os.fstat(stream.fileno())
-    require(all(getattr(before, key) == getattr(after, key) for key in ("st_dev", "st_ino", "st_mode", "st_size", "st_mtime_ns", "st_ctime_ns"))
-            and len(body) == before.st_size, "evidence changed while reading")
-    return body
+        body = bytearray()
+        while len(body) <= limit:
+            chunk = os.read(descriptor, min(65536, limit + 1 - len(body)))
+            if not chunk:
+                break
+            body.extend(chunk)
+        after = os.fstat(descriptor)
+        require(all(getattr(before, key) == getattr(after, key) for key in ("st_dev", "st_ino", "st_mode", "st_size", "st_mtime_ns", "st_ctime_ns"))
+                and len(body) == before.st_size, "evidence changed while reading")
+        return bytes(body)
+    except OSError as error:
+        raise ValueError("evidence must be a bounded regular file without links") from error
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+
+
+def creation_timestamp(value):
+    require(isinstance(value, str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,7})?(?:Z|[+-]\d{2}:\d{2})", value) is not None,
+            "creation timestamp must be a present offset timestamp")
+    require(datetime.fromisoformat(value).utcoffset() is not None, "creation timestamp requires an offset")
+    return value
 
 
 def document(root: Path, name: str):
@@ -63,8 +104,11 @@ def document(root: Path, name: str):
 
 
 def validate(directory: Path, *, repository: str, run: str, attempt: int, source: str, platform: str, builds: str) -> dict:
-    root = directory.absolute()
-    require(root.is_dir() and not root.is_symlink(), "missing current workflow artifact")
+    with held_directory(directory) as root:
+        return validate_held(root, repository=repository, run=run, attempt=attempt, source=source, platform=platform, builds=builds)
+
+
+def validate_held(root: int, *, repository: str, run: str, attempt: int, source: str, platform: str, builds: str) -> dict:
     context = {"kind": "ci", "repository": repository, "workflowRunId": run, "workflowAttempt": attempt,
                "jobId": "build-and-test", "runnerKind": "github-hosted", "operatingSystem": "Linux", "disposable": True}
     invocation = document(root, "invocation.json")
@@ -117,7 +161,7 @@ def validate(directory: Path, *, repository: str, run: str, attempt: int, source
     require(all(int(count.get(key, "-1")) == len(cases) for key in ("total", "executed", "passed"))
             and all(int(count.get(key, "0")) == 0 for key in ("failed", "error", "timeout", "aborted", "notExecuted", "notRunnable", "disconnected", "inconclusive")), "inconsistent native counters")
     for required in CASES:
-        require(sum(item.get("testName", "").endswith(required) for item in cases) == 1, "required unchanged native case missing or duplicated")
+        require(sum(item.get("testName") == required for item in cases) == 1, "required unchanged native case missing or duplicated")
     functional = decode(selected["functional-observations"])
     require(functional.get("status") == "functional-observations-passed" and functional.get("qualificationCredit") is False, "functional evidence did not pass")
     for key in ("runId", "attemptId", "environmentId"):
@@ -134,7 +178,7 @@ def validate(directory: Path, *, repository: str, run: str, attempt: int, source
                 and event.get("correlationId") == functional["commandId"] == event.get("causationId")
                 and event.get("userId") == "g4-native-tests" and event.get("serializationFormat") == "json", "persisted event identity mismatch")
     created = [event for event in events if event.get("eventTypeName") == "Hexalith.Parties.Contracts.Events.PartyCreated"]
-    require(len(created) == 1 and created[0].get("timestamp") == functional["projection"].get("createdAt"), "PartyCreated/projection timestamp mismatch")
+    require(len(created) == 1 and creation_timestamp(created[0].get("timestamp")) == creation_timestamp(functional["projection"].get("createdAt")), "PartyCreated/projection timestamp mismatch")
     require(functional.get("tenantsNativeQueryObserved") is True and functional.get("memoriesRegistryObserved") is True, "real reference-owner assertions absent")
     current = functional["currentOwner"]
     for key in ("runId", "attemptId", "environmentId", "revision", "mappingHash", "profile"):
@@ -168,7 +212,7 @@ def validate(directory: Path, *, repository: str, run: str, attempt: int, source
             require(len(observed) == 1 if field == "copied" or name == "Hexalith.EventStore.Contracts" else len(observed) <= 1, "native/composition SDK inventory missing")
             require(all(item.get("sha256") == expected and ", Version=4.1.0.0," in item["identity"] for item in observed), "native/composition SDK substitution")
     allowed = names | {loaded_name, "invocation.json", "execution.json", "cleanup.json", "test-result.json", "attachments.json", "attachment-withdrawals.json"}
-    require(all(path.is_file() and not path.is_symlink() and path.name in allowed for path in root.iterdir()), "unreferenced or duplicate artifact substitute")
+    require(all(name in allowed and stat.S_ISREG(os.stat(name, dir_fd=root, follow_symlinks=False).st_mode) for name in os.listdir(root)), "unreferenced or duplicate artifact substitute")
     return {"profile": PROFILE, "source": source, "runId": owner["runId"], "nativeCases": len(cases), "qualificationCredit": False}
 
 

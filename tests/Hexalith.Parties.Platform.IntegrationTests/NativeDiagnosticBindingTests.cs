@@ -118,4 +118,31 @@ public sealed class NativeDiagnosticBindingTests
             Directory.Delete(control, recursive: true);
         }
     }
+    /// <summary>Ordinary compatible batches retain containment; current purpose requires one exclusive profile.</summary>
+    [Theory]
+    [InlineData("platform-package", "platform-package,lifecycle-package", true)]
+    [InlineData("platform-package", "lifecycle-package", false)]
+    [InlineData("platform-current-package", "platform-current-package", true)]
+    [InlineData("platform-current-package", "platform-current-package,platform-package", false)]
+    [InlineData("platform-package", "platform-package,platform-current-package", false)]
+    [InlineData("platform-current-package", "platform-current-package,platform-current-package", false)]
+    public void InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(string profile, string profiles, bool accepted)
+    {
+        ArgumentNullException.ThrowIfNull(profiles);
+        string directory = Directory.CreateTempSubdirectory("parties-local-invocation-").FullName;
+        try
+        {
+            using JsonDocument context = JsonDocument.Parse("{\"kind\":\"local\"}");
+            var binding = new NativeDiagnosticBinding(new string('1', 32), new string('2', 32), new string('3', 32), directory,
+                directory, new string('a', 40), new string('b', 64), context.RootElement.Clone(), directory, "local-model", profile);
+            Directory.CreateDirectory(binding.ArtifactDirectory);
+            File.WriteAllBytes(Path.Combine(binding.ArtifactDirectory, "invocation.json"), JsonSerializer.SerializeToUtf8Bytes(new
+            {
+                classification = "baseline-only", executionContext = context.RootElement, profiles = profiles.Split(','),
+            }));
+            if (accepted) binding.VerifyCallerArtifact();
+            else Should.Throw<InvalidDataException>(binding.VerifyCallerArtifact);
+        }
+        finally { Directory.Delete(directory, recursive: true); }
+    }
 }
