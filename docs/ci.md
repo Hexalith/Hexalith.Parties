@@ -4,7 +4,7 @@ Hexalith.Parties uses GitHub Actions with shared Hexalith.Builds workflows and a
 
 ## Workflows
 
-- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@ae68c59bd2f4145a23ccf68c3711f98eaf62195f`.
+- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@fc2122240a39f03628c04fa8433e5eece90b8b4c`.
 - `.github/workflows/release.yml` is a manual `workflow_dispatch` workflow with a protected, caller-owned release job. It uses `Hexalith/Hexalith.Builds/Github/prepare-domain-release@11a3a79cfac4bba9548c6364a17a01ee9b561370` and takes the nested publisher from that same immutable Builds checkout.
 - `.github/workflows/commitlint.yml` delegates Conventional Commit validation to the retained immutable Builds revision `332b2c144defba546fe0a09626a4a72f2340e22f`, for pull requests and main pushes.
 - `.github/workflows/dependency-review.yml` delegates dependency review for pull requests.
@@ -31,9 +31,9 @@ dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.T
 
 CI runs on pushes and pull requests to `main`, scheduled nightly runs, and Pact Broker `repository_dispatch` events with type `contract_requiring_verification_published`.
 
-The v2 workflow uses the exact published module CLI 4.44.2 and genuine Platform
-v1.3.0 (`338a6afc31850761f49c0de7d399266dd15cfe84`) with the matching recorded
-Builds catalog `ae68c59bd2f4145a23ccf68c3711f98eaf62195f`. Supported package-mode
+The v2 workflow uses the exact published module CLI 4.44.3 and genuine Platform
+v1.4.0 (`ae7516ee6961dd31a5e319be59ead76449ab04a0`) with the matching recorded
+Builds catalog `fc2122240a39f03628c04fa8433e5eece90b8b4c`. Supported package-mode
 preparation generates verified runtime-free Release imports before restore/build
 of `Hexalith.Parties.Standalone.slnx` and package consumer validation.
 
@@ -55,8 +55,11 @@ success, failure, cancellation or partial startup. Unknown cleanup or owned
 leftovers fails; classified diagnostics survive workspace deletion. Same/cross-job
 admission and native lifecycle acceptance still require actual hosted evidence.
 
-All independent jobs remain blocking and unchanged, including the original offline
-cohort and the separate 52-case actual-client protocol job with private caches.
+All independent jobs remain blocking. The offline EventStore cohort now selects
+public 4.1.0 and requires all seven catalog cases, including the exact owner-declared
+legacy selectors for PartyDetail, PartyIndex and PartySearch and refusal of foreign
+selectors. The separate 52-case actual-client protocol job also uses that SDK with
+its existing private caches and unchanged Memories 3.0.18 selection.
 Source selection is user-delegated `codex-agent` bookkeeping, not human
 ratification, package/runtime parity or candidate acceptance.
 

@@ -561,3 +561,16 @@ references/Hexalith.McpCli|add6e2079a2446fc764f95b4add87d49cda430a8|validated-ad
 references/Hexalith.Memories|4dac7decfdd33b3d048de3c77e9cb1562bb95c6f|validated-advance|origin/main@4dac7decfdd3|codex-agent|2026-11-04
 references/Hexalith.Platform|aaa30aff1038688a921494a78c9fc53fc5eb8836|validated-advance|origin/main@aaa30aff1038|codex-agent|2026-11-04
 references/Hexalith.Tenants|143cec60a3f5bb1831fa57f35c510880ceb788d8|validated-advance|origin/main@143cec60a3f5|codex-agent|2026-11-04
+
+# --- 2026-11-05 explicit synchronized release source selection.
+#     codex-agent records six clean fast-forwards under the user release request.
+#     Platform v1.4.0 is the real release at ae7516ee after successful exact tuple
+#     preflight 42014821187. It pins Builds v4.44.3/fc212224 and CLI 4.44.3.
+#     Other rows record fetched origin/main source only. These selections do not
+#     claim that Parties or upstream CI, runtime qualification or publication pass.
+references/Hexalith.Builds|fc2122240a39f03628c04fa8433e5eece90b8b4c|validated-advance|v4.44.3|codex-agent|2026-11-05
+references/Hexalith.Platform|ae7516ee6961dd31a5e319be59ead76449ab04a0|validated-advance|v1.4.0|codex-agent|2026-11-05
+references/Hexalith.EventStore|2dca77cc2f22a9b85e4fcc3f8e18cbcaa532b135|validated-advance|origin/main@2dca77cc2f22|codex-agent|2026-11-05
+references/Hexalith.Memories|ea334b6456e079e181b9d78552d4f340c891b2ff|validated-advance|origin/main@ea334b6456e0|codex-agent|2026-11-05
+references/Hexalith.FrontComposer|4c24c287cde520631e960a322413bee804f7c3d4|validated-advance|origin/main@4c24c287cde5|codex-agent|2026-11-05
+references/Hexalith.McpCli|f24266b628a2abcfbdc9f0d064e0e4c324d8e7c8|validated-advance|origin/main@f24266b628a2|codex-agent|2026-11-05

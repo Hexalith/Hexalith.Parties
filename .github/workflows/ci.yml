@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   ci:
-    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@ae68c59bd2f4145a23ccf68c3711f98eaf62195f
+    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@fc2122240a39f03628c04fa8433e5eece90b8b4c
     with:
       solution: Hexalith.Parties.Standalone.slnx
       module-manifest: module/hexalith.module-manifest.v2.json
@@ -49,8 +49,8 @@ jobs:
       registry-pull-username: ${{ secrets.HEXALITH_CI_REGISTRY_USERNAME }}
       registry-pull-password: ${{ secrets.HEXALITH_CI_REGISTRY_PASSWORD }}
 
-  eventstore-404-package-cohort:
-    name: EventStore 4.0.4 package cohort (offline)
+  eventstore-410-package-cohort:
+    name: EventStore 4.1.0 package cohort (offline)
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -69,7 +69,7 @@ jobs:
         shell: bash
         run: |
           package_properties=(
-            -p:HexalithEventStoreVersion=4.0.4
+            -p:HexalithEventStoreVersion=4.1.0
             -p:HexalithTenantsVersion=5.11.2
             -p:HexalithMemoriesVersion=3.0.11
             -p:UseHexalithProjectReferences=false
@@ -96,11 +96,11 @@ jobs:
             --no-build --no-restore --configuration Release "${package_properties[@]}" \
             --filter-class Hexalith.Parties.Contracts.Tests.PartiesCatalogTests \
             --filter-class Hexalith.Parties.Contracts.Tests.PartiesCatalogAdapterTests \
-            --minimum-expected-tests 3 --fail-skips on
+            --minimum-expected-tests 7 --fail-skips on
           dotnet test --project tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj \
             --no-build --no-restore --configuration Release "${package_properties[@]}" \
             --filter-method Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.CatalogApiAvailabilityDoesNotSelectNativeHosts \
-            --minimum-expected-tests 22 --fail-skips on
+            --minimum-expected-tests 23 --fail-skips on
 
   memories-3018-package-protocol:
     name: Memories 3.0.18 package protocol
@@ -126,7 +126,7 @@ jobs:
         run: |
           set -euo pipefail
           package_properties=(
-            -p:HexalithEventStoreVersion=4.0.4
+            -p:HexalithEventStoreVersion=4.1.0
             -p:HexalithTenantsVersion=7.0.0
             -p:HexalithMemoriesVersion=3.0.18
             -p:UseHexalithProjectReferences=false
