@@ -15,5 +15,10 @@
   "engines": {
     "node": "24.22.1",
     "npm": "11.19.1"
+  },
+  "overrides": {
+    "semantic-release": {
+      "@semantic-release/npm": "npm:@semantic-release/error@4.0.0"
+    }
   }
 }

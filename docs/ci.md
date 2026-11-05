@@ -59,7 +59,9 @@ All independent jobs remain blocking. The original offline EventStore 4.0.4 /
 Tenants 5.11.2 / Memories 3.0.11 cohort retains its three catalog cases. A separate
 4.1.0 / 7.0.2 / 3.0.23 cohort requires ten catalog cases, canonical selector
 serialization, 33 unconditional capability evaluations and six actual gateway
-router boundary cases, including foreign-selector refusal. The original 52-case
+router boundary cases, including foreign-selector refusal. This lane also checks
+out the recorded EventStore configuration files required by its private test
+hosts; SDK dependencies still come from NuGet. The original 52-case
 Memories 3.0.18 actual-client protocol job keeps SDK 4.0.4, Tenants 7.0.0 and its
 private caches. These offline checks provide no hosted lifecycle acceptance.
 Source selection is user-delegated `codex-agent` bookkeeping, not human
@@ -507,3 +509,8 @@ qualification verifies its actual journal and unique issued owner receipt. No Gi
 forwarded into the scrubbed native process, and canonical functional observations remain unchanged.
 These measurements and local boundary controls grant no native, lifecycle, parity, human approval,
 or candidate acceptance by themselves.
+
+Release tooling uses the four explicit plugins in `release.config.cjs`. The unused
+default npm publisher is excluded from the installed dependency closure through
+the same override pattern used by Memories; this NuGet-only release does not
+load that plugin. The refreshed locked tooling passes `npm audit` without findings.
