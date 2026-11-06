@@ -1,0 +1,231 @@
+{
+  "source": "a133f603790375ff51a03f3d0844c7218da36ced",
+  "ciRun": 42260737127,
+  "fullLiveAccepted": true,
+  "passedVectors": 21,
+  "failedVectors": 0,
+  "successfulOwnedRuntimeCleanups": 22,
+  "runtimeResults": [
+    {
+      "path": "d31e824e3f074e1f8cf0f49a0523e22d/runtime-diagnostics/20261106T175742Z-af7934cc/result.json",
+      "ownedInfrastructureStopExitCodes": {
+        "sentry": 0,
+        "redis": 0,
+        "placement": 0,
+        "scheduler": 0
+      },
+      "commandExitCode": 0
+    },
+    {
+      "path": "d31e824e3f074e1f8cf0f49a0523e22d/runtime-diagnostics/20261106T174328Z-81460eca/result.json",
+      "ownedInfrastructureStopExitCodes": {
+        "sentry": 0,
+        "redis": 0,
+        "placement": 0,
+        "scheduler": 0
+      },
+      "commandExitCode": 0
+    },
+    {
+      "path": "d31e824e3f074e1f8cf0f49a0523e22d/runtime-diagnostics/20261106T174745Z-ebb4bc4b/result.json",
+      "ownedInfrastructureStopExitCodes": {
+        "sentry": 0,
+        "redis": 0,
+        "placement": 0,
+        "scheduler": 0
+      },
+      "commandExitCode": 0
+    },
+    {
+      "path": "d31e824e3f074e1f8cf0f49a0523e22d/runtime-diagnostics/20261106T174619Z-ebf272f3/result.json",
+      "ownedInfrastructureStopExitCodes": {
+        "sentry": 0,
+        "redis": 0,
+        "placement": 0,
+        "scheduler": 0
+      },
+      "commandExitCode": 0
+    },
+    {
+      "path": "d31e824e3f074e1f8cf0f49a0523e22d/runtime-diagnostics/20261106T173526Z-86d840db/result.json",
+      "ownedInfrastructureStopExitCodes": {
+        "sentry": 0,
+        "redis": 0,
+        "placement": 0,
+        "scheduler": 0
+      },
+      "commandExitCode": 0
+    },
+    {
+      "path": "d31e824e3f074e1f8cf0f49a0523e22d/runtime-diagnostics/20261106T173756Z-7b0df08b/result.json",
+      "ownedInfrastructureStopExitCodes": {
+        "sentry": 0,
+        "redis": 0,
+        "placement": 0,
+        "scheduler": 0
+      },
+      "commandExitCode": 0
+    },
+    {
+      "path": "d31e824e3f074e1f8cf0f49a0523e22d/runtime-diagnostics/20261106T175341Z-83525e0f/result.json",
+      "ownedInfrastructureStopExitCodes": {
+        "sentry": 0,
+        "redis": 0,
+        "placement": 0,
+        "scheduler": 0
+      },
+      "commandExitCode": 0
+    },
+    {
+      "path": "d31e824e3f074e1f8cf0f49a0523e22d/runtime-diagnostics/20261106T180411Z-ccb4271f/result.json",
+      "ownedInfrastructureStopExitCodes": {
+        "sentry": 0,
+        "redis": 0,
+        "placement": 0,
+        "scheduler": 0
+      },
+      "commandExitCode": 0
+    },
+    {
+      "path": "d31e824e3f074e1f8cf0f49a0523e22d/runtime-diagnostics/20261106T174926Z-a9378bd5/result.json",
+      "ownedInfrastructureStopExitCodes": {
+        "sentry": 0,
+        "redis": 0,
+        "placement": 0,
+        "scheduler": 0
+      },
+      "commandExitCode": 0
+    },
+    {
+      "path": "d31e824e3f074e1f8cf0f49a0523e22d/runtime-diagnostics/20261106T180106Z-82289a37/result.json",
+      "ownedInfrastructureStopExitCodes": {
+        "sentry": 0,
+        "redis": 0,
+        "placement": 0,
+        "scheduler": 0
+      },
+      "commandExitCode": 0
+    },
+    {
+      "path": "d31e824e3f074e1f8cf0f49a0523e22d/runtime-diagnostics/20261106T173251Z-a61a27b6/result.json",
+      "ownedInfrastructureStopExitCodes": {
+        "sentry": 0,
+        "redis": 0,
+        "placement": 0,
+        "scheduler": 0
+      },
+      "commandExitCode": 0
+    },
+    {
+      "path": "d31e824e3f074e1f8cf0f49a0523e22d/runtime-diagnostics/20261106T173400Z-71df058e/result.json",
+      "ownedInfrastructureStopExitCodes": {
+        "sentry": 0,
+        "redis": 0,
+        "placement": 0,
+        "scheduler": 0
+      },
+      "commandExitCode": 0
+    },
+    {
+      "path": "d31e824e3f074e1f8cf0f49a0523e22d/runtime-diagnostics/20261106T175521Z-15819c88/result.json",
+      "ownedInfrastructureStopExitCodes": {
+        "sentry": 0,
+        "redis": 0,
+        "placement": 0,
+        "scheduler": 0
+      },
+      "commandExitCode": 0
+    },
+    {
+      "path": "d31e824e3f074e1f8cf0f49a0523e22d/runtime-diagnostics/20261106T173925Z-d47af4d4/result.json",
+      "ownedInfrastructureStopExitCodes": {
+        "sentry": 0,
+        "redis": 0,
+        "placement": 0,
+        "scheduler": 0
+      },
+      "commandExitCode": 0
+    },
+    {
+      "path": "d31e824e3f074e1f8cf0f49a0523e22d/runtime-diagnostics/20261106T180244Z-cf2617a2/result.json",
+      "ownedInfrastructureStopExitCodes": {
+        "sentry": 0,
+        "redis": 0,
+        "placement": 0,
+        "scheduler": 0
+      },
+      "commandExitCode": 0
+    },
+    {
+      "path": "d31e824e3f074e1f8cf0f49a0523e22d/runtime-diagnostics/20261106T175145Z-8b8bfb8a/result.json",
+      "ownedInfrastructureStopExitCodes": {
+        "sentry": 0,
+        "redis": 0,
+        "placement": 0,
+        "scheduler": 0
+      },
+      "commandExitCode": 0
+    },
+    {
+      "path": "d31e824e3f074e1f8cf0f49a0523e22d/runtime-diagnostics/20261106T174045Z-474c8f08/result.json",
+      "ownedInfrastructureStopExitCodes": {
+        "sentry": 0,
+        "redis": 0,
+        "placement": 0,
+        "scheduler": 0
+      },
+      "commandExitCode": 0
+    },
+    {
+      "path": "d31e824e3f074e1f8cf0f49a0523e22d/runtime-diagnostics/20261106T175927Z-6804f829/result.json",
+      "ownedInfrastructureStopExitCodes": {
+        "sentry": 0,
+        "redis": 0,
+        "placement": 0,
+        "scheduler": 0
+      },
+      "commandExitCode": 0
+    },
+    {
+      "path": "d31e824e3f074e1f8cf0f49a0523e22d/runtime-diagnostics/20261106T180536Z-73647d83/result.json",
+      "ownedInfrastructureStopExitCodes": {
+        "sentry": 0,
+        "redis": 0,
+        "placement": 0,
+        "scheduler": 0
+      },
+      "commandExitCode": 0
+    },
+    {
+      "path": "d31e824e3f074e1f8cf0f49a0523e22d/runtime-diagnostics/20261106T173635Z-66222bc5/result.json",
+      "ownedInfrastructureStopExitCodes": {
+        "sentry": 0,
+        "redis": 0,
+        "placement": 0,
+        "scheduler": 0
+      },
+      "commandExitCode": 0
+    },
+    {
+      "path": "d31e824e3f074e1f8cf0f49a0523e22d/runtime-diagnostics/20261106T174506Z-c8b4f180/result.json",
+      "ownedInfrastructureStopExitCodes": {
+        "sentry": 0,
+        "redis": 0,
+        "placement": 0,
+        "scheduler": 0
+      },
+      "commandExitCode": 0
+    },
+    {
+      "path": "d31e824e3f074e1f8cf0f49a0523e22d/runtime-diagnostics/20261106T174204Z-163aa088/result.json",
+      "ownedInfrastructureStopExitCodes": {
+        "sentry": 0,
+        "redis": 0,
+        "placement": 0,
+        "scheduler": 0
+      },
+      "commandExitCode": 0
+    }
+  ],
+  "trx": []
+}

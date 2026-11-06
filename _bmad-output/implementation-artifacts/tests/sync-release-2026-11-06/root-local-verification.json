@@ -1,0 +1,30 @@
+{
+  "source": "8936e4e5366e7dae428e60915ea2cd00063dfad2",
+  "platform": "ed991837945571a12743214fc18a87fbd323fc30",
+  "eventstore": "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+  "build": "FullStandaloneRelease0warnings0errors",
+  "tests": {
+    "root-platform-157-fitness": {
+      "total": 136,
+      "passed": 136,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0
+    },
+    "root-platform-157-ci": {
+      "total": 590,
+      "passed": 590,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0
+    }
+  },
+  "observerCases": 14,
+  "actionlint": "pass",
+  "gitlinkWorktree": "pass",
+  "gitlinkRange": "14220a7fe0daa19c645675618200fb2a5da13382..8936e4e5366e7dae428e60915ea2cd00063dfad2 pass; historicalauthorizationrowsretained",
+  "localNativeRegression": "root-startup-platform-157/verified-local-runtime.json:28passed0skipsandallownedcleanupempty; nohostedacceptancecredit",
+  "hostedReleaseSourceValidation": "inprogress; noRootreleaseyet"
+}

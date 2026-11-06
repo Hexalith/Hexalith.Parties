@@ -1,0 +1,72 @@
+{
+  "version": "7.0.5",
+  "source": "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
+  "manifestSha256": "1588f3428ec29296c452fdd35bf95146142315aad3ad8ceb934e7a791f1fb522",
+  "packages": [
+    {
+      "id": "Hexalith.Tenants.Contracts",
+      "version": "7.0.5",
+      "sourceCommit": "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
+      "sha256": "4694e203a54afe8a80c160d92fcf0156da78228a00c67218e3dd88c420fa1c07",
+      "artifactHash": "sha512-Rw7W/bMwDBFwA1/wT6iOjNHd/PqSPAFQ2+ZUhWY7XXaIPlzKxiB+X/YALpHy1f6p/SoxAWCGq2Jlg4EEOTrY4w==",
+      "assemblies": {
+        "lib/net10.0/Hexalith.Tenants.Contracts.dll": "adedcc49d81f2ceb6855f365dddb05e8f1f550e303c5f0e92c4d3153ff672d45"
+      }
+    },
+    {
+      "id": "Hexalith.Tenants.Client",
+      "version": "7.0.5",
+      "sourceCommit": "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
+      "sha256": "9ff8434395afb9aa3a68cb8dcb84820ebd141f56bd4475898cd07758299234d3",
+      "artifactHash": "sha512-WCZyycMKfpJY0NBKoXlO75++t3TP2k8v8U7B55ggSxXoxjdChgL21yxo8feFtIrKKdN4Gzxnem5GJZcG5mR+qw==",
+      "assemblies": {
+        "lib/net10.0/Hexalith.Tenants.Client.dll": "6c1547a2a2c86bed736e52f5d834f1152c75d4c0ad7bdb928a68e1ef4bd36b4e"
+      }
+    },
+    {
+      "id": "Hexalith.Tenants.Server",
+      "version": "7.0.5",
+      "sourceCommit": "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
+      "sha256": "c054e8a2adce736fc583b650b0765385fcb548831089429902c2813f129e90a3",
+      "artifactHash": "sha512-I098rRvSOiWM/2QS0jilewFXd3y+uiSpo0LjlXHPDi0u/JhMmL9f4yCm+22gaXUgKi7rwvEXMp8TRdh3OReCOQ==",
+      "assemblies": {
+        "lib/net10.0/Hexalith.Tenants.Server.dll": "e84f4b22485c5db4866636558488e387132369583483b0334839c1bcf66b95ad"
+      }
+    },
+    {
+      "id": "Hexalith.Tenants.Testing",
+      "version": "7.0.5",
+      "sourceCommit": "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
+      "sha256": "90b7907e03caad49e8c30f95a8a21e03dab797fbf0e6f07ede95aa718d013693",
+      "artifactHash": "sha512-zz6B5BxCVptAMY3lW+AV6Io7vcAxQbbC0RHFsgvjyh46rqAVvbs5CuhLXPSaC7surik11Uo6WvRq+0AxbQbkTQ==",
+      "assemblies": {
+        "lib/net10.0/Hexalith.Tenants.Testing.dll": "4b319c6eb81ab15ae73d783bbe8164f0cbfa47abdca04bd1f6c0dba542c7fd8b"
+      }
+    },
+    {
+      "id": "Hexalith.Tenants.Aspire",
+      "version": "7.0.5",
+      "sourceCommit": "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
+      "sha256": "8fe8966d472ea0451dec6ca9c3674d67440fa5f1fb908c1db779f651eed1d3d9",
+      "artifactHash": "sha512-SV328A6PTCZg+4WQp2iFhNVFGOSoKRwf/GzCp4hzyBsigDcasuX1OBFJlQjTlDXPWA+5dJKJioWa6r0uQHVs2g==",
+      "assemblies": {
+        "lib/net10.0/Hexalith.Tenants.Aspire.dll": "fdb294620033d42e7a5075c49b4753390be87bc54a3e541d07a1fd7ba22e8439"
+      }
+    }
+  ],
+  "publicationRun": 42245346373,
+  "images": {
+    "tenants": {
+      "image": "registry.hexalith.com/tenants:7.0.5",
+      "digest": "sha256:1ba6ff9dd0623817d667bd46229dd0ba34a23ffc51d48c889d3e67f474bec22a",
+      "verificationSha256": "ec2da8931beeb37b15934c6e2f7f787eae38e4818e730afe55f5ec40437f2841",
+      "verificationFile": "release-evidence/7.0.5/destinations/verified.json"
+    },
+    "tenants-api": {
+      "image": "registry.hexalith.com/tenants-api:7.0.5",
+      "digest": "sha256:f4707de77c595977d5b7913b4e6119aed407da3c72475ba13b46e9e302d1ef7b",
+      "verificationSha256": "98300f4bb374a43473e4e3cf243fedcc589bedbbe8ae6d02cc2817e008148df5",
+      "verificationFile": "release-evidence/7.0.5/tenants-api-destination/verified.json"
+    }
+  }
+}

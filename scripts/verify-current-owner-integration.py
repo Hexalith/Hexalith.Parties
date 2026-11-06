@@ -103,6 +103,24 @@ def document(root: Path, name: str):
     return decode(read(root, name))
 
 
+def persisted_identity(aggregate):
+    """Derive the complete current SDK AggregateIdentity JSON contract from its canonical core tuple."""
+    require(isinstance(aggregate, dict) and set(aggregate) == {"tenantId", "domain", "aggregateId"}, "invalid aggregate identity tuple")
+    tenant, domain, identifier = (aggregate[key] for key in ("tenantId", "domain", "aggregateId"))
+    require(all(isinstance(value, str) and len(value) <= 64
+                and re.fullmatch(r"[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", value, re.ASCII) is not None
+                for value in (tenant, domain)), "invalid canonical tenant/domain")
+    require(isinstance(identifier, str) and len(identifier) <= 256
+            and re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?", identifier, re.ASCII) is not None,
+            "invalid canonical aggregate identifier")
+    actor = f"{tenant}:{domain}:{identifier}"
+    return {**aggregate, "actorId": actor, "eventStreamKeyPrefix": actor + ":events:",
+            "metadataKey": actor + ":metadata", "snapshotKey": actor + ":snapshot",
+            "pipelineKeyPrefix": actor + ":pipeline:",
+            "pubSubTopic": (domain if tenant == "system" else tenant + "." + domain) + ".events",
+            "queueSession": actor}
+
+
 def validate(directory: Path, *, repository: str, run: str, attempt: int, source: str, platform: str, builds: str) -> dict:
     with held_directory(directory) as root:
         return validate_held(root, repository=repository, run=run, attempt=attempt, source=source, platform=platform, builds=builds)
@@ -169,12 +187,13 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
     require(functional.get("profile") == PROFILE and functional.get("revision") == source and HEX.fullmatch(functional.get("mappingHash", "")) is not None
             and functional.get("executionContext") == context, "functional source/profile/context mismatch")
     aggregate = functional["aggregate"]
+    expected_identity = persisted_identity(aggregate)
     events = functional["events"]
     require(isinstance(events, list) and len(events) > 0 and functional.get("eventCount") == len(events) == functional.get("metadataSequence"), "persisted sequence mismatch")
     require(aggregate.get("tenantId", "").startswith("g4t-") and aggregate.get("domain") == "party" and aggregate.get("aggregateId"), "foreign persisted aggregate")
     require(functional["projection"].get("id") == aggregate["aggregateId"] and functional["projection"].get("freshness") in ("current", "Current"), "projection differs from persisted aggregate")
     for sequence, event in enumerate(events, 1):
-        require(event.get("identity") == aggregate and event.get("sequenceNumber") == sequence
+        require(event.get("identity") == expected_identity and event.get("sequenceNumber") == sequence
                 and event.get("correlationId") == functional["commandId"] == event.get("causationId")
                 and event.get("userId") == "g4-native-tests" and event.get("serializationFormat") == "json", "persisted event identity mismatch")
     created = [event for event in events if event.get("eventTypeName") == "Hexalith.Parties.Contracts.Events.PartyCreated"]

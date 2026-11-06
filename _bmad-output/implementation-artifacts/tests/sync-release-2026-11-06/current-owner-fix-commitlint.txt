@@ -1,0 +1,6 @@
+⧗   --- input ---
+fix(ci): validate actual current-owner evidence
+
+Validate the complete persisted SDK identity and bound partial reads.
+Retain redacted execution outcomes and measured dependency evidence.
+✔   found 0 problems, 0 warnings

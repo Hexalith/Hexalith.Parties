@@ -1,0 +1,19 @@
+{
+  "source": "https://builds.dotnet.microsoft.com/dotnet/release-metadata/releases-index.json",
+  "checkedAtUtc": "2026-11-06T20:31:53.831101+00:00",
+  "latestSupportedStableSdk": "10.0.403",
+  "latestRuntime": "10.0.14",
+  "repositoryPins": {
+    "global.json": "10.0.403",
+    "references/Hexalith.Commons/global.json": "10.0.403",
+    "references/Hexalith.Memories/global.json": "10.0.403",
+    "references/Hexalith.Platform/global.json": "10.0.403",
+    "references/Hexalith.EventStore/global.json": "10.0.403",
+    "references/Hexalith.Tenants/global.json": "10.0.403",
+    "references/Hexalith.Builds/global.json": "10.0.403",
+    "references/Hexalith.PolymorphicSerializations/global.json": "10.0.403",
+    "references/Hexalith.McpCli/global.json": "10.0.403",
+    "references/Hexalith.FrontComposer/global.json": "10.0.403"
+  },
+  "prereleasesExcluded": true
+}

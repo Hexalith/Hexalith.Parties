@@ -1,0 +1,46 @@
+{
+  "42281947755": {
+    "source": "ed991837945571a12743214fc18a87fbd323fc30",
+    "url": "https://github.com/Hexalith/Hexalith.Platform/actions/runs/42281947755",
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "tuple",
+        "conclusion": "success"
+      },
+      {
+        "name": "Same changed source against the legacy public tuple",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "42281947817": {
+    "source": "ed991837945571a12743214fc18a87fbd323fc30",
+    "url": "https://github.com/Hexalith/Hexalith.Platform/actions/runs/42281947817",
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "consumer-binding (4.1.0)",
+        "conclusion": "success"
+      },
+      {
+        "name": "consumer-binding (3.130.0)",
+        "conclusion": "success"
+      },
+      {
+        "name": "consumer-binding (3.130.1)",
+        "conclusion": "success"
+      },
+      {
+        "name": "consumer-binding (3.132.1)",
+        "conclusion": "success"
+      },
+      {
+        "name": "consumer-binding (3.130.2)",
+        "conclusion": "success"
+      }
+    ]
+  }
+}

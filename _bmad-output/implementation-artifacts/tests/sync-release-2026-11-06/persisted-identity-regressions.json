@@ -1,0 +1,31 @@
+{
+  "scope": [
+    "scripts/verify-current-owner-integration.py",
+    "scripts/test_current_owner_integration.py"
+  ],
+  "diff": "/tmp/parties-persisted-identity-verifier-q7deq41k.diff",
+  "boundaryCommand": "python3 -B -m unittest discover -s scripts -p test_current_owner_integration.py -v",
+  "boundaryPassed": 14,
+  "whitespaceCommand": "git diff --check -- scripts/verify-current-owner-integration.py scripts/test_current_owner_integration.py",
+  "whitespacePassed": true,
+  "offlineValidation": {
+    "method": "validate(exact unchanged ZIP member bytes in temporary directory, **binding)",
+    "archive": "/tmp/parties-release-evidence/root-8936-native-gate-failure/integration.zip",
+    "archiveSha256": "7c6b501af9bf59561bc09df737ad84da750267219ec0e255b8db693ffb12ebae",
+    "binding": {
+      "repository": "Hexalith/Hexalith.Parties",
+      "run": "42288812736",
+      "attempt": 2,
+      "source": "8936e4e5366e7dae428e60915ea2cd00063dfad2",
+      "platform": "ed991837945571a12743214fc18a87fbd323fc30",
+      "builds": "567604b616613ba429be0609636d805db776a709"
+    },
+    "result": {
+      "nativeCases": 28,
+      "qualificationCredit": false
+    },
+    "originalArchiveUnchanged": true,
+    "hostedCiStatusChanged": false
+  },
+  "activeOwnedProcesses": []
+}

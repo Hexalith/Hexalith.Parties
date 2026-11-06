@@ -1,0 +1,12 @@
+{
+  "receipt": {
+    "profile": "platform-current-package",
+    "source": "8936e4e5366e7dae428e60915ea2cd00063dfad2",
+    "runId": "b155e4bb4ff99720c9b427957d7575e2",
+    "nativeCases": 28,
+    "qualificationCredit": false
+  },
+  "archiveSha256": "7c6b501af9bf59561bc09df737ad84da750267219ec0e255b8db693ffb12ebae",
+  "artifactMembersUnchanged": true,
+  "mode": "offline verification with corrected verifier; hosted CI still requires fresh source"
+}

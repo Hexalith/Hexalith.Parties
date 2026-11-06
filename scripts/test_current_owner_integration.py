@@ -37,7 +37,11 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
             revision=self.expected["source"], mappingHash="d" * 64, executionContext=self.context, status="functional-observations-passed", qualificationCredit=False,
             aggregate=dict(tenantId="g4t-fixture", domain="party", aggregateId="party1"), commandId="command1", eventCount=1, metadataSequence=1,
             projection=dict(id="party1", freshness="Current", createdAt="2026-11-05T10:00:00Z"), tenantsNativeQueryObserved=True, memoriesRegistryObserved=True)
-        self.functional["events"] = [dict(identity=self.functional["aggregate"], sequenceNumber=1, correlationId="command1", causationId="command1", userId="g4-native-tests",
+        self.functional["events"] = [dict(identity=dict(
+            tenantId="g4t-fixture", domain="party", aggregateId="party1", actorId="g4t-fixture:party:party1",
+            eventStreamKeyPrefix="g4t-fixture:party:party1:events:", metadataKey="g4t-fixture:party:party1:metadata",
+            snapshotKey="g4t-fixture:party:party1:snapshot", pipelineKeyPrefix="g4t-fixture:party:party1:pipeline:",
+            pubSubTopic="g4t-fixture.party.events", queueSession="g4t-fixture:party:party1"), sequenceNumber=1, correlationId="command1", causationId="command1", userId="g4-native-tests",
             serializationFormat="json", eventTypeName="Hexalith.Parties.Contracts.Events.PartyCreated", timestamp="2026-11-05T10:00:00Z")]
         self.functional["currentOwner"] = dict(**{key: self.functional[key] for key in ("runId", "attemptId", "environmentId", "revision", "mappingHash", "profile")},
             configuration="Release", qualificationCredit=False, committedCatalogValidated=True, sdkVersion="4.1.0", tenantsVersion="7.0.5",
@@ -78,6 +82,70 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
     def test_current_same_run_evidence_passes_without_qualification_credit(self):
         self.assertEqual(self.check()["nativeCases"], 2)
         self.assertFalse(self.check()["qualificationCredit"])
+
+    def test_real_captured_sdk_identity_shape_matches_the_three_key_aggregate(self):
+        # Exact identity shape captured from genuine 42288812736 attempt 2; no event/body evidence is substituted.
+        actor = "g4t-b155e4bb4ff9:party:01M6SA5BHM3EH0HBBN0RJ6D487"
+        captured = {"tenantId": "g4t-b155e4bb4ff9", "domain": "party", "aggregateId": "01M6SA5BHM3EH0HBBN0RJ6D487",
+                    "actorId": actor, "eventStreamKeyPrefix": actor + ":events:", "metadataKey": actor + ":metadata",
+                    "snapshotKey": actor + ":snapshot", "pipelineKeyPrefix": actor + ":pipeline:",
+                    "pubSubTopic": "g4t-b155e4bb4ff9.party.events", "queueSession": actor}
+        self.functional["aggregate"] = {key: captured[key] for key in ("tenantId", "domain", "aggregateId")}
+        self.functional["events"][0]["identity"] = captured
+        self.functional["projection"]["id"] = captured["aggregateId"]
+        self.seal()
+        self.assertEqual(self.check()["nativeCases"], 2)
+
+    def test_every_core_and_computed_persisted_identity_field_is_required_and_exact(self):
+        original = copy.deepcopy(self.functional["events"][0]["identity"])
+        self.assertEqual(len(original), 10)
+        for field in original:
+            for mutation in ("missing", "foreign", "null"):
+                with self.subTest(field=field, mutation=mutation):
+                    identity = copy.deepcopy(original)
+                    if mutation == "missing": del identity[field]
+                    if mutation == "foreign": identity[field] = "foreign-value"
+                    if mutation == "null": identity[field] = None
+                    self.functional["events"][0]["identity"] = identity
+                    self.seal()
+                    with self.assertRaises(ValueError): self.check()
+        self.functional["events"][0]["identity"] = original
+        self.seal()
+
+    def test_core_only_extra_and_coherent_foreign_sdk_identities_are_refused(self):
+        original = self.functional["events"][0]["identity"]
+        foreign = {key: value.replace("g4t-fixture", "g4t-foreign") for key, value in original.items()}
+        for identity in (copy.deepcopy(self.functional["aggregate"]), {**original, "unexpected": "value"}, foreign, None, []):
+            with self.subTest(identity=identity):
+                self.functional["events"][0]["identity"] = identity
+                self.seal()
+                with self.assertRaises(ValueError): self.check()
+        self.functional["events"][0]["identity"] = original
+        self.seal()
+
+    def test_identity_core_requires_actual_sdk_canonical_component_grammar(self):
+        original = self.functional["aggregate"]
+        for field, value in (("tenantId", "G4T-fixture"), ("tenantId", "g4t-" + "a" * 61),
+                             ("tenantId", "g4t-other:tenant"), ("domain", "Party"), ("domain", "party_other"),
+                             ("aggregateId", "other:aggregate"), ("aggregateId", "-party"),
+                             ("aggregateId", "a" * 257), ("aggregateId", True)):
+            with self.subTest(field=field, value=value):
+                self.functional["aggregate"] = {**original, field: value}
+                self.seal()
+                with self.assertRaises(ValueError): self.check()
+        self.functional["aggregate"] = original
+        self.seal()
+
+    def test_sdk_system_topic_derivation_does_not_widen_current_run_tenant_scope(self):
+        core = {"tenantId": "system", "domain": "party", "aggregateId": "Party_1.A"}
+        identity = verify.persisted_identity(core)
+        self.assertEqual(identity["pubSubTopic"], "party.events")
+        self.assertEqual(identity["actorId"], "system:party:Party_1.A")
+        self.functional["aggregate"] = core
+        self.functional["events"][0]["identity"] = identity
+        self.functional["projection"]["id"] = core["aggregateId"]
+        self.seal()
+        with self.assertRaises(ValueError): self.check()
 
     def test_changed_semantic_boundaries_are_refused_after_valid_content_hashes(self):
         for mutation in ("profile", "source", "run", "attempt", "sdk", "runtime", "public", "projection", "event", "memories", "platform", "builds", "catalog", "archives"):

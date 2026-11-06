@@ -1,0 +1,46 @@
+{
+  "rootFixtureSource": "08bbc749cb9bf121d77d3f376a00785990d9b253",
+  "rootCodeBaseline": "a1522bdb496ceacc7fc3c1e3d4128e9c7399e2d9",
+  "platform": "ed991837945571a12743214fc18a87fbd323fc30",
+  "platformRelease": "v1.5.7",
+  "runId": "44862fc62de0d5405c707b0adcaa3ed2",
+  "actualNativeTestCounters": {
+    "total": "28",
+    "executed": "28",
+    "passed": "28",
+    "failed": "0",
+    "error": "0",
+    "timeout": "0",
+    "aborted": "0",
+    "inconclusive": "0",
+    "passedButRunAborted": "0",
+    "notRunnable": "0",
+    "notExecuted": "0",
+    "disconnected": "0",
+    "warning": "0",
+    "completed": "0",
+    "inProgress": "0",
+    "pending": "0"
+  },
+  "actualResult": {
+    "exitCode": "Success",
+    "phase": "None",
+    "category": "None",
+    "ruleId": null
+  },
+  "actualOrigins": {
+    "originsEqual": true
+  },
+  "actualCleanup": {
+    "containerIds": [],
+    "processIds": [],
+    "unverified": false,
+    "isEmpty": true,
+    "workspaceIds": [],
+    "claimIds": [],
+    "discoveryFailures": [],
+    "resourceIds": []
+  },
+  "qualificationCredit": false,
+  "purpose": "Actual local regression; final exact-source hosted gates remain mandatory"
+}

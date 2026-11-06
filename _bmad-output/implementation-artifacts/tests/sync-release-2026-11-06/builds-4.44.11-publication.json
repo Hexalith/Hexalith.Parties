@@ -1,0 +1,21 @@
+{
+  "version": "4.44.11",
+  "source": "567604b616613ba429be0609636d805db776a709",
+  "signedArchiveSha256": "3fa63148745f75ac80bbb60bbf602b39a73bbf1ade07ffe9911f73937e0cfb89",
+  "appHostSha256": "f4a9cb4c9cd81579ccdcec7e40d4254219d5afeb7f7c28dcc5d566164bd0df2d",
+  "toolingSha256": "c1d319f7c5a5f33219bbe8437f95ff169318ef5265c5827591c547623171c8db",
+  "toolingMembers": [
+    "tools/net10.0/any/Hexalith.Builds.Tooling.dll",
+    "tools/net10.0/any/g4-host/Hexalith.Builds.Tooling.dll"
+  ],
+  "inventorySha256": "a55b4fdd755125589092ec0f8f04f8ba19d2f0281d3d7a5b8215ba701d79ebf2",
+  "sourceCi": {
+    "id": "42249566014",
+    "runAttempt": 1,
+    "repository": "Hexalith/Hexalith.Builds",
+    "workflow": ".github/workflows/ci.yml",
+    "sha": "567604b616613ba429be0609636d805db776a709",
+    "branch": "main",
+    "url": "https://github.com/Hexalith/Hexalith.Builds/actions/runs/42249566014"
+  }
+}

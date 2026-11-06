@@ -8,6 +8,7 @@ from pathlib import Path
 import signal
 import tempfile
 import threading
+import time
 import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -122,6 +123,101 @@ class StartupObserverTests(unittest.TestCase):
                     with self.assertRaises(ValueError): self.observer.snapshot()
         self.write(self.state_path, self.state)
 
+    def test_published_preparation_bytes_export_after_all_six_participants_commit(self):
+        # Exact ed991837/real local 44862 serialized shape; only the issued ID is redacted.
+        body = (b'{"RunId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","step":"memories-active-observed",'
+                b'"httpStatus":null,"complete":false,"observedAtUtc":"2026-11-06T20:21:40.4627917+00:00"}')
+        path = self.catalog / 'preparation-progress.json'
+        path.write_bytes(body)
+        for host in O.HOSTS:
+            (self.catalog / (host + '.committed.json')).write_bytes(b'{}')
+        result = self.observer.snapshot()
+        self.assertTrue(all(result['files'][host + '.committed.json'] for host in O.HOSTS))
+        self.assertEqual(result['preparation'], {'phase': 'memories-active-observed', 'status': None,
+                                                'observedAt': '2026-11-06T20:21:40.462791+00:00'})
+
+    def test_atomic_replacement_never_accepts_changed_read_and_retries_complete_new_file(self):
+        path = self.catalog / 'preparation-progress.json'
+        replacement = self.catalog / 'progress.tmp'
+        replacement.write_bytes(path.read_bytes())
+        actual_fstat = os.fstat
+        calls = 0
+        def replace_during_read(descriptor):
+            nonlocal calls
+            calls += 1
+            if calls == 2:
+                # Ensure the filesystem records a distinct ctime for its real atomic unlink.
+                time.sleep(0.02)
+                os.replace(replacement, path)
+            return actual_fstat(descriptor)
+        with patch.object(O.os, 'fstat', side_effect=replace_during_read):
+            with self.assertRaises(O.ObservationPending): O.read(path)
+        self.assertEqual(O.read(path), self.progress)
+
+    def test_directly_created_empty_receipt_and_partial_json_remain_pending(self):
+        receipt = self.catalog / 'current-owner-observation.json'
+        receipt.touch()
+        self.assertFalse(O.exists(receipt))
+        receipt.write_bytes(b'{}')
+        self.assertTrue(O.exists(receipt))
+        progress = self.catalog / 'preparation-progress.json'
+        for body in (b'', b'{"RunId":'):
+            progress.write_bytes(body)
+            with self.assertRaises(O.ObservationPending): O.read(progress)
+        self.write(progress, self.progress)
+        self.assertEqual(self.observer.snapshot()['preparation']['phase'], 'source-validated')
+
+    def test_pending_metadata_is_retried_without_copying_unvalidated_values(self):
+        complete = self.observer.snapshot()
+        stop = SimpleNamespace(wait=lambda seconds: next(waits))
+        waits = iter((False, True))
+        with patch.object(self.observer, 'snapshot', side_effect=(O.ObservationPending(), complete)):
+            self.observer.observe(stop)
+        self.assertFalse(self.observer.failure)
+        self.assertEqual(self.observer.samples[0]['phase'], 'metadata-pending')
+        self.assertEqual(self.observer.samples[-1]['preparation']['phase'], 'source-validated')
+
+    def test_pending_metadata_cannot_extend_the_original_observer_bound(self):
+        stop = SimpleNamespace(wait=lambda seconds: False)
+        with patch.object(self.observer, 'snapshot', side_effect=O.ObservationPending), \
+             patch.object(O.time, 'monotonic', side_effect=(0, 1201)):
+            self.observer.observe(stop)
+        self.assertTrue(self.observer.failure)
+        self.assertEqual(self.observer.refusal_reason, 'metadata-pending-bound')
+
+    def test_actual_helper_outcomes_stay_separate_from_observer_refusal(self):
+        self.observer.snapshot()
+        evidence = self.root / 'TestResults/module-integration'
+        self.write(evidence / 'execution.json', {'runId': self.owner['runId'], 'status': 'completed',
+                   'outcome': {'exitCode': 'Success', 'phase': 'None', 'category': 'None', 'ruleId': None},
+                   'diagnostics': [{'message': 'private-helper-payload'}]})
+        self.write(evidence / 'cleanup.json', {'runId': self.owner['runId'],
+                   'outcome': {'exitCode': 'Success', 'phase': 'Cleanup'},
+                   'remainingResources': {'unverified': False, **{key: [] for key in
+                       ('containerIds', 'processIds', 'workspaceIds', 'claimIds', 'discoveryFailures')}}})
+        self.observer.failure = True
+        self.observer.refusal_reason = 'preparation-shape'
+        self.observer.finish(0)
+        output = json.loads((self.evidence / 'startup-observation.json').read_text())
+        self.assertTrue(output['observerRefused'])
+        self.assertEqual(output['helperOutcome']['exitCode'], 0)
+        self.assertEqual(output['helperOutcome']['execution.json'], {'exitCode': 'Success', 'phase': 'None'})
+        self.assertTrue(output['helperOutcome']['cleanup.json']['reportedEmpty'])
+        self.assertNotIn('private-helper-payload', json.dumps(output))
+        self.assertFalse(output['qualificationCredit'])
+
+    def test_foreign_helper_outcome_is_refused_without_exporting_its_fields(self):
+        self.observer.snapshot()
+        self.write(self.root / 'TestResults/module-integration/execution.json',
+                   {'runId': 'e' * 32, 'outcome': {'exitCode': 'private-helper-payload', 'phase': 'None'}})
+        self.observer.finish(4)
+        output = json.loads((self.evidence / 'startup-observation.json').read_text())
+        self.assertTrue(output['observerRefused'])
+        self.assertEqual(output['refusalReason'], 'helper-outcome')
+        self.assertEqual(output['helperOutcome']['exitCode'], 4)
+        self.assertNotIn('private-helper-payload', json.dumps(output))
+        self.assertNotIn('e' * 32, json.dumps(output))
+
     def test_foreign_receipt_job_is_refused(self):
         self.owner['executionContext'] = {**self.owner['executionContext'], 'jobId': 'foreign'}
         self.write(self.receipt, self.owner)
@@ -191,6 +287,7 @@ class StartupObserverTests(unittest.TestCase):
         self.observer.observe(threading.Event())
         output = json.loads((self.evidence / 'startup-observation.json').read_text())
         self.assertTrue(output['observerRefused'])
+        self.assertEqual(output['refusalReason'], 'readiness-shape')
         self.assertNotIn('e' * 32, json.dumps(output))
         self.assertLess((self.evidence / 'startup-observation.json').stat().st_size, O.LIMIT)
 

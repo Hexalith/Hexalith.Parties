@@ -1,0 +1,26 @@
+{
+  "checks": [
+    {
+      "command": "python3 -B -m unittest discover -s tests/ci-lifecycle -p test_startup_observer.py -v",
+      "passed": 21,
+      "failed": 0,
+      "result": "OK"
+    },
+    {
+      "command": "actionlint .github/workflows/current-owner-startup-diagnostics.yml",
+      "exitCode": 0
+    },
+    {
+      "command": "git diff --check -- .github/workflows/current-owner-startup-diagnostics.yml scripts/observe-current-owner-startup.py tests/ci-lifecycle/test_startup_observer.py",
+      "exitCode": 0
+    }
+  ],
+  "diff": "/tmp/parties-startup-observer-followup-jiqzan69.diff",
+  "scope": [
+    ".github/workflows/current-owner-startup-diagnostics.yml",
+    "scripts/observe-current-owner-startup.py",
+    "tests/ci-lifecycle/test_startup_observer.py"
+  ],
+  "causality": "Reachable producer-write races reproduced; original hosted refusal trigger remains indeterminate because the original artifact has no refusal reason.",
+  "activeOwnedProcesses": []
+}

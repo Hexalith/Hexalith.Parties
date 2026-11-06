@@ -30,10 +30,17 @@ PHASES = frozenset(('source-validated', 'bootstrap-submitting', 'bootstrap-commi
                    'tenants-native-observed', 'memories-sidecar-observing', 'memories-sidecar-observed',
                    'memories-submit-started', 'memories-submit-accepted', 'memories-submit-refused',
                    'memories-active-observing', 'memories-active-observed'))
+EXIT_CODES = frozenset(('Success', 'UsageOrManifest', 'PrerequisiteUnavailable', 'TopologyOrLifecycle',
+                        'ProductOrTest', 'PersistedState', 'EvidenceSchemaOrPolicy', 'Cancelled'))
+PHASE_NAMES = frozenset(('None', 'Usage', 'Manifest', 'Prerequisite', 'Topology', 'Test', 'PersistedState', 'Evidence', 'Cleanup'))
 HOSTS = ('eventstore', 'parties', 'tenants', 'tenants-api', 'memories', 'memories-domain-service')
 FILES = ('native-scope.json', 'catalog.json', 'selected-closure.json', 'activation.json', 'preparation.json',
          'current-reader-receipt.json', 'current-owner-observation.json') + tuple(
              host + suffix for host in HOSTS for suffix in ('.observation.json', '.ready.json', '.committed.json'))
+
+
+class ObservationPending(ValueError):
+    """An owned producer is still creating or atomically replacing metadata; no bytes were accepted."""
 
 
 def require(value, message='Unsafe startup observation'):
@@ -48,19 +55,28 @@ def read_bytes(path):
         descriptor = os.open(path.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=held)
         with os.fdopen(descriptor, 'rb') as stream:
             before = os.fstat(stream.fileno())
-            require(stat.S_ISREG(before.st_mode) and before.st_nlink == 1 and before.st_uid == os.geteuid()
-                    and 0 < before.st_size <= LIMIT)
+            require(stat.S_ISREG(before.st_mode) and before.st_nlink in (0, 1) and before.st_uid == os.geteuid()
+                    and before.st_size <= LIMIT)
+            if before.st_nlink == 0 or before.st_size == 0:
+                raise ObservationPending()
             body = stream.read(LIMIT + 1)
             after = os.fstat(stream.fileno())
-            require(len(body) == before.st_size and all(getattr(before, key) == getattr(after, key)
-                    for key in ('st_dev', 'st_ino', 'st_size', 'st_mtime_ns', 'st_ctime_ns')))
+            require(stat.S_ISREG(after.st_mode) and after.st_nlink in (0, 1) and after.st_uid == before.st_uid
+                    and after.st_mode == before.st_mode and after.st_size <= LIMIT)
+            if after.st_nlink == 0 or len(body) != before.st_size or any(getattr(before, key) != getattr(after, key)
+                    for key in ('st_dev', 'st_ino', 'st_size', 'st_mtime_ns', 'st_ctime_ns')):
+                raise ObservationPending()
             return body
     finally:
         os.close(held)
 
 
 def read(path):
-    value = HELPER.read_json(read_bytes(path).decode('utf-8'))
+    try:
+        value = HELPER.read_json(read_bytes(path).decode('utf-8'))
+    except json.JSONDecodeError as error:
+        # A directly written document can be visible before its complete JSON arrives.
+        raise ObservationPending() from error
     require(isinstance(value, dict))
     return value
 
@@ -77,8 +93,8 @@ def exists(path):
         except FileNotFoundError:
             return False
         require(stat.S_ISREG(info.st_mode) and info.st_nlink == 1 and info.st_uid == os.geteuid()
-                and 0 < info.st_size <= 8_388_608)
-        return True
+                and info.st_size <= 8_388_608)
+        return info.st_size > 0
     finally:
         os.close(held)
 
@@ -134,10 +150,15 @@ class Observer:
         self.owner = None
         self.samples = deque(maxlen=32)
         self.failure = False
+        self.refusal_reason = None
+        self.checkpoint = 'source-binding'
+        self.helper_outcome = {'returned': False}
         self.last = None
 
     def snapshot(self):
+        self.checkpoint = 'source-binding'
         require(source_revision(self.root) == self.source)
+        self.checkpoint = 'receipt-binding'
         try:
             read(self.receipt)
         except FileNotFoundError:
@@ -146,6 +167,7 @@ class Observer:
         owner = HELPER.receipt_owner(self.receipt, self.context)
         require(self.owner is None or self.owner == owner, 'Issued owner changed')
         self.owner = owner
+        self.checkpoint = 'state-binding'
         state_root = Path(owner['stateDirectory'])
         try:
             state = read(state_root / (owner['runId'] + '.json'))
@@ -153,6 +175,7 @@ class Observer:
             return {'phase': 'awaiting-state'}
         require(state.get('schema') == 'hexalith.g4-run-state.v1' and all(state.get(key) == owner[key]
                 for key in ('runId', 'attemptId', 'environmentId', 'executionContext')))
+        self.checkpoint = 'selected-source-binding'
         selected = state.get('selectedTest', {})
         require(isinstance(selected, dict))
         require(selected.get('moduleId') == 'parties' and selected.get('name') == PROFILE
@@ -161,6 +184,7 @@ class Observer:
                 and normalized_digest(selected.get('entryHash')) == hashlib.sha256(read_bytes(self.root / ENTRY)).hexdigest())
         workspace = state_root.parent / 'g4-workspaces' / owner['runId']
         require(state.get('workspace') == str(workspace))
+        self.checkpoint = 'mapping-binding'
         try:
             mapping = read(workspace / 'source-mapping/mapping.json')
         except FileNotFoundError:
@@ -170,10 +194,12 @@ class Observer:
         active = [item for item in entries if item.get('Identity') == 'Hexalith.Parties']
         require(mapping.get('Root') == str(self.root) and mapping.get('ActiveModule') == 'Hexalith.Parties'
                 and len(active) == 1 and active[0].get('Origin') == 'source' and active[0].get('Path') == str(self.root))
+        self.checkpoint = 'receipt-availability'
         catalog = workspace / 'platform-components' / (owner['environmentId'] + '-catalog')
         result = {'phase': 'observing', 'files': {name: exists(catalog / name) for name in FILES}}
         for name, schema, field in [('readiness-progress.json', 'hexalith.g4-readiness-progress.v1', 'resources'),
                                     ('startup-failure.json', 'hexalith.g4-startup-failure.v1', 'unreadyResources')]:
+            self.checkpoint = 'readiness-shape' if name == 'readiness-progress.json' else 'startup-failure-shape'
             try:
                 document = read(workspace / name)
             except FileNotFoundError:
@@ -184,6 +210,7 @@ class Observer:
                 require(re.fullmatch(r'HXR[0-9]{3}', document.get('ruleId', '')))
                 safe.update(ruleId=document['ruleId'], status=detail(document.get('status')))
             result[name] = safe
+        self.checkpoint = 'preparation-shape'
         try:
             progress = read(catalog / 'preparation-progress.json')
         except FileNotFoundError:
@@ -199,7 +226,8 @@ class Observer:
     def publish(self):
         value = {'schema': 'hexalith.parties.startup-observation.v1', 'qualificationCredit': False,
                  'source': self.source, 'runId': self.owner['runId'] if self.owner else None,
-                 'observerRefused': self.failure, 'observations': list(self.samples)}
+                 'observerRefused': self.failure, 'refusalReason': self.refusal_reason,
+                 'helperOutcome': self.helper_outcome, 'observations': list(self.samples)}
         body = (json.dumps(value, sort_keys=True) + '\n').encode()
         require(len(body) <= LIMIT)
         held = HELPER.open_directory(self.root, self.evidence)
@@ -225,18 +253,68 @@ class Observer:
 
     def observe(self, stop):
         deadline = time.monotonic() + 1200
+        pending = False
         try:
             for _ in range(600):
-                snapshot = self.snapshot()
+                try:
+                    snapshot = self.snapshot()
+                    pending = False
+                except ObservationPending:
+                    pending = True
+                    snapshot = {'phase': 'metadata-pending', 'checkpoint': self.checkpoint}
                 if snapshot != self.last:
                     self.last = snapshot
                     self.samples.append({'observedAt': datetime.now(timezone.utc).isoformat(), **snapshot})
                     self.publish()
-                if time.monotonic() >= deadline or stop.wait(2):
+                if stop.wait(2):
                     return
+                if time.monotonic() >= deadline:
+                    break
+            if pending:
+                self.failure = True
+                self.refusal_reason = 'metadata-pending-bound'
+                self.publish()
         except (OSError, ValueError, KeyError, TypeError, RecursionError, subprocess.SubprocessError):
             self.failure = True
-            # No exception payload, input values, arbitrary paths, URLs or child output are published.
+            self.refusal_reason = self.checkpoint
+            # Fixed checkpoints only; no exception payload, private paths, URLs or child output.
+            try:
+                self.publish()
+            except (OSError, ValueError, KeyError, TypeError, RecursionError):
+                pass
+
+    def finish(self, outcome):
+        """Keep only bounded enums/booleans from this invocation's existing helper results, after its cleanup."""
+        self.helper_outcome = {'returned': outcome is not None}
+        try:
+            if outcome is not None:
+                require(type(outcome) is int and -255 <= outcome <= 255)
+                self.helper_outcome['exitCode'] = outcome
+            if self.owner is not None:
+                require(source_revision(self.root) == self.source)
+                read(self.receipt)
+                require(HELPER.receipt_owner(self.receipt, self.context) == self.owner)
+                evidence = self.root / 'TestResults/module-integration'
+                for name in ('execution.json', 'cleanup.json'):
+                    try:
+                        document = read(evidence / name)
+                    except FileNotFoundError:
+                        continue
+                    require(document.get('runId') == self.owner['runId'])
+                    reported = document.get('outcome', {})
+                    require(isinstance(reported, dict) and reported.get('exitCode') in EXIT_CODES
+                            and reported.get('phase') in PHASE_NAMES)
+                    safe = {'exitCode': reported['exitCode'], 'phase': reported['phase']}
+                    if name == 'cleanup.json':
+                        remaining = document.get('remainingResources')
+                        require(isinstance(remaining, dict))
+                        safe['reportedEmpty'] = remaining.get('unverified') is False and all(
+                            remaining.get(key) == [] for key in ('containerIds', 'processIds', 'workspaceIds', 'claimIds', 'discoveryFailures'))
+                    self.helper_outcome[name] = safe
+            self.publish()
+        except (OSError, ValueError, KeyError, TypeError, RecursionError, subprocess.SubprocessError):
+            self.failure = True
+            self.refusal_reason = self.refusal_reason or 'helper-outcome'
             try:
                 self.publish()
             except (OSError, ValueError, KeyError, TypeError, RecursionError):
@@ -251,12 +329,15 @@ def run():
     stop = threading.Event()
     worker = threading.Thread(target=observer.observe, args=(stop,), daemon=True)
     worker.start()
+    outcome = None
     try:
         # The released helper owns all execution, signal forwarding, outcomes and finally cleanup.
         outcome = HELPER.run_integration(root, MANIFEST, [PROFILE], receipt, root / 'TestResults/module-integration')
     finally:
         stop.set()
         worker.join(timeout=15)
+        if not worker.is_alive():
+            observer.finish(outcome)
     require(not worker.is_alive(), 'Observer did not stop within its bound')
     return outcome or int(observer.failure)
 
