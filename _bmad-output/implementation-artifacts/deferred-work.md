@@ -2219,3 +2219,7 @@ rollback: None required (test-only).
 - source_spec: `spec-five-subscription-and-package-adoption-deferred-items.md`
   summary: Extend authoritative native stream and replay qualification to every recorded canonical Memories output.
   evidence: Review pass 2 BH2-08; the baseline helper selects UnitIds.Last although refresh records multiple canonical outputs. Both-output qualified REST absence is now tested; native gateway proof/replay remains unqualified due HTTP 503 and needs complete per-output expectations after that refusal is resolved.
+
+- source_spec: `/tmp/parties-release-20261105/parties-runtime-r5/_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-05.md`
+  summary: Unverified medium risk that a pathological blocked regular filesystem can outlast synchronous snapshot I/O deadline checks.
+  evidence: L2-B6 identifies synchronous regular-file open/read/write operations; actual8191-file source capture/export passes in11.258seconds. A controlled slow-filesystem reproducer is required to establish a practical overrun. No source/runtime qualification is granted by this deferral.
