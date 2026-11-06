@@ -4,7 +4,7 @@ Hexalith.Parties uses GitHub Actions with shared Hexalith.Builds workflows and a
 
 ## Workflows
 
-- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@ad50acf920d78ee16033bdc1cf26c34e8275cdcb`.
+- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@0b08666cb2aac1264007564f86ca9c52376499e4`.
 - `.github/workflows/release.yml` is a manual `workflow_dispatch` workflow with a protected, caller-owned release job. It uses `Hexalith/Hexalith.Builds/Github/prepare-domain-release@11a3a79cfac4bba9548c6364a17a01ee9b561370` and takes the nested publisher from that same immutable Builds checkout.
 - `.github/workflows/commitlint.yml` delegates Conventional Commit validation to the retained immutable Builds revision `332b2c144defba546fe0a09626a4a72f2340e22f`, for pull requests and main pushes.
 - `.github/workflows/dependency-review.yml` delegates dependency review for pull requests.
@@ -31,14 +31,14 @@ dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.T
 
 CI runs on pushes and pull requests to `main`, scheduled nightly runs, and Pact Broker `repository_dispatch` events with type `contract_requiring_verification_published`.
 
-The v2 workflow uses the genuine published module CLI 4.44.6 and prepares exact
-genuine released Platform v1.5.3 at
-`d1da347db92ef3272beda90005be5239878ff901` with the matching published Builds
-catalog `ad50acf920d78ee16033bdc1cf26c34e8275cdcb`. Atomic root adoption and
+The v2 workflow uses the genuine published module CLI 4.44.7 and prepares exact
+genuine released Platform v1.5.4 at
+`13fc1a8978b4e6dcf8233b443c23c4e4258c49c7` with the matching published Builds
+catalog `0b08666cb2aac1264007564f86ca9c52376499e4`. Atomic root adoption and
 actual Parties native effects and cleanup retain their own required proof.
-Platform tuple CI 42157212231 passed 259 current and 349 same-source legacy
-controls; catalog CI 42157212251 passed all five rows before the genuine
-v1.5.3 release. These checks provide no Parties native-runtime or candidate
+Platform tuple CI 42172121935 passed 259 current and 349 same-source legacy
+controls; catalog CI 42172122108 passed all five rows before the genuine
+v1.5.4 release. These checks provide no Parties native-runtime or candidate
 acceptance credit. The private reference cohort selects EventStore `4.1.0`,
 Tenants `7.0.4`, Memories `3.0.25` and McpCli `2.0.1`; unchanged native
 persisted effects and cleanup still require their own actual run.

@@ -156,7 +156,9 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, IT
     {
         while (true)
         {
-            using HttpResponseMessage response = await fixture.Gateway.GetAsync($"/api/v1/commands/status/{commandId}", token).ConfigureAwait(true);
+            using HttpRequestMessage request = new(HttpMethod.Get, $"/api/v1/commands/status/{commandId}");
+            request.Headers.Add("X-Hexalith-Tenant", fixture.Descriptor.SyntheticTenantId);
+            using HttpResponseMessage response = await fixture.Gateway.SendAsync(request, token).ConfigureAwait(true);
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
             JsonDocument status = JsonDocument.Parse(await response.Content.ReadAsStringAsync(token).ConfigureAwait(true));
             string? outcome = status.RootElement.GetProperty("status").GetString();
