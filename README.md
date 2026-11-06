@@ -33,7 +33,7 @@ mean a version is published or approved for downstream enrollment.
 ## Quick Start
 
 Set `HEXALITH_DAPR_HOME` to a prepared, absolute isolated Dapr home before
-starting. Follow the [pinned Platform v1.5.2 runtime prerequisites](https://github.com/Hexalith/Hexalith.Platform/blob/e7e16f621365337e7d6f81c242c9e5c355b3556f/README.md#run-and-debug-a-technical-module);
+starting. Follow the [pinned Platform v1.5.3 runtime prerequisites](https://github.com/Hexalith/Hexalith.Platform/blob/d1da347db92ef3272beda90005be5239878ff901/README.md#run-and-debug-a-technical-module);
 the tool refuses an unset or unprepared home.
 
 ```bash

@@ -32,13 +32,13 @@ dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.T
 CI runs on pushes and pull requests to `main`, scheduled nightly runs, and Pact Broker `repository_dispatch` events with type `contract_requiring_verification_published`.
 
 The v2 workflow uses the genuine published module CLI 4.44.6 and prepares exact
-genuine released Platform v1.5.2 at
-`e7e16f621365337e7d6f81c242c9e5c355b3556f` with the matching published Builds
+genuine released Platform v1.5.3 at
+`d1da347db92ef3272beda90005be5239878ff901` with the matching published Builds
 catalog `ad50acf920d78ee16033bdc1cf26c34e8275cdcb`. Atomic root adoption and
 actual Parties native effects and cleanup retain their own required proof.
-Platform tuple CI 42147545870 passed 259 current and 349 same-source legacy
-controls; catalog CI 42147545820 passed all five rows before the genuine
-v1.5.2 release. These checks provide no Parties native-runtime or candidate
+Platform tuple CI 42157212231 passed 259 current and 349 same-source legacy
+controls; catalog CI 42157212251 passed all five rows before the genuine
+v1.5.3 release. These checks provide no Parties native-runtime or candidate
 acceptance credit. The private reference cohort selects EventStore `4.1.0`,
 Tenants `7.0.4`, Memories `3.0.25` and McpCli `2.0.1`; unchanged native
 persisted effects and cleanup still require their own actual run.
