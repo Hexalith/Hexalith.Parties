@@ -663,3 +663,7 @@ references/Hexalith.McpCli|a133f603790375ff51a03f3d0844c7218da36ced|validated-ad
 references/Hexalith.Memories|4ff3e6866ecb6d1a497e7063e972c24259252c40|validated-advance|v3.0.25-1-g4ff3e686|codex-agent|2026-11-06
 references/Hexalith.Platform|01e5b6530af96ad6eaa69cc1867d43def56c43ca|validated-advance|v1.5.6|codex-agent|2026-11-06
 references/Hexalith.Tenants|d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35|validated-advance|v7.0.5|codex-agent|2026-11-06
+
+# Corrected published Platform1.5.7 and downstream metadata, explicit user delegation.
+references/Hexalith.Platform|ed991837945571a12743214fc18a87fbd323fc30|validated-advance|v1.5.7|codex-agent|2026-11-06
+references/Hexalith.EventStore|23252aef50e99d6b1338da0ac501cd25ab3a16fd|validated-advance|v4.1.0-39-g23252aef|codex-agent|2026-11-06

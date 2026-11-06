@@ -32,16 +32,22 @@ dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.T
 CI runs on pushes and pull requests to `main`, scheduled nightly runs, and Pact Broker `repository_dispatch` events with type `contract_requiring_verification_published`.
 
 The v2 workflow uses genuine published module CLI 4.44.11 and released
-[Platform v1.5.6](https://github.com/Hexalith/Hexalith.Platform/releases/tag/v1.5.6)
-at `01e5b6530af96ad6eaa69cc1867d43def56c43ca`, with matching published Builds
+[Platform v1.5.7](https://github.com/Hexalith/Hexalith.Platform/releases/tag/v1.5.7)
+at `ed991837945571a12743214fc18a87fbd323fc30`, with matching published Builds
 catalog `567604b616613ba429be0609636d805db776a709`. Exact-source
-[tuple CI 42258800584](https://github.com/Hexalith/Hexalith.Platform/actions/runs/42258800584)
-passed all 313 current and 349 same-code legacy controls, with zero skips;
-[catalog CI 42258800582](https://github.com/Hexalith/Hexalith.Platform/actions/runs/42258800582)
+[tuple CI 42281947755](https://github.com/Hexalith/Hexalith.Platform/actions/runs/42281947755)
+passed all 315 current and 349 same-code legacy controls, with zero skips;
+[catalog CI 42281947817](https://github.com/Hexalith/Hexalith.Platform/actions/runs/42281947817)
 passed all five SDK rows before publication. The private current-owner cohort
 selects EventStore `4.1.0`, Tenants `7.0.5`, Memories `3.0.25` and McpCli `2.0.1`.
 Parties exact-source CI, native persisted effects and complete cleanup retain
 their own required proof; producer checks do not grant runtime acceptance.
+
+The manual **Current-owner startup diagnostics** workflow runs the same package
+profile through the published owner lifecycle and always finalizes its issued
+run. It retains bounded, redacted phase and readiness metadata for startup
+investigation; its observations grant no additional qualification credit.
+
 
 Historical Platform v1.5.4 at `13fc1a8978b4e6dcf8233b443c23c4e4258c49c7`
 passed tuple CI 42172121935 with 259 current and 349 legacy controls and catalog

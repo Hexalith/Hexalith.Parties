@@ -1,0 +1,133 @@
+name: Current-owner startup diagnostics
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Each dispatch owns a separate ordinary package invocation and mandatory cleanup.
+concurrency:
+  group: startup-diagnostic-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  observe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: false
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Initialize only recorded root-direct dependencies
+        uses: Hexalith/Hexalith.Builds/Github/initialize-build@567604b616613ba429be0609636d805db776a709
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - name: Require the genuine diagnostic tool inputs
+        shell: bash
+        run: |
+          test "$(git -C references/Hexalith.Builds rev-parse HEAD)" = 567604b616613ba429be0609636d805db776a709
+          python3 - <<'PYTHON'
+          import json
+          from pathlib import Path
+          tool = json.loads(Path('.config/dotnet-tools.json').read_text())['tools']['hexalith.builds.module.cli']
+          assert tool['version'] == '4.44.11' and tool['rollForward'] is False
+          PYTHON
+      - name: Test observer ownership and redaction boundaries
+        run: python3 -B -m unittest discover -s tests/ci-lifecycle -p test_startup_observer.py -v
+      - name: Prepare the ordinary verified package imports and local tool
+        uses: Hexalith/Hexalith.Builds/Github/prepare-module-build@567604b616613ba429be0609636d805db776a709
+        with:
+          manifest: module/hexalith.module-manifest.v2.json
+      - name: Prepare ordinary package dependencies
+        run: bash scripts/prepare-ci-package-dependencies.sh
+      - name: Build the ordinary package solution
+        run: dotnet build Hexalith.Parties.Standalone.slnx --configuration Release -m:1 -warnaserror
+      - name: Install integration toolchain without starting services
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PYTHON'
+          import os
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+          root = ET.parse('references/Hexalith.Builds/Props/Directory.Packages.props').getroot()
+          with Path(os.environ['GITHUB_ENV']).open('a') as stream:
+              for key, element in [('CI_ASPIRE_VERSION', 'HexalithAspireAppHostSdkVersion'), ('CI_DAPR_CLI_VERSION', 'HexalithDaprCliVersion'), ('CI_DAPR_RUNTIME_VERSION', 'HexalithDaprRuntimeVersion')]:
+                  value = root.find('.//' + element).text
+                  if not value or any(c not in '0123456789.-abcdefghijklmnopqrstuvwxyz' for c in value):
+                      raise ValueError('invalid workflow-owned toolchain version')
+                  stream.write(key + '=' + value + '\n')
+          PYTHON
+      - name: Prepare integration binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          tools="$RUNNER_TEMP/hexalith-ci-tools"
+          dapr_home="$RUNNER_TEMP/hexalith-ci-dapr"
+          mkdir -p "$tools" "$dapr_home/tools" "$dapr_home/.dapr/bin"
+          dotnet tool install --tool-path "$tools" Aspire.Cli --version "$CI_ASPIRE_VERSION"
+          curl --fail --location --proto '=https' --proto-redir '=https' --retry 3 "https://github.com/dapr/cli/releases/download/v$CI_DAPR_CLI_VERSION/dapr_linux_amd64.tar.gz" -o "$RUNNER_TEMP/dapr-cli.tar.gz"
+          tar -xzf "$RUNNER_TEMP/dapr-cli.tar.gz" -C "$dapr_home/tools" dapr
+          for binary in daprd placement scheduler; do
+            curl --fail --location --proto '=https' --proto-redir '=https' --retry 3 "https://github.com/dapr/dapr/releases/download/v$CI_DAPR_RUNTIME_VERSION/${binary}_linux_amd64.tar.gz" -o "$RUNNER_TEMP/$binary.tar.gz"
+            tar -xzf "$RUNNER_TEMP/$binary.tar.gz" -C "$dapr_home/.dapr/bin" "$binary"
+          done
+          echo "$tools" >> "$GITHUB_PATH"
+          echo "HEXALITH_DAPR_HOME=$dapr_home" >> "$GITHUB_ENV"
+      - name: Authenticate pull-only integration registry
+        id: registry-login
+        shell: bash
+        env:
+          REGISTRY_PULL_USERNAME: ${{ secrets.HEXALITH_CI_REGISTRY_USERNAME }}
+          REGISTRY_PULL_PASSWORD: ${{ secrets.HEXALITH_CI_REGISTRY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$REGISTRY_PULL_USERNAME" || -z "$REGISTRY_PULL_PASSWORD" ]]; then
+            echo '::error::Dedicated pull-only registry credentials are required.'
+            exit 1
+          fi
+          runner_temp="$(realpath -e -- "$RUNNER_TEMP")"
+          config="$(mktemp -d "$runner_temp/hexalith-ci-registry.XXXXXX")"
+          trap 'status=$?; if [ "$status" -ne 0 ]; then rm -rf -- "$config"; fi; exit "$status"' EXIT
+          chmod 700 "$config"
+          export DOCKER_CONFIG="$config"
+          printf '%s\n' "DOCKER_CONFIG=$config" "HEXALITH_CI_REGISTRY_CONFIG=$config" >> "$GITHUB_ENV"
+          printf '%s' "$REGISTRY_PULL_PASSWORD" | docker login registry.hexalith.com --username="$REGISTRY_PULL_USERNAME" --password-stdin
+      - name: Observe the actual current-owner startup before standard cleanup
+        timeout-minutes: 25
+        run: python3 -B scripts/observe-current-owner-startup.py
+      - name: Independently finalize the exact issued owner
+        if: always()
+        timeout-minutes: 4
+        env:
+          CI_JOB_STATUS: ${{ job.status }}
+        run: >-
+          python3 references/Hexalith.Builds/Github/run-module-integration/run_module_integration.py
+          finalize --receipt "$RUNNER_TEMP/hexalith-ci-owner.json"
+          --evidence TestResults/module-integration --job-status "$CI_JOB_STATUS"
+      - name: Remove integration registry credentials
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          config="${HEXALITH_CI_REGISTRY_CONFIG:-}"
+          if [[ -z "$config" ]]; then exit 0; fi
+          runner_temp="$(realpath -e -- "$RUNNER_TEMP")"
+          if [[ "$(dirname -- "$config")" != "$runner_temp" || "$(basename -- "$config")" != hexalith-ci-registry.* || -L "$config" ]]; then
+            echo '::error::Refusing to remove a foreign registry credential directory.'
+            exit 1
+          fi
+          rm -rf -- "$config"
+          [[ ! -e "$config" && ! -L "$config" ]]
+      - name: Retain only bounded redacted startup metadata
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: current-owner-startup-observation
+          path: TestResults/startup-observer/startup-observation.json
+          if-no-files-found: warn
+          retention-days: 7

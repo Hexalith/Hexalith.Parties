@@ -4,10 +4,10 @@ This registered manual workflow remains a **baseline-only** diagnostic for
 Story 2.8. It grants no candidate acceptance or loaded-backend identity credit.
 The ordinary and manual baseline callers select Builds
 `567604b616613ba429be0609636d805db776a709` with genuine published tool 4.44.11
-and released Platform v1.5.6 source `01e5b6530af96ad6eaa69cc1867d43def56c43ca`.
-Matching committed gitlinks bind the tuple. Exact-source tuple CI 42258800584
-passed 313 current and 349 same-code legacy controls with zero skips; catalog
-CI 42258800582 passed all five rows. These producer checks do not qualify a
+and released Platform v1.5.7 source `ed991837945571a12743214fc18a87fbd323fc30`.
+Matching committed gitlinks bind the tuple. Exact-source tuple CI 42281947755
+passed 315 current and 349 same-code legacy controls with zero skips; catalog
+CI 42281947817 passed all five rows. These producer checks do not qualify a
 Parties manual lifecycle run.
 Historical Platform v1.5.4 source `13fc1a8978b4e6dcf8233b443c23c4e4258c49c7`
 passed tuple CI 42172121935 with 259 current/349 legacy controls and catalog
