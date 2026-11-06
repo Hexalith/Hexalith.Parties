@@ -1,0 +1,297 @@
+{
+  "version": "3.1.0",
+  "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+  "manifestSha256": "d9c193b0e7b61601b8fcceb906b5dafe4769a1b9d7538a6ce164b4aa0840b348",
+  "packages": [
+    {
+      "id": "Hexalith.Parties.Contracts",
+      "version": "3.1.0",
+      "sourceCommit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "sha256": "2eaf319ea5ea53418435bb6b91096ff3baf23713fb109f99165c6cdedbf51a3d",
+      "artifactHash": "sha512-UNz4ELRBrBSFpYxjow/Ne60CEA53CEweKFUoK4FZEvAC42QvJPi45ngdtfm4n9CWoUcsunkDUbR3HQ17W7H2tA==",
+      "assemblies": {
+        "lib/net10.0/Hexalith.Parties.Contracts.dll": "99230b764de6769a803702170c174f9dbef9b0b5b0c2931b07e85045478cd654"
+      },
+      "signatureVerification": {
+        "command": [
+          "dotnet",
+          "nuget",
+          "verify",
+          "--all",
+          "/tmp/parties-release-evidence/parties-3.1.0/hexalith.parties.contracts.3.1.0.nupkg"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "startedAtUtc": "2026-11-06T21:57:42.682780+00:00",
+        "completedAtUtc": "2026-11-06T21:57:42.943403+00:00",
+        "logFile": "signatures/parties-3.1.0/Hexalith.Parties.Contracts.signature.txt",
+        "logSha256": "b4e23c6c4efd763bcd9a3a8286573e6fc16ce7019b563c21456d283eae6c1925",
+        "verifiedArchiveSha256": "2eaf319ea5ea53418435bb6b91096ff3baf23713fb109f99165c6cdedbf51a3d"
+      }
+    },
+    {
+      "id": "Hexalith.Parties.Client",
+      "version": "3.1.0",
+      "sourceCommit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "sha256": "78c2dd60992e093a670217e03747b612a2734100f62a2ef322d0270720f88522",
+      "artifactHash": "sha512-5XtMNrF3mmfrEKZmcQ6x6/fZJp5ZM1mZljM4biJFWEwV0yzbAkJ1RRpAs3xtV7GIPtDPnYJ2ma0gYcIr6SS/rw==",
+      "assemblies": {
+        "lib/net10.0/Hexalith.Parties.Client.dll": "379bd77754b4469fa7057d9f62a5df915359425e752d6a03e70ae247fca92c75"
+      },
+      "signatureVerification": {
+        "command": [
+          "dotnet",
+          "nuget",
+          "verify",
+          "--all",
+          "/tmp/parties-release-evidence/parties-3.1.0/hexalith.parties.client.3.1.0.nupkg"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "startedAtUtc": "2026-11-06T21:57:42.681931+00:00",
+        "completedAtUtc": "2026-11-06T21:57:42.981393+00:00",
+        "logFile": "signatures/parties-3.1.0/Hexalith.Parties.Client.signature.txt",
+        "logSha256": "42fb8e311d3479cf3c18f17e1d9cc3b11608cebd848d521c691eefef5f727129",
+        "verifiedArchiveSha256": "78c2dd60992e093a670217e03747b612a2734100f62a2ef322d0270720f88522"
+      }
+    },
+    {
+      "id": "Hexalith.Parties.AdminPortal",
+      "version": "3.1.0",
+      "sourceCommit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "sha256": "6bbba169f1ecf1d5015fe78996a2c74fb15575c6defc1a60938cba241fd6f5a3",
+      "artifactHash": "sha512-wLOKCjwzah8j8ffnNxYM0rgxheVPx1et8YqvDneLYiRslSruuVGjD09prjnwMyFa/hAWu+Or5GX4JfhFv7Vfcg==",
+      "assemblies": {
+        "lib/net10.0/Hexalith.Parties.AdminPortal.dll": "03c91bc6e147e63e9b25640e403fe0e0cc91fc25ab6838b80787c343e232bf43"
+      },
+      "signatureVerification": {
+        "command": [
+          "dotnet",
+          "nuget",
+          "verify",
+          "--all",
+          "/tmp/parties-release-evidence/parties-3.1.0/hexalith.parties.adminportal.3.1.0.nupkg"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "startedAtUtc": "2026-11-06T21:57:42.682894+00:00",
+        "completedAtUtc": "2026-11-06T21:57:42.935991+00:00",
+        "logFile": "signatures/parties-3.1.0/Hexalith.Parties.AdminPortal.signature.txt",
+        "logSha256": "b041bf4b646c426291fd425c1b2244a31fa36de5da28d74798729caac1800866",
+        "verifiedArchiveSha256": "6bbba169f1ecf1d5015fe78996a2c74fb15575c6defc1a60938cba241fd6f5a3"
+      }
+    },
+    {
+      "id": "Hexalith.Parties.ConsumerPortal",
+      "version": "3.1.0",
+      "sourceCommit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "sha256": "2d384f2898efe805a8acd97b83ad27870b75ed48528e77f914c9ed420b52878f",
+      "artifactHash": "sha512-EAxVFl5WXOmlAA/rES9qq7jznh3J+oG00L/9+73b5I8ZSvMXNQw4qPK6i1v1c79lorTKR0LXkYqhd12orbwwMA==",
+      "assemblies": {
+        "lib/net10.0/Hexalith.Parties.ConsumerPortal.dll": "e466ab0069e3e150be1d15e910e74b5aae000010a3473d02897168d8e1f21237"
+      },
+      "signatureVerification": {
+        "command": [
+          "dotnet",
+          "nuget",
+          "verify",
+          "--all",
+          "/tmp/parties-release-evidence/parties-3.1.0/hexalith.parties.consumerportal.3.1.0.nupkg"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "startedAtUtc": "2026-11-06T21:57:42.937158+00:00",
+        "completedAtUtc": "2026-11-06T21:57:43.193224+00:00",
+        "logFile": "signatures/parties-3.1.0/Hexalith.Parties.ConsumerPortal.signature.txt",
+        "logSha256": "cd30a87c8e9915115533971da3e47d8d06d6ace5d76f0f5fffffa6a14da94b76",
+        "verifiedArchiveSha256": "2d384f2898efe805a8acd97b83ad27870b75ed48528e77f914c9ed420b52878f"
+      }
+    },
+    {
+      "id": "Hexalith.Parties.Picker",
+      "version": "3.1.0",
+      "sourceCommit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "sha256": "4aea46c1efc140ff046c8f18a5e47c758339245199dc8df487ffe28879178324",
+      "artifactHash": "sha512-hObycmhAW9gRZ6JYna5Jrpq6ELwrxIWWpwb8iOU9eB6vt564Ko5W3TQvAnMoBWHMOnF2Qs/UZeGBMGdZia1MHw==",
+      "assemblies": {
+        "lib/net10.0/Hexalith.Parties.Picker.dll": "d5bb5b48188115e1fb8c3639d5787da97905cb2f91eccf425db9e800138ad127"
+      },
+      "signatureVerification": {
+        "command": [
+          "dotnet",
+          "nuget",
+          "verify",
+          "--all",
+          "/tmp/parties-release-evidence/parties-3.1.0/hexalith.parties.picker.3.1.0.nupkg"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "startedAtUtc": "2026-11-06T21:57:42.944285+00:00",
+        "completedAtUtc": "2026-11-06T21:57:43.203560+00:00",
+        "logFile": "signatures/parties-3.1.0/Hexalith.Parties.Picker.signature.txt",
+        "logSha256": "9408b994e6550481f92b71212966acb944b264fc38802fe66c1420a317d0a25e",
+        "verifiedArchiveSha256": "4aea46c1efc140ff046c8f18a5e47c758339245199dc8df487ffe28879178324"
+      }
+    },
+    {
+      "id": "Hexalith.Parties.Authentication",
+      "version": "3.1.0",
+      "sourceCommit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "sha256": "2aa4f424b07d8e1604819d672cdcfd33d3f50db60bf4b2d48b29b47967d87b60",
+      "artifactHash": "sha512-jPywK5LVQYIwfL/yRRgbWSYWEr5/CobSc0wztAO30gsmIrRQZelx7KYJqDVxUwQkpk5XY1xsEpHs2TbvKp62Pg==",
+      "assemblies": {
+        "lib/net10.0/Hexalith.Parties.Authentication.dll": "449a47ba2cc812e1c65065a8e6a86f12035f0bf636274f57349828db4f00963e"
+      },
+      "signatureVerification": {
+        "command": [
+          "dotnet",
+          "nuget",
+          "verify",
+          "--all",
+          "/tmp/parties-release-evidence/parties-3.1.0/hexalith.parties.authentication.3.1.0.nupkg"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "startedAtUtc": "2026-11-06T21:57:42.982055+00:00",
+        "completedAtUtc": "2026-11-06T21:57:43.228813+00:00",
+        "logFile": "signatures/parties-3.1.0/Hexalith.Parties.Authentication.signature.txt",
+        "logSha256": "08e7ae52ab582b696102fd397249f43162e1722096b15cd8535176ede4f89f0f",
+        "verifiedArchiveSha256": "2aa4f424b07d8e1604819d672cdcfd33d3f50db60bf4b2d48b29b47967d87b60"
+      }
+    },
+    {
+      "id": "Hexalith.Parties.Projections",
+      "version": "3.1.0",
+      "sourceCommit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "sha256": "da9cf6924d2c39b413edaeb220322a4c53fb3b2d4ecb1c414007a36dc858954e",
+      "artifactHash": "sha512-NZIGNxK/ts/Y8TiUBBksZjrTV+9Ws/UJRdnDaNTNOf8kWu3LxrU9ddZqJEDa6qSm5TIMJQlgcgWNbMn5rQHh0Q==",
+      "assemblies": {
+        "lib/net10.0/Hexalith.Parties.Projections.dll": "78ee97260a6d65a190bbf44156de8ffd9eb23d8a5454c02d94247aad98585ef1"
+      },
+      "signatureVerification": {
+        "command": [
+          "dotnet",
+          "nuget",
+          "verify",
+          "--all",
+          "/tmp/parties-release-evidence/parties-3.1.0/hexalith.parties.projections.3.1.0.nupkg"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "startedAtUtc": "2026-11-06T21:57:43.194417+00:00",
+        "completedAtUtc": "2026-11-06T21:57:43.448326+00:00",
+        "logFile": "signatures/parties-3.1.0/Hexalith.Parties.Projections.signature.txt",
+        "logSha256": "21466b449f8e8b5f64585c981948fbb895095a9fbd2a1a160f0895bf67ba541a",
+        "verifiedArchiveSha256": "da9cf6924d2c39b413edaeb220322a4c53fb3b2d4ecb1c414007a36dc858954e"
+      }
+    },
+    {
+      "id": "Hexalith.Parties.Security",
+      "version": "3.1.0",
+      "sourceCommit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "sha256": "42bff9e12282a76a7c6d9fc1b3901284302a9214f98d1956a0722f5529f3f629",
+      "artifactHash": "sha512-BJ5OVtwgOOUEa3f2puOYW6UUtb4F25XSsCxUKO2skp7C0Rjm3JI4Kq86ZugnIVyHiFNMjFDAU1Rs+eHxWkTBNw==",
+      "assemblies": {
+        "lib/net10.0/Hexalith.Parties.Security.dll": "d4b596bc6b250be8923650aabfb99edb3ab61445fa984c76a4b79eb06764afec"
+      },
+      "signatureVerification": {
+        "command": [
+          "dotnet",
+          "nuget",
+          "verify",
+          "--all",
+          "/tmp/parties-release-evidence/parties-3.1.0/hexalith.parties.security.3.1.0.nupkg"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "startedAtUtc": "2026-11-06T21:57:43.204633+00:00",
+        "completedAtUtc": "2026-11-06T21:57:43.464332+00:00",
+        "logFile": "signatures/parties-3.1.0/Hexalith.Parties.Security.signature.txt",
+        "logSha256": "342efa4317244c33a9badac18630d11db08141f53a8e7230edf235b37ccb8e3d",
+        "verifiedArchiveSha256": "42bff9e12282a76a7c6d9fc1b3901284302a9214f98d1956a0722f5529f3f629"
+      }
+    },
+    {
+      "id": "Hexalith.Parties.Testing",
+      "version": "3.1.0",
+      "sourceCommit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "sha256": "51e0f7f556dc42dad1ae23a3e0b8535ef44d7f4bbc746911a68e74540acd9cb3",
+      "artifactHash": "sha512-LVKY+UBVW6HTf7E/lBhpbdUD0s4HyJTEZftNNHd8I9rXM6MokJFpl2AA0dDK1yE1FPfbHvtHv2NDP19SfLS/sQ==",
+      "assemblies": {
+        "lib/net10.0/Hexalith.Parties.Testing.dll": "32aed86ef159ea0a73013c64844ee95cefad0d6cfb1932c16240a261cbbe693b"
+      },
+      "signatureVerification": {
+        "command": [
+          "dotnet",
+          "nuget",
+          "verify",
+          "--all",
+          "/tmp/parties-release-evidence/parties-3.1.0/hexalith.parties.testing.3.1.0.nupkg"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "startedAtUtc": "2026-11-06T21:57:43.229568+00:00",
+        "completedAtUtc": "2026-11-06T21:57:43.477055+00:00",
+        "logFile": "signatures/parties-3.1.0/Hexalith.Parties.Testing.signature.txt",
+        "logSha256": "c1fc0fec817a8d1534d7c53236f7ffca376af51fb909c3af75c8b26e792443fe",
+        "verifiedArchiveSha256": "51e0f7f556dc42dad1ae23a3e0b8535ef44d7f4bbc746911a68e74540acd9cb3"
+      }
+    },
+    {
+      "id": "Hexalith.Parties.Aspire",
+      "version": "3.1.0",
+      "sourceCommit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "sha256": "37ec7539e9da3552d40ee4613b9c20ccbfc0696a8fb34941bdf8c5f4d280a8e4",
+      "artifactHash": "sha512-BmVIKqU6G7GspJvmckJgIPYnVH9Qv8FaKaKJH/YBpW4hNV5L1jWf1ynPPTDpsMgo2pFJstmUsAtm8V1Bo1SItQ==",
+      "assemblies": {
+        "lib/net10.0/Hexalith.Parties.Aspire.dll": "a889e81592a4a0276baca4eb206913e95a23bf2d5953b2d673a192d4134afbdd"
+      },
+      "signatureVerification": {
+        "command": [
+          "dotnet",
+          "nuget",
+          "verify",
+          "--all",
+          "/tmp/parties-release-evidence/parties-3.1.0/hexalith.parties.aspire.3.1.0.nupkg"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "startedAtUtc": "2026-11-06T21:57:43.449039+00:00",
+        "completedAtUtc": "2026-11-06T21:57:43.718641+00:00",
+        "logFile": "signatures/parties-3.1.0/Hexalith.Parties.Aspire.signature.txt",
+        "logSha256": "76ae82daabc9a21562353eab8adb95071329ee707cb4e172094d53073d2473a7",
+        "verifiedArchiveSha256": "37ec7539e9da3552d40ee4613b9c20ccbfc0696a8fb34941bdf8c5f4d280a8e4"
+      }
+    },
+    {
+      "id": "Hexalith.Parties.EventStoreExtensions",
+      "version": "3.1.0",
+      "sourceCommit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "sha256": "f09f84ef6f2d803f1bbfc0811b9c8753d77730f0a8a6369de89201731a46917f",
+      "artifactHash": "sha512-lAFPhYS8izfU7eQNFntG3bmXNrxV9i8qPIzrUWSHShIWdInqYMwN1EelgXSx6pon2Iu2iULURxgiI73WnHcXWw==",
+      "assemblies": {
+        "lib/net10.0/Hexalith.Parties.EventStoreExtensions.dll": "a48612597603ce5b8d743e28e91236a51e561369c6bcd2d9fcca092dd78f1c06"
+      },
+      "signatureVerification": {
+        "command": [
+          "dotnet",
+          "nuget",
+          "verify",
+          "--all",
+          "/tmp/parties-release-evidence/parties-3.1.0/hexalith.parties.eventstoreextensions.3.1.0.nupkg"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "startedAtUtc": "2026-11-06T21:57:43.465022+00:00",
+        "completedAtUtc": "2026-11-06T21:57:43.726394+00:00",
+        "logFile": "signatures/parties-3.1.0/Hexalith.Parties.EventStoreExtensions.signature.txt",
+        "logSha256": "c4cb221673ddb8932ea6857d2b69668e801fa53b670de22053434694d05f7079",
+        "verifiedArchiveSha256": "f09f84ef6f2d803f1bbfc0811b9c8753d77730f0a8a6369de89201731a46917f"
+      }
+    }
+  ],
+  "result": "pass",
+  "releaseUrl": "https://github.com/Hexalith/Hexalith.Parties/releases/tag/v3.1.0",
+  "publishedAt": "2026-11-06T21:40:43Z",
+  "signatureVerificationCapturedAtUtc": "2026-11-06T21:57:43.727110+00:00"
+}

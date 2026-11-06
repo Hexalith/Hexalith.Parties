@@ -1,0 +1,14 @@
+Command: dotnet nuget verify --all /tmp/parties-release-evidence/parties-3.1.0/hexalith.parties.contracts.3.1.0.nupkg
+StartedAtUtc: 2026-11-06T21:57:42.682780+00:00
+CompletedAtUtc: 2026-11-06T21:57:42.943403+00:00
+ExitCode: 0
+VerifiedArchiveSha256: 2eaf319ea5ea53418435bb6b91096ff3baf23713fb109f99165c6cdedbf51a3d
+
+
+Verifying Hexalith.Parties.Contracts.3.1.0
+Content hash: DrjszQshuFYap37nFUCztZWHHVakadK2cX3Dd5UtDMv0dULaiBYwsW78nN8ulKH2icSzlNkn5woj8xjhpPhdTw==
+
+Signature type: Repository
+  Subject Name: CN=NuGet.org Repository by Microsoft, O=NuGet.org Repository by Microsoft, L=Redmond, S=Washington, C=US
+  SHA256 hash: 1F4B311D9ACC115C8DC8018B5A49E00FCE6DA8E2855F9F014CA6F34570BC482D
+  Valid from: 02/23/2024 01:00:00 to 05/19/2027 01:59:59

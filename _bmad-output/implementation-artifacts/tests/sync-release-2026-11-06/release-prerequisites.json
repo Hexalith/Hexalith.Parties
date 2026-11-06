@@ -1,0 +1,77 @@
+{
+  "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+  "gates": [
+    {
+      "gate": "root CI and real current-owner integration",
+      "repository": "Hexalith/Hexalith.Parties",
+      "run": 42292809228,
+      "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "gate": "independent root source range proof",
+      "repository": "Hexalith/Hexalith.Parties",
+      "run": 42292808779,
+      "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "gate": "root CodeQL",
+      "repository": "Hexalith/Hexalith.Parties",
+      "run": 42292809117,
+      "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "gate": "root commitlint",
+      "repository": "Hexalith/Hexalith.Parties",
+      "run": 42292809120,
+      "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "gate": "actual bounded startup observer with full normal owner execution and cleanup",
+      "repository": "Hexalith/Hexalith.Parties",
+      "run": 42292829088,
+      "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "gate": "complete21vector native McpCli CI with persisted effects and cleanup",
+      "repository": "Hexalith/Hexalith.McpCli",
+      "run": 42260737127,
+      "source": "a133f603790375ff51a03f3d0844c7218da36ced",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "gate": "EventStore CI and private package integration",
+      "repository": "Hexalith/Hexalith.EventStore",
+      "run": 42288133749,
+      "source": "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "gate": "independent EventStore integration",
+      "repository": "Hexalith/Hexalith.EventStore",
+      "run": 42288132808,
+      "source": "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ]
+}

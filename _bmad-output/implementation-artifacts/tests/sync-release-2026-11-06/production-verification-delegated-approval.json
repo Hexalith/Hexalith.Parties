@@ -1,0 +1,10 @@
+{
+  "releaseRun": 42296293715,
+  "phase": "verify-publication",
+  "environment": "production",
+  "environmentId": 19131558330,
+  "apiReturnedDeploymentId": 7611479280,
+  "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+  "action": "approved through existing pending-deployments API",
+  "authorization": "explicit user instruction to release without human validation"
+}

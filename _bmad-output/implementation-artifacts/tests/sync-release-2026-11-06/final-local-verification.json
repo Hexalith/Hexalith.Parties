@@ -1,0 +1,40 @@
+{
+  "workingTreeBase": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+  "ciContractTests": {
+    "total": 592,
+    "passed": 592,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "not-run": 0
+  },
+  "observerTests": 23,
+  "currentOwnerVerifierTests": 14,
+  "historyCasesIncludedInCiContractTotal": 7,
+  "actionlint": "pass",
+  "whitespace": "pass",
+  "gitlinkWorktree": "pass",
+  "gitlinkFullPushRange": "14220a7fe0daa19c645675618200fb2a5da13382..50904cc4ba53c9b0b2c082d5872a0d276be8f5c3 pass; working-tree pointers unchanged",
+  "signatureEvidenceBindings": {
+    "packages": 11,
+    "allExitCodes": 0,
+    "archiveAndLogDigests": "verified"
+  },
+  "sourceBoundSubmoduleWorkflowSnapshots": 10,
+  "patchedReviewFindings": [
+    "B2",
+    "B5",
+    "B9",
+    "B10"
+  ],
+  "rejectedFindings": [
+    "B1",
+    "B3"
+  ],
+  "deferredFindings": [
+    "B4",
+    "B6",
+    "B7",
+    "B8"
+  ]
+}

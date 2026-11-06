@@ -1,0 +1,171 @@
+{
+  "kind": "post-cutoff-new-stable-compatibility-audit",
+  "recordedUtc": "2026-11-06T21:01:12.715539+00:00",
+  "qualifiedRegistryAuditCutoffUtc": "2026-11-06T12:44:28.443780+00:00",
+  "finalRegistryRecheckUtc": "2026-11-06T20:56:06.881079+00:00",
+  "decision": "Preserve the qualified immutable Builds567/4.44.11 and Platformed99/1.5.7 release snapshot. Explicitly exclude these two external stable package publications because both were published after the frozen audit cutoff. This is a release qualification cutoff, not an incompatibility claim. No new tool/Platform release cycle is opened for them.",
+  "packages": [
+    {
+      "id": "bunit",
+      "qualifiedSelectedVersion": "2.13.3",
+      "latestKnownStable": "2.14.0",
+      "publishedUtc": "2026-11-06T20:36:00.48Z",
+      "publishedAfterCutoff": true,
+      "catalogUrl": "https://api.nuget.org/v3/catalog0/data/2026.11.06.20.52.32/bunit.2.14.0.json",
+      "registrationUrl": "https://api.nuget.org/v3/registration5-gz-semver2/bunit/2.14.0.json",
+      "archiveUrl": "https://api.nuget.org/v3-flatcontainer/bunit/2.14.0/bunit.2.14.0.nupkg",
+      "archiveSha256": "9fd32cb7b794e978a05706624355b2b1ec4dc034536efdb8543bc6c68470318e",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/bUnit-dev/bUnit",
+        "branch": "refs/heads/stable",
+        "commit": "066dc802bef71598fd7ca80a832e809946ecc91e"
+      },
+      "targetFrameworks": [
+        "net10.0",
+        "net11.0",
+        "net8.0",
+        "net9.0"
+      ],
+      "net10DependencyFloor": {
+        "AngleSharp": "[1.10.0, )",
+        "AngleSharp.Css": "[1.4.0, )",
+        "AngleSharp.Diffing": "[1.1.1, )",
+        "Microsoft.AspNetCore.Components": "[10.0.13, )",
+        "Microsoft.AspNetCore.Components.Authorization": "[10.0.13, )",
+        "Microsoft.AspNetCore.Components.Web": "[10.0.13, )",
+        "Microsoft.AspNetCore.Components.WebAssembly": "[10.0.13, )",
+        "Microsoft.AspNetCore.Components.WebAssembly.Authentication": "[10.0.13, )",
+        "Microsoft.Extensions.Caching.Memory": "[10.0.13, )",
+        "Microsoft.Extensions.Localization.Abstractions": "[10.0.13, )",
+        "Microsoft.Extensions.Logging": "[10.0.13, )",
+        "Microsoft.Extensions.Logging.Abstractions": "[10.0.13, )"
+      }
+    },
+    {
+      "id": "azure.bicep.core",
+      "qualifiedSelectedVersion": "0.48.1",
+      "latestKnownStable": "0.49.2",
+      "publishedUtc": "2026-11-06T19:50:41.4Z",
+      "publishedAfterCutoff": true,
+      "catalogUrl": "https://api.nuget.org/v3/catalog0/data/2026.11.06.19.56.23/azure.bicep.core.0.49.2.json",
+      "registrationUrl": "https://api.nuget.org/v3/registration5-gz-semver2/azure.bicep.core/0.49.2.json",
+      "archiveUrl": "https://api.nuget.org/v3-flatcontainer/azure.bicep.core/0.49.2/azure.bicep.core.0.49.2.nupkg",
+      "archiveSha256": "02933bfae1bb436da53afb0465ceaf313a262ab4ed204ab9cd4b940e145ba779",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Azure/bicep"
+      },
+      "targetFrameworks": [
+        "net10.0"
+      ],
+      "net10DependencyFloor": {
+        "Azure.Bicep.IO": "[0.49.2, )",
+        "Azure.Bicep.Types": "[0.6.144, )",
+        "Azure.Bicep.Types.Az": "[0.2.972, )",
+        "Azure.Bicep.Types.K8s": "[0.1.644, )",
+        "Azure.Containers.ContainerRegistry": "[1.4.0, )",
+        "Azure.Deployments.Templates": "[1.812.0, )",
+        "Azure.Identity": "[1.21.0, )",
+        "Azure.ResourceManager.Resources": "[1.11.2, )",
+        "JsonPatch.Net": "[3.3.0, )",
+        "JsonPath.Net": "[2.1.1, )",
+        "Microsoft.Extensions.Configuration": "[10.0.14, )",
+        "Microsoft.Extensions.Configuration.Binder": "[10.0.14, )",
+        "Microsoft.Extensions.Configuration.Json": "[10.0.14, )",
+        "Microsoft.Extensions.DependencyInjection": "[10.0.14, )",
+        "Microsoft.Extensions.FileSystemGlobbing": "[10.0.14, )",
+        "Microsoft.Extensions.Http": "[10.0.12, )",
+        "Microsoft.PowerPlatform.ResourceStack": "[7.0.0.2129, )",
+        "Microsoft.VisualStudio.Threading": "[18.7.23, )",
+        "Newtonsoft.Json": "[13.0.3, )",
+        "OrasProject.Oras": "[0.8.0, )",
+        "Scriban": "[7.5.3, )",
+        "Semver": "[3.0.0, )",
+        "SharpYaml": "[3.16.0, )",
+        "TestableIO.System.IO.Abstractions.Wrappers": "[22.3.0, )",
+        "Microsoft.Extensions.DependencyInjection.Abstractions": "[10.0.14, )",
+        "Microsoft.Extensions.Logging": "[10.0.14, )",
+        "System.Memory.Data": "[10.0.14, )",
+        "System.Security.Cryptography.Pkcs": "[10.0.13, )",
+        "System.Security.Cryptography.Xml": "[10.0.13, )"
+      }
+    }
+  ],
+  "bunitCompatibility": {
+    "selectedVersion": "2.13.3",
+    "selectedAngleSharp": "1.9.1",
+    "selectedNet10DependencyFloor": {
+      "AngleSharp": "[1.8.6, )",
+      "AngleSharp.Css": "[1.2.0, )"
+    },
+    "latestVersion": "2.14.0",
+    "latestNet10DependencyFloor": {
+      "AngleSharp": "[1.10.0, )",
+      "AngleSharp.Css": "[1.4.0, )"
+    },
+    "officialReleaseSource": "https://raw.githubusercontent.com/bUnit-dev/bUnit/066dc802bef71598fd7ca80a832e809946ecc91e/CHANGELOG.md",
+    "officialFix": "The new release updates AngleSharp/AngleSharp.Css and implements the new BeforeToggle event on generated wrappers, addressing Find TypeLoadException with AngleSharp1.10.",
+    "conclusion": "bUnit2.14 cannot retain the current selected AngleSharp1.9.1 dependency floor. Its official fix makes coupled bUnit2.14/AngleSharp1.10 adoption a legitimate next qualification task; no evidence here claims the new bUnit is broken or that the existing compatibility hold applies to it.",
+    "affectedTestsRun": false,
+    "reasonNoTests": "Coordinator ended optional migration testing after sufficient measured timing/dependency facts; no restore/build/test was started."
+  },
+  "bicepCompatibility": {
+    "selected": "0.48.1",
+    "latest": "0.49.2",
+    "selectedTargetFramework": "net10.0",
+    "latestTargetFramework": "net10.0",
+    "targetFrameworkUpgradeRequired": false,
+    "directAndExistingEffectiveUsage": {
+      "directReferences": [],
+      "existingTrackedProjectAssetsScanned": 201,
+      "actualAssetsWithBicep": []
+    },
+    "apiUseMigrationRequiredByCurrentGraph": false,
+    "qualificationLimitation": "No consumer API/runtime compatibility is claimed; no direct tracked reference and no Bicep library in201 existing actual project asset graphs were found. Latest package changes its dependency set, but this unused central default is not part of these measured consumer outputs.",
+    "officialReleaseUrl": "https://github.com/Azure/bicep/releases/tag/v0.49.2",
+    "officialReleasePublishedUtc": "2026-11-06T19:41:01Z",
+    "apiInspection": {
+      "command": [
+        "dnx",
+        "dotnet-inspect",
+        "-y",
+        "--",
+        "diff",
+        "--package",
+        "Azure.Bicep.Core@0.48.1..0.49.2",
+        "-n",
+        "45"
+      ],
+      "exitCode": 0,
+      "observation": "Actual package API comparison reports breaking/additive changes, including removed IArtifactReferenceFactory and IModuleDispatcher/ModuleDispatcher and changed BicepCompiler/ArtifactRegistry/Compilation APIs. These are not used by the measured repository graphs; no general API compatibility claim is made.",
+      "noRuntimeOrTestsStarted": true
+    }
+  },
+  "isolatedEvaluationOnly": {
+    "command": [
+      "dotnet",
+      "msbuild",
+      "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+      "-nologo",
+      "-p:Configuration=Release",
+      "-p:UseHexalithProjectReferences=false",
+      "-p:UseNuGetDeps=true",
+      "-p:CustomAfterMicrosoftCommonTargets=/tmp/parties-release-audit/final-new-stable-compatibility/candidate-version.targets",
+      "-p:ArtifactsPath=/tmp/parties-release-audit/final-new-stable-compatibility/candidate-ui",
+      "-getItem:PackageVersion",
+      "-getProperty:TargetPath,ProjectAssetsFile,BaseIntermediateOutputPath"
+    ],
+    "verifiedActualEvaluatedBunit": "2.14.0",
+    "verifiedActualEvaluatedAngleSharp": "1.9.1",
+    "artifactsAndObjPaths": "All pointed at task-owned temporary candidate-ui directory; no restore/build/test was started.",
+    "defaultOutputsObserved": 39,
+    "defaultAssetsAndSelectedBunitAngleSharpOutputHashesUnchanged": true,
+    "defaultResolvedVersions": {
+      "bunit": "2.13.3",
+      "AngleSharp": "1.9.1"
+    }
+  },
+  "noTrackedFilesWorktreesSubmodulesGitlinksPublishedAuthoritiesOrRuntimeChanged": true,
+  "recommendation": "Finish the current user release from the explicitly qualified12:44 dependency snapshot. Record both later versions and publication dates as excluded post-cutoff updates; consider bUnit/AngleSharp together under subsequent owning Builds/FrontComposer/UI qualification, and review the unused Bicep catalog entry separately."
+}

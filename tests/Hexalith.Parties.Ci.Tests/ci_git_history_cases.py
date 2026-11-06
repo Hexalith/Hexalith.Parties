@@ -1,5 +1,6 @@
 """Exercise direct-checkout history preparation with real hermetic Git origins."""
 import os
+import json
 from pathlib import Path
 import shutil
 import subprocess
@@ -89,10 +90,49 @@ def exercise(repository, scenario):
         root_modules = (root / ".gitmodules").read_bytes()
         git(root, "config", "submodule.recurse", "true")
         git(root, "config", "fetch.recurseSubmodules", "true")
+        if scenario in ("fetch-transient", "fetch-exhausted"):
+            # Scope fault injection to this helper invocation and real temporary Git origins.
+            actual_git = shutil.which("git")
+            wrapper_directory = directory / "wrapper"
+            wrapper_directory.mkdir()
+            fetch_log = directory / "metadata-fetch-calls.json"
+            wrapper = wrapper_directory / "git"
+            wrapper.write_text("#!/usr/bin/env python3\n" +
+                "import json, os, subprocess, sys\nfrom pathlib import Path\n" +
+                "actual = " + repr(actual_git) + "\n" +
+                "log = Path(" + repr(str(fetch_log)) + ")\n" +
+                "scenario = " + repr(scenario) + "\n" +
+                "args = sys.argv[1:]\n" +
+                "if 'fetch' in args:\n" +
+                "    calls = json.loads(log.read_text()) if log.exists() else []\n" +
+                "    calls.append(args)\n    log.write_text(json.dumps(calls))\n" +
+                "    assert all(value in args for value in ('submodule.recurse=false', 'fetch.recurseSubmodules=false', '--no-recurse-submodules', '--tags'))\n" +
+                "    if scenario == 'fetch-exhausted': sys.exit(124)\n" +
+                "    if len(calls) == 1:\n" +
+                "        subprocess.run([actual, *args], check=True)\n" +
+                "        sys.exit(124)  # Metadata arrived before a simulated uncertain timeout.\n" +
+                "os.execv(actual, [actual, *args])\n")
+            wrapper.chmod(0o700)
+            env["PATH"] = str(wrapper_directory) + os.pathsep + env["PATH"]
         result = run(root, "bash", str(helper), check=False)
-        if scenario in ("missing-direct", "mismatched-head"):
+        if scenario in ("fetch-transient", "fetch-exhausted"):
+            calls = json.loads(fetch_log.read_text())
+            assert len(calls) == (2 if scenario == "fetch-transient" else 3), calls
+            assert "--unshallow" in calls[0], calls
+            if scenario == "fetch-transient":
+                assert "--unshallow" not in calls[1], calls
+            else:
+                assert all("--unshallow" in call for call in calls), calls
+                assert git(child, "rev-parse", "--is-shallow-repository") == "true"
+            assert git(child, "rev-parse", "HEAD") == selected
+            assert git(child, "symbolic-ref", "HEAD") == "refs/heads/main"
+
+        if scenario in ("missing-direct", "mismatched-head", "fetch-exhausted"):
             assert result.returncode != 0, result.stdout + result.stderr
-            expected = "already prepared own checkout" if scenario == "missing-direct" else "differs from its recorded selection"
+            expected = ("already prepared own checkout" if scenario == "missing-direct" else
+                        "differs from its recorded selection" if scenario == "mismatched-head" else
+                        "failed after 3 bounded attempts")
+            if scenario == "fetch-exhausted": assert result.returncode == 124
             assert expected in result.stderr, result.stdout + result.stderr
             if scenario == "missing-direct":
                 assert not (child / ".git").exists()

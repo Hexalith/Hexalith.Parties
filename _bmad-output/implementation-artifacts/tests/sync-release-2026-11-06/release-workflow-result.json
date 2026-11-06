@@ -1,0 +1,13 @@
+{
+  "run": 42296293715,
+  "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/42296293715",
+  "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+  "status": "completed",
+  "conclusion": "success",
+  "releaseVersion": "3.1.0",
+  "publicationVerificationArtifactId": 13542473786,
+  "publicationVerificationArtifactSha256": "67957cd3be084eafce423453aeeb776fe113904c4cdd958ff5776579863a326c",
+  "independentlySignedNuGetPackages": 11,
+  "registryVerifiedMultiarchImages": 3,
+  "delegatedProductionApprovals": 2
+}

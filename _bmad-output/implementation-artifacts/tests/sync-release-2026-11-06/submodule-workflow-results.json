@@ -1,0 +1,538 @@
+[
+  {
+    "repository": "Hexalith/Hexalith.EventStore",
+    "source": "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+    "latestWorkflows": [
+      {
+        "conclusion": "success",
+        "databaseId": 42288133749,
+        "event": "push",
+        "headSha": "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.EventStore/actions/runs/42288133749",
+        "workflowName": "CI",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T21:01:12Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42288133572,
+        "event": "push",
+        "headSha": "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.EventStore/actions/runs/42288133572",
+        "workflowName": "Commitlint",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T20:25:27Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42288133371,
+        "event": "push",
+        "headSha": "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.EventStore/actions/runs/42288133371",
+        "workflowName": "CodeQL",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T20:32:48Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42288133050,
+        "event": "push",
+        "headSha": "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.EventStore/actions/runs/42288133050",
+        "workflowName": "Payload Protection Azure",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T20:26:16Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42288133034,
+        "event": "push",
+        "headSha": "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.EventStore/actions/runs/42288133034",
+        "workflowName": "Payload Protection",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T20:31:01Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42288132911,
+        "event": "push",
+        "headSha": "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.EventStore/actions/runs/42288132911",
+        "workflowName": "Advisory Tests",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T20:39:20Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42288132817,
+        "event": "push",
+        "headSha": "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.EventStore/actions/runs/42288132817",
+        "workflowName": "Payload Protection Lifecycle",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T20:29:40Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42288132808,
+        "event": "push",
+        "headSha": "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.EventStore/actions/runs/42288132808",
+        "workflowName": "Integration Tests",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T21:23:01Z"
+      }
+    ],
+    "recordedSource": "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+    "actualSource": "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+    "sourceEquality": true,
+    "captureStartedAtUtc": "2026-11-06T21:58:16.986008+00:00",
+    "capturedAtUtc": "2026-11-06T21:58:17.504285+00:00",
+    "snapshotClassification": "read-only-github-api-status-snapshot",
+    "apiQuery": "GET /repos/Hexalith/Hexalith.EventStore/actions/runs?head_sha=23252aef50e99d6b1338da0ac501cd25ab3a16fd&per_page=100"
+  },
+  {
+    "repository": "Hexalith/Hexalith.Memories",
+    "source": "4ff3e6866ecb6d1a497e7063e972c24259252c40",
+    "latestWorkflows": [
+      {
+        "conclusion": "success",
+        "databaseId": 42220908958,
+        "event": "push",
+        "headSha": "4ff3e6866ecb6d1a497e7063e972c24259252c40",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.Memories/actions/runs/42220908958",
+        "workflowName": "CI",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T13:10:09Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42220908879,
+        "event": "push",
+        "headSha": "4ff3e6866ecb6d1a497e7063e972c24259252c40",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.Memories/actions/runs/42220908879",
+        "workflowName": "CodeQL",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T12:57:55Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42220908821,
+        "event": "push",
+        "headSha": "4ff3e6866ecb6d1a497e7063e972c24259252c40",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.Memories/actions/runs/42220908821",
+        "workflowName": "Commitlint",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T12:52:02Z"
+      }
+    ],
+    "recordedSource": "4ff3e6866ecb6d1a497e7063e972c24259252c40",
+    "actualSource": "4ff3e6866ecb6d1a497e7063e972c24259252c40",
+    "sourceEquality": true,
+    "captureStartedAtUtc": "2026-11-06T21:58:16.985711+00:00",
+    "capturedAtUtc": "2026-11-06T21:58:17.436179+00:00",
+    "snapshotClassification": "read-only-github-api-status-snapshot",
+    "apiQuery": "GET /repos/Hexalith/Hexalith.Memories/actions/runs?head_sha=4ff3e6866ecb6d1a497e7063e972c24259252c40&per_page=100"
+  },
+  {
+    "repository": "Hexalith/Hexalith.FrontComposer",
+    "source": "58e997a4b0fed7103948a984d1cb6f4724888a3f",
+    "latestWorkflows": [
+      {
+        "conclusion": "success",
+        "databaseId": 42232509558,
+        "event": "workflow_run",
+        "headSha": "58e997a4b0fed7103948a984d1cb6f4724888a3f",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.FrontComposer/actions/runs/42232509558",
+        "workflowName": "Flaky Test Governance",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T14:17:43Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42231207496,
+        "event": "push",
+        "headSha": "58e997a4b0fed7103948a984d1cb6f4724888a3f",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.FrontComposer/actions/runs/42231207496",
+        "workflowName": "CodeQL",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T14:14:26Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42231207229,
+        "event": "push",
+        "headSha": "58e997a4b0fed7103948a984d1cb6f4724888a3f",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.FrontComposer/actions/runs/42231207229",
+        "workflowName": "Commitlint",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T14:08:49Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42231206827,
+        "event": "push",
+        "headSha": "58e997a4b0fed7103948a984d1cb6f4724888a3f",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.FrontComposer/actions/runs/42231206827",
+        "workflowName": "CI",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T14:16:48Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42231206587,
+        "event": "push",
+        "headSha": "58e997a4b0fed7103948a984d1cb6f4724888a3f",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.FrontComposer/actions/runs/42231206587",
+        "workflowName": "Quality",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T14:33:32Z"
+      }
+    ],
+    "recordedSource": "58e997a4b0fed7103948a984d1cb6f4724888a3f",
+    "actualSource": "58e997a4b0fed7103948a984d1cb6f4724888a3f",
+    "sourceEquality": true,
+    "captureStartedAtUtc": "2026-11-06T21:58:16.986176+00:00",
+    "capturedAtUtc": "2026-11-06T21:58:17.473573+00:00",
+    "snapshotClassification": "read-only-github-api-status-snapshot",
+    "apiQuery": "GET /repos/Hexalith/Hexalith.FrontComposer/actions/runs?head_sha=58e997a4b0fed7103948a984d1cb6f4724888a3f&per_page=100"
+  },
+  {
+    "repository": "Hexalith/Hexalith.Tenants",
+    "source": "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
+    "latestWorkflows": [
+      {
+        "conclusion": "success",
+        "databaseId": 42245346373,
+        "event": "workflow_dispatch",
+        "headSha": "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.Tenants/actions/runs/42245346373",
+        "workflowName": "Release",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T15:57:38Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42239775076,
+        "event": "push",
+        "headSha": "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.Tenants/actions/runs/42239775076",
+        "workflowName": "Commitlint",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T15:05:43Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42239774184,
+        "event": "push",
+        "headSha": "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.Tenants/actions/runs/42239774184",
+        "workflowName": "CI",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T15:40:57Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42239774017,
+        "event": "push",
+        "headSha": "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.Tenants/actions/runs/42239774017",
+        "workflowName": "CodeQL",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T15:10:38Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42239773856,
+        "event": "push",
+        "headSha": "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.Tenants/actions/runs/42239773856",
+        "workflowName": "Source-reference integration",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T15:17:44Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42239773293,
+        "event": "push",
+        "headSha": "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.Tenants/actions/runs/42239773293",
+        "workflowName": "Story Guards",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T15:13:36Z"
+      }
+    ],
+    "recordedSource": "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
+    "actualSource": "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
+    "sourceEquality": true,
+    "captureStartedAtUtc": "2026-11-06T21:58:16.986533+00:00",
+    "capturedAtUtc": "2026-11-06T21:58:17.489575+00:00",
+    "snapshotClassification": "read-only-github-api-status-snapshot",
+    "apiQuery": "GET /repos/Hexalith/Hexalith.Tenants/actions/runs?head_sha=d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35&per_page=100"
+  },
+  {
+    "repository": "Hexalith/Hexalith.AI.Tools",
+    "source": "1745b6663ad32bb1288167135ed0f979366c53a0",
+    "latestWorkflows": [],
+    "recordedSource": "1745b6663ad32bb1288167135ed0f979366c53a0",
+    "actualSource": "1745b6663ad32bb1288167135ed0f979366c53a0",
+    "sourceEquality": true,
+    "captureStartedAtUtc": "2026-11-06T21:58:17.439290+00:00",
+    "capturedAtUtc": "2026-11-06T21:58:17.812075+00:00",
+    "snapshotClassification": "read-only-github-api-status-snapshot",
+    "apiQuery": "GET /repos/Hexalith/Hexalith.AI.Tools/actions/runs?head_sha=1745b6663ad32bb1288167135ed0f979366c53a0&per_page=100"
+  },
+  {
+    "repository": "Hexalith/Hexalith.Commons",
+    "source": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+    "latestWorkflows": [
+      {
+        "conclusion": "success",
+        "databaseId": 42191038791,
+        "event": "schedule",
+        "headSha": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.Commons/actions/runs/42191038791",
+        "workflowName": "CI",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T08:56:06Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 41926306986,
+        "event": "dynamic",
+        "headSha": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.Commons/actions/runs/41926306986",
+        "workflowName": "github_actions in /. - Update #1681709344",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-04T22:34:17Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 41437113500,
+        "event": "schedule",
+        "headSha": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.Commons/actions/runs/41437113500",
+        "workflowName": "CodeQL",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-02T11:31:11Z"
+      }
+    ],
+    "recordedSource": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+    "actualSource": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+    "sourceEquality": true,
+    "captureStartedAtUtc": "2026-11-06T21:58:17.476459+00:00",
+    "capturedAtUtc": "2026-11-06T21:58:18.086239+00:00",
+    "snapshotClassification": "read-only-github-api-status-snapshot",
+    "apiQuery": "GET /repos/Hexalith/Hexalith.Commons/actions/runs?head_sha=11555ace9efcae2928a00122dcba91243e5a8a1a&per_page=100"
+  },
+  {
+    "repository": "Hexalith/Hexalith.Builds",
+    "source": "567604b616613ba429be0609636d805db776a709",
+    "latestWorkflows": [
+      {
+        "conclusion": "success",
+        "databaseId": 42252030945,
+        "event": "workflow_dispatch",
+        "headSha": "567604b616613ba429be0609636d805db776a709",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.Builds/actions/runs/42252030945",
+        "workflowName": "Release",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T16:45:27Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42249566022,
+        "event": "push",
+        "headSha": "567604b616613ba429be0609636d805db776a709",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.Builds/actions/runs/42249566022",
+        "workflowName": "Commitlint",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T16:08:53Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42249566014,
+        "event": "push",
+        "headSha": "567604b616613ba429be0609636d805db776a709",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.Builds/actions/runs/42249566014",
+        "workflowName": "CI",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T16:23:45Z"
+      }
+    ],
+    "recordedSource": "567604b616613ba429be0609636d805db776a709",
+    "actualSource": "567604b616613ba429be0609636d805db776a709",
+    "sourceEquality": true,
+    "captureStartedAtUtc": "2026-11-06T21:58:17.492941+00:00",
+    "capturedAtUtc": "2026-11-06T21:58:17.921380+00:00",
+    "snapshotClassification": "read-only-github-api-status-snapshot",
+    "apiQuery": "GET /repos/Hexalith/Hexalith.Builds/actions/runs?head_sha=567604b616613ba429be0609636d805db776a709&per_page=100"
+  },
+  {
+    "repository": "Hexalith/Hexalith.PolymorphicSerializations",
+    "source": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+    "latestWorkflows": [
+      {
+        "conclusion": "success",
+        "databaseId": 42054477579,
+        "event": "dynamic",
+        "headSha": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.PolymorphicSerializations/actions/runs/42054477579",
+        "workflowName": "npm_and_yarn in /. - Update #1683408726",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-05T15:24:13Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 41437677412,
+        "event": "schedule",
+        "headSha": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.PolymorphicSerializations/actions/runs/41437677412",
+        "workflowName": "CodeQL",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-02T11:34:19Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 41306324197,
+        "event": "push",
+        "headSha": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.PolymorphicSerializations/actions/runs/41306324197",
+        "workflowName": "Build and Test",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-01T12:24:50Z"
+      }
+    ],
+    "recordedSource": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+    "actualSource": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+    "sourceEquality": true,
+    "captureStartedAtUtc": "2026-11-06T21:58:17.507143+00:00",
+    "capturedAtUtc": "2026-11-06T21:58:18.067952+00:00",
+    "snapshotClassification": "read-only-github-api-status-snapshot",
+    "apiQuery": "GET /repos/Hexalith/Hexalith.PolymorphicSerializations/actions/runs?head_sha=bce4eb9f45c6b131b960ab4fa39e50ff01e51960&per_page=100"
+  },
+  {
+    "repository": "Hexalith/Hexalith.McpCli",
+    "source": "a133f603790375ff51a03f3d0844c7218da36ced",
+    "latestWorkflows": [
+      {
+        "conclusion": "success",
+        "databaseId": 42260737127,
+        "event": "push",
+        "headSha": "a133f603790375ff51a03f3d0844c7218da36ced",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.McpCli/actions/runs/42260737127",
+        "workflowName": "CI",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T18:07:20Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42260737073,
+        "event": "push",
+        "headSha": "a133f603790375ff51a03f3d0844c7218da36ced",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.McpCli/actions/runs/42260737073",
+        "workflowName": "Commitlint",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T17:20:52Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42260736404,
+        "event": "push",
+        "headSha": "a133f603790375ff51a03f3d0844c7218da36ced",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.McpCli/actions/runs/42260736404",
+        "workflowName": "Agent instructions sync",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T17:20:44Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42260736400,
+        "event": "push",
+        "headSha": "a133f603790375ff51a03f3d0844c7218da36ced",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.McpCli/actions/runs/42260736400",
+        "workflowName": "Bootstrap package",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T17:22:42Z"
+      }
+    ],
+    "recordedSource": "a133f603790375ff51a03f3d0844c7218da36ced",
+    "actualSource": "a133f603790375ff51a03f3d0844c7218da36ced",
+    "sourceEquality": true,
+    "captureStartedAtUtc": "2026-11-06T21:58:17.815571+00:00",
+    "capturedAtUtc": "2026-11-06T21:58:18.263403+00:00",
+    "snapshotClassification": "read-only-github-api-status-snapshot",
+    "apiQuery": "GET /repos/Hexalith/Hexalith.McpCli/actions/runs?head_sha=a133f603790375ff51a03f3d0844c7218da36ced&per_page=100"
+  },
+  {
+    "repository": "Hexalith/Hexalith.Platform",
+    "source": "ed991837945571a12743214fc18a87fbd323fc30",
+    "latestWorkflows": [
+      {
+        "conclusion": "success",
+        "databaseId": 42281947817,
+        "event": "push",
+        "headSha": "ed991837945571a12743214fc18a87fbd323fc30",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.Platform/actions/runs/42281947817",
+        "workflowName": "Catalog builder consumer binding",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T19:45:12Z"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 42281947755,
+        "event": "push",
+        "headSha": "ed991837945571a12743214fc18a87fbd323fc30",
+        "status": "completed",
+        "url": "https://github.com/Hexalith/Hexalith.Platform/actions/runs/42281947755",
+        "workflowName": "Platform tuple CI preflight",
+        "runAttempt": 1,
+        "updatedAtUtc": "2026-11-06T20:17:44Z"
+      }
+    ],
+    "recordedSource": "ed991837945571a12743214fc18a87fbd323fc30",
+    "actualSource": "ed991837945571a12743214fc18a87fbd323fc30",
+    "sourceEquality": true,
+    "captureStartedAtUtc": "2026-11-06T21:58:17.924423+00:00",
+    "capturedAtUtc": "2026-11-06T21:58:18.349059+00:00",
+    "snapshotClassification": "read-only-github-api-status-snapshot",
+    "apiQuery": "GET /repos/Hexalith/Hexalith.Platform/actions/runs?head_sha=ed991837945571a12743214fc18a87fbd323fc30&per_page=100"
+  }
+]

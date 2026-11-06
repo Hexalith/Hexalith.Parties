@@ -1,0 +1,14 @@
+Command: dotnet nuget verify --all /tmp/parties-release-evidence/parties-3.1.0/hexalith.parties.authentication.3.1.0.nupkg
+StartedAtUtc: 2026-11-06T21:57:42.982055+00:00
+CompletedAtUtc: 2026-11-06T21:57:43.228813+00:00
+ExitCode: 0
+VerifiedArchiveSha256: 2aa4f424b07d8e1604819d672cdcfd33d3f50db60bf4b2d48b29b47967d87b60
+
+
+Verifying Hexalith.Parties.Authentication.3.1.0
+Content hash: hhuPboedQxL2rR6T3At6bg/sp7LJXnPG+7Adp0YdBtXF0UskNB6VIHG1TNRqh5iX/DN1VLC/gSD0dnPBw7w5FA==
+
+Signature type: Repository
+  Subject Name: CN=NuGet.org Repository by Microsoft, O=NuGet.org Repository by Microsoft, L=Redmond, S=Washington, C=US
+  SHA256 hash: 1F4B311D9ACC115C8DC8018B5A49E00FCE6DA8E2855F9F014CA6F34570BC482D
+  Valid from: 02/23/2024 01:00:00 to 05/19/2027 01:59:59

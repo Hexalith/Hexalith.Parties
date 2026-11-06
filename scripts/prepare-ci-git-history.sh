@@ -47,22 +47,43 @@ done < "$declarations"
 
 for index in "${!paths[@]}"; do
     checkout="${paths[$index]}"
-    fetch_options=(--tags --no-recurse-submodules)
-    if [[ "$(git -C "$checkout" rev-parse --is-shallow-repository)" = true ]]; then
-        fetch_options+=(--unshallow)
-    fi
-    printf 'Preparing historical Git objects: %s\n' "${checkout#"$root/"}"
-    GIT_TERMINAL_PROMPT=0 timeout --signal=TERM --kill-after=5s 120s \
-        git -c submodule.recurse=false -c fetch.recurseSubmodules=false -C "$checkout" \
-        fetch "${fetch_options[@]}" origin
-    if [[ "$(git -C "$checkout" rev-parse --is-shallow-repository)" != false \
-        || "$(git -C "$checkout" rev-parse HEAD)" != "${heads[$index]}" \
-        || "$(git -C "$checkout" symbolic-ref --quiet HEAD || true)" != "${branches[$index]}" \
-        || "$(git -C "$checkout" status --porcelain=v1 --untracked-files=all --ignore-submodules=all)" != "${statuses[$index]}" ]]; then
-        printf 'History preparation did not preserve the complete selected checkout: %s\n' "$checkout" >&2
-        exit 1
+    fetch_status=1
+    for attempt in 1 2 3; do
+        fetch_options=(--tags --no-recurse-submodules)
+        if [[ "$(git -C "$checkout" rev-parse --is-shallow-repository)" = true ]]; then
+            fetch_options+=(--unshallow)
+        fi
+        printf 'Preparing historical Git objects (attempt %s/3): %s\n' "$attempt" "${checkout#"$root/"}"
+        if GIT_TERMINAL_PROMPT=0 timeout --signal=TERM --kill-after=5s 120s \
+            git -c submodule.recurse=false -c fetch.recurseSubmodules=false -C "$checkout" \
+            fetch "${fetch_options[@]}" origin; then
+            fetch_status=0
+        else
+            fetch_status=$?
+        fi
+        # A failed metadata fetch may have downloaded history, but it must never
+        # change any selected source, branch or dirty state before another attempt.
+        if [[ "$(git -C "$root" rev-parse HEAD)" != "$selected_root" \
+            || "$(git -C "$checkout" rev-parse HEAD)" != "${heads[$index]}" \
+            || "$(git -C "$checkout" symbolic-ref --quiet HEAD || true)" != "${branches[$index]}" \
+            || "$(git -C "$checkout" status --porcelain=v1 --untracked-files=all --ignore-submodules=all)" != "${statuses[$index]}" ]]; then
+            printf 'History preparation changed the selected checkout: %s\n' "$checkout" >&2
+            exit 1
+        fi
+        if [[ "$fetch_status" = 0 ]]; then
+            if [[ "$(git -C "$checkout" rev-parse --is-shallow-repository)" = false ]]; then
+                break
+            fi
+            fetch_status=1
+        fi
+        if [[ "$attempt" != 3 ]]; then sleep 1; fi
+    done
+    if [[ "$fetch_status" != 0 ]]; then
+        printf 'Historical Git metadata fetch failed after 3 bounded attempts: %s\n' "$checkout" >&2
+        exit "$fetch_status"
     fi
 done
+
 if [[ "$(git -C "$root" rev-parse HEAD)" != "$selected_root" ]]; then
     printf 'Root source selection changed during history preparation.\n' >&2
     exit 1

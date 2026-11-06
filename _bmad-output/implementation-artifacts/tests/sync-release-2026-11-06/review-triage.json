@@ -1,0 +1,69 @@
+{
+  "layers": {
+    "blind-hunter": "10 findings",
+    "edge-case-hunter": "[]",
+    "verification-gap": "No verification gaps found"
+  },
+  "findings": [
+    {
+      "id": "B1",
+      "verdict": "false",
+      "route": "reject",
+      "evidence": "CompositionRunResources.IsEmpty and ResourceIds are computed read-only properties of the pinned producer from exactly the five checked inventories; empty inventories cannot serialize the contradictory nonempty resourceIds/isEmpty=false fixture. Actual successful hosted cleanup inventories and producer fields agree."
+    },
+    {
+      "id": "B2",
+      "verdict": "low",
+      "route": "patch",
+      "evidence": "The observer can reach its finite budget with awaiting-state/mapping rather than ObservationPending and emits no explicit termination state. Receipt publication precedes initial state writes, so these waiting phases are real; an explicit bounded-observation disposition improves the diagnostic without changing native/cleanup authority."
+    },
+    {
+      "id": "B3",
+      "verdict": "low",
+      "route": "reject",
+      "evidence": "The artifact correctly labels the earlier result helperOutcome; a subsequent independent finalizer failure remains a failing workflow step and cannot qualify release. Capturing a second rare idempotent-finalization failure requires another redacted projection/command surface rather than a direct correction; reject the added complexity for this low diagnostic omission."
+    },
+    {
+      "id": "B4",
+      "verdict": "maybe-false",
+      "route": "defer",
+      "evidence": "HTTPS and pinned official Dapr version URLs authenticate the transport/source, while fixed archive digests would additionally detect a replaced asset. No unexpected downloaded bytes or required checksum policy was demonstrated; record unverified medium integrity hardening with the concrete asset-replacement scenario/policy needed to settle it."
+    },
+    {
+      "id": "B5",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "A real bounded Git fetch timed out in source8936 CI and passed an unchanged-source rerun. Add a fixed maximum of metadata-fetch attempts, recompute shallow options each time, and preserve the original per-attempt timeout plus source/branch/dirty-state invariants."
+    },
+    {
+      "id": "B6",
+      "verdict": "medium",
+      "route": "defer",
+      "evidence": "Baseline FrontComposer6059af7e68571af18846de831c8fe5884896425a already returned an existing correlation without checking the message/descriptor. Same-principal reacknowledgement can return an unmapped new message handle, but this mapping behavior predates the preserved concurrent ownership commit97f03dfe and this synchronization work."
+    },
+    {
+      "id": "B7",
+      "verdict": "medium",
+      "route": "defer",
+      "evidence": "Baseline6059af7e already used separate correlation/message dictionaries and correlation-first lookup, with only same-namespace insertion checks. Cross-alias shadowing is real and can make an original message handle resolve incorrectly or become hidden; it is pre-existing, rather than caused by the browser/toolchain corrections."
+    },
+    {
+      "id": "B8",
+      "verdict": "maybe-false",
+      "route": "defer",
+      "evidence": "The new reader ownership lookup and existing admission catalog resolve context separately; a changing custom accessor could diverge, while the ordinary HTTP accessor reads the same request identity and no supported mutation path was shown. Record unverified medium and require a concrete supported changing-accessor/authorization reproduction before choosing the binding fix."
+    },
+    {
+      "id": "B9",
+      "verdict": "low",
+      "route": "patch",
+      "evidence": "The aggregate workflow JSON was captured while EventStore compatibility ran and lacks snapshot time/classification, although final prerequisites now prove success. Refresh the exact-source aggregate and label its actual capture time."
+    },
+    {
+      "id": "B10",
+      "verdict": "low",
+      "route": "patch",
+      "evidence": "All eleven signature subprocesses did succeed and their archive/source hashes were checked, but the durable per-archive receipt lacks command/status/time/log-digest binding. Repeat only signature verification with explicit captured metadata and immutable archive checks; do not invent retrospective timestamps."
+    }
+  ]
+}

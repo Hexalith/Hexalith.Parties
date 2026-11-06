@@ -1,0 +1,14 @@
+Command: dotnet nuget verify --all /tmp/parties-release-evidence/parties-3.1.0/hexalith.parties.aspire.3.1.0.nupkg
+StartedAtUtc: 2026-11-06T21:57:43.449039+00:00
+CompletedAtUtc: 2026-11-06T21:57:43.718641+00:00
+ExitCode: 0
+VerifiedArchiveSha256: 37ec7539e9da3552d40ee4613b9c20ccbfc0696a8fb34941bdf8c5f4d280a8e4
+
+
+Verifying Hexalith.Parties.Aspire.3.1.0
+Content hash: oQH1atdwiC5hoALILajjla71e5sXuPqyNLhqmwwdoZ6zr2DI3k959nxldGGy+lV8u2bqL9vLPAnj5FTelTZIFw==
+
+Signature type: Repository
+  Subject Name: CN=NuGet.org Repository by Microsoft, O=NuGet.org Repository by Microsoft, L=Redmond, S=Washington, C=US
+  SHA256 hash: 1F4B311D9ACC115C8DC8018B5A49E00FCE6DA8E2855F9F014CA6F34570BC482D
+  Valid from: 02/23/2024 01:00:00 to 05/19/2027 01:59:59

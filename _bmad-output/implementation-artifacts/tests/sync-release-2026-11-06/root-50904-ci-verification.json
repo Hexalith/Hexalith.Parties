@@ -1,0 +1,43 @@
+{
+  "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+  "ciRun": 42292809228,
+  "ciConclusion": "success",
+  "artifactId": 13541671459,
+  "artifactSha256": "712fa289bcdc797416c9630aed3f880f1ab9691c9717e1030ca24051602c576b",
+  "actualMandatoryVerifier": {
+    "profile": "platform-current-package",
+    "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+    "runId": "44da8dd3e63ab2b885bc5f8ef9a9b53f",
+    "nativeCases": 28,
+    "qualificationCredit": false
+  },
+  "nativeCounters": {
+    "total": "28",
+    "executed": "28",
+    "passed": "28",
+    "failed": "0",
+    "error": "0",
+    "timeout": "0",
+    "aborted": "0",
+    "inconclusive": "0",
+    "passedButRunAborted": "0",
+    "notRunnable": "0",
+    "notExecuted": "0",
+    "disconnected": "0",
+    "warning": "0",
+    "completed": "0",
+    "inProgress": "0",
+    "pending": "0"
+  },
+  "remainingResources": {
+    "claimIds": [],
+    "containerIds": [],
+    "discoveryFailures": [],
+    "isEmpty": true,
+    "processIds": [],
+    "resourceIds": [],
+    "unverified": false,
+    "workspaceIds": []
+  },
+  "publicQualificationCredit": false
+}

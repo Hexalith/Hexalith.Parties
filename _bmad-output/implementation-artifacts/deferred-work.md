@@ -2223,3 +2223,19 @@ rollback: None required (test-only).
 - source_spec: `/tmp/parties-release-20261105/parties-runtime-r5/_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-05.md`
   summary: Unverified medium risk that a pathological blocked regular filesystem can outlast synchronous snapshot I/O deadline checks.
   evidence: L2-B6 identifies synchronous regular-file open/read/write operations; actual8191-file source capture/export passes in11.258seconds. A controlled slow-filesystem reproducer is required to establish a practical overrun. No source/runtime qualification is granted by this deferral.
+
+- source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-06.md`
+  summary: Evaluate fixed digest verification for the manual Dapr diagnostic toolchain archives (unverified medium).
+  evidence: B4: version-pinned official HTTPS downloads are present, but no wrong bytes were demonstrated. Settle with an actual mutable-asset/compromise scenario or an applicable checksum policy; preserve the qualified runtime versions and normal failure gates.
+
+- source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-06.md`
+  summary: Reject lifecycle reacknowledgements whose message ID or descriptor conflicts with the existing correlation.
+  evidence: B6: FrontComposer baseline6059af7e GetOrCreateEntry returns an existing correlation unchanged, while TrackAcknowledged can return the newly supplied unmapped message ID. This predates this synchronization; add same-principal changed-message/descriptor tests in the owning follow-up.
+
+- source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-06.md`
+  summary: Enforce FrontComposer lifecycle uniqueness across correlation and message aliases.
+  evidence: B7: both baseline6059af7e and current code check dictionaries separately while lookup prioritizes correlations; a new correlation equal to another message can shadow that handle. Cover both alias directions and preserve tenant/user hidden-unknown behavior.
+
+- source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-06.md`
+  summary: Qualify lifecycle ownership/admission behavior under a changing context accessor (unverified medium).
+  evidence: B8: ReadCoreAsync captures ownership context before ResolveAsync obtains context again. The ordinary HTTP path has no demonstrated identity mutation. Settle with a supported changing-accessor reproduction, including authentication loss, then choose a bound-context or fail-closed equivalence check.

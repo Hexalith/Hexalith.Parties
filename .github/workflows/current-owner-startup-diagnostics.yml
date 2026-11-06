@@ -123,7 +123,7 @@ jobs:
           fi
           rm -rf -- "$config"
           [[ ! -e "$config" && ! -L "$config" ]]
-      - name: Retain only bounded redacted startup metadata
+      - name: Retain only bounded redacted startup and helper outcome metadata
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

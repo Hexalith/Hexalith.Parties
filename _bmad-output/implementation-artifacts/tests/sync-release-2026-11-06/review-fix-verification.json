@@ -1,0 +1,27 @@
+{
+  "codeDiff": "/tmp/parties-review-fixes-gjv2dsmf.diff",
+  "checks": [
+    {
+      "command": "python3 -B -m unittest discover -s tests/ci-lifecycle -p test_startup_observer.py -v",
+      "passed": 23
+    },
+    {
+      "command": "bash -n scripts/prepare-ci-git-history.sh",
+      "exitCode": 0
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Release -m:1 -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.CiGitHistoryPreparationTests",
+      "passed": 7,
+      "skipped": 0
+    }
+  ],
+  "workflowSnapshot": "_bmad-output/implementation-artifacts/tests/sync-release-2026-11-06/submodule-workflow-results.json",
+  "signatureEvidence": "_bmad-output/implementation-artifacts/tests/sync-release-2026-11-06/parties-3.1.0-publication.json",
+  "signatureVerificationsPassed": 11,
+  "activeOwnedProcesses": []
+}

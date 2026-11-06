@@ -1,0 +1,385 @@
+{
+  "builds_commit": "11a3a79cfac4bba9548c6364a17a01ee9b561370",
+  "dependency_versions": {
+    "Hexalith.Commons.Http": "2.30.10",
+    "Hexalith.Commons.UniqueIds": "2.30.10",
+    "Hexalith.EventStore.*": "4.1.0"
+  },
+  "downloads": [
+    {
+      "artifact": "Hexalith.Parties.Contracts",
+      "attempt": 1,
+      "bytes": 139134,
+      "redirect": 0,
+      "sha256": "2eaf319ea5ea53418435bb6b91096ff3baf23713fb109f99165c6cdedbf51a3d",
+      "status": 200
+    },
+    {
+      "artifact": "Hexalith.Parties.Client",
+      "attempt": 1,
+      "bytes": 64282,
+      "redirect": 0,
+      "sha256": "78c2dd60992e093a670217e03747b612a2734100f62a2ef322d0270720f88522",
+      "status": 200
+    },
+    {
+      "artifact": "Hexalith.Parties.AdminPortal",
+      "attempt": 1,
+      "bytes": 153960,
+      "redirect": 0,
+      "sha256": "6bbba169f1ecf1d5015fe78996a2c74fb15575c6defc1a60938cba241fd6f5a3",
+      "status": 200
+    },
+    {
+      "artifact": "Hexalith.Parties.ConsumerPortal",
+      "attempt": 1,
+      "bytes": 86656,
+      "redirect": 0,
+      "sha256": "2d384f2898efe805a8acd97b83ad27870b75ed48528e77f914c9ed420b52878f",
+      "status": 200
+    },
+    {
+      "artifact": "Hexalith.Parties.Picker",
+      "attempt": 1,
+      "bytes": 61501,
+      "redirect": 0,
+      "sha256": "4aea46c1efc140ff046c8f18a5e47c758339245199dc8df487ffe28879178324",
+      "status": 200
+    },
+    {
+      "artifact": "Hexalith.Parties.Authentication",
+      "attempt": 1,
+      "bytes": 28456,
+      "redirect": 0,
+      "sha256": "2aa4f424b07d8e1604819d672cdcfd33d3f50db60bf4b2d48b29b47967d87b60",
+      "status": 200
+    },
+    {
+      "artifact": "Hexalith.Parties.Projections",
+      "attempt": 1,
+      "bytes": 83456,
+      "redirect": 0,
+      "sha256": "da9cf6924d2c39b413edaeb220322a4c53fb3b2d4ecb1c414007a36dc858954e",
+      "status": 200
+    },
+    {
+      "artifact": "Hexalith.Parties.Security",
+      "attempt": 1,
+      "bytes": 90863,
+      "redirect": 0,
+      "sha256": "42bff9e12282a76a7c6d9fc1b3901284302a9214f98d1956a0722f5529f3f629",
+      "status": 200
+    },
+    {
+      "artifact": "Hexalith.Parties.Testing",
+      "attempt": 1,
+      "bytes": 33995,
+      "redirect": 0,
+      "sha256": "51e0f7f556dc42dad1ae23a3e0b8535ef44d7f4bbc746911a68e74540acd9cb3",
+      "status": 200
+    },
+    {
+      "artifact": "Hexalith.Parties.Aspire",
+      "attempt": 1,
+      "bytes": 27806,
+      "redirect": 0,
+      "sha256": "37ec7539e9da3552d40ee4613b9c20ccbfc0696a8fb34941bdf8c5f4d280a8e4",
+      "status": 200
+    },
+    {
+      "artifact": "Hexalith.Parties.EventStoreExtensions",
+      "attempt": 1,
+      "bytes": 30483,
+      "redirect": 0,
+      "sha256": "f09f84ef6f2d803f1bbfc0811b9c8753d77730f0a8a6369de89201731a46917f",
+      "status": 200
+    },
+    {
+      "artifact": "parties:manifest",
+      "attempt": 1,
+      "bytes": 493,
+      "redirect": 0,
+      "sha256": "48d0e8db506e4ce574e8c7bd97e528a302d3fbf97754b007176904cbc1f3abfb",
+      "status": 200
+    },
+    {
+      "artifact": "parties:manifest",
+      "attempt": 1,
+      "bytes": 493,
+      "redirect": 0,
+      "sha256": "48d0e8db506e4ce574e8c7bd97e528a302d3fbf97754b007176904cbc1f3abfb",
+      "status": 200
+    },
+    {
+      "artifact": "parties:manifest",
+      "attempt": 1,
+      "bytes": 1399,
+      "redirect": 0,
+      "sha256": "6457bde4e1c99119fe9cc6bc58654a0c618e42c59bfc37ed67d4b7410cecb263",
+      "status": 200
+    },
+    {
+      "artifact": "parties:config",
+      "attempt": 1,
+      "bytes": 4149,
+      "redirect": 0,
+      "sha256": "dcd4f805785eaf35e4b422e9361487330e30ee1cb870b0efc3ee09988f5250bf",
+      "status": 200
+    },
+    {
+      "artifact": "parties:manifest",
+      "attempt": 1,
+      "bytes": 1399,
+      "redirect": 0,
+      "sha256": "0560fde84e43fefe9450f111245555f232cf306ca4b00408bb65fe9fa03971d4",
+      "status": 200
+    },
+    {
+      "artifact": "parties:config",
+      "attempt": 1,
+      "bytes": 4150,
+      "redirect": 0,
+      "sha256": "edd6896a4ace4f784cf537887bff1065934174006cf39d0b7f8f47f23be72d0b",
+      "status": 200
+    },
+    {
+      "artifact": "parties-mcp:manifest",
+      "attempt": 1,
+      "bytes": 493,
+      "redirect": 0,
+      "sha256": "b98d9b4ec952399b61ab4ea03435e0b7b253302fdb22e70f99ca15ac079882aa",
+      "status": 200
+    },
+    {
+      "artifact": "parties-mcp:manifest",
+      "attempt": 1,
+      "bytes": 493,
+      "redirect": 0,
+      "sha256": "b98d9b4ec952399b61ab4ea03435e0b7b253302fdb22e70f99ca15ac079882aa",
+      "status": 200
+    },
+    {
+      "artifact": "parties-mcp:manifest",
+      "attempt": 1,
+      "bytes": 1399,
+      "redirect": 0,
+      "sha256": "bac3d92b67a705f5b12bba0c61202c9fe22959f19de5f850cd6067e7795234f8",
+      "status": 200
+    },
+    {
+      "artifact": "parties-mcp:config",
+      "attempt": 1,
+      "bytes": 4153,
+      "redirect": 0,
+      "sha256": "53d5d2c57d6bbe058f80b48707a16ad1d1b199cf29bd08f2ea66f8d8f6852376",
+      "status": 200
+    },
+    {
+      "artifact": "parties-mcp:manifest",
+      "attempt": 1,
+      "bytes": 1399,
+      "redirect": 0,
+      "sha256": "ca31214acda0e6306140e0a4e4f6a2f9bbfe39210f24ceae7afaeea762e3c5f0",
+      "status": 200
+    },
+    {
+      "artifact": "parties-mcp:config",
+      "attempt": 1,
+      "bytes": 4154,
+      "redirect": 0,
+      "sha256": "7fb5f0099619dbc8434c4479da9854e748c5c26f87089ab4cfd96c87d4b48ea2",
+      "status": 200
+    },
+    {
+      "artifact": "parties-ui:manifest",
+      "attempt": 1,
+      "bytes": 493,
+      "redirect": 0,
+      "sha256": "66dd933f58b53ef438714e4e4bfc2fc7e5621bfdc770afd96932a545b86625c7",
+      "status": 200
+    },
+    {
+      "artifact": "parties-ui:manifest",
+      "attempt": 1,
+      "bytes": 493,
+      "redirect": 0,
+      "sha256": "66dd933f58b53ef438714e4e4bfc2fc7e5621bfdc770afd96932a545b86625c7",
+      "status": 200
+    },
+    {
+      "artifact": "parties-ui:manifest",
+      "attempt": 1,
+      "bytes": 1401,
+      "redirect": 0,
+      "sha256": "fdf422ea7c9cbd6f67069d042971e1a700dd1991d32c341204ad87bedee06d3f",
+      "status": 200
+    },
+    {
+      "artifact": "parties-ui:config",
+      "attempt": 1,
+      "bytes": 4118,
+      "redirect": 0,
+      "sha256": "cca3b1befb678595f976183a9b6a0bae9305b7a8a27eb9ec2384dc8dc7d018aa",
+      "status": 200
+    },
+    {
+      "artifact": "parties-ui:manifest",
+      "attempt": 1,
+      "bytes": 1401,
+      "redirect": 0,
+      "sha256": "c9bb95307accf95feec458bfa39db4a14bf44ce8fc963d68e673cfea7839b908",
+      "status": 200
+    },
+    {
+      "artifact": "parties-ui:config",
+      "attempt": 1,
+      "bytes": 4119,
+      "redirect": 0,
+      "sha256": "f372d041f75fe562991a4b8be8b3551ac9510368af59d6e8d95a05508a07ade7",
+      "status": 200
+    }
+  ],
+  "hash_scope": "observed registry bytes; no equivalence to unsigned build archives is asserted",
+  "images": [
+    {
+      "image": "parties",
+      "index_digest": "sha256:48d0e8db506e4ce574e8c7bd97e528a302d3fbf97754b007176904cbc1f3abfb",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ]
+    },
+    {
+      "image": "parties-mcp",
+      "index_digest": "sha256:b98d9b4ec952399b61ab4ea03435e0b7b253302fdb22e70f99ca15ac079882aa",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ]
+    },
+    {
+      "image": "parties-ui",
+      "index_digest": "sha256:66dd933f58b53ef438714e4e4bfc2fc7e5621bfdc770afd96932a545b86625c7",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ]
+    }
+  ],
+  "oci_validator_sha256": "1913f75bdf39c494c5723bca5c04fcb2e6dc0474ad2d86c22e63aae96b9e850c",
+  "packages": [
+    {
+      "bytes": 139134,
+      "file": "nuget/hexalith.parties.contracts.3.1.0.nupkg",
+      "id": "Hexalith.Parties.Contracts",
+      "repository": "https://github.com/Hexalith/Hexalith.Parties",
+      "repository_commit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "repository_type": "git",
+      "sha256": "2eaf319ea5ea53418435bb6b91096ff3baf23713fb109f99165c6cdedbf51a3d",
+      "version": "3.1.0"
+    },
+    {
+      "bytes": 64282,
+      "file": "nuget/hexalith.parties.client.3.1.0.nupkg",
+      "id": "Hexalith.Parties.Client",
+      "repository": "https://github.com/Hexalith/Hexalith.Parties",
+      "repository_commit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "repository_type": "git",
+      "sha256": "78c2dd60992e093a670217e03747b612a2734100f62a2ef322d0270720f88522",
+      "version": "3.1.0"
+    },
+    {
+      "bytes": 153960,
+      "file": "nuget/hexalith.parties.adminportal.3.1.0.nupkg",
+      "id": "Hexalith.Parties.AdminPortal",
+      "repository": "https://github.com/Hexalith/Hexalith.Parties",
+      "repository_commit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "repository_type": "git",
+      "sha256": "6bbba169f1ecf1d5015fe78996a2c74fb15575c6defc1a60938cba241fd6f5a3",
+      "version": "3.1.0"
+    },
+    {
+      "bytes": 86656,
+      "file": "nuget/hexalith.parties.consumerportal.3.1.0.nupkg",
+      "id": "Hexalith.Parties.ConsumerPortal",
+      "repository": "https://github.com/Hexalith/Hexalith.Parties",
+      "repository_commit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "repository_type": "git",
+      "sha256": "2d384f2898efe805a8acd97b83ad27870b75ed48528e77f914c9ed420b52878f",
+      "version": "3.1.0"
+    },
+    {
+      "bytes": 61501,
+      "file": "nuget/hexalith.parties.picker.3.1.0.nupkg",
+      "id": "Hexalith.Parties.Picker",
+      "repository": "https://github.com/Hexalith/Hexalith.Parties",
+      "repository_commit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "repository_type": "git",
+      "sha256": "4aea46c1efc140ff046c8f18a5e47c758339245199dc8df487ffe28879178324",
+      "version": "3.1.0"
+    },
+    {
+      "bytes": 28456,
+      "file": "nuget/hexalith.parties.authentication.3.1.0.nupkg",
+      "id": "Hexalith.Parties.Authentication",
+      "repository": "https://github.com/Hexalith/Hexalith.Parties",
+      "repository_commit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "repository_type": "git",
+      "sha256": "2aa4f424b07d8e1604819d672cdcfd33d3f50db60bf4b2d48b29b47967d87b60",
+      "version": "3.1.0"
+    },
+    {
+      "bytes": 83456,
+      "file": "nuget/hexalith.parties.projections.3.1.0.nupkg",
+      "id": "Hexalith.Parties.Projections",
+      "repository": "https://github.com/Hexalith/Hexalith.Parties",
+      "repository_commit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "repository_type": "git",
+      "sha256": "da9cf6924d2c39b413edaeb220322a4c53fb3b2d4ecb1c414007a36dc858954e",
+      "version": "3.1.0"
+    },
+    {
+      "bytes": 90863,
+      "file": "nuget/hexalith.parties.security.3.1.0.nupkg",
+      "id": "Hexalith.Parties.Security",
+      "repository": "https://github.com/Hexalith/Hexalith.Parties",
+      "repository_commit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "repository_type": "git",
+      "sha256": "42bff9e12282a76a7c6d9fc1b3901284302a9214f98d1956a0722f5529f3f629",
+      "version": "3.1.0"
+    },
+    {
+      "bytes": 33995,
+      "file": "nuget/hexalith.parties.testing.3.1.0.nupkg",
+      "id": "Hexalith.Parties.Testing",
+      "repository": "https://github.com/Hexalith/Hexalith.Parties",
+      "repository_commit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "repository_type": "git",
+      "sha256": "51e0f7f556dc42dad1ae23a3e0b8535ef44d7f4bbc746911a68e74540acd9cb3",
+      "version": "3.1.0"
+    },
+    {
+      "bytes": 27806,
+      "file": "nuget/hexalith.parties.aspire.3.1.0.nupkg",
+      "id": "Hexalith.Parties.Aspire",
+      "repository": "https://github.com/Hexalith/Hexalith.Parties",
+      "repository_commit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "repository_type": "git",
+      "sha256": "37ec7539e9da3552d40ee4613b9c20ccbfc0696a8fb34941bdf8c5f4d280a8e4",
+      "version": "3.1.0"
+    },
+    {
+      "bytes": 30483,
+      "file": "nuget/hexalith.parties.eventstoreextensions.3.1.0.nupkg",
+      "id": "Hexalith.Parties.EventStoreExtensions",
+      "repository": "https://github.com/Hexalith/Hexalith.Parties",
+      "repository_commit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+      "repository_type": "git",
+      "sha256": "f09f84ef6f2d803f1bbfc0811b9c8753d77730f0a8a6369de89201731a46917f",
+      "version": "3.1.0"
+    }
+  ],
+  "result": "pass",
+  "source_sha": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+  "version": "3.1.0"
+}

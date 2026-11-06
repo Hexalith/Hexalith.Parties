@@ -1,0 +1,123 @@
+{
+  "observedAtUtc": "2026-11-06T21:24:58.252562+00:00",
+  "recordedAtUtc": "2026-11-06T21:25:29.649622+00:00",
+  "source": "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+  "workflows": [
+    {
+      "id": 42288133749,
+      "head_sha": "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 128134191428,
+          "name": "ci / semantic-release-governance",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-06T20:24:51Z",
+          "completed_at": "2026-11-06T20:27:30Z"
+        },
+        {
+          "id": 128134191611,
+          "name": "ci / checkpointed process packages",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-06T20:24:51Z",
+          "completed_at": "2026-11-06T20:27:41Z"
+        },
+        {
+          "id": 128134191618,
+          "name": "ci / folded-snapshot-compatibility",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-06T20:24:51Z",
+          "completed_at": "2026-11-06T20:29:31Z"
+        },
+        {
+          "id": 128134191680,
+          "name": "ci / tenants-source-mode",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-06T20:24:51Z",
+          "completed_at": "2026-11-06T20:27:35Z"
+        },
+        {
+          "id": 128134191912,
+          "name": "ci / contracts",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-06T20:24:51Z",
+          "completed_at": "2026-11-06T20:29:07Z"
+        },
+        {
+          "id": 128134192036,
+          "name": "ci / build-and-test",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-06T20:24:51Z",
+          "completed_at": "2026-11-06T21:01:11Z"
+        }
+      ]
+    },
+    {
+      "id": 42288132808,
+      "head_sha": "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 128134187823,
+          "name": "live-sidecar",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-06T20:24:51Z",
+          "completed_at": "2026-11-06T20:54:42Z"
+        },
+        {
+          "id": 128134187950,
+          "name": "published-compatibility",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-06T20:24:50Z",
+          "completed_at": "2026-11-06T21:23:00Z"
+        }
+      ]
+    }
+  ],
+  "nativeTests": {
+    "total": 9,
+    "passed": 9,
+    "failed": 0,
+    "notExecuted": 0,
+    "profile": "platform-package",
+    "classification": "baseline-only",
+    "publicQualificationClaimed": false,
+    "executionSuccess": true,
+    "cleanupCompleteAndEmpty": true
+  },
+  "artifact": {
+    "id": 13540826882,
+    "name": "module-integration-diagnostics",
+    "zip": "/tmp/parties-release-evidence/eventstore-232-final-diagnostics/published-module-integration-diagnostics.zip",
+    "sha256": "1a0539b37a66eb5bd1ff3f68b4759dd0d111b95dd71f26ca6ef7fa47fb68fb02",
+    "githubDigest": "sha256:1a0539b37a66eb5bd1ff3f68b4759dd0d111b95dd71f26ca6ef7fa47fb68fb02",
+    "bytes": 7063
+  },
+  "verifiedDiagnosticReferences": [
+    {
+      "id": "lifecycle",
+      "file": "lifecycle-9b1aa6810cbd8f6c2bd675e5bb4799834070ba4d44109730e4c47e3f7d0fe556.json",
+      "sha256": "9b1aa6810cbd8f6c2bd675e5bb4799834070ba4d44109730e4c47e3f7d0fe556"
+    },
+    {
+      "id": "native-report",
+      "file": "native-c1675592d8875cf057d27b0df4db4732c5942f40fc92d62138efd3d5ec8dca20.trx",
+      "sha256": "c1675592d8875cf057d27b0df4db4732c5942f40fc92d62138efd3d5ec8dca20"
+    }
+  ],
+  "monitorExitedSuccessfully": true,
+  "repositoryEdits": false,
+  "remoteMutations": false,
+  "runtimeActions": false,
+  "remainingBlockers": []
+}

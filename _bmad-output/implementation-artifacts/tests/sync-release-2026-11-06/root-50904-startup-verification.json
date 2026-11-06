@@ -1,0 +1,31 @@
+{
+  "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+  "run": 42292829088,
+  "artifactId": 13540608523,
+  "artifactSha256": "f375941bcef2faac029813cad518dd82c7aa0998f1ac8f59b924065303447cb5",
+  "ownerRunId": "ee997af9f828107537b10b9176439256",
+  "observerRefused": false,
+  "refusalReason": null,
+  "helperOutcome": {
+    "cleanup.json": {
+      "exitCode": "Success",
+      "phase": "None",
+      "reportedEmpty": true
+    },
+    "execution.json": {
+      "exitCode": "Success",
+      "phase": "None"
+    },
+    "exitCode": 0,
+    "returned": true
+  },
+  "observedPreparationPhases": [
+    "bootstrap-submitting",
+    "member-submitting",
+    "memories-active-observed",
+    "memories-active-observing",
+    "tenant-submitting",
+    "tenants-native-observing"
+  ],
+  "qualificationCredit": false
+}

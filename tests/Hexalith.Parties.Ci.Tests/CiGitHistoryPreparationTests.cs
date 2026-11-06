@@ -12,6 +12,8 @@ public sealed class CiGitHistoryPreparationTests
     [InlineData("full-no-tags")]
     [InlineData("missing-direct")]
     [InlineData("mismatched-head")]
+    [InlineData("fetch-transient")]
+    [InlineData("fetch-exhausted")]
     public async Task DirectHistoryPreparationPreservesSourceSelections(string scenario)
     {
         if (OperatingSystem.IsWindows()) { Assert.Skip("History preparation requires bash and timeout."); }

@@ -150,6 +150,7 @@ class Observer:
         self.owner = None
         self.samples = deque(maxlen=32)
         self.failure = False
+        self.observation_termination = 'observing'
         self.refusal_reason = None
         self.checkpoint = 'source-binding'
         self.helper_outcome = {'returned': False}
@@ -226,7 +227,8 @@ class Observer:
     def publish(self):
         value = {'schema': 'hexalith.parties.startup-observation.v1', 'qualificationCredit': False,
                  'source': self.source, 'runId': self.owner['runId'] if self.owner else None,
-                 'observerRefused': self.failure, 'refusalReason': self.refusal_reason,
+                 'observerRefused': self.failure, 'observationTermination': self.observation_termination,
+                 'refusalReason': self.refusal_reason,
                  'helperOutcome': self.helper_outcome, 'observations': list(self.samples)}
         body = (json.dumps(value, sort_keys=True) + '\n').encode()
         require(len(body) <= LIMIT)
@@ -267,15 +269,19 @@ class Observer:
                     self.samples.append({'observedAt': datetime.now(timezone.utc).isoformat(), **snapshot})
                     self.publish()
                 if stop.wait(2):
+                    self.observation_termination = 'normal-stop'
+                    self.publish()
                     return
                 if time.monotonic() >= deadline:
                     break
+            self.observation_termination = 'budget-exhausted'
             if pending:
                 self.failure = True
                 self.refusal_reason = 'metadata-pending-bound'
-                self.publish()
+            self.publish()
         except (OSError, ValueError, KeyError, TypeError, RecursionError, subprocess.SubprocessError):
             self.failure = True
+            self.observation_termination = 'refused'
             self.refusal_reason = self.checkpoint
             # Fixed checkpoints only; no exception payload, private paths, URLs or child output.
             try:
@@ -314,6 +320,7 @@ class Observer:
             self.publish()
         except (OSError, ValueError, KeyError, TypeError, RecursionError, subprocess.SubprocessError):
             self.failure = True
+            self.observation_termination = 'refused'
             self.refusal_reason = self.refusal_reason or 'helper-outcome'
             try:
                 self.publish()

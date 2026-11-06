@@ -2,7 +2,7 @@
 title: 'Synchronize dependencies and publish a verified Parties release'
 type: 'bugfix'
 created: '2026-11-06'
-status: 'in-progress'
+status: 'done'
 route: 'dispatch'
 review_loop_iteration: 0
 baseline_commit: 14220a7fe0daa19c645675618200fb2a5da13382
@@ -35,6 +35,8 @@ context: ['{project-root}/docs/ci.md', '{project-root}/docs/build-gate.md']
 
 </frozen-after-approval>
 
+Implementation handoffs below are retained as execution history; the final Verification and Review Triage Log record the completed state. The post-publication commit contains CI-only review adjustments and durable evidence; the published artifact source remains50904cc4ba53c9b0b2c082d5872a0d276be8f5c3.
+
 ## Code Map
 
 - `.gitmodules`, `.gitlink-signoff.tsv`, `scripts/gitlink-rc-gate.sh`: root dependency inventory and measured source-selection gate.
@@ -48,13 +50,13 @@ context: ['{project-root}/docs/ci.md', '{project-root}/docs/build-gate.md']
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] Root-declared repositories -- inspect/fetch/preserve all work and publish necessary dependency commits before parent pointers.
-- [ ] SDK and package manifests -- audit registry versions, update outdated selections and locks in their owners, verify documented compatibility exceptions.
-- [ ] `.gitlink-signoff.tsv` -- append exact measured source selections; preserve historical entries.
-- [ ] CI inputs and owning code -- repair actual automated failures and validate existing checks.
-- [ ] Root repository -- validate messages, commit, push and require current-source CI/range checks to pass.
-- [ ] Release workflow -- dispatch on exact green main; exercise the existing authorized reviewer API if waiting, without removing automated gates.
-- [ ] Publication evidence -- verify all eleven declared packages at the release version and source SHA; check final repository synchronization.
+- [x] Root-declared repositories -- inspect/fetch/preserve all work and publish necessary dependency commits before parent pointers.
+- [x] SDK and package manifests -- audit registry versions, update outdated selections and locks in their owners, verify documented compatibility exceptions.
+- [x] `.gitlink-signoff.tsv` -- append exact measured source selections; preserve historical entries.
+- [x] CI inputs and owning code -- repair actual automated failures and validate existing checks.
+- [x] Root repository -- validate messages, commit, push and require current-source CI/range checks to pass.
+- [x] Release workflow -- dispatch on exact green main; exercise the existing authorized reviewer API if waiting, without removing automated gates.
+- [x] Publication evidence -- verify all eleven declared packages at the release version and source SHA; check final repository synchronization.
 
 **Acceptance Criteria:**
 - Given root and dependency changes, when synchronization finishes, then all retained commits and selected gitlinks exist in their owning remotes.
@@ -200,9 +202,36 @@ context: ['{project-root}/docs/ci.md', '{project-root}/docs/build-gate.md']
 
 - Parent independently reviewed the exact ten-field SDK identity correction, reran all14boundary controls and validated an isolated extraction of the genuine unchanged hosted ZIP:28native cases pass with actual run/source/attempt bindings and no qualification credit. Original artifact SHA2567c6b501af9bf59561bc09df737ad84da750267219ec0e255b8db693ffb12ebae; extra-file refusal stays enforced. Existing21observer controls and workflow lint pass. Fresh hosted CI is still required after publication of this narrow root correction. Final live registry audit20:56 found two newer external stable versions since the original qualified catalog snapshot; their compatibility/publication timing is being checked, with no invented hold.
 
+### Coordinator release snapshot decision
+
+- The dependency audit snapshot is2026-11-06T12:44:28Z and its resulting genuine producer isBuilds567604b616613ba429be0609636d805db776a709/4.44.11. A final live registry recheck20:56 observed two later external publications: bUnit2.14.0 at20:36:00.480Z and Azure.Bicep.Core0.49.2 at19:50:41.400Z. Both are explicitly outside this qualified release snapshot. bUnit2.14.0 requires AngleSharp>=1.10.0 and AngleSharp.Css>=1.4.0, crossing the existing tested1.9.1 compatibility boundary; this is not a claim that the new bUnit is broken. Bicep has zero direct references and zero consumers across201existing assets files. No untested dependency migration or producer-source substitution is introduced during final publication. The new publications and exact official metadata are recorded for the next dependency update.
+- Root correction50904cc4ba53c9b0b2c082d5872a0d276be8f5c3 is committed/pushed with pinned full-message validation; all35focused observer/verifier controls pass. Fresh exact-source CI42292809228, manual42292829088 and CodeQL are pending; RC42292808779 and commitlint42292809120 passed. EventStore232 mainCI42288133749 is now green with its real native integration; independent live-sidecar job is green and published compatibility remains pending. Gated normal root publication waits for all eight actual runs, with user-authorized production approval only after automated checks pass. No root release exists yet.
+
+- Fresh actual source50904cc4 manual startup42292829088 is SUCCESS. Its unmodified GitHub artifact digestf375941bcef2faac029813cad518dd82c7aa0998f1ac8f59b924065303447cb5 verifies observerRefused=false, actual helper executionSuccess, cleanupSuccess and reported-empty=true; real preparation reached memories-active-observed. The record retains qualificationCredit=false. Root mainCI and EventStore independent compatibility remain pending; no root publication is claimed.
+
+- All eight final exact-source prerequisites are SUCCESS, including Root CI42292809228 (actual28native0skips and verifiedemptycleanup), real startup42292829088 and EventStore independentIntegration42288132808 (published compatibility56.78minutes). Normal Root Release42296293715 is dispatched at exactgreenmain50904cc4ba53c9b0b2c082d5872a0d276be8f5c3. Its strict preflight passed. Production approval is delegated by the explicit user request; publication and registry verification are still pending and no version is claimed yet.
+
+- Normal Root Release42296293715 is SUCCESS at exactsource50904cc4ba53c9b0b2c082d5872a0d276be8f5c3, published stablev3.1.0 on2026-11-06T21:40:43Z. All11declared NuGet archives were independently downloaded fromNuGet, dotnet-signature-verified, and matched exactrepository/version/source; publicGitHubtag resolves to the samecommit. Normal verify-publication independently passed all11packages andthree multiarchitecture OCI images, bothplatforms each with source/version labels. Actual receipts/digests/signature logs are retained under tests/sync-release-2026-11-06. Bothproduction environment approvals were submitted through the existing API under explicituserdelegation; no human signoff is claimed. Implementation acceptance is fulfilled; automated three-layer review and final evidence synchronization follow.
+
 ## Spec Change Log
 
 ## Review Triage Log
+
+| Finding | Verdict | Route | Evidence |
+|---|---|---|---|
+| B1 | false | reject | CompositionRunResources.IsEmpty and ResourceIds are computed read-only properties of the pinned producer from exactly the five checked inventories; empty inventories cannot serialize the contradictory nonempty resourceIds/isEmpty=false fixture. Actual successful hosted cleanup inventories and producer fields agree. |
+| B2 | low | patch | The observer can reach its finite budget with awaiting-state/mapping rather than ObservationPending and emits no explicit termination state. Receipt publication precedes initial state writes, so these waiting phases are real; an explicit bounded-observation disposition improves the diagnostic without changing native/cleanup authority. |
+| B3 | low | reject | The artifact correctly labels the earlier result helperOutcome; a subsequent independent finalizer failure remains a failing workflow step and cannot qualify release. Capturing a second rare idempotent-finalization failure requires another redacted projection/command surface rather than a direct correction; reject the added complexity for this low diagnostic omission. |
+| B4 | maybe-false | defer | HTTPS and pinned official Dapr version URLs authenticate the transport/source, while fixed archive digests would additionally detect a replaced asset. No unexpected downloaded bytes or required checksum policy was demonstrated; record unverified medium integrity hardening with the concrete asset-replacement scenario/policy needed to settle it. |
+| B5 | medium | patch | A real bounded Git fetch timed out in source8936 CI and passed an unchanged-source rerun. Add a fixed maximum of metadata-fetch attempts, recompute shallow options each time, and preserve the original per-attempt timeout plus source/branch/dirty-state invariants. |
+| B6 | medium | defer | Baseline FrontComposer6059af7e68571af18846de831c8fe5884896425a already returned an existing correlation without checking the message/descriptor. Same-principal reacknowledgement can return an unmapped new message handle, but this mapping behavior predates the preserved concurrent ownership commit97f03dfe and this synchronization work. |
+| B7 | medium | defer | Baseline6059af7e already used separate correlation/message dictionaries and correlation-first lookup, with only same-namespace insertion checks. Cross-alias shadowing is real and can make an original message handle resolve incorrectly or become hidden; it is pre-existing, rather than caused by the browser/toolchain corrections. |
+| B8 | maybe-false | defer | The new reader ownership lookup and existing admission catalog resolve context separately; a changing custom accessor could diverge, while the ordinary HTTP accessor reads the same request identity and no supported mutation path was shown. Record unverified medium and require a concrete supported changing-accessor/authorization reproduction before choosing the binding fix. |
+| B9 | low | patch | The aggregate workflow JSON was captured while EventStore compatibility ran and lacks snapshot time/classification, although final prerequisites now prove success. Refresh the exact-source aggregate and label its actual capture time. |
+| B10 | low | patch | All eleven signature subprocesses did succeed and their archive/source hashes were checked, but the durable per-archive receipt lacks command/status/time/log-digest binding. Repeat only signature verification with explicit captured metadata and immutable archive checks; do not invent retrospective timestamps. |
+
+
+- Review completion: all three independent layers returned; edge-case and verification-gap layers found none. Blind findingsB2/B5/B9/B10 are fixed and parent verified; B1/B3 rejected on recorded producer-invariant/low-complexity evidence; B4/B6/B7/B8 appended individually to the deferred ledger. Parent full CI-contract suite592passed0skips, observer23passed, current-owner verifier14passed; actionlint/whitespace/worktree/full142..HEADgitlink-range checks pass. All11signature command/status/time/log/archive bindings verify, and all10 source-bound workflow snapshots are final green or no-workflow AI.Tools. Releasev3.1.0/source509 and its signed archive/DLL identities remain unchanged; post-publication adjustments affect CI diagnostics/retry behavior and evidence only.
 
 ## Verification
 

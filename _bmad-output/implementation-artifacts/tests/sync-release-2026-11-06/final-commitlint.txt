@@ -1,0 +1,6 @@
+⧗   --- input ---
+fix(ci): finalize synchronized release verification
+
+Bound metadata fetch retries and record observation termination.
+Preserve verified v3.1.0 publication and review evidence.
+✔   found 0 problems, 0 warnings

@@ -1,0 +1,87 @@
+{
+  "capturedAtUtc": "2026-11-06T22:09:33.708829+00:00",
+  "parentSourceBeforeFinalCommit": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+  "directSubmodules": [
+    {
+      "path": "references/Hexalith.EventStore",
+      "branch": "main",
+      "head": "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+      "remoteMain": "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+      "dirty": "",
+      "recorded": "23252aef50e99d6b1338da0ac501cd25ab3a16fd"
+    },
+    {
+      "path": "references/Hexalith.Memories",
+      "branch": "main",
+      "head": "4ff3e6866ecb6d1a497e7063e972c24259252c40",
+      "remoteMain": "4ff3e6866ecb6d1a497e7063e972c24259252c40",
+      "dirty": "",
+      "recorded": "4ff3e6866ecb6d1a497e7063e972c24259252c40"
+    },
+    {
+      "path": "references/Hexalith.FrontComposer",
+      "branch": "main",
+      "head": "58e997a4b0fed7103948a984d1cb6f4724888a3f",
+      "remoteMain": "58e997a4b0fed7103948a984d1cb6f4724888a3f",
+      "dirty": "",
+      "recorded": "58e997a4b0fed7103948a984d1cb6f4724888a3f"
+    },
+    {
+      "path": "references/Hexalith.Tenants",
+      "branch": "main",
+      "head": "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
+      "remoteMain": "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
+      "dirty": "",
+      "recorded": "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35"
+    },
+    {
+      "path": "references/Hexalith.AI.Tools",
+      "branch": "main",
+      "head": "1745b6663ad32bb1288167135ed0f979366c53a0",
+      "remoteMain": "1745b6663ad32bb1288167135ed0f979366c53a0",
+      "dirty": "",
+      "recorded": "1745b6663ad32bb1288167135ed0f979366c53a0"
+    },
+    {
+      "path": "references/Hexalith.Commons",
+      "branch": "main",
+      "head": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+      "remoteMain": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+      "dirty": "",
+      "recorded": "11555ace9efcae2928a00122dcba91243e5a8a1a"
+    },
+    {
+      "path": "references/Hexalith.Builds",
+      "branch": "main",
+      "head": "567604b616613ba429be0609636d805db776a709",
+      "remoteMain": "567604b616613ba429be0609636d805db776a709",
+      "dirty": "",
+      "recorded": "567604b616613ba429be0609636d805db776a709"
+    },
+    {
+      "path": "references/Hexalith.PolymorphicSerializations",
+      "branch": "main",
+      "head": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+      "remoteMain": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+      "dirty": "",
+      "recorded": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960"
+    },
+    {
+      "path": "references/Hexalith.McpCli",
+      "branch": "main",
+      "head": "a133f603790375ff51a03f3d0844c7218da36ced",
+      "remoteMain": "a133f603790375ff51a03f3d0844c7218da36ced",
+      "dirty": "",
+      "recorded": "a133f603790375ff51a03f3d0844c7218da36ced"
+    },
+    {
+      "path": "references/Hexalith.Platform",
+      "branch": "main",
+      "head": "ed991837945571a12743214fc18a87fbd323fc30",
+      "remoteMain": "ed991837945571a12743214fc18a87fbd323fc30",
+      "dirty": "",
+      "recorded": "ed991837945571a12743214fc18a87fbd323fc30"
+    }
+  ],
+  "allTenRecordedActualRemoteMainEqualAndClean": true
+}

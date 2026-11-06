@@ -176,6 +176,7 @@ class StartupObserverTests(unittest.TestCase):
         self.assertFalse(self.observer.failure)
         self.assertEqual(self.observer.samples[0]['phase'], 'metadata-pending')
         self.assertEqual(self.observer.samples[-1]['preparation']['phase'], 'source-validated')
+        self.assertEqual(self.observer.observation_termination, 'normal-stop')
 
     def test_pending_metadata_cannot_extend_the_original_observer_bound(self):
         stop = SimpleNamespace(wait=lambda seconds: False)
@@ -184,6 +185,29 @@ class StartupObserverTests(unittest.TestCase):
             self.observer.observe(stop)
         self.assertTrue(self.observer.failure)
         self.assertEqual(self.observer.refusal_reason, 'metadata-pending-bound')
+        self.assertEqual(self.observer.observation_termination, 'budget-exhausted')
+
+    def test_waiting_for_required_metadata_reports_time_budget_exhaustion(self):
+        for phase in ('awaiting-receipt', 'awaiting-state', 'awaiting-mapping'):
+            with self.subTest(phase=phase):
+                observer = O.Observer(self.root, self.receipt, self.evidence)
+                with patch.object(observer, 'snapshot', return_value={'phase': phase}), \
+                     patch.object(O.time, 'monotonic', side_effect=(0, 1201)):
+                    observer.observe(SimpleNamespace(wait=lambda seconds: False))
+                output = json.loads((self.evidence / 'startup-observation.json').read_text())
+                self.assertEqual(output['observationTermination'], 'budget-exhausted')
+                self.assertFalse(output['observerRefused'])
+                self.assertEqual(output['helperOutcome'], {'returned': False})
+                self.assertEqual(output['observations'][-1]['phase'], phase)
+
+    def test_waiting_poll_budget_remains_exactly_six_hundred_samples(self):
+        with patch.object(self.observer, 'snapshot', return_value={'phase': 'awaiting-receipt'}) as snapshot, \
+             patch.object(O.time, 'monotonic', return_value=0):
+            self.observer.observe(SimpleNamespace(wait=lambda seconds: False))
+        self.assertEqual(snapshot.call_count, 600)
+        output = json.loads((self.evidence / 'startup-observation.json').read_text())
+        self.assertEqual(output['observationTermination'], 'budget-exhausted')
+        self.assertFalse(output['observerRefused'])
 
     def test_actual_helper_outcomes_stay_separate_from_observer_refusal(self):
         self.observer.snapshot()
@@ -288,6 +312,7 @@ class StartupObserverTests(unittest.TestCase):
         output = json.loads((self.evidence / 'startup-observation.json').read_text())
         self.assertTrue(output['observerRefused'])
         self.assertEqual(output['refusalReason'], 'readiness-shape')
+        self.assertEqual(output['observationTermination'], 'refused')
         self.assertNotIn('e' * 32, json.dumps(output))
         self.assertLess((self.evidence / 'startup-observation.json').stat().st_size, O.LIMIT)
 

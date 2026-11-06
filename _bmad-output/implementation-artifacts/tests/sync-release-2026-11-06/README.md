@@ -1,0 +1,27 @@
+# Verified synchronized release — 6 November 2026
+
+[Parties v3.1.0](https://github.com/Hexalith/Hexalith.Parties/releases/tag/v3.1.0) was published at 21:40:43 UTC from `50904cc4ba53c9b0b2c082d5872a0d276be8f5c3`. The [normal release workflow](https://github.com/Hexalith/Hexalith.Parties/actions/runs/42296293715) and its independent exact-source publication verification succeeded. Both production approvals used the existing API under the user's explicit delegation; no human signoff is claimed.
+
+All 11 packages declared in `tools/release-packages.json` are available from NuGet. Every downloaded archive passed `dotnet nuget verify --all`, with matching package ID, version, repository and source commit. [Per-package evidence](parties-3.1.0-publication.json) binds the signed archive/DLL hashes, actual verification command and exit code, UTC times and signature-log digest. The measured bytes are the signed registry archives; no unsigned-archive equivalence is asserted.
+
+All three images are published for **linux/amd64 and linux/arm64**, with source/version labels matching the release:
+
+| Image | OCI index digest |
+|---|---|
+| `registry.hexalith.com/parties:3.1.0` | `sha256:48d0e8db506e4ce574e8c7bd97e528a302d3fbf97754b007176904cbc1f3abfb` |
+| `registry.hexalith.com/parties-mcp:3.1.0` | `sha256:b98d9b4ec952399b61ab4ea03435e0b7b253302fdb22e70f99ca15ac079882aa` |
+| `registry.hexalith.com/parties-ui:3.1.0` | `sha256:66dd933f58b53ef438714e4e4bfc2fc7e5621bfdc770afd96932a545b86625c7` |
+
+[Registry verification](parties-3.1.0-registry-verification.json) and the three `*-oci.json` receipts retain the measured identities. Publication used the separately pinned approved Builds execution engine; the current development/catalog producer remains Builds `567604b616613ba429be0609636d805db776a709` / 4.44.11 and Platform `ed991837945571a12743214fc18a87fbd323fc30` / 1.5.7.
+
+The [eight prerequisite workflows](release-prerequisites.json) passed at their exact source revisions. Root CI exercised **28 real native cases**, EventStore CI **9**, and McpCli **21 vectors plus its independent authenticated smoke**. Their owned cleanup inventories were verified empty. Platform producer validation passed **315 current and 349 historical cases**, plus five catalog rows. These native records are baseline-only and grant no public-profile qualification credit. Historical public qualification statuses remain as recorded.
+
+The root's final local review checks passed **592 CI contract tests**, **23 observer tests** and **14 current-owner verifier tests**, with no failures or skips. The 592 include all seven real hermetic Git history cases. Workflow lint, whitespace and the complete baseline-to-head gitlink range passed. [Verification receipt](final-local-verification.json) and [test XML](review-final-ci.xml) record the results. Post-publication changes add CI-only bounded fetch retries, explicit observation termination and evidence; they do not change the released package/image identities.
+
+All ten root-declared submodules were inspected, preserved and synchronized to their owning remote main revisions. [Source-bound workflow snapshots](submodule-workflow-results.json) include actual capture times; every available latest owning workflow passed. AI.Tools has no workflow runs. No nested submodule was initialized or updated. All eleven task-owned temporary worktrees were removed after their runtimes were finalized empty.
+
+The SDK was already the [latest stable .NET SDK 10.0.403](https://dotnet.microsoft.com/en-us/download/dotnet/10.0), with runtime 10.0.14, and was retained across all .NET repositories. The dependency qualification snapshot is **6 November 2026, 12:44 UTC**. Tested compatibility selections remain: AngleSharp 1.9.1 with bUnit 2.13.3, OpenAPI 2.13, MSBuild 18.9.6 for .NET 10, and intentional Dapr Toolkit/StyleCop prereleases. FrontComposer retains Playwright/core 1.64.1 because the qualified 1.65.0 Firefox 159 run crashes upstream; root, Memories and Tenants use 1.65.0 without weakened test criteria.
+
+The final registry recheck found two external releases **after that snapshot**: bUnit 2.14.0 at 20:36 UTC and Azure.Bicep.Core 0.49.2 at 19:50 UTC. They are explicitly excluded from this qualified release. bUnit's official wrapper fix supports a future coupled AngleSharp 1.10/Css 1.4 qualification; it is not claimed broken. Bicep has no effective consumer in the 201 inspected asset graphs. [Measured publication dates and dependency/API evidence](new-publications-after-cutoff.json) document this cutoff decision, alongside the baseline/final package audits. Two unused catalog defaults and the local sample package have no public registry index; successful actual builds and the audit's recorded errors are kept separately.
+
+All three automated review layers completed. Edge-case and verification-gap reviewers found no issues. Of ten blind-review findings, four were corrected, two rejected with evidence, and four pre-existing or unverified follow-ups were recorded in the deferred-work ledger. [Individual triage](review-triage.json) preserves every finding and disposition. Frozen intent remained byte-identical throughout the work.
