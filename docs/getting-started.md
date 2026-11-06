@@ -20,7 +20,7 @@ authentication setup; those hosts are outside the reference environment.
 | Git | Any recent version | [git-scm.com](https://git-scm.com) |
 | `jq` | Latest, optional for Bash examples | [jqlang.org](https://jqlang.org) |
 
-Install Aspire CLI **13.6.4** to match the catalog embedded in module tool **4.44.5**. The local tool manifest pins that module version; `dotnet tool restore` restores that exact version. The tool owns run-scoped infrastructure, readiness and diagnostics; its catalog requires Dapr CLI 1.18.2 and runtime 1.18.7. Set `HEXALITH_DAPR_HOME` to a prepared absolute isolated Dapr home using the [pinned Platform v1.5.1 prerequisites](https://github.com/Hexalith/Hexalith.Platform/blob/7122fa4d056f0f9edb74f98d66aa41115cfdc702/README.md#run-and-debug-a-technical-module); an unset or unprepared home is refused.
+Install Aspire CLI **13.6.4** to match the catalog embedded in module tool **4.44.6**. The local tool manifest pins that module version; `dotnet tool restore` restores that exact version. The tool owns run-scoped infrastructure, readiness and diagnostics; its catalog requires Dapr CLI 1.18.2 and runtime 1.18.7. Set `HEXALITH_DAPR_HOME` to a prepared absolute isolated Dapr home using the [pinned Platform v1.5.2 prerequisites](https://github.com/Hexalith/Hexalith.Platform/blob/e7e16f621365337e7d6f81c242c9e5c355b3556f/README.md#run-and-debug-a-technical-module); an unset or unprepared home is refused.
 
 Verify your setup:
 

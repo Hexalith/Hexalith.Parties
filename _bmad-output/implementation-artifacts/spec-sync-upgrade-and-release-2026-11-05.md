@@ -339,3 +339,135 @@ Final root adoption uses this qualified publication with Builds v4.44.5,
 SDK 4.1.0, Tenants 7.0.4, Memories 3.0.24 and McpCli.Abstractions 2.0.1.
 Root native qualification, actual Parties release and eleven-package
 publication verification remain pending at this checkpoint.
+
+
+### Root capability and repeated-generation startup repairs
+
+Atomic adoption `fe0b41bda22b388cef8b93bd1e30a6d427a8ca38` passed
+90 focused controls and the three post-commit source-selection controls.
+Hosted CI then exposed a finite Memories refresh capability list missing
+published 3.0.24. Commit `a217cda7c6504ddcb05d0f159500d2f965eecd6f`
+adds that exact version, with an actual failing-before/passing-after
+MSBuild evaluation and 45 passing selector/REST controls. All isolated
+jobs in CI `42133947966` passed; native startup alone failed HXR027.
+No native case or persisted effect is claimed for that failed run.
+
+A normal local reproduction activated all seven catalog participants and
+measured a stale receipt: fresh owner bodies and request B matched, while
+current-reader receipt still described preparation A. All ten public
+reference DLL hashes matched. Platform equal-canonical-directory reuse
+deleted verified pending receipt B and copied retained receipt A. The
+minimal fix preserves exact already-verified B bytes for current-reader
+without altering the immutable original catalog receipt or proof checks.
+The existing real owner-reader fact now performs a second actual private
+build/pack and Generate, checks equal canonical bytes and original-receipt
+preservation, validates B and refuses it under A. Current259/legacy349
+counts and the immutable historical profile remain unchanged.
+
+Platform current `ae9fb2bdcb90b3dc4db7971abcb6b41c14e0890c` and real
+same-code historical `7cf37c62408df24e103aec80678bce8e10dffaae` are pushed;
+exact eight-path metadata equivalence passes. Hosted tuple42139421515
+and catalog42139420603 remain pending. Release compilation has zero
+warnings/errors; this does not replace hosted reader execution. The local
+run was stopped with all six resource inventories verified empty, owned
+containers10 to0 and all five ambient containers preserved. No nested
+checkout was initialized. Parties release remains pending genuine Platform
+qualification, root native effects/cleanup and exact-source CI.
+
+
+### New upstream work integrated during qualification
+
+The ten-remote check found new Memories `246157a7ff8e2dcd8d356c833a77a02514490d2f`,
+FrontComposer `f577f958ed1c043eec7feabc4885f59d48428818` and McpCli
+`cadc4d1911df304964b3a54e79b8c138ecc51abd`. They were integrated under the
+user's explicit instruction to include current edits. McpCli's three
+overlaps were merged while preserving all nine closure changes and all
+external pipe/redaction changes; 57 focused .NET and three Python cases
+passed with a zero-warning Release build. No future Parties publication
+data or live-vector acceptance was fabricated.
+
+Genuine Memories v3.0.25/release42134622308 adds the production intent
+adapter assembly to its ordinary DomainService. All ten signed NuGets,
+five dual-architecture OCI graphs, both core images' SDK4.1.0 bodies and
+three reader DLL/archive identities were independently verified. Its
+released declaration remains byte-identical. Stopped image inspection
+containers were removed and all five ambient containers preserved. The
+REST24-to25 complete public API comparison reports no changes or breaks.
+Builds adoption `3f3c8866e15ebf209067453700236e378f605c2e` retains old maps
+and snapshots; audit `ad50acf920d78ee16033bdc1cf26c34e8275cdcb` changes only
+the five Memory rows and their family. All311 unrelated package rows and
+155 family decisions remain identical. Eight direct catalog tests,
+zero-warning Release, canonical68 and live audit316/156/1 pass; hosted
+CI42142102328 and normal producer publication remain pending.
+
+FrontComposer's upstream CI identified four removed published members and
+one stale measured analyzer seal. Repair `aa8578318971da04ce7d7bd07928d08c6b95bc1a`
+preserves the signatures with explicit refusal of unscoped credentials,
+retains session/tenant isolation and configured DI, and updates only the
+actual identifier inventory and three justified instance-member CA1822
+census entries. Seventy auth/compatibility and five governance controls,
+three real APICompat-enabled package builds against unchanged4.7.2 and
+two package-only consumers pass. Hosted CI42141933570 and Quality42141933127
+remain required. Current Platform receipt-fix CI42139421515 has now passed
+259/349 with downloaded artifacts verified and catalog42139420603 passes
+all five rows. Its publication is combined with the measured latest Memory
+producer adoption, avoiding an unnecessary intermediate Platform release.
+
+
+### Qualified latest producer and final Platform candidate
+
+Builds source `ad50acf920d78ee16033bdc1cf26c34e8275cdcb` passed full
+CI42142102328. Normal release42144370420 completed successfully after the
+existing production approval was submitted under the user's explicit
+authorization. Genuine v4.44.6 resolves to that source. Both signed public
+NuGets, catalog/blob, qualified inventory and paired AppHost/Tooling bodies
+were independently verified; no tag assistance or gate exception was used.
+FrontComposer `aa8578318971da04ce7d7bd07928d08c6b95bc1a` has all five
+workflows and all eight Quality jobs successful. The actual three-case
+GovernanceBuild TRX was independently verified. Existing advisory/performance
+skips remain recorded as skips rather than execution credit.
+
+Platform shared `cb4bc16b11a49ebb961c171857bf4344c234e807` selects measured
+M25 artifacts and genuine446, preserves old M23/M24 maps and all three old
+producer pairs, and adds the actual fourth pair with cross-pair refusals.
+The combined21 source/config/test/doc files plus recorded Builds pointer
+were committed after15 component,19 tuple and9 helper controls passed with
+zero-warning Release. Current `e7e16f621365337e7d6f81c242c9e5c355b3556f`
+and real historical `01e27acb14fde329dc427ed81128c1ad1b50da8f` are pushed;
+exact eight-path source equivalence and unchanged349-profile hash pass.
+Catalog42147545820 passed all five rows. Tuple42147545870 remains pending
+259 current and349 historical execution; Platform publication is still held.
+
+Root's two-file M25 capability regression passed an actual19-of20-before
+failure followed by20-of20 (60 MSBuild evaluations) and27 actual REST cases
+against signed Client.Rest25, all without skips and with zero-warning
+Release. Three current fallback/default files passed2 fallback controls.
+Known producer tool/delegates/tests and two coupled documentation pins
+cover70 workflow controls (69 initially positive plus the corrected one),
+with exact published446 version/source observed. All these patches remain
+uncommitted for the final atomic root tuple and current source-observation
+adoption. Independent release11a3/validation332b bytes are unchanged.
+Primary Parties CI/native effects/cleanup, release and11-package publication
+verification remain outstanding.
+
+
+### Actual Platform publication and atomic root adoption
+
+Platform v1.5.2 was genuinely published at2026-11-06T02:27:18Z, and both
+API and local tag resolve to `e7e16f621365337e7d6f81c242c9e5c355b3556f`.
+All259 current controls including both real readers, all349 original
+historical controls and all five catalog rows passed. Both downloaded
+artifact digests, result source/run/attempt, raw historical profile and
+exact eight-path equivalence were independently verified before publication.
+
+The final17-own-file root aggregate selects actual measured ten-source
+identities, retains the complete prior matrix as dated history and appends
+only five delegated source signoffs. Release build has zero warnings and
+all18 source controls passed. Prior47 Memory,2 fallback and70 workflow
+controls remain recorded; only the three committed-source cases require
+the new atomic commit and clean owning layout. Genuine module446 was
+restored and its full source identity observed. The original nine Mcp
+closure edits are preserved for actual post-publication consumer adoption.
+Root native effects/cleanup, exact-source full CI and range proof, primary
+Parties release and independent eleven-package publication verification
+remain pending at this atomic adoption checkpoint.

@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   baseline:
-    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@afb2d4fd556b5d30a92734d21cb62bfe946ae958
+    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@ad50acf920d78ee16033bdc1cf26c34e8275cdcb
     with:
       solution: Hexalith.Parties.Standalone.slnx
       module-manifest: module/hexalith.module-manifest.v2.json

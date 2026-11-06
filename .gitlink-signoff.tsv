@@ -636,3 +636,17 @@ references/Hexalith.Memories|859680b38a77f04cc8f81ab7a5fe7f40a617cc2a|validated-
 references/Hexalith.Platform|7122fa4d056f0f9edb74f98d66aa41115cfdc702|validated-advance|v1.5.1|codex-agent|2026-11-06
 references/Hexalith.PolymorphicSerializations|bce4eb9f45c6b131b960ab4fa39e50ff01e51960|validated-advance|v1.19.8-1-gbce4eb9f|codex-agent|2026-11-06
 references/Hexalith.Tenants|cf36618a2c27b5722a1ff811cfbbce4528c3c105|validated-advance|v7.0.4-8-gcf36618a|codex-agent|2026-11-06
+
+# --- 2026-11-06 genuine Platform1.5.2 / Builds4.44.6 / Memory3.0.25 adoption.
+#     codex-agent records only the five changed source selections under explicit
+#     user delegation. Actual tuple42147545870 passed259current+349same-code
+#     legacy with zero skips; catalog42147545820 passed all5rows. Memory25
+#     public SDK4.1 bodies/images and normal Builds446 publication are verified.
+#     No human ratification, historical parity, Parties native/runtime/candidate,
+#     custody or rollback acceptance is granted. Parties release remains pending
+#     exact-source CI, unchanged native persisted effects and verified cleanup.
+references/Hexalith.Builds|ad50acf920d78ee16033bdc1cf26c34e8275cdcb|validated-advance|v4.44.6|codex-agent|2026-11-06
+references/Hexalith.FrontComposer|aa8578318971da04ce7d7bd07928d08c6b95bc1a|validated-advance|v4.7.6-9-gaa857831|codex-agent|2026-11-06
+references/Hexalith.McpCli|cadc4d1911df304964b3a54e79b8c138ecc51abd|validated-advance|v2.0.1-4-gcadc4d19|codex-agent|2026-11-06
+references/Hexalith.Memories|246157a7ff8e2dcd8d356c833a77a02514490d2f|validated-advance|v3.0.25|codex-agent|2026-11-06
+references/Hexalith.Platform|e7e16f621365337e7d6f81c242c9e5c355b3556f|validated-advance|v1.5.2|codex-agent|2026-11-06
