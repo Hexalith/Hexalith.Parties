@@ -217,6 +217,8 @@ Implementation handoffs below are retained as execution history; the final Verif
 
 All five final-source workflows for4542afbbe664583a5e892b6a12d436d22dc33cd2 passed, including real startup normal-stop and emptycleanup. Final remote inspection then observed EventStore story commits505d/fd77 that preserved232 history but recorded old unqualified dependency gitlinks. Owning commit6ef8dcd4fc75e9bf20e403f2baf326e882a05d69 preserves those story documents and restores the exact qualified Builds567/Platformed99/Tenantsd88 pointers, with pinned-message validation and normal hooks. Its entire executable/test/workflow/build/configuration/gitlink graph is byte-identical232; only three story documents differ. McpCli was remotely rewound to27ad, an ancestor already included in verifieda133; normal fast-forward push restoreda133 without force or loss. Parent current footprint/matrix/ledger records6ef and preserves all old rows. This is mechanical source reconciliation after publication, with no product/package/SDK/provenance-authority migration or changed release identities.
 
+- Subsequent concurrent McpCliae4a317f208829681dc8eec36a308bc36f3f9715 fast-forwards restoreda133, preserving the corrected cohort and adding inventory tests/evidence. Allproduction/native-fixture/workflow/dependency bytes match qualifieda133; only the existing InventoryCoverageTests executable test file and documentation/evidence change. Parent selection recordsae4 without altering runtime qualification/provenance maps. Latest nativeCI42306705668 supersedes the normal cancellation of duplicatea133run42305426028.
+
 ## Spec Change Log
 
 ## Review Triage Log

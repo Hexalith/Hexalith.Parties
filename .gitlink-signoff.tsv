@@ -670,3 +670,6 @@ references/Hexalith.EventStore|23252aef50e99d6b1338da0ac501cd25ab3a16fd|validate
 
 # Preserve concurrent records with the unchanged qualified executable graph.
 references/Hexalith.EventStore|6ef8dcd4fc75e9bf20e403f2baf326e882a05d69|validated-advance|v4.1.0-42-g6ef8dcd4|codex-agent|2026-11-06
+
+# Preserve concurrent inventory tests; runtime and dependency bytes unchanged.
+references/Hexalith.McpCli|ae4a317f208829681dc8eec36a308bc36f3f9715|validated-advance|v2.0.1-23-gae4a317f|codex-agent|2026-11-06

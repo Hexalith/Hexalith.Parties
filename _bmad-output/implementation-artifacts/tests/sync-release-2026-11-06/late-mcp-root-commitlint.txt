@@ -1,0 +1,6 @@
+⧗   --- input ---
+test: retain concurrent inventory qualification
+
+Synchronize the McpCli source observation with its inventory tests.
+Preserve the qualified runtime and release artifact identities.
+✔   found 0 problems, 0 warnings
