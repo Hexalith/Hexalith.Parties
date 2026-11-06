@@ -24,6 +24,7 @@ jobs:
       solution: Hexalith.Parties.Standalone.slnx
       module-manifest: module/hexalith.module-manifest.v2.json
       integration-test-profiles: platform-package
+      package-prepare-script: scripts/prepare-ci-package-dependencies.sh
       test-platform: microsoft-testing-platform
       run-consumer-validation: true
       run-coverage-gate: false

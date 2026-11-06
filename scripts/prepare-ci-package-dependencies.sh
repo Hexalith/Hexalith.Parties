@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Materialize the Aspire runner binaries required by the package integration gate.
+# Prepare historical test inputs and the Aspire binaries required by the package integration gate.
 set -euo pipefail
+
+bash "$(dirname "${BASH_SOURCE[0]}")/prepare-ci-git-history.sh"
 
 scratch="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/parties-aspire-restore.XXXXXX")"
 trap 'rm -rf -- "$scratch"' EXIT
