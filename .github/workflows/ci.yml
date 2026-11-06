@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   ci:
-    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@0b08666cb2aac1264007564f86ca9c52376499e4
+    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@567604b616613ba429be0609636d805db776a709
     with:
       solution: Hexalith.Parties.Standalone.slnx
       module-manifest: module/hexalith.module-manifest.v2.json

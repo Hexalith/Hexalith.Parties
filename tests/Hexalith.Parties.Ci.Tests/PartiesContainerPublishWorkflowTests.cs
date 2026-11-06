@@ -7,7 +7,7 @@ namespace Hexalith.Parties.Ci.Tests;
 public sealed class PartiesContainerPublishWorkflowTests
 {
     private const int ExpectedPackageCount = 11;
-    private const string BuildsCiSha = "0b08666cb2aac1264007564f86ca9c52376499e4";
+    private const string BuildsCiSha = "567604b616613ba429be0609636d805db776a709";
     private const string BuildsValidationSha = "332b2c144defba546fe0a09626a4a72f2340e22f";
     private const string BuildsExecutionSha = "11a3a79cfac4bba9548c6364a17a01ee9b561370";
     private static readonly TimeSpan WorkflowReadTimeout = TimeSpan.FromSeconds(10);
@@ -41,7 +41,7 @@ public sealed class PartiesContainerPublishWorkflowTests
     [InlineData("package.json", "package-lock.json", "@semantic-release/release-notes-generator", "^14.1.1", "14.1.1")]
     [InlineData("package.json", "package-lock.json", "semantic-release", "^25.0.9", "25.0.9")]
     [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@axe-core/playwright", "^4.14.0", "4.14.0")]
-    [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@playwright/test", "^1.64.1", "1.64.1")]
+    [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@playwright/test", "^1.65.0", "1.65.0")]
     [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@types/node", "^24.19.2", "24.19.2")]
     [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "typescript", "^7.0.2", "7.0.2")]
     public void DependencyManifestsAndLocksMatchSelectedVersions(
@@ -128,7 +128,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         }
         using JsonDocument tools = JsonDocument.Parse(CiTestPaths.ReadRepoFile(".config/dotnet-tools.json"));
         JsonElement tool = tools.RootElement.GetProperty("tools").GetProperty("hexalith.builds.module.cli");
-        tool.GetProperty("version").GetString().ShouldBe("4.44.7");
+        tool.GetProperty("version").GetString().ShouldBe("4.44.11");
         tool.GetProperty("rollForward").GetBoolean().ShouldBeFalse();
         workflow.ShouldNotContain("submodules: recursive");
 

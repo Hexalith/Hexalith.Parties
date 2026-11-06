@@ -4,7 +4,7 @@ Hexalith.Parties uses GitHub Actions with shared Hexalith.Builds workflows and a
 
 ## Workflows
 
-- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@0b08666cb2aac1264007564f86ca9c52376499e4`.
+- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@567604b616613ba429be0609636d805db776a709`.
 - `.github/workflows/release.yml` is a manual `workflow_dispatch` workflow with a protected, caller-owned release job. It uses `Hexalith/Hexalith.Builds/Github/prepare-domain-release@11a3a79cfac4bba9548c6364a17a01ee9b561370` and takes the nested publisher from that same immutable Builds checkout.
 - `.github/workflows/commitlint.yml` delegates Conventional Commit validation to the retained immutable Builds revision `332b2c144defba546fe0a09626a4a72f2340e22f`, for pull requests and main pushes.
 - `.github/workflows/dependency-review.yml` delegates dependency review for pull requests.
@@ -31,17 +31,23 @@ dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.T
 
 CI runs on pushes and pull requests to `main`, scheduled nightly runs, and Pact Broker `repository_dispatch` events with type `contract_requiring_verification_published`.
 
-The v2 workflow uses the genuine published module CLI 4.44.7 and prepares exact
-genuine released Platform v1.5.4 at
-`13fc1a8978b4e6dcf8233b443c23c4e4258c49c7` with the matching published Builds
-catalog `0b08666cb2aac1264007564f86ca9c52376499e4`. Atomic root adoption and
-actual Parties native effects and cleanup retain their own required proof.
-Platform tuple CI 42172121935 passed 259 current and 349 same-source legacy
-controls; catalog CI 42172122108 passed all five rows before the genuine
-v1.5.4 release. These checks provide no Parties native-runtime or candidate
-acceptance credit. The private reference cohort selects EventStore `4.1.0`,
-Tenants `7.0.4`, Memories `3.0.25` and McpCli `2.0.1`; unchanged native
-persisted effects and cleanup still require their own actual run.
+The v2 workflow uses genuine published module CLI 4.44.11 and released
+[Platform v1.5.6](https://github.com/Hexalith/Hexalith.Platform/releases/tag/v1.5.6)
+at `01e5b6530af96ad6eaa69cc1867d43def56c43ca`, with matching published Builds
+catalog `567604b616613ba429be0609636d805db776a709`. Exact-source
+[tuple CI 42258800584](https://github.com/Hexalith/Hexalith.Platform/actions/runs/42258800584)
+passed all 313 current and 349 same-code legacy controls, with zero skips;
+[catalog CI 42258800582](https://github.com/Hexalith/Hexalith.Platform/actions/runs/42258800582)
+passed all five SDK rows before publication. The private current-owner cohort
+selects EventStore `4.1.0`, Tenants `7.0.5`, Memories `3.0.25` and McpCli `2.0.1`.
+Parties exact-source CI, native persisted effects and complete cleanup retain
+their own required proof; producer checks do not grant runtime acceptance.
+
+Historical Platform v1.5.4 at `13fc1a8978b4e6dcf8233b443c23c4e4258c49c7`
+passed tuple CI 42172121935 with 259 current and 349 legacy controls and catalog
+CI 42172122108 with all five rows before its publication. That historical proof
+is bound to its original source and grants no new-source runtime acceptance.
+
 Release execution remains pinned to
 `11a3a79cfac4bba9548c6364a17a01ee9b561370`; commitlint/CodeQL validation remains
 `332b2c144defba546fe0a09626a4a72f2340e22f`. Supported package-mode

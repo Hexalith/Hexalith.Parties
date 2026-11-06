@@ -184,7 +184,7 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
     for key in ("runId", "attemptId", "environmentId", "revision", "mappingHash", "profile"):
         require(current.get(key) == functional[key], "current owner lineage mismatch")
     require(current.get("configuration") == "Release" and current.get("qualificationCredit") is False and current.get("committedCatalogValidated") is True
-            and current.get("sdkVersion") == "4.1.0" and current.get("tenantsVersion") == "7.0.4", "wrong current owner cohort")
+            and current.get("sdkVersion") == "4.1.0" and current.get("tenantsVersion") == "7.0.5", "wrong current owner cohort")
     identity = current["platform"]
     require(all(identity.get(key) == platform for key in ("commit", "compositionCommit", "checkoutCommit")) and identity.get("catalogCommit") == builds, "foreign Platform/catalog identity")
     require(current.get("sdkBodies") == SDK, "actual runtime SDK bodies differ")

@@ -40,7 +40,7 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
         self.functional["events"] = [dict(identity=self.functional["aggregate"], sequenceNumber=1, correlationId="command1", causationId="command1", userId="g4-native-tests",
             serializationFormat="json", eventTypeName="Hexalith.Parties.Contracts.Events.PartyCreated", timestamp="2026-11-05T10:00:00Z")]
         self.functional["currentOwner"] = dict(**{key: self.functional[key] for key in ("runId", "attemptId", "environmentId", "revision", "mappingHash", "profile")},
-            configuration="Release", qualificationCredit=False, committedCatalogValidated=True, sdkVersion="4.1.0", tenantsVersion="7.0.4",
+            configuration="Release", qualificationCredit=False, committedCatalogValidated=True, sdkVersion="4.1.0", tenantsVersion="7.0.5",
             platform=dict(commit=self.expected["platform"], compositionCommit=self.expected["platform"], checkoutCommit=self.expected["platform"], catalogCommit=self.expected["builds"]),
             sdkBodies=verify.SDK.copy(), runtimeBodies={name: str(index) * 64 for index, name in enumerate(("Hexalith.Parties", "Hexalith.Parties.Contracts", "Hexalith.Parties.Projections", "Hexalith.Parties.Authentication", "Hexalith.Parties.Security"), 1)},
             packageArchives={"Hexalith.Parties.Contracts.3.0.0.nupkg": "7" * 64, "Hexalith.Parties.EventStoreExtensions.3.0.0.nupkg": "8" * 64},

@@ -653,3 +653,13 @@ references/Hexalith.Platform|e7e16f621365337e7d6f81c242c9e5c355b3556f|validated-
 references/Hexalith.Platform|d1da347db92ef3272beda90005be5239878ff901|validated-advance|v1.5.3|codex-agent|2026-11-06
 references/Hexalith.Builds|0b08666cb2aac1264007564f86ca9c52376499e4|validated-advance|v4.44.7|codex-agent|2026-11-06
 references/Hexalith.Platform|13fc1a8978b4e6dcf8233b443c23c4e4258c49c7|validated-advance|v1.5.4|codex-agent|2026-11-06
+
+# 2026-11-06 synchronized dependency sources under explicit user delegation.
+# Agent source selection only; automated runtime and publication gates remain required.
+references/Hexalith.Builds|567604b616613ba429be0609636d805db776a709|validated-advance|v4.44.11|codex-agent|2026-11-06
+references/Hexalith.EventStore|3c68b324636d744842ac4d2c7d3c68ad44b46edc|validated-advance|v4.1.0-38-g3c68b324|codex-agent|2026-11-06
+references/Hexalith.FrontComposer|58e997a4b0fed7103948a984d1cb6f4724888a3f|validated-advance|v4.7.6-20-g58e997a4|codex-agent|2026-11-06
+references/Hexalith.McpCli|a133f603790375ff51a03f3d0844c7218da36ced|validated-advance|v2.0.1-22-ga133f603|codex-agent|2026-11-06
+references/Hexalith.Memories|4ff3e6866ecb6d1a497e7063e972c24259252c40|validated-advance|v3.0.25-1-g4ff3e686|codex-agent|2026-11-06
+references/Hexalith.Platform|01e5b6530af96ad6eaa69cc1867d43def56c43ca|validated-advance|v1.5.6|codex-agent|2026-11-06
+references/Hexalith.Tenants|d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35|validated-advance|v7.0.5|codex-agent|2026-11-06
