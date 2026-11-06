@@ -1,0 +1,11 @@
+{
+  "newSource": "6ef8dcd4fc75e9bf20e403f2baf326e882a05d69",
+  "priorQualifiedSource": "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+  "allProductionTestWorkflowBuildAndGitlinkBytesIdentical": true,
+  "onlyCumulativeDifferences": [
+    "_bmad-output/implementation-artifacts/deferred-work.md",
+    "_bmad-output/implementation-artifacts/spec-2-16-bounded-signalr-detail-metadata.md",
+    "_bmad-output/implementation-artifacts/spec-6-4-projection-cost-and-sequence-guard-implementation.md"
+  ],
+  "concurrentDocumentationPreserved": true
+}

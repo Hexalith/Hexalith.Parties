@@ -213,6 +213,10 @@ Implementation handoffs below are retained as execution history; the final Verif
 
 - Normal Root Release42296293715 is SUCCESS at exactsource50904cc4ba53c9b0b2c082d5872a0d276be8f5c3, published stablev3.1.0 on2026-11-06T21:40:43Z. All11declared NuGet archives were independently downloaded fromNuGet, dotnet-signature-verified, and matched exactrepository/version/source; publicGitHubtag resolves to the samecommit. Normal verify-publication independently passed all11packages andthree multiarchitecture OCI images, bothplatforms each with source/version labels. Actual receipts/digests/signature logs are retained under tests/sync-release-2026-11-06. Bothproduction environment approvals were submitted through the existing API under explicituserdelegation; no human signoff is claimed. Implementation acceptance is fulfilled; automated three-layer review and final evidence synchronization follow.
 
+### Late concurrent source reconciliation
+
+All five final-source workflows for4542afbbe664583a5e892b6a12d436d22dc33cd2 passed, including real startup normal-stop and emptycleanup. Final remote inspection then observed EventStore story commits505d/fd77 that preserved232 history but recorded old unqualified dependency gitlinks. Owning commit6ef8dcd4fc75e9bf20e403f2baf326e882a05d69 preserves those story documents and restores the exact qualified Builds567/Platformed99/Tenantsd88 pointers, with pinned-message validation and normal hooks. Its entire executable/test/workflow/build/configuration/gitlink graph is byte-identical232; only three story documents differ. McpCli was remotely rewound to27ad, an ancestor already included in verifieda133; normal fast-forward push restoreda133 without force or loss. Parent current footprint/matrix/ledger records6ef and preserves all old rows. This is mechanical source reconciliation after publication, with no product/package/SDK/provenance-authority migration or changed release identities.
+
 ## Spec Change Log
 
 ## Review Triage Log

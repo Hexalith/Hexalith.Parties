@@ -1,0 +1,45 @@
+{
+  "source": "4542afbbe664583a5e892b6a12d436d22dc33cd2",
+  "gates": [
+    {
+      "run": 42302633527,
+      "name": "CI",
+      "source": "4542afbbe664583a5e892b6a12d436d22dc33cd2",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/42302633527"
+    },
+    {
+      "run": 42302632791,
+      "name": "Release Candidate Gate",
+      "source": "4542afbbe664583a5e892b6a12d436d22dc33cd2",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/42302632791"
+    },
+    {
+      "run": 42302633435,
+      "name": "CodeQL",
+      "source": "4542afbbe664583a5e892b6a12d436d22dc33cd2",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/42302633435"
+    },
+    {
+      "run": 42302633464,
+      "name": "Commitlint",
+      "source": "4542afbbe664583a5e892b6a12d436d22dc33cd2",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/42302633464"
+    },
+    {
+      "run": 42302684749,
+      "name": "Current-owner startup diagnostics",
+      "source": "4542afbbe664583a5e892b6a12d436d22dc33cd2",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/42302684749"
+    }
+  ]
+}

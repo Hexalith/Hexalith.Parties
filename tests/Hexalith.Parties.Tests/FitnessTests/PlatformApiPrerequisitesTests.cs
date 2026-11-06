@@ -58,8 +58,8 @@ public sealed class PlatformApiPrerequisitesTests
     ];
 
     // Committed source observations are separate from historical migration/parity approvals.
-    private const string CurrentSelectedEventStoreSha = "23252aef50e99d6b1338da0ac501cd25ab3a16fd";
-    private const string CurrentSelectedEventStoreDescribe = "v4.1.0-39-g23252aef";
+    private const string CurrentSelectedEventStoreSha = "6ef8dcd4fc75e9bf20e403f2baf326e882a05d69";
+    private const string CurrentSelectedEventStoreDescribe = "v4.1.0-42-g6ef8dcd4";
     // Observe the synchronized source independently of the upstream package release tag.
     private const string CurrentSelectedEventStoreTag = "v4.1.0";
     // Current committed selections are observed independently of historical approvals
@@ -69,7 +69,7 @@ public sealed class PlatformApiPrerequisitesTests
         ["references/Hexalith.AI.Tools"] = "1745b6663ad32bb1288167135ed0f979366c53a0",
         ["references/Hexalith.Builds"] = "567604b616613ba429be0609636d805db776a709",
         ["references/Hexalith.Commons"] = "11555ace9efcae2928a00122dcba91243e5a8a1a",
-        ["references/Hexalith.EventStore"] = "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+        ["references/Hexalith.EventStore"] = "6ef8dcd4fc75e9bf20e403f2baf326e882a05d69",
         ["references/Hexalith.FrontComposer"] = "58e997a4b0fed7103948a984d1cb6f4724888a3f",
         ["references/Hexalith.McpCli"] = "a133f603790375ff51a03f3d0844c7218da36ced",
         ["references/Hexalith.Memories"] = "4ff3e6866ecb6d1a497e7063e972c24259252c40",
@@ -83,7 +83,7 @@ public sealed class PlatformApiPrerequisitesTests
         ["references/Hexalith.AI.Tools"] = "1745b666",
         ["references/Hexalith.Builds"] = "v4.44.11",
         ["references/Hexalith.Commons"] = "v2.30.10",
-        ["references/Hexalith.EventStore"] = "v4.1.0-39-g23252aef",
+        ["references/Hexalith.EventStore"] = "v4.1.0-42-g6ef8dcd4",
         ["references/Hexalith.FrontComposer"] = "v4.7.6-20-g58e997a4",
         ["references/Hexalith.McpCli"] = "v2.0.1-22-ga133f603",
         ["references/Hexalith.Memories"] = "v3.0.25-1-g4ff3e686",

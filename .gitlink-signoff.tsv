@@ -667,3 +667,6 @@ references/Hexalith.Tenants|d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35|validated-a
 # Corrected published Platform1.5.7 and downstream metadata, explicit user delegation.
 references/Hexalith.Platform|ed991837945571a12743214fc18a87fbd323fc30|validated-advance|v1.5.7|codex-agent|2026-11-06
 references/Hexalith.EventStore|23252aef50e99d6b1338da0ac501cd25ab3a16fd|validated-advance|v4.1.0-39-g23252aef|codex-agent|2026-11-06
+
+# Preserve concurrent records with the unchanged qualified executable graph.
+references/Hexalith.EventStore|6ef8dcd4fc75e9bf20e403f2baf326e882a05d69|validated-advance|v4.1.0-42-g6ef8dcd4|codex-agent|2026-11-06

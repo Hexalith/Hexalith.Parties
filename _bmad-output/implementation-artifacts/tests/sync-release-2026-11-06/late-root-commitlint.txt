@@ -1,0 +1,6 @@
+⧗   --- input ---
+fix(ci): preserve synchronized dependency selections
+
+Retain concurrent EventStore verification documentation.
+Keep the executable dependency graph and released artifacts unchanged.
+✔   found 0 problems, 0 warnings

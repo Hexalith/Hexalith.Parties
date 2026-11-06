@@ -1,0 +1,6 @@
+⧗   --- input ---
+fix(ci): retain the qualified dependency sources
+
+Preserve concurrent story verification records.
+Keep the tested Builds, Platform and Tenants source selections.
+✔   found 0 problems, 0 warnings
