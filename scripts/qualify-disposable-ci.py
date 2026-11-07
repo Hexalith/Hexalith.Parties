@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import re
 import select
+import shutil
 import signal
 import stat
 import subprocess
@@ -113,14 +114,37 @@ def launch_owner(label):
                                   '--ci-owner-receipt=' + item['receipt'], '--output=json'])
 
 
-def first_outcome(record):
+def observed_first_outcome(record):
     require(isinstance(record, dict) and isinstance(record.get('terminalOutcome'), dict),
             'First outcome must have the actual structured result fields')
-    required = ('runId', 'ownerId', 'terminalStatus', 'terminalOutcome', 'terminalAtUtc', 'sourceMappingHash')
+    required = ('runId', 'ownerId', 'terminalStatus', 'terminalOutcome', 'terminalAtUtc')
     require(all(record.get(key) is not None for key in required), 'First-outcome identity, status, time or mapping is absent')
     require(RUN_ID.fullmatch(record['runId']), 'First outcome has an invalid issued run identity')
     utc(record['terminalAtUtc'])
-    return {key: record.get(key) for key in (*required, 'terminalCause')}
+    return {key: record.get(key) for key in (*required, 'sourceMappingHash', 'terminalCause')}
+
+
+def first_outcome(record):
+    first = observed_first_outcome(record)
+    require(first['sourceMappingHash'] is not None, 'First-outcome identity, status, time or mapping is absent')
+    return first
+
+
+def remove_reader_directory(value, runner_temp):
+    """Remove only the workflow's private reader tree, without following foreign links."""
+    if not value:
+        return
+    path = Path(value)
+    root = Path(runner_temp).resolve(strict=True)
+    require(path.parent == root and path.name.startswith('hexalith-lifecycle-registry.')
+            and not path.is_symlink(), 'Refusing a foreign credential directory')
+    config = path / 'config.json'
+    require(not config.is_symlink(), 'Refusing a linked credential file')
+    config.unlink(missing_ok=True)
+    if path.exists():
+        require(shutil.rmtree.avoids_symlink_attacks, 'Safe private-directory removal is unavailable')
+        shutil.rmtree(path)
+    require(not path.exists() and not path.is_symlink(), 'Private reader removal could not be verified')
 
 
 def declared_terminal(record, action):
@@ -245,6 +269,7 @@ class Qualification:
             mapping = read(Path(os.environ['CustomAfterMicrosoftCommonProps']).parent / 'mapping.json')
             require(mapping.get('Root') == str(ROOT) and mapping.get('ContentHash') == os.environ['HEXALITH_SOURCE_MAPPING_HASH'],
                     'Qualification mapping differs from the strict prepared source')
+        self.prepared_mapping = mapping
         self.journal = read(self.journal_path) if self.journal_path.exists() else {
             'schema': 'hexalith.ci-lifecycle-qualification.v1', 'classification': 'baseline-only',
             'source': head, 'mappingHash': mapping['ContentHash'] if mapping else None,
@@ -271,6 +296,29 @@ class Qualification:
         self.journal['observations'].append(item)
         self.save()
         print(json.dumps(item), flush=True)
+
+    def checkpoint(self, scenario, step):
+        require((scenario, step) in {
+            ('matrix', 'passing'), ('matrix', 'failing'), ('matrix', 'retry-with-peer'), ('matrix', 'partial-startup'),
+            ('retry', 'launch-owners'), ('retry', 'ready-owners'), ('retry', 'withdrawal-refusal'),
+            ('retry', 'first-outcome'), ('retry', 'resources-after-refusal'), ('retry', 'provisioning-refusal'),
+            ('retry', 'withdrawal-before-stop'), ('retry', 'peer-before-retry'), ('retry', 'cleanup-retry'),
+            ('retry', 'peer-after-retry'), ('retry', 'peer-completion'),
+            ('partial', 'interrupt'), ('partial', 'cleanup'), ('partial', 'cleanup-retry'),
+        }, 'Unknown qualification checkpoint')
+        self.journal['checkpoint'] = {'scenario': scenario, 'step': step}
+        self.observe('scenario-checkpoint', **self.journal['checkpoint'])
+
+    def record_failure(self, error, phase):
+        require(phase in ('scenario', 'finalization'), 'Unknown qualification failure phase')
+        failure = {'phase': phase, 'checkpoint': self.journal.get('checkpoint'),
+                   'failureType': type(error).__name__, 'observedAtUtc': now()}
+        self.journal.setdefault('firstFailure', failure)
+        try:
+            self.observe('qualification-failure', failure=failure, firstFailure=self.journal['firstFailure'])
+        except (OSError, ValueError, KeyError, TypeError) as observation_error:
+            print(json.dumps({'kind': 'failure-observation-unverified', 'failure': failure,
+                              'observationFailureType': type(observation_error).__name__}), file=sys.stderr, flush=True)
 
     def owner(self, label):
         return next(item for item in self.journal['owners'] if item['label'] == label)
@@ -430,7 +478,7 @@ class Qualification:
         self.observe('not-allocated-before-launch-gate', label=item['label'], actualProcessId=record['pid'], gateStatus=record['gateStatus'])
         return True
 
-    def start(self, label, startup=False, cancellation_phase=None):
+    def begin(self, label, cancellation_phase=None):
         require(label not in [item['label'] for item in self.journal['owners']], 'Do not replace an existing owner attempt')
         directory = private_directory(self.temporary / label)
         item = {'label': label, 'receipt': str(directory / 'receipt.json'),
@@ -441,7 +489,16 @@ class Qualification:
         self.save()
         self.launch(item)
         self.poll(item, lambda: self.state(item).get('workspace') is not None, 600)
-        controls = self.control(item, 'wait')
+        self.control(item, 'wait')
+        return item
+
+    def start(self, label, startup=False, cancellation_phase=None):
+        return self.ready(self.begin(label, cancellation_phase), startup)
+
+    def ready(self, item, startup=False):
+        label = item['label']
+        owner = self.issued(item)
+        controls = Path(owner['stateDirectory']).parent / 'ci-qualification' / owner['runId']
         if startup:
             def starting():
                 state = self.state(item)
@@ -548,6 +605,41 @@ class Qualification:
                 'Terminal outcome belongs to another owner or prepared mapping')
         return result
 
+    def cleanup_outcome(self, item, checkpoint, required=False):
+        """Keep actual early outcomes; require original mapping proof at the durable boundary."""
+        require(checkpoint in ('withdrawal-refused', 'withdrawal-recorded', 'retry-completed',
+                               'partial-cleaned', 'partial-retried'), 'Unknown cleanup outcome checkpoint')
+        owner = self.issued(item)
+        directory = self.diagnostics(item)
+        record, mapping = None, None
+        try:
+            held = HELPER.open_directory(Path(directory.anchor), directory, create=False)
+        except FileNotFoundError:
+            held = None
+        if held is not None:
+            try:
+                try:
+                    record = HELPER.read_json(HELPER.read_private_artifact(held, 'selected-test.json', HELPER.FIXED_METADATA_BYTES).decode())
+                except FileNotFoundError:
+                    pass
+                if required and record is not None:
+                    mapping = HELPER.read_json(HELPER.read_private_artifact(held, 'selected-source-mapping.json', HELPER.FIXED_METADATA_BYTES).decode())
+            finally:
+                os.close(held)
+        first = observed_first_outcome(record) if record is not None else None
+        require(not required or first is not None, 'Cleanup has no actual durable first outcome')
+        if first is not None:
+            require(first['runId'] == first['ownerId'] == owner['runId'], 'Cleanup outcome belongs to another owner')
+            require(first['sourceMappingHash'] in (None, self.journal['mappingHash']), 'Cleanup outcome changed prepared mapping')
+        if required:
+            require(self.prepared_mapping is not None and mapping == self.prepared_mapping
+                    and mapping.get('Root') == str(ROOT) and mapping.get('Mode') == 'package'
+                    and mapping.get('ContentHash') == self.journal['mappingHash'],
+                    'Cleanup lacks the actual original owner mapping')
+        self.observe('cleanup-first-outcome', ownerRunId=owner['runId'], checkpoint=checkpoint,
+                     present=first is not None, originalMappingVerified=required, firstOutcome=first)
+        return first
+
     def withdrawn(self, item, admitted, reason=None):
         document = read(self.diagnostics(item) / 'attachments.json')
         require(isinstance(document, dict) and isinstance(document.get('attachments'), list), 'Withdrawal document is absent or malformed')
@@ -636,31 +728,47 @@ class Qualification:
         require(read(self.diagnostics(item) / 'attachments.json') == before, 'Refusal recorded an accepted attachment')
 
     def retry_with_peer(self):
-        peer = self.start('peer')
+        self.checkpoint('retry', 'launch-owners')
+        item = self.begin('retry')
+        peer = self.begin('peer')
+        self.checkpoint('retry', 'ready-owners')
+        self.ready(item)
+        self.ready(peer)
         peer_before = self.peer_scope(peer)
         self.observe('actual-active-peer', ownerRunId=self.issued(peer)['runId'], scope=peer_before)
-        item = self.start('retry')
         admitted = self.attach(item, 'retry-admission')
         directory = self.diagnostics(item)
         # Real OS locks affect only this issued owner's metadata; no production fault flag.
         with (directory / 'attachments.lock').open('a+') as attachments, (directory / 'provisioning.lock').open('a+') as provisioning:
             fcntl.flock(attachments, fcntl.LOCK_EX | fcntl.LOCK_NB)
             fcntl.flock(provisioning, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            self.checkpoint('retry', 'withdrawal-refusal')
             self.down(item, 'withdrawal-lock-refusal', expected=False)
-            first = first_outcome(self.archived(item))
-            require(first is not None, 'Cleanup refusal did not preserve an actual first outcome')
+            self.checkpoint('retry', 'first-outcome')
+            first = self.cleanup_outcome(item, 'withdrawal-refused')
+            self.checkpoint('retry', 'resources-after-refusal')
             require(self.containers(item), 'Withdrawal refusal stopped resources before withdrawal')
             fcntl.flock(attachments, fcntl.LOCK_UN)
+            self.checkpoint('retry', 'provisioning-refusal')
             self.down(item, 'provisioning-lock-refusal', expected=False)
+            durable = self.cleanup_outcome(item, 'withdrawal-recorded', required=True)
+            require(first is None or durable == first, 'Withdrawal replaced the earlier actual first outcome/time')
+            first = durable
+            self.checkpoint('retry', 'withdrawal-before-stop')
             self.withdrawn(item, admitted)
             require(self.containers(item), 'No live resources observed after durable withdrawal/before stopping')
             self.observe('withdrawn-before-stop', ownerRunId=self.issued(item)['runId'], liveContainers=self.containers(item))
+            self.checkpoint('retry', 'peer-before-retry')
             require(self.peer_scope(peer) == peer_before, 'Cleanup fault changed active peer resources, process, workspace or claims')
             require(self.state(peer).get('testRun') is None, 'Peer execution ended during another owner fault')
+        self.checkpoint('retry', 'cleanup-retry')
         self.down(item, 'exact-owner-cleanup-retry')
-        require(first_outcome(self.archived(item)) == first, 'Cleanup retry replaced the first outcome/time')
+        HELPER.retain_artifacts(self.issued(item), private_directory(self.evidence / item['label']))
+        require(self.cleanup_outcome(item, 'retry-completed', required=True) == first, 'Cleanup retry replaced the first outcome/time')
+        self.checkpoint('retry', 'peer-after-retry')
         require(self.peer_scope(peer) == peer_before, 'Cleanup retry changed the active peer')
         self.observe('active-peer-preserved', ownerRunId=self.issued(peer)['runId'], scope=self.peer_scope(peer))
+        self.checkpoint('retry', 'peer-completion')
         self.control(peer, 'pass')
         self.children['peer'].wait(timeout=150)
         require(self.capture_result(peer) == 0, 'Preserved peer did not complete its real required test')
@@ -668,16 +776,21 @@ class Qualification:
 
     def partial_startup(self):
         item = self.start('partial', startup=True)
+        self.checkpoint('partial', 'interrupt')
         self.process_signal(item, signal.SIGKILL)
         self.children['partial'].wait(timeout=10)
         require(self.children['partial'].returncode == -signal.SIGKILL, 'Partial-startup interruption was not observed')
         self.observe('actual-partial-startup-interruption', ownerRunId=self.issued(item)['runId'], exitCode=-signal.SIGKILL)
+        self.checkpoint('partial', 'cleanup')
         self.down(item, 'partial-startup-recovery')
-        first = first_outcome(self.archived(item))
+        HELPER.retain_artifacts(self.issued(item), private_directory(self.evidence / item['label']))
+        first = self.cleanup_outcome(item, 'partial-cleaned', required=True)
         require(first['terminalStatus'] == 'cancelled' and first['terminalOutcome'].get('exitCode') == 'Cancelled',
                 'Interrupted partial startup did not retain the actual cancelled outcome')
+        self.checkpoint('partial', 'cleanup-retry')
         self.down(item, 'partial-startup-idempotent-retry')
-        require(first_outcome(self.archived(item)) == first, 'Partial-startup retry changed the first outcome/time')
+        HELPER.retain_artifacts(self.issued(item), private_directory(self.evidence / item['label']))
+        require(self.cleanup_outcome(item, 'partial-retried', required=True) == first, 'Partial-startup retry changed the first outcome/time')
 
     def finalize_cancellation(self, item, prior, job_status):
         require(job_status == 'cancelled', 'Cancellation qualification requires actual cancelled workflow job status')
@@ -703,18 +816,45 @@ class Qualification:
 
     def cleanup_owned(self, item, owner, job_status):
         resume_failure = None
+        first_error = None
+        failures = []
         try:
             self.resume_host(item)
         except (OSError, ValueError, KeyError, TypeError) as error:
+            first_error = error
             resume_failure = {'failureType': type(error).__name__, 'failureObservedAtUtc': now()}
+            failures.append({'checkpoint': 'resume-host', **resume_failure})
         try:
             self.down(item, 'independent-finalizer', job_status=job_status)
-        finally:
+        except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
+            if first_error is None:
+                first_error = error
+            failures.append({'checkpoint': 'exact-down', 'failureType': type(error).__name__, 'failureObservedAtUtc': now()})
+        try:
+            HELPER.retain_artifacts(owner, private_directory(self.evidence / item['label']))
+        except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
+            if first_error is None:
+                first_error = error
+            failures.append({'checkpoint': 'retain-artifacts', 'failureType': type(error).__name__, 'failureObservedAtUtc': now()})
+        # Observation failures cannot prevent either exact down or artifact retention above.
+        for failure in failures:
             try:
-                HELPER.retain_artifacts(owner, private_directory(self.evidence / item['label']))
-            finally:
-                if resume_failure is not None:
-                    self.observe('owned-host-resume-unverified', ownerRunId=owner['runId'], **resume_failure)
+                self.observe('owner-finalizer-failure', label=item['label'], **failure)
+            except (OSError, ValueError, KeyError, TypeError) as error:
+                print(json.dumps({'kind': 'owner-finalizer-observation-unverified', 'label': item['label'],
+                                  'checkpoint': failure['checkpoint'], 'failureType': type(error).__name__}), file=sys.stderr, flush=True)
+                if first_error is None:
+                    first_error = error
+        if resume_failure is not None:
+            try:
+                self.observe('owned-host-resume-unverified', ownerRunId=owner['runId'], **resume_failure)
+            except (OSError, ValueError, KeyError, TypeError) as error:
+                print(json.dumps({'kind': 'owner-finalizer-observation-unverified', 'label': item['label'],
+                                  'checkpoint': 'resume-host', 'failureType': type(error).__name__}), file=sys.stderr, flush=True)
+                if first_error is None:
+                    first_error = error
+        if first_error is not None:
+            raise first_error
         return resume_failure
 
     def finalize_owner(self, item, job_status, issued):
@@ -770,12 +910,40 @@ def receive_signal(number, _frame):
     CANCELLED.append({'signal': number, 'observedAtUtc': now()})
 
 
+def run_matrix(qualification):
+    first_error = None
+    try:
+        for step, action in [('passing', lambda: qualification.ordinary('passing', 'pass')),
+                             ('failing', lambda: qualification.ordinary('failing', 'fail')),
+                             ('retry-with-peer', qualification.retry_with_peer),
+                             ('partial-startup', qualification.partial_startup)]:
+            qualification.checkpoint('matrix', step)
+            action()
+        return 0
+    except BaseException as error:
+        first_error = error
+        qualification.record_failure(error, 'scenario')
+        raise
+    finally:
+        try:
+            cleanup = qualification.finalize('')
+            require(cleanup == 0, 'Bounded exact-owner finalization is incomplete')
+        except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
+            qualification.record_failure(error, 'finalization')
+            if first_error is None:
+                raise
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('matrix', 'start-cancellation', 'wait-cancellation', 'finalize'))
+    parser.add_argument('command', choices=('matrix', 'start-cancellation', 'wait-cancellation', 'finalize', 'remove-reader'))
     parser.add_argument('--phase', choices=('startup', 'execution'))
     parser.add_argument('--job-status', choices=('', 'success', 'failure', 'cancelled'), default='')
     args = parser.parse_args()
+    if args.command == 'remove-reader':
+        value = os.environ.get('HEXALITH_LIFECYCLE_REGISTRY_CONFIG')
+        remove_reader_directory(value, os.environ['RUNNER_TEMP'] if value else None)
+        return 0
     qualification = Qualification(finalizing=args.command == 'finalize')
     if args.command == 'finalize':
         return qualification.finalize(args.job_status)
@@ -810,15 +978,7 @@ def main():
         qualification.resume_host(item)
         qualification.process_signal(item, signal.SIGINT)
         return 1
-    try:
-        qualification.ordinary('passing', 'pass')
-        qualification.ordinary('failing', 'fail')
-        qualification.retry_with_peer()
-        qualification.partial_startup()
-        return 0
-    finally:
-        cleanup = qualification.finalize('')
-        require(cleanup == 0, 'Bounded exact-owner finalization is incomplete')
+    return run_matrix(qualification)
 
 
 if __name__ == '__main__':
