@@ -118,6 +118,7 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, IT
             profile = observationBinding.Profile, revision = observationBinding.Revision, mappingHash = observationBinding.MappingHash,
             executionContext = observationBinding.ExecutionContext,
             currentOwner = observationBinding.ReadCurrentOwnerObservation(),
+            publicRuntime = await PublicRuntimeImageObservations.ReadAsync(observationBinding, token).ConfigureAwait(true),
             status = "functional-observations-passed",
             qualificationCredit = false,
             observedAtUtc = DateTimeOffset.UtcNow,

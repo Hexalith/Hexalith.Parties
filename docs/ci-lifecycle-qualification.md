@@ -2,25 +2,35 @@
 
 This registered manual workflow remains a **baseline-only** diagnostic for
 Story 2.8. It grants no candidate acceptance or loaded-backend identity credit.
-The ordinary and manual baseline callers select Builds
-`567604b616613ba429be0609636d805db776a709` with genuine published tool 4.44.11
-and released Platform v1.5.7 source `ed991837945571a12743214fc18a87fbd323fc30`.
-Matching committed gitlinks bind the tuple. Exact-source tuple CI 42281947755
-passed 315 current and 349 same-code legacy controls with zero skips; catalog
-CI 42281947817 passed all five rows. These producer checks do not qualify a
-Parties manual lifecycle run.
-Historical Platform v1.5.4 source `13fc1a8978b4e6dcf8233b443c23c4e4258c49c7`
-passed tuple CI 42172121935 with 259 current/349 legacy controls and catalog
-CI 42172122108 with all five rows before publication. These historical results
-do not qualify a new source or manual lifecycle run.
-The ordinary public `platform-package` baseline remains held until genuine new
-Parties publication and finite public Parties/Tenants7.0.5 cohort admission;
-the separate current-owner purpose cannot substitute for that authority.
-The old 4.43.4 and 4.43.5 HXP020 refusals remain historical evidence.
-Normal exact-source owner gates and real reference native qualification are still
-required before dispatch. Preserve incoming root gitlinks; source preparation
-is not runtime qualification. Never initialize nested dependencies or substitute
-source runtime.
+The ordinary and manual baseline callers select genuine Builds
+`b4703ec2247321f867f14cd9caca43fa00190feb`, exact tool `4.44.12` with
+`rollForward=false`, and published Platform `v1.7.0` source
+`52bc7986170f268afaef6227d0519a1d662af256`. Matching committed root gitlinks
+bind these inputs. Platform's fresh main gates passed 412 current cases, 349
+original legacy cases and all five SDK lanes; automatic source publication is complete. Every caller
+still needs its own new-source hosted results, native execution and cleanup;
+these producer results supply no caller or manual lifecycle credit.
+
+The ordinary `platform-package` profile selects the complete measured public
+Parties 3.1.0, SDK 4.1.0, Tenants 7.0.5, Memories 3.0.25 and McpCli 2.0.1 cohort.
+The separate private `platform-current-package` profile and its strict validator
+retain their existing contracts and cannot substitute for ordinary public proof.
+The ordinary artifact gate requires all original 28 native cases, exact persisted
+identity/sequence/projection and reference-owner effects, anonymous 401 responses, declared
+diagnostic hashes, and verified empty owned inventories after teardown.
+
+Historical Platform v1.5.7 source
+`ed991837945571a12743214fc18a87fbd323fc30` used Builds
+`567604b616613ba429be0609636d805db776a709` and tool `4.44.11`.
+Tuple CI 42281947755 passed 315 current/349 legacy controls and catalog
+CI 42281947817 passed five SDK rows. Historical Platform v1.5.4 source
+`13fc1a8978b4e6dcf8233b443c23c4e4258c49c7` passed tuple CI 42172121935
+with 259 current/349 legacy controls and catalog CI 42172122108. Those sources
+predated complete public Parties 3.1 admission. Their results and the old
+4.43.4/4.43.5 HXP020 refusals remain historical; they do not qualify a new
+caller, public native run or manual lifecycle run.
+Preserve incoming unrelated root gitlinks, initialize only necessary root-declared
+dependencies, and never substitute source-built public runtime inputs.
 
 After those gates, the parent operator dispatches
 `.github/workflows/ci-lifecycle-qualification.yml` on the exact reviewed source
@@ -119,6 +129,27 @@ bound native composition output; reading copied-file metadata does not load thos
 host-process loading. The bounded private single-write JSON is retained in the existing classified
 caller artifact directory: ordinary integration verifies `invocation.json`, while lifecycle
 qualification verifies its actual journal and unique issued owner receipt. No GitHub environment is
-forwarded into the scrubbed native process, and canonical functional observations remain unchanged.
+forwarded into the scrubbed native process, and canonical functional observations retain their first file.
 These measurements and local boundary controls grant no native, lifecycle, parity, human approval,
 or candidate acceptance by themselves.
+
+For the ordinary hosted public profile, the same declared, content-addressed
+`functional-observations` diagnostic also carries `publicRuntime`. After the real
+functional assertions, a 20-second read-only observer selects the unique running
+container with the issued run label and exact immutable public Parties image
+index. Filtered inspect output exposes only container/run/image/start identities;
+five fixed `docker cp` tar reads hash actual `/app` Contracts and four SDK files.
+Each client output and file has an explicit bound; links, extra files, foreign
+owners, mutable tags, stopped or changing containers and unknown shapes fail.
+It executes no container command and requires no image shell or hash utility.
+The reader rechecks the same running identity after measurement. These are
+running-image file identities, not a claim to inspect CLR memory.
+
+The public NuGet Contracts reader (`99230b...`) and EventStoreExtensions reader
+(`a48612...`) remain separate from the measured image Contracts body (`b2ddfb...`).
+All four image SDK bodies must match their measured genuine SDK 4.1.0 roles.
+The private current-owner observation remains null for ordinary runs; no proof is
+fabricated to fill it. A local or source-mode run emits no hosted runtime claim.
+The original private artifact validator stays unchanged, including all its
+negative controls. Resource-free byte/metadata fixtures run in Ci.Tests and the
+Python artifact controls; they grant no native or candidate acceptance.

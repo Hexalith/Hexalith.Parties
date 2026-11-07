@@ -19,6 +19,9 @@ using System.Text.Json;
 internal sealed record NativeDiagnosticBinding(string RunId, string AttemptId, string EnvironmentId,
     string OwnerWorkspace, string CallerRoot, string Revision, string MappingHash, JsonElement ExecutionContext, string StateDirectory, string ModelAssemblyPath, string Profile)
 {
+    /// <summary>Gets the exact public Platform identity carried by the already verified immutable mapping.</summary>
+    internal JsonElement PlatformIdentity { get; init; }
+
     /// <summary>Gets the original caller's existing classified artifact directory, outside disposable workspaces.</summary>
     internal string ArtifactDirectory => Path.Combine(CallerRoot, "TestResults", Profile switch
     {
@@ -73,7 +76,10 @@ internal sealed record NativeDiagnosticBinding(string RunId, string AttemptId, s
         string model = plan.RootElement.GetProperty("platformModelAssemblyPath").GetString()!;
         RequireEqual(model, Path.Combine(workspace, "hosts", "platform-model", "Hexalith.Platform.Composition.dll"));
         return new(runId, run.GetProperty("attemptId").GetString()!, run.GetProperty("environmentId").GetString()!,
-            workspace, root, ReadRevision(root), hash, context.Clone(), stateDirectory, model, plan.RootElement.GetProperty("selectedTest").GetProperty("name").GetString()!);
+            workspace, root, ReadRevision(root), hash, context.Clone(), stateDirectory, model, plan.RootElement.GetProperty("selectedTest").GetProperty("name").GetString()!)
+        {
+            PlatformIdentity = selected.GetProperty("PlatformIdentity").Clone(),
+        };
     }
 
     /// <summary>Verifies the original caller helper declared this artifact directory for the exact job and profile.</summary>

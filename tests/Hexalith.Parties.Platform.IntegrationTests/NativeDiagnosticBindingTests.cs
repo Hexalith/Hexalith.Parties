@@ -77,6 +77,7 @@ public sealed class NativeDiagnosticBindingTests
             NativeDiagnosticBinding binding = NativeDiagnosticBinding.Read(run, handoff);
             binding.CallerRoot.ShouldBe(caller);
             binding.OwnerWorkspace.ShouldBe(workspace);
+            JsonElement.DeepEquals(binding.PlatformIdentity, mapping.RootElement.GetProperty("PlatformIdentity")).ShouldBeTrue();
             binding.ExecutionContext.GetProperty("kind").GetString().ShouldBe("local");
             if (mutation.StartsWith("lifecycle-", StringComparison.Ordinal))
             {
