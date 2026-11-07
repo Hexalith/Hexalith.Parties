@@ -50,6 +50,8 @@ def public_reader_roles(observations: dict, *, source: str, run_id: str) -> dict
                 if name == contracts and field == "loaded" and item.get("sha256") != digest:
                     # Genuine module preparation always builds its active owner from source.
                     # This is test-side DTO provenance; it never admits a public package body.
+                    require(item.get("sha256") not in set(IMAGE_BODIES.values()) | set(PACKAGE_READERS.values()),
+                            "image/private bytes cannot substitute for a public NuGet reader")
                     test_name = "Hexalith.Parties.Platform.IntegrationTests"
                     tests = [entry for entry in observations[field] if entry["identity"].split(",", 1)[0] == test_name]
                     suffix = "/g4-workspaces/" + run_id + "/test-builds/bin/" + test_name + "/release/"
@@ -60,8 +62,7 @@ def public_reader_roles(observations: dict, *, source: str, run_id: str) -> dict
                             and not any(ord(char) < 32 for char in path), "caller-source DTO output path differs")
                     require(item["identity"] == contracts + ", Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
                             and item.get("informationalVersion") == "1.0.0+" + source
-                            and HEX.fullmatch(item.get("sha256", "")) is not None
-                            and item["sha256"] not in set(IMAGE_BODIES.values()) | set(PACKAGE_READERS.values()),
+                            and HEX.fullmatch(item.get("sha256", "")) is not None,
                             "caller-source DTO provenance differs; it is not a public NuGet reader")
                     require(len(tests) == 1 and tests[0].get("informationalVersion") == item["informationalVersion"]
                             and tests[0].get("loadedPath") == path.removesuffix(contracts + ".dll") + test_name + ".dll",
