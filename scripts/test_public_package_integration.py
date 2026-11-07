@@ -42,7 +42,8 @@ class PublicPackageEvidenceTests(unittest.TestCase):
                     for name, digest in public.IMAGE_BODIES.items()}, measuredAtUtc=now.isoformat(), qualificationCredit=False)
         f.loaded["profile"] = public.PROFILE
         for name, digest in public.PACKAGE_READERS.items():
-            item = dict(identity=name + ", Version=3.1.0.0, Culture=neutral, PublicKeyToken=null", sha256=digest)
+            item = dict(identity=name + ", Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", sha256=digest,
+                        informationalVersion="1.0.0+50904cc4ba53c9b0b2c082d5872a0d276be8f5c3")
             f.loaded["copied"].append(item)
             if name == "Hexalith.Parties.Contracts": f.loaded["loaded"].append(item.copy())
         for field in ("loaded", "copied"):

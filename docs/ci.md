@@ -565,8 +565,16 @@ cases, persisted stream/projection/reference-owner observations, exact source,
 SDK and role identities, and complete owned cleanup. The functional observation
 separately measures the five bounded SDK/owner DLL bodies from the unique owned
 Parties image, checking the same running identity before and after collection.
-Copied file metadata and loaded
-test-process assemblies retain their own distinct roles. Missing, stale, foreign,
+Copied file metadata and loaded test-process assemblies retain their own distinct
+roles. Pinned module preparation sets `HexalithPartiesFromSource=true` for the
+active owner even in package mode; the native test project therefore references
+its source Contracts project. That loaded DTO is recorded as
+`caller-source-test-dto`, bound to the native test source and output directory;
+it is never accepted as a public NuGet reader. The copied model Contracts must
+have the exact published 3.1.0 package body (CLR version 1.0.0.0), independently
+of the source DTO and running image body. The published model does not consume
+EventStoreExtensions: absence is valid, while any observed copy must match the
+exact public package body. Missing, stale, foreign,
 stopped, ambiguous or tampered evidence fails CI. Public observations require
 `currentOwner: null`; they cannot substitute a private current-owner receipt.
 Results remain `baseline-only` with `qualificationCredit: false` and grant no

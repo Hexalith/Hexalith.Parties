@@ -37,6 +37,45 @@ IMAGE_SIZES = {"Hexalith.Parties.Contracts": 304640, "Hexalith.EventStore.Contra
 CASES = frozenset(['Hexalith.Parties.Platform.IntegrationTests.FunctionalObservationWriterTests.DuplicateCanonicalWriteRefusesWhileRecheckPreservesOriginalBytesAsync', 'Hexalith.Parties.Platform.IntegrationTests.FunctionalObservationWriterTests.RecheckRequiresOriginalAndPreservesOutputOwnershipBoundsAsync', 'Hexalith.Parties.Platform.IntegrationTests.MemoriesTenantObservationTests.ActiveCurrentTenantPasses', 'Hexalith.Parties.Platform.IntegrationTests.MemoriesTenantObservationTests.InactiveCurrentTenantFails(status: "deleting")', 'Hexalith.Parties.Platform.IntegrationTests.MemoriesTenantObservationTests.InactiveCurrentTenantFails(status: "failed")', 'Hexalith.Parties.Platform.IntegrationTests.MemoriesTenantObservationTests.InactiveCurrentTenantFails(status: "provisioning")', 'Hexalith.Parties.Platform.IntegrationTests.NativeAssemblyObservationTests.CopiedOutputRefusesLinkedAssembly', 'Hexalith.Parties.Platform.IntegrationTests.NativeAssemblyObservationTests.CopiedOutputReportsActualFileHashWithoutLoadingIt', 'Hexalith.Parties.Platform.IntegrationTests.NativeAssemblyObservationTests.PrivateDiagnosticRefusesSymbolicDirectory', 'Hexalith.Parties.Platform.IntegrationTests.NativeAssemblyObservationTests.PrivateDiagnosticRetainsFirstBytesAndRefusesOverwrite', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: "platform-current-package", profiles: "platform-current-package", accepted: True)', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: "platform-current-package", profiles: "platform-current-package,platform-current-package", accepted: False)', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: "platform-current-package", profiles: "platform-current-package,platform-package", accepted: False)', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: "platform-package", profiles: "lifecycle-package", accepted: False)', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: "platform-package", profiles: "platform-package,lifecycle-package", accepted: True)', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: "platform-package", profiles: "platform-package,platform-current-package", accepted: False)', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: "changed-context")', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: "changed-mapping")', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: "current-valid-local")', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: "foreign-attempt")', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: "foreign-model-output")', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: "foreign-run")', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: "lifecycle-foreign-receipt")', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: "lifecycle-foreign-source")', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: "lifecycle-local")', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: "valid-local")', 'Hexalith.Parties.Platform.IntegrationTests.PartyEnvironmentTests.GatewayRefusesAnonymousCommandStatusAsync', 'Hexalith.Parties.Platform.IntegrationTests.PartyEnvironmentTests.RealDependencies_CreateQueryAndPersistMatchingPartyEvents'])
 
 
+def public_reader_roles(observations: dict, *, source: str, run_id: str) -> dict:
+    """Keep the owner test DTO separate from the model's consumed public package."""
+    contracts = "Hexalith.Parties.Contracts"
+    loaded_origin = "public-nuget"
+    for field in ("loaded", "copied"):
+        for name, digest in PACKAGE_READERS.items():
+            observed = [item for item in observations[field] if item["identity"].split(",", 1)[0] == name]
+            # The published composition consumes Contracts, not EventStoreExtensions.
+            require(len(observed) == 1 if name == contracts else len(observed) <= 1, "public package reader inventory missing")
+            for item in observed:
+                if name == contracts and field == "loaded" and item.get("sha256") != digest:
+                    # Genuine module preparation always builds its active owner from source.
+                    # This is test-side DTO provenance; it never admits a public package body.
+                    test_name = "Hexalith.Parties.Platform.IntegrationTests"
+                    tests = [entry for entry in observations[field] if entry["identity"].split(",", 1)[0] == test_name]
+                    suffix = "/g4-workspaces/" + run_id + "/test-builds/bin/" + test_name + "/release/"
+                    path = item.get("loadedPath", "")
+                    require(isinstance(path, str) and path.startswith("/") and suffix in path
+                            and path.endswith(suffix + contracts + ".dll")
+                            and all(part not in (".", "..") for part in path.split("/"))
+                            and not any(ord(char) < 32 for char in path), "caller-source DTO output path differs")
+                    require(item["identity"] == contracts + ", Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+                            and item.get("informationalVersion") == "1.0.0+" + source
+                            and HEX.fullmatch(item.get("sha256", "")) is not None
+                            and item["sha256"] not in set(IMAGE_BODIES.values()) | set(PACKAGE_READERS.values()),
+                            "caller-source DTO provenance differs; it is not a public NuGet reader")
+                    require(len(tests) == 1 and tests[0].get("informationalVersion") == item["informationalVersion"]
+                            and tests[0].get("loadedPath") == path.removesuffix(contracts + ".dll") + test_name + ".dll",
+                            "caller-source DTO and native test source/output differ")
+                    loaded_origin = "caller-source-test-dto"
+                else:
+                    require(item.get("sha256") == digest, "image/private bytes cannot substitute for a public NuGet reader")
+                    if name == contracts:
+                        require(item["identity"] == contracts + ", Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+                                and item.get("informationalVersion") == "1.0.0+50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+                                "public NuGet Contracts assembly metadata differs")
+    return {"loadedContracts": loaded_origin, "copiedContracts": "public-nuget"}
+
+
 def validate(directory: Path, *, repository: str, run: str, attempt: int, source: str, platform: str, builds: str) -> dict:
     require(platform == PLATFORM and builds == BUILDS, "ordinary public gate requires the actual published Platform and Builds sources")
     with held_directory(directory) as root:
@@ -156,14 +195,10 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
             observed = [item for item in loaded[field] if item["identity"].split(",", 1)[0] == name]
             require(len(observed) == 1 if field == "copied" or name == "Hexalith.EventStore.Contracts" else len(observed) <= 1, "native/composition SDK inventory missing")
             require(all(item.get("sha256") == digest and ", Version=4.1.0.0," in item["identity"] for item in observed), "native/composition SDK substitution")
-        for name, digest in PACKAGE_READERS.items():
-            observed = [item for item in loaded[field] if item["identity"].split(",", 1)[0] == name]
-            required = field == "copied" or name == "Hexalith.Parties.Contracts"
-            require(len(observed) == 1 if required else len(observed) <= 1, "public package reader inventory missing")
-            require(all(item.get("sha256") == digest for item in observed), "image/private bytes cannot substitute for a public NuGet reader")
+    reader_roles = public_reader_roles(loaded, source=source, run_id=owner["runId"])
     allowed = names | {loaded_name, "invocation.json", "execution.json", "cleanup.json", "test-result.json", "attachments.json", "attachment-withdrawals.json"}
     require(all(name in allowed and stat.S_ISREG(os.stat(name, dir_fd=root, follow_symlinks=False).st_mode) for name in os.listdir(root)), "unreferenced or duplicate artifact substitute")
-    return {"profile": PROFILE, "source": source, "runId": owner["runId"], "nativeCases": len(cases), "qualificationCredit": False}
+    return {"profile": PROFILE, "source": source, "runId": owner["runId"], "nativeCases": len(cases), "readerRoles": reader_roles, "qualificationCredit": False}
 
 
 def main() -> None:
