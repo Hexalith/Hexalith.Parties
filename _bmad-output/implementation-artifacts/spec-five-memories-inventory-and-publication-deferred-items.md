@@ -2,7 +2,7 @@
 title: 'Five Memories inventory and publication deferred items'
 type: 'bugfix'
 created: '2026-10-24'
-status: 'in-progress'
+status: 'done'
 route: 'dispatch'
 review_loop_iteration: 4
 baseline_commit: '5eca98e9725aeb528c90d058eb2e08a64700b49f'
@@ -54,13 +54,13 @@ context: []
 
 **Execution:**
 
-- [ ] Memories contracts/client and inventory files above: add bounded, tenant-authorized source inventory covering historical cases, admitted workflows, units and deletion state. Persist admission before scheduling; explicitly report incomplete legacy coverage. Extend producer tests for scope, pagination, races and restart.
-- [ ] Memories ingestion files above: add explicit revision-aware refresh without changing ordinary ingest. Condition publication on predecessor/version; inventory superseded outputs. Adopt in Parties indexing with stable retry identity and existing cleanup fences; test every refresh matrix row through real adapters and serialized restart.
-- [ ] Parties cleanup above: reconcile remote inventory even when local mappings are empty; durably retain discovered obligations and require complete terminal absence. Extend `PartyMemoryCleanupServiceTests.cs` for partial pages, failures and historical cases.
-- [ ] Memories gateway files above: compose supported SDK workload clients with exact command-domain authority, configured target and sidecar credentials. Preserve legacy configuration compatibility; reject missing/incorrect credentials. Supply a real separate Memories domain-service host/SDK adapter using the existing three aggregates and six commands, authenticated routing and actual event/state persistence; preserve Server's enforced absence of a `/process` route. Extend runtime tests with controlled delays, restart, actual derived-store checks and unrelated-scope controls.
-- [ ] UI tests above: qualify compact coverage automatically from validated source metadata where appropriate, regenerate pinned-tool mappings and run the actual source browser. Retain package negative controls and publication deferral.
-- [ ] Release files above and CI expectation tests: adopt published Builds integration `11a3a79cfac4bba9548c6364a17a01ee9b561370` and validator SHA-256 `1913f75bdf39c494c5723bca5c04fcb2e6dc0474ad2d86c22e63aae96b9e850c`. Preserve its authoritative NuGet-404 fix. Add canonical created labels to valid fixtures and executable negative mutations.
-- [ ] Update `docs/ci.md`, `docs/memories-backed-party-search.md`, `tests/README.md`, deferred ledger and bounded batch receipts. Close only verified boundaries.
+- [x] Memories contracts/client and inventory files above: add bounded, tenant-authorized source inventory covering historical cases, admitted workflows, units and deletion state. Persist admission before scheduling; explicitly report incomplete legacy coverage. Extend producer tests for scope, pagination, races and restart.
+- [x] Memories ingestion files above: add explicit revision-aware refresh without changing ordinary ingest. Condition publication on predecessor/version; inventory superseded outputs. Adopt in Parties indexing with stable retry identity and existing cleanup fences; test every refresh matrix row through real adapters and serialized restart.
+- [x] Parties cleanup above: reconcile remote inventory even when local mappings are empty; durably retain discovered obligations and require complete terminal absence. Extend `PartyMemoryCleanupServiceTests.cs` for partial pages, failures and historical cases.
+- [x] Memories gateway files above: compose supported SDK workload clients with exact command-domain authority, configured target and sidecar credentials. Preserve legacy configuration compatibility; reject missing/incorrect credentials. Supply a real separate Memories domain-service host/SDK adapter using the existing three aggregates and six commands, authenticated routing and actual event/state persistence; preserve Server's enforced absence of a `/process` route. Extend runtime tests with controlled delays, restart, actual derived-store checks and unrelated-scope controls.
+- [x] UI tests above: qualify compact coverage automatically from validated source metadata where appropriate, regenerate pinned-tool mappings and run the actual source browser. Retain package negative controls and publication deferral.
+- [x] Release files above and CI expectation tests: adopt published Builds integration `11a3a79cfac4bba9548c6364a17a01ee9b561370` and validator SHA-256 `1913f75bdf39c494c5723bca5c04fcb2e6dc0474ad2d86c22e63aae96b9e850c`. Preserve its authoritative NuGet-404 fix. Add canonical created labels to valid fixtures and executable negative mutations.
+- [x] Update `docs/ci.md`, `docs/memories-backed-party-search.md`, `tests/README.md`, deferred ledger and bounded batch receipts. Close only verified boundaries.
 
 **Acceptance Criteria:**
 
@@ -221,3 +221,36 @@ A separate user-owned process committed and merged the shared task work while th
 Preserve every incoming commit and current source file. The mandated reversion was stopped before any mutation because its baseline assertion detected these newer user commits; no code was reverted. Higher-priority user-change preservation applies. Implement the loop4 requirements incrementally from this integrated current worktree; do not restore an older KEEP seed over incoming work. The rederive-4 snapshot is preservation/reference material for this current integration. Parent owns reviews and all Git operations.
 
 The incoming Builds integration independently changes the Memories catalog from2.29.8 to2.29.9; this build must preserve that incoming selection and make no package/catalog/version edits. Earlier generated source mappings were produced against the earlier catalog and cannot silently qualify the new graph. Parent is restoring the isolated pinned module-tool/Dapr prerequisites and generating a fresh mapping; wait for its supplied generated imports before source qualification, and never hand-edit generated mappings or bypass the gate. You may implement and perform current package checks independently. Record any incoming compatibility change and exact mode/count evidence separately. The final immutable provenance checks must use all current root-declared selections; incoming user pointer changes must not be relabelled as this build's own content.
+
+
+## Superseded closure (2026-11-07)
+
+Administrator chose "Reconcile & close" on 2026-11-07. This spec stopped after loop4 triage and stayed `in-progress`. Shared-worktree integration `7ca130c415ae2a5e02ee45ad8e6a602d55ae4028` and later commits landed its work. No loop4 implementation child, formal review4 or `review4-verification.json` ran under this spec. The KEEP snapshot `/tmp/parties-five-review4-vz26i1jn/rederive-4/` no longer exists. Receipts in `tests/five-memories-inventory-and-publication-2026-10-24/` end at review3 and stay historical.
+
+Loop4 corrections are present in the current tree (spot-checked by source inspection at root `6e4ae2be507279578f2f5fe34d90ebdd3fd3c378`, Memories `4ff3e6866ecb6d1a497e7063e972c24259252c40`):
+
+- R4-B1: `IngestionInputValidator` rejects refresh without exactly one inline byte source.
+- R4-B3: `IngestionIdentityGuard` requires a 64-hex SHA-256.
+- R4-B4: `SourceInventoryStore.MaximumPageBytes` producer bound; the Parties consumer loop is bounded by intent capacity, not a fixed page count.
+- R4-B5: no `__none` predecessor key remains.
+- R4-B8: `RestoreDataPlaneActivity` graph writes use `TenantIngestionOwnership.GraphWriteAsync`.
+- R4-B9: graph finalizer activity.
+- R4-B10: `ProvisionRediSearchActivity` erasure fence.
+- R4-E2: `CompleteOwnedRunAsync` owned disposal.
+- R4-V1: `memories-domain-service` `ERR_DIRECT_INVOKE` denial controls.
+
+Later `done` specs superseded the remaining scope and qualification:
+
+- [spec-five-processing-and-memories-erasure-deferred-items.md](spec-five-processing-and-memories-erasure-deferred-items.md): DW-107 done 2026-10-25; DW-196/197/198 done 2026-10-25.
+- [spec-five-published-frontcomposer-adoption-deferred-items.md](spec-five-published-frontcomposer-adoption-deferred-items.md): DW-112 done 2026-10-28 (Shell 4.7.1).
+- [spec-five-data-lifecycle-qualification-deferred-items.md](spec-five-data-lifecycle-qualification-deferred-items.md): published Memories refresh/inventory adoption (2026-10-28). Later ledger qualification for the refresh entry is dated 2026-11-03.
+
+Closure fitness at root `6e4ae2be507279578f2f5fe34d90ebdd3fd3c378` used the current CI package selection: EventStore 4.1.0, Tenants 7.0.2, Memories Client.Rest/Contracts 3.0.23 (resolved as packages).
+
+- Release `-warnaserror` build of `Hexalith.Parties.Tests`: 0 warnings, 0 errors.
+- 114 passed, 0 failed, 0 skipped (`--fail-skips on`): CleanupService 34, RestClientRecovery 27, Recovery 25, SourceInventory 18, CleanupCancellation 5, IndexingCancellation 5.
+- The TRX (SHA-256 `9e4754fef04c2e300f56a626ddf71cfce72fdb3c07173eb5545d9aaa62d6f6c2`) was kept outside the repository.
+
+This consumer-side fitness does not re-run the Memories producer suites, live runtime, browser or publisher lanes.
+
+DW-82, DW-168 and the unchanged-URI refresh entry stay `open`. Their remaining gates are outside this spec's authority: legacy inventory reconciliation after older writers drain, owner completeness attestation, and installed producer/workload and deployed qualification. Frozen intent is unchanged. No package/catalog/version change, deployment, migration or release dispatch was performed.
