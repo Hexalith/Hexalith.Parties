@@ -80,6 +80,28 @@ jobs:
                       raise ValueError('Invalid verified catalog toolchain version')
                   output.write(name + '=' + value + '\n')
           PY
+      - name: Restore verified Aspire runtime packages in this job
+        run: |
+          set -euo pipefail
+          scratch="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/parties-lifecycle-aspire.XXXXXX")"
+          trap 'rm -rf -- "$scratch"' EXIT
+          cat > "$scratch/apphost.cs" <<APPHOST
+          #!/usr/bin/env dotnet
+          #:sdk Aspire.AppHost.Sdk@$CI_ASPIRE_VERSION
+          using Aspire.Hosting;
+          var builder = DistributedApplication.CreateBuilder(args);
+          using var app = builder.Build();
+          APPHOST
+          dotnet restore "$scratch/apphost.cs" --verbosity minimal
+          packages="${NUGET_PACKAGES:-$HOME/.nuget/packages}"
+          for binary in \
+              "$packages/aspire.hosting.orchestration.linux-x64/$CI_ASPIRE_VERSION/tools/dcp" \
+              "$packages/aspire.dashboard.sdk.linux-x64/$CI_ASPIRE_VERSION/tools/Aspire.Dashboard"; do
+            if [[ ! -x "$binary" ]]; then
+              printf 'Aspire package preparation did not materialize %s\n' "$binary" >&2
+              exit 1
+            fi
+          done
       - name: Install toolchain without provisioning services
         run: |
           set -euo pipefail
