@@ -982,7 +982,7 @@ public sealed class PlatformApiPrerequisitesTests
         catalog.ShouldContain("<HexalithMemoriesVersion Condition=\"'$(HexalithMemoriesVersion)' == ''\">3.0.25</HexalithMemoriesVersion>");
         catalog.ShouldContain("<HexalithPolymorphicSerializationsVersion Condition=\"'$(HexalithPolymorphicSerializationsVersion)' == ''\">1.19.8</HexalithPolymorphicSerializationsVersion>");
         catalog.ShouldContain("<HexalithTenantsVersion Condition=\"'$(HexalithTenantsVersion)' == ''\">7.0.5</HexalithTenantsVersion>");
-        catalog.ShouldContain("<HexalithPartiesVersion Condition=\"'$(HexalithPartiesVersion)' == ''\">3.0.0</HexalithPartiesVersion>");
+        catalog.ShouldContain("<HexalithPartiesVersion Condition=\"'$(HexalithPartiesVersion)' == ''\">3.1.0</HexalithPartiesVersion>");
         // The selected Builds catalog routes this version through a property whose unconditional value applies to
         // every Parties project (only Hexalith.Folders.Aspire overrides it), so pin both halves exactly.
         catalog.ShouldContain("<HexalithAspireHostingDaprVersion>13.6.2-beta.959</HexalithAspireHostingDaprVersion>");
