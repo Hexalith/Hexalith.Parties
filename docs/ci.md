@@ -4,7 +4,7 @@ Hexalith.Parties uses GitHub Actions with shared Hexalith.Builds workflows and a
 
 ## Workflows
 
-- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@567604b616613ba429be0609636d805db776a709`.
+- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@b4703ec2247321f867f14cd9caca43fa00190feb`.
 - `.github/workflows/release.yml` is a manual `workflow_dispatch` workflow with a protected, caller-owned release job. It uses `Hexalith/Hexalith.Builds/Github/prepare-domain-release@11a3a79cfac4bba9548c6364a17a01ee9b561370` and takes the nested publisher from that same immutable Builds checkout.
 - `.github/workflows/commitlint.yml` delegates Conventional Commit validation to the retained immutable Builds revision `332b2c144defba546fe0a09626a4a72f2340e22f`, for pull requests and main pushes.
 - `.github/workflows/dependency-review.yml` delegates dependency review for pull requests.
@@ -31,7 +31,19 @@ dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.T
 
 CI runs on pushes and pull requests to `main`, scheduled nightly runs, and Pact Broker `repository_dispatch` events with type `contract_requiring_verification_published`.
 
-The v2 workflow uses genuine published module CLI 4.44.11 and released
+The v2 workflow uses genuine published module CLI 4.44.12 and released
+[Platform v1.7.0](https://github.com/Hexalith/Hexalith.Platform/releases/tag/v1.7.0)
+at `52bc7986170f268afaef6227d0519a1d662af256`, with matching published Builds
+catalog `b4703ec2247321f867f14cd9caca43fa00190feb`. Its exact-source
+[tuple CI 42371632142](https://github.com/Hexalith/Hexalith.Platform/actions/runs/42371632142)
+passed all 412 current and 349 same-code legacy controls;
+[catalog CI 42371632124](https://github.com/Hexalith/Hexalith.Platform/actions/runs/42371632124)
+passed all five SDK rows before ordinary source publication. The ordinary
+`platform-package` purpose consumes the genuine public Parties 3.1.0 package/image
+cohort with SDK 4.1.0, Tenants 7.0.5, Memories 3.0.25 and McpCli 2.0.1.
+These producer results supply no Parties native, lifecycle or cleanup acceptance.
+
+Historical caller preparation used genuine published module CLI 4.44.11 and released
 [Platform v1.5.7](https://github.com/Hexalith/Hexalith.Platform/releases/tag/v1.5.7)
 at `ed991837945571a12743214fc18a87fbd323fc30`, with matching published Builds
 catalog `567604b616613ba429be0609636d805db776a709`. Exact-source
@@ -63,7 +75,7 @@ of `Hexalith.Parties.Standalone.slnx` and package consumer validation.
 All twelve prior isolated projects and the whole `Parties.Tests`, `Sample.Tests`
 and `Ci.Tests` projects run in the isolated list without trait filters. Their
 self-contained doubles and model tests do not provision Platform/domain servers.
-Only after isolated success does the declared `platform-current-package` suite in
+Only after isolated success does the declared `platform-package` suite in
 `module/hexalith.module-manifest.v2.json` require real runner-owned services.
 The retired direct integration/Aspire/performance inputs and Dapr overrides are
 absent; the verified producer catalog selects the toolchain. The retained Aspire
@@ -538,17 +550,26 @@ default npm publisher is excluded from the installed dependency closure through
 the same override pattern used by Memories; this NuGet-only release does not
 load that plugin. The refreshed locked tooling passes `npm audit` without findings.
 
-The current-owner package suite builds the committed Parties owner in Release
-with public catalog-pinned reference packages and digest-pinned reference images.
-Its Contracts and EventStoreExtensions packages are private measured run artifacts;
-they are never published as the catalog's nominal Parties version. The separate
-`platform-package` purpose consumes genuinely published Parties packages/image;
-its historical Parties 3.0.0 image does not qualify the current SDK 4.1 topology.
+The retained `platform-current-package` purpose builds the committed Parties owner
+in Release with public catalog-pinned references and private measured Contracts
+and EventStoreExtensions artifacts. Its unchanged
+`scripts/verify-current-owner-integration.py` reader remains strict for that
+separate purpose. The historical public Parties 3.0.0 cohort grants no acceptance
+for the current public Parties 3.1.0 / SDK 4.1.0 topology.
 
-`verify-current-owner-integration` is required after the reusable CI job. It reads
-only this workflow run's `module-integration-diagnostics` artifact and requires
-both unchanged real native cases, persisted stream/projection/reference-owner
-observations, exact source/runtime/catalog/SDK identities and complete owned
-cleanup. Missing evidence fails CI. This remains `baseline-only` with
-`qualificationCredit: false`; it grants no candidate-policy or public-consumer
-acceptance. A genuine later publication requires separate public cohort admission.
+The ordinary CI `platform-package` suite consumes genuinely published Parties
+3.1.0 packages and its immutable image. `verify-public-package-integration` is
+required after the reusable CI job. It reads only this workflow run's
+`module-integration-diagnostics` artifact and requires all 28 unchanged native
+cases, persisted stream/projection/reference-owner observations, exact source,
+SDK and role identities, and complete owned cleanup. The functional observation
+separately measures the five bounded SDK/owner DLL bodies from the unique owned
+Parties image, checking the same running identity before and after collection.
+Copied file metadata and loaded
+test-process assemblies retain their own distinct roles. Missing, stale, foreign,
+stopped, ambiguous or tampered evidence fails CI. Public observations require
+`currentOwner: null`; they cannot substitute a private current-owner receipt.
+Results remain `baseline-only` with `qualificationCredit: false` and grant no
+candidate, parity or human approval by themselves. See
+[the lifecycle qualification instructions](ci-lifecycle-qualification.md) for the
+separate actual native/manual execution and cleanup gates.

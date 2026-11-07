@@ -67,13 +67,13 @@ public sealed class PlatformApiPrerequisitesTests
     private static readonly IReadOnlyDictionary<string, string> CurrentSelectedGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["references/Hexalith.AI.Tools"] = "1745b6663ad32bb1288167135ed0f979366c53a0",
-        ["references/Hexalith.Builds"] = "567604b616613ba429be0609636d805db776a709",
+        ["references/Hexalith.Builds"] = "b4703ec2247321f867f14cd9caca43fa00190feb",
         ["references/Hexalith.Commons"] = "11555ace9efcae2928a00122dcba91243e5a8a1a",
         ["references/Hexalith.EventStore"] = "6ef8dcd4fc75e9bf20e403f2baf326e882a05d69",
         ["references/Hexalith.FrontComposer"] = "58e997a4b0fed7103948a984d1cb6f4724888a3f",
         ["references/Hexalith.McpCli"] = "ae4a317f208829681dc8eec36a308bc36f3f9715",
         ["references/Hexalith.Memories"] = "4ff3e6866ecb6d1a497e7063e972c24259252c40",
-        ["references/Hexalith.Platform"] = "ed991837945571a12743214fc18a87fbd323fc30",
+        ["references/Hexalith.Platform"] = "52bc7986170f268afaef6227d0519a1d662af256",
         ["references/Hexalith.PolymorphicSerializations"] = "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
         ["references/Hexalith.Tenants"] = "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
     };
@@ -81,13 +81,13 @@ public sealed class PlatformApiPrerequisitesTests
     private static readonly IReadOnlyDictionary<string, string> CurrentSelectedSourceDescribes = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["references/Hexalith.AI.Tools"] = "1745b666",
-        ["references/Hexalith.Builds"] = "v4.44.11",
+        ["references/Hexalith.Builds"] = "v4.44.12",
         ["references/Hexalith.Commons"] = "v2.30.10",
         ["references/Hexalith.EventStore"] = "v4.1.0-42-g6ef8dcd4",
         ["references/Hexalith.FrontComposer"] = "v4.7.6-20-g58e997a4",
         ["references/Hexalith.McpCli"] = "v2.0.1-23-gae4a317f",
         ["references/Hexalith.Memories"] = "v3.0.25-1-g4ff3e686",
-        ["references/Hexalith.Platform"] = "v1.5.7",
+        ["references/Hexalith.Platform"] = "v1.7.0",
         ["references/Hexalith.PolymorphicSerializations"] = "v1.19.8-1-gbce4eb9f",
         ["references/Hexalith.Tenants"] = "v7.0.5",
     };
@@ -839,6 +839,11 @@ public sealed class PlatformApiPrerequisitesTests
         synchronizedSelection.ShouldContain("codex-agent (explicit user delegation)");
         synchronizedSelection.ShouldContain("Source-selection and CI repair only");
         synchronizedSelection.ShouldContain("Unvalidated");
+        string publicSelection = matrix.Split('\n', StringSplitOptions.TrimEntries)
+            .Single(row => row.StartsWith("| Story 2.8 published reference-caller selection (2026-11-07) |", StringComparison.Ordinal));
+        publicSelection.ShouldContain("codex-agent (explicit user delegation)");
+        publicSelection.ShouldContain("Source-selection and CI repair only");
+        publicSelection.ShouldContain("Unvalidated");
         advanceRow.ShouldContain("EventStore `a9205f511b4f96b5daf94d65369d6dee63e0c623`");
         string[] subscriptionRows = matrix.Split('\n', StringSplitOptions.TrimEntries)
             .Where(static row => row.StartsWith("| Subscription safety delegated source (2026-11-03) |", StringComparison.Ordinal))
@@ -872,7 +877,14 @@ public sealed class PlatformApiPrerequisitesTests
                 _ => identity,
             };
             advanceRow.ShouldContain($"{path["references/Hexalith.".Length..]} `{historicalIdentity}`");
-            synchronizedSelection.ShouldContain($"{path["references/Hexalith.".Length..]} `{identity}`");
+            string synchronizedIdentity = path switch
+            {
+                "references/Hexalith.Builds" => "567604b616613ba429be0609636d805db776a709",
+                "references/Hexalith.Platform" => "ed991837945571a12743214fc18a87fbd323fc30",
+                _ => identity,
+            };
+            synchronizedSelection.ShouldContain($"{path["references/Hexalith.".Length..]} `{synchronizedIdentity}`");
+            publicSelection.ShouldContain($"{path["references/Hexalith.".Length..]} `{identity}`");
             AssertSelectedSourceObservation(root, path, identity);
             DescribeObservedSource(root, path, describe, identity).ShouldBe(describe, path);
         }
@@ -895,6 +907,7 @@ public sealed class PlatformApiPrerequisitesTests
             Regex.IsMatch(graphSentence.Value, $@"\b{Regex.Escape(label)}(?: package)?\s+`{Regex.Escape(version)}`", RegexOptions.CultureInvariant)
                 .ShouldBeTrue($"Current matrix selection must name the evaluated {package} version.");
             synchronizedSelection.ShouldContain($"{label} `{version}`");
+            publicSelection.ShouldContain($"{label} `{version}`");
             string previousTupleVersion = label switch
             {
                 "EventStore" => "4.0.4",
@@ -2810,7 +2823,7 @@ public sealed class PlatformApiPrerequisitesTests
 
     private static string ReadCurrentSourceSelection(string matrix)
     {
-        const string currentHeading = "### Current source observation — 2026-11-06";
+        const string currentHeading = "### Current source observation — 2026-11-07";
         int currentStart = matrix.IndexOf(currentHeading, StringComparison.Ordinal);
         currentStart.ShouldBeGreaterThanOrEqualTo(0, currentHeading);
         int historicalStart = matrix.IndexOf("### Historical source observation", currentStart, StringComparison.Ordinal);
