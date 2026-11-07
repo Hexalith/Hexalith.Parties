@@ -153,3 +153,24 @@ fabricated to fill it. A local or source-mode run emits no hosted runtime claim.
 The original private artifact validator stays unchanged, including all its
 negative controls. Resource-free byte/metadata fixtures run in Ci.Tests and the
 Python artifact controls; they grant no native or candidate acceptance.
+
+The cleanup-lock scenario begins both retry and peer launches before waiting for
+either real execution checkpoint, preserving their existing independent finite
+budgets. At the first refused bookkeeping stage, a terminal record may still be
+pending. Every actual early first outcome is retained and compared at the later
+durable withdrawal boundary and exact cleanup retry. A required outcome must exist
+there. Independent public down can leave its optional sourceMappingHash null;
+qualification does not fill it in. Instead, it requires the actual owner-archived
+selected mapping to equal the complete original prepared package mapping, with
+the same checkout root and content hash. Normal suite and cancellation terminal
+checks remain strict. This diagnostic path grants no candidate acceptance.
+
+Fixed scenario/checkpoint and failure-type observations preserve the first
+scenario failure through exhaustive finalization; cleanup failures and each
+finalizer result remain separate observations. Private exception text and child
+stderr are not exported. The independent always() finalizer remains mandatory.
+Reader cleanup retains its exact RunnerTemp/private-prefix and linked-root/config
+refusals, unlinks the credential file first, then removes only that owned tree
+using symlink-attack-resistant standard-library removal. Nested metadata cannot
+leave cleanup failing solely because the owned directory is nonempty; foreign
+linked targets are never traversed. Any unverifiable removal still fails.

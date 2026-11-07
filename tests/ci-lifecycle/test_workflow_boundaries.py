@@ -41,6 +41,9 @@ class WorkflowBoundaryTests(unittest.TestCase):
         self.assertLess(workflow.index('name: lifecycle-cancellation-ready'),
                         workflow.index('- name: Await parent cancellation'))
         self.assertNotIn('gh run cancel', workflow)
+        reader_cleanup = workflow.split('- name: Remove the private reader file', 1)[1].split('- name:', 1)[0]
+        self.assertTrue(reader_cleanup.lstrip().startswith('if: always()'))
+        self.assertIn('python3 -B scripts/qualify-disposable-ci.py remove-reader', reader_cleanup)
 
     def test_qualification_is_explicit_package_suite_excluded_from_ordinary_solution_build(self):
         manifest = json.loads((ROOT / 'module/hexalith.module-manifest.v2.json').read_text())
