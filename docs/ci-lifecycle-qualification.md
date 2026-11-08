@@ -2,11 +2,13 @@
 
 This registered manual workflow remains a **baseline-only** diagnostic for
 Story 2.8. It grants no candidate acceptance or loaded-backend identity credit.
-The ordinary and manual baseline callers select genuine Builds
-`b4703ec2247321f867f14cd9caca43fa00190feb`, exact tool `4.44.12` with
-`rollForward=false`, and published Platform `v1.7.0` source
-`52bc7986170f268afaef6227d0519a1d662af256`. Matching committed root gitlinks
-bind these inputs. Platform's fresh main gates passed 412 current cases, 349
+The ordinary and manual baseline callers retain the Builds catalog
+`b4703ec2247321f867f14cd9caca43fa00190feb` and published Platform `v1.7.0` source
+`52bc7986170f268afaef6227d0519a1d662af256`, selected by their committed root gitlinks.
+The compatible installed module CLI is `4.44.13` with `rollForward=false`,
+published from Builds `3c8096180ecf2aa539ac454815efbfceb8a92822`.
+The installed CLI source and catalog gitlink are separate selections.
+Platform's fresh main gates passed 412 current cases, 349
 original legacy cases and all five SDK lanes; automatic source publication is complete. Every caller
 still needs its own new-source hosted results, native execution and cleanup;
 these producer results supply no caller or manual lifecycle credit.
