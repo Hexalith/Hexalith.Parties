@@ -1,0 +1,79 @@
+{
+  "schema": "ext-parties-1.applied-readiness-direction.v1",
+  "recordedAtUtc": "2026-11-08T21:46:19.183516+00:00",
+  "status": "ApprovedAppliedDirectionProductionDeferred",
+  "ownerRole": "Current user, sole Owner and contributor",
+  "sourceStatements": [
+    "apply recommended",
+    "me (recovery lead)",
+    "me (recovery deputy)",
+    "i am the only contributor"
+  ],
+  "reviewedReadinessSha256": "99f92a5d435c0416f2004a9741cd0b7b92a89c7a5b38c5b3216f3a41ffd99b2d",
+  "decisions": {
+    "OD-1": {
+      "status": "SingleContributorWorkModelApplied",
+      "accountableHuman": "Current user, sole Owner and contributor",
+      "humanLeadAppointment": "Owner-declared self-appointment; runtime subject, issuer, competence and access remain unverified",
+      "requestedDeputy": "Same current user",
+      "differentHumanDeputyAvailable": false,
+      "productionSeparationSatisfied": false,
+      "implementationAndEvidenceAssignee": "Codex, within existing authorized source/evidence scope",
+      "actualEngineeringAllocationAttested": false,
+      "disposition": "Do not request another contributor. Apply the recommended deferral when no distinct deputy exists; preserve the production D3 requirement as unmet."
+    },
+    "OD-2": {
+      "status": "ExistingConfigurationNoGoAndFallbackApplied",
+      "route": "Retain the operational-security fallback; full custody and recovery remain deferred",
+      "assessmentCandidate": "Existing OpenBao; direct Transit first",
+      "effortCeilingEngineerDays": 2,
+      "newInfrastructureSpend": 0,
+      "qualifiedBackendSelected": false,
+      "feasibilityReopened": false,
+      "futureReopening": "Only on authenticated independent authority/time/restore-cut, complete original-unit C01-C16 disposal, preservation/current-profile/access and measured capacity evidence; do not repeat the stopped assessment or provision a new service."
+    },
+    "OD-3": {
+      "status": "ConditionalDesignDirectionApproved",
+      "choice": "Separate V2 assurance/result types, original-unit/retry/rebind/revoke mapping, actor-free segmented F1, strict V1 rejection and unsupported legacy continuity unavailable",
+      "exactProposalSha256": {
+        "api-schemas.md": "88368dada2e038e702093bb0012c0ea735e00d2798a7ec9905f4f76475d8d9d5",
+        "compatibility-contract.md": "64a3dbf1027a1057a01d2a9df6e190bdcf7399bffca0d8d7201eaec8ce842da8",
+        "implementation-plan.md": "356df1b4661ca3cea85a2e993560986c5854c45795d464237f70806cfc293fad",
+        "acceptance-tests.md": "9bf036dc7b3217e26855dcd3da7f6229b136831988551a9907928d1c9439a34c"
+      },
+      "effectiveDesignRatification": false,
+      "condition": "Preserve the recommended evidence-first order. Exact proposal direction is approved now; activation requires credible operating-route feasibility and actual legacy migration, F1 issuer/trust/revocation/rotation/validity/erasure and privacy-policy evidence. No missing facts or policy values are inferred.",
+      "repeatUnchangedDirectionApprovalRequired": false
+    },
+    "OD-4": {
+      "status": "CompleteCommitmentAndInstalledQualificationRemainPending",
+      "choice": "One coordinated two-host delivery with a real full B15 pass path; set a supportable date only with a concrete completed target",
+      "replacementAccepted": false,
+      "replacementTarget": null,
+      "replacementDate": null,
+      "executionAuthorized": false,
+      "condition": "All nine commitment fields and exact source/package/image/install/profile/config/plan/trust/tenant/holder/observer bindings, executable command, D03/D04 permissions and passing installed Level 4; consumer Level 5/RQ-1 remains separate."
+    }
+  },
+  "preserved": {
+    "acceptedTarget": "56cb4401c4179d431385ad3d931fefa402e4fc5a",
+    "missedAcceptedDate": "2026-10-08",
+    "acceptedStatus": "Committed",
+    "policy": "party-actor-retention-v1",
+    "purpose": "party-actor-history-v1",
+    "expiry": "Exclusive original binding-effective-at + exactly 31,536,000 seconds; never renew predecessors",
+    "approvedClauseSha256": "bd43978bdba457642c05b48b6bf56a3a38c044ff189a797d4ceba1c5a465aa46",
+    "strictV1MeaningUnchanged": true,
+    "frozenBranchBIntentUnchanged": true
+  },
+  "guardState": {
+    "implementationReady": false,
+    "available": false,
+    "liveQualified": false,
+    "installationAuthorized": false,
+    "qualificationAuthorized": false,
+    "productionTasksRemainOpen": true,
+    "distinctDeputyRequirementWaived": false
+  },
+  "scope": "Apply documentary recommendations and single-contributor staffing disposition. No runtime identity/independent authority, operational risk or preservation attestation, provider selection, new policy values, budget increase, production recovery, deployment, faults, credential change, backup deletion or replacement commitment is inferred."
+}

@@ -1,0 +1,100 @@
+{
+  "checkedAtUtc": "2026-11-08T20:34:52.393723+00:00",
+  "passed": true,
+  "checkCount": 15,
+  "checks": [
+    {
+      "name": "48 selected contract/source/owner/evidence inputs unchanged",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "pre-existing user spec bytes retained as exact prefix",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "frozen intent unchanged",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "both production tasks remain open and status in-progress",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "historical handoff bytes retained outside one overlay",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "all eight gates reconciled in order",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "four staged owner decisions",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "all R1-R10 obligations mapped",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "contract bounds and strict/installed separation retained",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "17 selected owner returns remain null",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "owner installation/qualification/availability guards stay false",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "no implementation/availability/qualification claim",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "new local Markdown links resolve",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "new artifacts use CRLF and clean whitespace",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "tracked whitespace check",
+      "passed": true,
+      "detail": {
+        "command": [
+          "git",
+          "-c",
+          "core.whitespace=cr-at-eol",
+          "diff",
+          "--check"
+        ],
+        "exitCode": 0,
+        "output": ""
+      }
+    }
+  ],
+  "outputHashes": {
+    "docs/implementation/ext-parties-1-readiness-2026-11-08/README.md": "99f92a5d435c0416f2004a9741cd0b7b92a89c7a5b38c5b3216f3a41ffd99b2d",
+    "docs/implementation/ext-parties-1-readiness-2026-11-08/evidence.json": "aadbc6bba6971ada445388329e64be773cf828967ac07e9fe0fe8a6344864e41",
+    "docs/implementation/ext-parties-1-readiness-2026-11-08/verify-readiness.py": "2a298ad56307df62553ac6e88dc1cc61711e3067ae7deb9bc49b08924ff7e643",
+    "_bmad-output/implementation-artifacts/spec-ext-parties-1-branch-b-authoritative-identity.md": "bb0d5ad0e8dcaf4471b447d1233ac465ab1e034f8a4acea4577d0ab81bdd2dc8",
+    "docs/implementation/ext-parties-1-v2-continuation-2026-11-02/README.md": "fac39b0616f89adae97fade8b0e23b4084989d7a732d3e0344a1b9d87e9e3900"
+  },
+  "scope": "Documentation/preservation only; no runtime, provider, credential, Local, LiveReadiness, Live or consuming command."
+}

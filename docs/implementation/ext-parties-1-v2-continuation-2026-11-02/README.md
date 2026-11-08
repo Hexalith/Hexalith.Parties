@@ -1,5 +1,11 @@
 # EXT-PARTIES-1 V2 continuation and owner handoff — 2026-11-02
 
+<!-- readiness-reconciliation-2026-11-08:start -->
+**Current readiness overlay — 2026-11-08:** use the [G01–G08 reconciliation and four remaining owner decisions](../ext-parties-1-readiness-2026-11-08/README.md) for the next handoff. Existing amendment/assessment approvals, sole ownership and delegated evidence collection are resolved. Staffing is the immediate owner choice; agent-collected feasibility evidence must precede any operating-route reopening. Exact V2 ratification and complete delivery acceptance follow feasibility. No complete gate has closed, and both production tasks remain open. The November 2 observations and matrix below retain their historical scope; they are not fresh November 8 service evidence. The complete amendment packet and original Platform owner-form fields remain unchanged.
+
+The subsequent owner instruction is applied in the [single-contributor direction](../ext-parties-1-readiness-2026-11-08/applied-direction.md): sole accountable Human, agent source/evidence work, no distinct deputy, retained fallback and conditional exact V2 design direction. No new contributor request or production authorization is inferred. The canonical Platform form now includes the linked applied-direction metadata while preserving all original fields and nulls.
+<!-- readiness-reconciliation-2026-11-08:end -->
+
 **Verdict: blocked before a coordinated target or Live installation plan.** The A-01–A-06 amendment text is approved, but the proposed V2 representation has no affected-owner ratification, and the existing OpenBao configuration cannot demonstrate its approved destruction and restore bounds. EXT-PARTIES-1 remains **Committed and unavailable** at `56cb4401c4179d431385ad3d931fefa402e4fc5a`; `2026-10-08` is the missed accepted date. There is no accepted replacement target or date. This continuation makes no owner appointment, policy acceptance, installation, credential, backup, runtime or qualification change.
 
 ## Evidence checked and its limit

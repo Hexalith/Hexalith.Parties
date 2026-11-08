@@ -1,0 +1,133 @@
+{
+  "checkedAtUtc": "2026-11-08T21:48:18.194867+00:00",
+  "passed": true,
+  "checkCount": 21,
+  "checks": [
+    {
+      "name": "48 protected inputs preserved, including exact original owner-form bytes",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "only the exact authorized owner metadata addition is present",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "canonical owner form binds the actual applied decision",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "single-contributor direction retains unmet production separation",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "conditional design direction binds unchanged exact proposal bytes",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "applied direction leaves production and delivery gates closed",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "original validation receipt unchanged",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "pre-existing user spec bytes retained as exact prefix",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "frozen intent unchanged",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "both production tasks remain open and status in-progress",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "historical handoff bytes retained outside one overlay",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "all eight gates reconciled in order",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "four staged owner decisions",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "all R1-R10 obligations mapped",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "contract bounds and strict/installed separation retained",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "17 selected owner returns remain null",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "owner installation/qualification/availability guards stay false",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "no implementation/availability/qualification claim",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "new local Markdown links resolve",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "new artifacts use CRLF and clean whitespace",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "tracked whitespace check",
+      "passed": true,
+      "detail": {
+        "command": [
+          "git",
+          "-c",
+          "core.whitespace=cr-at-eol",
+          "diff",
+          "--check"
+        ],
+        "exitCode": 0,
+        "output": ""
+      }
+    }
+  ],
+  "outputHashes": {
+    "docs/implementation/ext-parties-1-readiness-2026-11-08/README.md": "26acccadd85df160fe2cfbe1b825823a345a97ef8a3ae038a5d48e058af050b1",
+    "docs/implementation/ext-parties-1-readiness-2026-11-08/evidence.json": "aadbc6bba6971ada445388329e64be773cf828967ac07e9fe0fe8a6344864e41",
+    "docs/implementation/ext-parties-1-readiness-2026-11-08/verify-readiness.py": "5172ce8d309e26798175a1ce0e12db6a65817fe0f2d96d2360be0cb4492eedde",
+    "_bmad-output/implementation-artifacts/spec-ext-parties-1-branch-b-authoritative-identity.md": "c3e3af17408fc59dcf2ebab2669d0f77841b94b6a644c1c63fb9594506924a22",
+    "docs/implementation/ext-parties-1-v2-continuation-2026-11-02/README.md": "6f5379bff5b3fba16c81bfde0a7347be40677d403739d87740a44f372f5ca1c8",
+    "docs/implementation/ext-parties-1-readiness-2026-11-08/applied-direction.md": "204d80f351932d6b9b72fb89b4a17d2b01ae2e49634e207c5a403a143c6aa0c8",
+    "docs/implementation/ext-parties-1-readiness-2026-11-08/applied-decision.json": "81811eb3d578ed2e5e4c0d332adbbef6f0ff7457753533a035f4808988d6aca3",
+    "docs/implementation/ext-parties-1-readiness-2026-11-08/applied-change.json": "e4a304a5df008865b4ed3d33011fde29e4234a9739de50ff0e840c3a395b1878"
+  },
+  "scope": "Documentation/preservation only; no runtime, provider, credential, Local, LiveReadiness, Live or consuming command."
+}

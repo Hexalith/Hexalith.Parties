@@ -1,0 +1,141 @@
+{
+  "schema": "ext-parties-1.readiness-reconciliation.v1",
+  "observedAtUtc": "2026-11-08T20:30:21.571263+00:00",
+  "scope": "Read-only local source and retained owner evidence; no fresh network or runtime qualification. File hashes establish inspected bytes, not accepted delivery targets.",
+  "checkoutHeads": {
+    ".": "42b76cd6d79a676ff65c75c724b4d88af8f7f112",
+    "../platform": "7fbe852f90e54c780f44943c843a66f08478995b",
+    "../eventstore": "cab8363c2b6e2c0588efc8ca9c2e09fab0006841",
+    "references/Hexalith.Platform": "e39a9a2587ec150d550510763ab69db305d13fdb",
+    "references/Hexalith.EventStore": "b437879df2339692d177774d1f076936da6ebd62",
+    "../agents": "7957108c30d38b8e82eb072cf3437b6a67627cd7"
+  },
+  "protectedInputsSha256": {
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/compatibility-contract.md": "64a3dbf1027a1057a01d2a9df6e190bdcf7399bffca0d8d7201eaec8ce842da8",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/validation.json": "9afffe438004e34ff844e8749160296908f96511a39ac00d788012c5dd2769e4",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/proposal-input-manifest.json": "53827667ce323c74c657a4d01223eea10f9d238bec2516b32b3a643071274e37",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/approval.md": "4609d358c571eebd36730e259c9785558d93885eb32e8e73b3248e7d5912f44a",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/source-manifest.json": "d019a95a3ef8904aff7c7755ae4d9b2d37f4f8db5fe1f576dbd93bad7a58f09f",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/validation-build-support.zip": "0b7af54ec0505a03be7d7c3acaef98790889c5ab4686b6805ae7c109c550d003",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/readiness-decisions.md": "08cc205f82d1dc0beaee894f9e17d4d0565a81d83152609a13b43bc61e9adf36",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/acceptance-tests.md": "9bf036dc7b3217e26855dcd3da7f6229b136831988551a9907928d1c9439a34c",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/clause-diff.md": "bd43978bdba457642c05b48b6bf56a3a38c044ff189a797d4ceba1c5a465aa46",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/brownfield.md": "ec6003cfcb3938b28f1f9a1ddb68eba4eca26034cd699a34abfedae8ca77741f",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/validate-proposal.py": "69c90b36b2aebf08af316292726a62af81ac23fce29b3abb7194b1178c6e375f",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/proposal-source-drift.json": "60aba8c3fa8f0889c45b95ffa229bfa9233a18e62cb93a9a93c8d15f26f1f630",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/validation-final.json": "afa1d319a56ddd73a66abdce55f4aa87ece0315a2d6f75d0b1446ffc64def6cd",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/api-schemas.md": "88368dada2e038e702093bb0012c0ea735e00d2798a7ec9905f4f76475d8d9d5",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/validation-build.json": "0a97ebd13e5a38ca0206c670ee0f11a8449c2e3134330bffe39302e61b28ddfa",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/owner-decisions.md": "7e77549570502894a83aee0a66c61d35666781c5f67927277aab68e92bfdf88c",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/SPEC.md": "740f081cdd20ecd490c6f4395a55ab9c868b38c41c3c8a988753f3f3f6929372",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/proposal-validation.json": "a956282063bc7dc4c9574306b0f1fb36258715971d9da93431a57227614c0d7a",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/verification-plan.md": "50c7bb27b8e4f8f094e408d32b35174352290e67282d3509648bb2986e6f3769",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/.memlog.md": "b2f2169513f28d8d6776a630fee2b5363e1dc5ea257c0fe455dd440b65a8251b",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/implementation-plan.md": "356df1b4661ca3cea85a2e993560986c5854c45795d464237f70806cfc293fad",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/proposal-validation-initial.json": "41beb120a290356e6ab011ad162724b50b673b6d0ed486b402b8bc8acb8cbccd",
+    "docs/implementation/ext-parties-1-applied-direction-2026-10-29.md": "9f1ed5ea2c13605acffcf19ff3f76e031f58a746103975e9c6af4600606e255e",
+    "docs/implementation/ext-parties-1-feasibility-verdict-2026-10-29.md": "d80c83ee3ded821ccbf779b06ef779da6381c9910cc3135588a663010ce6c610",
+    "docs/implementation/ext-parties-1-v2-continuation-2026-11-02/observations.json": "878001def2c6901d72c06edba9c98ceb7c00203169f318c03b1c2f52d3ae7f99",
+    "docs/implementation/ext-parties-1-v2-continuation-2026-11-02/observations-recheck.json": "0418379a6ec1996abfc91f6b96f9979f31e16629ea0817f3c9ff350e0ffae58e",
+    "eng/verify-ext-parties-1.ps1": "7169d009a2799a0e4bfa33216ef774ce8057ddfa12ada610e11070b6da0b8012",
+    "eng/verify-ext-parties-history-readiness.ps1": "77778b35dd7f419540498f2a3ca93e65b93855f636035893838351ac1eb727cd",
+    "src/Hexalith.Parties/Domain/PartyDomainProcessor.cs": "8b6edc2b111fd9b3c435643ebcd6ab1444efd4bce40815b3df16c9ee909fa8b9",
+    "src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs": "b628a78b05c48463fb392c66f7129fc95a79679ea4458638bddb186c0add9f60",
+    "../agents/_bmad-output/planning-artifacts/external-dependency-register.md": "1ee2692ea5bf6a0e42921c6dc64a58ebe5738efdbb0424d0345a281fca0b1487",
+    "../platform/docs/implementation/story-5-4-coupled-delivery-2026-10-25/owner-decisions.json": "a4635da24202e97d5d770fa2d14394c32415f8949bfb9904ca7ea5c221a02596",
+    "../platform/docs/implementation/ext-parties-1-custody-direction-2026-10-25.md": "e733c85418706644372312f37640e9df2310fe05f5d7e7a53154892c7a60db3a",
+    "../platform/src/Hexalith.Platform.Custody/PlatformCustodyServiceCollectionExtensions.cs": "564f7715fa04df908c1b49d0598a3eb9ca374c37338bd13d6c22d56cb0bf09f8",
+    "../platform/src/Hexalith.Platform.Custody/IdentityHistoryCustodyOptions.cs": "93d3a6aa292090368f5e24d4f6790b3533e7bb99c6267696742679464271de2d",
+    "../platform/src/Hexalith.Platform.Custody/IdentityHistoryCustodyUnit.cs": "e961874210ac0fb9de9c9bce60509b8188ca349766e89860406ee85a817f9aca",
+    "../platform/src/Hexalith.Platform.Custody/IdentityHistoryCleanup.cs": "459bf37506ff2c5a3de43ced6e93b93f64abc14e2736e3f462044a7f6ff3c79a",
+    "../eventstore/src/Hexalith.EventStore.Contracts/Security/IIdentityHistoryCustody.cs": "94445f7829d49076956e8cbc5defd0a7885d3ae9b699f9ea9a3c7ffda76c3b3c",
+    "../eventstore/src/Hexalith.EventStore.Contracts/Security/IExpiredIdentityHistoryCustody.cs": "d205f7204f83952accc6f3b47ce7626ad2fbeee2f17d2631a1489d17ffee9008",
+    "../eventstore/src/Hexalith.EventStore.Contracts/Security/IdentityHistoryCustodyEvidence.cs": "299291c4c38f8c6c089d36529517a0f3946bd375a41ea8594a0ed150375b2b70",
+    "../eventstore/src/Hexalith.EventStore.Server/Security/RetainedIdentityHistorySourceReader.cs": "824f50ebc1a6cf4b3e00259ccfb4d5c65402bd0dda41ebee85682bb81fdfb264",
+    "../platform/_bmad-output/implementation-artifacts/evidence/epic-4/4-27/20261017t093206z-sole-owner-documentary-policy/sole-owner-policy.json": "d3c654d2e9c9f91a236fde5751f28a29ff02b8580dbb029cfc4fdd2e7b0bcbd7",
+    "references/Hexalith.Platform/docs/implementation/story-5-4-coupled-delivery-2026-10-25/owner-decisions.json": "a4635da24202e97d5d770fa2d14394c32415f8949bfb9904ca7ea5c221a02596",
+    "references/Hexalith.Platform/src/Hexalith.Platform.Custody/PlatformCustodyServiceCollectionExtensions.cs": "564f7715fa04df908c1b49d0598a3eb9ca374c37338bd13d6c22d56cb0bf09f8",
+    "references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Security/IIdentityHistoryCustody.cs": "3fc679e5ccbcffa9b091fb860269197795f0134764f12b1d7b564874a1e9a272",
+    "references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Security/IExpiredIdentityHistoryCustody.cs": "1c2270bcf337d77c06cb09fbd513e402d57523133bc36359bacf2ba4134406d6",
+    "references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Security/IdentityHistoryCustodyEvidence.cs": "a8fdd689892e8dc614ee9f2bbf74f407f2da92f5a5d4faa4cf4718f3261ab096",
+    "references/Hexalith.EventStore/src/Hexalith.EventStore.Server/Security/RetainedIdentityHistorySourceReader.cs": "824f50ebc1a6cf4b3e00259ccfb4d5c65402bd0dda41ebee85682bb81fdfb264"
+  },
+  "preexistingBranchB": {
+    "path": "_bmad-output/implementation-artifacts/spec-ext-parties-1-branch-b-authoritative-identity.md",
+    "length": 43197,
+    "sha256": "7e131d37a84e020e0ebbdbdadb625e49b0c47610a2394c1c3d54c4d40aeafed3",
+    "frozenSha256": "d197478c80e0f82b21d8cd038985d37e6bf98d0cc4724e602274d1feecb1fe87",
+    "preexistingUncommittedChange": true
+  },
+  "originalHandoff": {
+    "path": "docs/implementation/ext-parties-1-v2-continuation-2026-11-02/README.md",
+    "sha256": "469b69e4cf1f04d1a700f230dc548d06b358d63853b34053c6f5d4b608c232a1"
+  },
+  "sourceComparisons": {
+    "Platform/docs/implementation/story-5-4-coupled-delivery-2026-10-25/owner-decisions.json": {
+      "siblingSha256": "a4635da24202e97d5d770fa2d14394c32415f8949bfb9904ca7ea5c221a02596",
+      "referenceSha256": "a4635da24202e97d5d770fa2d14394c32415f8949bfb9904ca7ea5c221a02596",
+      "sameNormalizedText": true
+    },
+    "Platform/src/Hexalith.Platform.Custody/PlatformCustodyServiceCollectionExtensions.cs": {
+      "siblingSha256": "564f7715fa04df908c1b49d0598a3eb9ca374c37338bd13d6c22d56cb0bf09f8",
+      "referenceSha256": "564f7715fa04df908c1b49d0598a3eb9ca374c37338bd13d6c22d56cb0bf09f8",
+      "sameNormalizedText": true
+    },
+    "EventStore/src/Hexalith.EventStore.Contracts/Security/IIdentityHistoryCustody.cs": {
+      "siblingSha256": "94445f7829d49076956e8cbc5defd0a7885d3ae9b699f9ea9a3c7ffda76c3b3c",
+      "referenceSha256": "3fc679e5ccbcffa9b091fb860269197795f0134764f12b1d7b564874a1e9a272",
+      "sameNormalizedText": true
+    },
+    "EventStore/src/Hexalith.EventStore.Contracts/Security/IExpiredIdentityHistoryCustody.cs": {
+      "siblingSha256": "d205f7204f83952accc6f3b47ce7626ad2fbeee2f17d2631a1489d17ffee9008",
+      "referenceSha256": "1c2270bcf337d77c06cb09fbd513e402d57523133bc36359bacf2ba4134406d6",
+      "sameNormalizedText": true
+    },
+    "EventStore/src/Hexalith.EventStore.Contracts/Security/IdentityHistoryCustodyEvidence.cs": {
+      "siblingSha256": "299291c4c38f8c6c089d36529517a0f3946bd375a41ea8594a0ed150375b2b70",
+      "referenceSha256": "a8fdd689892e8dc614ee9f2bbf74f407f2da92f5a5d4faa4cf4718f3261ab096",
+      "sameNormalizedText": true
+    },
+    "EventStore/src/Hexalith.EventStore.Server/Security/RetainedIdentityHistorySourceReader.cs": {
+      "siblingSha256": "824f50ebc1a6cf4b3e00259ccfb4d5c65402bd0dda41ebee85682bb81fdfb264",
+      "referenceSha256": "824f50ebc1a6cf4b3e00259ccfb4d5c65402bd0dda41ebee85682bb81fdfb264",
+      "sameNormalizedText": true
+    }
+  },
+  "ownerFormNulls": {
+    "#/D2_resources/independentCurrentAuthorityHostServiceStoreIdIncarnationSchemaAndGenesis": null,
+    "#/D3_recovery/primaryHumanSubjectAndIssuer": null,
+    "#/D3_recovery/differentDeputyHumanSubjectAndIssuer": null,
+    "#/D3_recovery/appointmentAndTwoPersonChangeAuthorityReference": null,
+    "#/D4_rolesAndTrust/authorityComputeTargetIdAndAuditAccess": null,
+    "#/D6_releaseAndPhysicalProfile/completeCopyHolderProducerTransportClosureReference": null,
+    "#/mvpOperationalInputs/backupAndRestore/everyRecoveryCopyInventoryAndActualDisposalEvidenceReference": null,
+    "#/mvpOperationalInputs/currentOperationalProfile/currentAcceptedProfileReference": null,
+    "#/mvpOperationalInputs/currentOperationalProfile/freshAuthorizedReadinessEvidenceReference": null,
+    "#/mvpOperationalInputs/currentOperationalProfile/credentialAndScopeEvidenceReference": null,
+    "#/mvpOperationalInputs/currentOperationalProfile/ownerMetadataCredentialRecordReference": null,
+    "#/mvpOperationalInputs/maintenancePreservationBaseline/historicalMetadataProofAndAcceptanceReference": null,
+    "#/mvpOperationalInputs/maintenancePreservationBaseline/memoriesPreservationDispositionReference": null,
+    "#/mvpOperationalInputs/maintenancePreservationBaseline/agentsRegisterPreservationDispositionReference": null,
+    "#/extParties1OwnerEvidenceHandoff/independentAuthorityTimeAndRestoreCutEvidenceReference": null,
+    "#/extParties1OwnerEvidenceHandoff/intendedWorkloadCapacityEvidenceReference": null,
+    "#/extParties1OwnerEvidenceHandoff/assessmentAllocationAndImplementerReference": null
+  },
+  "ownerFormGuards": {
+    "installationAuthorized": false,
+    "qualificationAuthorized": false,
+    "attemptReserved": false,
+    "dependencyAvailable": false
+  },
+  "externalEvidenceLimit": {
+    "command": "rg --files /home/administrator/hexalith-secrets-evidence/ext-secrets-1 /home/administrator/hexalith-recovery-evidence -g '*owner-return*' -g '*preservation-decision*' -g '*appointment*' -g '*deputy*' -g '*acceptance*' -g '*authority*' -g '*capacity*' -g '*handoff*' -g '*HANDOFF*' -g '!**/final-tested-source/**' -g '!**/original-source/**' -g '!**/snapshot/**' -g '!**/sources/**' -g '!**/source/**'",
+    "exitCode": 2,
+    "result": "Secrets evidence root does not exist in this workspace; recovery root returned two retained authority-design.json paths and no matching owner-return/appointment/deputy record. No external signed-source revalidation or universal absence claim.",
+    "canonicalLocalOwnerFormPresent": true
+  },
+  "implementationReady": false,
+  "available": false,
+  "liveQualified": false,
+  "newRuntimeTestsRun": false
+}
