@@ -1,11 +1,22 @@
 """Source contract controls only; passing these does not qualify a hosted environment."""
 import json
+import os
 from pathlib import Path
 import re
+import signal
+import subprocess
+import tempfile
+import time
 import unittest
 from xml.etree import ElementTree
 
 ROOT = Path(__file__).resolve().parents[2]
+# A stand-in for the controller: it records the first runner signal it actually receives.
+SIGNAL_PROBE = """#!/bin/sh
+trap 'printf "%s\\n" "$*" > "$SIGNAL_MARKER"; exit 1' INT TERM
+: > "$STARTED_MARKER"
+while :; do sleep 0.05; done
+"""
 
 
 class WorkflowBoundaryTests(unittest.TestCase):
@@ -44,6 +55,40 @@ class WorkflowBoundaryTests(unittest.TestCase):
         reader_cleanup = workflow.split('- name: Remove the private reader file', 1)[1].split('- name:', 1)[0]
         self.assertTrue(reader_cleanup.lstrip().startswith('if: always()'))
         self.assertIn('python3 -B scripts/qualify-disposable-ci.py remove-reader', reader_cleanup)
+
+    def test_cancellation_wait_receives_the_runner_signal_sent_only_to_its_step_process(self):
+        # The hosted runner cancels a step by signalling only the step's own shell process.
+        # Run 42524190110 lost that signal behind a non-forwarding bash wrapper.
+        workflow = (ROOT / '.github/workflows/ci-lifecycle-qualification.yml').read_text()
+        body = re.search(r'- name: Await parent cancellation of this exact ready run\n'
+                         r'        if: [^\n]+\n        run: ([^\n]+)\n', workflow).group(1)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            probe = root / 'bin' / 'python3'
+            probe.parent.mkdir()
+            probe.write_text(SIGNAL_PROBE)
+            probe.chmod(0o700)
+            (root / 'step.sh').write_text(body + '\n')
+            markers = {'SIGNAL_MARKER': str(root / 'signal'), 'STARTED_MARKER': str(root / 'started')}
+            environment = {**os.environ, **markers, 'PATH': str(probe.parent) + os.pathsep + os.environ['PATH']}
+            step = subprocess.Popen(['bash', '-e', str(root / 'step.sh')], cwd=root, env=environment,
+                                    stdin=subprocess.DEVNULL, start_new_session=True)
+            try:
+                deadline = time.monotonic() + 10
+                while not (root / 'started').exists():
+                    self.assertLess(time.monotonic(), deadline, 'The wait step never started its controller')
+                    time.sleep(0.02)
+                os.kill(step.pid, signal.SIGINT)
+                try:
+                    step.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    self.fail('The controller never received the runner signal sent to the step process')
+            finally:
+                if step.poll() is None:
+                    os.killpg(step.pid, signal.SIGKILL)
+                    step.wait(timeout=5)
+            self.assertEqual((root / 'signal').read_text().split(),
+                             ['-B', 'scripts/qualify-disposable-ci.py', 'wait-cancellation'])
 
     def test_qualification_is_explicit_package_suite_excluded_from_ordinary_solution_build(self):
         manifest = json.loads((ROOT / 'module/hexalith.module-manifest.v2.json').read_text())

@@ -156,9 +156,10 @@ jobs:
           path: TestResults/ci-lifecycle
           if-no-files-found: error
           retention-days: 14
+      # The runner signals only this step's own process; exec keeps the controller as that process.
       - name: Await parent cancellation of this exact ready run
         if: ${{ inputs.scenario != 'matrix' }}
-        run: python3 -B scripts/qualify-disposable-ci.py wait-cancellation
+        run: exec python3 -B scripts/qualify-disposable-ci.py wait-cancellation
       - name: Independently finalize every exact same-job owner
         if: always()
         env:
