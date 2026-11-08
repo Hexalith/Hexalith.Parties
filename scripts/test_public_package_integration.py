@@ -31,7 +31,7 @@ class PublicPackageEvidenceTests(unittest.TestCase):
         f.write("invocation.json", self.invocation)
         f.functional.update(profile=public.PROFILE, currentOwner=None)
         platform = dict(commit=public.PLATFORM, compositionCommit=public.PLATFORM, checkoutCommit=public.PLATFORM,
-                        catalogCommit=public.BUILDS, releaseTag="v1.7.0")
+                        catalogCommit=public.BUILDS, releaseTag="v1.7.1")
         now = datetime.now(timezone.utc)
         f.functional["publicRuntime"] = dict(kind="running-owned-public-parties-image", profile=public.PROFILE,
             ownerRunId=f.owner["runId"], ownerAttemptId=f.owner["attemptId"], environmentId=f.owner["environmentId"],

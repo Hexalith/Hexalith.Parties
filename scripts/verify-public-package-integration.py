@@ -22,8 +22,8 @@ require, held_directory, read, decode, document = (_readers.require, _readers.he
 persisted_identity, creation_timestamp = _readers.persisted_identity, _readers.creation_timestamp
 SDK, HEX, IDENTITY = _readers.SDK, _readers.HEX, _readers.IDENTITY
 PROFILE = "platform-package"
-PLATFORM = "52bc7986170f268afaef6227d0519a1d662af256"
-BUILDS = "b4703ec2247321f867f14cd9caca43fa00190feb"
+PLATFORM = "0f4e27f1f78310bd731c10c19dc51bb1e0345d44"
+BUILDS = "3c8096180ecf2aa539ac454815efbfceb8a92822"
 IMAGE = "registry.hexalith.com/parties@sha256:48d0e8db506e4ce574e8c7bd97e528a302d3fbf97754b007176904cbc1f3abfb"
 PACKAGE_READERS = {
     "Hexalith.Parties.Contracts": "99230b764de6769a803702170c174f9dbef9b0b5b0c2931b07e85045478cd654",
@@ -165,7 +165,7 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
                             ("environmentId", owner["environmentId"]), ("revision", source), ("mappingHash", functional["mappingHash"]), ("executionContext", context)):
         require(runtime.get(field) == expected, "running image owner/source/job differs")
     require(runtime["platform"] == {"commit": platform, "compositionCommit": platform, "checkoutCommit": platform,
-                                   "catalogCommit": builds, "releaseTag": "v1.7.0"}, "running image public Platform/catalog differs")
+                                   "catalogCommit": builds, "releaseTag": "v1.7.1"}, "running image public Platform/catalog differs")
     image = runtime["image"]
     require(isinstance(image, dict) and set(image) == {"containerId", "runId", "imageReference", "imageContentId", "running", "startedAt"}, "unknown running image identity")
     require(HEX.fullmatch(image.get("containerId", "")) is not None and image.get("runId") == owner["runId"]

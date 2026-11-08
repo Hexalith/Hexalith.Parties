@@ -33,7 +33,7 @@ mean a version is published or approved for downstream enrollment.
 ## Quick Start
 
 Set `HEXALITH_DAPR_HOME` to a prepared, absolute isolated Dapr home before
-starting. Follow the [pinned Platform v1.7.0 runtime prerequisites](https://github.com/Hexalith/Hexalith.Platform/blob/52bc7986170f268afaef6227d0519a1d662af256/README.md#run-and-debug-a-technical-module);
+starting. Follow the [pinned Platform v1.7.1 runtime prerequisites](https://github.com/Hexalith/Hexalith.Platform/blob/0f4e27f1f78310bd731c10c19dc51bb1e0345d44/README.md#run-and-debug-a-technical-module);
 the tool refuses an unset or unprepared home.
 
 ```bash
@@ -308,7 +308,7 @@ The suite observes real Tenants through its declared REST interface, reads the s
 tenant through its declared REST interface, creates and queries a Party, and verifies persisted
 aggregate metadata and every event envelope in the run-owned state store.
 
-From the Platform checkout, use the exact published module CLI 4.44.12 restored from its local tool manifest:
+From the Platform checkout, use the exact published module CLI 4.44.13 restored from its local tool manifest:
 
 ```bash
 hexalith-module test --manifest references/Hexalith.Parties/module/hexalith.module-manifest.v2.json --profile platform-source --mode source
