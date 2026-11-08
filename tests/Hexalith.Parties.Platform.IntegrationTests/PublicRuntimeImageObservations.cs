@@ -30,9 +30,9 @@ internal static class PublicRuntimeImageObservations
         binding.VerifyCallerArtifact();
         JsonElement platform = binding.PlatformIdentity;
         foreach (string name in new[] { "Commit", "CompositionCommit", "CheckoutCommit" })
-            Require(platform.GetProperty(name).GetString() == "52bc7986170f268afaef6227d0519a1d662af256", "Public runtime Platform source differs from the authenticated release.");
-        Require(platform.GetProperty("CatalogCommit").GetString() == "b4703ec2247321f867f14cd9caca43fa00190feb"
-            && platform.GetProperty("ReleaseTag").GetString() == "v1.7.0", "Public runtime catalog or release tag differs.");
+            Require(platform.GetProperty(name).GetString() == "0f4e27f1f78310bd731c10c19dc51bb1e0345d44", "Public runtime Platform source differs from the authenticated release.");
+        Require(platform.GetProperty("CatalogCommit").GetString() == "3c8096180ecf2aa539ac454815efbfceb8a92822"
+            && platform.GetProperty("ReleaseTag").GetString() == "v1.7.1", "Public runtime catalog or release tag differs.");
         using CancellationTokenSource bound = CancellationTokenSource.CreateLinkedTokenSource(token);
         bound.CancelAfter(TimeSpan.FromSeconds(20));
         JsonElement actual = await ObserveImageAsync(binding.RunId, RunDockerAsync, bound.Token).ConfigureAwait(false);

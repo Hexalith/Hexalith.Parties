@@ -4,7 +4,7 @@ Hexalith.Parties uses GitHub Actions with shared Hexalith.Builds workflows and a
 
 ## Workflows
 
-- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@b4703ec2247321f867f14cd9caca43fa00190feb`.
+- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@3c8096180ecf2aa539ac454815efbfceb8a92822`.
 - `.github/workflows/release.yml` is a manual `workflow_dispatch` workflow with a protected, caller-owned release job. It uses `Hexalith/Hexalith.Builds/Github/prepare-domain-release@11a3a79cfac4bba9548c6364a17a01ee9b561370` and takes the nested publisher from that same immutable Builds checkout.
 - `.github/workflows/commitlint.yml` delegates Conventional Commit validation to the retained immutable Builds revision `332b2c144defba546fe0a09626a4a72f2340e22f`, for pull requests and main pushes.
 - `.github/workflows/dependency-review.yml` delegates dependency review for pull requests.
@@ -32,7 +32,20 @@ dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.T
 CI runs on pushes and pull requests to `main`, scheduled nightly runs, and Pact Broker `repository_dispatch` events with type `contract_requiring_verification_published`.
 
 The v2 workflow uses genuine published module CLI 4.44.13 and released
-[Platform v1.7.0](https://github.com/Hexalith/Hexalith.Platform/releases/tag/v1.7.0)
+[Platform v1.7.1](https://github.com/Hexalith/Hexalith.Platform/releases/tag/v1.7.1)
+at `0f4e27f1f78310bd731c10c19dc51bb1e0345d44`, with matching published Builds
+catalog `3c8096180ecf2aa539ac454815efbfceb8a92822`. Its exact-source
+[tuple CI 42472676506](https://github.com/Hexalith/Hexalith.Platform/actions/runs/42472676506)
+passed all 412 current and 349 original legacy controls;
+[catalog CI 42472676518](https://github.com/Hexalith/Hexalith.Platform/actions/runs/42472676518)
+passed all five SDK rows before configured automatic publisher `42475186387` published release
+`438196836` on 2026-11-08 at 11:19:47 UTC. Builds `v4.44.13`
+was qualified by main CI `42436815567` and normal publisher `42438005017`. The ordinary
+`platform-package` purpose consumes the genuine public Parties 3.1.0 package/image
+cohort with SDK 4.1.0, Tenants 7.0.5, Memories 3.0.25 and McpCli 2.0.1.
+These producer results supply no Parties native, lifecycle or cleanup acceptance.
+
+Historical published caller source [Platform v1.7.0](https://github.com/Hexalith/Hexalith.Platform/releases/tag/v1.7.0)
 at `52bc7986170f268afaef6227d0519a1d662af256`, with matching published Builds
 catalog `b4703ec2247321f867f14cd9caca43fa00190feb`. Its exact-source
 [tuple CI 42371632142](https://github.com/Hexalith/Hexalith.Platform/actions/runs/42371632142)

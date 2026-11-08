@@ -2,16 +2,18 @@
 
 This registered manual workflow remains a **baseline-only** diagnostic for
 Story 2.8. It grants no candidate acceptance or loaded-backend identity credit.
-The ordinary and manual baseline callers retain the Builds catalog
-`b4703ec2247321f867f14cd9caca43fa00190feb` and published Platform `v1.7.0` source
-`52bc7986170f268afaef6227d0519a1d662af256`, selected by their committed root gitlinks.
-The compatible installed module CLI is `4.44.13` with `rollForward=false`,
-published from Builds `3c8096180ecf2aa539ac454815efbfceb8a92822`.
-The installed CLI source and catalog gitlink are separate selections.
-Platform's fresh main gates passed 412 current cases, 349
-original legacy cases and all five SDK lanes; automatic source publication is complete. Every caller
-still needs its own new-source hosted results, native execution and cleanup;
-these producer results supply no caller or manual lifecycle credit.
+The ordinary and manual baseline callers select genuine Builds `v4.44.13`
+at `3c8096180ecf2aa539ac454815efbfceb8a92822` and published Platform `v1.7.1`
+at `0f4e27f1f78310bd731c10c19dc51bb1e0345d44`, through their exact committed root gitlinks.
+The installed module CLI remains `4.44.13` with `rollForward=false`;
+its published source, selected catalog and workflow source now agree on Builds `3c809618…`.
+Platform main tuple CI `42472676506` passed 412 current and 349 original legacy
+cases; main catalog CI `42472676518` passed all five SDK lanes. Configured
+automatic publisher `42475186387` published release `438196836` / `v1.7.1`
+at 2026-11-08 11:19:47 UTC. Builds main CI `42436815567` and normal
+publisher `42438005017` qualify the genuine signed public `4.44.13` tools.
+Every caller still needs its own new-source hosted results, native execution
+and complete owned cleanup; producer success supplies no caller or manual credit.
 
 The ordinary `platform-package` profile selects the complete measured public
 Parties 3.1.0, SDK 4.1.0, Tenants 7.0.5, Memories 3.0.25 and McpCli 2.0.1 cohort.
@@ -20,6 +22,12 @@ retain their existing contracts and cannot substitute for ordinary public proof.
 The ordinary artifact gate requires all original 28 native cases, exact persisted
 identity/sequence/projection and reference-owner effects, anonymous 401 responses, declared
 diagnostic hashes, and verified empty owned inventories after teardown.
+
+Historical Platform `v1.7.0` source `52bc7986170f268afaef6227d0519a1d662af256`
+selected Builds `v4.44.12` / `b4703ec2247321f867f14cd9caca43fa00190feb`.
+Its main tuple `42371632142` passed 412 current/349 legacy controls and catalog
+`42371632124` passed five SDK lanes before publication. Those source-bound results
+remain historical and do not qualify this caller selection or a new native/manual run.
 
 Historical Platform v1.5.7 source
 `ed991837945571a12743214fc18a87fbd323fc30` used Builds
