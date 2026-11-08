@@ -31,7 +31,7 @@ dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.T
 
 CI runs on pushes and pull requests to `main`, scheduled nightly runs, and Pact Broker `repository_dispatch` events with type `contract_requiring_verification_published`.
 
-The v2 workflow uses genuine published module CLI 4.44.12 and released
+The v2 workflow uses genuine published module CLI 4.44.13 and released
 [Platform v1.7.0](https://github.com/Hexalith/Hexalith.Platform/releases/tag/v1.7.0)
 at `52bc7986170f268afaef6227d0519a1d662af256`, with matching published Builds
 catalog `b4703ec2247321f867f14cd9caca43fa00190feb`. Its exact-source
