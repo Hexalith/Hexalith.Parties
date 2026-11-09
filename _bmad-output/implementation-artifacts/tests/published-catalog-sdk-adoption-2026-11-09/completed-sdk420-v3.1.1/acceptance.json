@@ -1,0 +1,71 @@
+{
+  "status": "complete",
+  "spec": "spec-published-catalog-sdk-adoption.md",
+  "completedAtUtc": "2026-11-09T21:02:25.009786+00:00",
+  "sdkVersion": "4.2.0",
+  "sdkSource": "aa16227bd07f0564a3026d619a5abd973e02656f",
+  "latestStableVerifiedAtUtc": "2026-11-09T20:22:38.432478+00:00",
+  "release": {
+    "version": "3.1.1",
+    "source": "84e3df796ac977041a21ec7bd8e5789bdc44241a",
+    "tag": "v3.1.1",
+    "releaseId": 439617151,
+    "url": "https://github.com/Hexalith/Hexalith.Parties/releases/tag/v3.1.1",
+    "workflowRun": 42693002067,
+    "successfulAttempt": 2,
+    "publicationComplete": true
+  },
+  "ownerTuple": {
+    "buildsVersion": "4.47.0",
+    "buildsSource": "5ec1779040606be89306129a7d2b245258c9acd2",
+    "platformVersion": "1.9.0",
+    "platformSource": "081178aa5cc01f5dc736ba0d1980aa80fedc6fe1",
+    "tenantsVersion": "7.0.5",
+    "tenantsSourceQualification": "5293ab9dca49b6298f1e3396367627009967cbfb",
+    "tenantsQualificationBranch": "build/qualify-eventstore-4.2",
+    "tenantsPr68Merged": false
+  },
+  "gates": {
+    "sourceCi": 42690523916,
+    "allCiJobsPassed": 11,
+    "rc": 42690522780,
+    "commitlint": 42690523452,
+    "codeql": 42690523464,
+    "allFourWorkflowsPassed": true,
+    "standaloneWarnings": 0,
+    "standaloneErrors": 0,
+    "modulePrepareDiagnostics": 0,
+    "ciControls": 633,
+    "fitnessCases": 304,
+    "hostedUnitPassed": 6440,
+    "hostedUnitExistingSkips": 14,
+    "nativePackageCases": 28,
+    "concurrentRuntimeCases": 1,
+    "localWholeIntegrationPassed": 265,
+    "localWholeExistingOrOptInSkips": 15,
+    "localOwnedSessionsFullyCleaned": 8,
+    "preparedReceiptsUnchanged": 11,
+    "browserPassedWithoutRetries": 68
+  },
+  "publication": {
+    "officialNugetPackages": 11,
+    "allSignaturesVerified": true,
+    "allNuspecSourcesBound": true,
+    "allManagedPeSourcesBound": true,
+    "allSdkAssemblyReferences420": true,
+    "githubReleaseManagedBytesIdentical": true,
+    "isolatedConsumerAndDeclarationInventoryPassed": true,
+    "containerImages": 3,
+    "containerPlatforms": [
+      "linux/amd64",
+      "linux/arm64"
+    ],
+    "protectedLiveRegistryVerificationPassed": true,
+    "independentCapturedOciValidationPassed": true,
+    "initialNugetPropagationFailureRetained": true,
+    "failedVerifierOnlyRerunRequested": true,
+    "immutableTagPreserved": true
+  },
+  "outstandingAdoptionWork": [],
+  "separateDeferredWork": "Existing ledger entries retain their triaged dispositions; no whole-G4/G5, deployment, historical parity, human ratification or rollback-deletion acceptance is granted."
+}

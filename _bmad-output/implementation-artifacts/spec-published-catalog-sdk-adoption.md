@@ -1,10 +1,17 @@
 ---
 title: Adopt the published catalog SDK and qualified owner artifacts
-status: in-review
+status: done
 review_loop_iteration: 1
 created: 2026-10-31
 baseline_commit: 6febe55d1c711a305a5969f04b8b9fb1fa80722f
 ---
+
+
+## Completed adoption — 2026-11-09
+
+The selected latest stable EventStore SDK is **4.2.0**, independently rechecked at20:22UTC. Qualified source **84e3df796ac977041a21ec7bd8e5789bdc44241a** is published as [Parties v3.1.1](https://github.com/Hexalith/Hexalith.Parties/releases/tag/v3.1.1). All eleven exact-source CI jobs, independent RC/commitlint/CodeQL and the protected Release publication verifier pass. All eleven freshly downloaded official NuGet archives pass signature, exact source, SDK4.2managed-reference and GitHub-release PE-byte checks; all three container images pass live registry verification for amd64 and arm64. [Final acceptance](tests/published-catalog-sdk-adoption-2026-11-09/completed-sdk420-v3.1.1/acceptance.json) binds the actual results and preserved failures.
+
+This completes the catalog SDK adoption only. The original3.129-era intent and every dated checkpoint below remain historical. Existing deferred-work entries, six unvalidated canonical parity receipts, G5 availability, deployment and rollback-deletion decisions retain their separate status. Tenants PR68 remains unmerged; its exact CI-qualified source branch is explicitly selected without an owner approval claim.
 
 ## Intent
 
@@ -926,3 +933,12 @@ The automatic and manual CI callers now select published Builds5ec1779040606be89
 CI42686394068 at e2a93bb365af5f2ea86a2a8079747ac84affdffb passes every execution job: full main unit/package integration, both SDK lanes, UI, concurrent authenticated topology, publisher/controller/declaration checks; independent RC/commitlint/CodeQL also pass. The last wrapper129404657570 refuses the otherwise successful28-case native report because pinned xunit4.0.3 MTP emits literal backslash+quote bytes5c22 in19inline-string display names, while its historical baseline stores plain quotes. Actual SDK4.2native reader bodies, separately measured public SDK4.1image bodies, persisted/authenticated behavior, exact source/job ownership and complete cleanup all satisfy the unchanged remaining predicates.
 
 The correction retains canonical CASES and derives an exact CURRENT_TRX_CASES set for the pinned current reporter. All28unique cases, one occurrence each, unchanged counters and every other strict predicate remain required. An independent literal28-name reporter snapshot and missing/duplicate/wrong-parameter/unescaped/double-escaped/case-change controls pass; public18/18andprivate17/17reader suites pass. The parent independently executes the corrected unmodified reader against the actual downloaded native artifacts: all strict checks pass with28cases, without modifying captured bytes or granting new-source acceptance. Sanitized verification and raw input hashes are retained under tests/published-catalog-sdk-adoption-2026-11-09/final-source-e2a93bb3; raw native logs remain private. Normal exact-source CI must still succeed for the committed correction before release. Status remainsin-review.
+
+
+### Final acceptance and publication closure
+
+Exact-source CI42690523916 passes all eleven jobs at84e3df796ac977041a21ec7bd8e5789bdc44241a; RC42690522780, commitlint42690523452 and CodeQL42690523464 pass independently. Downloaded hosted reports prove6440unit passes/14existing skips across15declared projects,28ordinary native package cases and1actual concurrent topology case with no skipped/aborted native results. Strict source/SDK/image/persistence/ownership/cleanup readbacks pass. Earlier local standalone0warnings/errors,633CI controls,304Fitness,51model controls,68browser cases without retries,265whole-integration passes and complete cleanup of8owned sessions remain bound to their own captured source/input receipts.
+
+Authorized Release42693002067 publishes immutablev3.1.1 at that source. Configured production gates receive normal eligible-reviewer approvals; no policy changes or admin bypass occur. NuGet accepts all11uploads at20:32UTC but asynchronous availability initially returns404, so first protected registry verification fails honestly and its evidence is retained. After all11official URLs become available, only the failed verification is requested for rerun; actual final attempt2 succeeds. The independent parent downloads all11official archives, verifies every NuGet signature and exact nuspec source/dependency cohort, reads all11managed PE source suffixes and SDK4.2assembly references, and compares their DLL bytes with all11actual GitHub release assets. Isolated consumers execute the real41route/41operation/28adapter inventory and build the portal. The parent independently revalidates the protected live-registry captures and all3images/6platforms, with identical NuGet archive hashes across independent and hosted downloads. No unsigned build archive is substituted for an official NuGet receipt.
+
+All required adoption acceptance is achieved. Final artifact inventory and acceptance are retained in tests/published-catalog-sdk-adoption-2026-11-09/completed-sdk420-v3.1.1. Raw native logs remain private, historical failures/receipts remain preserved, and existing triaged deferrals are not silently closed.
