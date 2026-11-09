@@ -4,7 +4,7 @@ Hexalith.Parties uses GitHub Actions with shared Hexalith.Builds workflows and a
 
 ## Workflows
 
-- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@3c8096180ecf2aa539ac454815efbfceb8a92822`.
+- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@5ec1779040606be89306129a7d2b245258c9acd2`.
 - `.github/workflows/release.yml` is a manual `workflow_dispatch` workflow with a protected, caller-owned release job. It uses `Hexalith/Hexalith.Builds/Github/prepare-domain-release@11a3a79cfac4bba9548c6364a17a01ee9b561370` and takes the nested publisher from that same immutable Builds checkout.
 - `.github/workflows/commitlint.yml` delegates Conventional Commit validation to the retained immutable Builds revision `332b2c144defba546fe0a09626a4a72f2340e22f`, for pull requests and main pushes.
 - `.github/workflows/dependency-review.yml` delegates dependency review for pull requests.
