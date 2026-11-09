@@ -1,0 +1,261 @@
+{
+  "schema": 1,
+  "reviewed_head": "ae8bc6b56e0e7b8eab5372fe612188e4c47233ab",
+  "reviewed_diff_sha256": "aab146b62812205dd30771c8f18e810cc55505c07b4ad2613026306bfe784065",
+  "correction_diff_sha256": "ad055f43f38154efc093c02a4e821caaf81a62cd745796c59209055d0592bb40",
+  "completion_status": "in-review",
+  "archives": {
+    "delivery.diff": {
+      "archive": "third-review-delivery.diff.gz",
+      "original_sha256": "aab146b62812205dd30771c8f18e810cc55505c07b4ad2613026306bfe784065",
+      "sanitized_sha256": "aab146b62812205dd30771c8f18e810cc55505c07b4ad2613026306bfe784065",
+      "compressed_sha256": "75ff428bd036bd6bfa658b92eba3f4a88d3a90f2200f3942654c04b38bfed43f"
+    },
+    "scope.json": {
+      "archive": "third-review-scope.json.gz",
+      "original_sha256": "01ac370930dea5cb8131d9d662b83b417cfd0919f037e52fe5f549362129fef7",
+      "sanitized_sha256": "01ac370930dea5cb8131d9d662b83b417cfd0919f037e52fe5f549362129fef7",
+      "compressed_sha256": "d7aa52749f9a25ecfa723b67001a644e019f274394b29e5756f8b157ff7e4ad8"
+    },
+    "correction.diff": {
+      "archive": "third-review-correction.diff.gz",
+      "original_sha256": "ad055f43f38154efc093c02a4e821caaf81a62cd745796c59209055d0592bb40",
+      "sanitized_sha256": "ad055f43f38154efc093c02a4e821caaf81a62cd745796c59209055d0592bb40",
+      "compressed_sha256": "76b8c9c3073256cb70b429e87427fbc3c2a71aede73075a841fdb011739c3eca"
+    },
+    "probes-before.json": {
+      "archive": "third-review-probes-before.json.gz",
+      "original_sha256": "bf58a7b6507cc47ef72b713f4f3f255571f31418ddb5557010960e3e65303a67",
+      "sanitized_sha256": "bf58a7b6507cc47ef72b713f4f3f255571f31418ddb5557010960e3e65303a67",
+      "compressed_sha256": "489a069e533e8a52e8c8ac01698aeea2dfce80619f5dea98eb4998e55bfd803a"
+    },
+    "probe.py": {
+      "archive": "third-review-probe.py.gz",
+      "original_sha256": "9ac065fd41820f0ad4c5e353d6c786427b7f7fe6b2f95ad3b721b5f7f4c90b02",
+      "sanitized_sha256": "83e07e20153328fdf0135b09e514b5437fcc1512763da53200d2601e27918e0b",
+      "compressed_sha256": "ce3029ace5e9c0bbe009fd155b1e8bd6ad94306f1faef3785e7dd0fd084d2a5c"
+    },
+    "fresh-runs.json": {
+      "archive": "third-review-fresh-runs.json.gz",
+      "original_sha256": "5840a0da7ea495b6fbaaa2ce69756e2d80debd1c16a125c47b0f3c1035fa8428",
+      "sanitized_sha256": "929cdea4a4036e3fe6226e5ab05b3a1a35685c971870cd2ea4f49ad9c4cf87b9",
+      "compressed_sha256": "720ce99b286d4337e8ae9dfd24c1333d4b5e5cbd61c7b48acf55260fe3b82200"
+    },
+    "fresh-prepare-source.log": {
+      "archive": "third-review-fresh-prepare-source.log.gz",
+      "original_sha256": "82a6072d2fc1182796e9ed638fc3502b4ee1268c0b2e5e9520be3fa66ea63053",
+      "sanitized_sha256": "0f196b9ad124df4dffb7951b23e89e7aea9fce61fbce8fd444b5657f72dd148d",
+      "compressed_sha256": "faf1419a0d9230178dedd615c0c7c1e626de2e890fdedfca4f7ac0e60a6db023"
+    },
+    "fresh-source-build.log": {
+      "archive": "third-review-fresh-source-build.log.gz",
+      "original_sha256": "6b8ac666b3810a50b98ef970009fd5a2f709dac14e9551d9ca454b41189f6408",
+      "sanitized_sha256": "aded1db41385fcad44bcd2da45963177dad01b0ea281c85d33b886f9cd733433",
+      "compressed_sha256": "b4f9f33708e44e696ac7b64b1fa89d836a94fe1cf22d41409b3e6107bf7f62ac"
+    },
+    "fresh-six-source.log": {
+      "archive": "third-review-fresh-six-source.log.gz",
+      "original_sha256": "e8ca16e2c260152620ecfec8f9fc7a471a0bb6c99792f86ae67cc0359b86b4c2",
+      "sanitized_sha256": "e8ca16e2c260152620ecfec8f9fc7a471a0bb6c99792f86ae67cc0359b86b4c2",
+      "compressed_sha256": "9d1dd40c04cc44aec670e16f71d981ba9712595e7204d85531fd8e8f39c1c1d7"
+    },
+    "fresh-six-source.xml": {
+      "archive": "third-review-fresh-six-source.xml.gz",
+      "original_sha256": "42feacc6686b9bfed1b81d418c80bbce5abf885df6a64b8f64a287b7641e51fe",
+      "sanitized_sha256": "510867b1ce0854be0971831f36a4f994056c7482f4e3a47b74d430cf7e1aad5f",
+      "compressed_sha256": "c58f408a4f77c5f9728bb639cfaeb97a893cab178a9635b2329343d5f39edfb1"
+    },
+    "fresh-full-source.log": {
+      "archive": "third-review-fresh-full-source.log.gz",
+      "original_sha256": "90e0c26ea3d64be39db6c35b75caeadbe13633bd0aac625887127cca166100e1",
+      "sanitized_sha256": "b6d3653235f7613d21905c0ffb3cae431ed5d41e96a6420d52a3de32566e83b4",
+      "compressed_sha256": "564c43d75cf49c5ed74cbbf4890fb475a90f55aa36b385c5f6c2acdfa16ed1a2"
+    },
+    "fresh-full-source.xml": {
+      "archive": "third-review-fresh-full-source.xml.gz",
+      "original_sha256": "d3473ef38ae768eb86cb0b5998b22eb8f643897f88514f9c77a01b12f1935e52",
+      "sanitized_sha256": "1036415d6e691e3cdd8c2ed7d6c7f563a9a9b7e6b92926565dc6112b2631ebac",
+      "compressed_sha256": "6a4c7503c47989381d20249b2c361febd19a0614e42ea7294db216cbe137b64e"
+    },
+    "publication.json": {
+      "archive": "third-review-publication.json.gz",
+      "original_sha256": "835daaf06c3d1886039bf07cf38a824353771172846ef0f486bdd76d76ab9388",
+      "sanitized_sha256": "48ccb714a40aef044a3b1564202388f3f092e91db75081d088943562cc94ee54",
+      "compressed_sha256": "c9e1b2d38093bcf313e224bc3c7cbc2ad75b3f1b264db2eb0b57b3727567d5e0"
+    },
+    "blind-hunter-original.md": {
+      "archive": "third-review-blind-hunter-original.md.gz",
+      "original_sha256": "72a29ea744660c5ad8d5ccb77b0133d2df26cd0f38cd92654a2779e2b11c0c40",
+      "sanitized_sha256": "72a29ea744660c5ad8d5ccb77b0133d2df26cd0f38cd92654a2779e2b11c0c40",
+      "compressed_sha256": "6c61e01825f40534611bb65cf9cbb4681ea1956939d217f630a290a82313f311"
+    },
+    "edge-case-original.md": {
+      "archive": "third-review-edge-case-original.md.gz",
+      "original_sha256": "a60dad34d3aeaa28e8e00cae0cb7f15076265b64f112a2b86b1893c07c5be5fe",
+      "sanitized_sha256": "a60dad34d3aeaa28e8e00cae0cb7f15076265b64f112a2b86b1893c07c5be5fe",
+      "compressed_sha256": "39fa7988a959df0ebe03130d3146b476375bf6307a7e93d4670987c3f5237e10"
+    },
+    "verification-gap-original.md": {
+      "archive": "third-review-verification-gap-original.md.gz",
+      "original_sha256": "d29fdd0ef493d6c0be2ded1a4c832280ad20e926a4051dfebcd04bbd71ac3417",
+      "sanitized_sha256": "d29fdd0ef493d6c0be2ded1a4c832280ad20e926a4051dfebcd04bbd71ac3417",
+      "compressed_sha256": "49ef6635af0480bee82636f141864da23daddc5a1f19f28d14dfedb6052853c1"
+    },
+    "correction-final.diff": {
+      "archive": "third-review-correction-final.diff.gz",
+      "original_sha256": "790142451e98296955e1987a9e5673a49f1f9a872832de2998e08175f8cbdca8",
+      "sanitized_sha256": "790142451e98296955e1987a9e5673a49f1f9a872832de2998e08175f8cbdca8",
+      "compressed_sha256": "488c19ab5d3467c51baa64ce8fd6da7896db0b8f2e313e2d59d94767f8e91ae4"
+    },
+    "blind-hunter-followup.md": {
+      "archive": "third-review-blind-hunter-followup.md.gz",
+      "original_sha256": "15a6273fdf75d654fc39435323d3f1682695a4c0f60df95dbd79b1739f001cc6",
+      "sanitized_sha256": "15a6273fdf75d654fc39435323d3f1682695a4c0f60df95dbd79b1739f001cc6",
+      "compressed_sha256": "fae55c442d217eecb44aff936c40e93ec0a88e5b7d926e42e6d227e49fba93f5"
+    },
+    "blind-hunter-final.md": {
+      "archive": "third-review-blind-hunter-final.md.gz",
+      "original_sha256": "3f9f33436528e5058eed37497ef9ff61710d282c896382d379d60b1f11c8cf05",
+      "sanitized_sha256": "3f9f33436528e5058eed37497ef9ff61710d282c896382d379d60b1f11c8cf05",
+      "compressed_sha256": "bc5ab693c408512eb9805cd5d4fa698f9dde234c683a206cd9c869afe34d200b"
+    },
+    "edge-case-final.md": {
+      "archive": "third-review-edge-case-final.md.gz",
+      "original_sha256": "08e08789030e149b7ba6701e153e0fd9575aad76818d6d9920100d0e5c9c0ceb",
+      "sanitized_sha256": "08e08789030e149b7ba6701e153e0fd9575aad76818d6d9920100d0e5c9c0ceb",
+      "compressed_sha256": "196b6b1b48729dc2a0a277d936e49376202887ab4d4a42b005515af4276b8571"
+    },
+    "verification-gap-final.md": {
+      "archive": "third-review-verification-gap-final.md.gz",
+      "original_sha256": "5b39dc5f12042262be82dbc9c3bf1451c177a0ab8df336b514d3502a168550ff",
+      "sanitized_sha256": "5b39dc5f12042262be82dbc9c3bf1451c177a0ab8df336b514d3502a168550ff",
+      "compressed_sha256": "a9576b70e5064d3e7cc7424eb4fcea4a65147ad317fe0abf780e513de8be0cde"
+    },
+    "negative-normal.log": {
+      "archive": "third-review-negative-normal.log.gz",
+      "original_sha256": "34d0c7ad4dcbf855bebf901e12141fae4c0915c9da9a3d7fb92bec7fafbe4cb1",
+      "sanitized_sha256": "34d0c7ad4dcbf855bebf901e12141fae4c0915c9da9a3d7fb92bec7fafbe4cb1",
+      "compressed_sha256": "fbddcb1f7f2759cf7745dd20fc52e1c42eea56bb9e54616a4a8bdfa6b98f6ea8"
+    },
+    "negative-optimized.log": {
+      "archive": "third-review-negative-optimized.log.gz",
+      "original_sha256": "34d0c7ad4dcbf855bebf901e12141fae4c0915c9da9a3d7fb92bec7fafbe4cb1",
+      "sanitized_sha256": "34d0c7ad4dcbf855bebf901e12141fae4c0915c9da9a3d7fb92bec7fafbe4cb1",
+      "compressed_sha256": "fbddcb1f7f2759cf7745dd20fc52e1c42eea56bb9e54616a4a8bdfa6b98f6ea8"
+    },
+    "verify-normal.log": {
+      "archive": "third-review-verify-normal.log.gz",
+      "original_sha256": "5a7ac6d33747fa76fe65182dff6a6d82543f5a82c80354e2bb2f34173b51e12c",
+      "sanitized_sha256": "5a7ac6d33747fa76fe65182dff6a6d82543f5a82c80354e2bb2f34173b51e12c",
+      "compressed_sha256": "4ac6a7b705555adc2c35a88bf6119d625138a65ea0f9568c49c536cbd03456b9"
+    },
+    "verify-optimized.log": {
+      "archive": "third-review-verify-optimized.log.gz",
+      "original_sha256": "5a7ac6d33747fa76fe65182dff6a6d82543f5a82c80354e2bb2f34173b51e12c",
+      "sanitized_sha256": "5a7ac6d33747fa76fe65182dff6a6d82543f5a82c80354e2bb2f34173b51e12c",
+      "compressed_sha256": "4ac6a7b705555adc2c35a88bf6119d625138a65ea0f9568c49c536cbd03456b9"
+    },
+    "warning-guard.log": {
+      "archive": "third-review-warning-guard.log.gz",
+      "original_sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604",
+      "sanitized_sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604",
+      "compressed_sha256": "315caa5fc9bf0ac255efb2d79aabdb0d6ca1be5539c23b95a077d0ecc6973a0b"
+    },
+    "gitlink-worktree.log": {
+      "archive": "third-review-gitlink-worktree.log.gz",
+      "original_sha256": "8782e28303ebf4b8dd48671040cabe35640a969d4f711b6fb624f9d231e0b02e",
+      "sanitized_sha256": "8782e28303ebf4b8dd48671040cabe35640a969d4f711b6fb624f9d231e0b02e",
+      "compressed_sha256": "50720248d10ddad443b4c61c1b989b2e3cd211d021648ab0dd61cd5832f759a4"
+    },
+    "whitespace.log": {
+      "archive": "third-review-whitespace.log.gz",
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sanitized_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compressed_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    "final-checks.json": {
+      "archive": "third-review-final-checks.json.gz",
+      "original_sha256": "8d0ab2a6ea6c745e7ad9803f489348afb23e3b486daba5be4482292b981cd8a5",
+      "sanitized_sha256": "197c1d63cfc738f240ef5c8000d2b1bc3cd32b6ea99894f05126db7e7d921e4c",
+      "compressed_sha256": "db135853e2a50d69384d3d6a2d6f86fdd6a968d3922259c27d72258c8a6a1506"
+    },
+    "verify-final.log": {
+      "archive": "third-review-verify-final.log.gz",
+      "original_sha256": "5a7ac6d33747fa76fe65182dff6a6d82543f5a82c80354e2bb2f34173b51e12c",
+      "sanitized_sha256": "5a7ac6d33747fa76fe65182dff6a6d82543f5a82c80354e2bb2f34173b51e12c",
+      "compressed_sha256": "4ac6a7b705555adc2c35a88bf6119d625138a65ea0f9568c49c536cbd03456b9"
+    },
+    "whitespace-final.log": {
+      "archive": "third-review-whitespace-final.log.gz",
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sanitized_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compressed_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    "final-binding-checks.json": {
+      "archive": "third-review-final-binding-checks.json.gz",
+      "original_sha256": "8ed3842aa10182249c6b3ea31ca7e840e0f1bb9c0256c8bf1d2c609fd503a624",
+      "sanitized_sha256": "8c4bbf7c6c921d6bb86c166b6d6ec9f840090357455ffa8654546c670aaca15c",
+      "compressed_sha256": "0ffacf71bd1e168488100a2e42dbbbd73e5b247015ce39cd1946bd37c8adb468"
+    },
+    "root-message.txt": {
+      "archive": "third-review-root-message.txt.gz",
+      "original_sha256": "a4679a42b9f2916e505f554ac354c5f487dee29895a2e96b09b920b487a9e410",
+      "sanitized_sha256": "a4679a42b9f2916e505f554ac354c5f487dee29895a2e96b09b920b487a9e410",
+      "compressed_sha256": "a97f4ac64cbc4b279fa458d030236c44378477fd21080fb9c089e27a3b87b5d7"
+    },
+    "root-commitlint.log": {
+      "archive": "third-review-root-commitlint.log.gz",
+      "original_sha256": "f038072b70c2c13f641c5cb588133bf5b43c56b5a90e3fb0dde3a8d71bb64bf4",
+      "sanitized_sha256": "f038072b70c2c13f641c5cb588133bf5b43c56b5a90e3fb0dde3a8d71bb64bf4",
+      "compressed_sha256": "34c89771297106d34cb171fa8f7014f27071dc0038c7c687a7cf5153f5dfc061"
+    },
+    "root-commitlint.json": {
+      "archive": "third-review-root-commitlint.json.gz",
+      "original_sha256": "80842f55ee0eb8e61d075a6f0fd962f098ad2cc25ed73a61150aafbbe641ee6f",
+      "sanitized_sha256": "45ea07483cf9620a209f75efff651556e8bcd0d898ea88c4315d173c23efdb73",
+      "compressed_sha256": "f65a65bf5e09670e522b9da6a4d069d4fa98171986bfbe69d01671810dd7008a"
+    }
+  },
+  "fresh_source_build": {
+    "exit_code": 0,
+    "warnings": 0,
+    "errors": 0
+  },
+  "fresh_six_controls": {
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0
+  },
+  "fresh_full_service": {
+    "total": 2881,
+    "passed": 2868,
+    "failed": 0,
+    "skipped": 13,
+    "skip_inventory": "Same thirteen name/reason pairs as permitted-parent-skips.json.gz"
+  },
+  "unresolved": [
+    "Tenants Contracts retained 205 missing-fixture baseline/current failures; not rerun in this review",
+    "Tenants owner test patch publication still refused with HTTP 403"
+  ],
+  "limits": [
+    "Fresh .NET execution uses the shared workspace, including existing uncommitted edits; it is not a clean-commit qualification.",
+    "Fresh run commands, mapping environment, exits, XML and pre-run assembly digests are retained. Full ambient environment and complete transitive source/binary snapshots are unavailable.",
+    "The current source pass does not rewrite the prior HXW005 failure or historical .NET results.",
+    "Existing historical packet, frozen intent, protected deferred-work entries and dependency selections are unchanged."
+  ],
+  "final_correction_diff_sha256": "790142451e98296955e1987a9e5673a49f1f9a872832de2998e08175f8cbdca8",
+  "clearance_layers": [
+    "blind-hunter-final.md",
+    "edge-case-final.md",
+    "verification-gap-final.md"
+  ],
+  "fixture_cases_per_mode": 53,
+  "fixture_cases_both_modes": 106,
+  "probe_caveat": "BH-T10 in the initial probe is unchanged valid evidence; the missing fixture binding was established by static inspection. Its persistent missing-input control now rejects.",
+  "current_input_sha256": {
+    "_bmad-output/implementation-artifacts/tests/six-fitness-failures-resumed-2026-11-09/verify-receipt.py": "6e95cbf10ccb0396528811a0c41a35ecd7c8b34ab01ccc281955c14bc7f1482c",
+    "_bmad-output/implementation-artifacts/tests/six-fitness-failures-resumed-2026-11-09/test-verify-receipt.py": "47381c781d3b1b70fe63349ef0c8dfcdc660f0a80c4873a8aba69544f5f67892",
+    "_bmad-output/implementation-artifacts/spec-six-fitness-failures.md": "c5d4216377332a4da2f5fb6c6094ee2a47f616888b15a07cbe7ccab7ea91f368"
+  },
+  "observed_head_after_review": "ae8bc6b56e0e7b8eab5372fe612188e4c47233ab"
+}

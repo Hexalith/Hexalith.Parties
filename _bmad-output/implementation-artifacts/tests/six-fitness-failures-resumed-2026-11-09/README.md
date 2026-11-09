@@ -1,6 +1,6 @@
 # Six fitness failures: resumed verification, 2026-11-09
 
-All six equivalent current controls pass. Final selected-package Debug build:
+The earlier resumed runs passed all six equivalent controls. Selected-package Debug build:
 zero warnings/errors. Full Parties service: 2,852 passed, zero failed, 13 existing
 runtime skips. Documentation: 10/10. Projections: 466 passed, one existing
 compatibility skip. Tenants Server: 1,875/1,875. Tenants floor controls: 48/48,
@@ -9,7 +9,7 @@ including ten persistent restore/build entry-target cases.
 The spec remains **in-review**. Tenants Contracts retains exactly the same 205
 failing identities before and after the test-only patch (813 versus 823 passed).
 Missing nested Builds fixtures dominate; no nested submodule was initialized.
-The latest CLI 4.45.0 source build fails HXW005 because Commons source duplicates
+The earlier CLI 4.45.0 source build failed HXW005 because Commons source duplicated
 restored Commons 2.30.10. Earlier CLI 4.44.13 source results are retained with their
 unsupported-toolchain diagnostics. Package success does not clear those gates.
 Sandbox socket failures are retained separately from successful socket-enabled
@@ -70,3 +70,24 @@ properties and digest shape are now checked. The 205 failure diagnostics match
 before/after after normalizing only Python fixture elapsed durations. This does
 not broaden the historical environment qualification. Fresh Tenants publication
 preflight still returns HTTP 403. The retained .NET runs were not repeated here.
+
+Third review and fresh source execution are retained in `third-review-*` artifacts
+and `third-review-validation.json`. The historical `validation.json` gate above
+continues to validate its retained runs; fresh source results do not rewrite those
+records. Current source preparation and Debug service build pass with zero warnings
+or errors. All six controls pass; the full service suite passes 2,868 with zero
+failures and the same thirteen runtime skips (2,881 total). This execution used the
+shared workspace, including concurrent uncommitted changes; it is not a clean-commit
+or complete transitive source/binary qualification. The earlier HXW005 result remains
+historical. Owner Contracts and Tenants publication remain blocked.
+
+The corrected receipt gate pins the complete recorded command/environment/exit and
+log/XML inventory, requires the four source evaluations and complete second-review
+evidence, binds the current negative-fixture source and both exact validated
+candidate payloads, and rejects native runner-error elements. The fixture suite now
+has one valid case and 52 corruptions, passing in both modes (106 cases). All three
+reviewers independently reran both modes and cleared final correction SHA-256
+`790142451e98296955e1987a9e5673a49f1f9a872832de2998e08175f8cbdca8`.
+No new work was deferred. The third-review companion manifest records its own
+compressed/raw artifact hashes and the fresh run limits; its artifacts are additive
+to the historical gate's scope.

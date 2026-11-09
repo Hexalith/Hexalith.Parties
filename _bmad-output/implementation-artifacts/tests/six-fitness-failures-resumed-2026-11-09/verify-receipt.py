@@ -52,6 +52,7 @@ def verify(folder, root, manifest=None):
             continue
         require(data['archives'][run['xml']]['original_sha256'] == run['xml_sha256'], 'XML binding: ' + name)
         tree = ET.fromstring(payloads[run['xml']])
+        require(not tree.findall('.//errors/error'), 'runner error elements: ' + name)
         assemblies = tree.findall('assembly')
         require(assemblies, 'empty report: ' + name)
         require([a.attrib for a in assemblies] == run['assemblies'], 'assembly attributes: ' + name)
@@ -279,12 +280,62 @@ def verify(folder, root, manifest=None):
         '_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md',
         '_bmad-output/implementation-artifacts/spec-six-fitness-failures.md',
         '_bmad-output/implementation-artifacts/tests/six-fitness-failures-resumed-2026-11-09/verify-receipt.py',
+        '_bmad-output/implementation-artifacts/tests/six-fitness-failures-resumed-2026-11-09/test-verify-receipt.py',
         'references/Hexalith.Tenants/Directory.Build.props', 'references/Hexalith.Tenants/Directory.Build.targets',
         'references/Hexalith.Tenants/tests/Hexalith.Tenants.Contracts.Tests/PackageGovernanceTests.cs',
     }
     require(set(data['post_verification_inputs']) == expected_inputs, 'input inventory')
     for name, expected_hash in data['post_verification_inputs'].items():
         require(digest((root / name).read_bytes()) == expected_hash, 'current input: ' + name)
+
+    # This is a stamped historical packet. Preserve complete execution metadata,
+    # including unsuccessful and intermediate runs, without inventing missing provenance.
+    inventory_bytes = payloads['recorded-execution-inventory.json']
+    require(digest(inventory_bytes) == 'f001c3d899291be52256d4b3cc43d4b5ca6d097760e52b4a2003dace1345dfef',
+            'execution inventory anchor')
+    inventory = json.loads(inventory_bytes)
+    execution_keys = ['name', 'command', 'cwd', 'environment_overrides', 'cleared_environment_keys',
+                      'exit_code', 'log', 'log_sha256', 'xml', 'xml_sha256']
+    executions = [{key: run[key] for key in execution_keys if key in run} for run in data['runs']]
+    require(executions == inventory['executions'], 'recorded execution inventory')
+    for name, expected_hash in {
+        'owner-message.txt': '39faedef758d411a012f7cc94cea7119a94d9d9697cf99dbef4b515c7cc9ae2c',
+        'root-message.txt': '4e9a05bac6a50962f12c2019fbf77b90d151910d04bc22bd0f457db97ff24a2b',
+    }.items():
+        require(digest(payloads[name]) == expected_hash, 'validated commit message binding: ' + name)
+
+    for name in ['parent-source-fitness-selection', 'projections-source-selection',
+                 'owner-contracts-selection', 'owner-server-selection']:
+        selection_run = runs[name]
+        selected_props = json.loads(payloads[selection_run['log']])['Properties']
+        require(selection_run['exit_code'] == 0 and selected_props['Configuration'] == 'Debug'
+                and selected_props['TreatWarningsAsErrors'].lower() == 'true'
+                and selected_props['HexalithEventStoreFromSource'] == 'true'
+                and selected_props['HexalithSourceMappingMode'] == 'source', 'source selection: ' + name)
+        project = Path(selection_run['command'][2]).stem
+        expected_path = selection_run['cwd'] + f'/tests/{project}/bin/Debug/net10.0/{project}.dll'
+        require(selected_props['TargetPath'] == expected_path, 'source selection target: ' + name)
+        if 'HexalithSourceMappingHash' in selected_props:
+            require(selected_props['HexalithSourceMappingHash'] == source_environment['HEXALITH_SOURCE_MAPPING_HASH'],
+                    'source selection mapping: ' + name)
+
+    require(data.get('followup_review') == inventory['followup_review'], 'second review metadata')
+    require({name: data['archives'][name] for name in inventory['review_archives'] if name in data['archives']}
+            == inventory['review_archives'], 'second review archive inventory')
+    for name in data['followup_review']['layers']:
+        require(payloads[name].strip(), 'empty second review report: ' + name)
+    require(digest(payloads['second-review.diff']) == data['followup_review']['reviewed_diff_sha256']
+            and digest(payloads['second-review-correction.diff']) == data['followup_review']['correction_diff_sha256'],
+            'second review diff bindings')
+    checks = json.loads(payloads[data['followup_review']['checks']])
+    require([check['name'] for check in checks] == ['verify-normal', 'negative-normal', 'verify-optimized', 'negative-optimized']
+            and all(check['exit_code'] == 0 for check in checks), 'second review checks')
+    for mode in ['normal', 'optimized']:
+        fixture_result = json.loads(payloads[f'second-review-negative-{mode}.log'])
+        require(fixture_result['cases'] == len(fixture_result['results']) == data['followup_review']['fixture_cases_per_mode']
+                and fixture_result['results'][0] == {'case': 'valid', 'result': 'accepted'}
+                and all(result['result'] == 'rejected' for result in fixture_result['results'][1:]),
+                'second review fixtures: ' + mode)
     return {'evidence': 'verified', 'completion': 'in-review', 'preserved_files': len(preserved), 'owner_failures': 205}
 
 

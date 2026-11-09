@@ -143,6 +143,33 @@ def main():
         for name in ['parent-source-fitness-build', 'projections-source-build', 'owner-patched-contracts-build']:
             run(data, name)['environment_overrides'] = {}
 
+    def remove_runs(data, names):
+        data['runs'] = [record for record in data['runs'] if record['name'] not in names]
+
+    def change_source_test_environments(data, work):
+        for name in ['parent-source-fitness-tests', 'parent-source-full-socket-enabled',
+                     'projections-source-tests', 'owner-server-socket-enabled']:
+            run(data, name)['environment_overrides'] = {}
+
+    def change_hook_commands(data, work):
+        for record in data['runs']:
+            if record['name'].startswith('hook-qualified-'):
+                record['command'] = ['dotnet', 'msbuild', 'unrelated.proj', '-t:ValidateEventStorePackageFloor']
+
+    def remove_second_review(data, work):
+        data.pop('followup_review')
+        for name in list(data['archives']):
+            if name.startswith('second-review-'):
+                data['archives'].pop(name)
+
+    def runner_error(tree):
+        ET.SubElement(ET.SubElement(tree, 'errors'), 'error', {'type': 'assembly-cleanup'}).text = 'Runner failed'
+
+    def coordinated_execution(data, work):
+        run(data, final)['command'].extend(['-class', 'NoSuchClass'])
+        rewrite_json(data, work, 'recorded-execution-inventory.json',
+                     lambda value: next(r for r in value['executions'] if r['name'] == final)['command'].extend(['-class', 'NoSuchClass']))
+
     cases = [
         ('missing-XML', lambda d, w: run(d, final).pop('xml'), 'missing XML'),
         ('reduced-full-suite', xml_case(final, reduced), 'suite summary'),
@@ -181,6 +208,21 @@ def main():
         ('coordinated-floor-drift', coordinated_floor, 'recorded floor inventory'),
         ('changed-floor-anchor', lambda d, w: rewrite_json(d, w, 'recorded-floor-inventory.json', lambda v: v.pop()), 'floor inventory anchor'),
         ('coordinated-source-mode', coordinated_source_mode, 'source environment anchor'),
+        ('filtered-full-command', lambda d, w: run(d, final)['command'].extend(['-class', 'NoSuchClass']), 'recorded execution inventory'),
+        ('source-test-environments', change_source_test_environments, 'recorded execution inventory'),
+        ('source-test-directory', lambda d, w: run(d, 'parent-source-fitness-tests').update(cwd='unrelated'), 'recorded execution inventory'),
+        ('missing-source-selections', lambda d, w: remove_runs(d, ['parent-source-fitness-selection', 'projections-source-selection', 'owner-contracts-selection', 'owner-server-selection']), 'recorded execution inventory'),
+        ('missing-owner-builds', lambda d, w: remove_runs(d, ['owner-contracts-build', 'owner-server-build']), 'recorded execution inventory'),
+        ('unrelated-source-blocker', lambda d, w: run(d, 'final-parent-source-build').update(command=['unrelated'], cwd='unrelated', environment_overrides={}), 'recorded execution inventory'),
+        ('direct-hook-commands', change_hook_commands, 'recorded execution inventory'),
+        ('failed-commitlint', lambda d, w: [run(d, name).update(exit_code=1) for name in ['owner-commitlint', 'root-commitlint']], 'recorded execution inventory'),
+        ('missing-repository-safeguards', lambda d, w: remove_runs(d, ['warning-guard', 'gitlink-worktree', 'scope-whitespace']), 'recorded execution inventory'),
+        ('missing-second-review', remove_second_review, 'second review metadata'),
+        ('missing-fixture-input', lambda d, w: d['post_verification_inputs'].pop('_bmad-output/implementation-artifacts/tests/six-fitness-failures-resumed-2026-11-09/test-verify-receipt.py'), 'input inventory'),
+        ('runner-error-element', xml_case(final, runner_error), 'runner error elements'),
+        ('coordinated-execution-drift', coordinated_execution, 'execution inventory anchor'),
+        ('changed-root-validated-message', lambda d, w: rewrite(d, w, 'root-message.txt', b'Invalid retained candidate\n'), 'validated commit message binding'),
+        ('changed-owner-validated-message', lambda d, w: rewrite(d, w, 'owner-message.txt', b'Invalid retained candidate\n'), 'validated commit message binding'),
     ]
     for name, mutation, expected in cases:
         with tempfile.TemporaryDirectory(prefix='six-fitness-gate-') as temporary:

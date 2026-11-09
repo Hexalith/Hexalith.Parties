@@ -6004,6 +6004,12 @@
       "original_sha256": "4630c775a5a54ecf0c93a9fef2945a75625c9834745a28e7f3cfae4e9ba6aa45",
       "sanitized_sha256": "4630c775a5a54ecf0c93a9fef2945a75625c9834745a28e7f3cfae4e9ba6aa45",
       "compressed_sha256": "8f75f8544cd44093ffc0d3e58a8461b3a211d9fa2ca450692705634137d886b9"
+    },
+    "recorded-execution-inventory.json": {
+      "archive": "recorded-execution-inventory.json.gz",
+      "original_sha256": "f001c3d899291be52256d4b3cc43d4b5ca6d097760e52b4a2003dace1345dfef",
+      "sanitized_sha256": "f001c3d899291be52256d4b3cc43d4b5ca6d097760e52b4a2003dace1345dfef",
+      "compressed_sha256": "3b16c361a97f7e5a2d0649094f07c1aad23de875e87f632b08bb58bfe562e32f"
     }
   },
   "reviewed_diff_sha256": {
@@ -6134,13 +6140,14 @@
     "docs/getting-started.md": "4e541e41de4574141703c44a65a5207cc12cbdb423a1e6480b2be88696582271",
     "docs/development-guide.md": "ccb4f19dcd1bea24cb02d971914aabfaf8ce52cfaf469463daec4afab6d2f48b",
     "tests/Hexalith.Parties.Tests/FitnessTests/DocumentationFitnessTests.cs": "9e97ee3f95f08138bfbc4b4d977560814ec0c5ea1e2192bb96f955d1c0b13877",
-    "_bmad-output/implementation-artifacts/spec-six-fitness-failures.md": "df2446abfbae391e0f170ef18da258ecbf49165104cacaffc1a3c2a6e32685ea",
-    "_bmad-output/implementation-artifacts/tests/six-fitness-failures-resumed-2026-11-09/verify-receipt.py": "67727c0afc88ab6575232f7e50119f8de034420ef3eb5ef5e87e44e9f46adce1",
+    "_bmad-output/implementation-artifacts/spec-six-fitness-failures.md": "c5d4216377332a4da2f5fb6c6094ee2a47f616888b15a07cbe7ccab7ea91f368",
+    "_bmad-output/implementation-artifacts/tests/six-fitness-failures-resumed-2026-11-09/verify-receipt.py": "6e95cbf10ccb0396528811a0c41a35ecd7c8b34ab01ccc281955c14bc7f1482c",
     "references/Hexalith.Tenants/Directory.Build.props": "4003c5362c523c4d6bf9003869200c417c81dc02007eb3fed7f2ad03492c50a4",
     "references/Hexalith.Tenants/Directory.Build.targets": "f7ae6ea101206e3cbb892c4edeaf52b58e69bdbd283cd1f030e2994dad5ce8ed",
     "tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs": "3ce1a364e70d86a2c4e3f47f343c3998ab889537c052e97b71013643c88a0697",
     "_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md": "8daa96c486aff41cce9b52869996378d809c814279d63971e7b3e4cd6968b002",
-    "references/Hexalith.Tenants/tests/Hexalith.Tenants.Contracts.Tests/PackageGovernanceTests.cs": "62d3887a73a5e77f29a1bd18aa970b9be81a5e763b111dbce32b53787ec23d23"
+    "references/Hexalith.Tenants/tests/Hexalith.Tenants.Contracts.Tests/PackageGovernanceTests.cs": "62d3887a73a5e77f29a1bd18aa970b9be81a5e763b111dbce32b53787ec23d23",
+    "_bmad-output/implementation-artifacts/tests/six-fitness-failures-resumed-2026-11-09/test-verify-receipt.py": "47381c781d3b1b70fe63349ef0c8dfcdc660f0a80c4873a8aba69544f5f67892"
   },
   "limits": [
     "Owner Contracts retains 205 identical baseline failures.",

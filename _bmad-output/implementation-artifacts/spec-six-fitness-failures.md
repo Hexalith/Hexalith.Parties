@@ -159,6 +159,48 @@ deferred. Status remains in-review because the owner Contracts and source-build
 gates remain blocked. A fresh credential-backed publication dry run still returns
 HTTP 403 for Tenants; no unpublished gitlink is adopted.
 
+### Third resumed review — 2026-11-09
+
+The three independent layers reviewed the original delivery, retained owner patch,
+resumed changes and current receipt checker. Diff SHA-256 is
+`aab146b62812205dd30771c8f18e810cc55505c07b4ad2613026306bfe784065`.
+The verification-gap layer found no new gap. Each remaining finding was checked
+before grouping; the first eight share incomplete execution metadata binding.
+All fixes are internal receipt checks, with no new public surface or dependency
+selection changes.
+
+| Finding | Verdict / resolution | Evidence |
+| --- | --- | --- |
+| BH-T01: full-test filters and output arguments are unbound | medium / patched | A full-suite record with an added nonexistent class filter was accepted against unchanged full XML. Pin complete recorded execution metadata, including every command argument and XML binding. |
+| BH-T02: source-test environments are unbound | medium / patched | Replacing all four successful source test environments with empty overrides was accepted. Preserve their exact mapping environments and working directories in the anchored execution inventory. |
+| BH-T03: source selection evaluations are optional | medium / patched | Removing all four source selection records was accepted. Require the complete execution inventory and reconcile successful source evaluations, target paths, Debug, warnings policy and each recorded mapping hash. |
+| BH-T04: baseline owner builds are optional | medium / patched | Removing baseline Contracts and Server builds was accepted. Require these exact build records and their original successful outcomes. |
+| BH-T05: source blocker invocation is unbound | medium / patched | Replacing its command, directory and environment with unrelated values was accepted because the old log still contained HXW005. Pin the actual final preparation and build metadata; retain that historical failure. |
+| BH-T06: hook outcomes do not identify the executed targets | medium / patched | Replacing all six hook commands with a direct floor call was accepted. Pin every connected/detached project and entry target in the complete execution inventory. |
+| BH-T07: commitlint failure is accepted | medium / patched | Changing both recorded validator exits to failure was accepted. Pin the successful owner/root invocations, exact message paths and retained log bindings. |
+| BH-T08: repository safeguards are optional | medium / patched | Removing warning, gitlink and whitespace guard runs was accepted. Require the complete recorded successful safeguard invocations. |
+| BH-T09: the second review can disappear | medium / patched | Removing its descriptor and archives was accepted. Anchor its metadata/archive inventory, compare both reviewed diff hashes, and require nonempty reports and successful 38-case normal/optimized historical checks. |
+| BH-T10: current negative-fixture source is unbound | medium / patched | The mandatory current input set omitted test-verify-receipt.py. Add its exact current bytes; retain historical 38-case results as historical and record the expanded fixtures separately. |
+| BH-T07-F: validated candidate content remains unbound | medium / patched | Follow-up replaced the candidate bytes while preserving the successful log and command. Pin both exact payload digests, confirm each complete candidate occurs in its retained successful log, and add independent owner/root replacement controls. |
+| EC-T01: runner error elements bypass declared counts | medium / patched | Inserting a native errors/error element with the declared count still zero was accepted. Reject actual runner error elements before summary checks and preserve the corruption as a regression fixture. |
+
+The expanded fixture suite includes all original 38 cases, every demonstrated
+corruption and a coordinated execution-inventory mutation. Existing .NET receipt
+runs remain unchanged. Fresh source preparation and Debug service build now pass
+without warning/error overrides; all six equivalent controls pass, and the full
+service suite passes 2,868 with zero failures and the same thirteen allowed runtime
+skips (2,881 total). This run uses the shared working tree, including existing
+concurrent edits; it does not retrospectively clear the historical HXW005 result.
+Final correction SHA-256 is
+`790142451e98296955e1987a9e5673a49f1f9a872832de2998e08175f8cbdca8`.
+All three reviewers independently pass 53 cases in each Python mode (106 each)
+and clear the final correction. Fresh commands, XML and reports are retained as
+`third-review-*` companion artifacts.
+Tenants publication dry run still exits 128 with HTTP 403. The owner Contracts
+missing-nested-Builds gate remains unresolved, and its retained 205 baseline/current
+failures are not rerun or reclassified by the passing service suite. Status remains
+in-review. No nested submodule is initialized and no new work is deferred.
+
 ## Final Verification
 
 - Upstream-aware owner fix published at `6deb5d5dbaad4e26405910b347d45b82deae1057`;
@@ -183,7 +225,7 @@ HTTP 403 for Tenants; no unpublished gitlink is adopted.
   DW items remain open. Broad owner-gate and Aspire precheck limitations remain
   explicit; this spec does not claim all-gates completion.
 
-## Resumed verification — 2026-11-09
+## Earlier resumed verification — 2026-11-09
 
 - Resumed from Parties `806ed7b83b35fcc24996e58affb78ea51a0c8aa7`.
   Original delivery review uses Parties `207aaf51f63448e51acf83b4c46fdb456df6526c`
@@ -248,3 +290,15 @@ HTTP 403 for Tenants; no unpublished gitlink is adopted.
 - Status remains in-review: the owner Contracts gate, latest mapped-source
   build and owner publication are blocked. Passing package tests do not turn
   those gates green. Evidence: `tests/six-fitness-failures-resumed-2026-11-09/`.
+
+## Current verification after third review — 2026-11-09
+
+The latest fresh mapped-source Debug service build passes with zero warnings or
+errors. All six controls pass; the full service suite passes 2,868 with zero
+failures and the same thirteen runtime skips. These shared-workspace results do
+not rewrite the earlier source failure or establish clean-commit/transitive
+binary qualification. All three reviewers clear the final correction and each
+independently passes 53 fixtures per Python mode. The receipt gate retains its
+historical execution scope; new run/report hashes are in the additive
+third-review companion manifest. Status remains in-review because the owner
+Contracts gate and Tenants publication remain blocked. No new work is deferred.
