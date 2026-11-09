@@ -10,6 +10,7 @@ using Aspire.Hosting.Testing;
 
 using CommunityToolkit.Aspire.Hosting.Dapr;
 
+using Hexalith.EventStore.Aspire;
 using Hexalith.Parties.IntegrationTests.HealthChecks;
 
 using Shouldly;
@@ -51,6 +52,14 @@ public sealed class PackagedGatewayTopologyTests
             await using var packageLifetime = packaged.ConfigureAwait(true);
             ProjectResource nativeGateway = native.Resources.OfType<ProjectResource>().Single(resource => resource.Name == "eventstore");
             ProjectResource packageGateway = packaged.Resources.OfType<ProjectResource>().Single(resource => resource.Name == "eventstore");
+#if HEXALITH_EVENTSTORE_QUERY_SELECTOR_BINDINGS
+            // The published full-composition callee must reuse the native gateway's
+            // generated binding before the fixture applies its selected private token.
+            int parameterCount = packaged.Resources.OfType<ParameterResource>().Count();
+            _ = packaged.CreateResourceBuilder(packageGateway).WithGeneratedEventStoreAppChannelToken();
+            packaged.Resources.OfType<ParameterResource>().Count().ShouldBe(parameterCount);
+            packaged.Resources.OfType<ParameterResource>().Count(parameter => parameter.Name == "eventstore-app-api-token").ShouldBe(1);
+#endif
 #if HEXALITH_EVENTSTORE_CATALOG_HOSTS
             ProjectResource packageAdminUi = packaged.Resources.OfType<ProjectResource>().Single(resource => resource.Name == "eventstore-admin-ui");
             packageAdminUi.GetProjectMetadata().ProjectPath.Replace('\\', '/')
@@ -95,16 +104,28 @@ public sealed class PackagedGatewayTopologyTests
 #if HEXALITH_EVENTSTORE_CATALOG_HOSTS
             string[] participants = ["eventstore", "eventstore-admin", "eventstore-admin-ui", "memories", "parties", "sample", "sample-blazor-ui", "tenants"];
             string[] expectedSecrets = [.. participants.SelectMany(host => new[] { "catalog-" + host + "-app-token", "catalog-" + host + "-dapr-token" }),
+#if !HEXALITH_EVENTSTORE_QUERY_SELECTOR_BINDINGS
                 "catalog-idempotency-digest-key", "catalog-tenants-stream-proof-key"];
+#else
+                "catalog-tenants-stream-proof-key"];
+#endif
             ParameterResource[] privateParameters = packaged.Resources.OfType<ParameterResource>()
                 .Where(parameter => expectedSecrets.Contains(parameter.Name, StringComparer.Ordinal)).ToArray();
             privateParameters.Select(parameter => parameter.Name).Order(StringComparer.Ordinal).ShouldBe(expectedSecrets.Order(StringComparer.Ordinal));
             privateParameters.ShouldAllBe(parameter => parameter.Secret);
+#if !HEXALITH_EVENTSTORE_QUERY_SELECTOR_BINDINGS
             DaprComponentResource routing = packaged.Resources.OfType<DaprComponentResource>()
                 .Where(component => component.Name.StartsWith("routing-parties-", StringComparison.Ordinal)).ShouldHaveSingleItem();
             routing.Type.ShouldBe("state.redis");
             routing.Options?.LocalPath.ShouldBeNull();
-            string catalogComponent = routing.Name;
+            string? catalogComponent = routing.Name;
+#else
+            // SDK 4.1 enrollment waits for the fixture's actual fresh backend and final
+            // endpoint overrides. Model inspection must not provision digest custody.
+            string? catalogComponent = null;
+            packaged.Resources.OfType<DaprComponentResource>()
+                .ShouldNotContain(component => component.Name.StartsWith("routing-parties-", StringComparison.Ordinal));
+#endif
             packaged.Resources.Where(resource => !expectedSecrets.Contains(resource.Name, StringComparer.Ordinal) && resource.Name != catalogComponent)
                 .Select(resource => resource.Name).Order(StringComparer.Ordinal)
                 .ShouldBe(native.Resources.Select(resource => resource.Name).Order(StringComparer.Ordinal));
@@ -159,7 +180,7 @@ public sealed class PackagedGatewayTopologyTests
                     AssertEnvironmentMatches(expectedSidecarEnvironment, actualSidecarEnvironment, selectedSidecar.Name);
                     IEnumerable<string> expectedComponents = originalSidecar.Sidecar.Annotations.OfType<DaprComponentReferenceAnnotation>().Select(reference => reference.Component.Name);
 #if HEXALITH_EVENTSTORE_CATALOG_HOSTS
-                    if (participants.Contains(original.Name, StringComparer.Ordinal)) { expectedComponents = expectedComponents.Append(catalogComponent!); }
+                    if (catalogComponent is not null && participants.Contains(original.Name, StringComparer.Ordinal)) { expectedComponents = expectedComponents.Append(catalogComponent); }
 #endif
                     selectedSidecar.Annotations.OfType<DaprComponentReferenceAnnotation>().Select(reference => reference.Component.Name)
                         .ShouldBe(expectedComponents);
@@ -252,7 +273,11 @@ public sealed class PackagedGatewayTopologyTests
         string host = resource.EndsWith("-dapr", StringComparison.Ordinal) ? resource[..^5] : resource;
         if (new[] { "eventstore", "eventstore-admin", "eventstore-admin-ui", "memories", "parties", "sample", "sample-blazor-ui", "tenants" }.Contains(host, StringComparer.Ordinal))
         {
-            foreach ((string key, string kind) in new[] { ("APP_API_TOKEN", "app"), ("DAPR_API_TOKEN", "dapr") })
+            foreach ((string key, string kind) in new[] {
+#if !HEXALITH_EVENTSTORE_QUERY_SELECTOR_BINDINGS
+                ("APP_API_TOKEN", "app"),
+#endif
+                ("DAPR_API_TOKEN", "dapr") })
             {
                 privateKeys.Add(key);
                 actual[key].ShouldBeAssignableTo<IManifestExpressionProvider>().ValueExpression
@@ -280,6 +305,7 @@ public sealed class PackagedGatewayTopologyTests
             expected.ShouldNotContainKey(InvocationBudget);
             actual[InvocationBudget].ShouldBe("30");
             const string Prefix = "EventStore__IdempotencyAdmission__";
+#if !HEXALITH_EVENTSTORE_QUERY_SELECTOR_BINDINGS
             foreach ((string key, string value) in new[]
             {
                 ("Enabled", "true"), ("DigestKeySource", "Configuration"), ("ActiveDigestKeyVersion", "development-v1"),
@@ -293,6 +319,9 @@ public sealed class PackagedGatewayTopologyTests
             privateKeys.Add(Prefix + "DigestKeys__development-v1");
             actual[Prefix + "DigestKeys__development-v1"].ShouldBeAssignableTo<IManifestExpressionProvider>().ValueExpression
                 .ShouldBe("{catalog-idempotency-digest-key.value}");
+#else
+            actual.Keys.ShouldNotContain(key => key.StartsWith(Prefix, StringComparison.Ordinal));
+#endif
             string proofKey = actual.Keys.Where(key => key.StartsWith("Authentication__BoundStreamRead__PublicKeys__tenants", StringComparison.Ordinal)).ShouldHaveSingleItem();
             privateKeys.Add(proofKey);
             using RSA proof = RSA.Create();

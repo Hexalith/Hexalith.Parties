@@ -191,7 +191,7 @@ public sealed class HttpPartiesIdentityClient(HttpClient httpClient, TimeProvide
     private async Task<TResult> QueryAsync<TQuery, TResult>(string tenantId, string partyId, TQuery payload, CancellationToken cancellationToken)
     {
         var request = new SubmitQueryRequest(tenantId, "party", partyId, typeof(TQuery).FullName!,
-            ProjectionType: "party", Payload: JsonSerializer.SerializeToElement(payload, PartiesJsonOptions.Default), EntityId: partyId);
+            Payload: JsonSerializer.SerializeToElement(payload, PartiesJsonOptions.Default), EntityId: partyId);
         using HttpResponseMessage response = await httpClient.PostAsJsonAsync("api/v1/queries", request, PartiesJsonOptions.Default, cancellationToken).ConfigureAwait(false);
         if (!response.IsSuccessStatusCode)
         {

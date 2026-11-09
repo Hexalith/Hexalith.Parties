@@ -29,8 +29,6 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <Content Include="$(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/appsettings*.json"
              Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
-    <Content Include="$(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/wwwroot/**/*"
-             Link="wwwroot/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
   </ItemGroup>
 
   <Target Name="ValidateAdminUiSettingsRoot" BeforeTargets="PrepareForBuild">
@@ -50,16 +48,41 @@
   <!-- Native UI is a nonpackable application artifact, not a source SDK library.
        Restore and build it with the same explicit global profile; ProjectReference
        metadata is discarded by NuGet's path walk and can restore the wrong graph. -->
-  <Target Name="StageNativeAdminUiAssets" BeforeTargets="PrepareForBuild;ResolveStaticWebAssetsInputs" DependsOnTargets="ValidateAdminUiSettingsRoot">
+  <Target Name="StageNativeAdminUiAssets" BeforeTargets="PrepareForBuild;ResolveProjectStaticWebAssets" DependsOnTargets="ValidateAdminUiSettingsRoot">
+    <PropertyGroup>
+      <_NativeAdminUiStageRoot>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)native-admin-ui/wwwroot', '$(MSBuildProjectDirectory)/'))</_NativeAdminUiStageRoot>
+    </PropertyGroup>
     <ItemGroup>
       <_NativeAdminUiAsset Include="$(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/wwwroot/**/*" />
-      <_ObsoleteNativeAdminUiAsset Include="$(MSBuildProjectDirectory)/wwwroot/**/*;$(TargetDir)wwwroot/**/*"
-          Exclude="@(_NativeAdminUiAsset->'$(MSBuildProjectDirectory)/wwwroot/%(RecursiveDir)%(Filename)%(Extension)');@(_NativeAdminUiAsset->'$(TargetDir)wwwroot/%(RecursiveDir)%(Filename)%(Extension)')" />
-      <Content Remove="@(_ObsoleteNativeAdminUiAsset)" />
+      <_ObsoleteNativeAdminUiAsset Include="$(_NativeAdminUiStageRoot)/**/*;$(TargetDir)wwwroot/**/*"
+          Exclude="@(_NativeAdminUiAsset->'$(_NativeAdminUiStageRoot)/%(RecursiveDir)%(Filename)%(Extension)');@(_NativeAdminUiAsset->'$(TargetDir)wwwroot/%(RecursiveDir)%(Filename)%(Extension)')" />
+      <!-- Retained staging from older builds is not an input to this isolated artifact. -->
+      <Content Remove="wwwroot/**/*;$(MSBuildProjectDirectory)/wwwroot/**/*" />
     </ItemGroup>
     <Delete Files="@(_ObsoleteNativeAdminUiAsset)" />
-    <MakeDir Directories="$(MSBuildProjectDirectory)/wwwroot" />
-    <Copy SourceFiles="@(_NativeAdminUiAsset)" DestinationFiles="@(_NativeAdminUiAsset->'$(MSBuildProjectDirectory)/wwwroot/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <MakeDir Directories="$(_NativeAdminUiStageRoot)" />
+    <Copy SourceFiles="@(_NativeAdminUiAsset)" DestinationFiles="@(_NativeAdminUiAsset->'$(_NativeAdminUiStageRoot)/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="DefineNativeAdminUiStaticWebAssets" AfterTargets="ResolveProjectStaticWebAssets" DependsOnTargets="StageNativeAdminUiAssets">
+    <ItemGroup>
+      <_StagedNativeAdminUiAsset Include="$(_NativeAdminUiStageRoot)/**/*">
+        <RelativePath>%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+      </_StagedNativeAdminUiAsset>
+      <StaticWebAssetDiscoveryPattern Remove="@(StaticWebAssetDiscoveryPattern)" Condition="'%(StaticWebAssetDiscoveryPattern.Source)' == '$(PackageId)'" />
+      <StaticWebAssetDiscoveryPattern Include="$(PackageId)/native-admin-ui">
+        <Source>$(PackageId)</Source><BasePath>$(StaticWebAssetBasePath)</BasePath>
+        <ContentRoot>$(_NativeAdminUiStageRoot)/</ContentRoot><Pattern>**</Pattern>
+      </StaticWebAssetDiscoveryPattern>
+    </ItemGroup>
+    <DefineStaticWebAssets CandidateAssets="@(_StagedNativeAdminUiAsset)" SourceType="Computed"
+        SourceId="$(PackageId)" ContentRoot="$(_NativeAdminUiStageRoot)/" BasePath="$(StaticWebAssetBasePath)"
+        CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never">
+      <Output TaskParameter="Assets" ItemName="_NativeAdminUiStaticWebAsset" />
+      <Output TaskParameter="Assets" ItemName="StaticWebAsset" />
+    </DefineStaticWebAssets>
+    <DefineStaticWebAssetEndpoints CandidateAssets="@(_NativeAdminUiStaticWebAsset)" ContentTypeMappings="@(StaticWebAssetContentTypeMapping)">
+      <Output TaskParameter="Endpoints" ItemName="StaticWebAssetEndpoint" />
+    </DefineStaticWebAssetEndpoints>
   </Target>
   <Target Name="BuildNativeAdminUiArtifact" BeforeTargets="ResolveAssemblyReferences" DependsOnTargets="ValidateAdminUiSettingsRoot">
     <PropertyGroup>
@@ -81,7 +104,7 @@
       <Output TaskParameter="ConsoleOutput" PropertyName="_NativeAdminUiSourceCommit" />
     </Exec>
     <ItemGroup>
-      <_NativeAdminUiEvidence Include="$(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj;@(_NativeAdminUiBuiltAssembly);@(_NativeAdminUiBuiltAssembly->'%(RootDir)%(Directory)%(Filename).deps.json');$(TargetDir)wwwroot/**/*;$(MSBuildProjectDirectory)/wwwroot/**/*" />
+      <_NativeAdminUiEvidence Include="$(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj;@(_NativeAdminUiBuiltAssembly);@(_NativeAdminUiBuiltAssembly->'%(RootDir)%(Directory)%(Filename).deps.json');$(TargetDir)wwwroot/**/*;$(_NativeAdminUiStageRoot)/**/*" />
     </ItemGroup>
     <RemoveDuplicates Inputs="@(_NativeAdminUiEvidence)"><Output TaskParameter="Filtered" ItemName="_UniqueNativeAdminUiEvidence" /></RemoveDuplicates>
     <GetFileHash Files="@(_UniqueNativeAdminUiEvidence)" Algorithm="SHA256"><Output TaskParameter="Items" ItemName="_NativeAdminUiHashedEvidence" /></GetFileHash>

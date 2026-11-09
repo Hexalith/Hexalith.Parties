@@ -30,6 +30,7 @@ internal sealed class MtlsBootstrapCommandDouble : IDisposable
         {
             ["PATH"] = _commands + Path.PathSeparator + Environment.GetEnvironmentVariable("PATH"),
             ["FAKE_MTLS_STATE"] = Root,
+            ["DAPR_MTLS_RUNTIME_PROFILE"] = "1.18.7",
             ["FAKE_MTLS_IMAGE"] = File.ReadAllLines(_script)
                 .Single(line => line.StartsWith("sentry_image=", StringComparison.Ordinal)).Split('"')[1],
             ["FAKE_MTLS_SENTRY_CONFIG"] = Path.Combine(repositoryRoot, "src", "Hexalith.Parties.AppHost", "DaprComponents", "sentry.yaml"),

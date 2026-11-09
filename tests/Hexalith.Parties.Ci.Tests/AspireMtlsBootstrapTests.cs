@@ -51,6 +51,42 @@ public sealed class AspireMtlsBootstrapTests
         }
     }
 
+    /// <summary>Explicit catalog runtime selection uses its matching immutable control-plane image.</summary>
+    /// <param name="profile">The exact supported runtime profile.</param>
+    [Theory]
+    [InlineData("1.18.7")]
+    [InlineData("1.19.1")]
+    public void BootstrapUsesTheSelectedRuntimeControlPlane(string profile)
+    {
+        (int exitCode, string error, string[] requests) = RunBootstrap(prepareOnly: true, runtimeProfile: profile);
+        exitCode.ShouldBe(0, error);
+        requests.Count(request => request.StartsWith("docker container start ", StringComparison.Ordinal)).ShouldBe(3);
+    }
+
+    /// <summary>A control plane from another profile cannot be resumed under the selected runtime.</summary>
+    [Fact]
+    public void BootstrapRefusesAnExistingControlPlaneFromAnotherRuntimeProfile()
+    {
+        (int exitCode, string error, string[] requests) = RunBootstrap(prepareOnly: true, runtimeProfile: "1.19.1",
+            observedControlPlaneImage: "daprio/dapr@sha256:b42eeb03c4300938226b7a5d7a15db5513e69e1d55570967c290d670c7612df2");
+        exitCode.ShouldNotBe(0);
+        error.ShouldContain("expected 'daprio/dapr@sha256:801b920e02867addcd64f9a5792b8aadf015d6fc365f8b26a72415e2e01bcf98'");
+        requests.ShouldNotContain(request => request.StartsWith("docker container start ", StringComparison.Ordinal));
+    }
+
+    /// <summary>Unqualified runtime profiles fail before touching Docker or Aspire.</summary>
+    /// <param name="profile">The unqualified selection.</param>
+    [Theory]
+    [InlineData("1.19.0")]
+    [InlineData("1.19.1-preview.1")]
+    public void BootstrapRefusesUnqualifiedRuntimeProfiles(string profile)
+    {
+        (int exitCode, string error, string[] requests) = RunBootstrap(prepareOnly: true, runtimeProfile: profile);
+        exitCode.ShouldBe(2);
+        error.ShouldContain("Unsupported Dapr mTLS runtime profile");
+        requests.ShouldBeEmpty();
+    }
+
     /// <summary>Rejects a network that cannot provide the scoped control-plane boundary.</summary>
     [Theory]
     [InlineData("host", "")]
@@ -205,7 +241,9 @@ public sealed class AspireMtlsBootstrapTests
         bool cleanupOnly = false,
         string foreignRole = "",
         string foreignKind = "",
-        bool ownsNetwork = true)
+        bool ownsNetwork = true,
+        string runtimeProfile = "",
+        string? observedControlPlaneImage = null)
     {
         if (OperatingSystem.IsWindows())
         {
@@ -392,8 +430,11 @@ public sealed class AspireMtlsBootstrapTests
             start.Environment["FAKE_NETWORK_DRIVER"] = networkDriver;
             start.Environment["FAKE_EXTRA_NETWORK_MEMBER"] = extraNetworkMember;
             start.Environment["FAKE_SENTRY_CONFIGURATION"] = CiTestPaths.RepoFile("src/Hexalith.Parties.AppHost/DaprComponents/sentry.yaml");
-            start.Environment["FAKE_SENTRY_IMAGE"] = CiTestPaths.ReadRepoFile("scripts/aspire-start-mtls.sh")
-                .Split('\n').Single(line => line.StartsWith("sentry_image=", StringComparison.Ordinal)).Split('"')[1];
+            start.Environment["DAPR_MTLS_RUNTIME_PROFILE"] = runtimeProfile;
+            start.Environment["FAKE_SENTRY_IMAGE"] = observedControlPlaneImage ?? (runtimeProfile == "1.19.1"
+                ? "daprio/dapr@sha256:801b920e02867addcd64f9a5792b8aadf015d6fc365f8b26a72415e2e01bcf98"
+                : CiTestPaths.ReadRepoFile("scripts/aspire-start-mtls.sh")
+                    .Split('\n').Single(line => line.StartsWith("sentry_image=", StringComparison.Ordinal)).Split('"')[1]);
 
             using Process process = new() { StartInfo = start };
             process.Start().ShouldBeTrue();

@@ -126,13 +126,13 @@ public static class PartiesCatalogDeclarations
     /// <summary>Existing wire query identities, including internal computed authority queries.</summary>
     public static IReadOnlyList<RouteContractDeclaration> Queries { get; } = [
         Query("detail", "PartyDetail", typeof(GetParty).FullName!, "party-detail", compatibilityActorType: "PartyDetailProjectionQueryActor"),
-        Query("get-party", "GetParty", typeof(GetParty).FullName!, "party-detail"),
+        Query("get-party", "GetParty", typeof(GetParty).FullName!, "party-detail", compatibilityActorType: "PartyDetailProjectionQueryActor"),
         Query("index", "PartyIndex", typeof(ListParties).FullName!, "party-index", compatibilityActorType: "PartyIndexProjectionQueryActor"),
         Query("search", "PartySearch", typeof(SearchParties).FullName!, "party-index", compatibilityActorType: "PartyIndexProjectionQueryActor"),
-        Query("export", "ExportPartyData", "Hexalith.Parties.Queries.ExportPartyDataQueryHandler", "party-detail"),
-        Query("processing-records", "GetProcessingRecords", typeof(GetProcessingRecords).FullName!, "party-detail"),
-        Query("erasure-status", "GetErasureStatus", "Hexalith.Parties.Queries.GetErasureStatusQueryHandler", "party-detail"),
-        Query("erasure-certificate", "GetErasureCertificate", "Hexalith.Parties.Queries.GetErasureCertificateQueryHandler", "party-detail"),
+        Query("export", "ExportPartyData", "Hexalith.Parties.Queries.ExportPartyDataQueryHandler", "party-detail", compatibilityActorType: "PartyDetailProjectionQueryActor"),
+        Query("processing-records", "GetProcessingRecords", typeof(GetProcessingRecords).FullName!, "party-detail", compatibilityActorType: "PartyDetailProjectionQueryActor"),
+        Query("erasure-status", "GetErasureStatus", "Hexalith.Parties.Queries.GetErasureStatusQueryHandler", "party-detail", compatibilityActorType: "PartyDetailProjectionQueryActor"),
+        Query("erasure-certificate", "GetErasureCertificate", "Hexalith.Parties.Queries.GetErasureCertificateQueryHandler", "party-detail", compatibilityActorType: "PartyDetailProjectionQueryActor"),
         Query("identity", typeof(ResolvePartyIdentity).FullName!, typeof(ResolvePartyIdentity).FullName!, null),
         Query("human-binding-at", typeof(ResolveHumanActorBindingAt).FullName!, typeof(ResolveHumanActorBindingAt).FullName!, null),
         Query("chatbot-authority", ResolveChatBotPartyAuthority.QueryType, typeof(ResolveChatBotPartyAuthority).FullName!, null, true)];

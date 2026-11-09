@@ -14,7 +14,7 @@ public sealed class ExternalRuntimeCompilationTests
     private static readonly string[] SdkPackages =
     [
         "Hexalith.EventStore.Client", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.ServiceDefaults",
-        "Hexalith.EventStore.Admin.Server", "Hexalith.EventStore.Admin.Abstractions", "Hexalith.EventStore.DomainService",
+        "Hexalith.EventStore.Admin.Server", "Hexalith.EventStore.Admin.Abstractions", "Hexalith.EventStore.DomainService", "Hexalith.EventStore.SignalR",
     ];
 
     private static readonly string[] PeerPackages =
@@ -33,6 +33,7 @@ public sealed class ExternalRuntimeCompilationTests
         "tests/Hexalith.Parties.EventStoreSample.TestHost/Hexalith.Parties.EventStoreSample.TestHost.csproj",
         "references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample.BlazorUI/Hexalith.EventStore.Sample.BlazorUI.csproj",
         "src/Hexalith.Parties/Hexalith.Parties.csproj",
+        "src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj",
         "src/Hexalith.Parties.EventStoreExtensions/Hexalith.Parties.EventStoreExtensions.csproj",
     ];
 
@@ -66,14 +67,18 @@ public sealed class ExternalRuntimeCompilationTests
                 File.WriteAllText(manifest, "stale preparation must not qualify this attempt");
                 string publicArchives = Path.Combine(receiptDirectory, "public-archives");
                 Directory.CreateDirectory(publicArchives);
-                foreach (string package in PeerPackages)
+                foreach (string package in SdkPackages.Concat(PeerPackages))
                 {
                     string archive = package + "." + FixtureVersion + ".nupkg";
-                    File.Copy(Path.Combine(commonFeed, archive), Path.Combine(publicArchives, archive.ToLowerInvariant()));
+                    string official = File.Exists(Path.Combine(commonFeed, archive)) ? Path.Combine(commonFeed, archive) : Path.Combine(selectedFeed, archive);
+                    string cached = Path.Combine(publicArchives, archive.ToLowerInvariant());
+                    File.Copy(official, cached);
+                    File.AppendAllText(cached, "stale cached fixture bytes must be replaced");
                 }
 
                 // The unmodified script invokes the real SDK for every project. No compiler or validator is replaced.
                 ProcessStartInfo start = CreateIsolatedFixtureStartInfo("bash", root);
+                PackageTestProcess.UseOfficialArchiveFixtures(start, Path.Combine(root, "official-transport"), commonFeed, selectedFeed);
                 foreach (string argument in new[] { Path.Combine(root, "scripts", "prepare-aspire-runtime-hosts.sh"), "--configuration", PackageTestProcess.ProbeConfiguration })
                 {
                     start.ArgumentList.Add(argument);
@@ -118,6 +123,12 @@ public sealed class ExternalRuntimeCompilationTests
                     foreach (string project in RuntimeProjects)
                     {
                         completed.RootElement.GetProperty("projects").TryGetProperty(Path.Combine(root, project), out _).ShouldBeTrue(project);
+                    }
+                    foreach (string package in SdkPackages.Concat(PeerPackages))
+                    {
+                        string archive = package + "." + FixtureVersion + ".nupkg";
+                        string official = File.Exists(Path.Combine(commonFeed, archive)) ? Path.Combine(commonFeed, archive) : Path.Combine(selectedFeed, archive);
+                        File.ReadAllBytes(Path.Combine(publicArchives, archive.ToLowerInvariant())).ShouldBe(File.ReadAllBytes(official));
                     }
                 }
             }

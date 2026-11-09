@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Reflection;
+using System.Text.Json;
 
 namespace Hexalith.Parties.PackageTests;
 
@@ -69,6 +70,35 @@ internal static class PackageTestProcess
         {
             startInfo.Environment.Remove(key);
         }
+    }
+
+    /// <summary>Supplies independent archive bytes at the HTTPS transport boundary for synthetic package compilation.</summary>
+    /// <param name="startInfo">The isolated child process that runs the production validator.</param>
+    /// <param name="directory">The private directory for the Python transport fixture.</param>
+    /// <param name="feeds">The independent fixture feeds containing the expected official archive bytes.</param>
+    internal static void UseOfficialArchiveFixtures(ProcessStartInfo startInfo, string directory, params string[] feeds)
+    {
+        Directory.CreateDirectory(directory);
+        File.WriteAllText(Path.Combine(directory, "sitecustomize.py"), """
+            import json
+            import os
+            import urllib.request
+            from pathlib import Path
+            from urllib.parse import urlsplit
+            def official_fixture(url, timeout=None):
+                parsed = urlsplit(url)
+                if parsed.scheme != 'https' or parsed.netloc != 'api.nuget.org' or not parsed.path.startswith('/v3-flatcontainer/'):
+                    raise OSError('Unexpected fixture download')
+                name = Path(parsed.path).name.lower()
+                candidates = [path for feed in json.loads(os.environ['PARTIES_OFFICIAL_ARCHIVE_FEEDS'])
+                    for path in Path(feed).iterdir() if path.is_file() and path.name.lower() == name]
+                if len(candidates) != 1:
+                    raise OSError('An exact independent official fixture archive is required')
+                return candidates[0].open('rb')
+            urllib.request.urlopen = official_fixture
+            """.ReplaceLineEndings("\n") + "\n");
+        startInfo.Environment["PYTHONPATH"] = directory;
+        startInfo.Environment["PARTIES_OFFICIAL_ARCHIVE_FEEDS"] = JsonSerializer.Serialize(feeds);
     }
 
     private static void EnsureSuccess(PackageTestProcessResult result, string operation)

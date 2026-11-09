@@ -6,6 +6,7 @@ import hashlib
 import json
 import re
 import time
+import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
 import zipfile
@@ -31,6 +32,9 @@ NATIVE_SAMPLE_CONTRACTS_PROJECT = (Path(__file__).resolve().parents[1] / "refere
                                    "Hexalith.EventStore.Sample.Contracts/Hexalith.EventStore.Sample.Contracts.csproj")
 PRIVATE_ADMIN_UI_PROJECT = (Path(__file__).resolve().parents[1] / "tests/"
                             "Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj")
+PARTIES_UI_PROJECT = (Path(__file__).resolve().parents[1] / "src/"
+                      "Hexalith.Parties.UI/Hexalith.Parties.UI.csproj")
+PARTIES_UI_IDS = {"Hexalith.EventStore.Client", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.SignalR"}
 
 
 def select_sdk(libraries: dict, project: Path | None = None, restored: set[str] | None = None,
@@ -67,6 +71,8 @@ def select_sdk(libraries: dict, project: Path | None = None, restored: set[str] 
 def required_sdk_ids(project: Path | None = None) -> set[str]:
     # This host uses Admin.Server's Dapr transport, not the domain SDK Client.
     # Bind the exception to the declared project, never a supplied name or missing assembly.
+    if project is not None and project.resolve() == PARTIES_UI_PROJECT:
+        return PARTIES_UI_IDS
     return ADMIN_SERVER_IDS if project is not None and project.resolve() == ADMIN_SERVER_PROJECT else CORE_IDS
 
 PUBLIC_FAMILIES = {
@@ -199,14 +205,34 @@ def validate_deps(path: Path, version: str, sdk_libraries: set[str], families: d
 def runtime_inputs(target: Path) -> set[Path]:
     """Enumerate the runtime files whose additions, deletions and changes require preparation."""
     paths = {target, target.with_suffix(".deps.json")}
+    apphost = target.with_suffix("")
+    if apphost.is_file():
+        paths.add(apphost)
     runtimeconfig = target.with_suffix(".runtimeconfig.json")
     if runtimeconfig.is_file():
         paths.add(runtimeconfig)
-    paths.update(path.resolve() for path in target.parent.rglob("*") if path.is_file() and path.suffix.lower() in {".dll", ".exe"})
+    paths.update(path.resolve() for path in target.parent.rglob("*") if path.is_file()
+                 and (path.suffix.lower() in {".dll", ".exe", ".so", ".dylib"} or ".so." in path.name.lower()))
     paths.update(path.resolve() for path in target.parent.glob("appsettings*.json"))
     paths.update(path.resolve() for name in ("wwwroot", "native-ui-artifact") for path in (target.parent / name).rglob("*") if path.is_file())
     paths.update(path.resolve() for path in target.parent.glob("*staticwebassets*.json"))
     paths.update(path.resolve() for path in target.parent.glob("native-admin-ui-artifact.tsv"))
+    for manifest in target.parent.glob("*staticwebassets*.json"):
+        document = load(manifest)
+        if not isinstance(document, dict) or "ContentRoots" not in document:
+            continue
+        roots = document["ContentRoots"]
+        if not isinstance(roots, list) or any(not isinstance(value, str) for value in roots):
+            raise ValueError("Static web asset content roots must be an explicit path list")
+        for value in roots:
+            content = Path(value)
+            if not content.is_absolute() or content.is_symlink() or not content.is_dir():
+                raise ValueError("Static web asset content root is unavailable or linked: " + value)
+            for asset in content.rglob("*"):
+                if asset.is_symlink():
+                    raise ValueError("Linked static web assets cannot qualify a prepared runtime: " + str(asset))
+                if asset.is_file():
+                    paths.add(asset.resolve())
     return paths
 
 
@@ -237,7 +263,9 @@ def record(metadata: dict, project: Path, configuration: str, version: str, star
                 paths.add(source)
     return {"schemaVersion": 1, "completed": True, "project": str(project.resolve()), "configuration": configuration,
             "sdkVersion": version, "familyVersions": families, "role": role, "targetPath": str(target), "assetsPath": str(assets_path),
-            "buildStartedNs": started_ns, "completedNs": time.time_ns(), "files": {str(path): digest(path) for path in sorted(paths)},
+            "buildStartedNs": started_ns, "completedNs": time.time_ns(),
+            "runtimeInputs": [str(path) for path in sorted(runtime_inputs(target))],
+            "files": {str(path): digest(path) for path in sorted(paths)},
             "sdkArchives": archives, "sdkBinaries": binaries}
 
 
@@ -252,7 +280,11 @@ def verify_receipt(receipt: dict, project: Path, configuration: str, version: st
         if digest(Path(filename)) != expected:
             raise ValueError("Prepared runtime file drifted after completed build: " + filename)
     target, assets_path = Path(receipt["targetPath"]), Path(receipt["assetsPath"])
-    recorded_inputs = {Path(filename) for filename in receipt["files"] if Path(filename).is_relative_to(target.parent)}
+    if not isinstance(receipt.get("runtimeInputs"), list):
+        raise ValueError("Prepared runtime input inventory is missing")
+    recorded_inputs = {Path(filename) for filename in receipt["runtimeInputs"]}
+    if not recorded_inputs.issubset({Path(filename) for filename in receipt["files"]}):
+        raise ValueError("Prepared runtime inventory contains unbound inputs")
     if runtime_inputs(target) != recorded_inputs:
         raise ValueError("Prepared runtime file inventory drifted after completed build")
     assets = validate(assets_path, version, project)
@@ -266,35 +298,54 @@ def verify_receipt(receipt: dict, project: Path, configuration: str, version: st
 
 def public_archive(package: str, cache: Path) -> dict:
     package_id, version = package.split("=", 1)
-    repository = next(("https://github.com/Hexalith/" + name for name in ("Hexalith.Tenants", "Hexalith.Memories")
+    repository = next(("https://github.com/Hexalith/" + name for name in ("Hexalith.EventStore", "Hexalith.Tenants", "Hexalith.Memories", "Hexalith.FrontComposer", "Hexalith.McpCli")
                        if package_id.startswith(name + ".")), None)
     if repository is None:
         raise ValueError("Unsupported public peer archive identity")
     cache.mkdir(parents=True, exist_ok=True)
     path = cache / (package_id.lower() + "." + version + ".nupkg")
-    if not path.is_file():
-        url = "https://api.nuget.org/v3-flatcontainer/" + package_id.lower() + "/" + version + "/" + path.name
-        with urllib.request.urlopen(url, timeout=60) as response:
-            content = response.read()
-        temporary = path.with_suffix(".pending")
-        temporary.write_bytes(content)
-        temporary.replace(path)
+    # A pre-existing local archive cannot authenticate its own contents or metadata.
+    # Each completed preparation independently retrieves the official HTTPS bytes.
+    url = "https://api.nuget.org/v3-flatcontainer/" + package_id.lower() + "/" + version + "/" + path.name
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(url, timeout=30) as response:
+                content = response.read()
+            break
+        except urllib.error.HTTPError as failure:
+            if failure.code not in {408, 429, 500, 502, 503, 504} or attempt == 2:
+                raise
+        except (urllib.error.URLError, TimeoutError, ConnectionError):
+            if attempt == 2:
+                raise
+        time.sleep(attempt + 1)
+    temporary = path.with_suffix(".pending")
+    temporary.write_bytes(content)
+    temporary.replace(path)
     return archive_identity(path, package_id, version, repository)
 
 
 def complete(paths: list[Path], configuration: str, version: str, packages: list[str], cache: Path, families: dict) -> dict:
     projects = {}
+    restored_archives = []
     for path in paths:
         receipt = load(path)
         verify_receipt(receipt, Path(receipt["project"]), configuration, version, families)
         if receipt["project"] in projects:
             raise ValueError("A prepared project appears more than once")
         projects[receipt["project"]] = {"receipt": str(path.resolve()), "sha256": digest(path)}
+        restored_archives.extend(receipt["sdkArchives"])
     if not projects:
         raise ValueError("No completed builds were supplied")
+    selections = sorted(set(packages) | {archive["id"] + "=" + archive["version"] for archive in restored_archives})
+    public = [public_archive(package, cache) for package in selections]
+    official = {(archive["id"], archive["version"]): archive for archive in public}
+    for archive in restored_archives:
+        if archive["sha256"] != official[archive["id"], archive["version"]]["sha256"]:
+            raise ValueError("Restored archive differs from independently retrieved official package: " + archive["id"])
     return {"schemaVersion": 1, "completed": True, "configuration": configuration, "sdkVersion": version,
             "completedNs": time.time_ns(), "familyVersions": families, "projects": projects,
-            "publicArchives": [public_archive(package, cache) for package in packages]}
+            "publicArchives": public}
 
 
 def verify_manifest(path: Path, project: Path, configuration: str, version: str, families: dict | None = None) -> dict:
@@ -313,7 +364,13 @@ def verify_manifest(path: Path, project: Path, configuration: str, version: str,
         actual = archive_identity(Path(proof["path"]), proof["id"], proof["version"], proof["repository"])
         if actual != proof:
             raise ValueError("Public peer package identity/source proof drifted")
-    return verify_receipt(load(receipt_path), project, configuration, version, manifest["familyVersions"])
+    receipt = verify_receipt(load(receipt_path), project, configuration, version, manifest["familyVersions"])
+    official = {(archive["id"], archive["version"]): archive for archive in manifest["publicArchives"]}
+    for archive in receipt["sdkArchives"]:
+        proof = official.get((archive["id"], archive["version"]))
+        if proof is None or archive["sha256"] != proof["sha256"]:
+            raise ValueError("Restored runtime archive is not bound to independently retrieved official bytes")
+    return receipt
 
 
 def main() -> None:

@@ -16,6 +16,13 @@ scheduler_port="${DAPR_MTLS_SCHEDULER_PORT:-55006}"
 scheduler_health_port="${DAPR_MTLS_SCHEDULER_HEALTH_PORT:-18082}"
 sentry_container="hexalith-parties-dapr-sentry${name_suffix}"
 sentry_image="daprio/dapr@sha256:b42eeb03c4300938226b7a5d7a15db5513e69e1d55570967c290d670c7612df2"
+# The default remains the original self-hosted profile. CI explicitly binds the
+# selected shared catalog runtime to a matched immutable control-plane image.
+case "${DAPR_MTLS_RUNTIME_PROFILE:-1.18.7}" in
+    1.18.7) ;;
+    1.19.1) sentry_image="daprio/dapr@sha256:801b920e02867addcd64f9a5792b8aadf015d6fc365f8b26a72415e2e01bcf98" ;;
+    *) printf 'Unsupported Dapr mTLS runtime profile: %s\n' "${DAPR_MTLS_RUNTIME_PROFILE}" >&2; exit 2 ;;
+esac
 sentry_configuration="${repository_root}/src/Hexalith.Parties.AppHost/DaprComponents/sentry.yaml"
 sentry_grpc_binding="127.0.0.1:${sentry_port}"
 sentry_health_binding="127.0.0.1:${sentry_health_port}"

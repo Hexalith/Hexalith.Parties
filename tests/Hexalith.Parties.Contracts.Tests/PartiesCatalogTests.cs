@@ -58,7 +58,12 @@ public class PartiesCatalogTests
     [InlineData("PartyDetail", "PartyDetailProjectionQueryActor")]
     [InlineData("PartyIndex", "PartyIndexProjectionQueryActor")]
     [InlineData("PartySearch", "PartyIndexProjectionQueryActor")]
-    public void PublishedMcpCliQueriesAcceptOnlyTheirOwnerDeclaredLegacySelector(string wireType, string selector)
+    [InlineData("GetParty", "PartyDetailProjectionQueryActor")]
+    [InlineData("ExportPartyData", "PartyDetailProjectionQueryActor")]
+    [InlineData("GetProcessingRecords", "PartyDetailProjectionQueryActor")]
+    [InlineData("GetErasureStatus", "PartyDetailProjectionQueryActor")]
+    [InlineData("GetErasureCertificate", "PartyDetailProjectionQueryActor")]
+    public void PublishedQueriesAcceptOnlyTheirOwnerDeclaredLegacySelector(string wireType, string selector)
     {
         var route = PartiesCatalogDeclarations.Queries.Single(query => query.MessageType == wireType);
         route.Execution!.TargetKind.ShouldBe("domain-service");
@@ -73,7 +78,7 @@ public class PartiesCatalogTests
     [Fact]
     public void OtherPartyQueriesDoNotAcceptLegacySelectors()
     {
-        foreach (var route in PartiesCatalogDeclarations.Queries.Where(query => query.MessageType is not ("PartyDetail" or "PartyIndex" or "PartySearch")))
+        foreach (var route in PartiesCatalogDeclarations.Queries.Where(query => query.Execution!.QueryKind == "computed"))
         {
             route.Execution!.CompatibilityProjectionActorTypes.ShouldBeNull();
             RouteCatalogQuerySelectorPolicy.Matches(route, "PartyDetailProjectionQueryActor").ShouldBeFalse();
@@ -85,6 +90,11 @@ public class PartiesCatalogTests
     [InlineData("PartyDetail", "PartyDetailProjectionQueryActor")]
     [InlineData("PartyIndex", "PartyIndexProjectionQueryActor")]
     [InlineData("PartySearch", "PartyIndexProjectionQueryActor")]
+    [InlineData("GetParty", "PartyDetailProjectionQueryActor")]
+    [InlineData("ExportPartyData", "PartyDetailProjectionQueryActor")]
+    [InlineData("GetProcessingRecords", "PartyDetailProjectionQueryActor")]
+    [InlineData("GetErasureStatus", "PartyDetailProjectionQueryActor")]
+    [InlineData("GetErasureCertificate", "PartyDetailProjectionQueryActor")]
     public void OwnerSelectorsSurviveCanonicalCatalogSerialization(string wireType, string selector)
     {
         var route = PartiesCatalogDeclarations.Queries.Single(query => query.MessageType == wireType);

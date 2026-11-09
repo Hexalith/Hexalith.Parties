@@ -132,8 +132,8 @@ public sealed class PartiesContainerPublishWorkflowTests
         tool.GetProperty("rollForward").GetBoolean().ShouldBeFalse();
         workflow.ShouldNotContain("submodules: recursive");
 
-        foreach (var cohort in new[] { (Job: "eventstore-404-package-cohort", Version: "4.0.4", Tenants: "5.11.2", Memories: "3.0.11", CatalogCount: 3, CapabilityCount: 23),
-            (Job: "eventstore-410-package-cohort", Version: "4.1.0", Tenants: "7.0.2", Memories: "3.0.23", CatalogCount: 10, CapabilityCount: 33) })
+        foreach (var cohort in new[] { (Job: "eventstore-404-package-cohort", Version: "4.0.4", Tenants: "5.11.2", Memories: "3.0.11", CatalogCount: 3, CapabilityCount: 25),
+            (Job: "eventstore-420-package-cohort", Version: "4.2.0", Tenants: "7.0.5", Memories: "3.0.25", CatalogCount: 20, CapabilityCount: 41) })
         {
             string packageCohort = ReadWorkflowJob(workflow, cohort.Job);
             packageCohort.ShouldContain("-p:HexalithEventStoreVersion=" + cohort.Version);
@@ -146,19 +146,21 @@ public sealed class PartiesContainerPublishWorkflowTests
             packageCohort.ShouldContain($"--minimum-expected-tests {cohort.CapabilityCount} --fail-skips on");
             string focusedRuns = packageCohort[packageCohort.IndexOf("dotnet test --project ", StringComparison.Ordinal)..];
             focusedRuns.ShouldNotContain("-m:1");
+            packageCohort.ShouldNotContain("continue-on-error");
         }
-        string latestCohort = ReadWorkflowJob(workflow, "eventstore-410-package-cohort");
+        string latestCohort = ReadWorkflowJob(workflow, "eventstore-420-package-cohort");
         latestCohort.ShouldContain("tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj");
         latestCohort.ShouldContain("--filter-class Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogConfigurationTests");
         latestCohort.ShouldContain("--filter-class Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogPreparationCleanupTests");
-        latestCohort.ShouldContain("--minimum-expected-tests 17 --fail-skips on");
+        latestCohort.ShouldContain("--filter-class Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogModelFinalizationTests");
+        latestCohort.ShouldContain("--minimum-expected-tests 51 --fail-skips on");
         string controllers = ReadWorkflowJob(workflow, "lifecycle-controller-tests");
         controllers.ShouldContain("python3 -B -m unittest discover -s tests/ci-lifecycle -v");
         controllers.ShouldContain("submodule update --init --depth 1 --checkout -- references/Hexalith.Builds");
         controllers.ShouldNotContain("continue-on-error");
         latestCohort.ShouldContain("--filter-method Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.EventStoreTransportAndSelectorCapabilitiesRequireExactQualification");
         latestCohort.ShouldContain("--filter-class Hexalith.Parties.Tests.Gateway.PartiesCatalogGatewaySelectorTests");
-        latestCohort.ShouldContain("--minimum-expected-tests 9 --fail-skips on");
+        latestCohort.ShouldContain("--minimum-expected-tests 24 --fail-skips on");
         string legacyProtocol = ReadWorkflowJob(workflow, "memories-3018-package-protocol");
         legacyProtocol.ShouldContain("-p:HexalithEventStoreVersion=4.0.4");
         legacyProtocol.ShouldContain("-p:HexalithTenantsVersion=7.0.0");

@@ -22,6 +22,22 @@ namespace Hexalith.Parties.Tests.Gateway;
 
 public sealed class PartyIdentityQueryHandlerTests
 {
+    /// <summary>The actual historical identity wire passes through the committed SDK router to the producer.</summary>
+    [Fact]
+    public async Task HistoricalClientRequestPassesTheCommittedCatalogRouter()
+    {
+        var fixture = Service(Events());
+        using var http = new HttpClient(new PartyIdentityRoundTripHandler(new HumanActorBindingAtQueryHandler(fixture.Service)))
+        {
+            BaseAddress = new Uri("https://gateway.test/"),
+        };
+        var client = new HttpPartiesIdentityClient(http);
+        HumanActorBindingResult result = await client.ResolveHumanActorBindingAtAsync("tenant-a",
+            new("tenant-a", "party-1", Start.AddHours(1), Actor, 1), TestContext.Current.CancellationToken);
+        result.Outcome.ShouldBe(HumanActorBindingOutcome.Resolved);
+        result.Evidence!.ActorId.ShouldBe(Actor);
+    }
+
     private static readonly DateTimeOffset Start = DateTimeOffset.UtcNow.AddDays(-1);
     private const string Actor = "01HX0000000000000000000001";
     private static HumanActorBindingEvidence Binding() => new("tenant-a", "party-1", Actor, 1, 1, Start, Start.AddDays(10), "writer", Actor,
@@ -652,7 +668,7 @@ public sealed class PartyIdentityQueryHandlerTests
         }
 
         var fixture = Service(events);
-        using var http = new HttpClient(new PartyIdentityRoundTripHandler(new(fixture.Service)))
+        using var http = new HttpClient(new PartyIdentityRoundTripHandler(new PartyIdentityQueryHandler(fixture.Service)))
         {
             BaseAddress = new Uri("https://gateway.test/"),
         };

@@ -1,6 +1,7 @@
 extern alias apphost;
 
 using System.Reflection;
+using System.Diagnostics;
 
 using Shouldly;
 
@@ -57,6 +58,34 @@ public sealed class DevelopmentCatalogPreparationCleanupTests
         Directory.Exists(path).ShouldBeFalse();
         failure.Message.ShouldContain("parties-catalog-no-such-command");
         failure.Message.Length.ShouldBeLessThan(4200);
+    }
+
+    /// <summary>Large simultaneous stdout/stderr are drained without retaining unbounded logs or losing their tails.</summary>
+    [Fact]
+    public async Task ExcessiveProcessOutputRetainsOnlyBoundedDiagnosticTails()
+    {
+        string path = Path.Combine(Path.GetTempPath(), "parties-catalog-output-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(path);
+        try
+        {
+            ProcessStartInfo start = new("python3")
+            {
+                WorkingDirectory = path, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false,
+            };
+            start.ArgumentList.Add("-c");
+            start.ArgumentList.Add("import sys\nfor i in range(2048):\n sys.stdout.write('x'*8192)\n sys.stderr.write('y'*8192)\nsys.stdout.write('STDOUT_END')\nsys.stderr.write('STDERR_END')\nsys.exit(1)");
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(30));
+            InvalidDataException failure = await Should.ThrowAsync<InvalidDataException>(() =>
+                CatalogTool.RunProcessAsync(start, Path.Combine(path, "bounded.log"), timeout.Token)).ConfigureAwait(true);
+            string retained = await File.ReadAllTextAsync(Path.Combine(path, "bounded.log"), TestContext.Current.CancellationToken).ConfigureAwait(true);
+            retained.Length.ShouldBeLessThanOrEqualTo(8192);
+            retained.ShouldContain("STDOUT_END");
+            retained.ShouldContain("STDERR_END");
+            failure.Message.Length.ShouldBeLessThan(4200);
+            failure.Message.ShouldContain("STDERR_END");
+        }
+        finally { Directory.Delete(path, recursive: true); }
     }
 
     /// <summary>Cancellation remains cancellation when process exit races with termination.</summary>

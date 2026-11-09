@@ -1,14 +1,18 @@
 """Exercise the exact pre-launch receipt entrypoint with real archive/file mutations."""
 import importlib.util
+import io
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
 import time
 import unittest
+import urllib.error
 import zipfile
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/validate-aspire-runtime-cohort.py"
@@ -31,6 +35,8 @@ class RuntimeReceiptCases(unittest.TestCase):
         self.assets_path = self.root / "obj/project.assets.json"
         self.assets_path.parent.mkdir()
         self.cache = self.root / "packages"
+        self.official = self.root / "official"
+        self.official.mkdir()
         self.families = {"HexalithFrontComposerVersion": "4.7.4", "HexalithMcpCliVersion": "2.0.1"}
         libraries, packages = {}, {}
         for package, version in [(name, "3.129.1") for name in sorted(cohort.CORE_IDS)] + [("Hexalith.FrontComposer.Contracts", "4.7.4"), ("Hexalith.McpCli.Abstractions", "2.0.1")]:
@@ -59,6 +65,7 @@ class RuntimeReceiptCases(unittest.TestCase):
         with zipfile.ZipFile(archive, "w") as zipped:
             zipped.writestr(package + ".nuspec", nuspec)
             zipped.writestr(entry, contents)
+        shutil.copyfile(archive, self.official / archive.name)
         identity = package + "/" + version
         libraries[identity] = {"type": "package", "path": relative}
         packages[identity] = {"runtime": {entry: {}}}
@@ -69,8 +76,126 @@ class RuntimeReceiptCases(unittest.TestCase):
     def prepare(self):
         receipt = cohort.record(self.metadata, self.project, "Release", "3.129.1", 0, "runtime", self.families)
         cohort.write(self.receipt_path, receipt)
-        cohort.write(self.manifest, cohort.complete([self.receipt_path], "Release", "3.129.1", [], self.cache, self.families))
+        def official(package, cache):
+            package_id, version = package.split("=", 1)
+            archive = self.official / (package_id.lower() + "." + version + ".nupkg")
+            owner = next(name for name in ("Hexalith.EventStore", "Hexalith.FrontComposer", "Hexalith.McpCli") if package_id.startswith(name + "."))
+            return cohort.archive_identity(archive, package_id, version, "https://github.com/Hexalith/" + owner)
+        with patch.object(cohort, "public_archive", side_effect=official):
+            cohort.write(self.manifest, cohort.complete([self.receipt_path], "Release", "3.129.1", [], self.cache, self.families))
         return receipt
+
+    def test_repacked_local_archive_cannot_authenticate_its_own_runtime(self):
+        archive = next((self.cache / "hexalith.eventstore.client").rglob("*.nupkg"))
+        with zipfile.ZipFile(archive, "a") as repacked:
+            repacked.writestr("repacked.txt", "same declared identity and deployed DLL")
+        with self.assertRaisesRegex(ValueError, "independently retrieved official"):
+            self.prepare()
+        self.assertFalse(self.manifest.exists())
+
+    def test_apphost_and_native_libraries_are_bound_until_launch(self):
+        for name in ("Host", "libnative.so", "libnative.so.1", "libnative.dylib"):
+            for mutation in ("change", "remove", "add"):
+                with self.subTest(name=name, mutation=mutation):
+                    self.tearDown(); self.setUp()
+                    selected = self.output / name
+                    if mutation != "add": selected.write_bytes(b"actual prepared native body")
+                    self.prepare()
+                    if mutation == "remove": selected.unlink()
+                    else: selected.write_bytes(b"unprepared native body")
+                    result, runner = self.launch()
+                    self.assertNotEqual(0, result.returncode)
+                    self.assertFalse(runner.exists())
+
+    def add_external_static_assets(self):
+        roots = []
+        for name in ("compressed", "jsmodules", "scopedcss", "source-wwwroot", "nuget-staticwebassets"):
+            content = self.root / "external" / name
+            content.mkdir(parents=True)
+            (content / "asset.css").write_text("prepared " + name)
+            roots.append(content)
+        for index, selected in enumerate((roots[:3], roots[3:])):
+            (self.output / ("Consumed" + str(index) + ".staticwebassets.runtime.json")).write_text(json.dumps({
+                "ContentRoots": [str(path) for path in selected],
+                "Root": {"Children": {str(i): {"Asset": {"ContentRootIndex": i, "SubPath": "asset.css"}}
+                                      for i in range(len(selected))},
+                         "Patterns": [{"ContentRootIndex": i, "Pattern": "**", "Depth": 0} for i in range(len(selected))]}}))
+        return roots
+
+    def test_every_consumed_static_manifest_binds_its_external_runtime_files(self):
+        roots = self.add_external_static_assets()
+        receipt = self.prepare()
+        self.assertTrue(all(str(root / "asset.css") in receipt["files"] for root in roots))
+        result, runner = self.launch()
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertTrue(runner.exists())
+
+    def test_external_static_asset_addition_removal_and_mutation_refuse_launch(self):
+        for index in range(5):
+            for mutation in ("add", "remove", "change"):
+                with self.subTest(content_root=index, mutation=mutation):
+                    self.tearDown(); self.setUp()
+                    roots = self.add_external_static_assets()
+                    self.prepare()
+                    asset = roots[index] / "asset.css"
+                    if mutation == "add": (roots[index] / "new.js").write_text("not prepared")
+                    elif mutation == "remove": asset.unlink()
+                    else: asset.write_text("changed after preparation")
+                    result, runner = self.launch()
+                    self.assertNotEqual(0, result.returncode)
+                    self.assertFalse(runner.exists())
+
+    def test_linked_external_static_assets_refuse_preparation(self):
+        roots = self.add_external_static_assets()
+        (roots[0] / "linked.css").symlink_to(roots[1] / "asset.css")
+        with self.assertRaisesRegex(ValueError, "Linked static web assets"):
+            self.prepare()
+
+    def test_real_downloader_replaces_stale_cache_from_independent_transport(self):
+        name = "hexalith.eventstore.client.3.129.1.nupkg"
+        official = (self.official / name).read_bytes()
+        cache = self.root / "downloaded"
+        cache.mkdir()
+        (cache / name).write_bytes(b"untrusted cached bytes")
+        with patch.object(cohort.urllib.request, "urlopen", return_value=io.BytesIO(official)) as download:
+            proof = cohort.public_archive("Hexalith.EventStore.Client=3.129.1", cache)
+        self.assertEqual(official, (cache / name).read_bytes())
+        self.assertEqual(cohort.digest(cache / name), proof["sha256"])
+        download.assert_called_once_with("https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.client/3.129.1/" + name, timeout=30)
+
+    def test_download_retries_transient_failure_without_accepting_cache(self):
+        name = "hexalith.eventstore.client.3.129.1.nupkg"
+        official = (self.official / name).read_bytes()
+        with patch.object(cohort.urllib.request, "urlopen", side_effect=[urllib.error.URLError("transient"), io.BytesIO(official)]) as download, \
+                patch.object(cohort.time, "sleep"):
+            proof = cohort.public_archive("Hexalith.EventStore.Client=3.129.1", self.root / "downloaded")
+        self.assertEqual(2, download.call_count)
+        self.assertEqual("Hexalith.EventStore.Client", proof["id"])
+
+    def test_download_failure_does_not_fall_back_to_existing_cache(self):
+        cache = self.root / "downloaded"
+        cache.mkdir()
+        (cache / "hexalith.eventstore.client.3.129.1.nupkg").write_bytes(b"untrusted cached bytes")
+        with patch.object(cohort.urllib.request, "urlopen", side_effect=urllib.error.URLError("unavailable")) as download, \
+                patch.object(cohort.time, "sleep"):
+            with self.assertRaises(urllib.error.URLError):
+                cohort.public_archive("Hexalith.EventStore.Client=3.129.1", cache)
+        self.assertEqual(3, download.call_count)
+
+    def test_declared_portal_uses_its_actual_client_contracts_and_signalr_packages(self):
+        self.project = cohort.PARTIES_UI_PROJECT
+        removed = "Hexalith.EventStore.ServiceDefaults/3.129.1"
+        self.assets["libraries"].pop(removed)
+        self.assets["targets"]["net10.0"].pop(removed)
+        (self.output / "Hexalith.EventStore.ServiceDefaults.dll").unlink()
+        self.add_package("Hexalith.EventStore.SignalR", "3.129.1", self.assets["libraries"], self.assets["targets"]["net10.0"])
+        self.assets_path.write_text(json.dumps(self.assets))
+        self.target.with_suffix(".deps.json").write_text(json.dumps(self.deps))
+        receipt = self.prepare()
+        self.assertEqual(cohort.PARTIES_UI_IDS, {proof["id"] for proof in receipt["sdkArchives"] if proof["id"] in cohort.SDK_IDS})
+        result, runner = self.launch()
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertTrue(runner.exists())
 
     def launch(self, configuration="Release", families=None):
         runner = self.root / "runner-started"
@@ -320,7 +445,7 @@ class RuntimeReceiptCases(unittest.TestCase):
                 self.tearDown(); self.setUp(); self.prepare()
                 added = self.output / filename
                 added.parent.mkdir(parents=True, exist_ok=True)
-                added.write_bytes(b"unprepared runtime input")
+                added.write_bytes(b"{}" if "staticwebassets" in filename else b"unprepared runtime input")
                 result, runner = self.launch()
                 self.assertNotEqual(0, result.returncode)
                 self.assertFalse(runner.exists())

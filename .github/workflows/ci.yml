@@ -129,10 +129,10 @@ jobs:
           dotnet test --project tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj \
             --no-build --no-restore --configuration Release "${package_properties[@]}" \
             --filter-method Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.CatalogApiAvailabilityDoesNotSelectNativeHosts \
-            --minimum-expected-tests 23 --fail-skips on
+            --minimum-expected-tests 25 --fail-skips on
 
-  eventstore-410-package-cohort:
-    name: EventStore 4.1.0 package cohort (offline)
+  eventstore-420-package-cohort:
+    name: EventStore 4.2.0 package cohort (offline)
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -151,9 +151,9 @@ jobs:
         shell: bash
         run: |
           package_properties=(
-            -p:HexalithEventStoreVersion=4.1.0
-            -p:HexalithTenantsVersion=7.0.2
-            -p:HexalithMemoriesVersion=3.0.23
+            -p:HexalithEventStoreVersion=4.2.0
+            -p:HexalithTenantsVersion=7.0.5
+            -p:HexalithMemoriesVersion=3.0.25
             -p:UseHexalithProjectReferences=false
             -p:UseNuGetDeps=true
             -p:EventStoreFromSource=false
@@ -180,21 +180,22 @@ jobs:
             --no-build --no-restore --configuration Release "${package_properties[@]}" \
             --filter-class Hexalith.Parties.Contracts.Tests.PartiesCatalogTests \
             --filter-class Hexalith.Parties.Contracts.Tests.PartiesCatalogAdapterTests \
-            --minimum-expected-tests 10 --fail-skips on
+            --minimum-expected-tests 20 --fail-skips on
           dotnet test --project tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj \
             --no-build --no-restore --configuration Release "${package_properties[@]}" \
             --filter-method Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.CatalogApiAvailabilityDoesNotSelectNativeHosts \
             --filter-method Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.EventStoreTransportAndSelectorCapabilitiesRequireExactQualification \
-            --minimum-expected-tests 33 --fail-skips on
+            --minimum-expected-tests 41 --fail-skips on
           dotnet test --project tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj \
             --no-build --no-restore --configuration Release "${package_properties[@]}" \
             --filter-class Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogConfigurationTests \
             --filter-class Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogPreparationCleanupTests \
-            --minimum-expected-tests 17 --fail-skips on
+            --filter-class Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogModelFinalizationTests \
+            --minimum-expected-tests 51 --fail-skips on
           dotnet test --project tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj \
             --no-build --no-restore --configuration Release "${package_properties[@]}" \
             --filter-class Hexalith.Parties.Tests.Gateway.PartiesCatalogGatewaySelectorTests \
-            --minimum-expected-tests 9 --fail-skips on
+            --minimum-expected-tests 24 --fail-skips on
 
   memories-3018-package-protocol:
     name: Memories 3.0.18 package protocol

@@ -17,6 +17,38 @@ namespace Hexalith.Parties.Client.Tests;
 
 public sealed class HttpPartiesIdentityClientTests
 {
+    /// <summary>Computed identity queries leave projection selection to the committed catalog.</summary>
+    /// <param name="historical">Whether to resolve the recorded binding at an action time.</param>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task IdentityQueriesDoNotSendProjectionSelectors(bool historical)
+    {
+        DateTimeOffset actionAt = DateTimeOffset.UtcNow.AddMinutes(-1);
+        using var http = new HttpClient(new Handler(async request =>
+        {
+            SubmitQueryRequest query = (await request.Content!.ReadFromJsonAsync<SubmitQueryRequest>(
+                PartiesJsonOptions.Default, TestContext.Current.CancellationToken).ConfigureAwait(false))!;
+            query.ProjectionType.ShouldBeNull();
+            query.ProjectionActorType.ShouldBeNull();
+            object result = historical
+                ? new HumanActorBindingResult(HumanActorBindingOutcome.Denied, 1, "tenant-a", "party-1", actionAt, 0, null, null)
+                : new PartyIdentityResult(PartyIdentityOutcome.Missing, null);
+            return Json(new SubmitQueryResponse("correlation", JsonSerializer.SerializeToElement(result, PartiesJsonOptions.Default)));
+        })) { BaseAddress = new Uri("https://gateway.test/") };
+        var client = new HttpPartiesIdentityClient(http);
+        if (historical)
+        {
+            (await client.ResolveHumanActorBindingAtAsync("tenant-a", new("tenant-a", "party-1", actionAt, "actor", 1),
+                TestContext.Current.CancellationToken)).Outcome.ShouldBe(HumanActorBindingOutcome.Denied);
+        }
+        else
+        {
+            (await client.ResolvePartyIdentityAsync("tenant-a", new("tenant-a", "party-1"),
+                TestContext.Current.CancellationToken)).Outcome.ShouldBe(PartyIdentityOutcome.Missing);
+        }
+    }
+
     /// <summary>Invalid successful HTTP bodies cannot acknowledge any binding operation.</summary>
     public static TheoryData<string, string> InvalidCommandAcknowledgments
     {

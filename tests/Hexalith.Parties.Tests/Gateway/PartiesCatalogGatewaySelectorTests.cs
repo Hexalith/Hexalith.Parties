@@ -36,6 +36,21 @@ public sealed class PartiesCatalogGatewaySelectorTests
     [InlineData("PartyDetail", "PartyIndexProjectionQueryActor", false)]
     [InlineData("PartyIndex", "PartyDetailProjectionQueryActor", false)]
     [InlineData("PartySearch", "PartyDetailProjectionQueryActor", false)]
+    [InlineData("GetParty", "PartyDetailProjectionQueryActor", true)]
+    [InlineData("GetParty", "ForeignQueryActor", false)]
+    [InlineData("GetParty", "PartyIndexProjectionQueryActor", false)]
+    [InlineData("ExportPartyData", "PartyDetailProjectionQueryActor", true)]
+    [InlineData("ExportPartyData", "ForeignQueryActor", false)]
+    [InlineData("ExportPartyData", "PartyIndexProjectionQueryActor", false)]
+    [InlineData("GetProcessingRecords", "PartyDetailProjectionQueryActor", true)]
+    [InlineData("GetProcessingRecords", "ForeignQueryActor", false)]
+    [InlineData("GetProcessingRecords", "PartyIndexProjectionQueryActor", false)]
+    [InlineData("GetErasureStatus", "PartyDetailProjectionQueryActor", true)]
+    [InlineData("GetErasureStatus", "ForeignQueryActor", false)]
+    [InlineData("GetErasureStatus", "PartyIndexProjectionQueryActor", false)]
+    [InlineData("GetErasureCertificate", "PartyDetailProjectionQueryActor", true)]
+    [InlineData("GetErasureCertificate", "ForeignQueryActor", false)]
+    [InlineData("GetErasureCertificate", "PartyIndexProjectionQueryActor", false)]
     public async Task CanonicalPartySelectorsEnforceTheActualGatewayBoundary(string wireType, string selector, bool accepted)
     {
         var declaration = PartiesCatalogDeclarations.Queries.Single(query => query.MessageType == wireType);

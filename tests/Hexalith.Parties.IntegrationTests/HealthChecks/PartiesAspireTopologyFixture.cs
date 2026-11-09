@@ -302,6 +302,13 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 }
                 return Task.CompletedTask;
             });
+#if HEXALITH_EVENTSTORE_QUERY_SELECTOR_BINDINGS
+            // The SDK observes the actual selected owner transport. Enroll only after
+            // this fixture has supplied its new backend and final endpoint overrides.
+            InitializationPhase = "finalize-package-catalog";
+            await apphost::Hexalith.Parties.AppHost.PartiesDevelopmentCatalogBootstrap.CompleteOwnedTestModelAsync(
+                _builder, _redis ?? throw new InvalidOperationException("The fixture's fresh Redis resource is unavailable."), cts.Token).ConfigureAwait(false);
+#endif
             InitializationPhase = "build-application";
             _app = await _builder.BuildAsync(cts.Token).ConfigureAwait(false);
             InitializationPhase = "start-application";

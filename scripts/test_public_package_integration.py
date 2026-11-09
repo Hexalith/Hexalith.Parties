@@ -31,7 +31,7 @@ class PublicPackageEvidenceTests(unittest.TestCase):
         f.write("invocation.json", self.invocation)
         f.functional.update(profile=public.PROFILE, currentOwner=None, selectorCompatibilityObserved=True)
         platform = dict(commit=public.PLATFORM, compositionCommit=public.PLATFORM, checkoutCommit=public.PLATFORM,
-                        catalogCommit=public.BUILDS, releaseTag="v1.7.1")
+                        catalogCommit=public.BUILDS, releaseTag="v1.8.0")
         now = datetime.now(timezone.utc)
         f.functional["publicRuntime"] = dict(kind="running-owned-public-parties-image", profile=public.PROFILE,
             ownerRunId=f.owner["runId"], ownerAttemptId=f.owner["attemptId"], environmentId=f.owner["environmentId"],
@@ -64,6 +64,12 @@ class PublicPackageEvidenceTests(unittest.TestCase):
         self.assertEqual(result["nativeCases"], 28)
         self.assertEqual(result["profile"], "platform-package")
         self.assertFalse(result["qualificationCredit"])
+
+    def test_historical_tuple_cannot_qualify_selected_sources(self):
+        with self.assertRaises(ValueError):
+            public.validate(self.fixture.root, **{**self.expected,
+                "platform": "0f4e27f1f78310bd731c10c19dc51bb1e0345d44",
+                "builds": "3c8096180ecf2aa539ac454815efbfceb8a92822"})
 
     def test_private_current_owner_proof_cannot_be_promoted(self):
         self.fixture.functional["currentOwner"] = {"profile": "platform-current-package"}

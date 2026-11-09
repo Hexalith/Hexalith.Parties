@@ -117,7 +117,9 @@ public sealed class EventStoreGatewayE2ETests
         timeout.CancelAfter(TimeSpan.FromSeconds(60));
         while (true)
         {
-            using HttpResponseMessage response = await client.GetAsync($"/api/v1/commands/status/{commandId}", timeout.Token).ConfigureAwait(false);
+            using var statusRequest = new HttpRequestMessage(HttpMethod.Get, $"/api/v1/commands/status/{commandId}");
+            statusRequest.Headers.Add("X-Hexalith-Tenant", PartiesTenantBootstrapHost.TenantId);
+            using HttpResponseMessage response = await client.SendAsync(statusRequest, timeout.Token).ConfigureAwait(false);
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 JsonDocument status = JsonDocument.Parse(await response.Content.ReadAsStringAsync(timeout.Token).ConfigureAwait(false));

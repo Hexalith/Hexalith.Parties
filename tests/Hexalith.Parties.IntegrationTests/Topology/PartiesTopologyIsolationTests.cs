@@ -164,12 +164,20 @@ public sealed class PartiesTopologyIsolationTests
             }, budget.Token).ConfigureAwait(false);
             Console.WriteLine($"CounterSeed session={fixture.Session.Id} message={id} phase=post-return status={(int)submitted.StatusCode} durationMs={Stopwatch.GetElapsedTime(postStarted).TotalMilliseconds:F1} elapsedMs={Stopwatch.GetElapsedTime(seedStarted).TotalMilliseconds:F1}");
             submitted.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+#if HEXALITH_EVENTSTORE_QUERY_SELECTOR_BINDINGS
+            if (increment == 0)
+            {
+                await AssertCommandStatusScopeRefusalsAsync(client, id, budget.Token).ConfigureAwait(false);
+            }
+#endif
             long statusStarted = Stopwatch.GetTimestamp();
             int statusRequests = 0;
             while (true)
             {
                 statusRequests++;
-                using HttpResponseMessage response = await client.GetAsync($"/api/v1/commands/status/{id}", budget.Token).ConfigureAwait(false);
+                using var statusRequest = new HttpRequestMessage(HttpMethod.Get, $"/api/v1/commands/status/{id}");
+                statusRequest.Headers.Add("X-Hexalith-Tenant", PartiesTenantBootstrapHost.TenantId);
+                using HttpResponseMessage response = await client.SendAsync(statusRequest, budget.Token).ConfigureAwait(false);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
                     using JsonDocument status = await response.Content.ReadFromJsonAsync<JsonDocument>(budget.Token).ConfigureAwait(false)
@@ -281,7 +289,9 @@ public sealed class PartiesTopologyIsolationTests
         budget.CancelAfter(TimeSpan.FromSeconds(60));
         while (true)
         {
-            using HttpResponseMessage response = await client.GetAsync($"/api/v1/commands/status/{id}", budget.Token).ConfigureAwait(false);
+            using var statusRequest = new HttpRequestMessage(HttpMethod.Get, $"/api/v1/commands/status/{id}");
+            statusRequest.Headers.Add("X-Hexalith-Tenant", PartiesTenantBootstrapHost.TenantId);
+            using HttpResponseMessage response = await client.SendAsync(statusRequest, budget.Token).ConfigureAwait(false);
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 using JsonDocument status = await response.Content.ReadFromJsonAsync<JsonDocument>(budget.Token).ConfigureAwait(false)
@@ -292,6 +302,26 @@ public sealed class PartiesTopologyIsolationTests
             await Task.Delay(TimeSpan.FromMilliseconds(250), budget.Token).ConfigureAwait(false);
         }
     }
+
+#if HEXALITH_EVENTSTORE_QUERY_SELECTOR_BINDINGS
+    /// <summary>The real human status boundary requires one explicit authorized tenant scope.</summary>
+    private static async Task AssertCommandStatusScopeRefusalsAsync(HttpClient authorized, string messageId, CancellationToken cancellationToken)
+    {
+        using var client = new HttpClient { BaseAddress = authorized.BaseAddress };
+        client.DefaultRequestHeaders.Authorization = authorized.DefaultRequestHeaders.Authorization;
+        foreach (string? scope in new string?[] { null, "foreign-tenant", "conflicting-platform-scope" })
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"/api/v1/commands/status/{messageId}");
+            if (scope is not null)
+            {
+                request.Headers.Add("X-Hexalith-Tenant", scope == "conflicting-platform-scope" ? PartiesTenantBootstrapHost.TenantId : scope);
+                if (scope == "conflicting-platform-scope") { request.Headers.Add("X-Hexalith-Scope", "platform:tenants"); }
+            }
+            using HttpResponseMessage refused = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            refused.StatusCode.ShouldBe(HttpStatusCode.Forbidden, "An absent, foreign or conflicting explicit status scope must be denied.");
+        }
+    }
+#endif
 
     private static HttpClient CreateSampleGatewayClient(PartiesAspireTopologyFixture fixture)
     {

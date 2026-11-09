@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Xml.Linq;
 
@@ -63,9 +64,14 @@ internal static class PartiesDevelopmentCatalogTool
         string bindings = Path.Combine(build, "bindings.props");
         new XDocument(new XElement("Project", references)).Save(bindings);
         xml.Save(project);
-        File.Copy(Path.Combine(Path.GetDirectoryName(template)!, "Program.cs"), Path.Combine(build, "Program.cs"));
+        foreach (string source in Directory.EnumerateFiles(Path.GetDirectoryName(template)!, "*.cs"))
+        {
+            byte[] bytes = await File.ReadAllBytesAsync(source, token).ConfigureAwait(false);
+            inputHashes[source] = Convert.ToHexStringLower(SHA256.HashData(bytes));
+            await File.WriteAllBytesAsync(Path.Combine(build, Path.GetFileName(source)), bytes, token).ConfigureAwait(false);
+        }
         string output = Path.Combine(build, "output");
-        await RunAsync(build, "build.log", ["build", project, "-c", "Release", "-m:1", "--output", output,
+        await RunAsync(build, "build.log", ["build", project, "-c", "Release", "-m:1", "--disable-build-servers", "-nr:false", "-p:UseSharedCompilation=false", "--output", output,
             "-p:GeneratePackageOnBuild=false", "-p:CentralPackageVersionsFileImported=true",
             "-p:UseHexalithProjectReferences=false", "-p:HexalithEventStoreVersion=" + sdkVersion,
             "-p:PlatformCatalogBindings=" + bindings, "--nologo", "-warnaserror"], token).ConfigureAwait(false);
@@ -158,7 +164,7 @@ internal static class PartiesDevelopmentCatalogTool
         Directory.Delete(path, recursive: true);
     }
 
-    private static async Task RunAsync(string directory, string log, IReadOnlyList<string> arguments, CancellationToken token)
+    private static Task RunAsync(string directory, string log, IReadOnlyList<string> arguments, CancellationToken token)
     {
         ProcessStartInfo start = new("dotnet")
         {
@@ -168,9 +174,19 @@ internal static class PartiesDevelopmentCatalogTool
         {
             start.ArgumentList.Add(argument);
         }
+        start.Environment["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
+        return RunProcessAsync(start, Path.Combine(directory, log), token);
+    }
+
+    /// <summary>Drains both owned process streams while retaining only bounded diagnostic tails.</summary>
+    /// <param name="start">The explicitly selected owned executable.</param>
+    /// <param name="log">The owned diagnostic file.</param>
+    /// <param name="token">The bounded preparation lifetime.</param>
+    internal static async Task RunProcessAsync(ProcessStartInfo start, string log, CancellationToken token)
+    {
         using Process process = Process.Start(start) ?? throw new InvalidOperationException("The actual catalog executable did not start.");
-        Task<string> output = process.StandardOutput.ReadToEndAsync(token);
-        Task<string> error = process.StandardError.ReadToEndAsync(token);
+        Task<string> output = ReadBoundedDiagnosticsAsync(process.StandardOutput, token);
+        Task<string> error = ReadBoundedDiagnosticsAsync(process.StandardError, token);
         try
         {
             await process.WaitForExitAsync(token).ConfigureAwait(false);
@@ -194,7 +210,7 @@ internal static class PartiesDevelopmentCatalogTool
             throw;
         }
         string diagnostics = await output.ConfigureAwait(false) + await error.ConfigureAwait(false);
-        await File.WriteAllTextAsync(Path.Combine(directory, log), diagnostics, token).ConfigureAwait(false);
+        await File.WriteAllTextAsync(log, diagnostics, token).ConfigureAwait(false);
         if (process.ExitCode != 0)
         {
             // The owned preparation directory is removed on failure; retain bounded details in the exception.
@@ -202,4 +218,20 @@ internal static class PartiesDevelopmentCatalogTool
                 + diagnostics[^Math.Min(diagnostics.Length, 4096)..]);
         }
     }
+
+    private static async Task<string> ReadBoundedDiagnosticsAsync(StreamReader reader, CancellationToken token)
+    {
+        const int Capacity = 4096;
+        char[] buffer = new char[Capacity];
+        StringBuilder retained = new(Capacity);
+        int count;
+        while ((count = await reader.ReadAsync(buffer.AsMemory(), token).ConfigureAwait(false)) != 0)
+        {
+            int discard = Math.Max(0, retained.Length + count - Capacity);
+            if (discard != 0) { retained.Remove(0, discard); }
+            retained.Append(buffer, 0, count);
+        }
+        return retained.ToString();
+    }
+
 }

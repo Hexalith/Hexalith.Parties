@@ -8,6 +8,7 @@
     <ProjectReference Include="../Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\src\Hexalith.Parties.Client\Hexalith.Parties.Client.csproj" />
     <ProjectReference Include="..\..\src\Hexalith.Parties.Testing\Hexalith.Parties.Testing.csproj" />
+    <ProjectReference Include="../../src/Hexalith.Parties.EventStoreExtensions/Hexalith.Parties.EventStoreExtensions.csproj" />
     <ProjectReference Include="../Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj" Aliases="adminui" />
     <ProjectReference Include="../Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj" Aliases="gateway" />
     <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Server\Hexalith.EventStore.Server.csproj" Condition="'$(HexalithEventStoreFromSource)' == 'true'" />
