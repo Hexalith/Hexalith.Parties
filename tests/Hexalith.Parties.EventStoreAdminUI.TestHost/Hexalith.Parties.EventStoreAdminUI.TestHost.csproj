@@ -54,12 +54,15 @@
     </PropertyGroup>
     <ItemGroup>
       <_NativeAdminUiAsset Include="$(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/wwwroot/**/*" />
-      <_ObsoleteNativeAdminUiAsset Include="$(_NativeAdminUiStageRoot)/**/*;$(TargetDir)wwwroot/**/*"
-          Exclude="@(_NativeAdminUiAsset->'$(_NativeAdminUiStageRoot)/%(RecursiveDir)%(Filename)%(Extension)');@(_NativeAdminUiAsset->'$(TargetDir)wwwroot/%(RecursiveDir)%(Filename)%(Extension)')" />
+      <_ObsoleteNativeAdminUiAsset Include="$(_NativeAdminUiStageRoot)/**/*"
+          Exclude="@(_NativeAdminUiAsset->'$(_NativeAdminUiStageRoot)/%(RecursiveDir)%(Filename)%(Extension)')" />
+      <!-- Only a removed native original owns these output paths. Preserve current
+           compressed assets and unrelated SDK output during metadata-only probes. -->
+      <_ObsoleteNativeAdminUiOutput Include="@(_ObsoleteNativeAdminUiAsset->'$(TargetDir)wwwroot/%(RecursiveDir)%(Filename)%(Extension)');@(_ObsoleteNativeAdminUiAsset->'$(TargetDir)wwwroot/%(RecursiveDir)%(Filename)%(Extension).gz');@(_ObsoleteNativeAdminUiAsset->'$(TargetDir)wwwroot/%(RecursiveDir)%(Filename)%(Extension).br')" />
       <!-- Retained staging from older builds is not an input to this isolated artifact. -->
       <Content Remove="wwwroot/**/*;$(MSBuildProjectDirectory)/wwwroot/**/*" />
     </ItemGroup>
-    <Delete Files="@(_ObsoleteNativeAdminUiAsset)" />
+    <Delete Files="@(_ObsoleteNativeAdminUiAsset);@(_ObsoleteNativeAdminUiOutput)" />
     <MakeDir Directories="$(_NativeAdminUiStageRoot)" />
     <Copy SourceFiles="@(_NativeAdminUiAsset)" DestinationFiles="@(_NativeAdminUiAsset->'$(_NativeAdminUiStageRoot)/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
