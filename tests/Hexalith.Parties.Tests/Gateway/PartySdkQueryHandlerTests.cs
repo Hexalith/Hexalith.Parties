@@ -278,7 +278,7 @@ public sealed class PartySdkQueryHandlerTests
         first.Success.ShouldBeTrue();
         string cursor = first.Metadata!.Paging!.NextCursor.ShouldNotBeNull();
         cursor.Length.ShouldBeLessThanOrEqualTo(QueryPolicyLimits.MaxCursorLength);
-        // A pre-change reader can consume every still-bounded raw cursor during rolling upgrade.
+        // A bounded raw cursor decodes with its original uncompressed scope using the selected SDK.
         if (!compact)
         {
             firstCodec.TryDecode(cursor, "PartySearch", scope, out string? position, out _).ShouldBeTrue();

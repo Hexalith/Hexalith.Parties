@@ -100,6 +100,8 @@ source/package pass. Exact commands, identities and results are in
 
 ## Spec Change Log
 
+- 2026-11-09 — Current review dates the historical SDK selection, documents handler validation precedence, and limits a cursor-test comment to its same-SDK assertion. Preserve runtime behavior, package selections, the exact archival fixture and historical receipts. Retain current full-suite diagnostics separately; keep `in-review` for the existing broad blockers.
+
 - 2026-11-09 — Additional resumed review retains exact original source-build and full-suite diagnostics, records fresh affected-path verification, and carries existing broad blockers without duplicate deferrals. Preserve active code, package selections, frozen intent, historical receipts and the exact archival fixture; keep `in-review`.
 
 - 2026-11-09 — Reconcile this resumed spec with the later published SDK adoption and ledger closure. Preserve the frozen intent, historical patch/receipts, package selections, and active consumer behavior. Clarify the archival verifier prerequisites and record fresh verification blockers separately from the October 22 acceptance.
@@ -211,6 +213,49 @@ review limits are in
 The original broad source/full-package lanes were not rerun. The spec remains
 `in-review` for the existing broad blockers; the October 22 feature closure and
 all pre-existing edits, dependencies and historical receipts are preserved.
+
+### Current review — 2026-11-09
+
+Three independent layers reviewed DW-27 and its directly referenced code/evidence
+within the accumulated baseline diff (51,034,912 bytes). Unrelated historical
+changes were not exhaustively reviewed. The edge-case layer returned no findings.
+The blind layer returned eleven findings; the verification-gap layer returned one.
+Each received its own verdict before grouping:
+
+- T01 — low, patch: `docs/development-guide.md` describes the historical 3.128.0 package selection as the default. Date that qualification and direct current readers to the effective `HexalithEventStoreVersion` property.
+- T02 — false, rejected: the archival fixture intentionally runs from the repository root, as its recorded command and `cwd` specify. Running it from another directory fails before verification; no supported invocation or working-directory-independent claim is broken. Preserve the exact fixture bytes.
+- T03 — low, rejected: the historical verifier can overwrite its default receipt on a restored pre-adoption checkout. The documented historical prerequisites and custom destination already permit preservation; enforcing destination freshness adds interface guards for this dormant archival workflow. The current adopted checkout fails its prerequisites before writing.
+- T04 — low, rejected, carried S09: the same isolated fixture omits corrupt-binding controls, while the retained October receipt records their normal/optimized rejection. Keep the existing decision and exact fixture; do not add another mutation/control-flow matrix.
+- T05 — low, patch: the isolated actor-router HTTP fixture bypasses catalog eligibility. Explicitly limit this run's evidence to handler behavior and protocol mapping in the new receipt; production catalog admission and concrete domain-query transport qualification remain separate.
+- T06 — low, rejected: the test transport accepts any actor path ending in `/method/QueryAsync`. No actor selection or transport routing changed in DW-27, and the helper makes no actor-identity assertion. Adding full-route guards extends this isolated classifier fixture without a demonstrated routing regression.
+- T07 — low, rejected: successful paging has direct handler content, metadata and continuation controls, but no additional successful requests through this failing-request HTTP fixture. The success paginator and serialization pipeline are unchanged. Adding another cross-layer matrix expands coverage without a demonstrated changed success failure.
+- T08 — low, rejected, carried R08/R09: zero/negative sizes and invalid/conflicting offsets are intercepted by unchanged public validation, while direct handler controls cover classification. Oversized cursor validation is likewise unchanged. Keep the prior public-boundary verdicts; another HTTP matrix adds fixtures without a demonstrated changed mapper defect.
+- T09 — low, rejected, carried F02: the same package fixture uses null loggers; shared router/pipeline tests already assert safe paging logs. Preserve the existing decision against another package-only log-capture fixture.
+- T10 — low, patch: a later cursor-test comment implies a prior-version reader is exercised, although the assertion uses the selected SDK codec and raw scope. Narrow the comment to that actual assertion; preserve executable test code and all cursor behavior.
+- T11 — low, patch: `docs/api-contracts.md` omits the existing envelope/payload and unsupported-search precedence over invalid page size. Document that ordering, including unsupported CaseId, without changing the HTTP status/reason contract.
+- G01 — low, rejected, carried F01: the verification-gap layer identifies the same absent canonical handler-aware HTTP companion case, now tracing the concrete domain-query invoker. Keep the prior coverage decision: actual domain handler results use HTTP 200, the invoker returns the deserialized result, and the handler-aware router forwards unsuccessful error messages to the same mapper. No current classification failure is demonstrated; concrete transport/catalog qualification remains outside this run's evidence claim.
+
+T01/T10/T11 are direct accuracy corrections; T05 is an explicit evidence-scope
+qualification. No earlier implementation subagent is available, so the parent
+applies these corrections. The exact archival fixture, frozen intent, historical
+receipts and all executable production/test behavior are preserved. Existing
+source-compilation and dependency-observation deferrals remain unchanged; this
+review creates no duplicate deferred entries. Current commands, results and
+durable diagnostic bindings are recorded in
+`tests/dw-27-invalid-page-failure-2026-11-09/current-review-verification.json`.
+
+After the corrections, the selected-package Debug build passes with zero
+warnings/errors, and all 952 focused tests pass without skips. Fresh full-package
+verification again records 2,848 passed, the same four dependency-observation
+failures, and 13 runtime skips. The normal/optimized archival fixture and
+warning/whitespace guards pass. Mapped source compilation was not rerun: its
+catalog aliases/configuration and EventStore checkout are unchanged; the retained
+three-error diagnostic and original tool-range warning remain disclosed.
+Production bytes, package hashes, the exact archival fixture and historical
+artifacts are preserved. The spec remains `in-review`; no commit or dependency
+mutation was performed.
+The original blind reviewer independently confirmed the direct fixes and all
+archival/historical byte bindings, with no unresolved patched claims.
 
 ## Verification
 

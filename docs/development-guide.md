@@ -385,9 +385,12 @@ compilation. See the [source receipt](../_bmad-output/implementation-artifacts/t
 
 ### Published SDK query vocabulary and recovery
 
-The default package graph selects EventStore `3.128.0`, whose package repository
-revision is `c5d1c280d8c1c1a207cd159d817f614e93c93130`. Source selection remains
-owned by the pinned module tool. `PartySdkQueryFailureReason` binds directly to
+The October 26 package qualification selected EventStore `3.128.0`, whose
+package repository revision is `c5d1c280d8c1c1a207cd159d817f614e93c93130`.
+Resolve the current package selection from the effective MSBuild property
+`HexalithEventStoreVersion`; the dated qualification retains its original scope.
+Source selection remains owned by the pinned module tool.
+`PartySdkQueryFailureReason` binds directly to
 published `QueryExecutionFailure` and `ReadModelUnavailable` constants, retaining
 the exact historical wire values and gateway HTTP behavior.
 

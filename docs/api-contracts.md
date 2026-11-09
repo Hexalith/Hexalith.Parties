@@ -399,6 +399,10 @@ size/offset, filtered total, hasMore and nextCursor. When envelope Paging is
 absent, the legacy payload Page/PageSize behavior remains (page defaults to 1,
 size to 20, maximum 100; nonpositive values reject).
 
+Parties validates envelope identity and payload before paging. Unsupported
+search modes and CaseId also reject before paging. These failures retain their
+existing classifications even when the envelope page size is invalid.
+
 When an envelope page size reaches a Parties list/search handler and falls
 outside 1–100, it rejects before cursor decoding or data access. The gateway
 maps this failure to HTTP 400 with `reasonCode=query_invalid_page`,

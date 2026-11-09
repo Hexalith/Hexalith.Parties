@@ -1,7 +1,3 @@
-#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
-extern alias eventstore;
-#endif
-
 using System.Text.Json;
 
 using Hexalith.EventStore.Contracts.Queries;
@@ -16,15 +12,9 @@ using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Shouldly;
 
-#if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
-using HandlerAwareQueryRouter = eventstore::Hexalith.EventStore.Queries.HandlerAwareQueryRouter;
-using IDomainQueryHandlerRegistry = eventstore::Hexalith.EventStore.Queries.IDomainQueryHandlerRegistry;
-using IDomainQueryInvoker = eventstore::Hexalith.EventStore.Queries.IDomainQueryInvoker;
-#else
 using HandlerAwareQueryRouter = global::Hexalith.EventStore.Queries.HandlerAwareQueryRouter;
 using IDomainQueryHandlerRegistry = global::Hexalith.EventStore.Queries.IDomainQueryHandlerRegistry;
 using IDomainQueryInvoker = global::Hexalith.EventStore.Queries.IDomainQueryInvoker;
-#endif
 
 namespace Hexalith.Parties.Tests.Gateway;
 
