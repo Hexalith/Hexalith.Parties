@@ -103,6 +103,60 @@ def document(root: Path, name: str):
     return decode(read(root, name))
 
 
+EXECUTION_SCHEMA = "hexalith.module.ci-integration-execution.v1"
+CLEANUP_SCHEMA = "hexalith.module.ci-integration-cleanup.v1"
+CLEANUP_RECORD = re.compile(r"cleanup-([1-9][0-9]?)\.json\Z", re.ASCII)
+
+
+def invocation_accepted(invocation, context, profile) -> bool:
+    """The pinned helper records three fields; later helpers add only the integer timeout they enforce."""
+    if not isinstance(invocation, dict):
+        return False
+    expected = {"classification": "baseline-only", "executionContext": context, "profiles": [profile]}
+    if "timeoutSeconds" not in invocation:
+        return invocation == expected
+    timeout = invocation["timeoutSeconds"]
+    rest = {key: value for key, value in invocation.items() if key != "timeoutSeconds"}
+    return type(timeout) is int and 60 <= timeout <= 86400 and rest == expected
+
+
+def integer_zero(value) -> bool:
+    """A process exit code counts as success only as the integer 0, never False or 0.0."""
+    return type(value) is int and value == 0
+
+
+def integration_phases(root, context, run_id, invocation):
+    """Return the helper's execution result, its final exact-down result and the evidence names carrying them.
+
+    The pinned Builds helper writes a three-field `invocation.json`, raw `execution.json` and `cleanup.json`.
+    Later helpers add the integer `timeoutSeconds`, wrap execution with its process observation and keep one
+    `cleanup-<n>.json` record per exact down. Each layout is accepted only whole: a mixed, non-contiguous,
+    foreign-job, foreign-owner or unverified layout is refused.
+    """
+    names = set(os.listdir(root))
+    execution = document(root, "execution.json")
+    numbers = sorted(int(match.group(1)) for match in map(CLEANUP_RECORD.fullmatch, names) if match)
+    wrapped = isinstance(execution, dict) and execution.get("schema") == EXECUTION_SCHEMA
+    timed = isinstance(invocation, dict) and "timeoutSeconds" in invocation
+    if not wrapped:
+        require(not numbers and not timed, "mixed helper evidence layouts")
+        return execution, document(root, "cleanup.json"), {"execution.json", "cleanup.json"}
+    require(timed and numbers and "cleanup.json" not in names, "mixed helper evidence layouts")
+    require(numbers == list(range(1, len(numbers) + 1)), "non-contiguous cleanup records")
+    require(execution.get("executionContext") == context and integer_zero(execution.get("processExitCode"))
+            and execution.get("outputParsed") is True and execution.get("cancelled") is False
+            and execution.get("timedOut") is False and isinstance(execution.get("result"), dict),
+            "integration execution was not a verified completion of this job")
+    records = [document(root, f"cleanup-{number}.json") for number in numbers]
+    require(all(isinstance(record, dict) and record.get("schema") == CLEANUP_SCHEMA for record in records), "unsupported cleanup record")
+    require(all(record.get("executionContext") == context and record.get("runId") == run_id for record in records),
+            "cleanup record belongs to another job or owner")
+    final = records[-1]
+    require(final.get("status") == "completed" and final.get("verified") is True and integer_zero(final.get("processExitCode"))
+            and isinstance(final.get("result"), dict), "final exact down was not verified")
+    return execution["result"], final["result"], {"execution.json", *(f"cleanup-{number}.json" for number in numbers)}
+
+
 def persisted_identity(aggregate):
     """Derive the complete current SDK AggregateIdentity JSON contract from its canonical core tuple."""
     require(isinstance(aggregate, dict) and set(aggregate) == {"tenantId", "domain", "aggregateId"}, "invalid aggregate identity tuple")
@@ -130,7 +184,7 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
     context = {"kind": "ci", "repository": repository, "workflowRunId": run, "workflowAttempt": attempt,
                "jobId": "build-and-test", "runnerKind": "github-hosted", "operatingSystem": "Linux", "disposable": True}
     invocation = document(root, "invocation.json")
-    require(invocation == {"classification": "baseline-only", "executionContext": context, "profiles": [PROFILE]}, "foreign invocation/profile")
+    require(invocation_accepted(invocation, context, PROFILE), "foreign invocation/profile")
     result = document(root, "test-result.json")
     require(result.get("schema") == "hexalith.test-result.v1" and result.get("policyId") == "hexalith.platform.candidate-and-attachment-policy.v1", "unsupported result contract")
     bindings = result["bindings"]
@@ -144,8 +198,8 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
     require(result.get("termination", {}).get("state") == "not-yet-populated", "interrupted native execution")
     cleanup = result["cleanup"]
     require(cleanup.get("state") == "populated" and cleanup.get("disposition") == "complete" and cleanup.get("failures") == [] and cleanup.get("leftoverResourceIds") == [], "owned result cleanup incomplete")
-    for filename in ("execution.json", "cleanup.json"):
-        phase = document(root, filename)
+    execution, final_cleanup, phase_names = integration_phases(root, context, owner["runId"], invocation)
+    for phase in (execution, final_cleanup):
         remaining = phase.get("remainingResources", {})
         require(phase.get("runId") == owner["runId"] and phase.get("outcome", {}).get("exitCode") == "Success", "execution/cleanup failed or foreign")
         require(remaining.get("unverified") is False and remaining.get("isEmpty") is True
@@ -230,7 +284,7 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
             observed = [item for item in loaded[field] if item["identity"].split(",", 1)[0] == name]
             require(len(observed) == 1 if field == "copied" or name == "Hexalith.EventStore.Contracts" else len(observed) <= 1, "native/composition SDK inventory missing")
             require(all(item.get("sha256") == expected and ", Version=4.1.0.0," in item["identity"] for item in observed), "native/composition SDK substitution")
-    allowed = names | {loaded_name, "invocation.json", "execution.json", "cleanup.json", "test-result.json", "attachments.json", "attachment-withdrawals.json"}
+    allowed = names | phase_names | {loaded_name, "invocation.json", "test-result.json", "attachments.json", "attachment-withdrawals.json"}
     require(all(name in allowed and stat.S_ISREG(os.stat(name, dir_fd=root, follow_symlinks=False).st_mode) for name in os.listdir(root)), "unreferenced or duplicate artifact substitute")
     return {"profile": PROFILE, "source": source, "runId": owner["runId"], "nativeCases": len(cases), "qualificationCredit": False}
 

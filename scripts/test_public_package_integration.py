@@ -191,6 +191,118 @@ class PublicPackageEvidenceTests(unittest.TestCase):
         f.seal()
         with self.assertRaises(ValueError): self.check()
 
+    def test_per_attempt_helper_layout_is_accepted_only_when_complete_and_verified(self):
+        f = self.fixture
+        execution = json.loads((f.root / "execution.json").read_text())
+        cleanup = json.loads((f.root / "cleanup.json").read_text())
+        (f.root / "cleanup.json").unlink()
+        observed = dict(schema="hexalith.module.ci-integration-execution.v1", executionContext=f.context, processExitCode=0,
+                        launched=True, cancelled=False, timedOut=False, signals=[], outputParsed=True, result=execution,
+                        stderr=dict(bytes=0, sha256="0" * 64, excerpt="", truncated=False, redacted=True))
+        attempt = dict(schema="hexalith.module.ci-integration-cleanup.v1", status="completed", runId=f.owner["runId"],
+                       executionContext=f.context, jobStatus="", processExitCode=0, outputParsed=True, result=cleanup, verified=True)
+        f.write("invocation.json", dict(self.invocation, timeoutSeconds=2100))
+        f.write("execution.json", observed)
+        f.write("cleanup-1.json", attempt)
+        f.write("cleanup-2.json", dict(attempt, jobStatus="success"))
+        self.assertEqual(self.check()["runId"], f.owner["runId"])
+        refusals = (
+            ("cleanup-2.json", dict(attempt, verified=False)),
+            ("cleanup-2.json", dict(attempt, status="timed-out")),
+            ("cleanup-2.json", dict(attempt, result=dict(cleanup, remainingResources=dict(cleanup["remainingResources"], unverified=True)))),
+            ("execution.json", dict(observed, cancelled=True)),
+            ("execution.json", dict(observed, outputParsed=False, result=None)),
+        )
+        for number, (name, changed) in enumerate(refusals):
+            original = json.loads((f.root / name).read_text())
+            f.write(name, changed)
+            with self.subTest(refusal=number, name=name), self.assertRaises(ValueError):
+                self.check()
+            f.write(name, original)
+        f.write("cleanup.json", cleanup)
+        with self.subTest(layout="mixed"), self.assertRaises(ValueError):
+            self.check()
+        (f.root / "cleanup.json").unlink()
+        (f.root / "cleanup-1.json").unlink()
+        with self.subTest(layout="gap"), self.assertRaises(ValueError):
+            self.check()
+
+    def new_helper_layout(self):
+        """Write the exact record shapes the per-attempt Builds helper emits for a verified run."""
+        f = self.fixture
+        execution = json.loads((f.root / "execution.json").read_text())
+        cleanup = json.loads((f.root / "cleanup.json").read_text())
+        (f.root / "cleanup.json").unlink()
+        stderr = dict(bytes=0, sha256=hashlib.sha256(b"").hexdigest(), excerpt="", truncated=False, redacted=True)
+        invocation = dict(executionContext=f.context, profiles=[public.PROFILE], classification="baseline-only", timeoutSeconds=2045)
+        observed = dict(schema="hexalith.module.ci-integration-execution.v1", executionContext=f.context, processExitCode=0,
+                        launched=True, cancelled=False, timedOut=False, signals=[], outputParsed=True, result=execution, stderr=stderr)
+        attempt = dict(schema="hexalith.module.ci-integration-cleanup.v1", status="completed", runId=f.owner["runId"],
+                       executionContext=f.context, jobStatus="", processExitCode=0, outputParsed=True, verified=True,
+                       stderr=stderr, result=cleanup)
+        f.write("invocation.json", invocation)
+        f.write("execution.json", observed)
+        f.write("cleanup-1.json", attempt)
+        return invocation, observed, attempt, execution, cleanup
+
+    def test_new_helper_timeout_is_the_only_accepted_invocation_addition(self):
+        f = self.fixture
+        invocation, *_ = self.new_helper_layout()
+        self.assertEqual(self.check()["runId"], f.owner["runId"])
+        for name, changed in {
+            "bool-timeout": dict(invocation, timeoutSeconds=True),
+            "float-timeout": dict(invocation, timeoutSeconds=2045.0),
+            "string-timeout": dict(invocation, timeoutSeconds="2045"),
+            "below-range": dict(invocation, timeoutSeconds=59),
+            "above-range": dict(invocation, timeoutSeconds=86401),
+            "other-new-field": dict(invocation, qualificationOwners=["eventstore"]),
+            "foreign-profile": dict(invocation, profiles=["lifecycle-package"]),
+        }.items():
+            f.write("invocation.json", changed)
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                self.check()
+        f.write("invocation.json", dict(invocation, timeoutSeconds=60))
+        self.assertEqual(self.check()["runId"], f.owner["runId"])
+
+    def test_mixed_layouts_foreign_records_and_non_integer_exit_codes_refuse(self):
+        f = self.fixture
+        invocation, observed, attempt, execution, cleanup = self.new_helper_layout()
+        foreign = dict(f.context, workflowRunId="999")
+        refusals = {
+            "timeout-with-raw-execution": [("execution.json", execution)],
+            "timeout-with-whole-raw-layout": [("execution.json", execution), ("cleanup.json", cleanup), ("cleanup-1.json", None)],
+            "raw-invocation-with-new-records": [("invocation.json", {k: v for k, v in invocation.items() if k != "timeoutSeconds"})],
+            "wrapped-execution-with-raw-cleanup": [("cleanup.json", cleanup), ("cleanup-1.json", None)],
+            "raw-and-per-attempt-cleanup": [("cleanup.json", cleanup)],
+            "foreign-wrapper-context": [("execution.json", dict(observed, executionContext=foreign))],
+            "missing-wrapper-context": [("execution.json", {k: v for k, v in observed.items() if k != "executionContext"})],
+            "foreign-cleanup-context": [("cleanup-1.json", dict(attempt, status="completed", verified=False, executionContext=foreign)),
+                                        ("cleanup-2.json", attempt)],
+            "foreign-cleanup-owner": [("cleanup-1.json", dict(attempt, runId="f" * 32))],
+            "earlier-record-foreign-owner": [("cleanup-1.json", dict(attempt, runId="f" * 32, verified=False)), ("cleanup-2.json", attempt)],
+            "false-exit-code": [("execution.json", dict(observed, processExitCode=False))],
+            "float-exit-code": [("execution.json", dict(observed, processExitCode=0.0))],
+            "final-cleanup-false-exit": [("cleanup-1.json", dict(attempt, processExitCode=False))],
+        }
+        for name, writes in refusals.items():
+            originals = {file: (f.root / file).read_text() if (f.root / file).exists() else None for file, _ in writes}
+            for file, value in writes:
+                if value is None:
+                    (f.root / file).unlink()
+                else:
+                    f.write(file, value)
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                self.check()
+            for file, body in originals.items():
+                if body is None:
+                    (f.root / file).unlink(missing_ok=True)
+                else:
+                    (f.root / file).write_text(body)
+        self.assertEqual(self.check()["runId"], f.owner["runId"])
+        f.write("cleanup-1.json", dict(attempt, status="completed", verified=False, processExitCode=3))
+        f.write("cleanup-2.json", dict(attempt, jobStatus="success"))
+        self.assertEqual(self.check()["runId"], f.owner["runId"])
+
     def test_hash_tampering_and_unreferenced_substitute_refuse(self):
         f = self.fixture
         selected = next(item for item in f.result["diagnostics"] if item["id"] == "functional-observations")

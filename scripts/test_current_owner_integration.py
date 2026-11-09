@@ -83,6 +83,29 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
         self.assertEqual(self.check()["nativeCases"], 2)
         self.assertFalse(self.check()["qualificationCredit"])
 
+    def test_new_helper_invocation_timeout_and_per_attempt_records_are_bound_to_this_job(self):
+        phase = json.loads((self.root / "execution.json").read_text())
+        (self.root / "cleanup.json").unlink()
+        stderr = dict(bytes=0, sha256=hashlib.sha256(b"").hexdigest(), excerpt="", truncated=False, redacted=True)
+        self.write("invocation.json", dict(executionContext=self.context, profiles=[verify.PROFILE], classification="baseline-only",
+                                           timeoutSeconds=2045))
+        self.write("execution.json", dict(schema=verify.EXECUTION_SCHEMA, executionContext=self.context, processExitCode=0, launched=True,
+                                          cancelled=False, timedOut=False, signals=[], outputParsed=True, result=phase, stderr=stderr))
+        attempt = dict(schema=verify.CLEANUP_SCHEMA, status="completed", runId=self.owner["runId"], executionContext=self.context,
+                       jobStatus="", processExitCode=0, outputParsed=True, verified=True, stderr=stderr, result=phase)
+        self.write("cleanup-1.json", attempt)
+        self.assertEqual(self.check()["nativeCases"], 2)
+        for name, value in {"foreign-owner": dict(attempt, runId="f" * 32), "bool-exit": dict(attempt, processExitCode=False),
+                            "foreign-job": dict(attempt, executionContext=dict(self.context, jobId="other"))}.items():
+            self.write("cleanup-1.json", value)
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                self.check()
+        self.write("cleanup-1.json", attempt)
+        self.write("invocation.json", dict(executionContext=self.context, profiles=[verify.PROFILE], classification="baseline-only",
+                                           timeoutSeconds=True))
+        with self.assertRaises(ValueError):
+            self.check()
+
     def test_real_captured_sdk_identity_shape_matches_the_three_key_aggregate(self):
         # Exact identity shape captured from genuine 42288812736 attempt 2; no event/body evidence is substituted.
         actor = "g4t-b155e4bb4ff9:party:01M6SA5BHM3EH0HBBN0RJ6D487"

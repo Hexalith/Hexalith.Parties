@@ -56,9 +56,12 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           submodules: false
       - name: Initialize only direct owner dependencies
         run: git -c submodule.recurse=false submodule update --init --depth 1
+      - name: Test the lifecycle controller before any service
+        run: python3 -B -m unittest discover -s tests/ci-lifecycle -v
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
@@ -69,15 +72,41 @@ jobs:
       - name: Read verified catalog toolchain versions
         run: |
           python3 - <<'PY'
+          import json
           import os
+          import re
           from pathlib import Path
           from xml.etree import ElementTree as ET
-          root = ET.parse('references/Hexalith.Builds/Props/Directory.Packages.props').getroot()
+          builds = Path('references/Hexalith.Builds')
+          root = ET.parse(builds / 'Props/Directory.Packages.props').getroot()
+          versions = {}
+          for name, property_name in [('CI_ASPIRE_VERSION', 'HexalithAspireAppHostSdkVersion'), ('CI_DAPR_CLI_VERSION', 'HexalithDaprCliVersion'), ('CI_DAPR_RUNTIME_VERSION', 'HexalithDaprRuntimeVersion')]:
+              node = root.find('.//' + property_name)
+              if node is None or node.text is None:
+                  raise ValueError('Missing verified catalog toolchain property: ' + property_name)
+              value = node.text.strip()
+              if not value or any(character not in '0123456789.-abcdefghijklmnopqrstuvwxyz' for character in value):
+                  raise ValueError('Invalid verified catalog toolchain version')
+              versions[name] = value
+          # Builds pins each Dapr archive digest beside the catalog versions; without them nothing is downloaded.
+          digests_path = builds / 'Props/dapr-toolchain-sha256.json'
+          if not digests_path.is_file():
+              raise ValueError('The pinned Builds catalog carries no Dapr archive digests; adopt a Builds release that pins them')
+          digests = json.loads(digests_path.read_text(encoding='utf-8'))
+          if digests.get('schema') != 'hexalith.builds.dapr-toolchain-sha256.v1':
+              raise ValueError('Unsupported Dapr archive digest schema')
+          runtime = digests.get('runtime', {}).get(versions['CI_DAPR_RUNTIME_VERSION'], {})
+          pinned = {
+              'CI_DAPR_CLI_SHA256': digests.get('cli', {}).get(versions['CI_DAPR_CLI_VERSION'], {}).get('dapr_linux_amd64.tar.gz'),
+              'CI_DAPRD_SHA256': runtime.get('daprd_linux_amd64.tar.gz'),
+              'CI_PLACEMENT_SHA256': runtime.get('placement_linux_amd64.tar.gz'),
+              'CI_SCHEDULER_SHA256': runtime.get('scheduler_linux_amd64.tar.gz'),
+          }
+          for name, value in pinned.items():
+              if not isinstance(value, str) or re.fullmatch(r'[0-9a-f]{64}', value) is None:
+                  raise ValueError('Missing or invalid pinned Dapr archive digest: ' + name)
           with Path(os.environ['GITHUB_ENV']).open('a') as output:
-              for name, property_name in [('CI_ASPIRE_VERSION', 'HexalithAspireAppHostSdkVersion'), ('CI_DAPR_CLI_VERSION', 'HexalithDaprCliVersion'), ('CI_DAPR_RUNTIME_VERSION', 'HexalithDaprRuntimeVersion')]:
-                  value = root.find('.//' + property_name).text
-                  if not value or any(character not in '0123456789.-abcdefghijklmnopqrstuvwxyz' for character in value):
-                      raise ValueError('Invalid verified catalog toolchain version')
+              for name, value in {**versions, **pinned}.items():
                   output.write(name + '=' + value + '\n')
           PY
       - name: Restore verified Aspire runtime packages in this job
@@ -109,31 +138,49 @@ jobs:
           dapr_home="$RUNNER_TEMP/hexalith-lifecycle-dapr"
           mkdir -p "$tools" "$dapr_home/tools" "$dapr_home/.dapr/bin"
           dotnet tool install --tool-path "$tools" Aspire.Cli --version "$CI_ASPIRE_VERSION"
+          verify_archive() {
+            if [[ ! "$1" =~ ^[0-9a-f]{64}$ ]]; then
+              echo "Refusing $2 without its pinned SHA-256 digest." >&2
+              return 1
+            fi
+            printf '%s  %s\n' "$1" "$2" | sha256sum --check --strict --quiet -
+          }
           curl --fail --location --proto '=https' --proto-redir '=https' "https://github.com/dapr/cli/releases/download/v$CI_DAPR_CLI_VERSION/dapr_linux_amd64.tar.gz" -o "$RUNNER_TEMP/lifecycle-dapr-cli.tar.gz"
+          verify_archive "${CI_DAPR_CLI_SHA256:-}" "$RUNNER_TEMP/lifecycle-dapr-cli.tar.gz"
           tar -xzf "$RUNNER_TEMP/lifecycle-dapr-cli.tar.gz" -C "$dapr_home/tools" dapr
           for binary in daprd placement scheduler; do
+            case "$binary" in
+              daprd) digest="${CI_DAPRD_SHA256:-}" ;;
+              placement) digest="${CI_PLACEMENT_SHA256:-}" ;;
+              scheduler) digest="${CI_SCHEDULER_SHA256:-}" ;;
+            esac
             curl --fail --location --proto '=https' --proto-redir '=https' "https://github.com/dapr/dapr/releases/download/v$CI_DAPR_RUNTIME_VERSION/${binary}_linux_amd64.tar.gz" -o "$RUNNER_TEMP/lifecycle-$binary.tar.gz"
+            verify_archive "$digest" "$RUNNER_TEMP/lifecycle-$binary.tar.gz"
             tar -xzf "$RUNNER_TEMP/lifecycle-$binary.tar.gz" -C "$dapr_home/.dapr/bin" "$binary"
           done
           echo "$tools" >> "$GITHUB_PATH"
           echo "HEXALITH_DAPR_HOME=$dapr_home" >> "$GITHUB_ENV"
+      # The reader file lives at a fixed path under runner.temp, so any later step in this job could read it.
+      # Only the owner-starting steps receive it as DOCKER_CONFIG, nothing exports it through GITHUB_ENV, and an
+      # always() step removes it.
       - name: Configure only the dedicated pull reader
         env:
           REGISTRY_READER_USERNAME: ${{ secrets.HEXALITH_CI_REGISTRY_USERNAME }}
           REGISTRY_READER_PASSWORD: ${{ secrets.HEXALITH_CI_REGISTRY_PASSWORD }}
+          HEXALITH_LIFECYCLE_REGISTRY_CONFIG: ${{ runner.temp }}/hexalith-lifecycle-registry.reader
         run: |
           python3 - <<'PY'
           import base64
           import json
           import os
-          import tempfile
           from pathlib import Path
           username, password = (os.environ[key] for key in ['REGISTRY_READER_USERNAME', 'REGISTRY_READER_PASSWORD'])
           if not username or not password:
               raise ValueError('Dedicated pull-only reader is required')
-          directory = Path(tempfile.mkdtemp(prefix='hexalith-lifecycle-registry.', dir=Path(os.environ['RUNNER_TEMP']).resolve(strict=True)))
-          with Path(os.environ['GITHUB_ENV']).open('a') as output:
-              output.write(f'DOCKER_CONFIG={directory}\nHEXALITH_LIFECYCLE_REGISTRY_CONFIG={directory}\n')
+          directory = Path(os.environ['HEXALITH_LIFECYCLE_REGISTRY_CONFIG'])
+          if directory.parent != Path(os.environ['RUNNER_TEMP']).resolve(strict=True):
+              raise ValueError('Refusing a reader directory outside the job temporary root')
+          directory.mkdir(mode=0o700)
           token = base64.b64encode((username + ':' + password).encode()).decode()
           descriptor = os.open(directory / 'config.json', os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
           with os.fdopen(descriptor, 'w') as output:
@@ -141,12 +188,18 @@ jobs:
           PY
       - name: Exercise real passing failing partial-startup and exact retry scenarios
         if: ${{ inputs.scenario == 'matrix' }}
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/hexalith-lifecycle-registry.reader
         run: python3 -B scripts/qualify-disposable-ci.py matrix
       - name: Observe actual startup cancellation readiness
         if: ${{ inputs.scenario == 'cancel-startup' }}
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/hexalith-lifecycle-registry.reader
         run: python3 -B scripts/qualify-disposable-ci.py start-cancellation --phase startup
       - name: Observe actual execution cancellation readiness and active hold
         if: ${{ inputs.scenario == 'cancel-execution' }}
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/hexalith-lifecycle-registry.reader
         run: python3 -B scripts/qualify-disposable-ci.py start-cancellation --phase execution
       - name: Publish the actual ready owner before operator cancellation
         if: ${{ inputs.scenario != 'matrix' }}
@@ -156,9 +209,10 @@ jobs:
           path: TestResults/ci-lifecycle
           if-no-files-found: error
           retention-days: 14
+      # The runner signals only this step's own process; exec keeps the controller as that process.
       - name: Await parent cancellation of this exact ready run
         if: ${{ inputs.scenario != 'matrix' }}
-        run: python3 -B scripts/qualify-disposable-ci.py wait-cancellation
+        run: exec python3 -B scripts/qualify-disposable-ci.py wait-cancellation
       - name: Independently finalize every exact same-job owner
         if: always()
         env:
@@ -169,6 +223,8 @@ jobs:
           fi
       - name: Remove the private reader file
         if: always()
+        env:
+          HEXALITH_LIFECYCLE_REGISTRY_CONFIG: ${{ runner.temp }}/hexalith-lifecycle-registry.reader
         run: python3 -B scripts/qualify-disposable-ci.py remove-reader
       - name: Retain classified lifecycle observations
         if: always()

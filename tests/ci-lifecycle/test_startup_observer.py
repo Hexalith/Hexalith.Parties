@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import signal
+import sys
 import tempfile
 import threading
 import time
@@ -317,6 +318,10 @@ class StartupObserverTests(unittest.TestCase):
         self.assertLess((self.evidence / 'startup-observation.json').stat().st_size, O.LIMIT)
 
     def test_full_execution_and_cancelled_cleanup_are_delegated_to_the_released_helper(self):
+        if hasattr(O.HELPER, 'write_process_record'):
+            # A session-recording helper defers exact cleanup after a cancellation to the always() finalizer.
+            self.assert_session_helper_delegation()
+            return
         for cancelled, cleanup, expected in ((False, 0, 0), (False, 1, 1), (True, 0, 130)):
             with self.subTest(cancelled=cancelled, cleanup=cleanup):
                 child = SimpleNamespace(communicate=lambda timeout: ('{"outcome":{"exitCode":"Success"}}', None),
@@ -334,6 +339,49 @@ class StartupObserverTests(unittest.TestCase):
                     self.assertEqual(O.run(), expected)
                     self.assertEqual(finalize.call_count, 1)
                     self.assertEqual(finalize.call_args.kwargs['job_status'], 'cancelled' if cancelled else '')
+
+    def assert_session_helper_delegation(self):
+        tools = self.root / 'fake-tools'
+        tools.mkdir()
+        tool = tools / 'fixed-tool'
+        tool.write_text('#!' + sys.executable + '\n' + 'import json, os, pathlib, signal, sys, time\n'
+                        'def stop(number, frame):\n'
+                        '    print(json.dumps({"outcome": {"exitCode": "Cancelled"}}), flush=True)\n'
+                        '    sys.exit(130)\n'
+                        'signal.signal(signal.SIGINT, stop)\n'
+                        'if os.environ.get("FAKE_WAIT") == "1":\n'
+                        '    pathlib.Path(os.environ["FAKE_READY"]).write_text("ready")\n'
+                        '    while True:\n'
+                        '        time.sleep(0.02)\n'
+                        'print(json.dumps({"outcome": {"exitCode": "Success"}}))\n')
+        tool.chmod(0o700)
+        ready = self.root / 'fake-tool-ready'
+        for cancelled, cleanup, expected in ((False, 0, 0), (False, 1, 1), (True, 0, 130)):
+            with self.subTest(cancelled=cancelled, cleanup=cleanup):
+                O.HELPER.process_record_path(self.receipt).unlink(missing_ok=True)
+                ready.unlink(missing_ok=True)
+
+                def cancel_when_ready():
+                    deadline = time.monotonic() + 10
+                    while not ready.exists() and time.monotonic() < deadline:
+                        time.sleep(0.01)
+                    os.kill(os.getpid(), signal.SIGTERM)
+
+                def delegate(root, manifest, profiles, receipt, evidence):
+                    self.assertEqual((manifest, profiles), (O.MANIFEST, [O.PROFILE]))
+                    if cancelled:
+                        threading.Thread(target=cancel_when_ready, daemon=True).start()
+                    return O.HELPER.execute_integration(['fixed-tool'], root, receipt, evidence, 30)
+
+                environment = {'PATH': str(tools) + os.pathsep + os.environ['PATH'], 'FAKE_WAIT': '1' if cancelled else '0',
+                               'FAKE_READY': str(ready)}
+                with patch.dict(os.environ, environment), patch.object(O, 'ROOT', self.root), patch.object(O.Observer, 'observe'), \
+                     patch.object(O.HELPER, 'run_integration', side_effect=delegate), \
+                     patch.object(O.HELPER, 'finalize', return_value=cleanup) as finalize:
+                    self.assertEqual(O.run(), expected)
+                    self.assertEqual(finalize.call_count, 0 if cancelled else 1)
+                    if not cancelled:
+                        self.assertEqual(finalize.call_args.kwargs['job_status'], '')
 
     def test_workflow_preserves_fixed_profile_and_always_cleanup_without_raw_uploads(self):
         workflow = (ROOT / '.github/workflows/current-owner-startup-diagnostics.yml').read_text()
