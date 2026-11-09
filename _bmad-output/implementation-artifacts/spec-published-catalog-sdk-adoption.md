@@ -76,6 +76,16 @@ Coordinate the original producer freeze only before the real live run.
 
 Allowed files for this story:
 
+- `.config/dotnet-tools.json` - align the current published SDK/tool and exact evidence bindings
+- `.github/workflows/current-owner-startup-diagnostics.yml` - align the current published SDK/tool and exact evidence bindings
+- `docs/getting-started.md` - align the current published SDK/tool and exact evidence bindings
+- `scripts/test_current_owner_integration.py` - align the current published SDK/tool and exact evidence bindings
+- `scripts/test_public_package_integration.py` - align the current published SDK/tool and exact evidence bindings
+- `scripts/verify-current-owner-integration.py` - align the current published SDK/tool and exact evidence bindings
+- `scripts/verify-public-package-integration.py` - align the current published SDK/tool and exact evidence bindings
+- `tests/Hexalith.Parties.Platform.IntegrationTests/PublicRuntimeImageObservations.cs` - align the current published SDK/tool and exact evidence bindings
+- `tests/Hexalith.Parties.Tests/FitnessTests/PackageCatalogFallbackTests.cs` - align the current published SDK/tool and exact evidence bindings
+
 - `.gitignore` - ignore only generated native Admin UI static-asset staging
 
 - `.github/workflows/release.yml`

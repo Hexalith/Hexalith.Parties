@@ -66,7 +66,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Observability | OpenTelemetry (exporter/hosting/instrumentation) | `1.20.1` core/hosting/exporter and ASP.NET Core/HTTP/runtime instrumentation |
 | Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `10.11.0` |
 | Versioning | MinVer (git-tag SemVer, prefix `v`) | `8.0.0` |
-| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `4.0.2` / `4.3.0` / `6.2.0` / `2.13.3` / `4.16.0`† / `18.1.0` |
+| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `4.0.3` / `4.3.0` / `6.2.0` / `2.14.0` / `4.16.0`† / `18.1.0` |
 
 The earlier Tenants source identity `fcdcb4205a3f6e46f736cdd3e6f2b20ca2f241df`
 (`v5.7.0-180-gfcdcb420`), recorded at Parties
@@ -79,7 +79,7 @@ Solution-wide build settings (`Directory.Build.props`): `Nullable=enable`, `Impl
 
 The AppHost SDK and Aspire packages are aligned at `13.6.4`; DAPR client,
 actors, and ASP.NET Core packages are aligned at `1.19.0`. This is the .NET SDK
-package version; the selected Dapr runtime catalog remains `1.18.7`.
+package version; the selected Dapr runtime catalog remains `1.19.1`.
 
 Historical root source identities follow the Story 8.10 final set approved by
 Administrator / jpiquot on 2026-10-05 (authoritative record: the Story 8.3

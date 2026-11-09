@@ -1031,7 +1031,7 @@ public sealed class PlatformApiPrerequisitesTests
         catalog.ShouldContain("<PackageVersion Include=\"xunit.v3.assert\" Version=\"4.0.3\" />");
         catalog.ShouldContain("<PackageVersion Include=\"xunit.v3.extensibility.core\" Version=\"4.0.3\" />");
         catalog.ShouldContain("<PackageVersion Include=\"xunit.runner.visualstudio\" Version=\"4.0.1\" />");
-        catalog.ShouldContain("<PackageVersion Include=\"bunit\" Version=\"2.13.3\" />");
+        catalog.ShouldContain("<PackageVersion Include=\"bunit\" Version=\"2.14.0\" />");
 
         matrix.ShouldContain("Package (default Release graph)");
         matrix.ShouldContain("Source (explicit project-reference graph)");
