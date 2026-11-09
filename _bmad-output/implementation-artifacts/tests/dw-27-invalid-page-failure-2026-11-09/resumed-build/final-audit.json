@@ -1,0 +1,16 @@
+{
+  "archives_verified": 23,
+  "tracked_files": 8339,
+  "only_changed_tracked_file": "_bmad-output/implementation-artifacts/spec-dw-27-invalid-page-failure.md",
+  "frozen_intent_unchanged": true,
+  "historical_fixture_unchanged": true,
+  "evidence_scripts_parsed": 4,
+  "warning_guard_exit_code": 0,
+  "whitespace_exit_code": 0,
+  "spec_status": "in-review",
+  "head": "0be5b476a946f12a8c67bfcab296ea55a45ab4c8",
+  "validation_json_sha256": "07c525a1d31c0cb31cf63ea7a2df8ad815d944074ccd80c159768da0ec1115dd",
+  "full_suite_skip_reasons_verified_per_mode": 13,
+  "independent_U10_recheck": "resolved",
+  "finished_utc": "2026-11-09T09:21:40.543217+00:00"
+}

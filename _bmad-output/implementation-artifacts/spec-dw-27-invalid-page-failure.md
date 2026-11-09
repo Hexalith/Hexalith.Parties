@@ -65,7 +65,21 @@ context:
 
 ## Implementation Notes
 
-**Current disposition (2026-11-09):** DW-27 was implemented and closed by the later
+**Current disposition (2026-11-09, resumed build at
+`0be5b476a946f12a8c67bfcab296ea55a45ab4c8`):** The implementation is active.
+The separate catalog-selector alias repair clears the previous source compilation
+blocker: fresh mapped source and selected-package Debug builds both pass with zero
+warnings/errors. Each mode passes all 961 focused cases (875 handler, 77 gateway,
+9 selector), with no skips. Each full service suite records 2,848 passed, the same
+four prerequisite/observation failures and 13 skips. No runtime defect or new
+production/test change is established by this review. The pinned tool-range and
+missing-tag diagnostics remain disclosed; these runs do not establish a supported
+Platform toolchain. This spec remains `in-review` for the existing broad failures.
+Exact commands, environments, diagnostics and review limits are retained in
+`tests/dw-27-invalid-page-failure-2026-11-09/resumed-build/validation.json`.
+The earlier dated receipts remain immutable.
+
+**Earlier disposition (2026-11-09, before the catalog-selector repair):** DW-27 was implemented and closed by the later
 `spec-five-sdk-runtime-deferred-items.md` batch on October 22, using published
 EventStore 3.126.1. Its final receipt records 2,534/2,534 package tests and
 2,534/2,534 mapped Debug service tests. The ledger and archive already reflect
@@ -99,6 +113,8 @@ source/package pass. Exact commands, identities and results are in
 - The user subsequently authorized committing and pushing all changes. EventStore was rebased onto current main and pushed as `9ed9b9742bd006e568f026cc1c588275cf9db097`; all ten tested source/test/doc files are byte-identical to the manifest. Current Parties source-observation constants/row are refreshed to that identity; historical receipts, owner approvals, package pins and the unapplied consumer patch remain unchanged. Commit messages passed the owning pinned CLIs; see `tests/dw-27-invalid-page-failure-2026-10-17/push-preparation.json`.
 
 ## Spec Change Log
+
+- 2026-11-09 — Resume review after the independent catalog-selector fix. Record passing source/package builds and 961 focused cases per mode, preserve both full suites' four prerequisite failures and 13 skips, and explicitly limit the archival fixture to in-process reconstruction rather than CLI replay. Preserve production/tests, dependencies, frozen intent and every earlier receipt; retain `in-review`.
 
 - 2026-11-09 — Current review dates the historical SDK selection, documents handler validation precedence, and limits a cursor-test comment to its same-SDK assertion. Preserve runtime behavior, package selections, the exact archival fixture and historical receipts. Retain current full-suite diagnostics separately; keep `in-review` for the existing broad blockers.
 
@@ -256,6 +272,46 @@ artifacts are preserved. The spec remains `in-review`; no commit or dependency
 mutation was performed.
 The original blind reviewer independently confirmed the direct fixes and all
 archival/historical byte bindings, with no unresolved patched claims.
+
+### Resumed build review after catalog-selector repair — 2026-11-09
+
+All three workflow layers reviewed DW-27 and directly referenced code/evidence in
+the 52,038,251-byte accumulated baseline diff. Unrelated historical changes were
+not exhaustively reviewed. The verification-gap layer returned no findings; the
+blind layer returned eleven and the edge-case layer returned one. Each finding
+received its own verdict before grouping:
+
+- U01 — low, rejected: the earlier disposition still reports alias errors although a subsequent independent fix uses global Gateway aliases. This is a spec-only correction, which the workflow rejects as a review patch. The normal current-disposition update above records this run's fresh source-build result and preserves the earlier dated results.
+- U02 — false, rejected, carried S06: the same pinned 4.44.13/Platform tool-range objection remains disclosed in preparation diagnostics. No supported-toolchain qualification is claimed. Passing mapped builds are observational results; neither dependencies nor the previous compatibility decision changes.
+- U03 — low, rejected: the precedence theory lacks CaseId combined with invalid page size. The unchanged `Mode || CaseId` guard precedes paging; separate CaseId rejection and unsupported-mode precedence controls cover those guards. Another cross-product fixture adds coverage without demonstrating a changed classification defect.
+- U04 — low, rejected: quotient overflow at size 1 and `int.MaxValue` offset/position is absent from the focused cursor theory. The unchanged long-division guard rejects it with the initialized `InvalidCursor` reason before reads/search. Additional extreme-value fixture branches expand coverage without establishing a regression from the page-category change.
+- U05 — low, rejected: the invalid-size matrix lacks a positive misaligned offset. Its existing negative/conflicting cases and empty codec/store/search calls prove page-size rejection precedes offset handling; the separate cursor controls cover misalignment. An additional compound tuple is unnecessary to establish the changed ordering, and no runtime defect was shown.
+- U06 — low, rejected: invalid envelope size is not combined with ignored malformed legacy paging fields. Existing authority controls prove those fields are ignored when envelope paging exists, and invalid-size controls cover both resulting handlers. A new cross-product fixture adds coverage without demonstrating a changed parser or precedence defect.
+- U07 — low, rejected: legacy zero/negative payload sizes lack direct no-envelope controls in the new paging matrix. Both unchanged strict parsers reject sizes below one as `InvalidEnvelope` before `TryResolvePaging`; the new failure discriminator applies only to envelope size. Extra legacy parser fixtures add coverage without demonstrating a changed behavior failure.
+- U08 — low, rejected: the page-failure theory omits null metadata/projection assertions. Both callers return the unchanged shared `QueryResult.Failure` factory, whose shape is also asserted by neighboring strict-payload controls. Duplicating the factory's null-field assertions adds implementation-mirroring checks without a changed failure-shape defect.
+- U09 — low, rejected: cursor controls omit codec-call assertions for negative/conflicting offsets. The unchanged short-circuit conditions reject both before `TryDecodeCursor`; current controls already assert the reason and no store/search access. New call-order assertions duplicate that unchanged implementation without a demonstrated changed side effect.
+- U10 — low, patch: the isolated archival fixture's generated receipt names a synthetic verifier path that is not installed. Explicitly qualify the new receipt/README as in-process reconstruction and destination proof, without standalone CLI replay. Preserve the exact historical fixture and all previous receipts.
+- U11 — low, rejected: the same fixture does not exercise CLI parsing/path resolution because it calls `verify` directly. It makes no CLI-parsing qualification; the U10 limitation states that explicitly. Adding an isolated subprocess/CLI matrix expands this dormant archival tool and is unnecessary for its reconstruction claim.
+- E01 — low, rejected, carried R03: a deliberately overlapping receipt destination can overwrite the manifest or another verified input on a reconstructed historical checkout. Preserve the prior output-alias decision; new path/symlink guards expand a dormant evidence interface and no current consumer/activation claim depends on it.
+
+U10 is a direct evidence-scope qualification in the new packet. No earlier
+implementation agent is available, so the parent applies it. No production code,
+executable tests, package selection or historical artifact changes are required.
+There are no new deferrals. The separate selector repair clears V01's earlier
+compilation failure; V02's four existing broad failures remain unchanged.
+
+Fresh mapped source and package Debug builds pass with zero warnings/errors.
+Each mode passes 961 focused tests without skips. Each full service suite returns
+exit 1 with 2,848 passed, the same four `PlatformApiPrerequisitesTests` failures,
+and 13 skips. The archival fixture passes in normal/optimized Python; syntax,
+warning and whitespace guards pass. Exact commands, emitted mapping, original
+logs/XML, failure stacks, skip reasons and compressed/raw hashes are retained in
+`tests/dw-27-invalid-page-failure-2026-11-09/resumed-build/validation.json`.
+All 8,339 tracked root files match the pre-run snapshot before this spec update;
+the final audit permits only this spec and the new packet to change. The spec
+remains `in-review`: the workflow's failing-verification checkpoint prevents
+marking it done. No commit, dependency mutation or historical receipt rewrite is
+performed.
 
 ## Verification
 
