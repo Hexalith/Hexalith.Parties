@@ -2248,3 +2248,12 @@ rollback: None required (test-only).
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-27-invalid-page-failure.md`
   summary: Reconcile the current dependency observation fitness controls with their immutable historical records.
   evidence: On 2026-11-09, the unchanged package full suite passes 2848 tests, skips 13, and fails four PlatformApiPrerequisitesTests: CommittedSelectionObservations_PreservePackageGraphAndImmutableConsumptionRefusals, Matrix_ValidationEvidenceCommandsAreReproducible, and CommittedSourceSelections_RecordOverridesAndRefuseInvalidImmutableConsumption for McpCli and Platform. Current committed gitlinks and EventStore sprint state differ from the dated expected observations. Preserve historical receipts and investigate the current observation policy; see tests/dw-27-invalid-page-failure-2026-11-09/validation.json.
+
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-dw-27-invalid-page-failure.md`
+  summary: Assess the processing-history query's existing invalid-cursor classification separately from list/search paging.
+  evidence: ReadProcessingPageAsync in src/Hexalith.Parties/Queries/PartySdkQueryService.ProcessingBuckets.cs returns InvalidPage after failed cursor decoding or invalid decoded positions; ProcessingFirstPageWithoutRevisionAuthorityReturnsReadModelUnavailableAsync preserves that response. This predates the current review and is separate from DW-27's list/search goal. A follow-up must decide compatibility before changing the processing-query contract.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-dw-27-invalid-page-failure.md`
+  summary: Assess paging-validation precedence for the separate processing-history query.
+  evidence: GetProcessingRecordsAsync reads detail and processing models before ReadProcessingPageAsync validates independent page size/offset inputs. Missing detail, model corruption or store failure can take precedence over invalid page sizes, including publicly admitted sizes 101/200. This existing ordering is outside DW-27's list/search change; establish the intended existence/revision precedence before altering it.

@@ -276,11 +276,15 @@ against isolated primary and fallback NuGet caches without external feeds.
 
 ## SDK paging, Memories retry and owner publish qualification
 
-`PartySdkQueryHandlerTests` and `EventStoreGatewayRoutingTests` exercise the
-published EventStore SDK's `InvalidPage` result through actual gateway HTTP
-routing. Envelope sizes outside 1–100 fail before cursor decoding, read-model
-access or search. Valid-size cursor failures keep their existing category;
-legacy payload paging and protected continuation controls remain covered.
+`PartySdkQueryHandlerTests` checks that otherwise valid list/search envelopes with sizes outside
+1–100 return `InvalidPage` before cursor decoding, read-model access or search.
+`EventStoreGatewayRoutingTests` exercises actual handlers and the published SDK's
+HTTP mapping with substituted actor transport: sizes 101/200 reach Parties and
+return HTTP 400 with `reason=invalid-page`. Unchanged public validation intercepts
+sizes below 1 or above 200 before Parties. These isolated tests do not qualify
+catalog admission or deployed domain-query transport. Valid-size cursor failures
+keep their existing category; legacy payload paging and protected continuation
+controls remain covered.
 
 `PartyMemoryIndexEntrySearchIndexerTests` keeps enabled indexing without a CaseId
 retryable. Its handler redelivery cases serialize the committed canonical model,

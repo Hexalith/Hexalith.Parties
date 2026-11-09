@@ -5,8 +5,11 @@ This packet records the **October 17 pre-adoption state**. The later
 completed DW-27 with published EventStore 3.126.1 and passing package/source
 service suites. Its closure is recorded in `deferred-work-archive.md`.
 The [November 9 resumed verification](../dw-27-invalid-page-failure-2026-11-09/validation.json)
-checks the current selected 4.1.0 package separately and records current broad
-validation blockers.
+checks the selected 4.1.0 package separately and records the earlier source-build
+and broad-suite blockers. The later
+[resumed build verification](../dw-27-invalid-page-failure-2026-11-09/resumed-build/validation.json)
+records the catalog-selector repair, passing source/package builds and focused
+tests, and the four remaining broad-suite failures.
 
 The patch, manifest and receipts below remain historical evidence. Do not apply
 the saved patch to the already-adopted consumer or regenerate these dated outputs

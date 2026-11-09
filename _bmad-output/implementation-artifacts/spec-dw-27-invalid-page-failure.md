@@ -65,7 +65,24 @@ context:
 
 ## Implementation Notes
 
-**Current disposition (2026-11-09, resumed build at
+**Current disposition (2026-11-09, continued review at
+`94d5d34d751f6635feeb5abdec6cfdf52180d53c`):** Fresh mapped Debug build passes
+with zero warnings/errors, and all 961 focused cases pass without skips. The
+prerequisite class reproduces the same four broad-suite blockers (114 passed,
+four failed, no skips). The previous full source/package suites were not repeated:
+tracked runtime/test/configuration inputs are unchanged, and all 23 retained
+archives pass compressed/raw integrity checks. The test guide now states the
+public-validation and substituted-transport limits; the historical README links
+the repaired source build. Two observations about the separate processing-history
+query are deferred for compatibility and precedence decisions. Three review
+layers establish no new list/search runtime defect. This spec remains `in-review`
+under the existing failing-verification checkpoint. Exact commands, fresh logs/XML,
+individual verdicts, replay limits and preservation evidence are recorded in
+`tests/dw-27-invalid-page-failure-2026-11-09/continued-review/validation.json`.
+No production/test, dependency, raw historical receipt, archival fixture, Git index
+or history changes are made.
+
+**Previous disposition (2026-11-09, resumed build at
 `0be5b476a946f12a8c67bfcab296ea55a45ab4c8`):** The implementation is active.
 The separate catalog-selector alias repair clears the previous source compilation
 blocker: fresh mapped source and selected-package Debug builds both pass with zero
@@ -113,6 +130,8 @@ source/package pass. Exact commands, identities and results are in
 - The user subsequently authorized committing and pushing all changes. EventStore was rebased onto current main and pushed as `9ed9b9742bd006e568f026cc1c588275cf9db097`; all ten tested source/test/doc files are byte-identical to the manifest. Current Parties source-observation constants/row are refreshed to that identity; historical receipts, owner approvals, package pins and the unapplied consumer patch remain unchanged. Commit messages passed the owning pinned CLIs; see `tests/dw-27-invalid-page-failure-2026-10-17/push-preparation.json`.
 
 ## Spec Change Log
+
+- 2026-11-09 — Continue review at the recorded main revision. Correct test-guide qualification and add the later source-build link to the historical README; clarify collection-only exit semantics and fresh-results replay in a new packet. Record two pre-existing processing-query observations separately, reproduce the four known prerequisite failures, and preserve all production/tests, dependencies, raw historical receipts, the exact archival fixture and frozen intent. Retain `in-review` without repeating unchanged full suites.
 
 - 2026-11-09 — Resume review after the independent catalog-selector fix. Record passing source/package builds and 961 focused cases per mode, preserve both full suites' four prerequisite failures and 13 skips, and explicitly limit the archival fixture to in-process reconstruction rather than CLI replay. Preserve production/tests, dependencies, frozen intent and every earlier receipt; retain `in-review`.
 
@@ -312,6 +331,40 @@ the final audit permits only this spec and the new packet to change. The spec
 remains `in-review`: the workflow's failing-verification checkpoint prevents
 marking it done. No commit, dependency mutation or historical receipt rewrite is
 performed.
+
+### Continued review — 2026-11-09
+
+All three independent layers reviewed DW-27 and directly referenced code/evidence
+in the 53,387,073-byte accumulated diff. Unrelated historical changes were not
+exhaustively reviewed. Edge-case and verification-gap layers returned no findings;
+the blind layer returned ten. Each finding received a verdict before grouping:
+
+- W01 — medium, defer: the separate processing-history paginator returns `InvalidPage` after failed cursor decoding or invalid decoded positions; `ProcessingFirstPageWithoutRevisionAuthorityReturnsReadModelUnavailableAsync` asserts that existing category. This is not the changed list/search path. Record a separate compatibility assessment before altering that response.
+- W02 — medium, defer: `GetProcessingRecordsAsync` reads detail/processing models before the separate paginator validates page size/offset. Existing missing-data/store/corruption failures can precede invalid paging, including publicly admitted sizes 101/200. Record a separate assessment of intended existence/revision precedence; preserve the list/search fix.
+- W03 — low, rejected: the typed client exposes status, type, sanitized detail and correlation rather than reason fields. Adding machine-readable reason properties changes its public surface and parsing without a demonstrated broken caller; this is an additive client enhancement rather than a direct correction to the required HTTP contract.
+- W04 — low, patch: the test-guide paragraph overstates public HTTP qualification. State otherwise valid list/search handler bounds, unchanged public rejection outside 1–200, the admitted 101/200 cases, substituted actor transport and separate catalog/deployed-transport qualification.
+- W05 — low, patch: the historical October README links the earlier November receipt without the later repaired source build. Preserve that dated link and add the resumed-build result so readers can distinguish the earlier blocker from the subsequent source pass.
+- W06 — low, patch: the archived collection driver does not propagate each check's failure to its own exit. Explicitly state in the new packet that driver success is not a gate and individual check exits/XML determine validation. Preserve the exact archived driver and all historical receipts.
+- W07 — low, patch: reusing the archived driver's directory can parse stale XML after a failed invocation. Require an empty results directory and fresh XML paths for replay in the new packet. The recorded runs used new temporary directories; no retained result is shown to be stale, and no historical driver is rewritten.
+- W08 — low, rejected: earlier source/package modes share an output directory and do not retain per-mode binary provenance. The previous receipt explicitly disclaims that proof. Adding historical collection machinery would not recover overwritten bytes, and no mismatched executed assembly is demonstrated; preserve that limit.
+- W09 — low, rejected: the HTTP failure theory omits type/title/correlation assertions, while shared HTTP tests cover the standard shape and this story preserves that implementation. Additional duplicate assertions add coverage without demonstrating a changed response-shape defect.
+- W10 — medium, defer, carried V02: the same four `PlatformApiPrerequisitesTests` fail for Builds/McpCli/Platform observations and the EventStore sprint expectation. The targeted current run reproduces all four. Preserve the existing verdict/follow-up without rewriting observations or adding a duplicate ledger entry.
+
+W01/W02 have distinct pre-existing causes and receive two separate ledger entries.
+W04/W05 are direct documentation corrections; W06/W07 are qualifications in the
+new packet. No earlier implementation agent is available, so the parent applies
+those corrections. There is no production, executable-test or dependency patch.
+
+Fresh source Debug build and all 961 focused cases pass; the prerequisite class
+returns exit 1 with 114 passed and the same four failures. Historical reconstruction
+passes in normal/optimized Python. The warning guard and whitespace checks pass.
+The prior full suites are retained as historical results (2,848 passed, four failed,
+13 skipped each), not rerun or claimed passing. All 23 prior archives pass their
+compressed/raw hash checks. HXW010/HXW011, collection-driver replay limits, isolated
+HTTP transport and in-process archival-fixture limits remain explicit in
+`tests/dw-27-invalid-page-failure-2026-11-09/continued-review/validation.json`.
+The failing-verification checkpoint keeps this spec `in-review`; the frozen
+no-commit boundary applies, and no index/history mutation is performed.
 
 ## Verification
 
