@@ -20,6 +20,39 @@ public = load("public_package_controls", "verify-public-package-integration.py")
 private_fixture = load("unchanged_private_controls", "test_current_owner_integration.py")
 
 
+# Literal xUnit 4.0.3 MTP TRX snapshot, independent of the validator's name sets.
+XUNIT_403_TRX_CASE_NAMES = (
+    r'Hexalith.Parties.Platform.IntegrationTests.FunctionalObservationWriterTests.DuplicateCanonicalWriteRefusesWhileRecheckPreservesOriginalBytesAsync',
+    r'Hexalith.Parties.Platform.IntegrationTests.FunctionalObservationWriterTests.RecheckRequiresOriginalAndPreservesOutputOwnershipBoundsAsync',
+    r'Hexalith.Parties.Platform.IntegrationTests.MemoriesTenantObservationTests.ActiveCurrentTenantPasses',
+    r'Hexalith.Parties.Platform.IntegrationTests.MemoriesTenantObservationTests.InactiveCurrentTenantFails(status: \"deleting\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.MemoriesTenantObservationTests.InactiveCurrentTenantFails(status: \"failed\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.MemoriesTenantObservationTests.InactiveCurrentTenantFails(status: \"provisioning\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeAssemblyObservationTests.CopiedOutputRefusesLinkedAssembly',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeAssemblyObservationTests.CopiedOutputReportsActualFileHashWithoutLoadingIt',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeAssemblyObservationTests.PrivateDiagnosticRefusesSymbolicDirectory',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeAssemblyObservationTests.PrivateDiagnosticRetainsFirstBytesAndRefusesOverwrite',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: \"platform-current-package\", profiles: \"platform-current-package,platform-current-package\", accepted: False)',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: \"platform-current-package\", profiles: \"platform-current-package,platform-package\", accepted: False)',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: \"platform-current-package\", profiles: \"platform-current-package\", accepted: True)',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: \"platform-package\", profiles: \"lifecycle-package\", accepted: False)',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: \"platform-package\", profiles: \"platform-package,lifecycle-package\", accepted: True)',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: \"platform-package\", profiles: \"platform-package,platform-current-package\", accepted: False)',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \"changed-context\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \"changed-mapping\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \"current-valid-local\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \"foreign-attempt\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \"foreign-model-output\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \"foreign-run\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \"lifecycle-foreign-receipt\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \"lifecycle-foreign-source\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \"lifecycle-local\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \"valid-local\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.PartyEnvironmentTests.GatewayRefusesAnonymousCommandStatusAsync',
+    r'Hexalith.Parties.Platform.IntegrationTests.PartyEnvironmentTests.RealDependencies_CreateQueryAndPersistMatchingPartyEvents',
+)
+
+
 class PublicPackageEvidenceTests(unittest.TestCase):
     def setUp(self):
         self.fixture = private_fixture.CurrentOwnerEvidenceTests("test_current_same_run_evidence_passes_without_qualification_credit")
@@ -51,7 +84,7 @@ class PublicPackageEvidenceTests(unittest.TestCase):
         f.write("loaded-assemblies-" + f.owner["runId"] + ".json", f.loaded)
         report = ET.Element("TestRun")
         results = ET.SubElement(report, "Results")
-        for name in sorted(public.CASES): ET.SubElement(results, "UnitTestResult", testName=name, outcome="Passed")
+        for name in XUNIT_403_TRX_CASE_NAMES: ET.SubElement(results, "UnitTestResult", testName=name, outcome="Passed")
         ET.SubElement(ET.SubElement(report, "ResultSummary"), "Counters", total="28", executed="28", passed="28", failed="0")
         f.native = ET.tostring(report)
         f.seal()
@@ -64,6 +97,36 @@ class PublicPackageEvidenceTests(unittest.TestCase):
         self.assertEqual(result["nativeCases"], 28)
         self.assertEqual(result["profile"], "platform-package")
         self.assertFalse(result["qualificationCredit"])
+
+    def test_actual_xunit403_escaped_case_refuses_missing_duplicate_and_wrong_parameters(self):
+        # Written literally from the current reporter, not generated by the validator.
+        escaped = r'Hexalith.Parties.Platform.IntegrationTests.MemoriesTenantObservationTests.InactiveCurrentTenantFails(status: \"deleting\")'
+        duplicate = r'Hexalith.Parties.Platform.IntegrationTests.MemoriesTenantObservationTests.InactiveCurrentTenantFails(status: \"failed\")'
+        wrong_parameter = r'Hexalith.Parties.Platform.IntegrationTests.MemoriesTenantObservationTests.InactiveCurrentTenantFails(status: \"active\")'
+        f = self.fixture
+        original = f.native
+        self.assertEqual(sum(item.get("testName") == escaped for item in ET.fromstring(original).iter("UnitTestResult")), 1)
+        self.assertEqual(self.check()["nativeCases"], 28)
+        for mutation in ("missing", "duplicate", "wrong-parameter", "unescaped", "double-escaped", "wrong-case"):
+            with self.subTest(mutation=mutation):
+                tree = ET.fromstring(original)
+                results = tree.find("Results")
+                selected = next(item for item in results if item.get("testName") == escaped)
+                if mutation == "missing":
+                    results.remove(selected)
+                    counters = tree.find("ResultSummary/Counters")
+                    counters.set("total", "27")
+                    counters.set("executed", "27")
+                    counters.set("passed", "27")
+                if mutation == "duplicate": selected.set("testName", duplicate)
+                if mutation == "wrong-parameter": selected.set("testName", wrong_parameter)
+                if mutation == "unescaped": selected.set("testName", escaped.replace(r'\"', '"'))
+                if mutation == "double-escaped": selected.set("testName", escaped.replace("\\", "\\\\"))
+                if mutation == "wrong-case": selected.set("testName", escaped.replace("deleting", "Deleting"))
+                f.native = ET.tostring(tree)
+                f.seal()
+                with self.assertRaisesRegex(ValueError, "native set differs|required unchanged native case"):
+                    self.check()
 
     def test_historical_tuple_cannot_qualify_selected_sources(self):
         with self.assertRaises(ValueError):

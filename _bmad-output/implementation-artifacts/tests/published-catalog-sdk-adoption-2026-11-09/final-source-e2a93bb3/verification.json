@@ -1,0 +1,66 @@
+{
+  "capturedSource": "e2a93bb365af5f2ea86a2a8079747ac84affdffb",
+  "workflow": 42686394068,
+  "nativeJob": 129394255279,
+  "nativeCases": 28,
+  "nativeJobPassed": true,
+  "overallCiPassed": false,
+  "historicalWrapperFailure": 129404657570,
+  "reason": "xUnit4.0.3 MTP escapes quote bytes5c22 in19theory displaynames;exactreportsetcorrectionneeded",
+  "sdkVersion": "4.2.0",
+  "publicImageSdkVersion": "4.1.0",
+  "correctedLocalReadbackAllStrictPredicatesPassed": true,
+  "publicReaderControls": 18,
+  "privateReaderControls": 17,
+  "newExactSourceHostedAcceptanceStillRequired": true,
+  "rawArtifactsRemainPrivate": true,
+  "actualArtifactHashes": [
+    {
+      "file": "cleanup-1.json",
+      "bytes": 1579,
+      "sha256": "465863026eb4e02e09e116c47627243ce6efac8e301b2e9562253e28da781048"
+    },
+    {
+      "file": "cleanup-2.json",
+      "bytes": 1586,
+      "sha256": "4bdb02e79604eb1999daebd15199b4ef329e196d3a7d7422c3e5c903657033a3"
+    },
+    {
+      "file": "execution.json",
+      "bytes": 1842,
+      "sha256": "f21808db5a420ee84c13199ac4312378fc6e71c3cb8e12873ad5d2ab2b0bdbc1"
+    },
+    {
+      "file": "functional-observations-7e4ee789bb1b640b09cb9f36ec138f20a631032be1aadf583afb5ccf152eb031.json",
+      "bytes": 5257,
+      "sha256": "7e4ee789bb1b640b09cb9f36ec138f20a631032be1aadf583afb5ccf152eb031"
+    },
+    {
+      "file": "invocation.json",
+      "bytes": 387,
+      "sha256": "4fc8a3419c3c0b1964bb700345c8f85ab6539aa21d5120da022803dd07401b66"
+    },
+    {
+      "file": "lifecycle-47fd73807da597c913f40aa2419d252938c0ea6ecdfe76ac649434704e735bc4.json",
+      "bytes": 275,
+      "sha256": "47fd73807da597c913f40aa2419d252938c0ea6ecdfe76ac649434704e735bc4"
+    },
+    {
+      "file": "loaded-assemblies-b2407296a1ac4c9c031fdd023dd20f1d.json",
+      "bytes": 13630,
+      "sha256": "f105c1224146173f2065e2b49edde681ba043d753862bbe5011d7d382713ca28"
+    },
+    {
+      "file": "native-545037cbacbad7b4f33321a3eefa18d860356b96cda2d6c172e13586a6afeb24.trx",
+      "bytes": 39664,
+      "sha256": "545037cbacbad7b4f33321a3eefa18d860356b96cda2d6c172e13586a6afeb24"
+    },
+    {
+      "file": "test-result.json",
+      "bytes": 18961,
+      "sha256": "fe9a06c9588a5b95041b7e277d99d4a8a86b11e09928c51211b9d1c9d58c3d6a"
+    }
+  ],
+  "ciXmlRawSha256": "752687addf3b88e4d32a8a76f2c5cbb914d1e2d7cd5edb76ffb275a111ab2091",
+  "ciXmlSanitization": "removed test output/failure bodies; test names/outcomes remain"
+}
