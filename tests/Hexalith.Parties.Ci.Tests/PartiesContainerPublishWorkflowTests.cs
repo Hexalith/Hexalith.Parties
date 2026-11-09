@@ -128,7 +128,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         }
         using JsonDocument tools = JsonDocument.Parse(CiTestPaths.ReadRepoFile(".config/dotnet-tools.json"));
         JsonElement tool = tools.RootElement.GetProperty("tools").GetProperty("hexalith.builds.module.cli");
-        tool.GetProperty("version").GetString().ShouldBe("4.44.13");
+        tool.GetProperty("version").GetString().ShouldBe("4.45.0");
         tool.GetProperty("rollForward").GetBoolean().ShouldBeFalse();
         workflow.ShouldNotContain("submodules: recursive");
 
@@ -148,6 +148,14 @@ public sealed class PartiesContainerPublishWorkflowTests
             focusedRuns.ShouldNotContain("-m:1");
         }
         string latestCohort = ReadWorkflowJob(workflow, "eventstore-410-package-cohort");
+        latestCohort.ShouldContain("tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj");
+        latestCohort.ShouldContain("--filter-class Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogConfigurationTests");
+        latestCohort.ShouldContain("--filter-class Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogPreparationCleanupTests");
+        latestCohort.ShouldContain("--minimum-expected-tests 17 --fail-skips on");
+        string controllers = ReadWorkflowJob(workflow, "lifecycle-controller-tests");
+        controllers.ShouldContain("python3 -B -m unittest discover -s tests/ci-lifecycle -v");
+        controllers.ShouldContain("submodule update --init --depth 1 --checkout -- references/Hexalith.Builds");
+        controllers.ShouldNotContain("continue-on-error");
         latestCohort.ShouldContain("--filter-method Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.EventStoreTransportAndSelectorCapabilitiesRequireExactQualification");
         latestCohort.ShouldContain("--filter-class Hexalith.Parties.Tests.Gateway.PartiesCatalogGatewaySelectorTests");
         latestCohort.ShouldContain("--minimum-expected-tests 9 --fail-skips on");

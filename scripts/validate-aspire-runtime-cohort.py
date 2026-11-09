@@ -12,7 +12,7 @@ import zipfile
 from pathlib import Path
 
 SDK_IDS = {
-    "Hexalith.EventStore.Admin.Abstractions", "Hexalith.EventStore.Admin.Server",
+    "Hexalith.EventStore.Admin.Abstractions", "Hexalith.EventStore.Admin.Cli", "Hexalith.EventStore.Admin.Server",
     "Hexalith.EventStore.Aspire", "Hexalith.EventStore.Client", "Hexalith.EventStore.Contracts",
     "Hexalith.EventStore.DomainService", "Hexalith.EventStore.Gateway",
     "Hexalith.EventStore.RestApi.Generators", "Hexalith.EventStore.Server",
@@ -24,6 +24,38 @@ ADMIN_SERVER_IDS = {"Hexalith.EventStore.Admin.Server", "Hexalith.EventStore.Adm
                     "Hexalith.EventStore.Contracts", "Hexalith.EventStore.ServiceDefaults"}
 ADMIN_SERVER_PROJECT = (Path(__file__).resolve().parents[1] / "references/Hexalith.EventStore/src/"
                         "Hexalith.EventStore.Admin.Server.Host/Hexalith.EventStore.Admin.Server.Host.csproj")
+SAMPLE_CONTRACTS_PROJECT = (Path(__file__).resolve().parents[1] / "tests/"
+                            "Hexalith.Parties.EventStoreSample.Contracts.TestArtifact/"
+                            "Hexalith.Parties.EventStoreSample.Contracts.TestArtifact.csproj")
+PRIVATE_ADMIN_UI_PROJECT = (Path(__file__).resolve().parents[1] / "tests/"
+                            "Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj")
+
+
+def select_sdk(libraries: dict, project: Path | None = None, restored: set[str] | None = None,
+               entry: str | None = None) -> dict:
+    selected = {}
+    for identity, metadata in libraries.items():
+        package_id = identity.rsplit("/", 1)[0]
+        if not package_id.casefold().startswith("hexalith.eventstore."):
+            continue
+        if package_id in SDK_IDS:
+            selected[identity] = metadata
+            continue
+        if package_id == entry and metadata.get("type") == "project":
+            continue
+        if (package_id == "Hexalith.EventStore.Admin.UI" and metadata.get("type") == "reference"
+                and project is not None and project.resolve() == PRIVATE_ADMIN_UI_PROJECT):
+            continue
+        # The linked native sample is an application artifact, not an SDK library.
+        # Restore binds its actual declared project; deps readback must retain that identity.
+        if package_id == "Hexalith.EventStore.Sample.Contracts" and metadata.get("type") == "project":
+            if restored is not None and identity in restored:
+                continue
+            path = metadata.get("msbuildProject")
+            if project is not None and isinstance(path, str) and (project.parent / path).resolve() == SAMPLE_CONTRACTS_PROJECT:
+                continue
+        raise ValueError("Unqualified runtime SDK family member: " + identity)
+    return selected
 
 
 def required_sdk_ids(project: Path | None = None) -> set[str]:
@@ -68,8 +100,7 @@ def write(path: Path, value: dict) -> None:
 
 def validate(assets_path: Path, expected_version: str, project: Path | None = None) -> dict:
     assets = load(assets_path)
-    selected = [(identity, metadata) for identity, metadata in assets["libraries"].items()
-                if identity.rsplit("/", 1)[0] in SDK_IDS]
+    selected = list(select_sdk(assets["libraries"], project).items())
     if not selected:
         raise ValueError("No actual restored EventStore SDK libraries were found")
     missing = required_sdk_ids(project) - {identity.rsplit("/", 1)[0] for identity, _ in selected}
@@ -146,8 +177,7 @@ def sdk_proof(assets: dict, target: Path, version: str, families: dict) -> tuple
 
 def validate_deps(path: Path, version: str, sdk_libraries: set[str], families: dict, project: Path | None = None) -> None:
     deps = load(path)
-    selected = {identity for identity, metadata in deps["libraries"].items()
-                if identity.rsplit("/", 1)[0] in SDK_IDS}
+    selected = set(select_sdk(deps["libraries"], project, sdk_libraries, path.name.removesuffix(".deps.json")))
     if not required_sdk_ids(project).issubset({identity.rsplit("/", 1)[0] for identity in selected}) or not selected.issubset(sdk_libraries):
         raise ValueError("Deployed dependency manifest differs from the restored SDK graph")
     if any(identity.rsplit("/", 1)[1] != version or deps["libraries"][identity].get("type") != "package" for identity in selected):
@@ -157,6 +187,20 @@ def validate_deps(path: Path, version: str, sdk_libraries: set[str], families: d
     for identity in deps["libraries"]:
         if identity.rsplit("/", 1)[0] in public_ids and identity not in sdk_libraries:
             raise ValueError("Deployed public dependency manifest differs from actual restore")
+
+
+def runtime_inputs(target: Path) -> set[Path]:
+    """Enumerate the runtime files whose additions, deletions and changes require preparation."""
+    paths = {target, target.with_suffix(".deps.json")}
+    runtimeconfig = target.with_suffix(".runtimeconfig.json")
+    if runtimeconfig.is_file():
+        paths.add(runtimeconfig)
+    paths.update(path.resolve() for path in target.parent.rglob("*") if path.is_file() and path.suffix.lower() in {".dll", ".exe"})
+    paths.update(path.resolve() for path in target.parent.glob("appsettings*.json"))
+    paths.update(path.resolve() for name in ("wwwroot", "native-ui-artifact") for path in (target.parent / name).rglob("*") if path.is_file())
+    paths.update(path.resolve() for path in target.parent.glob("*staticwebassets*.json"))
+    paths.update(path.resolve() for path in target.parent.glob("native-admin-ui-artifact.tsv"))
+    return paths
 
 
 def record(metadata: dict, project: Path, configuration: str, version: str, started_ns: int, role: str, families: dict) -> dict:
@@ -174,14 +218,7 @@ def record(metadata: dict, project: Path, configuration: str, version: str, star
     validate_families(assets, families)
     validate_deps(deps, version, set(assets["libraries"]), families, project)
     archives, binaries = sdk_proof(assets, target, version, families)
-    paths = {target, deps, assets_path, project.resolve()}
-    if runtimeconfig.is_file():
-        paths.add(runtimeconfig)
-    paths.update(path.resolve() for path in target.parent.rglob("*") if path.is_file() and path.suffix.lower() in {".dll", ".exe"})
-    paths.update(path.resolve() for path in target.parent.glob("appsettings*.json"))
-    paths.update(path.resolve() for path in (target.parent / "wwwroot").rglob("*") if path.is_file())
-    paths.update(path.resolve() for path in (target.parent / "native-ui-artifact").rglob("*") if path.is_file())
-    paths.update(path.resolve() for path in target.parent.glob("*staticwebassets*.json"))
+    paths = runtime_inputs(target) | {assets_path, project.resolve()}
     for proof in target.parent.glob("native-admin-ui-artifact.tsv"):
         paths.add(proof.resolve())
         for row in proof.read_text(encoding="utf-8").splitlines():
@@ -208,6 +245,9 @@ def verify_receipt(receipt: dict, project: Path, configuration: str, version: st
         if digest(Path(filename)) != expected:
             raise ValueError("Prepared runtime file drifted after completed build: " + filename)
     target, assets_path = Path(receipt["targetPath"]), Path(receipt["assetsPath"])
+    recorded_inputs = {Path(filename) for filename in receipt["files"] if Path(filename).is_relative_to(target.parent)}
+    if runtime_inputs(target) != recorded_inputs:
+        raise ValueError("Prepared runtime file inventory drifted after completed build")
     assets = validate(assets_path, version, project)
     validate_families(assets, receipt["familyVersions"])
     validate_deps(target.with_suffix(".deps.json"), version, set(assets["libraries"]), receipt["familyVersions"], project)

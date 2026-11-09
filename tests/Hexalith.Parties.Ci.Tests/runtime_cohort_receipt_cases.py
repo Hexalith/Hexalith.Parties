@@ -280,6 +280,47 @@ class RuntimeReceiptCases(unittest.TestCase):
                 with self.assertRaises(ValueError): self.prepare()
                 self.assertFalse(self.manifest.exists())
 
+    def test_unqualified_family_members_refuse_in_restore_and_deployed_graph(self):
+        for package in ("Hexalith.EventStore.Unqualified", "Hexalith.EventStore.Admin.Cli", "hexalith.eventstore.client"):
+            for graph in ("assets", "deps"):
+                with self.subTest(package=package, graph=graph):
+                    self.tearDown(); self.setUp()
+                    path = self.assets_path if graph == "assets" else self.target.with_suffix(".deps.json")
+                    data = json.loads(path.read_text())
+                    data["libraries"][package + "/9.9.9"] = {"type": "project"}
+                    path.write_text(json.dumps(data))
+                    with self.assertRaises(ValueError): self.prepare()
+                    self.assertFalse(self.manifest.exists())
+
+    def test_only_actual_declared_sample_application_project_is_exempt_from_sdk_versions(self):
+        identity = "Hexalith.EventStore.Sample.Contracts/1.0.0"
+        for path in (str(cohort.SAMPLE_CONTRACTS_PROJECT), "foreign/Contracts.csproj"):
+            with self.subTest(path=path):
+                self.tearDown(); self.setUp()
+                metadata = {"type": "project", "msbuildProject": path}
+                self.assets["libraries"][identity] = metadata
+                self.assets_path.write_text(json.dumps(self.assets))
+                self.target.with_suffix(".deps.json").write_text(json.dumps(self.deps))
+                if path == str(cohort.SAMPLE_CONTRACTS_PROJECT):
+                    self.prepare()
+                    result, runner = self.launch()
+                    self.assertEqual(0, result.returncode, result.stderr)
+                    self.assertTrue(runner.exists())
+                else:
+                    with self.assertRaisesRegex(ValueError, "Unqualified"): self.prepare()
+
+    def test_added_configuration_binaries_and_assets_refuse_receipt_readback(self):
+        for filename in ("appsettings.Development.json", "Unrecorded.dll", "wwwroot/new.js", "native-ui-artifact/new.json", "Host.staticwebassets.new.json"):
+            with self.subTest(filename=filename):
+                self.tearDown(); self.setUp(); self.prepare()
+                added = self.output / filename
+                added.parent.mkdir(parents=True, exist_ok=True)
+                added.write_bytes(b"unprepared runtime input")
+                result, runner = self.launch()
+                self.assertNotEqual(0, result.returncode)
+                self.assertFalse(runner.exists())
+                self.assertIn("inventory drifted", result.stderr)
+
     def test_archive_nuspec_and_binary_are_read_from_the_same_zip(self):
         self.prepare()
         archive = self.cache / "hexalith.eventstore.client/3.129.1/hexalith.eventstore.client.3.129.1.nupkg"

@@ -157,6 +157,7 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
     created = [event for event in events if event.get("eventTypeName") == "Hexalith.Parties.Contracts.Events.PartyCreated"]
     require(len(created) == 1 and creation_timestamp(created[0].get("timestamp")) == creation_timestamp(functional["projection"].get("createdAt")), "PartyCreated/projection timestamp mismatch")
     require(functional.get("tenantsNativeQueryObserved") is True and functional.get("memoriesRegistryObserved") is True, "real reference-owner assertions absent")
+    require(functional.get("selectorCompatibilityObserved") is True, "SDK selector compatibility assertions absent")
     require("currentOwner" in functional and functional["currentOwner"] is None, "ordinary evidence cannot promote a private current-owner proof")
     runtime = functional.get("publicRuntime")
     require(isinstance(runtime, dict) and set(runtime) == {"kind", "profile", "ownerRunId", "ownerAttemptId", "environmentId", "revision", "mappingHash", "executionContext", "platform", "image", "bodies", "measuredAtUtc", "qualificationCredit"}, "measured ordinary runtime evidence missing or unknown")

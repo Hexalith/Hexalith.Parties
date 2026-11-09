@@ -134,8 +134,10 @@ internal static class PartiesDevelopmentCatalogTool
     internal static async Task RunOwnedPreparationAsync(string path, string owner, Func<Task> prepare)
     {
         CreatePrivateDirectory(path);
-        try { File.WriteAllText(Path.Combine(path, ".owner"), owner); }
-        catch { Directory.Delete(path, recursive: false); throw; }
+        using (var marker = new StreamWriter(new FileStream(Path.Combine(path, ".owner"), FileMode.CreateNew)))
+        {
+            marker.Write(owner);
+        }
         try { await prepare().ConfigureAwait(false); }
         catch (Exception failure)
         {
@@ -173,22 +175,31 @@ internal static class PartiesDevelopmentCatalogTool
         {
             await process.WaitForExitAsync(token).ConfigureAwait(false);
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException cancellation)
         {
-            process.Kill(entireProcessTree: true);
             using CancellationTokenSource cleanup = new(TimeSpan.FromSeconds(30));
-            try { await process.WaitForExitAsync(cleanup.Token).ConfigureAwait(false); }
-            catch (OperationCanceledException failure)
+            try
             {
-                failure.Data["CatalogOwnedProcessStillRunning"] = true;
-                throw;
+                if (!process.HasExited) { process.Kill(entireProcessTree: true); }
+                await process.WaitForExitAsync(cleanup.Token).ConfigureAwait(false);
+            }
+            catch (Exception failure)
+            {
+                if (!process.HasExited)
+                {
+                    cancellation.Data["CatalogOwnedProcessStillRunning"] = true;
+                    cancellation.Data["CatalogOwnedProcessCleanupFailure"] = failure;
+                }
             }
             throw;
         }
-        await File.WriteAllTextAsync(Path.Combine(directory, log), await output.ConfigureAwait(false) + await error.ConfigureAwait(false), token).ConfigureAwait(false);
+        string diagnostics = await output.ConfigureAwait(false) + await error.ConfigureAwait(false);
+        await File.WriteAllTextAsync(Path.Combine(directory, log), diagnostics, token).ConfigureAwait(false);
         if (process.ExitCode != 0)
         {
-            throw new InvalidDataException("The actual Platform catalog tool refused preparation; see " + Path.Combine(directory, log) + ".");
+            // The owned preparation directory is removed on failure; retain bounded details in the exception.
+            throw new InvalidDataException("The actual Platform catalog tool refused preparation: "
+                + diagnostics[^Math.Min(diagnostics.Length, 4096)..]);
         }
     }
 }

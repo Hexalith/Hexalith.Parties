@@ -2257,3 +2257,59 @@ rollback: None required (test-only).
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-27-invalid-page-failure.md`
   summary: Assess paging-validation precedence for the separate processing-history query.
   evidence: GetProcessingRecordsAsync reads detail and processing models before ReadProcessingPageAsync validates independent page size/offset inputs. Missing detail, model corruption or store failure can take precedence over invalid page sizes, including publicly admitted sizes 101/200. This existing ordering is outside DW-27's list/search change; establish the intended existence/revision precedence before altering it.
+
+- source_spec: `spec-published-catalog-sdk-adoption.md`
+  summary: Validate the complete released G4 test-result schema before public evidence acceptance.
+  evidence: R-B1: the current passing fixture lacks schema-required tool/suite/artifacts/deadlines bindings; require the actual released schema and real-result controls.
+
+- source_spec: `spec-published-catalog-sdk-adoption.md`
+  summary: Bind persisted public/private G4 aggregate tenant to the declared synthetic tenant.
+  evidence: R-B2: validators currently accept any g4t- tenant prefix; use result.bindings.environment.isolation.syntheticTenantId and coherent foreign-tenant refusal controls.
+
+- source_spec: `spec-published-catalog-sdk-adoption.md`
+  summary: Bind G4 public image measurements to the issued execution interval.
+  evidence: R-B4: the current public verifier accepts a2099measurement timestamp; check actual execution start/end and future-time refusal.
+
+- source_spec: `spec-published-catalog-sdk-adoption.md`
+  summary: Propagate the lifecycle qualification deadline through both nested persistence operations.
+  evidence: R-B7: LifecycleQualificationTests creates240s cancellation but nested persistence and recheck use independent120s lifetimes; add bounded cancellation at the shared operation boundary.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
+  summary: Run the lifecycle controller safety tests automatically.
+  evidence: medium; resumed review BH1. No checked workflow invokes the full tests/ci-lifecycle discovery; the verification-gap layer independently confirms the process-birth refusal test is omitted. This later lifecycle work predates this resumed qualification and is independent of the 4.0.4 offline job. Parent probes and full triage: `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to the source spec.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
+  summary: Determine whether the supplemental public/private result readers need the full released contract validator.
+  evidence: maybe-false (medium unverified); resumed review BH2. Both readers accept their intentionally minimal synthetic fixtures. The owning CLI produces the real result first; no malformed production result was demonstrated. Trace that released producer/validator contract and construct a reachable invalid artifact to settle the claim. Parent probes and full triage: `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to the source spec.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
+  summary: Bind native TRX timestamps and execution identity to the current integration owner.
+  evidence: medium; resumed review BH3. The supplemental public validator accepts a resealed report with all required names but Times in 1900. Its name/counter checks do not bind the native report to the current functional observation interval. This is a later integration-reader issue. Parent probes and full triage: `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to the source spec.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
+  summary: Require selector compatibility observations in the private current-owner reader.
+  evidence: medium; resumed review BH4. The public reader now refuses false after a concurrent correction; the private reader still accepts selectorCompatibilityObserved=false in the parent probe. Preserve the other session correction and defer only the remaining private-reader issue. Parent probes and full triage: `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to the source spec.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
+  summary: Reject boolean and non-integer sequence/count representations in integration evidence.
+  evidence: medium; resumed review BH5. Parent probes confirm both public/private readers accept metadataSequence=true and eventCount=1.0. Equality to len(events) does not enforce the advertised integer representation. This affects later evidence readers, not the 4.0.4 codec/build proof. Parent probes and full triage: `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to the source spec.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
+  summary: Bound public runtime and functional observation times to their recorded execution interval.
+  evidence: medium; resumed review BH6. The public reader accepts measuredAtUtc in 2999 and observedAtUtc in 1900; its only measurement ordering check compares image start with measurement. The offline cohort job does not use this reader. Parent probes and full triage: `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to the source spec.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
+  summary: Enforce loaded-process and copied-output assembly scopes in the private evidence reader.
+  evidence: medium; resumed review BH7. Parent probes relabel both inventories copied-static-image without refusal. The public reader enforces their distinct scopes, while the private reader currently checks identities/hashes alone. Parent probes and full triage: `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to the source spec.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
+  summary: Determine whether lifecycle metadata can reach a symlinked parent after directory admission.
+  evidence: maybe-false (medium unverified); resumed review BH8. The standalone read() follows a symlinked parent in a parent probe. private_directory() rejects linked ancestor paths during admission, so hostile hosted-path reachability is unproven. Trace every caller and demonstrate a post-admission directory replacement to settle it. Parent probes and full triage: `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to the source spec.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
+  summary: Determine the required Dapr executable archive integrity policy for diagnostic workflows.
+  evidence: maybe-false (medium unverified); resumed review BH10. The workflows download exact release URLs over HTTPS without a separate pinned digest. No altered executable or failed release authenticity condition was demonstrated. Establish the owner supply-chain requirement and trusted digest source before treating this hardening proposal as a confirmed defect. Parent probes and full triage: `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to the source spec.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
+  summary: Reconcile ordinary public evidence-reader source expectations with current committed gitlinks.
+  evidence: high; resumed review VG3. Parent probe confirms validate() refuses current Platform e39a9a2587ec150d550510763ab69db305d13fdb and Builds 27145e52ffab5623198ba5efdab5cdb71aa42d28 before artifact inspection, since it requires historical published identities. This blocks the broader public gate and belongs to separate dependency/publication reconciliation; the 4.0.4 offline job is independent. Parent probes and full triage: `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to the source spec.

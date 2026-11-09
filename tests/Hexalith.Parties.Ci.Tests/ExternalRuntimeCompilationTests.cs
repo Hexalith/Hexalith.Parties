@@ -81,6 +81,7 @@ public sealed class ExternalRuntimeCompilationTests
                 PackageTestProcessResult result = PackageTestProcess.Run(start, root, processTimeoutMilliseconds: 240_000);
                 string diagnostic = result.StandardOutput + result.StandardError;
                 string assetsPath = Path.Combine(root, Path.GetDirectoryName(TenantsProject)!, "obj", "project.assets.json");
+                File.Exists(assetsPath).ShouldBeTrue(diagnostic);
                 using JsonDocument assets = JsonDocument.Parse(File.ReadAllText(assetsPath));
                 assets.RootElement.GetProperty("packageFolders").EnumerateObject().Select(folder => Path.TrimEndingDirectorySeparator(folder.Name))
                     .ShouldBe([Path.Combine(root, "packages")]);

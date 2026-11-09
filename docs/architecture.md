@@ -62,7 +62,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | MCP | ModelContextProtocol / .AspNetCore | `2.3.0` / `2.3.0` |
 | UI | Microsoft.FluentUI.AspNetCore.Components | `5.0.1` |
 | | Microsoft.AspNetCore.Components.CustomElements | `10.0.14` |
-| Rich search (opt) | Hexalith.Memories.Client.Rest | package `3.0.24` by default |
+| Rich search (opt) | Hexalith.Memories.Client.Rest | package `3.0.25` by default |
 | Observability | OpenTelemetry (exporter/hosting/instrumentation) | `1.20.1` core/hosting/exporter and ASP.NET Core/HTTP/runtime instrumentation |
 | Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `10.11.0` |
 | Versioning | MinVer (git-tag SemVer, prefix `v`) | `8.0.0` |

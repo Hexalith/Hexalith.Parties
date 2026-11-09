@@ -31,6 +31,20 @@ dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.T
 
 CI runs on pushes and pull requests to `main`, scheduled nightly runs, and Pact Broker `repository_dispatch` events with type `contract_requiring_verification_published`.
 
+The repository tool manifest now selects module CLI **4.45.0**, matching the
+selected Platform's `[4.45.0, 5.0.0-0)` prerequisite. The immutable reusable
+workflow restores that exact manifest. This corrects the `HXW010` preparation
+failure in main CI `42609106160`; it does not renew the historical public
+Platform/Builds runtime tuple accepted by the downstream evidence verifier.
+Fresh native runtime, complete cleanup and hosted exact-source gates remain
+required. EventStore SDK **4.1.0** is the latest stable version verified directly
+against nuget.org on 2026-11-09 and remains the effective package selection.
+
+Ordinary CI also runs the deterministic lifecycle controller tests and the
+Docker-free private catalog configuration/cleanup tests. These checks execute
+the retained compatibility helpers without provisioning domain services;
+the declared Platform integration profile retains its independent runtime gate.
+
 The v2 workflow uses genuine published module CLI 4.44.13 and released
 [Platform v1.7.1](https://github.com/Hexalith/Hexalith.Platform/releases/tag/v1.7.1)
 at `0f4e27f1f78310bd731c10c19dc51bb1e0345d44`, with matching published Builds

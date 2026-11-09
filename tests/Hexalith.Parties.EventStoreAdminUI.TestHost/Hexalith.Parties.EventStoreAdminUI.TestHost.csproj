@@ -51,7 +51,13 @@
        Restore and build it with the same explicit global profile; ProjectReference
        metadata is discarded by NuGet's path walk and can restore the wrong graph. -->
   <Target Name="StageNativeAdminUiAssets" BeforeTargets="PrepareForBuild;ResolveStaticWebAssetsInputs" DependsOnTargets="ValidateAdminUiSettingsRoot">
-    <ItemGroup><_NativeAdminUiAsset Include="$(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/wwwroot/**/*" /></ItemGroup>
+    <ItemGroup>
+      <_NativeAdminUiAsset Include="$(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/wwwroot/**/*" />
+      <_ObsoleteNativeAdminUiAsset Include="$(MSBuildProjectDirectory)/wwwroot/**/*;$(TargetDir)wwwroot/**/*"
+          Exclude="@(_NativeAdminUiAsset->'$(MSBuildProjectDirectory)/wwwroot/%(RecursiveDir)%(Filename)%(Extension)');@(_NativeAdminUiAsset->'$(TargetDir)wwwroot/%(RecursiveDir)%(Filename)%(Extension)')" />
+      <Content Remove="@(_ObsoleteNativeAdminUiAsset)" />
+    </ItemGroup>
+    <Delete Files="@(_ObsoleteNativeAdminUiAsset)" />
     <MakeDir Directories="$(MSBuildProjectDirectory)/wwwroot" />
     <Copy SourceFiles="@(_NativeAdminUiAsset)" DestinationFiles="@(_NativeAdminUiAsset->'$(MSBuildProjectDirectory)/wwwroot/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>

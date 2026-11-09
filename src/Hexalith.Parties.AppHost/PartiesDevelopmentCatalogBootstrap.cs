@@ -377,12 +377,22 @@ internal sealed class PartiesDevelopmentCatalogBootstrap : IDistributedApplicati
         Task<string> output = process.StandardOutput.ReadToEndAsync(token);
         Task<string> error = process.StandardError.ReadToEndAsync(token);
         try { await process.WaitForExitAsync(token).ConfigureAwait(false); }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException cancellation)
         {
-            process.Kill(entireProcessTree: true);
             using CancellationTokenSource cleanup = new(TimeSpan.FromSeconds(30));
-            try { await process.WaitForExitAsync(cleanup.Token).ConfigureAwait(false); }
-            catch (OperationCanceledException failure) { failure.Data["CatalogOwnedProcessStillRunning"] = true; throw; }
+            try
+            {
+                if (!process.HasExited) { process.Kill(entireProcessTree: true); }
+                await process.WaitForExitAsync(cleanup.Token).ConfigureAwait(false);
+            }
+            catch (Exception failure)
+            {
+                if (!process.HasExited)
+                {
+                    cancellation.Data["CatalogOwnedProcessStillRunning"] = true;
+                    cancellation.Data["CatalogOwnedProcessCleanupFailure"] = failure;
+                }
+            }
             throw;
         }
         string stdout = await output.ConfigureAwait(false);

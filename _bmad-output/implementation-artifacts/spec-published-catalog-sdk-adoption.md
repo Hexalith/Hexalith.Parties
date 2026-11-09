@@ -657,3 +657,36 @@ POST/status/persisted-verification phases, duration and status. It prints no
 JWT, API token, payload or private key and preserves the60s budget, all five
 commands and every persisted-state assertion. One attribution run follows
 against verified unchanged prepared publicSDK132 host outputs.
+
+
+## Current SDK resumption — 2026-11-09
+
+The requested latest stable SDK is EventStore **4.1.0**. Direct nuget.org flat-container indexes for DomainService, Contracts and Server agree. All 14 official SDK archives were independently retrieved; their nuspecs bind source `dbc6e7e08d605ba6c6c790e3e08a15dc8bbdec8a`. The effective normal Release graph already selects SDK4.1.0, Tenants7.0.5, Memories3.0.25 and FrontComposer4.7.6. Earlier3.129/3.130 observations above remain historical and do not qualify this cohort.
+
+Normal standalone restore and Release build pass with zero warnings/errors. The 16 individual static projects report6,403passed,14existing skips,0failures/errors/not-run. All10catalog tests execute without skips. Fresh complete runtime preparation, integrated persisted effects, browser/package-consumer validation and exact-source hosted release gates remain required; status remains in-review.
+
+The ordinary AppHost baseline was started through Aspire CLI and inspected before edits. The security resource was unhealthy (TLS handshake EOF), leaving service resources waiting. The exact owned AppHost was stopped through Aspire CLI; `aspire ps` is empty. This is baseline diagnostic evidence, not runtime acceptance.
+
+Current main CI42609106160 fails before compilation withHXW010: selected Platform requires module CLI[4.45.0,5.0.0-0), but the repository tool manifest selects4.44.13. The supported helper restores that exact manifest. Align the manifest to4.45.0 while retaining immutable workflow and production/release gates. The independent public-runtime verifier also remains bound to its historical published Platform/Builds tuple; no current-source runtime acceptance is inferred from that older proof.
+
+### Resumed review triage
+
+All three independent layers reviewed the full original-baseline diff before triage. Existing committed work is preserved.
+
+| Finding | Verdict | Route | Evidence and action |
+| --- | --- | --- | --- |
+| R-B1 incomplete public result schema | medium | defer | The separate G4 public evidence fixture omits required execution bindings. Its verifier and lifecycle migration predate this SDK resumption; full released-schema validation belongs to that existing evidence contract. |
+| R-B2 persisted tenant binding | medium | defer | Public/private G4 evidence validators check only the synthetic prefix, rather than declared isolation identity. Record this separate existing evidence-contract defect. |
+| R-B3 missing selector observation | medium | patch | The current SDK adoption emits selectorCompatibilityObserved but the public evidence predicate ignores it. Require an exact true observation with absent/false refusal controls. |
+| R-B4 future image observation | medium | defer | A future measurement passes the existing independent G4 image verifier. Binding observation time to the issued execution interval is separate pre-existing lifecycle evidence work. |
+| R-B5 unqualified SDK family member | medium | patch | The receipt validator ignores unlisted SDK dependencies; Admin.Cli is also absent from its known public inventory. Refuse unqualified family members, retaining only the exact bound nonpackable Sample.Contracts application artifact. |
+| R-B6 added runtime input | medium | patch | Receipt readback checks existing filenames only, so a new Development configuration is unbound. Compare the current relevant output inventory with the completed receipt. |
+| R-B7 nested lifecycle deadline | medium | defer | The independent G4 lifecycle qualification fact creates240s cancellation but its nested120s persistence methods do not accept that token. Preserve this separate test harness and record its deadline defect. |
+| R-B8 removed failure diagnostic | medium | patch | The catalog helper reports a log path inside its deleted preparation directory. Preserve bounded compiler/tool diagnostics in the propagated failure before cleanup. |
+| R-B9 kill/exit race | medium | patch | Both process helpers call Kill outside cleanup confirmation, so termination failures can lose the owned-process marker. Preserve cancellation and mark any unconfirmed process termination. |
+| R-B10 stale UI asset staging | medium | patch | Native source assets are copied into persistent staging without removing deleted producer files. Remove only obsolete generated staged assets from source and output inventories. |
+| R-E1 concurrent ownership marker | medium | patch | The cited guard snippet was inaccurate: actual code uses WriteAllText after nonexclusive directory creation. Use an exclusive CreateNew marker, never delete a competing owner's directory. |
+| R-E2 historical acceptance cohort | low | reject | This finding proposes editing the build spec and is rejected under the review workflow. The user's latest-SDK instruction is independently recorded in the current checkpoint above. |
+| R-G1 lifecycle verification unwired | medium | patch | Accepted verification-gap evidence: all74deterministic lifecycle controls pass manually but ordinary CI does not invoke them. Add a blocking ordinary CI invocation with its direct Builds dependency. |
+| R-G2 private configuration verification unwired | medium | patch | Accepted verification-gap evidence: the replacement Platform suite does not execute retained private catalog configuration/cleanup tests. Execute the Docker-free classes in the4.1package check using root-declared owner manifests. |
+| R-G3 local project inventory | medium | patch | scripts/test.ps1 omits the declared Platform.LifecycleTests project, causing every lane to fail inventory admission. Add it to the runner-owned project inventory. |

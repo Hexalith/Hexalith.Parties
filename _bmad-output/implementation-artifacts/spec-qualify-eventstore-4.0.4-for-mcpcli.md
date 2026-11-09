@@ -2,7 +2,7 @@
 title: 'Qualify the Parties catalog for the canonical McpCli runtime cohort'
 type: 'bugfix'
 created: '2026-11-03'
-status: 'in-review'
+status: 'done'
 route: 'dispatch'
 baseline_commit: '4c57e79d6def9299ae279aa95cd852319fbc4832'
 context:
@@ -50,7 +50,7 @@ Work only from the existing clean owning checkout /home/administrator/projects/h
 
 ## Verification
 
-Implementation pending. No private business runtime is authorized for this local owner qualification.
+The original implementation and local qualification are recorded below. Current resumed evidence is in `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to this spec. No private business runtime is authorized for this local owner qualification.
 
 
 ## Local Qualification
@@ -71,3 +71,30 @@ Edge-case and verification-gap layers returned no findings. Both fixes are inter
 ## Review Fix Results
 
 Both review findings are fixed: a persistent offline exact4.0.4 job compiles actual owners and runs their existing catalog tests through a focused linked test runner, preserving the legacy harness; all22 gate cases assert properties and symbols. Focused23 gate/workflow plus3 catalog tests passed; changed test graphs built without warnings/errors. YAML/Bash parse and semantic equality of every existing job passed. Direct CI runners fail on skips or zero tests. Exact follow-up: /tmp/tenants-release-20261103-07JciR/parties404-review-fixes.json. Full downstream native topology acceptance remains pending.
+
+
+## Resumed Review Triage — 2026-11-09
+The workflow-required historical-baseline diff also includes later work. Every finding below was triaged separately; unrelated implementation and concurrent edits are preserved.
+
+| Finding | Verdict and route | Evidence |
+| --- | --- | --- |
+| BH1: Run the lifecycle controller safety tests automatically. | medium; defer | No checked workflow invokes the full tests/ci-lifecycle discovery; the verification-gap layer independently confirms the process-birth refusal test is omitted. This later lifecycle work predates this resumed qualification and is independent of the 4.0.4 offline job. |
+| BH2: Determine whether the supplemental public/private result readers need the full released contract validator. | maybe-false (medium unverified); defer | Both readers accept their intentionally minimal synthetic fixtures. The owning CLI produces the real result first; no malformed production result was demonstrated. Trace that released producer/validator contract and construct a reachable invalid artifact to settle the claim. |
+| BH3: Bind native TRX timestamps and execution identity to the current integration owner. | medium; defer | The supplemental public validator accepts a resealed report with all required names but Times in 1900. Its name/counter checks do not bind the native report to the current functional observation interval. This is a later integration-reader issue. |
+| BH4: Require selector compatibility observations in the private current-owner reader. | medium; defer | The public reader now refuses false after a concurrent correction; the private reader still accepts selectorCompatibilityObserved=false in the parent probe. Preserve the other session correction and defer only the remaining private-reader issue. |
+| BH5: Reject boolean and non-integer sequence/count representations in integration evidence. | medium; defer | Parent probes confirm both public/private readers accept metadataSequence=true and eventCount=1.0. Equality to len(events) does not enforce the advertised integer representation. This affects later evidence readers, not the 4.0.4 codec/build proof. |
+| BH6: Bound public runtime and functional observation times to their recorded execution interval. | medium; defer | The public reader accepts measuredAtUtc in 2999 and observedAtUtc in 1900; its only measurement ordering check compares image start with measurement. The offline cohort job does not use this reader. |
+| BH7: Enforce loaded-process and copied-output assembly scopes in the private evidence reader. | medium; defer | Parent probes relabel both inventories copied-static-image without refusal. The public reader enforces their distinct scopes, while the private reader currently checks identities/hashes alone. |
+| BH8: Determine whether lifecycle metadata can reach a symlinked parent after directory admission. | maybe-false (medium unverified); defer | The standalone read() follows a symlinked parent in a parent probe. private_directory() rejects linked ancestor paths during admission, so hostile hosted-path reachability is unproven. Trace every caller and demonstrate a post-admission directory replacement to settle it. |
+| BH9: Hardcoded Aspire version currently differs from the selected catalog. | false; reject | The preparation script and selected HexalithAspireAppHostSdkVersion both equal 13.6.4. No catalog/version divergence occurs in this checkout; a hypothetical later update is not an existing qualification defect. |
+| BH10: Determine the required Dapr executable archive integrity policy for diagnostic workflows. | maybe-false (medium unverified); defer | The workflows download exact release URLs over HTTPS without a separate pinned digest. No altered executable or failed release authenticity condition was demonstrated. Establish the owner supply-chain requirement and trusted digest source before treating this hardening proposal as a confirmed defect. |
+| EC1: The requested temporary qualification handoff is absent. | false; reject | It was absent at review start. Fresh observed-build/package/validator results now recreate the exact requested handoff and a durable repository copy; the missing historical receipts are explicitly retained as a limitation rather than reconstructed. |
+| VG1: Automatically execute lifecycle controller process-birth refusal controls. | medium; defer | Pre-verified broken-verification gap: full 74-test local discovery passes but no checked workflow runs it. Same root cause as BH1, with one shared deferred entry; no live service or hosted credit is inferred. |
+| VG2: The lifecycle project is absent from the PowerShell test inventory. | false; reject | The review-start failure was real, but concurrent edits now include Hexalith.Parties.Platform.LifecycleTests in $platformProjects. The current inventory entry directly resolves the cited missing-project claim; this run did not change that file. |
+| VG3: Reconcile ordinary public evidence-reader source expectations with current committed gitlinks. | high; defer | Parent probe confirms validate() refuses current Platform e39a9a2587ec150d550510763ab69db305d13fdb and Builds 27145e52ffab5623198ba5efdab5cdb71aa42d28 before artifact inspection, since it requires historical published identities. This blocks the broader public gate and belongs to separate dependency/publication reconciliation; the 4.0.4 offline job is independent. |
+
+## Resumed Qualification — 2026-11-09
+
+All five real affected project builds pass with zero warnings/errors against explicit public 4.0.4/5.11.2/3.0.11. Final focused verification passes 53 tests with zero skips; the initial concurrent tool-policy mismatch and successful rebuilt recheck are both retained. The SDK validates 41 routes, 41 operation schemas and 28 descriptors/adapters. Eight independently downloaded selected cohort archives and four consumed SDK PE bodies match; the adapter remains outside the native host closure.
+
+Fresh commands, results, hashes, review verdicts and limitations are retained in [the durable receipt](tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json); the exact requested `/tmp/tenants-release-20261103-07JciR/parties404-qualification-handoff.json` is recreated from this run. Original temporary receipts and the complete historical 14-archive producer qualification were not reconstructed. Broader CI source-identity and lifecycle/evidence-reader issues are deferred. No hosted CI, full topology acceptance, dependency-default change, publication or commit is claimed.

@@ -46,7 +46,7 @@ Public command and query traffic goes through **Hexalith.EventStore**; the `part
 | AuthN | JWT Bearer | 10.0.14 |
 | MCP | ModelContextProtocol | 2.3.0 |
 | UI | FluentUI Blazor + CustomElements | 5.0.1 / 10.0.14 |
-| Rich search (opt) | Hexalith.Memories.Client.Rest | 3.0.3 |
+| Rich search (opt) | Hexalith.Memories.Client.Rest | 3.0.25 |
 | Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers | 4.0.2 / 4.3.0 / 6.2.0 / 2.13.3 / 4.16.0 |
 
 The DAPR row describes the .NET client/actor SDK packages. The selected runtime

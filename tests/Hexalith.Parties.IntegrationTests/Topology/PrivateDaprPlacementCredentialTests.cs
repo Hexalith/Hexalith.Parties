@@ -30,8 +30,8 @@ public sealed class PrivateDaprPlacementCredentialTests
     [InlineData("Development", true, "missing", true, false, false)]
     [InlineData("Development", true, "invalid", true, true, false)]
     [InlineData("Development", true, "valid", false, true, false)]
-    [InlineData("Development", false, "valid", true, false, false)]
-    [InlineData("Production", true, "valid", true, false, false)]
+    [InlineData("Development", false, "valid", true, true, true)]
+    [InlineData("Production", true, "valid", true, true, true)]
     public async Task PlacementHealth_RequiresActualPrivateCredentialAndReadyRuntimeAsync(
         string environment, bool privateProfile, string credential, bool hostReady, bool sendsHeader, bool healthy)
     {
@@ -70,7 +70,12 @@ public sealed class PrivateDaprPlacementCredentialTests
             ["EventStore:RouteCatalog:DevelopmentBootstrap:CatalogPath"] = privateProfile ? "/private/run/catalog.json" : null,
         });
         builder.Services.AddHealthChecks().AddEventStoreDaprHealthChecks();
+        int registrations = builder.Services.Count;
         Credential.AddTo(builder);
+        if (!privateProfile || environment != Environments.Development)
+        {
+            builder.Services.Count.ShouldBe(registrations, "The private helper must not configure other profiles; SDK4.1 authenticates its own metadata requests.");
+        }
         builder.Services.AddHttpClient<IDaprActorPlacementProbe, DaprActorPlacementProbe>()
             .ConfigurePrimaryHttpMessageHandler(() => sidecar.GetTestServer().CreateHandler());
         await using WebApplication app = builder.Build();
@@ -86,7 +91,7 @@ public sealed class PrivateDaprPlacementCredentialTests
         headerObserved.ShouldBe(sendsHeader);
         report.Status.ShouldBe(healthy ? HealthStatus.Healthy : HealthStatus.Unhealthy);
         HealthReportEntry placement = report.Entries.ShouldHaveSingleItem().Value;
-        if (credential == "valid" && privateProfile && environment == Environments.Development)
+        if (credential == "valid")
         {
             placement.Exception.ShouldBeNull();
             placement.Description.ShouldNotBeNull().ShouldContain(hostReady ? "host ready" : "host not ready");

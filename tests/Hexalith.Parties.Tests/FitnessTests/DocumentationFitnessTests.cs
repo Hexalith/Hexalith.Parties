@@ -186,6 +186,7 @@ public sealed class DocumentationFitnessTests
         }
 
         string dapr = Version("Dapr.Client");
+        string daprRuntime = EffectivePackageVersions.ReadProperty(root, "HexalithDaprRuntimeVersion");
         foreach (string package in new[] { "Dapr.AspNetCore", "Dapr.Actors.AspNetCore", "Dapr.Actors.Generators", "Dapr.Actors", "Dapr.AI", "Dapr.AI.Microsoft.Extensions", "Dapr.Workflow" })
         {
             Version(package).ShouldBe(dapr, package);
@@ -202,6 +203,7 @@ public sealed class DocumentationFitnessTests
             $"| UI | Microsoft.FluentUI.AspNetCore.Components | `{Version("Microsoft.FluentUI.AspNetCore.Components")}` |",
             $"| Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `{Version("Microsoft.Extensions.Http.Resilience")}` |",
             $"| Versioning | MinVer (git-tag SemVer, prefix `v`) | `{Version("MinVer")}` |",
+            $"| Rich search (opt) | Hexalith.Memories.Client.Rest | package `{Version("Hexalith.Memories.Client.Rest")}` by default |",
             $"| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `{Version("xunit.v3")}` / `{Version("Shouldly")}` / `{Version("NSubstitute")}` / `{Version("bunit")}` / `{Version("Testcontainers")}`† / `{Version("YamlDotNet")}` |",
         ];
         foreach (string expectedRow in expectedArchitectureRows)
@@ -212,7 +214,10 @@ public sealed class DocumentationFitnessTests
         Version("Microsoft.Extensions.ServiceDiscovery").ShouldBe(Version("Microsoft.Extensions.Http.Resilience"));
         architecture.ShouldContain($"aligned at `{aspire}`");
         string overview = Read(root, "docs/project-overview.md");
+        architecture.ShouldContain($"selected Dapr runtime catalog remains `{daprRuntime}`");
         overview.ShouldContain($"| Actors / pub-sub | DAPR | {dapr} |");
+        overview.ShouldContain($"catalog remains `{daprRuntime}`");
+        overview.ShouldContain($"| Rich search (opt) | Hexalith.Memories.Client.Rest | {Version("Hexalith.Memories.Client.Rest")} |");
         overview.ShouldContain($"| AuthN | JWT Bearer | {Version("Microsoft.AspNetCore.Authentication.JwtBearer")} |");
         overview.ShouldContain($"| UI | FluentUI Blazor + CustomElements | {Version("Microsoft.FluentUI.AspNetCore.Components")} / {Version("Microsoft.AspNetCore.Components.CustomElements")} |");
         overview.ShouldContain($"| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers | {Version("xunit.v3")} / {Version("Shouldly")} / {Version("NSubstitute")} / {Version("bunit")} / {Version("Testcontainers")} |");

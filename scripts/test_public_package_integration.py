@@ -29,7 +29,7 @@ class PublicPackageEvidenceTests(unittest.TestCase):
         self.expected = {**f.expected, "platform": public.PLATFORM, "builds": public.BUILDS}
         self.invocation = dict(classification="baseline-only", executionContext=f.context, profiles=[public.PROFILE])
         f.write("invocation.json", self.invocation)
-        f.functional.update(profile=public.PROFILE, currentOwner=None)
+        f.functional.update(profile=public.PROFILE, currentOwner=None, selectorCompatibilityObserved=True)
         platform = dict(commit=public.PLATFORM, compositionCommit=public.PLATFORM, checkoutCommit=public.PLATFORM,
                         catalogCommit=public.BUILDS, releaseTag="v1.7.1")
         now = datetime.now(timezone.utc)
@@ -69,6 +69,16 @@ class PublicPackageEvidenceTests(unittest.TestCase):
         self.fixture.functional["currentOwner"] = {"profile": "platform-current-package"}
         self.fixture.seal()
         with self.assertRaisesRegex(ValueError, "private current-owner"): self.check()
+
+    def test_missing_or_false_selector_compatibility_observation_refuses(self):
+        for value in (None, False, "true", 1):
+            with self.subTest(value=value):
+                if value is None:
+                    self.fixture.functional.pop("selectorCompatibilityObserved", None)
+                else:
+                    self.fixture.functional["selectorCompatibilityObserved"] = value
+                self.fixture.seal()
+                with self.assertRaisesRegex(ValueError, "selector compatibility"): self.check()
 
     def test_role_substitution_and_actual_body_tampering_refuse_after_resealing(self):
         f = self.fixture

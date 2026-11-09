@@ -145,7 +145,7 @@ jobs:
           global-json-file: global.json
       - name: Initialize recorded catalog and gateway settings
         run: |
-          git -c submodule.recurse=false submodule update --init --depth 1 --checkout -- references/Hexalith.Builds references/Hexalith.EventStore
+          git -c submodule.recurse=false submodule update --init --depth 1 --checkout -- references/Hexalith.Builds references/Hexalith.EventStore references/Hexalith.Tenants references/Hexalith.Memories
           git submodule status -- references/Hexalith.Builds references/Hexalith.EventStore
       - name: Build public packages and run focused catalog qualification
         shell: bash
@@ -172,7 +172,8 @@ jobs:
             src/Hexalith.Parties/Hexalith.Parties.csproj \
             tests/Hexalith.Parties.Catalog.Tests/Hexalith.Parties.Catalog.Tests.csproj \
             tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj \
-            tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj; do
+            tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj \
+            tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj; do
             dotnet build "$project" --configuration Release --disable-build-servers -m:1 -warnaserror "${package_properties[@]}"
           done
           dotnet test --project tests/Hexalith.Parties.Catalog.Tests/Hexalith.Parties.Catalog.Tests.csproj \
@@ -185,6 +186,11 @@ jobs:
             --filter-method Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.CatalogApiAvailabilityDoesNotSelectNativeHosts \
             --filter-method Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.EventStoreTransportAndSelectorCapabilitiesRequireExactQualification \
             --minimum-expected-tests 33 --fail-skips on
+          dotnet test --project tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj \
+            --no-build --no-restore --configuration Release "${package_properties[@]}" \
+            --filter-class Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogConfigurationTests \
+            --filter-class Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogPreparationCleanupTests \
+            --minimum-expected-tests 17 --fail-skips on
           dotnet test --project tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj \
             --no-build --no-restore --configuration Release "${package_properties[@]}" \
             --filter-class Hexalith.Parties.Tests.Gateway.PartiesCatalogGatewaySelectorTests \
@@ -317,6 +323,19 @@ jobs:
           submodules: false
       - name: Test configuration merging and resolvers
         run: python3 -B -m unittest discover -s _bmad/scripts/tests -v
+
+  lifecycle-controller-tests:
+    name: Lifecycle controller tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: false
+      - name: Initialize direct controller dependencies
+        run: git -c submodule.recurse=false submodule update --init --depth 1 --checkout -- references/Hexalith.Builds
+      - name: Test lifecycle ownership, cancellation and cleanup
+        run: python3 -B -m unittest discover -s tests/ci-lifecycle -v
 
   platform-declaration:
     name: Parties Platform declaration

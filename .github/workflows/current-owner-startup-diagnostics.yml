@@ -34,7 +34,7 @@ jobs:
           import json
           from pathlib import Path
           tool = json.loads(Path('.config/dotnet-tools.json').read_text())['tools']['hexalith.builds.module.cli']
-          assert tool['version'] == '4.44.13' and tool['rollForward'] is False
+          assert tool['version'] == '4.45.0' and tool['rollForward'] is False
           PYTHON
       - name: Test observer ownership and redaction boundaries
         run: python3 -B -m unittest discover -s tests/ci-lifecycle -p test_startup_observer.py -v

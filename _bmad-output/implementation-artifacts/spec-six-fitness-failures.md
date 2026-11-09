@@ -100,6 +100,28 @@ and push the authorized changes on main.
   3.128.3 observations above describe the initial baseline only.
 
 
+### Resumed independent review — 2026-11-09
+
+The resumed review covers the original two Parties delivery commits and the
+Tenants owner fix; later unrelated commits are outside that historical diff.
+Each finding below retains its own verdict before shared-root-cause grouping.
+The scheduling findings BH-R03/VG-R01 share one patch. Exact reports, reviewed
+diff hashes and current execution evidence are retained in the resumed packet.
+
+| Finding | Verdict / resolution | Evidence |
+| --- | --- | --- |
+| BH-R01: floor also affects nested owners | false | Current target excludes `_TenantsNestedReferenceRoot`; the existing nested-owner control covers this later correction. |
+| BH-R02: per-item overrides bypass property floor | false | No owned production project declares the proposed lower VersionOverride or later lower PackageVersion. The owner deliberately pins its EventStore family after catalog import; current graph checks independently verify the resulting items. Arbitrary future project edits are not a demonstrated reachable bypass in this change. |
+| BH-R03: direct floor calls miss broken scheduling | medium / patch | A detached BeforeTargets attribute leaves direct-target tests green but both ordinary entry targets accept a below-floor override. Add persistent entry-target controls. |
+| BH-R04: source fixture does not prove real mapping | false | The small isolated owner fixture checks selection semantics; the independent mapped-source parent build and its source/graph controls supply the real mapping proof. It is not the only source authority check. |
+| BH-R05: cleanup may outlive five-second wait | low / rejected | The timeout already kills the process tree and bounds cleanup; the proposed post-kill race affects exceptional test diagnostics only. No surviving process or normal execution defect was demonstrated; further lifecycle branches are disproportionate here. |
+| BH-R06: runtime prose lacks catalog guard | low / patch | Bind the SDK/runtime prose to the effective runtime catalog in the existing documentation check. Current runtime is still 1.18.7. |
+| BH-R07: historical build argv/exits are absent | medium / patch | Preserve the historical packet and disclose that its build entries retain hashes rather than complete invocation records. The resumed packet retains exact argv, environments, exits and logs for every new build. No historical arguments are reconstructed as facts. |
+| BH-R08: historical seam logs are absent | medium / patch | The old seam receipt cannot prove the omitted diagnostic text. Preserve that limitation and replace ongoing reliance with persistent entry-target assertions and retained fresh execution/mutation logs. |
+| BH-R09: evidence packet has no reusable verifier | medium / patch | Add a focused verifier for the resumed manifest, archive hashes, XML identities/counts, six equivalent controls, original packet preservation and owner baseline/current failure equality. |
+| BH-R10: clearance lacks exact reviewed diff binding | medium / patch | Retain all three current reviewer reports with the exact historical delivery diff hash and patch follow-up hashes. This does not reconstruct missing historical reviewer transcripts. |
+| VG-R01: restore/build scheduling lacks regression proof | medium / patch | Independent mutation demonstrates both hooks can disconnect while direct tests still pass. Group with BH-R03 and cover both normal entry targets, rejected floor/prerelease, accepted package metadata/newer version and exact source identity. |
+
 ## Final Verification
 
 - Upstream-aware owner fix published at `6deb5d5dbaad4e26405910b347d45b82deae1057`;
