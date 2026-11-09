@@ -112,7 +112,7 @@ public sealed class DocumentationFitnessTests
             .Distinct(StringComparer.Ordinal)
             .Order(StringComparer.Ordinal)
             .ToArray();
-        runnableProjects.ShouldBe([.. ExpectedRunnableProjects.Append("Hexalith.Parties.Platform.IntegrationTests").Order(StringComparer.Ordinal)]);
+        runnableProjects.ShouldBe([.. ExpectedRunnableProjects.Append("Hexalith.Parties.Platform.IntegrationTests").Append("Hexalith.Parties.Platform.LifecycleTests").Order(StringComparer.Ordinal)]);
         testScript.ShouldContain("$platformProjects");
         testScript.ShouldContain("$testSupportProjects");
         testScript.ShouldContain("Hexalith.Parties.EventStoreGateway.TestHost.csproj");

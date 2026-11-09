@@ -177,7 +177,7 @@ internal sealed class PartiesDevelopmentCatalogBootstrap : IDistributedApplicati
         JsonObject rootSelection = await RootSelectionAsync(token).ConfigureAwait(false);
         string sdkVersion = rootSelection["HexalithEventStoreVersion"]!.GetValue<string>();
         _families = new JsonObject();
-        foreach (string name in new[] { "HexalithFrontComposerVersion", "HexalithTenantsVersion", "HexalithMemoriesVersion" })
+        foreach (string name in new[] { "HexalithFrontComposerVersion", "HexalithTenantsVersion", "HexalithMemoriesVersion", "HexalithMcpCliVersion" })
         {
             _families[name] = rootSelection[name]!.DeepClone();
         }
@@ -356,7 +356,7 @@ internal sealed class PartiesDevelopmentCatalogBootstrap : IDistributedApplicati
     {
         string project = Path.Combine(_root.FullName, "tests", "Hexalith.Parties.EventStoreGateway.TestHost", "Hexalith.Parties.EventStoreGateway.TestHost.csproj");
         string output = await ProcessAsync("dotnet", ["msbuild", project, "-nologo", "-p:Configuration=" + _configuration,
-            "-getProperty:HexalithEventStoreVersion,HexalithTenantsVersion,HexalithMemoriesVersion,HexalithFrontComposerVersion"], token).ConfigureAwait(false);
+            "-getProperty:HexalithEventStoreVersion,HexalithTenantsVersion,HexalithMemoriesVersion,HexalithFrontComposerVersion,HexalithMcpCliVersion"], token).ConfigureAwait(false);
         return JsonNode.Parse(output)!["Properties"]!.AsObject();
     }
 

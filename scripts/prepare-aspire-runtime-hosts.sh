@@ -83,14 +83,15 @@ if [[ "$gateway_profile" == packaged ]]; then
             exit 1
         fi
     fi
-    peer_versions="$(dotnet msbuild "$gateway_project" -nologo -getProperty:HexalithTenantsVersion,HexalithMemoriesVersion,HexalithFrontComposerVersion)"
+    peer_versions="$(dotnet msbuild "$gateway_project" -nologo -getProperty:HexalithTenantsVersion,HexalithMemoriesVersion,HexalithFrontComposerVersion,HexalithMcpCliVersion)"
     families_json="$(python3 -c 'import json,sys; print(json.dumps(json.load(sys.stdin)["Properties"]))' <<< "$peer_versions")"
     tenants_version="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["HexalithTenantsVersion"])' <<< "$families_json")"
     memories_version="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["HexalithMemoriesVersion"])' <<< "$families_json")"
     frontcomposer_version="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["HexalithFrontComposerVersion"])' <<< "$families_json")"
+    mcpcli_version="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["HexalithMcpCliVersion"])' <<< "$families_json")"
     cohort_arguments=("-p:HexalithEventStoreVersion=$sdk_version" "-p:HexalithUsePublishedSdkForHostedTests=true"
         "-p:HexalithTenantsVersion=$tenants_version" "-p:HexalithMemoriesVersion=$memories_version"
-        "-p:HexalithFrontComposerVersion=$frontcomposer_version")
+        "-p:HexalithFrontComposerVersion=$frontcomposer_version" "-p:HexalithMcpCliVersion=$mcpcli_version")
     receipt_directory="$repository_root/artifacts/runtime-profile/$configuration"
     mkdir -p "$receipt_directory"
     # An earlier completed manifest cannot qualify a failed or only partially completed preparation.

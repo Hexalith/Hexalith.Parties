@@ -88,7 +88,7 @@ public sealed class AspireRuntimePreparationTests
                     configuration = args[args.index('--configuration') + 1]
                 target = (project.parent / 'bin' / configuration / 'net10.0' / (project.stem + '.dll')).resolve()
                 assets = (project.parent / 'obj/project.assets.json').resolve()
-                families = {'HexalithTenantsVersion':'6.0.0', 'HexalithMemoriesVersion':'3.0.13', 'HexalithFrontComposerVersion':'4.7.4'}
+                families = {'HexalithTenantsVersion':'6.0.0', 'HexalithMemoriesVersion':'3.0.13', 'HexalithFrontComposerVersion':'4.7.4', 'HexalithMcpCliVersion':'2.0.1'}
                 if '-getProperty:HexalithEventStoreVersion' in args:
                     print('3.130.2')
                 elif '-getProperty:HexalithEventStoreCatalogHostsSupported' in args:
@@ -189,7 +189,8 @@ public sealed class AspireRuntimePreparationTests
                 builds.ShouldAllBe(call => call.Contains("-p:HexalithEventStoreVersion=3.130.2") && call.Contains("-p:HexalithUsePublishedSdkForHostedTests=true"));
                 arguments.Count(call => call.Any(argument => argument.StartsWith("-getProperty:TargetPath,", StringComparison.Ordinal))).ShouldBe(10 + qualificationProjects.Length);
                 builds.ShouldAllBe(call => call.Contains("-t:Rebuild") && call.Contains("-p:HexalithFrontComposerVersion=4.7.4")
-                    && call.Contains("-p:HexalithTenantsVersion=6.0.0") && call.Contains("-p:HexalithMemoriesVersion=3.0.13"));
+                    && call.Contains("-p:HexalithTenantsVersion=6.0.0") && call.Contains("-p:HexalithMemoriesVersion=3.0.13")
+                    && call.Contains("-p:HexalithMcpCliVersion=2.0.1"));
                 File.Exists(Path.Combine(root, "artifacts", "runtime-profile", "Release", "prepared.json")).ShouldBeTrue();
             }
             else

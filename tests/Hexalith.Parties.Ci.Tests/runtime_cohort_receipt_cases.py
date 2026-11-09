@@ -31,9 +31,9 @@ class RuntimeReceiptCases(unittest.TestCase):
         self.assets_path = self.root / "obj/project.assets.json"
         self.assets_path.parent.mkdir()
         self.cache = self.root / "packages"
-        self.families = {"HexalithFrontComposerVersion": "4.7.4"}
+        self.families = {"HexalithFrontComposerVersion": "4.7.4", "HexalithMcpCliVersion": "2.0.1"}
         libraries, packages = {}, {}
-        for package, version in [(name, "3.129.1") for name in sorted(cohort.CORE_IDS)] + [("Hexalith.FrontComposer.Contracts", "4.7.4")]:
+        for package, version in [(name, "3.129.1") for name in sorted(cohort.CORE_IDS)] + [("Hexalith.FrontComposer.Contracts", "4.7.4"), ("Hexalith.McpCli.Abstractions", "2.0.1")]:
             self.add_package(package, version, libraries, packages)
         self.assets = {"libraries": libraries, "targets": {"net10.0": packages}, "packageFolders": {str(self.cache): {}}}
         self.assets_path.write_text(json.dumps(self.assets))
@@ -52,7 +52,7 @@ class RuntimeReceiptCases(unittest.TestCase):
         contents = ("actual archive runtime:" + package + "/" + version).encode()
         (self.output / (package + ".dll")).write_bytes(contents)
         archive = folder / (package.lower() + "." + version + ".nupkg")
-        owner = "Hexalith.EventStore" if package in cohort.SDK_IDS else "Hexalith.FrontComposer"
+        owner = next(name for name in ("Hexalith.EventStore", "Hexalith.FrontComposer", "Hexalith.McpCli") if package.startswith(name + "."))
         nuspec = ('<package><metadata><id>' + package + '</id><version>' + version + '</version>'
                   '<repository type="git" url="https://github.com/Hexalith/' + owner + '" commit="' + 'a' * 40 + '" />'
                   '</metadata></package>')
@@ -166,7 +166,8 @@ class RuntimeReceiptCases(unittest.TestCase):
 
     def test_completed_exact_build_qualifies_the_same_entrypoint_used_before_start(self):
         receipt = self.prepare()
-        self.assertEqual(4, len(receipt["sdkBinaries"]))
+        self.assertEqual(cohort.CORE_IDS | {"Hexalith.FrontComposer.Contracts", "Hexalith.McpCli.Abstractions"},
+                         {Path(binary["path"]).stem for binary in receipt["sdkBinaries"]})
         result, runner = self.launch()
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertTrue(runner.exists())
@@ -263,7 +264,7 @@ class RuntimeReceiptCases(unittest.TestCase):
             self.prepare()
 
     def test_record_rejects_actual_sdk_and_frontend_graph_drift(self):
-        for mutation in ("wrong-version", "project", "missing-core", "wrong-frontend", "project-frontend", "deps-skew"):
+        for mutation in ("wrong-version", "project", "missing-core", "wrong-frontend", "project-frontend", "wrong-mcpcli", "project-mcpcli", "deps-skew"):
             with self.subTest(mutation=mutation):
                 self.tearDown(); self.setUp()
                 libraries = self.assets["libraries"]
@@ -272,6 +273,8 @@ class RuntimeReceiptCases(unittest.TestCase):
                 elif mutation == "missing-core": libraries.pop("Hexalith.EventStore.Contracts/3.129.1")
                 elif mutation == "wrong-frontend": libraries["Hexalith.FrontComposer.Contracts/4.7.2"] = libraries.pop("Hexalith.FrontComposer.Contracts/4.7.4")
                 elif mutation == "project-frontend": libraries["Hexalith.FrontComposer.Contracts/4.7.4"]["type"] = "project"
+                elif mutation == "wrong-mcpcli": libraries["Hexalith.McpCli.Abstractions/2.0.0"] = libraries.pop("Hexalith.McpCli.Abstractions/2.0.1")
+                elif mutation == "project-mcpcli": libraries["Hexalith.McpCli.Abstractions/2.0.1"]["type"] = "project"
                 else:
                     self.deps["libraries"] = dict(self.deps["libraries"])
                     self.deps["libraries"]["Hexalith.EventStore.Client/3.128.4"] = self.deps["libraries"].pop("Hexalith.EventStore.Client/3.129.1")
@@ -294,14 +297,16 @@ class RuntimeReceiptCases(unittest.TestCase):
 
     def test_only_actual_declared_sample_application_project_is_exempt_from_sdk_versions(self):
         identity = "Hexalith.EventStore.Sample.Contracts/1.0.0"
-        for path in (str(cohort.SAMPLE_CONTRACTS_PROJECT), "foreign/Contracts.csproj"):
+        for path in (str(cohort.SAMPLE_CONTRACTS_PROJECT), str(cohort.NATIVE_SAMPLE_CONTRACTS_PROJECT), "foreign/Contracts.csproj"):
             with self.subTest(path=path):
                 self.tearDown(); self.setUp()
                 metadata = {"type": "project", "msbuildProject": path}
                 self.assets["libraries"][identity] = metadata
                 self.assets_path.write_text(json.dumps(self.assets))
                 self.target.with_suffix(".deps.json").write_text(json.dumps(self.deps))
-                if path == str(cohort.SAMPLE_CONTRACTS_PROJECT):
+                if path != "foreign/Contracts.csproj":
+                    self.deps["libraries"]["Hexalith.EventStore.Sample.Contracts.Reference/1.0.0.0"] = {"type": "reference"}
+                    self.target.with_suffix(".deps.json").write_text(json.dumps(self.deps))
                     self.prepare()
                     result, runner = self.launch()
                     self.assertEqual(0, result.returncode, result.stderr)

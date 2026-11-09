@@ -27,6 +27,8 @@ ADMIN_SERVER_PROJECT = (Path(__file__).resolve().parents[1] / "references/Hexali
 SAMPLE_CONTRACTS_PROJECT = (Path(__file__).resolve().parents[1] / "tests/"
                             "Hexalith.Parties.EventStoreSample.Contracts.TestArtifact/"
                             "Hexalith.Parties.EventStoreSample.Contracts.TestArtifact.csproj")
+NATIVE_SAMPLE_CONTRACTS_PROJECT = (Path(__file__).resolve().parents[1] / "references/Hexalith.EventStore/samples/"
+                                   "Hexalith.EventStore.Sample.Contracts/Hexalith.EventStore.Sample.Contracts.csproj")
 PRIVATE_ADMIN_UI_PROJECT = (Path(__file__).resolve().parents[1] / "tests/"
                             "Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj")
 
@@ -46,13 +48,17 @@ def select_sdk(libraries: dict, project: Path | None = None, restored: set[str] 
         if (package_id == "Hexalith.EventStore.Admin.UI" and metadata.get("type") == "reference"
                 and project is not None and project.resolve() == PRIVATE_ADMIN_UI_PROJECT):
             continue
+        if (package_id == "Hexalith.EventStore.Sample.Contracts.Reference" and metadata.get("type") == "reference"
+                and restored is not None and any(name.rsplit("/", 1)[0] == "Hexalith.EventStore.Sample.Contracts" for name in restored)):
+            continue
         # The linked native sample is an application artifact, not an SDK library.
         # Restore binds its actual declared project; deps readback must retain that identity.
         if package_id == "Hexalith.EventStore.Sample.Contracts" and metadata.get("type") == "project":
             if restored is not None and identity in restored:
                 continue
             path = metadata.get("msbuildProject")
-            if project is not None and isinstance(path, str) and (project.parent / path).resolve() == SAMPLE_CONTRACTS_PROJECT:
+            if (project is not None and isinstance(path, str)
+                    and (project.parent / path).resolve() in {SAMPLE_CONTRACTS_PROJECT, NATIVE_SAMPLE_CONTRACTS_PROJECT}):
                 continue
         raise ValueError("Unqualified runtime SDK family member: " + identity)
     return selected
@@ -67,6 +73,7 @@ PUBLIC_FAMILIES = {
     "HexalithTenantsVersion": {"Hexalith.Tenants." + name for name in ("Contracts", "Client", "Server", "Testing", "Aspire")},
     "HexalithMemoriesVersion": {"Hexalith.Memories." + name for name in ("Aspire", "Contracts", "Client.Rest", "Redis", "Cli", "Mcp", "ServiceDefaults", "EventStore", "Telemetry", "EventStoreExtensions")},
     "HexalithFrontComposerVersion": {"Hexalith.FrontComposer." + name for name in ("Cli", "Contracts", "Contracts.UI", "Mcp", "Schema", "Shell", "SourceTools", "Testing")},
+    "HexalithMcpCliVersion": {"Hexalith.McpCli.Abstractions"},
 }
 
 
@@ -151,7 +158,7 @@ def sdk_proof(assets: dict, target: Path, version: str, families: dict) -> tuple
             raise ValueError("One actual restored SDK archive is required for " + identity)
         archive_path = available[0]
         repository = next("https://github.com/Hexalith/" + name for name in
-                          ("Hexalith.EventStore", "Hexalith.Tenants", "Hexalith.Memories", "Hexalith.FrontComposer")
+                          ("Hexalith.EventStore", "Hexalith.Tenants", "Hexalith.Memories", "Hexalith.FrontComposer", "Hexalith.McpCli")
                           if package_id.startswith(name + "."))
         proof = archive_identity(archive_path, package_id, package_version, repository)
         archives.append(proof)

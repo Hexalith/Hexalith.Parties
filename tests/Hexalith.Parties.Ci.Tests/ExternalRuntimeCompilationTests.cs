@@ -214,6 +214,7 @@ public sealed class ExternalRuntimeCompilationTests
             new XElement("TreatWarningsAsErrors", "true"), new XElement("NuGetAudit", "false"),
             new XElement("HexalithEventStoreVersion", FixtureVersion), new XElement("HexalithTenantsVersion", FixtureVersion),
             new XElement("HexalithMemoriesVersion", FixtureVersion), new XElement("HexalithFrontComposerVersion", FixtureVersion),
+            new XElement("HexalithMcpCliVersion", FixtureVersion),
             new XElement("HexalithEventStoreCatalogHostsSupported", "true"))))
             .Save(Path.Combine(root, "Directory.Build.props"));
         foreach (string relative in RuntimeProjects.Append("references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj"))
