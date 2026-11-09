@@ -1,0 +1,391 @@
+{
+  "started_utc": "2026-11-09T07:48:47.239029+00:00",
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "head": "f2570a7a82107afc50f4d5ce73e7b221d2084eed",
+  "raw_directory": "/tmp/dw27-resumed-review-lkj3z2lf",
+  "checks": [
+    {
+      "name": "package-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "--configuration",
+        "Debug",
+        "--disable-build-servers",
+        "-m:1",
+        "-p:UseHexalithProjectReferences=false",
+        "-p:UseNuGetDeps=true"
+      ],
+      "exit_code": 0,
+      "raw_log": "/tmp/dw27-resumed-review-lkj3z2lf/package-build.log",
+      "sha256": "fb7fd926bb48726ae4e7ddb0e3211afa581809287b65e652e0c91fbf3ff4dffa"
+    },
+    {
+      "name": "focused",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests",
+        "-class",
+        "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests",
+        "-failSkips",
+        "-result-xml",
+        "/tmp/dw27-resumed-review-lkj3z2lf/focused.xml"
+      ],
+      "exit_code": 0,
+      "raw_log": "/tmp/dw27-resumed-review-lkj3z2lf/focused.log",
+      "sha256": "fb62d41acac42401c0fa367e9e8f8b539cd760dd69a749eff8b29cce07d06f17",
+      "assemblies": [
+        {
+          "environment": "64-bit (x64) .NET 10.0.14 [collection-per-class, parallel (collections, 14 threads)]",
+          "id": "4d985ac3-f269-49bd-bf6f-9fe9cf1d0e67",
+          "name": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+          "run-date": "2026-11-09",
+          "run-time": "07:48:49",
+          "start-rtf": "2026-11-09T07:48:49.5021340+00:00",
+          "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+          "target-framework": ".NETCoreApp,Version=v10.0",
+          "errors": "0",
+          "failed": "0",
+          "finish-rtf": "2026-11-09T07:48:59.4575058+00:00",
+          "not-run": "0",
+          "passed": "952",
+          "skipped": "0",
+          "time": "9.957",
+          "time-rtf": "00:00:09.9570000",
+          "total": "952"
+        }
+      ],
+      "xml_sha256": "aaf0db9f03034fbb766ed5ab45845c7c1e8eb46760ccbe6e5eff13d51fe0c607"
+    },
+    {
+      "name": "archival-normal",
+      "command": [
+        "python3",
+        "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-11-09/check-archival-receipt.py"
+      ],
+      "exit_code": 0,
+      "raw_log": "/tmp/dw27-resumed-review-lkj3z2lf/archival-normal.log",
+      "sha256": "06c7019c5abff7fbdfeff687939eb99a3b1040c878d6d325ede894b37bf09d18"
+    },
+    {
+      "name": "archival-optimized",
+      "command": [
+        "python3",
+        "-O",
+        "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-11-09/check-archival-receipt.py"
+      ],
+      "exit_code": 0,
+      "raw_log": "/tmp/dw27-resumed-review-lkj3z2lf/archival-optimized.log",
+      "sha256": "06c7019c5abff7fbdfeff687939eb99a3b1040c878d6d325ede894b37bf09d18"
+    },
+    {
+      "name": "warning-guard",
+      "command": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "exit_code": 0,
+      "raw_log": "/tmp/dw27-resumed-review-lkj3z2lf/warning-guard.log",
+      "sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604"
+    },
+    {
+      "name": "whitespace",
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "raw_log": "/tmp/dw27-resumed-review-lkj3z2lf/whitespace.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "source_sha256": {
+    "src/Hexalith.Parties/Queries/PartySdkQueryService.cs": "6536c03271d9c273183e94bd0f6f03f805ca7bec7119f4ccb9bbdc42a0dd4cea",
+    "tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs": "549c003f13a34fdffb1dfa481c4f4fd3f6ae98d7c59490f6d121bf3f0ad41882",
+    "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs": "801160582266d2489acf66615009fef4e5c96146ba1a1bfe786f83b369a4f6be",
+    "tests/Hexalith.Parties.Tests/Gateway/PartyPagingActorInvocationHandler.cs": "b7e83239fa143c45520ffdf6446d8af650f88fc7d2b486c84bc8e4c227d0800f"
+  },
+  "assembly_sha256": "3b5099ebecd8ea5732560627d8a223cc0a3a42811cf5b237f3c6c94cbd23fe6f",
+  "finished_utc": "2026-11-09T07:48:59.985591+00:00",
+  "scope": "Resumed workflow review of already-adopted DW-27; no production, dependency or historical receipt changes.",
+  "same_test_assembly_as_prior_receipts": true,
+  "retained_raw_artifacts": {
+    "package-build.log": {
+      "path": "resumed-review-package-build.log.gz",
+      "sha256": "e183d690b0187e9c335699733d01e0ed7377e6fb405f1d694c50bf778dea7b7a",
+      "uncompressed_sha256": "fb7fd926bb48726ae4e7ddb0e3211afa581809287b65e652e0c91fbf3ff4dffa",
+      "uncompressed_bytes": 1594
+    },
+    "focused.log": {
+      "path": "resumed-review-focused.log.gz",
+      "sha256": "7dc2dda26d4c80d7cf8434923cf63699597813c9c265cca579aa485b647571a7",
+      "uncompressed_sha256": "fb62d41acac42401c0fa367e9e8f8b539cd760dd69a749eff8b29cce07d06f17",
+      "uncompressed_bytes": 349781
+    },
+    "focused.xml": {
+      "path": "resumed-review-focused.xml.gz",
+      "sha256": "6f99b95551a9790a26c99899fb620343ded04734ec1b729dc61a14de71570ade",
+      "uncompressed_sha256": "aaf0db9f03034fbb766ed5ab45845c7c1e8eb46760ccbe6e5eff13d51fe0c607",
+      "uncompressed_bytes": 677303
+    },
+    "archival-normal.log": {
+      "path": "resumed-review-archival-normal.log.gz",
+      "sha256": "66a8ce9bd3105739b1850c85a71ebacd10c2b753457b490b988b19293f59212b",
+      "uncompressed_sha256": "06c7019c5abff7fbdfeff687939eb99a3b1040c878d6d325ede894b37bf09d18",
+      "uncompressed_bytes": 248
+    },
+    "archival-optimized.log": {
+      "path": "resumed-review-archival-optimized.log.gz",
+      "sha256": "66a8ce9bd3105739b1850c85a71ebacd10c2b753457b490b988b19293f59212b",
+      "uncompressed_sha256": "06c7019c5abff7fbdfeff687939eb99a3b1040c878d6d325ede894b37bf09d18",
+      "uncompressed_bytes": 248
+    },
+    "warning-guard.log": {
+      "path": "resumed-review-warning-guard.log.gz",
+      "sha256": "315caa5fc9bf0ac255efb2d79aabdb0d6ca1be5539c23b95a077d0ecc6973a0b",
+      "uncompressed_sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604",
+      "uncompressed_bytes": 93
+    },
+    "whitespace.log": {
+      "path": "resumed-review-whitespace.log.gz",
+      "sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "uncompressed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uncompressed_bytes": 0
+    }
+  },
+  "historical_artifacts_sha256": {
+    "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/validation.json": "27a5bec50dae729f6d8f8499532fa2c66459174e3ae869d2ce4784b183c52474",
+    "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/parties-consumer-adoption.patch": "4ddb36d577d5ad8865cb254d5b58681dff6743331bb4c019ff53aec862d84b91",
+    "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/consumer-patch-manifest.json": "e9559e04d07f84d5aa73b2a17deb7b42118ccbd8589e0dc532595c62f18cb796",
+    "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/compatibility-and-restoration-check.json": "0dd7fe4d213d38136b1106a47ecafe236a100e3c64369e0228218b3e7c4b3696",
+    "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/parent-final-verification.json": "33480521c98a314c0b1bb4517c91bed814fbcde55682b0323ab5c2ccb57ab0ba"
+  },
+  "additional_checks": [
+    "All five historical artifact hashes match validation.json.",
+    "All four active source hashes match validation.json.",
+    "All three retained follow-up compressed artifacts match their compressed and uncompressed hashes.",
+    "All three evidence scripts parse successfully."
+  ],
+  "existing_broad_blockers": {
+    "receipt": "validation.json",
+    "diagnostics": "package-full-failure-diagnostics.json",
+    "source_build": "Three CS0234 errors in PartiesCatalogGatewaySelectorTests.cs lines 20\u201322. Exact command and generated source environment are retained in validation.json.",
+    "full_package_suite": {
+      "total": 2865,
+      "passed": 2848,
+      "failed": 4,
+      "skipped": 13,
+      "errors": 0,
+      "not-run": 0
+    },
+    "rerun": false,
+    "reason": "Active source and executed assembly hashes equal the prior receipts; this review changes no production/test sources. No new broad or topology pass is claimed."
+  },
+  "selected_packages": {
+    "command": [
+      "dotnet",
+      "msbuild",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "-nologo",
+      "-getProperty:HexalithEventStoreVersion,HexalithEventStoreFromSource,HexalithSourceMappingMode,Configuration,TargetPath"
+    ],
+    "exit_code": 0,
+    "properties": {
+      "HexalithEventStoreVersion": "4.1.0",
+      "HexalithEventStoreFromSource": "",
+      "HexalithSourceMappingMode": "",
+      "Configuration": "Debug",
+      "TargetPath": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll"
+    },
+    "packages": {
+      "Hexalith.EventStore.Contracts/4.1.0": {
+        "type": "package",
+        "nupkg_sha256": "e2c09e4f00340f26dd3c1509167c83f41ca757f2442f6624bc58edace1fe9a70",
+        "dll_sha256": {
+          "lib/net10.0/Hexalith.EventStore.Contracts.dll": "f3f2d7f6e7edf54e187af15edec8b4f13bf7e255b186b999efa0836a0c86a739"
+        },
+        "output_dll_matches_package": true
+      },
+      "Hexalith.EventStore.Server/4.1.0": {
+        "type": "package",
+        "nupkg_sha256": "fce322ee16345aa1c150375065bc2665c34f38d1bab6086d1144dd275dc25da4",
+        "dll_sha256": {
+          "lib/net10.0/Hexalith.EventStore.Server.dll": "75b8e9ad7203466b5fbb7390521caaa62b68d63ff06930a1b37ee673dd3fc683"
+        },
+        "output_dll_matches_package": true
+      },
+      "Hexalith.EventStore.DomainService/4.1.0": {
+        "type": "package",
+        "nupkg_sha256": "da40e1e05461bac67bbbf9f3a839085e0f8c65e726168b33f2dc955e0c2d1fb0",
+        "dll_sha256": {
+          "lib/net10.0/Hexalith.EventStore.DomainService.dll": "5d8068c8c116551efc3d545f85d41040023fa38217e5b4e73e4d225fe8e8bf78"
+        },
+        "output_dll_matches_package": true
+      },
+      "Hexalith.EventStore.Gateway/4.1.0": {
+        "type": "package",
+        "nupkg_sha256": "ba571748d713eeab11bdaa310385ac20602566a2538fd364befb2ff1ea5c2d81",
+        "dll_sha256": {
+          "lib/net10.0/Hexalith.EventStore.Gateway.dll": "e54d95b9c3b63358e89c2b13d90f0c2e4ab78a284c0675f5022b823dc8bee1f8"
+        },
+        "output_dll_matches_package": true
+      }
+    },
+    "all_hashes_match_prior_receipt": true
+  },
+  "original_broad_diagnostics": {
+    "scope": "Exact retained diagnostics from the original November 9 run recorded in validation.json; these lanes were not rerun and remain failing/incomplete.",
+    "source_receipt": "validation.json",
+    "artifacts": {
+      "source-build.log": {
+        "path": "resumed-review-original-source-build.log.gz",
+        "sha256": "6f8597e9b8419db4be99521f367c90e9d2cb19bffc598c2048f4560a4eb99f9e",
+        "uncompressed_sha256": "28d9e69b2120a636d147bb078e55ad2e76e153f256820653bc77226078d5e21c",
+        "uncompressed_bytes": 13383,
+        "original_path": "/tmp/dw-27-resume-20261109/source-build.log"
+      },
+      "package-full.log": {
+        "path": "resumed-review-original-package-full.log.gz",
+        "sha256": "6592ed9fe3400664d610fa9c346124aca260e972514af7bb1814bd75fb8944a1",
+        "uncompressed_sha256": "2dac9f389ff8240e652c60f19e670b2f7a643ad9ab53e2c04e44b168a6234d2e",
+        "uncompressed_bytes": 930576,
+        "original_path": "/tmp/dw-27-resume-20261109/package-full.log"
+      },
+      "package-full.xml": {
+        "path": "resumed-review-original-package-full.xml.gz",
+        "sha256": "c308da7a67fec9a0789baeca63abfe1102179346fcf41c3dbf87646d0644620c",
+        "uncompressed_sha256": "e28e472d15e158fa79ea0f755a01746e32fc1a65d82e0e86826565c519ccf21f",
+        "uncompressed_bytes": 2017565,
+        "original_path": "/tmp/dw-27-resume-20261109/package-full.xml"
+      }
+    },
+    "original_full_suite_skips": [
+      {
+        "name": "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests.ActualSdkRejectsTwoClientStaleEtagsAndCompetingAbsentKeyCreation",
+        "type": "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests",
+        "method": "ActualSdkRejectsTwoClientStaleEtagsAndCompetingAbsentKeyCreation",
+        "reason": "Set PARTIES_MEMORIES_STATE_RUNTIME_CONFIG to private owned Dapr endpoints and credentials."
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests.ActualSdkHealthDetectsInventoryPrefixAclDenialAndRepairInBothModes",
+        "type": "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests",
+        "method": "ActualSdkHealthDetectsInventoryPrefixAclDenialAndRepairInBothModes",
+        "reason": "Set PARTIES_MEMORIES_INVENTORY_ACL_CONFIG to an owned authenticated ACL runtime and loopback repair controller."
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests.ActualSdkPersistencePreservesLegacyListsEtagsProbeDeletionAndCanonicalReceipts",
+        "type": "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests",
+        "method": "ActualSdkPersistencePreservesLegacyListsEtagsProbeDeletionAndCanonicalReceipts",
+        "reason": "Set PARTIES_MEMORIES_STATE_RUNTIME_CONFIG to private owned Dapr endpoints and credentials."
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests.ActualProviderRebuildPersistsAcrossFreshClientsAndPreservesErasureAndRollbackBytes(existing: False)",
+        "type": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests",
+        "method": "ActualProviderRebuildPersistsAcrossFreshClientsAndPreservesErasureAndRollbackBytes",
+        "reason": "Set PARTIES_BACKFILL_STATE_RUNTIME_CONFIG to an owned disposable Redis/Dapr provider."
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests.ActualProviderRebuildPersistsAcrossFreshClientsAndPreservesErasureAndRollbackBytes(existing: True)",
+        "type": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests",
+        "method": "ActualProviderRebuildPersistsAcrossFreshClientsAndPreservesErasureAndRollbackBytes",
+        "reason": "Set PARTIES_BACKFILL_STATE_RUNTIME_CONFIG to an owned disposable Redis/Dapr provider."
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests.ActualProviderCompetingWriteAfterPreparationRefusesPublicationAndPreservesEveryCanonicalKey(target: \\\"detail\\\", existing: False)",
+        "type": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests",
+        "method": "ActualProviderCompetingWriteAfterPreparationRefusesPublicationAndPreservesEveryCanonicalKey",
+        "reason": "Set PARTIES_BACKFILL_STATE_RUNTIME_CONFIG to an owned disposable Redis/Dapr provider."
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests.ActualProviderCompetingWriteAfterPreparationRefusesPublicationAndPreservesEveryCanonicalKey(target: \\\"detail\\\", existing: True)",
+        "type": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests",
+        "method": "ActualProviderCompetingWriteAfterPreparationRefusesPublicationAndPreservesEveryCanonicalKey",
+        "reason": "Set PARTIES_BACKFILL_STATE_RUNTIME_CONFIG to an owned disposable Redis/Dapr provider."
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests.ActualProviderCompetingWriteAfterPreparationRefusesPublicationAndPreservesEveryCanonicalKey(target: \\\"processing\\\", existing: False)",
+        "type": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests",
+        "method": "ActualProviderCompetingWriteAfterPreparationRefusesPublicationAndPreservesEveryCanonicalKey",
+        "reason": "Set PARTIES_BACKFILL_STATE_RUNTIME_CONFIG to an owned disposable Redis/Dapr provider."
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests.ActualProviderCompetingWriteAfterPreparationRefusesPublicationAndPreservesEveryCanonicalKey(target: \\\"processing\\\", existing: True)",
+        "type": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests",
+        "method": "ActualProviderCompetingWriteAfterPreparationRefusesPublicationAndPreservesEveryCanonicalKey",
+        "reason": "Set PARTIES_BACKFILL_STATE_RUNTIME_CONFIG to an owned disposable Redis/Dapr provider."
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests.ActualProviderCompetingWriteAfterPreparationRefusesPublicationAndPreservesEveryCanonicalKey(target: \\\"index\\\", existing: False)",
+        "type": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests",
+        "method": "ActualProviderCompetingWriteAfterPreparationRefusesPublicationAndPreservesEveryCanonicalKey",
+        "reason": "Set PARTIES_BACKFILL_STATE_RUNTIME_CONFIG to an owned disposable Redis/Dapr provider."
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests.ActualProviderCompetingWriteAfterPreparationRefusesPublicationAndPreservesEveryCanonicalKey(target: \\\"index\\\", existing: True)",
+        "type": "Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests",
+        "method": "ActualProviderCompetingWriteAfterPreparationRefusesPublicationAndPreservesEveryCanonicalKey",
+        "reason": "Set PARTIES_BACKFILL_STATE_RUNTIME_CONFIG to an owned disposable Redis/Dapr provider."
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests.SelectedMemoriesIngestionAndCleanupPersistAcrossRestart",
+        "type": "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+        "method": "SelectedMemoriesIngestionAndCleanupPersistAcrossRestart",
+        "reason": "Set PARTIES_MEMORIES_RUNTIME_CONFIG to an owned local runtime's private JSON configuration."
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests.SelectedMemoriesRefreshAndCleanupPersistAcrossClientRecreation",
+        "type": "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+        "method": "SelectedMemoriesRefreshAndCleanupPersistAcrossClientRecreation",
+        "reason": "Set PARTIES_MEMORIES_RUNTIME_CONFIG to an owned local runtime's private JSON configuration."
+      }
+    ],
+    "source_mapping_warning": "Original source preparation used pinned module tool 4.44.13 outside selected Platform range [4.45.0, 5.0.0-0); HXW010 was already recorded, with no source qualification claimed."
+  },
+  "review": {
+    "layers": 3,
+    "coverage": "DW-27 implementation, paging regressions, documentation, archival evidence and directly referenced callees; unrelated accumulated history was not exhaustively reviewed.",
+    "edge_case_findings": 0,
+    "verification_gap_findings": 0,
+    "blind_findings": 10,
+    "triage": {
+      "carried_defer": [
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S05"
+      ],
+      "false_rejected": [
+        "S06"
+      ],
+      "patched": [
+        "S07",
+        "S08"
+      ],
+      "low_rejected": [
+        "S09",
+        "S10"
+      ]
+    },
+    "spec_status": "in-review",
+    "no_duplicate_deferrals": true,
+    "follow_up": "Original blind reviewer independently verified S07/S08 resolved: all three retained gzip artifacts match compressed hashes, original bytes and validation.json bindings; all 13 skip names/reasons match retained XML; validation.json is unchanged from the review diff."
+  },
+  "final_packet_verification": {
+    "compressed_artifacts_checked": 10,
+    "all_compressed_and_raw_bindings_match": true,
+    "all_historical_and_source_bindings_match": true,
+    "frozen_intent_matches_committed_spec": true,
+    "python_scripts_parsed": 3,
+    "warning_guard_exit_code": 0,
+    "whitespace_exit_code": 0,
+    "original_full_suite_disposition_preserved": true
+  },
+  "finished_review_utc": "2026-11-09T08:02:57.379115+00:00"
+}

@@ -1,5 +1,28 @@
 # DW-27 verification — 2026-10-17
 
+This packet records the **October 17 pre-adoption state**. The later
+[October 22 SDK adoption](../five-sdk-runtime-deferred-items-2026-10-22/final-verification.json)
+completed DW-27 with published EventStore 3.126.1 and passing package/source
+service suites. Its closure is recorded in `deferred-work-archive.md`.
+The [November 9 resumed verification](../dw-27-invalid-page-failure-2026-11-09/validation.json)
+checks the current selected 4.1.0 package separately and records current broad
+validation blockers.
+
+The patch, manifest and receipts below remain historical evidence. Do not apply
+the saved patch to the already-adopted consumer or regenerate these dated outputs
+in the present checkout. The restoration verifier deliberately requires the
+original pre-adoption consumer bytes and the preserved legacy SDK constructor/test
+bytes; reconstruct that historical state in an isolated fixture to exercise it.
+The inventory script also writes into this dated packet and is not a current
+activation gate. Use fresh output locations for new evidence. A failed archival
+command is a failed run; an older receipt records only its original run.
+
+## Historical October 17 results and rollout instructions (superseded)
+
+The remaining results and rollout instructions describe October 17 only.
+The October 22 adoption supersedes their open-dependency conclusion and patch
+application steps; they are retained to explain the original receipts.
+
 The shared EventStore prerequisite is prepared in its owning repository. Parties
 adoption remains gated on publication; its tracked code and package selection are
 unchanged. `validation.json` records exact commands, working directories, counts,
@@ -63,7 +86,10 @@ both test-file changes. `consumer-patch-manifest.json` binds its hash and the
 baseline/tested file bytes. The three tracked files were restored byte for byte;
 `git apply --check` succeeds. Run
 `python3 _bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/verify-compatibility-and-restoration.py`
-from the repository root to regenerate `compatibility-and-restoration-check.json`.
+only from an isolated checkout containing the original pre-adoption bytes. Its
+default destination is the historical `compatibility-and-restoration-check.json`;
+use `--receipt` with a fresh path for any new exercise. The current consumer is
+already adopted and is expected to fail the restoration assertion.
 That evidence includes the raw legacy cursor test source, baseline/current byte
 hashes, the unchanged constructor signature hashes, and baseline/current hashes
 for every restored tracked consumer file. It also applies the saved patch to

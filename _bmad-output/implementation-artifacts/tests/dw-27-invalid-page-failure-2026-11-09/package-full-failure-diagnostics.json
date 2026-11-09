@@ -1,0 +1,46 @@
+{
+  "scope": "Diagnostics extracted from the original November 9 full-suite run; no new full-suite run or repaired gate is claimed.",
+  "source_receipt": "validation.json",
+  "source_xml_sha256": "e28e472d15e158fa79ea0f755a01746e32fc1a65d82e0e86826565c519ccf21f",
+  "command": [
+    "dotnet",
+    "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+    "-result-xml",
+    "/tmp/dw-27-resume-20261109/package-full.xml"
+  ],
+  "exit_code": 1,
+  "counts": {
+    "total": 2865,
+    "passed": 2848,
+    "failed": 4,
+    "skipped": 13,
+    "errors": 0,
+    "not-run": 0
+  },
+  "failures": [
+    {
+      "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.CommittedSelectionObservations_PreservePackageGraphAndImmutableConsumptionRefusals",
+      "exception_type": "Shouldly.ShouldAssertException",
+      "message": "Shouldly.ShouldAssertException : selected.Replace('\\\\t', ' ')\n    should be\n\\\"160000 commit 3c8096180ecf2aa539ac454815efbfceb8a92822 references/Hexalith.Builds\\\"\n    but was\n\\\"160000 commit 27145e52ffab5623198ba5efdab5cdb71aa42d28 references/Hexalith.Builds\\\"",
+      "stack_trace": "   at Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.AssertSelectedSourceObservation(String root, String relativePath, String expectedIdentity) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs:line 2866\n   at Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.CommittedSelectionObservations_PreservePackageGraphAndImmutableConsumptionRefusals() in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs:line 900\n   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)\n   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)\n   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)\n   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)"
+    },
+    {
+      "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.Matrix_ValidationEvidenceCommandsAreReproducible",
+      "exception_type": "Shouldly.ShouldAssertException",
+      "message": "Shouldly.ShouldAssertException : hasMatches\n    should be\nTrue\n    but was\nFalse\n\nAdditional Info:\n    rg -n -F '8-7-server-persistence-and-snapshot-integration: backlog' references/Hexalith.EventStore/_bmad-output/implementation-artifacts/sprint-status.yaml",
+      "stack_trace": "   at Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.AssertFixedStringSearch(String root, String pattern, String[] paths, Boolean expectMatch) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs:line 2623\n   at Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.Matrix_ValidationEvidenceCommandsAreReproducible() in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs:line 1740\n   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)\n   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)\n   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)\n   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)"
+    },
+    {
+      "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.CommittedSourceSelections_RecordOverridesAndRefuseInvalidImmutableConsumption(dependency: \\\"McpCli\\\")",
+      "exception_type": "Shouldly.ShouldAssertException",
+      "message": "Shouldly.ShouldAssertException : selected.Replace('\\\\t', ' ')\n    should be\n\\\"160000 commit ae4a317f208829681dc8eec36a308bc36f3f9715 references/Hexalith.McpCli\\\"\n    but was\n\\\"160000 commit 1c1f06b46bbe9e115022be8af75b10085c8ac360 references/Hexalith.McpCli\\\"",
+      "stack_trace": "   at Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.AssertSelectedSourceObservation(String root, String relativePath, String expectedIdentity) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs:line 2866\n   at Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.CommittedSourceSelections_RecordOverridesAndRefuseInvalidImmutableConsumption(String dependency) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs:line 774\n   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)\n   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)\n   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)\n   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)"
+    },
+    {
+      "name": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.CommittedSourceSelections_RecordOverridesAndRefuseInvalidImmutableConsumption(dependency: \\\"Platform\\\")",
+      "exception_type": "Shouldly.ShouldAssertException",
+      "message": "Shouldly.ShouldAssertException : selected.Replace('\\\\t', ' ')\n    should be\n\\\"160000 commit 0f4e27f1f78310bd731c10c19dc51bb1e0345d44 references/Hexalith.Platform\\\"\n    but was\n\\\"160000 commit e39a9a2587ec150d550510763ab69db305d13fdb references/Hexalith.Platform\\\"",
+      "stack_trace": "   at Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.AssertSelectedSourceObservation(String root, String relativePath, String expectedIdentity) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs:line 2866\n   at Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.CommittedSourceSelections_RecordOverridesAndRefuseInvalidImmutableConsumption(String dependency) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs:line 774\n   at InvokeStub_PlatformApiPrerequisitesTests.CommittedSourceSelections_RecordOverridesAndRefuseInvalidImmutableConsumption(Object, Span`1)\n   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)"
+    }
+  ]
+}

@@ -2239,3 +2239,12 @@ rollback: None required (test-only).
 - source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-06.md`
   summary: Qualify lifecycle ownership/admission behavior under a changing context accessor (unverified medium).
   evidence: B8: ReadCoreAsync captures ownership context before ResolveAsync obtains context again. The ordinary HTTP path has no demonstrated identity mutation. Settle with a supported changing-accessor reproduction, including authentication loss, then choose a bound-context or fail-closed equivalence check.
+
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-dw-27-invalid-page-failure.md`
+  summary: Repair the current source-mapped service-test catalog-selector aliases without weakening source validation.
+  evidence: On 2026-11-09, pinned hexalith-module 4.44.13 prepare-build succeeds with HXW010/HXW011 observations, but its generated Debug source environment gives CS0234 for eventstore::Hexalith.EventStore.Queries types at PartiesCatalogGatewaySelectorTests.cs lines 20–22. The source SDK/Parties host compile and the selected-package build plus 952 handler/gateway tests pass. Exact command/environment and diagnostics are retained in tests/dw-27-invalid-page-failure-2026-11-09/validation.json.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-dw-27-invalid-page-failure.md`
+  summary: Reconcile the current dependency observation fitness controls with their immutable historical records.
+  evidence: On 2026-11-09, the unchanged package full suite passes 2848 tests, skips 13, and fails four PlatformApiPrerequisitesTests: CommittedSelectionObservations_PreservePackageGraphAndImmutableConsumptionRefusals, Matrix_ValidationEvidenceCommandsAreReproducible, and CommittedSourceSelections_RecordOverridesAndRefuseInvalidImmutableConsumption for McpCli and Platform. Current committed gitlinks and EventStore sprint state differ from the dated expected observations. Preserve historical receipts and investigate the current observation policy; see tests/dw-27-invalid-page-failure-2026-11-09/validation.json.

@@ -44,6 +44,7 @@ with tempfile.TemporaryDirectory(prefix="dw-27-package-inventory-") as temporary
         item = {
             "index_url": index_url,
             "index_artifact": f"{package}-versions.json",
+            "index_sha256": hashlib.sha256(index).hexdigest(),
             "latest_stable": latest,
             "selected": {},
         }

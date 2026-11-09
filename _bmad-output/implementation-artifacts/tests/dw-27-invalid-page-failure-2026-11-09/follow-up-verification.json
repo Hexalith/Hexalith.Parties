@@ -1,0 +1,234 @@
+{
+  "created_utc": "2026-11-09T07:11:59.668490+00:00",
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "head": "f2570a7a82107afc50f4d5ce73e7b221d2084eed",
+  "source_sha256": {
+    "src/Hexalith.Parties/Queries/PartySdkQueryService.cs": "6536c03271d9c273183e94bd0f6f03f805ca7bec7119f4ccb9bbdc42a0dd4cea",
+    "tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs": "549c003f13a34fdffb1dfa481c4f4fd3f6ae98d7c59490f6d121bf3f0ad41882",
+    "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs": "801160582266d2489acf66615009fef4e5c96146ba1a1bfe786f83b369a4f6be",
+    "tests/Hexalith.Parties.Tests/Gateway/PartyPagingActorInvocationHandler.cs": "b7e83239fa143c45520ffdf6446d8af650f88fc7d2b486c84bc8e4c227d0800f"
+  },
+  "raw_directory": "/tmp/dw27-current-vj1qt1l5",
+  "package_build": {
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "--configuration",
+      "Debug",
+      "--disable-build-servers",
+      "-m:1",
+      "-p:UseHexalithProjectReferences=false",
+      "-p:UseNuGetDeps=true"
+    ],
+    "exit_code": 0,
+    "raw_log": "/tmp/dw27-current-vj1qt1l5/package-build.log",
+    "raw_log_sha256": "21d23a7ce7a5e60f3a5671a1a5b43bac3dc8540172329d2b6d2624a032ba39a9",
+    "warnings": 0,
+    "errors": 0
+  },
+  "package_focused": {
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests",
+      "-class",
+      "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests",
+      "-failSkips",
+      "-result-xml",
+      "/tmp/dw27-current-vj1qt1l5/focused.xml"
+    ],
+    "exit_code": 0,
+    "assembly_sha256": "3b5099ebecd8ea5732560627d8a223cc0a3a42811cf5b237f3c6c94cbd23fe6f",
+    "raw_log": "/tmp/dw27-current-vj1qt1l5/focused.log",
+    "raw_xml": "/tmp/dw27-current-vj1qt1l5/focused.xml",
+    "assemblies": [
+      {
+        "environment": "64-bit (x64) .NET 10.0.14 [collection-per-class, parallel (collections, 14 threads)]",
+        "id": "c42bdafe-23e8-4c1d-930e-153053ecf7d7",
+        "name": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "run-date": "2026-11-09",
+        "run-time": "07:12:28",
+        "start-rtf": "2026-11-09T07:12:28.2574986+00:00",
+        "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+        "target-framework": ".NETCoreApp,Version=v10.0",
+        "errors": "0",
+        "failed": "0",
+        "finish-rtf": "2026-11-09T07:12:36.8920136+00:00",
+        "not-run": "0",
+        "passed": "952",
+        "skipped": "0",
+        "time": "8.635",
+        "time-rtf": "00:00:08.6350000",
+        "total": "952"
+      }
+    ],
+    "raw_log_sha256": "bfc75294da6755b1a378d3165f3dbec5229dfade857c15c98a15995ec6d434a8",
+    "raw_xml_sha256": "dadd163307bfb0ec64a4ab3265b07b47cc31eeeadda90b08ce3f9cb279a1fcb3"
+  },
+  "scope": "Follow-up of already-adopted DW-27: fresh focused package verification and documentation/evidence corrections; no production, dependency or historical receipt changes.",
+  "archival_verifier": {
+    "fixture": "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-11-09/check-archival-receipt.py",
+    "fixture_sha256": "12008e1651b23692931bd04c50ef684b72a0f9043319015358af229fe5e72d59",
+    "checks": [
+      {
+        "command": [
+          "python3",
+          "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-11-09/check-archival-receipt.py"
+        ],
+        "exit_code": 0,
+        "stdout": "PASS: raw compatibility preserved; tracked consumers restored; reconstructed candidate hashes match\nPASS: custom receipt destination recorded; historical reconstruction checks passed\nPASS: retained patch, manifest and historical receipts unchanged\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "python3",
+          "-O",
+          "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-11-09/check-archival-receipt.py"
+        ],
+        "exit_code": 0,
+        "stdout": "PASS: raw compatibility preserved; tracked consumers restored; reconstructed candidate hashes match\nPASS: custom receipt destination recorded; historical reconstruction checks passed\nPASS: retained patch, manifest and historical receipts unchanged\n",
+        "stderr": ""
+      }
+    ]
+  },
+  "python_syntax": {
+    "method": "compile(bytes, path, exec) without executing the historical inventory",
+    "files": [
+      "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-11-09/check-archival-receipt.py",
+      "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/inspect-published-sdk.py"
+    ],
+    "exit_code": 0
+  },
+  "guards": [
+    {
+      "command": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "exit_code": 0,
+      "stdout": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "preservation": {
+    "source_hashes_match_previous_receipt": true,
+    "same_test_assembly": true,
+    "historical_artifacts": {
+      "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/validation.json": true,
+      "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/parties-consumer-adoption.patch": true,
+      "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/consumer-patch-manifest.json": true,
+      "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/compatibility-and-restoration-check.json": true,
+      "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/parent-final-verification.json": true
+    },
+    "git_and_dependency_mutations": "none"
+  },
+  "retained_raw_artifacts": {
+    "package-build.log": {
+      "path": "follow-up-package-build.log.gz",
+      "sha256": "c8c29dfa04a402f4b2682fc1e02a39b2dc6ea3c4799e799c6d419001696c4438",
+      "uncompressed_sha256": "21d23a7ce7a5e60f3a5671a1a5b43bac3dc8540172329d2b6d2624a032ba39a9",
+      "uncompressed_bytes": 1594
+    },
+    "focused.log": {
+      "path": "follow-up-focused.log.gz",
+      "sha256": "f12bab0ac704f3718613964ae4c6955f8f4f1a3d71fbb9ebbbc92188a4ebe064",
+      "uncompressed_sha256": "bfc75294da6755b1a378d3165f3dbec5229dfade857c15c98a15995ec6d434a8",
+      "uncompressed_bytes": 349766
+    },
+    "focused.xml": {
+      "path": "follow-up-focused.xml.gz",
+      "sha256": "c7040eea779c866cae1fbc99359ec82d1532c01460ca730596994298226f7525",
+      "uncompressed_sha256": "dadd163307bfb0ec64a4ab3265b07b47cc31eeeadda90b08ce3f9cb279a1fcb3",
+      "uncompressed_bytes": 677288
+    }
+  },
+  "existing_broad_blockers": {
+    "receipt": "validation.json",
+    "scope": "Not rerun: source and focused assembly bytes are unchanged; no current broad pass is claimed.",
+    "source_build": {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "--configuration",
+        "Debug",
+        "--disable-build-servers",
+        "-m:1"
+      ],
+      "environment": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/dw-27-resume-20261109/source-mapping/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/dw-27-resume-20261109/source-mapping/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/dw-27-resume-20261109/source-mapping/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/dw-27-resume-20261109/source-mapping/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/dw-27-resume-20261109/source-mapping/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "5da9b4b43131010d971a5c8c6e70106d9bcdaad7c40bcdf00c73a458a18cc96b",
+        "Configuration": "Debug"
+      },
+      "exit_code": 1,
+      "diagnostics": [
+        "PartiesCatalogGatewaySelectorTests.cs(20,45): CS0234 eventstore::Hexalith.EventStore.Queries.HandlerAwareQueryRouter",
+        "PartiesCatalogGatewaySelectorTests.cs(21,49): CS0234 eventstore::Hexalith.EventStore.Queries.IDomainQueryHandlerRegistry",
+        "PartiesCatalogGatewaySelectorTests.cs(22,41): CS0234 eventstore::Hexalith.EventStore.Queries.IDomainQueryInvoker"
+      ]
+    },
+    "package_full": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-result-xml",
+        "/tmp/dw-27-resume-20261109/package-full.xml"
+      ],
+      "exit_code": 1,
+      "counts": {
+        "total": 2865,
+        "passed": 2848,
+        "failed": 4,
+        "skipped": 13,
+        "errors": 0,
+        "not-run": 0
+      },
+      "retained_diagnostics": "package-full-failure-diagnostics.json"
+    }
+  },
+  "limits": [
+    "Source service test compilation retains three CS0234 catalog-selector errors.",
+    "Full package service suite retains four dependency-observation fitness failures and 13 skips.",
+    "No full current source/package or integrated-topology pass is claimed.",
+    "No package inventory outputs were regenerated; index hashing applies to future invocations only.",
+    "Spec remains in-review."
+  ],
+  "review": {
+    "edge_case_findings": 0,
+    "verification_gap_findings": 0,
+    "blind_findings": 10,
+    "patched": [
+      "F04",
+      "F05",
+      "F06",
+      "F09",
+      "F10"
+    ],
+    "rejected_low": [
+      "F01",
+      "F02",
+      "F03",
+      "F07",
+      "F08"
+    ],
+    "follow_up": "The original blind reviewer independently verified all five direct corrections, including original fixture hash, extracted diagnostics, inventory hashing, current API documentation and superseded historical instructions. No unresolved original patched claims; five historical artifacts unchanged."
+  }
+}

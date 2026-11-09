@@ -1,0 +1,383 @@
+{
+  "created_utc": "2026-11-08T23:46:52.110169+00:00",
+  "scope": "Resume review of already-adopted DW-27. Preserve existing implementation/dependencies and historical evidence. No full current qualification is claimed.",
+  "baseline_commit": "611fa39803d716b377c67801459a7dd4f3059829",
+  "current_source": {
+    "head": "f2570a7a82107afc50f4d5ce73e7b221d2084eed",
+    "source_sha256": {
+      "src/Hexalith.Parties/Queries/PartySdkQueryService.cs": "6536c03271d9c273183e94bd0f6f03f805ca7bec7119f4ccb9bbdc42a0dd4cea",
+      "tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs": "549c003f13a34fdffb1dfa481c4f4fd3f6ae98d7c59490f6d121bf3f0ad41882",
+      "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs": "801160582266d2489acf66615009fef4e5c96146ba1a1bfe786f83b369a4f6be",
+      "tests/Hexalith.Parties.Tests/Gateway/PartyPagingActorInvocationHandler.cs": "b7e83239fa143c45520ffdf6446d8af650f88fc7d2b486c84bc8e4c227d0800f"
+    }
+  },
+  "eventstore_source_revision": "b437879df2339692d177774d1f076936da6ebd62",
+  "prior_acceptance": {
+    "receipt": "../five-sdk-runtime-deferred-items-2026-10-22/final-verification.json",
+    "selected_eventstore": "3.126.1",
+    "package_service_passed": 2534,
+    "source_service_passed": 2534,
+    "ledger_status": "done 2026-10-22"
+  },
+  "current_package_selection": {
+    "command": [
+      "dotnet",
+      "msbuild",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "-nologo",
+      "-getProperty:HexalithEventStoreVersion,HexalithEventStoreFromSource,TargetPath,Configuration,HexalithSourceMappingMode"
+    ],
+    "result": {
+      "Properties": {
+        "HexalithEventStoreVersion": "4.1.0",
+        "HexalithEventStoreFromSource": "",
+        "TargetPath": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "Configuration": "Debug",
+        "HexalithSourceMappingMode": ""
+      }
+    },
+    "packages": {
+      "Hexalith.EventStore.Contracts/4.1.0": {
+        "type": "package",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.EventStore",
+          "commit": "dbc6e7e08d605ba6c6c790e3e08a15dc8bbdec8a"
+        },
+        "nupkg_sha256": "e2c09e4f00340f26dd3c1509167c83f41ca757f2442f6624bc58edace1fe9a70",
+        "dll_sha256": {
+          "lib/net10.0/Hexalith.EventStore.Contracts.dll": "f3f2d7f6e7edf54e187af15edec8b4f13bf7e255b186b999efa0836a0c86a739"
+        }
+      },
+      "Hexalith.EventStore.Server/4.1.0": {
+        "type": "package",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.EventStore",
+          "commit": "dbc6e7e08d605ba6c6c790e3e08a15dc8bbdec8a"
+        },
+        "nupkg_sha256": "fce322ee16345aa1c150375065bc2665c34f38d1bab6086d1144dd275dc25da4",
+        "dll_sha256": {
+          "lib/net10.0/Hexalith.EventStore.Server.dll": "75b8e9ad7203466b5fbb7390521caaa62b68d63ff06930a1b37ee673dd3fc683"
+        }
+      },
+      "Hexalith.EventStore.DomainService/4.1.0": {
+        "type": "package",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.EventStore",
+          "commit": "dbc6e7e08d605ba6c6c790e3e08a15dc8bbdec8a"
+        },
+        "nupkg_sha256": "da40e1e05461bac67bbbf9f3a839085e0f8c65e726168b33f2dc955e0c2d1fb0",
+        "dll_sha256": {
+          "lib/net10.0/Hexalith.EventStore.DomainService.dll": "5d8068c8c116551efc3d545f85d41040023fa38217e5b4e73e4d225fe8e8bf78"
+        }
+      },
+      "Hexalith.EventStore.Gateway/4.1.0": {
+        "type": "package",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.EventStore",
+          "commit": "dbc6e7e08d605ba6c6c790e3e08a15dc8bbdec8a"
+        },
+        "nupkg_sha256": "ba571748d713eeab11bdaa310385ac20602566a2538fd364befb2ff1ea5c2d81",
+        "dll_sha256": {
+          "lib/net10.0/Hexalith.EventStore.Gateway.dll": "e54d95b9c3b63358e89c2b13d90f0c2e4ab78a284c0675f5022b823dc8bee1f8"
+        }
+      }
+    }
+  },
+  "source_preparation": {
+    "command": [
+      "dotnet",
+      "tool",
+      "run",
+      "hexalith-module",
+      "--",
+      "prepare-build",
+      "--manifest",
+      "module/hexalith.module-manifest.v2.json",
+      "--workspace",
+      "/tmp/dw-27-resume-20261109/source-mapping",
+      "--mode",
+      "source",
+      "--output",
+      "json"
+    ],
+    "exit_code": 0,
+    "result": {
+      "status": "prepared",
+      "outcome": {
+        "exitCode": "Success",
+        "phase": "None",
+        "category": "None",
+        "ruleId": null
+      },
+      "diagnostics": [
+        {
+          "ruleId": "HXW011",
+          "phase": "Prerequisite",
+          "category": "None",
+          "message": "Platform identity e39a9a2587ec150d550510763ab69db305d13fdb has no local v<SemVer> release tag.",
+          "field": "/home/administrator/projects/hexalith/parties/references/Hexalith.Platform",
+          "hint": "Fetch Platform tags, then retry.",
+          "source": null,
+          "location": null,
+          "row": null
+        },
+        {
+          "ruleId": "HXW010",
+          "phase": "Prerequisite",
+          "category": "None",
+          "message": "Tool version 4.44.13 is outside Platform range [4.45.0, 5.0.0-0) at '/home/administrator/projects/hexalith/parties/references/Hexalith.Platform/hexalith-platform.json'.",
+          "field": "/home/administrator/projects/hexalith/parties/references/Hexalith.Platform/hexalith-platform.json",
+          "hint": null,
+          "source": null,
+          "location": null,
+          "row": null
+        }
+      ],
+      "buildPreparation": {
+        "workspace": "/tmp/dw-27-resume-20261109/source-mapping",
+        "mode": "source",
+        "mappingHash": "5da9b4b43131010d971a5c8c6e70106d9bcdaad7c40bcdf00c73a458a18cc96b",
+        "environment": {
+          "CustomBeforeDirectoryBuildProps": "/tmp/dw-27-resume-20261109/source-mapping/source-mapping/SourceMapping.targets",
+          "CustomAfterMicrosoftCommonProps": "/tmp/dw-27-resume-20261109/source-mapping/source-mapping/SourceMapping.props",
+          "CustomBeforeDirectoryBuildTargets": "/tmp/dw-27-resume-20261109/source-mapping/source-mapping/SourceMapping.before-targets.props",
+          "CustomAfterDirectoryBuildTargets": "/tmp/dw-27-resume-20261109/source-mapping/source-mapping/SourceMapping.late.props",
+          "AfterMicrosoftNETSdkTargets": "/tmp/dw-27-resume-20261109/source-mapping/source-mapping/SourceMapping.final.targets",
+          "HEXALITH_SOURCE_MAPPING_HASH": "5da9b4b43131010d971a5c8c6e70106d9bcdaad7c40bcdf00c73a458a18cc96b",
+          "Configuration": "Debug"
+        }
+      }
+    }
+  },
+  "source_build": {
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "--configuration",
+      "Debug",
+      "--disable-build-servers",
+      "-m:1"
+    ],
+    "environment": {
+      "CustomBeforeDirectoryBuildProps": "/tmp/dw-27-resume-20261109/source-mapping/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "/tmp/dw-27-resume-20261109/source-mapping/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "/tmp/dw-27-resume-20261109/source-mapping/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "/tmp/dw-27-resume-20261109/source-mapping/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "/tmp/dw-27-resume-20261109/source-mapping/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "5da9b4b43131010d971a5c8c6e70106d9bcdaad7c40bcdf00c73a458a18cc96b",
+      "Configuration": "Debug"
+    },
+    "exit_code": 1,
+    "warnings": 0,
+    "errors": 3,
+    "diagnostics": [
+      "PartiesCatalogGatewaySelectorTests.cs(20,45): CS0234 eventstore::Hexalith.EventStore.Queries.HandlerAwareQueryRouter",
+      "PartiesCatalogGatewaySelectorTests.cs(21,49): CS0234 eventstore::Hexalith.EventStore.Queries.IDomainQueryHandlerRegistry",
+      "PartiesCatalogGatewaySelectorTests.cs(22,41): CS0234 eventstore::Hexalith.EventStore.Queries.IDomainQueryInvoker"
+    ],
+    "completed_projects": "Source EventStore Contracts, Client, DomainService, Server, Gateway, host and Parties host build before the catalog test compilation failure. No source test assembly pass.",
+    "raw_log": {
+      "path": "/tmp/dw-27-resume-20261109/source-build.log",
+      "bytes": 13383,
+      "sha256": "28d9e69b2120a636d147bb078e55ad2e76e153f256820653bc77226078d5e21c"
+    },
+    "cwd": "/home/administrator/projects/hexalith/parties"
+  },
+  "package_build": {
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "--configuration",
+      "Debug",
+      "--disable-build-servers",
+      "-m:1",
+      "-p:UseHexalithProjectReferences=false",
+      "-p:UseNuGetDeps=true"
+    ],
+    "exit_code": 0,
+    "warnings": 0,
+    "errors": 0,
+    "raw_log": {
+      "path": "/tmp/dw-27-resume-20261109/package-build.log",
+      "bytes": 2778,
+      "sha256": "ad633988830b41ac93e5122de851f8ae3ba9588af9490499bddefea71896c4cf"
+    },
+    "cwd": "/home/administrator/projects/hexalith/parties"
+  },
+  "package_focused": {
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests",
+      "-class",
+      "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests",
+      "-failSkips",
+      "-result-xml",
+      "/tmp/dw-27-resume-20261109/package-focused.xml"
+    ],
+    "assembly_sha256": "3b5099ebecd8ea5732560627d8a223cc0a3a42811cf5b237f3c6c94cbd23fe6f",
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exit_code": 0,
+    "counts": {
+      "total": 952,
+      "passed": 952,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    "seconds": "8.782",
+    "started_utc": "2026-11-08T23:42:48.1941352+00:00",
+    "finished_utc": "2026-11-08T23:42:56.9753195+00:00",
+    "failures": [],
+    "class_counts": {
+      "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests": 875,
+      "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests": 77
+    },
+    "raw_log": {
+      "path": "/tmp/dw-27-resume-20261109/package-focused.log",
+      "bytes": 349775,
+      "sha256": "d5c10be579115c9799d43c8481a8ce3d6de4c4ceb4585e502d704f80b9e7277b"
+    },
+    "raw_xml": {
+      "path": "/tmp/dw-27-resume-20261109/package-focused.xml",
+      "bytes": 677275,
+      "sha256": "9b6e9ef66642d27bcac5f8202c12195497ae90f7e24be23cd6de45ccf033a38a"
+    }
+  },
+  "package_full": {
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "-result-xml",
+      "/tmp/dw-27-resume-20261109/package-full.xml"
+    ],
+    "assembly_sha256": "3b5099ebecd8ea5732560627d8a223cc0a3a42811cf5b237f3c6c94cbd23fe6f",
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exit_code": 1,
+    "counts": {
+      "total": 2865,
+      "passed": 2848,
+      "failed": 4,
+      "skipped": 13,
+      "errors": 0,
+      "not-run": 0
+    },
+    "seconds": "53.755",
+    "started_utc": "2026-11-08T23:43:06.7406194+00:00",
+    "finished_utc": "2026-11-08T23:44:00.4929176+00:00",
+    "failures": [
+      "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.CommittedSelectionObservations_PreservePackageGraphAndImmutableConsumptionRefusals",
+      "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.Matrix_ValidationEvidenceCommandsAreReproducible",
+      "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.CommittedSourceSelections_RecordOverridesAndRefuseInvalidImmutableConsumption(dependency: \\\"McpCli\\\")",
+      "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.CommittedSourceSelections_RecordOverridesAndRefuseInvalidImmutableConsumption(dependency: \\\"Platform\\\")"
+    ],
+    "class_counts": {
+      "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests": 875,
+      "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests": 77
+    },
+    "raw_log": {
+      "path": "/tmp/dw-27-resume-20261109/package-full.log",
+      "bytes": 930576,
+      "sha256": "2dac9f389ff8240e652c60f19e670b2f7a643ad9ab53e2c04e44b168a6234d2e"
+    },
+    "raw_xml": {
+      "path": "/tmp/dw-27-resume-20261109/package-full.xml",
+      "bytes": 2017565,
+      "sha256": "e28e472d15e158fa79ea0f755a01746e32fc1a65d82e0e86826565c519ccf21f"
+    }
+  },
+  "archival_verifier_check": {
+    "fixture_source": "/tmp/dw-27-resume-20261109/check-receipt-command.py",
+    "fixture_sha256": "12008e1651b23692931bd04c50ef684b72a0f9043319015358af229fe5e72d59",
+    "checks": [
+      {
+        "command": [
+          "python3",
+          "/tmp/dw-27-resume-20261109/check-receipt-command.py"
+        ],
+        "exit_code": 0,
+        "raw_log": {
+          "path": "/tmp/dw-27-resume-20261109/receipt-command-check.log",
+          "bytes": 248,
+          "sha256": "06c7019c5abff7fbdfeff687939eb99a3b1040c878d6d325ede894b37bf09d18"
+        }
+      },
+      {
+        "command": [
+          "python3",
+          "-O",
+          "/tmp/dw-27-resume-20261109/check-receipt-command.py"
+        ],
+        "exit_code": 0,
+        "raw_log": {
+          "path": "/tmp/dw-27-resume-20261109/receipt-command-check-optimized.log",
+          "bytes": 248,
+          "sha256": "06c7019c5abff7fbdfeff687939eb99a3b1040c878d6d325ede894b37bf09d18"
+        }
+      }
+    ],
+    "assertions": [
+      "Isolated original pre-adoption consumer bytes, legacy cursor test and constructor",
+      "Retained patch reconstruction matches all saved tested-candidate hashes",
+      "Custom resolved --receipt destination recorded",
+      "Retained historical inputs/receipts unchanged"
+    ]
+  },
+  "preservation": {
+    "frozen_intent_unchanged": true,
+    "production_and_test_sources_unchanged": true,
+    "package_selection_and_gitlinks_unchanged": true,
+    "historical_artifacts_sha256": {
+      "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/validation.json": "27a5bec50dae729f6d8f8499532fa2c66459174e3ae869d2ce4784b183c52474",
+      "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/parties-consumer-adoption.patch": "4ddb36d577d5ad8865cb254d5b58681dff6743331bb4c019ff53aec862d84b91",
+      "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/consumer-patch-manifest.json": "e9559e04d07f84d5aa73b2a17deb7b42118ccbd8589e0dc532595c62f18cb796",
+      "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/compatibility-and-restoration-check.json": "0dd7fe4d213d38136b1106a47ecafe236a100e3c64369e0228218b3e7c4b3696",
+      "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/parent-final-verification.json": "33480521c98a314c0b1bb4517c91bed814fbcde55682b0323ab5c2ccb57ab0ba"
+    },
+    "git_mutations": "none: no stage, commit, branch, push or submodule/dependency update"
+  },
+  "review": {
+    "layers": 3,
+    "edge_case_findings": 0,
+    "verification_gap_findings": 0,
+    "blind_findings": 10,
+    "triage": "R01/R04 patched; remaining low-impact archival/extra-coverage requests rejected with individual evidence in spec",
+    "new_broad_blockers": "Source catalog alias compilation and four stale dependency-observation fitness assertions; appended separately to deferred-work.md",
+    "follow_up": "Independent original reviewer verified R04 with normal/optimized isolated reconstruction. Parent verified the new November 9 receipt target exists and parses after its creation, completing R01 links. Other triage decisions remain unchanged."
+  },
+  "limits": [
+    "Current source test assembly does not build.",
+    "Current full package service assembly has 4 failures and 13 skips.",
+    "No new shared EventStore full-suite or integrated-topology qualification.",
+    "Spec remains in-review; the prior ledger feature closure remains unchanged."
+  ],
+  "guards": {
+    "warning_and_nested_submodule_guard": {
+      "command": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "exit_code": 0,
+      "raw_log": "/tmp/dw-27-resume-20261109/warning-guard.log"
+    },
+    "whitespace": {
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0
+    },
+    "new_receipt_json": "parsed successfully; no trailing whitespace"
+  }
+}

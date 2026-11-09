@@ -105,7 +105,8 @@ def verify(manifest_path, receipt_path):
                 "reconstructed_sha256": actual, "hash_matches": True,
             }
     result = {
-        "command": [sys.executable, str(Path(__file__).relative_to(root)), "--manifest", str(manifest_path)],
+        "command": [sys.executable, str(Path(__file__).relative_to(root)),
+                    "--manifest", str(manifest_path), "--receipt", str(receipt_path)],
         "cwd": str(root), "exit_code": 0,
         "legacy_cursor_http_test": legacy, "exception_constructor_signature": constructor,
         "tracked_consumer_files": restored, "reconstructed_tested_candidate_files": candidates,

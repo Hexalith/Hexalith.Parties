@@ -1,0 +1,302 @@
+{
+  "schema": "ext-parties-1.continuation-source-evidence.v1",
+  "observedAtUtc": "2026-11-08T23:31:43.504558+00:00",
+  "scope": "Read-only local source/document evidence; no service, credential, Local, LiveReadiness, Live, restore, fault, load test or consuming operation.",
+  "pathBase": "/home/administrator/projects/hexalith/parties",
+  "protectedInputsSha256": {
+    "AGENTS.md": "7730aba9b2a347d7fb2b8587495ffc45f1a485b7be6bffdc0817b416e4220455",
+    ".editorconfig": "bf153a1f5c75d634a1c574864eade9a3e011cb0781dc12c7337d75db5531d53c",
+    ".gitattributes": "65bcb14d5b581f574900debeea30f21301e83eedb77d00e1cf70510c3a2aa6fe",
+    "Directory.Build.props": "9ce552be3a090a606be441c22f03bd445e6c4e4a3a6b4ebdcd98b57691357c0d",
+    "Directory.Build.targets": "eaf6da40c25de6acb9e3162127655d85a3612b4590a85b10e5e3f058bff65804",
+    "global.json": "722b3c748e87aea67cd06e65b9af200bf22aa69ec601a3d1fbc6e163e1cf3bb5",
+    "package.json": "23af9a29757d59546dda7d23663446bc331fd2d21be05fc120335d4dcdefd018",
+    "commitlint.config.mjs": "7d7a89db3a7e3a78567ce79408fad48f414e1d487e93a39990e82822f850666b",
+    "references/Hexalith.AI.Tools/hexalith-llm-instructions.md": "49e0fc0c04960b6f986343e87250462313394642ce9f9451de7ddca34e849bb4",
+    "_bmad-output/implementation-artifacts/spec-ext-parties-1-owner-delivery.md": "4122fd32ef5e9b09439af8788cd8b52efcfda81c7dcfd8cd4e1a4a26b727cf6f",
+    "_bmad-output/implementation-artifacts/spec-ext-parties-1-branch-b-authoritative-identity.md": "c3e3af17408fc59dcf2ebab2669d0f77841b94b6a644c1c63fb9594506924a22",
+    "docs/implementation/ext-parties-1-readiness-2026-11-08/README.md": "26acccadd85df160fe2cfbe1b825823a345a97ef8a3ae038a5d48e058af050b1",
+    "docs/implementation/ext-parties-1-readiness-2026-11-08/applied-direction.md": "204d80f351932d6b9b72fb89b4a17d2b01ae2e49634e207c5a403a143c6aa0c8",
+    "docs/implementation/ext-parties-1-readiness-2026-11-08/applied-decision.json": "81811eb3d578ed2e5e4c0d332adbbef6f0ff7457753533a035f4808988d6aca3",
+    "docs/implementation/ext-parties-1-readiness-2026-11-08/applied-change.json": "e4a304a5df008865b4ed3d33011fde29e4234a9739de50ff0e840c3a395b1878",
+    "docs/implementation/ext-parties-1-readiness-2026-11-08/evidence.json": "aadbc6bba6971ada445388329e64be773cf828967ac07e9fe0fe8a6344864e41",
+    "docs/implementation/ext-parties-1-readiness-2026-11-08/validation.json": "6e08e6f60903e8f64dfab7a398ceb3af43b74e9b7d2863f11cb9731e2b3b8517",
+    "docs/implementation/ext-parties-1-readiness-2026-11-08/validation-applied.json": "693d1b7bd8350f7924fe9f6d4989d987071a6bcba6e6a47848a03160f530a2d7",
+    "docs/implementation/ext-parties-1-readiness-2026-11-08/verify-readiness.py": "5172ce8d309e26798175a1ce0e12db6a65817fe0f2d96d2360be0cb4492eedde",
+    "docs/implementation/ext-parties-1-v2-continuation-2026-11-02/README.md": "6f5379bff5b3fba16c81bfde0a7347be40677d403739d87740a44f372f5ca1c8",
+    "docs/implementation/ext-parties-1-v2-continuation-2026-11-02/observations.json": "878001def2c6901d72c06edba9c98ceb7c00203169f318c03b1c2f52d3ae7f99",
+    "docs/implementation/ext-parties-1-v2-continuation-2026-11-02/observations-recheck.json": "0418379a6ec1996abfc91f6b96f9979f31e16629ea0817f3c9ff350e0ffae58e",
+    "docs/implementation/ext-parties-1-feasibility-verdict-2026-10-29.md": "d80c83ee3ded821ccbf779b06ef779da6381c9910cc3135588a663010ce6c610",
+    "docs/implementation/ext-parties-1-applied-direction-2026-10-29.md": "9f1ed5ea2c13605acffcf19ff3f76e031f58a746103975e9c6af4600606e255e",
+    "eng/verify-ext-parties-1.ps1": "7169d009a2799a0e4bfa33216ef774ce8057ddfa12ada610e11070b6da0b8012",
+    "src/Hexalith.Parties/Domain/PartyDomainProcessor.cs": "8b6edc2b111fd9b3c435643ebcd6ab1444efd4bce40815b3df16c9ee909fa8b9",
+    "src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs": "b628a78b05c48463fb392c66f7129fc95a79679ea4458638bddb186c0add9f60",
+    "src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs": "dca2ac9e7b36345061f851308f1ad6affe24f6bdedc6f641e4577e159f7ec940",
+    "../platform/docs/implementation/story-5-4-coupled-delivery-2026-10-25/owner-decisions.json": "3d2223815b4ce815cfaf3e169eea4f6627755d753bcb7102bfd194c4f72eabe0",
+    "../platform/src/Hexalith.Platform.Custody/PlatformCustodyServiceCollectionExtensions.cs": "564f7715fa04df908c1b49d0598a3eb9ca374c37338bd13d6c22d56cb0bf09f8",
+    "../platform/src/Hexalith.Platform.Custody/IdentityHistoryCustodyOptions.cs": "93d3a6aa292090368f5e24d4f6790b3533e7bb99c6267696742679464271de2d",
+    "../platform/src/Hexalith.Platform.Custody/IdentityHistoryCleanup.cs": "459bf37506ff2c5a3de43ced6e93b93f64abc14e2736e3f462044a7f6ff3c79a",
+    "../eventstore/src/Hexalith.EventStore.Contracts/Security/IIdentityHistoryCustody.cs": "94445f7829d49076956e8cbc5defd0a7885d3ae9b699f9ea9a3c7ffda76c3b3c",
+    "../eventstore/src/Hexalith.EventStore.Contracts/Security/IdentityHistoryCustodyEvidence.cs": "299291c4c38f8c6c089d36529517a0f3946bd375a41ea8594a0ed150375b2b70",
+    "../eventstore/src/Hexalith.EventStore.Contracts/Security/IExpiredIdentityHistoryCustody.cs": "d205f7204f83952accc6f3b47ce7626ad2fbeee2f17d2631a1489d17ffee9008",
+    "../eventstore/src/Hexalith.EventStore.Server/Security/RetainedIdentityHistorySourceReader.cs": "824f50ebc1a6cf4b3e00259ccfb4d5c65402bd0dda41ebee85682bb81fdfb264",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/SPEC.md": "740f081cdd20ecd490c6f4395a55ab9c868b38c41c3c8a988753f3f3f6929372",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/api-schemas.md": "88368dada2e038e702093bb0012c0ea735e00d2798a7ec9905f4f76475d8d9d5",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/compatibility-contract.md": "64a3dbf1027a1057a01d2a9df6e190bdcf7399bffca0d8d7201eaec8ce842da8",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/implementation-plan.md": "356df1b4661ca3cea85a2e993560986c5854c45795d464237f70806cfc293fad",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/acceptance-tests.md": "9bf036dc7b3217e26855dcd3da7f6229b136831988551a9907928d1c9439a34c",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/readiness-decisions.md": "08cc205f82d1dc0beaee894f9e17d4d0565a81d83152609a13b43bc61e9adf36",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/approval.md": "4609d358c571eebd36730e259c9785558d93885eb32e8e73b3248e7d5912f44a",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/owner-decisions.md": "7e77549570502894a83aee0a66c61d35666781c5f67927277aab68e92bfdf88c",
+    "_bmad-output/specs/spec-ext-parties-1-contract-amendment/brownfield.md": "ec6003cfcb3938b28f1f9a1ddb68eba4eca26034cd699a34abfedae8ca77741f"
+  },
+  "canonicalPlatformForm": "../platform/docs/implementation/story-5-4-coupled-delivery-2026-10-25/owner-decisions.json",
+  "ownerFields": {
+    "#/D2_resources/independentCurrentAuthorityHostServiceStoreIdIncarnationSchemaAndGenesis": null,
+    "#/D3_recovery/primaryHumanSubjectAndIssuer": null,
+    "#/D3_recovery/differentDeputyHumanSubjectAndIssuer": null,
+    "#/D3_recovery/appointmentAndTwoPersonChangeAuthorityReference": null,
+    "#/D4_rolesAndTrust/authorityComputeTargetIdAndAuditAccess": null,
+    "#/D6_releaseAndPhysicalProfile/completeCopyHolderProducerTransportClosureReference": null,
+    "#/mvpOperationalInputs/backupAndRestore/everyRecoveryCopyInventoryAndActualDisposalEvidenceReference": null,
+    "#/mvpOperationalInputs/currentOperationalProfile/currentAcceptedProfileReference": null,
+    "#/mvpOperationalInputs/currentOperationalProfile/freshAuthorizedReadinessEvidenceReference": null,
+    "#/mvpOperationalInputs/currentOperationalProfile/credentialAndScopeEvidenceReference": null,
+    "#/mvpOperationalInputs/currentOperationalProfile/ownerMetadataCredentialRecordReference": null,
+    "#/mvpOperationalInputs/maintenancePreservationBaseline/historicalMetadataProofAndAcceptanceReference": null,
+    "#/mvpOperationalInputs/maintenancePreservationBaseline/memoriesPreservationDispositionReference": null,
+    "#/mvpOperationalInputs/maintenancePreservationBaseline/agentsRegisterPreservationDispositionReference": null,
+    "#/extParties1OwnerEvidenceHandoff/independentAuthorityTimeAndRestoreCutEvidenceReference": null,
+    "#/extParties1OwnerEvidenceHandoff/intendedWorkloadCapacityEvidenceReference": null,
+    "#/extParties1OwnerEvidenceHandoff/assessmentAllocationAndImplementerReference": null
+  },
+  "ownerFormGuards": {
+    "installationAuthorized": false,
+    "qualificationAuthorized": false,
+    "attemptReserved": false,
+    "dependencyAvailable": false
+  },
+  "appliedDirection": {
+    "schema": "platform.ext-parties-1.applied-readiness-reference.v1",
+    "status": "ApprovedDirectionSingleContributorFallbackProductionDeferred",
+    "sourceStatements": [
+      "apply recommended",
+      "me (lead and deputy)",
+      "i am the only contributor"
+    ],
+    "appliedDecisionReference": {
+      "path": "/home/administrator/projects/hexalith/parties/docs/implementation/ext-parties-1-readiness-2026-11-08/applied-decision.json",
+      "sha256": "81811eb3d578ed2e5e4c0d332adbbef6f0ff7457753533a035f4808988d6aca3"
+    },
+    "singleAccountableHuman": "Current user, sole Owner and contributor; owner-declared lead",
+    "sourceAndEvidenceWorkAssignee": "Codex within the existing authorized scope",
+    "differentHumanDeputyAvailable": false,
+    "distinctDeputyRequirementWaived": false,
+    "d3ProductionSeparationSatisfied": false,
+    "conditionalV2DesignDirectionApproved": true,
+    "effectiveV2Ratification": false,
+    "fullCustodyReopened": false,
+    "replacementAccepted": false,
+    "installationAuthorized": false,
+    "qualificationAuthorized": false,
+    "dependencyAvailable": false,
+    "scope": "Documentary owner direction only; retain the existing no-go and operational-security fallback. Original owner fields, nulls, appointments/access prerequisites and installed acceptance gates are unchanged."
+  },
+  "sourceScans": [
+    {
+      "argv": [
+        "rg",
+        "-n",
+        "-g",
+        "*.cs",
+        "IIdentityHistoryCustodyV2|ServiceExpiredHistorySegmentProofV2|party-actor-custody-amended-v2",
+        "src"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exitCode": 1,
+      "matches": [],
+      "interpretation": "Bounded source observation only; exit 1 means no match in this tree."
+    },
+    {
+      "argv": [
+        "rg",
+        "-n",
+        "-g",
+        "*.cs",
+        "IIdentityHistoryCustodyV2|ServiceExpiredHistorySegmentProofV2|party-actor-custody-amended-v2",
+        "../platform/src"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exitCode": 1,
+      "matches": [],
+      "interpretation": "Bounded source observation only; exit 1 means no match in this tree."
+    },
+    {
+      "argv": [
+        "rg",
+        "-n",
+        "-g",
+        "*.cs",
+        "IIdentityHistoryCustodyV2|ServiceExpiredHistorySegmentProofV2|party-actor-custody-amended-v2",
+        "../eventstore/src"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exitCode": 1,
+      "matches": [],
+      "interpretation": "Bounded source observation only; exit 1 means no match in this tree."
+    }
+  ],
+  "externalEvidenceLimit": {
+    "path": "/home/administrator/hexalith-secrets-evidence/ext-secrets-1",
+    "existsAtLocalCheck": false,
+    "meaning": "Known local archive is absent. Referenced private receipts/signatures were not revalidated; no inference of universal absence, denial of current service access or nonexistence of external records."
+  },
+  "readinessValidation": {
+    "argv": [
+      "python3",
+      "-B",
+      "docs/implementation/ext-parties-1-readiness-2026-11-08/verify-readiness.py"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exitCode": 0,
+    "result": {
+      "checkedAtUtc": "2026-11-08T23:31:43.499223+00:00",
+      "passed": true,
+      "checkCount": 21,
+      "checks": [
+        {
+          "name": "48 protected inputs preserved, including exact original owner-form bytes",
+          "passed": true,
+          "detail": []
+        },
+        {
+          "name": "only the exact authorized owner metadata addition is present",
+          "passed": true,
+          "detail": null
+        },
+        {
+          "name": "canonical owner form binds the actual applied decision",
+          "passed": true,
+          "detail": null
+        },
+        {
+          "name": "single-contributor direction retains unmet production separation",
+          "passed": true,
+          "detail": null
+        },
+        {
+          "name": "conditional design direction binds unchanged exact proposal bytes",
+          "passed": true,
+          "detail": null
+        },
+        {
+          "name": "applied direction leaves production and delivery gates closed",
+          "passed": true,
+          "detail": null
+        },
+        {
+          "name": "original validation receipt unchanged",
+          "passed": true,
+          "detail": null
+        },
+        {
+          "name": "pre-existing user spec bytes retained as exact prefix",
+          "passed": true,
+          "detail": null
+        },
+        {
+          "name": "frozen intent unchanged",
+          "passed": true,
+          "detail": null
+        },
+        {
+          "name": "both production tasks remain open and status in-progress",
+          "passed": true,
+          "detail": null
+        },
+        {
+          "name": "historical handoff bytes retained outside one overlay",
+          "passed": true,
+          "detail": null
+        },
+        {
+          "name": "all eight gates reconciled in order",
+          "passed": true,
+          "detail": null
+        },
+        {
+          "name": "four staged owner decisions",
+          "passed": true,
+          "detail": null
+        },
+        {
+          "name": "all R1-R10 obligations mapped",
+          "passed": true,
+          "detail": null
+        },
+        {
+          "name": "contract bounds and strict/installed separation retained",
+          "passed": true,
+          "detail": null
+        },
+        {
+          "name": "17 selected owner returns remain null",
+          "passed": true,
+          "detail": []
+        },
+        {
+          "name": "owner installation/qualification/availability guards stay false",
+          "passed": true,
+          "detail": null
+        },
+        {
+          "name": "no implementation/availability/qualification claim",
+          "passed": true,
+          "detail": null
+        },
+        {
+          "name": "new local Markdown links resolve",
+          "passed": true,
+          "detail": []
+        },
+        {
+          "name": "new artifacts use CRLF and clean whitespace",
+          "passed": true,
+          "detail": []
+        },
+        {
+          "name": "tracked whitespace check",
+          "passed": true,
+          "detail": {
+            "command": [
+              "git",
+              "-c",
+              "core.whitespace=cr-at-eol",
+              "diff",
+              "--check"
+            ],
+            "exitCode": 0,
+            "output": ""
+          }
+        }
+      ],
+      "outputHashes": {
+        "docs/implementation/ext-parties-1-readiness-2026-11-08/README.md": "26acccadd85df160fe2cfbe1b825823a345a97ef8a3ae038a5d48e058af050b1",
+        "docs/implementation/ext-parties-1-readiness-2026-11-08/evidence.json": "aadbc6bba6971ada445388329e64be773cf828967ac07e9fe0fe8a6344864e41",
+        "docs/implementation/ext-parties-1-readiness-2026-11-08/verify-readiness.py": "5172ce8d309e26798175a1ce0e12db6a65817fe0f2d96d2360be0cb4492eedde",
+        "_bmad-output/implementation-artifacts/spec-ext-parties-1-branch-b-authoritative-identity.md": "c3e3af17408fc59dcf2ebab2669d0f77841b94b6a644c1c63fb9594506924a22",
+        "docs/implementation/ext-parties-1-v2-continuation-2026-11-02/README.md": "6f5379bff5b3fba16c81bfde0a7347be40677d403739d87740a44f372f5ca1c8",
+        "docs/implementation/ext-parties-1-readiness-2026-11-08/applied-direction.md": "204d80f351932d6b9b72fb89b4a17d2b01ae2e49634e207c5a403a143c6aa0c8",
+        "docs/implementation/ext-parties-1-readiness-2026-11-08/applied-decision.json": "81811eb3d578ed2e5e4c0d332adbbef6f0ff7457753533a035f4808988d6aca3",
+        "docs/implementation/ext-parties-1-readiness-2026-11-08/applied-change.json": "e4a304a5df008865b4ed3d33011fde29e4234a9739de50ff0e840c3a395b1878"
+      },
+      "scope": "Documentation/preservation only; no runtime, provider, credential, Local, LiveReadiness, Live or consuming command."
+    }
+  },
+  "sourceHashesAreInstalledBindings": false,
+  "implementationReady": false,
+  "fullCustodyReopened": false,
+  "installationAuthorized": false,
+  "qualificationAuthorized": false,
+  "dependencyAvailable": false
+}

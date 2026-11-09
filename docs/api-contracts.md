@@ -399,6 +399,15 @@ size/offset, filtered total, hasMore and nextCursor. When envelope Paging is
 absent, the legacy payload Page/PageSize behavior remains (page defaults to 1,
 size to 20, maximum 100; nonpositive values reject).
 
+When an envelope page size reaches a Parties list/search handler and falls
+outside 1–100, it rejects before cursor decoding or data access. The gateway
+maps this failure to HTTP 400 with `reasonCode=query_invalid_page`,
+`reason=invalid-page`, and detail `The supplied page is invalid.`. Cursor
+decoding and offset validation failures retain HTTP 400 with the same reason
+code, `reason=invalid-cursor`, and detail `The supplied cursor is invalid.`.
+The public gateway retains its maximum page size of 200; schema validation
+can reject a request before it reaches Parties.
+
 `tests/conformance-vectors/mcpcli-v1/` contains seven vectors bound to the local
 `0.0.0-story410` artifact, with prerequisite creates and original write-vector
 Query postconditions retained. Shared McpCli validation and both-head replay

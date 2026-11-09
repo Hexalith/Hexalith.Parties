@@ -1,0 +1,505 @@
+{
+  "schema": "ext-parties-1.continuation-validation.v1",
+  "checkedAtUtc": "2026-11-08T23:36:29.298191+00:00",
+  "passed": true,
+  "checkCount": 23,
+  "checks": [
+    {
+      "name": "45 investigated source/document inputs unchanged",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "8 declared companions resolve; no README or memlog in frontmatter",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "3 stable unique capabilities each have intent and success",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "kernel has five load-bearing fields and explicit open questions",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "every evidence pointer names an existing Platform field",
+      "passed": true,
+      "detail": {
+        "count": 46,
+        "unknown": []
+      }
+    },
+    {
+      "name": "all 17 selected nulls covered as requests or D3 deferral",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "selected original null fields remain null",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "E01-E09 and G01-G08/M0-M1/S1 boundaries retained",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "all 7 M0 acceptance criteria defined",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "factual return requirements are not blank templates",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "kernel retains stop, expiry, old acceptance and full qualification",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "future code paths and local test project are explicit",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "all authored Markdown links resolve",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "rendered contract and source receipt use CRLF and clean whitespace",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "no actor-history V2 identifier found in bounded owning src scans",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "no new runtime permission or installation inferred",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "existing readiness verifier retains all 21 preservation checks",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "tracked whitespace check passes",
+      "passed": true,
+      "detail": {
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "new artifact whitespace: SPEC.md",
+      "passed": true,
+      "detail": {
+        "argv": [
+          "git",
+          "-c",
+          "core.whitespace=cr-at-eol",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "/home/administrator/projects/hexalith/parties/_bmad-output/specs/spec-ext-parties-1-continuation/SPEC.md"
+        ],
+        "exitCode": 1,
+        "output": "",
+        "interpretation": "Expected new-file difference exit 1; empty output means no whitespace diagnostics. Separate rendered CRLF/whitespace validation also passes."
+      }
+    },
+    {
+      "name": "new artifact whitespace: continuation-plan.md",
+      "passed": true,
+      "detail": {
+        "argv": [
+          "git",
+          "-c",
+          "core.whitespace=cr-at-eol",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "/home/administrator/projects/hexalith/parties/_bmad-output/specs/spec-ext-parties-1-continuation/continuation-plan.md"
+        ],
+        "exitCode": 1,
+        "output": "",
+        "interpretation": "Expected new-file difference exit 1; empty output means no whitespace diagnostics. Separate rendered CRLF/whitespace validation also passes."
+      }
+    },
+    {
+      "name": "new artifact whitespace: evidence-requests.md",
+      "passed": true,
+      "detail": {
+        "argv": [
+          "git",
+          "-c",
+          "core.whitespace=cr-at-eol",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "/home/administrator/projects/hexalith/parties/_bmad-output/specs/spec-ext-parties-1-continuation/evidence-requests.md"
+        ],
+        "exitCode": 1,
+        "output": "",
+        "interpretation": "Expected new-file difference exit 1; empty output means no whitespace diagnostics. Separate rendered CRLF/whitespace validation also passes."
+      }
+    },
+    {
+      "name": "new artifact whitespace: .memlog.md",
+      "passed": true,
+      "detail": {
+        "argv": [
+          "git",
+          "-c",
+          "core.whitespace=cr-at-eol",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "/home/administrator/projects/hexalith/parties/_bmad-output/specs/spec-ext-parties-1-continuation/.memlog.md"
+        ],
+        "exitCode": 1,
+        "output": "",
+        "interpretation": "Expected new-file difference exit 1; empty output means no whitespace diagnostics. Separate rendered CRLF/whitespace validation also passes."
+      }
+    },
+    {
+      "name": "new artifact whitespace: source-evidence.json",
+      "passed": true,
+      "detail": {
+        "argv": [
+          "git",
+          "-c",
+          "core.whitespace=cr-at-eol",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "/home/administrator/projects/hexalith/parties/_bmad-output/specs/spec-ext-parties-1-continuation/source-evidence.json"
+        ],
+        "exitCode": 1,
+        "output": "",
+        "interpretation": "Expected new-file difference exit 1; empty output means no whitespace diagnostics. Separate rendered CRLF/whitespace validation also passes."
+      }
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "docs/implementation/ext-parties-1-readiness-2026-11-08/verify-readiness.py"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exitCode": 0,
+      "result": {
+        "checkedAtUtc": "2026-11-08T23:36:06.445362+00:00",
+        "passed": true,
+        "checkCount": 21,
+        "checks": [
+          {
+            "name": "48 protected inputs preserved, including exact original owner-form bytes",
+            "passed": true,
+            "detail": []
+          },
+          {
+            "name": "only the exact authorized owner metadata addition is present",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "name": "canonical owner form binds the actual applied decision",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "name": "single-contributor direction retains unmet production separation",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "name": "conditional design direction binds unchanged exact proposal bytes",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "name": "applied direction leaves production and delivery gates closed",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "name": "original validation receipt unchanged",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "name": "pre-existing user spec bytes retained as exact prefix",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "name": "frozen intent unchanged",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "name": "both production tasks remain open and status in-progress",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "name": "historical handoff bytes retained outside one overlay",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "name": "all eight gates reconciled in order",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "name": "four staged owner decisions",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "name": "all R1-R10 obligations mapped",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "name": "contract bounds and strict/installed separation retained",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "name": "17 selected owner returns remain null",
+            "passed": true,
+            "detail": []
+          },
+          {
+            "name": "owner installation/qualification/availability guards stay false",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "name": "no implementation/availability/qualification claim",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "name": "new local Markdown links resolve",
+            "passed": true,
+            "detail": []
+          },
+          {
+            "name": "new artifacts use CRLF and clean whitespace",
+            "passed": true,
+            "detail": []
+          },
+          {
+            "name": "tracked whitespace check",
+            "passed": true,
+            "detail": {
+              "command": [
+                "git",
+                "-c",
+                "core.whitespace=cr-at-eol",
+                "diff",
+                "--check"
+              ],
+              "exitCode": 0,
+              "output": ""
+            }
+          }
+        ],
+        "outputHashes": {
+          "docs/implementation/ext-parties-1-readiness-2026-11-08/README.md": "26acccadd85df160fe2cfbe1b825823a345a97ef8a3ae038a5d48e058af050b1",
+          "docs/implementation/ext-parties-1-readiness-2026-11-08/evidence.json": "aadbc6bba6971ada445388329e64be773cf828967ac07e9fe0fe8a6344864e41",
+          "docs/implementation/ext-parties-1-readiness-2026-11-08/verify-readiness.py": "5172ce8d309e26798175a1ce0e12db6a65817fe0f2d96d2360be0cb4492eedde",
+          "_bmad-output/implementation-artifacts/spec-ext-parties-1-branch-b-authoritative-identity.md": "c3e3af17408fc59dcf2ebab2669d0f77841b94b6a644c1c63fb9594506924a22",
+          "docs/implementation/ext-parties-1-v2-continuation-2026-11-02/README.md": "6f5379bff5b3fba16c81bfde0a7347be40677d403739d87740a44f372f5ca1c8",
+          "docs/implementation/ext-parties-1-readiness-2026-11-08/applied-direction.md": "204d80f351932d6b9b72fb89b4a17d2b01ae2e49634e207c5a403a143c6aa0c8",
+          "docs/implementation/ext-parties-1-readiness-2026-11-08/applied-decision.json": "81811eb3d578ed2e5e4c0d332adbbef6f0ff7457753533a035f4808988d6aca3",
+          "docs/implementation/ext-parties-1-readiness-2026-11-08/applied-change.json": "e4a304a5df008865b4ed3d33011fde29e4234a9739de50ff0e840c3a395b1878"
+        },
+        "scope": "Documentation/preservation only; no runtime, provider, credential, Local, LiveReadiness, Live or consuming command."
+      }
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.whitespace=cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exitCode": 0,
+      "result": {
+        "stdout": "",
+        "stderr": ""
+      }
+    }
+  ],
+  "selfValidation": {
+    "coherence": "PASS: Spec Law 1-6/8; three what/success capabilities, explicit non-goals, evidence acceptance, stable IDs and bounded future build. No unsupported factual assumption.",
+    "preservation": "PASS: every load-bearing requested-source claim is retained in the kernel/authored or adopted companions; latest applied direction overrides obsolete prompts without source edits.",
+    "claimCoverage": [
+      {
+        "source": "owner-delivery: frozen intent, Branch B, retention, local-proof limitations, no installation/date and no Identity/Live/register edits",
+        "preservedIn": [
+          "SPEC.md Constraints/Non-goals",
+          "continuation-plan.md Source findings/Later delivery boundary"
+        ]
+      },
+      {
+        "source": "readiness README: G01-G08, R/Q/D/F/B obligations, C01-C16, no-go, metadata/preservation/current profile/capacity, known backup resources, historic evidence limits and complete commitment",
+        "preservedIn": [
+          "evidence-requests.md E01-E09",
+          "continuation-plan.md M1/S1/Later delivery boundary",
+          "adopted implementation-plan.md and acceptance-tests.md"
+        ]
+      },
+      {
+        "source": "applied-direction and applied-decision: sole contributor/lead/Codex, no deputy, fallback/cap, conditional four-hash design and feasibility-first order, original form/nulls and guards",
+        "preservedIn": [
+          "SPEC.md Constraints",
+          "continuation-plan.md Decision and precedence/M1/S1",
+          "evidence-requests.md Return rules/E06/E08"
+        ]
+      },
+      {
+        "source": "adopted proposal: exact schemas/predicates/Q5/F1, owned changes/migration, all AT-01-AT-20/P-01-P-10 and full Level 4/5 scope",
+        "preservedIn": [
+          "SPEC.md companions",
+          "continuation-plan.md S1/Later delivery boundary",
+          "evidence-requests.md E07-E09"
+        ]
+      }
+    ],
+    "wrapperOnlyContent": "Historical artifact-production ceremony, obsolete outstanding-choice prompts and superseded date suggestions are not active work; original sources remain byte-preserved."
+  },
+  "outputHashes": {
+    "SPEC.md": "b7e4172c5734b9bb7499b0ea283d6b9318658d75706cc5bd96db2c809615e39c",
+    "continuation-plan.md": "a00fdae71abb9e7bd4c7b13fbbcebbdcab0c50c750fd8f2cd17ab1099375adab",
+    "evidence-requests.md": "355bacf4a66fd142768c62b168f0faea1c06ec4ced5af6b520ae52f9336173ac",
+    "source-evidence.json": "389cce12760b0dc119eaa9783b9ea59ee74ff169e79cb6a05fbd3ff263d2f465"
+  },
+  "memlog": "Shared memlog.py is the only log writer; generated tool-native LF is retained. No log readback or manual patch occurred. Validation verdict entries are appended after this report.",
+  "scope": "Documentation/source preservation only. Not execution of acceptance vectors, a V2 build, Local, LiveReadiness, Live, recovery, provider/credential operation, load test, installed qualification or consumer gate.",
+  "initialValidation": {
+    "passed": false,
+    "failedChecks": [
+      {
+        "name": "new artifact whitespace: SPEC.md",
+        "passed": true,
+        "detail": {
+          "argv": [
+            "git",
+            "-c",
+            "core.whitespace=cr-at-eol",
+            "diff",
+            "--no-index",
+            "--check",
+            "/dev/null",
+            "/home/administrator/projects/hexalith/parties/_bmad-output/specs/spec-ext-parties-1-continuation/SPEC.md"
+          ],
+          "exitCode": 1,
+          "output": "",
+          "interpretation": "Expected new-file difference exit 1; empty output means no whitespace diagnostics. Separate rendered CRLF/whitespace validation also passes."
+        }
+      },
+      {
+        "name": "new artifact whitespace: continuation-plan.md",
+        "passed": true,
+        "detail": {
+          "argv": [
+            "git",
+            "-c",
+            "core.whitespace=cr-at-eol",
+            "diff",
+            "--no-index",
+            "--check",
+            "/dev/null",
+            "/home/administrator/projects/hexalith/parties/_bmad-output/specs/spec-ext-parties-1-continuation/continuation-plan.md"
+          ],
+          "exitCode": 1,
+          "output": "",
+          "interpretation": "Expected new-file difference exit 1; empty output means no whitespace diagnostics. Separate rendered CRLF/whitespace validation also passes."
+        }
+      },
+      {
+        "name": "new artifact whitespace: evidence-requests.md",
+        "passed": true,
+        "detail": {
+          "argv": [
+            "git",
+            "-c",
+            "core.whitespace=cr-at-eol",
+            "diff",
+            "--no-index",
+            "--check",
+            "/dev/null",
+            "/home/administrator/projects/hexalith/parties/_bmad-output/specs/spec-ext-parties-1-continuation/evidence-requests.md"
+          ],
+          "exitCode": 1,
+          "output": "",
+          "interpretation": "Expected new-file difference exit 1; empty output means no whitespace diagnostics. Separate rendered CRLF/whitespace validation also passes."
+        }
+      },
+      {
+        "name": "new artifact whitespace: .memlog.md",
+        "passed": true,
+        "detail": {
+          "argv": [
+            "git",
+            "-c",
+            "core.whitespace=cr-at-eol",
+            "diff",
+            "--no-index",
+            "--check",
+            "/dev/null",
+            "/home/administrator/projects/hexalith/parties/_bmad-output/specs/spec-ext-parties-1-continuation/.memlog.md"
+          ],
+          "exitCode": 1,
+          "output": "",
+          "interpretation": "Expected new-file difference exit 1; empty output means no whitespace diagnostics. Separate rendered CRLF/whitespace validation also passes."
+        }
+      },
+      {
+        "name": "new artifact whitespace: source-evidence.json",
+        "passed": true,
+        "detail": {
+          "argv": [
+            "git",
+            "-c",
+            "core.whitespace=cr-at-eol",
+            "diff",
+            "--no-index",
+            "--check",
+            "/dev/null",
+            "/home/administrator/projects/hexalith/parties/_bmad-output/specs/spec-ext-parties-1-continuation/source-evidence.json"
+          ],
+          "exitCode": 1,
+          "output": "",
+          "interpretation": "Expected new-file difference exit 1; empty output means no whitespace diagnostics. Separate rendered CRLF/whitespace validation also passes."
+        }
+      }
+    ],
+    "finding": "The initial checker incorrectly required exit 0 for git diff --no-index against /dev/null. A new file produces exit 1 with no diagnostics because --no-index implies difference exit status. Content and explicit CRLF/trailing-whitespace checks already passed. Preserve these raw results; correct their interpretation without changing artifacts or runtime."
+  }
+}
