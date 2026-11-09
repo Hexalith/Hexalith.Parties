@@ -53,6 +53,7 @@ credentials are not used.
 | Input | Real observation |
 | --- | --- |
 | `matrix` | Passing and intentionally failing persistence suites; compatible same-job finite admission, explicitly disjoint negative context, completed-owner refusal; real owner-scoped metadata lock refusals and exact retry while an active peer remains functional; killed partial startup and exact recovery. |
+| `focused-ci` | Only passing, failing and partial-startup CI cases. Metadata locks and peer retry remain required by the full matrix; this selection cannot pass it. |
 | `cancel-startup` | Durable issued receipt, actual Starting AppHost and owned containers; only the issued AppHost is paused to expose the real startup window. |
 | `cancel-execution` | Real gateway/Tenants/Memories and persisted EventStore assertions, native execution checkpoint and actual accepted 240-second hold. |
 
@@ -184,3 +185,30 @@ refusals, unlinks the credential file first, then removes only that owned tree
 using symlink-attack-resistant standard-library removal. Nested metadata cannot
 leave cleanup failing solely because the owned directory is nonempty; foreign
 linked targets are never traversed. Any unverifiable removal still fails.
+
+## Story 2.10 selection and diagnostics
+
+The controller records `requiredCases`, `selectedCases`, `completedCases`, their
+counts and the finalization result in the durable campaign journal. A failed or
+missing selected case and an incomplete finalizer keep the campaign incomplete.
+`selected-passed` covers only that selection. `fullMatrixPassed` can become true
+only for all four manual matrix groups; neither field supplies complete local
+lifecycle qualification, Platform tool acceptance or candidate acceptance.
+Startup and execution cancellation remain separate actual workflow runs and keep
+the ready-artifact-before-cancel protocol.
+
+Public failure records contain fixed `failureCode`, allowlisted `failureType`,
+`redacted: true` and the fixed scenario checkpoint. They omit exception text,
+paths, descriptors and raw service output. `HXLQ101` means a missing input;
+`HXLQ102` invalid metadata; `HXLQ103` filesystem refusal; `HXLQ104` a finite
+wait expired; `HXLQ105` process refusal; `HXLQ106` private reader cleanup refusal;
+`HXLQ107` missing launch acknowledgement; `HXLQ108` missing, partial, linked or
+nonexecutable Aspire runtime cache. The runtime-cache check runs after fresh
+restore and observes binary presence without starting either binary. It does not
+attest artifact content or qualify an old cache/test result for a new decision.
+
+These additions were prepared with resource-free controls only. Before a hosted
+campaign, select one exact compatible committed input set and run the owning
+checks. These changes preserve the existing Story 2.8 tool-only signal, pinned
+digest-verification and scoped-reader controls after integration with current main. No workflow dispatch or accepted pin change is
+implied by this preparation. Verified setup-cache reuse remains deferred.

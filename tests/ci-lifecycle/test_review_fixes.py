@@ -212,10 +212,11 @@ class WorkflowControlTests(unittest.TestCase):
         self.assertNotIn('GITHUB_ENV', self.step('Configure only the dedicated pull reader'))
         reader = '${{ runner.temp }}/hexalith-lifecycle-registry.reader'
         for name in ('Exercise real passing failing partial-startup and exact retry scenarios',
+                     'Exercise only the explicitly selected CI contract cases',
                      'Observe actual startup cancellation readiness', 'Observe actual execution cancellation readiness and active hold'):
             self.assertIn('DOCKER_CONFIG: ' + reader, self.step(name))
         self.assertIn('HEXALITH_LIFECYCLE_REGISTRY_CONFIG: ' + reader, self.step('Remove the private reader file'))
-        self.assertEqual(self.workflow.count('DOCKER_CONFIG:'), 3)
+        self.assertEqual(self.workflow.count('DOCKER_CONFIG:'), 4)
 
     def test_toolchain_versions_and_digests_refuse_before_any_download(self):
         body = self.step('Read verified catalog toolchain versions').split("python3 - <<'PY'\n", 1)[1].split('\n          PY', 1)[0]

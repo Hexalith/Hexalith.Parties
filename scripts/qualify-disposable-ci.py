@@ -48,6 +48,63 @@ LABEL = 'hexalith.g4.run'
 MANIFEST = 'module/hexalith.module-manifest.v2.json'
 PROFILE = 'lifecycle-package'
 CANCELLED = []
+MATRIX_CASES = ('passing', 'failing', 'retry-with-peer', 'partial-startup')
+SELECTIONS = {'matrix': MATRIX_CASES, 'focused-ci': ('passing', 'failing', 'partial-startup')}
+
+
+class QualificationRefusal(ValueError):
+    """A fixed public code; private exception text never enters retained diagnostics."""
+
+    def __init__(self, code):
+        if code not in ('HXLQ107', 'HXLQ108'):
+            raise ValueError('Unknown qualification refusal code')
+        self.code = code
+        super().__init__('Lifecycle qualification refused')
+
+
+def failure_metadata(error, operation=None):
+    """Return a bounded allowlist of metadata, independent of paths and payloads."""
+    names = ('ValueError', 'KeyError', 'TypeError', 'OSError', 'FileNotFoundError',
+             'PermissionError', 'ProcessLookupError', 'TimeoutError', 'TimeoutExpired',
+             'CalledProcessError', 'SubprocessError', 'JSONDecodeError', 'QualificationRefusal')
+    name = type(error).__name__
+    name = name if name in names else 'Exception'
+    if isinstance(error, QualificationRefusal):
+        code = error.code
+    elif operation == 'remove-reader':
+        code = 'HXLQ106'
+    elif isinstance(error, (TimeoutError, subprocess.TimeoutExpired)):
+        code = 'HXLQ104'
+    elif isinstance(error, FileNotFoundError):
+        code = 'HXLQ101'
+    elif isinstance(error, OSError):
+        code = 'HXLQ103'
+    elif isinstance(error, subprocess.SubprocessError):
+        code = 'HXLQ105'
+    else:
+        code = 'HXLQ102'
+    return {'failureCode': code, 'failureType': name, 'redacted': True}
+
+
+def verify_runtime_cache(packages, version):
+    """Observe restored binaries without starting them; missing/partial caches refuse."""
+    require(isinstance(version, str) and re.fullmatch(r'[0-9]+(?:[.][0-9]+){2}(?:-[0-9a-z.-]+)?', version),
+            'Invalid verified Aspire version')
+    root = Path(packages)
+    observations = []
+    for component, binary in [('aspire.hosting.orchestration.linux-x64', 'dcp'),
+                              ('aspire.dashboard.sdk.linux-x64', 'Aspire.Dashboard')]:
+        path = root / component / version / 'tools' / binary
+        try:
+            require(not any(part.is_symlink() for part in (path, *path.parents)), 'Linked runtime cache')
+            info = path.stat()
+            require(stat.S_ISREG(info.st_mode) and 0 < info.st_size <= 536_870_912 and os.access(path, os.X_OK),
+                    'Missing executable runtime cache')
+        except (OSError, ValueError):
+            raise QualificationRefusal('HXLQ108') from None
+        observations.append({'component': component, 'version': version, 'executablePresent': True,
+                             'bytes': info.st_size})
+    return observations
 
 
 def now():
@@ -368,7 +425,7 @@ class Qualification:
     def record_failure(self, error, phase):
         require(phase in ('scenario', 'finalization'), 'Unknown qualification failure phase')
         failure = {'phase': phase, 'checkpoint': self.journal.get('checkpoint'),
-                   'failureType': type(error).__name__, 'observedAtUtc': now()}
+                   **failure_metadata(error), 'observedAtUtc': now()}
         self.journal.setdefault('firstFailure', failure)
         try:
             self.observe('qualification-failure', failure=failure, firstFailure=self.journal['firstFailure'])
@@ -488,6 +545,8 @@ class Qualification:
         deadline = time.monotonic() + 5
         while not expected.exists() and time.monotonic() < deadline:
             time.sleep(0.05)
+        if not expected.exists():
+            raise QualificationRefusal('HXLQ107')
         record = read(expected)
         require(isinstance(record, dict), 'Launch process record is malformed')
         require(all(record.get(key) == item[key] for key in ('label', 'receipt', 'publicResult')),
@@ -888,20 +947,20 @@ class Qualification:
             self.resume_host(item)
         except (OSError, ValueError, KeyError, TypeError) as error:
             first_error = error
-            resume_failure = {'failureType': type(error).__name__, 'failureObservedAtUtc': now()}
+            resume_failure = {**failure_metadata(error), 'failureObservedAtUtc': now()}
             failures.append({'checkpoint': 'resume-host', **resume_failure})
         try:
             self.down(item, 'independent-finalizer', job_status=job_status)
         except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
             if first_error is None:
                 first_error = error
-            failures.append({'checkpoint': 'exact-down', 'failureType': type(error).__name__, 'failureObservedAtUtc': now()})
+            failures.append({'checkpoint': 'exact-down', **failure_metadata(error), 'failureObservedAtUtc': now()})
         try:
             HELPER.retain_artifacts(owner, private_directory(self.evidence / item['label']))
         except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
             if first_error is None:
                 first_error = error
-            failures.append({'checkpoint': 'retain-artifacts', 'failureType': type(error).__name__, 'failureObservedAtUtc': now()})
+            failures.append({'checkpoint': 'retain-artifacts', **failure_metadata(error), 'failureObservedAtUtc': now()})
         # Observation failures cannot prevent either exact down or artifact retention above.
         for failure in failures:
             try:
@@ -965,7 +1024,7 @@ class Qualification:
             try:
                 self.finalize_owner(item, job_status, issued)
             except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
-                failures.append({'label': item['label'], 'failureType': type(error).__name__})
+                failures.append({'label': item['label'], **failure_metadata(error)})
         self.observe('finalizer-result', failures=failures, issuedOwners=len(issued),
                      allocationStatus='allocated' if issued else 'unverified' if failures else 'not-allocated',
                      issuedOwnersCleanupVerified=bool(issued) and not failures, candidateAcceptance=False)
@@ -976,15 +1035,27 @@ def receive_signal(number, _frame):
     CANCELLED.append({'signal': number, 'observedAtUtc': now()})
 
 
-def run_matrix(qualification):
+def run_matrix(qualification, selection='matrix'):
+    require(selection in SELECTIONS, 'Unknown qualification selection')
+    selected = list(SELECTIONS[selection])
+    campaign = {'selection': selection, 'requiredCases': list(MATRIX_CASES), 'selectedCases': selected,
+                'completedCases': [], 'selectedRequiredCount': len(selected), 'fullRequiredCount': len(MATRIX_CASES),
+                'status': 'incomplete', 'fullMatrixPassed': False, 'candidateAcceptance': False}
+    require('campaign' not in qualification.journal, 'Do not replace a prior campaign attempt')
+    qualification.journal['campaign'] = campaign
+    qualification.observe('campaign-selection', campaign=campaign)
     first_error = None
     try:
         for step, action in [('passing', lambda: qualification.ordinary('passing', 'pass')),
                              ('failing', lambda: qualification.ordinary('failing', 'fail')),
                              ('retry-with-peer', qualification.retry_with_peer),
                              ('partial-startup', qualification.partial_startup)]:
+            if step not in selected:
+                continue
             qualification.checkpoint('matrix', step)
             action()
+            campaign['completedCases'].append(step)
+            qualification.observe('campaign-progress', campaign=campaign)
         return 0
     except BaseException as error:
         first_error = error
@@ -994,7 +1065,13 @@ def run_matrix(qualification):
         try:
             cleanup = qualification.finalize('')
             require(cleanup == 0, 'Bounded exact-owner finalization is incomplete')
+            if first_error is None and campaign['completedCases'] == selected:
+                campaign['status'] = 'selected-passed'
+                campaign['fullMatrixPassed'] = selection == 'matrix' and selected == list(MATRIX_CASES)
+            qualification.observe('campaign-result', campaign=campaign)
         except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
+            campaign['status'] = 'incomplete'
+            campaign['fullMatrixPassed'] = False
             qualification.record_failure(error, 'finalization')
             if first_error is None:
                 raise
@@ -1002,10 +1079,17 @@ def run_matrix(qualification):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('matrix', 'start-cancellation', 'wait-cancellation', 'finalize', 'remove-reader'))
+    parser.add_argument('command', choices=('matrix', 'focused-ci', 'start-cancellation', 'wait-cancellation', 'finalize', 'remove-reader', 'verify-runtime-cache'))
+    parser.add_argument('--packages')
+    parser.add_argument('--aspire-version')
     parser.add_argument('--phase', choices=('startup', 'execution'))
     parser.add_argument('--job-status', choices=('', 'success', 'failure', 'cancelled'), default='')
     args = parser.parse_args()
+    if args.command == 'verify-runtime-cache':
+        require(args.packages is not None, 'Runtime cache location is required')
+        print(json.dumps({'kind': 'runtime-cache-presence', 'components': verify_runtime_cache(args.packages, args.aspire_version),
+                          'contentQualification': False}))
+        return 0
     if args.command == 'remove-reader':
         value = os.environ.get('HEXALITH_LIFECYCLE_REGISTRY_CONFIG')
         remove_reader_directory(value, os.environ['RUNNER_TEMP'] if value else None)
@@ -1046,7 +1130,7 @@ def main():
         qualification.resume_host(item)
         qualification.process_signal(item, signal.SIGINT)
         return 1
-    return run_matrix(qualification)
+    return run_matrix(qualification, selection=args.command)
 
 
 if __name__ == '__main__':
@@ -1054,5 +1138,6 @@ if __name__ == '__main__':
         raise SystemExit(launch_owner(sys.argv[2]) if len(sys.argv) == 3 and sys.argv[1] == '--launch-owner' else main())
     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
         # No private descriptor, credential, arbitrary exception payload or raw child stderr is published.
-        print('Lifecycle qualification refused: ' + type(error).__name__, file=sys.stderr)
+        operation = sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] == 'remove-reader' else None
+        print(json.dumps({'kind': 'qualification-refused', **failure_metadata(error, operation)}), file=sys.stderr)
         raise SystemExit(1)

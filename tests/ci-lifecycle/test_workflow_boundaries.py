@@ -90,6 +90,18 @@ class WorkflowBoundaryTests(unittest.TestCase):
             self.assertEqual((root / 'signal').read_text().split(),
                              ['-B', 'scripts/qualify-disposable-ci.py', 'wait-cancellation'])
 
+    def test_focused_selection_keeps_full_matrix_and_cancellation_protocol_distinct(self):
+        workflow = (ROOT / '.github/workflows/ci-lifecycle-qualification.yml').read_text()
+        self.assertIn('options: [matrix, focused-ci, cancel-startup, cancel-execution]', workflow)
+        self.assertIn('scripts/qualify-disposable-ci.py focused-ci', workflow)
+        self.assertIn('scripts/qualify-disposable-ci.py matrix', workflow)
+        self.assertLess(workflow.index('- name: Test the lifecycle controller'),
+                        workflow.index('- name: Prepare the actual pinned package tool'))
+        for marker in ('- name: Publish the actual ready owner', '- name: Await parent cancellation'):
+            step = workflow.split(marker, 1)[1].split('- name:', 1)[0]
+            self.assertIn("inputs.scenario == 'cancel-startup' || inputs.scenario == 'cancel-execution'", step)
+        self.assertIn('verify-runtime-cache --packages "$packages" --aspire-version "$CI_ASPIRE_VERSION"', workflow)
+
     def test_qualification_is_explicit_package_suite_excluded_from_ordinary_solution_build(self):
         manifest = json.loads((ROOT / 'module/hexalith.module-manifest.v2.json').read_text())
         suites = {suite['name']: suite for suite in manifest['modules'][0]['tests']}

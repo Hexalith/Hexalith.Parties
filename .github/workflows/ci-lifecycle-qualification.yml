@@ -7,7 +7,7 @@ on:
         description: Explicit real-service scenario; cancellation is performed by the operator
         required: true
         type: choice
-        options: [matrix, cancel-startup, cancel-execution]
+        options: [matrix, focused-ci, cancel-startup, cancel-execution]
 
 permissions:
   contents: read
@@ -123,14 +123,7 @@ jobs:
           APPHOST
           dotnet restore "$scratch/apphost.cs" --verbosity minimal
           packages="${NUGET_PACKAGES:-$HOME/.nuget/packages}"
-          for binary in \
-              "$packages/aspire.hosting.orchestration.linux-x64/$CI_ASPIRE_VERSION/tools/dcp" \
-              "$packages/aspire.dashboard.sdk.linux-x64/$CI_ASPIRE_VERSION/tools/Aspire.Dashboard"; do
-            if [[ ! -x "$binary" ]]; then
-              printf 'Aspire package preparation did not materialize %s\n' "$binary" >&2
-              exit 1
-            fi
-          done
+          python3 -B scripts/qualify-disposable-ci.py verify-runtime-cache --packages "$packages" --aspire-version "$CI_ASPIRE_VERSION"
       - name: Install toolchain without provisioning services
         run: |
           set -euo pipefail
@@ -191,6 +184,11 @@ jobs:
         env:
           DOCKER_CONFIG: ${{ runner.temp }}/hexalith-lifecycle-registry.reader
         run: python3 -B scripts/qualify-disposable-ci.py matrix
+      - name: Exercise only the explicitly selected CI contract cases
+        if: ${{ inputs.scenario == 'focused-ci' }}
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/hexalith-lifecycle-registry.reader
+        run: python3 -B scripts/qualify-disposable-ci.py focused-ci
       - name: Observe actual startup cancellation readiness
         if: ${{ inputs.scenario == 'cancel-startup' }}
         env:
@@ -202,7 +200,7 @@ jobs:
           DOCKER_CONFIG: ${{ runner.temp }}/hexalith-lifecycle-registry.reader
         run: python3 -B scripts/qualify-disposable-ci.py start-cancellation --phase execution
       - name: Publish the actual ready owner before operator cancellation
-        if: ${{ inputs.scenario != 'matrix' }}
+        if: ${{ inputs.scenario == 'cancel-startup' || inputs.scenario == 'cancel-execution' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: lifecycle-cancellation-ready
@@ -211,7 +209,7 @@ jobs:
           retention-days: 14
       # The runner signals only this step's own process; exec keeps the controller as that process.
       - name: Await parent cancellation of this exact ready run
-        if: ${{ inputs.scenario != 'matrix' }}
+        if: ${{ inputs.scenario == 'cancel-startup' || inputs.scenario == 'cancel-execution' }}
         run: exec python3 -B scripts/qualify-disposable-ci.py wait-cancellation
       - name: Independently finalize every exact same-job owner
         if: always()
