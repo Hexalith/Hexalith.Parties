@@ -145,3 +145,69 @@ diff hashes and current execution evidence are retained in the resumed packet.
   no deployed historical drain/reconciliation packet was found. All five named
   DW items remain open. Broad owner-gate and Aspire precheck limitations remain
   explicit; this spec does not claim all-gates completion.
+
+## Resumed verification — 2026-11-09
+
+- Resumed from Parties `806ed7b83b35fcc24996e58affb78ea51a0c8aa7`.
+  Original delivery review uses Parties `207aaf51f63448e51acf83b4c46fdb456df6526c`
+  through `2c08ae879008381948761db90ced5cd7eac091db`, plus the original
+  Tenants owner fix. Three independent reviewers completed review and patch
+  follow-up; reports and exact diff hashes are retained in the resumed packet.
+- The ten added owner controls exercise both ordinary restore/build targets.
+  Below-floor and floor prerelease selections refuse with the expected floor
+  diagnostic; stable metadata, the current package and exact source selections
+  pass. All 48 floor controls pass. A six-control isolated mutation demonstrates
+  that detaching only BeforeTargets is caught by the entry targets while direct
+  validation still rejects. Two earlier mutation-fixture import failures are
+  retained as setup failures, not floor evidence.
+- Owner patch is local main commit `60c1bd50c63513a466be2c301b48d3c4f1d3cf72`.
+  GitHub refused `git push origin main` with HTTP 403 for jpiquot. The clean
+  dependency checkout was returned to parent-selected
+  `d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35`; no unpublished gitlink was adopted.
+- Fresh owner Contracts builds pass with zero warnings/errors. The same 205
+  failing case identities occur before (813 passed) and after (823 passed) the
+  test-only patch, out of 1,018 and 1,028 cases respectively. This is a fresh
+  baseline comparison, not a claim that today's failures equal the historical
+  193. Missing nested Builds fixtures remain dominant. Ambient mapping caused
+  three additional fixture-mode failures in an earlier run; clearing mapping
+  removes those three. No nested submodule is initialized or substituted.
+- Full owner Server passes 1,875/1,875 with local sockets enabled. Full projections
+  passes 466 with one existing compatibility skip. Initial fresh mapped-source
+  fitness passes 304/304, and full service passes 2,852 with 13 existing opt-in
+  runtime skips after the sandbox's four local-socket failures are retried.
+- Concurrent main commit `18dd525c3ee80b065bb410bc639cef89f15f163a` incorporated
+  the earlier documentation/test corrections and other work. It also advanced
+  the CLI pin to 4.45.0 and enumerated the existing Platform lifecycle lane.
+  Preserve that work. Correct the exact script-project inventory and current
+  setup-guide tool literals exposed by those changes; historical receipts keep
+  their original tool versions. Memories tables now select 3.0.25, and the
+  existing technology check binds both Memories rows and runtime prose to the
+  effective catalog. Dapr SDK remains 1.19.0 and runtime remains 1.18.7.
+- The new 4.45.0 source build is retained as blocked: HXW005 reports Commons
+  source also present as package 2.30.10. Its build gate is not suppressed.
+  The selected-package Debug fallback build has zero warnings/errors; final
+  documentation passes 10/10 and final full service passes 2,852 with zero
+  failures and the same 13 runtime skips. Three original names still exist;
+  the renamed receipt/source-selection controls preserve the other three
+  assertions. All six equivalent current controls pass.
+- Original 36-file qualification evidence and the complete historical six-fix
+  packet remain byte-for-byte unchanged. Historical build argv/exit omissions,
+  missing seam diagnostics and unbound original reviewer transcripts cannot be
+  reconstructed. The new packet records fresh exact commands, selector changes,
+  exits, logs, native XML, reviewed diff hashes and reports. It is evidence
+  consistency checking, not signed execution attestation or complete transitive
+  binary provenance. No historical approval is expanded.
+- Additional receipt review found reduced-suite/skip acceptance, unpinned floor
+  arguments, duplicate hook controls and optional input bindings. Each is medium
+  and patched: exact suite summaries and inventories, exact argument tuples,
+  exact six mutation expectations, and mandatory current input paths now fail
+  closed. A final independent follow-up and normal/optimized negative controls
+  are recorded with the packet. No new work is deferred by this run.
+- Available custody decision and installation records retain their original
+  unapproved/blocked hashes and statuses. DW-50/82/168/130/149 remain open; their
+  existing entry bodies are preserved even though concurrent work updates other
+  parts of the ledger. No deployed historical drain or expiry qualification is
+  inferred from source/unit results.
+- Status remains in-review: the owner Contracts gate, latest mapped-source
+  build and owner publication are blocked. Passing package tests do not turn
+  those gates green. Evidence: `tests/six-fitness-failures-resumed-2026-11-09/`.

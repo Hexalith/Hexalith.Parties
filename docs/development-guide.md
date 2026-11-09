@@ -267,7 +267,7 @@ commit's Builds gitlink. Stage selected source checkouts consistently and commit
 the Platform selection before retrying a stale-catalog diagnostic. Runtime
 topology qualification remains separate from successful build preparation.
 
-Use pinned module tool 4.44.13 with Aspire CLI 13.6.4 from an independent Parties
+Use pinned module tool 4.45.0 with Aspire CLI 13.6.4 from an independent Parties
 checkout. Initialize only its direct references, including Platform, Memories and McpCli. The tool selects the
 seven-server dependency closure and emits a run ID, mapping and diagnostics.
 Break in `MvpComplianceWarningMiddleware.InvokeAsync` on `/ready`; a disposable
