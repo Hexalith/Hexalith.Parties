@@ -1,0 +1,81 @@
+{
+  "status": "local-verification-passed-hosted-pending",
+  "source": "b78247c3ea7975520f354484f24e31e30e798e1b",
+  "tool": "4.47.0",
+  "sdk": "4.2.0",
+  "fullStandalone": {
+    "warnings": 0,
+    "errors": 0,
+    "auditedRestore": true
+  },
+  "modulePrepareBuild": {
+    "status": "prepared",
+    "diagnostics": []
+  },
+  "ciTests": {
+    "passed": 633,
+    "failed": 0,
+    "skipped": 0
+  },
+  "fitness": {
+    "initialPassed": 301,
+    "initialFailed": 3,
+    "finalPassed": 304,
+    "finalFailed": 0,
+    "finalSkipped": 0
+  },
+  "readerTests": {
+    "current": 17,
+    "public": 17
+  },
+  "legacyMinimal": {
+    "root": "/tmp/parties-sdk404-minimal-ye0aj9iy",
+    "source": "b78247c3ea7975520f354484f24e31e30e798e1b",
+    "onlyInitializedRoots": [
+      "Hexalith.Builds",
+      "Hexalith.EventStore"
+    ],
+    "sdkAssets": [
+      "Hexalith.EventStore.Admin.Abstractions/4.0.4",
+      "Hexalith.EventStore.Client/4.0.4",
+      "Hexalith.EventStore.Contracts/4.0.4",
+      "Hexalith.EventStore.DomainService/4.0.4",
+      "Hexalith.EventStore.Gateway/4.0.4",
+      "Hexalith.EventStore.Server/4.0.4",
+      "Hexalith.EventStore.ServiceDefaults/4.0.4",
+      "Hexalith.EventStore.Testing/4.0.4"
+    ],
+    "routerPassed": 322,
+    "passed": true,
+    "completedAtUtc": "2026-11-09T19:28:50.908123+00:00"
+  },
+  "headAlignment": {
+    "oldHead": "ebe1739d70a4e76447938b0bb8c53db508bf6019",
+    "newHead": "b78247c3ea7975520f354484f24e31e30e798e1b",
+    "filesPreserved": 8820,
+    "allWorkingBytesModesLinksUnchanged": true,
+    "stagedIndexBeforeWasEmpty": true,
+    "alignedAtUtc": "2026-11-09T19:24:44.899785+00:00"
+  },
+  "xml": [
+    {
+      "file": "ci-tests.xml.gz",
+      "rawSha256": "f86429c77ef1330db8432fd120c6f802e5d4989e427ef9350b78022a9be9b1b9",
+      "transformation": "removed output and failure bodies; names and outcomes retained"
+    },
+    {
+      "file": "fitness.xml.gz",
+      "rawSha256": "459bf44736ed5cd962622f0104eda44da74dea075c6654626cfb6b99820b7330",
+      "transformation": "removed output and failure bodies; names and outcomes retained"
+    },
+    {
+      "file": "fitness-final.xml.gz",
+      "rawSha256": "55b33bb836d385a8629eadf8c5939014bff124686eefddcc9d1aff40ef39322c",
+      "transformation": "removed output and failure bodies; names and outcomes retained"
+    }
+  ],
+  "hostedCi": 42682994160,
+  "hostedRc": 42682993316,
+  "rootPublicationAccepted": false,
+  "limitation": "The first final hosted source still requires a CI-only root gateway-settings initialization correction; do not infer hosted or publication acceptance."
+}

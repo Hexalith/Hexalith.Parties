@@ -90,10 +90,10 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
-      - name: Initialize only the recorded package catalog input
+      - name: Initialize recorded catalog and gateway settings
         run: |
-          git -c submodule.recurse=false submodule update --init --depth 1 --checkout -- references/Hexalith.Builds
-          git submodule status -- references/Hexalith.Builds
+          git -c submodule.recurse=false submodule update --init --depth 1 --checkout -- references/Hexalith.Builds references/Hexalith.EventStore
+          git submodule status -- references/Hexalith.Builds references/Hexalith.EventStore
       - name: Build public packages and run focused catalog qualification
         shell: bash
         run: |
