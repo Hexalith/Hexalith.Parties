@@ -1,0 +1,138 @@
+{
+  "result": "PASS",
+  "cases": 22,
+  "checks": [
+    {
+      "scenario": "valid",
+      "optimized": false,
+      "exit_code": 0,
+      "output": "{\"archives\": 38, \"historical_files_checked\": 8380, \"input_bindings\": 3, \"required_checks\": 10, \"result\": \"PASS\"}"
+    },
+    {
+      "scenario": "required-exit",
+      "optimized": false,
+      "exit_code": 1,
+      "output": "FAIL: missing or failing required check"
+    },
+    {
+      "scenario": "missing-xml",
+      "optimized": false,
+      "exit_code": 1,
+      "output": "FAIL: required XML missing or changed: final-source-prerequisites"
+    },
+    {
+      "scenario": "empty-xml",
+      "optimized": false,
+      "exit_code": 1,
+      "output": "FAIL: empty XML report: final-source-prerequisites"
+    },
+    {
+      "scenario": "prerequisite-skip",
+      "optimized": false,
+      "exit_code": 1,
+      "output": "FAIL: prerequisite skips: final-source-prerequisites"
+    },
+    {
+      "scenario": "unexpected-runtime-skip",
+      "optimized": false,
+      "exit_code": 1,
+      "output": "FAIL: unexpected full-suite skips: final-source-full"
+    },
+    {
+      "scenario": "stale-check-hash",
+      "optimized": false,
+      "exit_code": 1,
+      "output": "FAIL: check log hash: final-source-prerequisites"
+    },
+    {
+      "scenario": "missing-inputs",
+      "optimized": false,
+      "exit_code": 1,
+      "output": "FAIL: final input binding inventory"
+    },
+    {
+      "scenario": "wrong-mode",
+      "optimized": false,
+      "exit_code": 1,
+      "output": "FAIL: package selection semantics"
+    },
+    {
+      "scenario": "wrong-target",
+      "optimized": false,
+      "exit_code": 1,
+      "output": "FAIL: executed TargetPath: source"
+    },
+    {
+      "scenario": "mixed-selectors",
+      "optimized": false,
+      "exit_code": 1,
+      "output": "FAIL: mixed package selectors"
+    },
+    {
+      "scenario": "valid",
+      "optimized": true,
+      "exit_code": 0,
+      "output": "{\"archives\": 38, \"historical_files_checked\": 8380, \"input_bindings\": 3, \"required_checks\": 10, \"result\": \"PASS\"}"
+    },
+    {
+      "scenario": "required-exit",
+      "optimized": true,
+      "exit_code": 1,
+      "output": "FAIL: missing or failing required check"
+    },
+    {
+      "scenario": "missing-xml",
+      "optimized": true,
+      "exit_code": 1,
+      "output": "FAIL: required XML missing or changed: final-source-prerequisites"
+    },
+    {
+      "scenario": "empty-xml",
+      "optimized": true,
+      "exit_code": 1,
+      "output": "FAIL: empty XML report: final-source-prerequisites"
+    },
+    {
+      "scenario": "prerequisite-skip",
+      "optimized": true,
+      "exit_code": 1,
+      "output": "FAIL: prerequisite skips: final-source-prerequisites"
+    },
+    {
+      "scenario": "unexpected-runtime-skip",
+      "optimized": true,
+      "exit_code": 1,
+      "output": "FAIL: unexpected full-suite skips: final-source-full"
+    },
+    {
+      "scenario": "stale-check-hash",
+      "optimized": true,
+      "exit_code": 1,
+      "output": "FAIL: check log hash: final-source-prerequisites"
+    },
+    {
+      "scenario": "missing-inputs",
+      "optimized": true,
+      "exit_code": 1,
+      "output": "FAIL: final input binding inventory"
+    },
+    {
+      "scenario": "wrong-mode",
+      "optimized": true,
+      "exit_code": 1,
+      "output": "FAIL: package selection semantics"
+    },
+    {
+      "scenario": "wrong-target",
+      "optimized": true,
+      "exit_code": 1,
+      "output": "FAIL: executed TargetPath: source"
+    },
+    {
+      "scenario": "mixed-selectors",
+      "optimized": true,
+      "exit_code": 1,
+      "output": "FAIL: mixed package selectors"
+    }
+  ]
+}

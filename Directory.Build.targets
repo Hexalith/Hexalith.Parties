@@ -20,7 +20,7 @@
     <!-- Test utilities consume the same exact roots selected by prepare-build. -->
     <AssemblyMetadata Include="HexalithTestRepositoryRoot" Value="$(MSBuildThisFileDirectory)" />
     <AssemblyMetadata Include="HexalithTestRoot:Hexalith.AI.Tools" Value="$(HexalithAIToolsRoot)" />
-    <AssemblyMetadata Include="HexalithTestRoot:Hexalith.Platform" Value="$(HexalithSourceMappingRoot)" />
+    <AssemblyMetadata Include="HexalithTestRoot:Hexalith.Platform" Value="$(HexalithPlatformRoot)" />
     <AssemblyMetadata Include="HexalithTestRoot:Hexalith.PolymorphicSerializations" Value="$(HexalithPolymorphicSerializationsRoot)" />
     <AssemblyMetadata Include="HexalithTestRoot:Hexalith.Builds" Value="$(HexalithBuildsRoot)" />
     <AssemblyMetadata Include="HexalithTestRoot:Hexalith.Commons" Value="$(HexalithCommonsRoot)" />

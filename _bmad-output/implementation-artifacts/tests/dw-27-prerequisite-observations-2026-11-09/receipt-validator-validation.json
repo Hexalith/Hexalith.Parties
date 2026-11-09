@@ -1,0 +1,46 @@
+{
+  "created_utc": "2026-11-09T11:14:07.475320+00:00",
+  "result": "PASS",
+  "checks": [
+    {
+      "command": [
+        "python3",
+        "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/dw-27-prerequisite-observations-2026-11-09/validate-receipt.py",
+        "--receipt",
+        "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/dw-27-prerequisite-observations-2026-11-09/validation.json",
+        "--root",
+        "/home/administrator/projects/hexalith/parties"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exit_code": 0,
+      "stdout": "{\"archives\": 38, \"historical_files_checked\": 8380, \"input_bindings\": 3, \"required_checks\": 10, \"result\": \"PASS\"}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "-O",
+        "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/dw-27-prerequisite-observations-2026-11-09/validate-receipt.py",
+        "--receipt",
+        "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/dw-27-prerequisite-observations-2026-11-09/validation.json",
+        "--root",
+        "/home/administrator/projects/hexalith/parties"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exit_code": 0,
+      "stdout": "{\"archives\": 38, \"historical_files_checked\": 8380, \"input_bindings\": 3, \"required_checks\": 10, \"result\": \"PASS\"}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/dw-27-prerequisite-observations-2026-11-09/check-receipt-validator.py"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exit_code": 0,
+      "fixture_cases": 22,
+      "stdout_file": "receipt-validator-fixtures.json",
+      "stderr": ""
+    }
+  ]
+}

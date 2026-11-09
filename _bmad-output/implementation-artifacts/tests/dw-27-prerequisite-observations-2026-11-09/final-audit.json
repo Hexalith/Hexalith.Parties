@@ -1,0 +1,40 @@
+{
+  "result": "PASS",
+  "head": "5c54b8c972e875e578e78834a306a0687f93d50b",
+  "checks": [
+    {
+      "command": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "exit_code": 0,
+      "stdout": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--cached",
+        "--quiet"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "verified_inputs_unchanged": true,
+  "original_frozen_intent_preserved": true
+}

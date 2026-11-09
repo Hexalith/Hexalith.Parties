@@ -2,7 +2,7 @@
 title: 'DW-27 distinguish invalid page sizes from cursors'
 type: 'bugfix'
 created: '2026-10-17'
-status: 'in-review'
+status: 'done'
 route: 'dispatch'
 review_loop_iteration: 0
 baseline_commit: 611fa39803d716b377c67801459a7dd4f3059829
@@ -65,7 +65,31 @@ context:
 
 ## Implementation Notes
 
-**Current disposition (2026-11-09, continued review at
+**Current disposition (2026-11-09, prerequisite reconciliation):** All four
+reported prerequisite failures are resolved by
+`spec-dw-27-prerequisite-observations.md`. Five already committed/signed source
+advances are observed separately from historical selection/parity decisions;
+EventStore owner 8.7 is correctly observed as in-progress. A previously masked
+Platform test-root metadata error now consumes the actual tool-emitted
+`HexalithPlatformRoot`, preserving source-mapping authority. No dependency pin or
+paging behavior changed, and no new owner signoff is inferred.
+
+Fresh mapped-source and selected-package Debug builds each pass with zero
+warnings/errors. Each prerequisite class passes 118/118 without skips; each full
+service suite passes 2,852, fails zero and skips the same 13 opt-in runtime cases.
+Those skips do not qualify live persistence/topology. HXW010 (pinned CLI 4.44.13
+outside Platform's required range) and HXW011 (no local release tag at the selected
+Platform commit) remain disclosed; passing builds do not establish supported
+Platform/toolchain qualification. Exact commands, environments, logs/XML, skip
+reasons, historical preservation checks and hashes are retained in
+`tests/dw-27-prerequisite-observations-2026-11-09/validation.json`.
+All three resumed review layers completed. The new packet's evidence gate was
+hardened and independently rechecked; no unresolved patched claim or new deferral
+remains. DW-27 is done from this fresh verification, with the stated runtime and
+toolchain limits preserved.
+
+
+**Previous disposition (2026-11-09, continued review at
 `94d5d34d751f6635feeb5abdec6cfdf52180d53c`):** Fresh mapped Debug build passes
 with zero warnings/errors, and all 961 focused cases pass without skips. The
 prerequisite class reproduces the same four broad-suite blockers (114 passed,
@@ -130,6 +154,14 @@ source/package pass. Exact commands, identities and results are in
 - The user subsequently authorized committing and pushing all changes. EventStore was rebased onto current main and pushed as `9ed9b9742bd006e568f026cc1c588275cf9db097`; all ten tested source/test/doc files are byte-identical to the manifest. Current Parties source-observation constants/row are refreshed to that identity; historical receipts, owner approvals, package pins and the unapplied consumer patch remain unchanged. Commit messages passed the owning pinned CLIs; see `tests/dw-27-invalid-page-failure-2026-10-17/push-preparation.json`.
 
 ## Spec Change Log
+
+- 2026-11-09 — Resolve the four prerequisite blockers through a dedicated focused
+  correction, including the masked Platform test-root binding. Preserve signed
+  selections, historical observations/receipts, frozen intent and paging bytes.
+  Record passing prerequisite/full source and package Debug checks, complete all
+  three review layers, harden the new evidence gate with normal/optimized negative
+  fixtures, and mark done after independent correction recheck. Retain 13 runtime
+  skips, HXW010/HXW011 and unrelated parity/approval limits; no commit or delivery.
 
 - 2026-11-09 — Continue review at the recorded main revision. Correct test-guide qualification and add the later source-build link to the historical README; clarify collection-only exit semantics and fresh-results replay in a new packet. Record two pre-existing processing-query observations separately, reproduce the four known prerequisite failures, and preserve all production/tests, dependencies, raw historical receipts, the exact archival fixture and frozen intent. Retain `in-review` without repeating unchanged full suites.
 
@@ -376,3 +408,71 @@ current source mapping must come from the pinned module tool's `prepare-build`
 environment, rather than handwritten source selectors.
 
 Build affected test projects individually in Debug with `-m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false`. Invoke their built xUnit assemblies with single-dash `-class` filters for the named classes, then run full affected assemblies. Before consumer activation, verify published SDK availability and the pinned-package build/gateway tests. Apply repository fallback validation without weakening gates. Run whitespace/warning-override guards and independent implementation review. Record exact commands, counts and blockers under `_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/`.
+
+### Prerequisite reconciliation verification — 2026-11-09
+
+The dedicated correction preserves original frozen intent, strict immutable
+consumption checks, historical approval bodies and receipt bytes, pinned
+packages/tooling, and all production paging source. The previous observation is
+retained as history. The two processing-history compatibility/precedence
+observations remain separate existing deferrals; no new implementation behavior
+is introduced. Both fresh required service modes pass, with the 13 explicit
+live-runtime skips and HXW010/HXW011 limitations retained. No Git index/history,
+publication or deployment operation is performed.
+
+### Final prerequisite reconciliation review — 2026-11-09
+
+All three active layers reviewed DW-27 and directly related prerequisite/evidence
+changes in the 54,813,179-byte accumulated diff. Edge-case and verification-gap
+layers returned no findings. Unrelated accumulated history was not exhaustively
+reviewed. The blind layer returned ten; each received an individual verdict:
+
+- X01 — medium, patch: archived packaging assertions disappear under `python -O`.
+  Preserve the executed archive as forensic context and make a separate explicit,
+  optimization-safe receipt validator the qualification gate.
+- X02 — medium, patch: collection permits absent/empty XML. The independent gate
+  requires nonempty XML for every prerequisite/full invocation and checks its
+  inventory and recorded summary against the actual report.
+- X03 — medium, patch: recorded skips alone do not enforce acceptance. Require zero
+  prerequisite skips and the exact 13 historical runtime skip names for each full
+  suite, with actual reasons retained; reject unexpected cases.
+- X04 — medium, patch: packaging did not compare captured check hashes with the
+  archived artifacts. The gate now verifies compressed/raw hashes and binds every
+  recorded log/XML hash to the actual decompressed data.
+- X05 — low, patch: the baseline hash inventory omitted final changed-input hashes.
+  Record and verify the three final runnable observation/build inputs after the
+  passing runs. Explicitly label their timing and retain the absence of stored
+  per-mode/transitive binary provenance; do not invent earlier capture events.
+- X06 — low, patch: query success alone does not establish dependency mode. Validate
+  source mapping mode/hash and the exact emitted environment, package mapping
+  absence, and fresh expanded selector queries in the authoritative receipt gate.
+- X07 — low, patch: the archived collector executes a conventional DLL path. The
+  actual recorded invocations match evaluated TargetPath; enforce that equality
+  and require individual-command replay to use evaluated TargetPath. Preserve the
+  original executed collector and disclaim standalone replay qualification.
+- X08 — low, patch: the archived clearing list omits several supported selectors.
+  Fresh expanded queries show all package FromSource selectors absent/false and
+  no inherited selectors. Enforce those observations in the gate, document full
+  selector clearing for replay, and retain the original collector as forensic data.
+- X09 — low, patch: archived scripts require an undocumented temporary pointer.
+  Document its preparation-file assumptions, qualify those scripts as forensic
+  records, and provide the new gate with explicit receipt/root CLI arguments.
+- X10 — low, rejected: the forensic collector has no subprocess timeout/cleanup
+  supervisor. No recorded run stalled; all completed checks have fresh reports.
+  Adding process-tree management guards an unobserved archival replay failure
+  and expands this evidence interface. Disclose the limitation and retain its
+  exact executed bytes; no unattended or standalone collector qualification.
+
+The receipt validator passes in normal and optimized Python. Its isolated fixture
+passes 22 cases: valid evidence plus ten corruptions in each interpreter mode,
+covering failing required exits, missing/empty XML, prerequisite/unexpected runtime
+skips, hash drift, missing input bindings, wrong mode, wrong TargetPath and mixed
+selectors. No production, test, build-selection or matrix input changed after the
+passing service checks. No full-suite repetition is needed for evidence-only
+corrections; final guards and independent correction recheck follow. There is no
+new deferred work and the existing processing-history deferrals remain separate.
+
+Final independent recheck confirms X01-X09 are resolved and both executed
+collection-script archives are byte-identical. X10 remains a disclosed rejected
+archival replay concern. Edge-case and verification-gap layers found no issues.
+The current status is done; no new deferred work or owner approval is invented.
