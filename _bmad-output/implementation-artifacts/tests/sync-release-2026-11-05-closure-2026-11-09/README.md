@@ -1,0 +1,11 @@
+# November 5 release specification closure
+
+The November 5 task was completed by the [November 6 continuation](../../spec-sync-upgrade-and-release-2026-11-06.md) and [Parties v3.1.0](https://github.com/Hexalith/Hexalith.Parties/releases/tag/v3.1.0), source `50904cc4ba53c9b0b2c082d5872a0d276be8f5c3`. This closure reconciles the stale task status with that completed release.
+
+[Fresh verification](verification.json) records all eleven public NuGet downloads, unchanged archive/DLL identities, exact repository commits and fresh successful `dotnet nuget verify --all` commands. Compressed signature logs preserve their original bytes and recorded hashes. The exact release Git manifest is retained as compressed bytes; its raw SHA-256 is `a5906a28c49406bb998111cb218b6d6480940fcd8529f348eb90f8effaf7755a`. The older receipt's different `manifestSha256` is preserved and is not relied upon as raw-file proof.
+
+GitHub still reports success for the release and all eight exact-source prerequisite runs. The downloaded publication artifact matches both its API digest and original receipt: `67957cd3be084eafce423453aeeb776fe113904c4cdd958ff5776579863a326c`. Its eleven packages match the fresh NuGet downloads. The retained container subset includes the three raw OCI graphs; both architecture manifests and config hashes/source/version labels pass. This rechecks archived publication evidence, not a fresh OCI registry download or a new runtime session.
+
+All three independent review layers completed before triage. [Every finding](review-triage.json) has an individual verdict. Five later or concurrent defect groups are appended to the deferred ledger; the Dapr archive correction was already committed independently; five claims were refuted and one low diagnostic edge was rejected. No later source tuple or runtime is qualified by this historical closure.
+
+[Current source observation](current-source-observation.json) is explicitly separate: all ten checkouts matched selected gitlinks and were clean at capture, but four upstream tips had since advanced. Ongoing main CI and those later dependency updates remain separate work. No source, dependency, or existing evidence file was replaced during this closure.

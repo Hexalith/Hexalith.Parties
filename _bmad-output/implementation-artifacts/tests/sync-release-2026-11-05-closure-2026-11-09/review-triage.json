@@ -1,0 +1,133 @@
+{
+  "reviewDiffSha256": "0e4e0713155e3f4757b875f0674c2d8475aa68b6425165c9bf6202d2089f5dac",
+  "reviewDiffBytes": 4720866,
+  "layers": [
+    "blind-hunter",
+    "edge-case-hunter",
+    "verification-gap"
+  ],
+  "allLayersReportedBeforeTriage": true,
+  "scope": "Close November 5 historical release work fulfilled by the November 6 continuation; preserve later and concurrent changes",
+  "findings": [
+    {
+      "id": "R-B01",
+      "verdict": "medium",
+      "route": "defer",
+      "finding": "Diagnostic workflow refuses synchronized Builds checkout",
+      "evidence": "The snapshot initializes the root Builds gitlink 27145e52ffab5623198ba5efdab5cdb71aa42d28 but requires 3c8096180ecf2aa539ac454815efbfceb8a92822. This is a later source-adoption mismatch after the completed 50904cc4 release; reconcile measured runtime authority and checkout selection without blindly blessing a new tuple.",
+      "group": "diagnostic-tuple"
+    },
+    {
+      "id": "R-B02",
+      "verdict": "high",
+      "route": "defer",
+      "finding": "Mandatory public verifier refuses synchronized source tuple",
+      "evidence": "The CI caller supplies root gitlinks e39a9a2587ec150d550510763ab69db305d13fdb and 27145e52ffab5623198ba5efdab5cdb71aa42d28, while validate requires 0f4e27f1f78310bd731c10c19dc51bb1e0345d44 and 3c8096180ecf2aa539ac454815efbfceb8a92822 before reading evidence. The public gate was introduced in 71f61d89cf9a1aa3a60e2065f913b95b4b2a639b after this release.",
+      "group": "public-tuple"
+    },
+    {
+      "id": "R-B03",
+      "verdict": "medium",
+      "route": "defer",
+      "finding": "Ownership marker initialization can leak a preparation directory",
+      "evidence": "18dd525c3ee80b065bb410bc639cef89f15f163a moved marker creation/write outside the cleanup try. An I/O failure can leave an occupied directory that DeleteOwnedDirectory cannot authenticate. The released 50904cc4 source retained its initialization catch; this is a later regression.",
+      "group": "marker-cleanup"
+    },
+    {
+      "id": "R-B04",
+      "verdict": "medium",
+      "route": "patch-closed-concurrently",
+      "finding": "Diagnostic Dapr downloads lacked archive digest checks in the snapshot",
+      "evidence": "Current committed d3d5e7d4de132c3e8b81d1ab04fb8c3541b8aaa4 reads pinned digest metadata, validates its schema and SHA shape, and verifies each archive before tar. The independently committed correction closes the snapshot finding; no additional edit is needed.",
+      "group": "dapr-digests"
+    },
+    {
+      "id": "R-B05",
+      "verdict": "false",
+      "route": "reject",
+      "finding": "Private verifier accepts its two required native cases",
+      "evidence": "The frozen intent explicitly requires both actual native cases. CASES names those exact two and the verifier checks unique presence, all passed outcomes and consistent counters. Whole-suite execution is enforced by the invoking test runner; the release receipt independently records all 28 actual cases. No requirement for the private evidence reader to freeze all evolving helper-test names was established.",
+      "group": "private-case-inventory"
+    },
+    {
+      "id": "R-B06",
+      "verdict": "false",
+      "route": "reject",
+      "finding": "Private verifier does not read selectorCompatibilityObserved",
+      "evidence": "PartyEnvironmentTests unconditionally awaits AssertLiveSelectorCompatibilityAsync before persistence observation publication, and emits the flag as literal true. The required passing native case therefore includes those assertions. Changing only the redundant flag in a synthetic resealed document does not demonstrate a supported producer that omits the selector checks or a new false acceptance.",
+      "group": "private-selector-flag"
+    },
+    {
+      "id": "R-B07",
+      "verdict": "false",
+      "route": "reject",
+      "finding": "Private verifier ignores assembly scope labels",
+      "evidence": "The loaded and copied arrays already identify distinct roles and each is checked against the exact SDK identity/body map. NativeAssemblyObservations generates fixed labels from actual process/reflection and copied-output measurements; swapping labels alone changes neither measurement nor admission. No supported producer or substituted body escaping the actual checks was shown.",
+      "group": "private-scope-labels"
+    },
+    {
+      "id": "R-B08",
+      "verdict": "false",
+      "route": "reject",
+      "finding": "Equivalent creation timestamp spellings compare unequal",
+      "evidence": "The real native observation serializes createdEnvelope.Timestamp and the equal detail.CreatedAt as DateTimeOffset values in the same anonymous document/serializer. Native assertions require the values to be equal before issuance. The proposed mixed Z/+00:00 spelling is a synthetic re-encoding, not a demonstrated output of the supported producer; the actual 28-case release report passed.",
+      "group": "timestamp-spelling"
+    },
+    {
+      "id": "R-B09",
+      "verdict": "low",
+      "route": "reject",
+      "finding": "Public verifier permits a far-future measuredAtUtc",
+      "evidence": "The value is syntactically validated and ordered after container startup; the producer writes DateTimeOffset.UtcNow while source/run/body authority is independently checked. Replacing only this diagnostic time does not substitute any run, image or body. No normal clock/producer failure was demonstrated; adding a new execution-interval authority/tolerance surface is disproportionate for this diagnostic edge.",
+      "group": "future-measurement"
+    },
+    {
+      "id": "R-B10",
+      "verdict": "false",
+      "route": "reject",
+      "finding": "Observer could report empty for contradictory resourceIds/isEmpty",
+      "evidence": "CompositionRunResources.IsEmpty and ResourceIds are computed read-only properties of the pinned producer. Empty five-kind inventories with unverified=false compute isEmpty=true and resourceIds=[]; the proposed contradiction cannot be serialized by that producer. Both actual release cleanup receipts and the mandatory verifier independently establish complete emptiness.",
+      "group": "computed-resource-inventory"
+    },
+    {
+      "id": "R-E01",
+      "verdict": "high",
+      "route": "defer",
+      "finding": "Public evidence caller tuple differs from required published tuple",
+      "evidence": "Independently confirms R-B02 at the CI caller and verifier boundary. It concerns the public-profile adoption introduced after released source 50904cc4, and does not invalidate the original current-owner release proof.",
+      "group": "public-tuple"
+    },
+    {
+      "id": "R-E02",
+      "verdict": "medium",
+      "route": "defer",
+      "finding": "Diagnostic input fence differs from synchronized Builds selection",
+      "evidence": "Independently confirms R-B01. Keep publication/runtime authority distinct from root source selection when fixing the later workflow; do not replace a qualified digest with an unqualified tip.",
+      "group": "diagnostic-tuple"
+    },
+    {
+      "id": "R-E03",
+      "verdict": "medium",
+      "route": "defer",
+      "finding": "Canceled asset-staging test can leave its MSBuild process running",
+      "evidence": "NativeAdminUiAssetStagingTests StageAsync awaits WaitForExitAsync with the test token but has no kill/wait finally; Process.Dispose does not terminate the child. Outer directory deletion can race the still-running child. This test was added after the completed release, in the preserved November 9 preparation work.",
+      "group": "test-process-cleanup"
+    },
+    {
+      "id": "R-V01",
+      "verdict": "medium",
+      "route": "defer",
+      "finding": "Split private catalog source staging lacks executed GenerateAsync regression",
+      "evidence": "Preverified: existing cleanup cases invoke RunAsync via reflection, and normal CI selects configuration/cleanup classes without executing GenerateAsync. Program.cs references PublishedCatalogArtifactCohort in another source, so reverting to Program-only staging evades the selected tests but breaks runtime generation. This is a preserved concurrent development-catalog change outside the completed release snapshot.",
+      "group": "catalog-staging-test"
+    },
+    {
+      "id": "R-V02",
+      "verdict": "high",
+      "route": "defer",
+      "finding": "Public evidence tuple mismatch is hidden by synthetic constants",
+      "evidence": "Independently confirms R-B02; synthetic fixtures replace expected identities with verifier constants and the workflow test inspects text. A real caller/reader tuple control is needed for the later adoption.",
+      "group": "public-tuple"
+    }
+  ]
+}

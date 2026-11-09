@@ -1,0 +1,493 @@
+{
+  "capturedAtUtc": "2026-11-09T12:21:47.066957+00:00",
+  "scope": "Historical November 5 release specification, fulfilled through the completed November 6 continuation",
+  "continuationSpec": "../../spec-sync-upgrade-and-release-2026-11-06.md",
+  "release": {
+    "id": 437088011,
+    "tag": "v3.1.0",
+    "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+    "publishedAtUtc": "2026-11-06T21:40:43Z",
+    "url": "https://github.com/Hexalith/Hexalith.Parties/releases/tag/v3.1.0",
+    "tagReverified": true
+  },
+  "releaseWorkflow": {
+    "id": 42296293715,
+    "head_sha": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+    "event": "workflow_dispatch",
+    "status": "completed",
+    "conclusion": "success",
+    "run_attempt": 1,
+    "html_url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/42296293715"
+  },
+  "exactSourcePrerequisites": {
+    "result": "passed",
+    "gates": [
+      {
+        "gate": "root CI and real current-owner integration",
+        "repository": "Hexalith/Hexalith.Parties",
+        "run": 42292809228,
+        "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+        "event": "push",
+        "status": "completed",
+        "conclusion": "success",
+        "reverifiedAtUtc": "2026-11-09T12:13:43.895753+00:00",
+        "runAttempt": 1,
+        "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/42292809228"
+      },
+      {
+        "gate": "independent root source range proof",
+        "repository": "Hexalith/Hexalith.Parties",
+        "run": 42292808779,
+        "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+        "event": "push",
+        "status": "completed",
+        "conclusion": "success",
+        "reverifiedAtUtc": "2026-11-09T12:13:43.806246+00:00",
+        "runAttempt": 1,
+        "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/42292808779"
+      },
+      {
+        "gate": "root CodeQL",
+        "repository": "Hexalith/Hexalith.Parties",
+        "run": 42292809117,
+        "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+        "event": "push",
+        "status": "completed",
+        "conclusion": "success",
+        "reverifiedAtUtc": "2026-11-09T12:13:43.858563+00:00",
+        "runAttempt": 1,
+        "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/42292809117"
+      },
+      {
+        "gate": "root commitlint",
+        "repository": "Hexalith/Hexalith.Parties",
+        "run": 42292809120,
+        "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+        "event": "push",
+        "status": "completed",
+        "conclusion": "success",
+        "reverifiedAtUtc": "2026-11-09T12:13:43.769201+00:00",
+        "runAttempt": 1,
+        "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/42292809120"
+      },
+      {
+        "gate": "actual bounded startup observer with full normal owner execution and cleanup",
+        "repository": "Hexalith/Hexalith.Parties",
+        "run": 42292829088,
+        "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "reverifiedAtUtc": "2026-11-09T12:13:44.118193+00:00",
+        "runAttempt": 1,
+        "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/42292829088"
+      },
+      {
+        "gate": "complete21vector native McpCli CI with persisted effects and cleanup",
+        "repository": "Hexalith/Hexalith.McpCli",
+        "run": 42260737127,
+        "source": "a133f603790375ff51a03f3d0844c7218da36ced",
+        "event": "push",
+        "status": "completed",
+        "conclusion": "success",
+        "reverifiedAtUtc": "2026-11-09T12:13:44.155438+00:00",
+        "runAttempt": 1,
+        "url": "https://github.com/Hexalith/Hexalith.McpCli/actions/runs/42260737127"
+      },
+      {
+        "gate": "EventStore CI and private package integration",
+        "repository": "Hexalith/Hexalith.EventStore",
+        "run": 42288133749,
+        "source": "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+        "event": "push",
+        "status": "completed",
+        "conclusion": "success",
+        "reverifiedAtUtc": "2026-11-09T12:13:44.220795+00:00",
+        "runAttempt": 1,
+        "url": "https://github.com/Hexalith/Hexalith.EventStore/actions/runs/42288133749"
+      },
+      {
+        "gate": "independent EventStore integration",
+        "repository": "Hexalith/Hexalith.EventStore",
+        "run": 42288132808,
+        "source": "23252aef50e99d6b1338da0ac501cd25ab3a16fd",
+        "event": "push",
+        "status": "completed",
+        "conclusion": "success",
+        "reverifiedAtUtc": "2026-11-09T12:13:44.211855+00:00",
+        "runAttempt": 1,
+        "url": "https://github.com/Hexalith/Hexalith.EventStore/actions/runs/42288132808"
+      }
+    ]
+  },
+  "freshPublicNugetVerification": {
+    "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+    "version": "3.1.0",
+    "sourceManifestSha256": "a5906a28c49406bb998111cb218b6d6480940fcd8529f348eb90f8effaf7755a",
+    "historicalManifestSha256": "d9c193b0e7b61601b8fcceb906b5dafe4769a1b9d7538a6ce164b4aa0840b348",
+    "historicalManifestDigestMatchesSourceBlob": false,
+    "inventoryVerifiedFromReleaseGitBlob": true,
+    "packages": [
+      {
+        "id": "Hexalith.Parties.Contracts",
+        "version": "3.1.0",
+        "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+        "downloadUrl": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.contracts/3.1.0/hexalith.parties.contracts.3.1.0.nupkg",
+        "archiveSha256": "2eaf319ea5ea53418435bb6b91096ff3baf23713fb109f99165c6cdedbf51a3d",
+        "archiveBytes": 139134,
+        "signatureCommand": [
+          "dotnet",
+          "nuget",
+          "verify",
+          "--all",
+          "/tmp/parties-sync-release-resume-20261109-vhdzfytl/nuget/hexalith.parties.contracts.3.1.0.nupkg"
+        ],
+        "signatureExitCode": 0,
+        "signatureLogFile": "Hexalith.Parties.Contracts.signature.txt.gz",
+        "signatureLogSha256": "7d46c4fa4b247a27f9acef782857d802b17a4f16d7a3a4ffb99f8df027671780",
+        "startedAtUtc": "2026-11-09T12:12:47.339825+00:00",
+        "completedAtUtc": "2026-11-09T12:12:48.503038+00:00",
+        "matchesHistoricalArchiveAndDlls": true,
+        "historicalSignatureLogVerified": true,
+        "storedSignatureLogSha256": "e75840ff702bc8b2cbe25e56c49f09fe560ce0cc5f8fc6ef47cdacc942aeb3f8"
+      },
+      {
+        "id": "Hexalith.Parties.Client",
+        "version": "3.1.0",
+        "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+        "downloadUrl": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.client/3.1.0/hexalith.parties.client.3.1.0.nupkg",
+        "archiveSha256": "78c2dd60992e093a670217e03747b612a2734100f62a2ef322d0270720f88522",
+        "archiveBytes": 64282,
+        "signatureCommand": [
+          "dotnet",
+          "nuget",
+          "verify",
+          "--all",
+          "/tmp/parties-sync-release-resume-20261109-vhdzfytl/nuget/hexalith.parties.client.3.1.0.nupkg"
+        ],
+        "signatureExitCode": 0,
+        "signatureLogFile": "Hexalith.Parties.Client.signature.txt.gz",
+        "signatureLogSha256": "a6ba1b992855f8bf8dd3294d96d22448e28b695738392941a6eef48605f5f76b",
+        "startedAtUtc": "2026-11-09T12:12:47.340225+00:00",
+        "completedAtUtc": "2026-11-09T12:12:47.922499+00:00",
+        "matchesHistoricalArchiveAndDlls": true,
+        "historicalSignatureLogVerified": true,
+        "storedSignatureLogSha256": "3ba12c6b4164ae34edce7eb70dd58ad6924515d5f16f921a851138a9fbeaf0e6"
+      },
+      {
+        "id": "Hexalith.Parties.AdminPortal",
+        "version": "3.1.0",
+        "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+        "downloadUrl": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.adminportal/3.1.0/hexalith.parties.adminportal.3.1.0.nupkg",
+        "archiveSha256": "6bbba169f1ecf1d5015fe78996a2c74fb15575c6defc1a60938cba241fd6f5a3",
+        "archiveBytes": 153960,
+        "signatureCommand": [
+          "dotnet",
+          "nuget",
+          "verify",
+          "--all",
+          "/tmp/parties-sync-release-resume-20261109-vhdzfytl/nuget/hexalith.parties.adminportal.3.1.0.nupkg"
+        ],
+        "signatureExitCode": 0,
+        "signatureLogFile": "Hexalith.Parties.AdminPortal.signature.txt.gz",
+        "signatureLogSha256": "6c1232d9a005b6f7ac823bafb081e9071efb95c60898f2a6483953cf45f94e1a",
+        "startedAtUtc": "2026-11-09T12:12:47.340600+00:00",
+        "completedAtUtc": "2026-11-09T12:12:47.846877+00:00",
+        "matchesHistoricalArchiveAndDlls": true,
+        "historicalSignatureLogVerified": true,
+        "storedSignatureLogSha256": "1ef96b3a0b6cad14807e95b105d3233916490bd74431edf10ff239ddc8e13a6d"
+      },
+      {
+        "id": "Hexalith.Parties.ConsumerPortal",
+        "version": "3.1.0",
+        "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+        "downloadUrl": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.consumerportal/3.1.0/hexalith.parties.consumerportal.3.1.0.nupkg",
+        "archiveSha256": "2d384f2898efe805a8acd97b83ad27870b75ed48528e77f914c9ed420b52878f",
+        "archiveBytes": 86656,
+        "signatureCommand": [
+          "dotnet",
+          "nuget",
+          "verify",
+          "--all",
+          "/tmp/parties-sync-release-resume-20261109-vhdzfytl/nuget/hexalith.parties.consumerportal.3.1.0.nupkg"
+        ],
+        "signatureExitCode": 0,
+        "signatureLogFile": "Hexalith.Parties.ConsumerPortal.signature.txt.gz",
+        "signatureLogSha256": "61405743608d9c215d5aad7563fd48f6a270431cb55cf2a085007638d6623aff",
+        "startedAtUtc": "2026-11-09T12:12:47.340986+00:00",
+        "completedAtUtc": "2026-11-09T12:12:47.834009+00:00",
+        "matchesHistoricalArchiveAndDlls": true,
+        "historicalSignatureLogVerified": true,
+        "storedSignatureLogSha256": "22b2c5b21d3a321166354185233f9fa2c34264ff7a2543cf48d99bc60aaa8d53"
+      },
+      {
+        "id": "Hexalith.Parties.Picker",
+        "version": "3.1.0",
+        "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+        "downloadUrl": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.picker/3.1.0/hexalith.parties.picker.3.1.0.nupkg",
+        "archiveSha256": "4aea46c1efc140ff046c8f18a5e47c758339245199dc8df487ffe28879178324",
+        "archiveBytes": 61501,
+        "signatureCommand": [
+          "dotnet",
+          "nuget",
+          "verify",
+          "--all",
+          "/tmp/parties-sync-release-resume-20261109-vhdzfytl/nuget/hexalith.parties.picker.3.1.0.nupkg"
+        ],
+        "signatureExitCode": 0,
+        "signatureLogFile": "Hexalith.Parties.Picker.signature.txt.gz",
+        "signatureLogSha256": "2cc79567328ed63c1e2ef9886b6d339ea7014bfd2e1afb5a7ac85026fab5dfc4",
+        "startedAtUtc": "2026-11-09T12:12:47.834076+00:00",
+        "completedAtUtc": "2026-11-09T12:12:48.819302+00:00",
+        "matchesHistoricalArchiveAndDlls": true,
+        "historicalSignatureLogVerified": true,
+        "storedSignatureLogSha256": "d3a93bfe4ebcafeb5f53b818c776211721601252e6be957a953f50c37e4c9395"
+      },
+      {
+        "id": "Hexalith.Parties.Authentication",
+        "version": "3.1.0",
+        "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+        "downloadUrl": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.authentication/3.1.0/hexalith.parties.authentication.3.1.0.nupkg",
+        "archiveSha256": "2aa4f424b07d8e1604819d672cdcfd33d3f50db60bf4b2d48b29b47967d87b60",
+        "archiveBytes": 28456,
+        "signatureCommand": [
+          "dotnet",
+          "nuget",
+          "verify",
+          "--all",
+          "/tmp/parties-sync-release-resume-20261109-vhdzfytl/nuget/hexalith.parties.authentication.3.1.0.nupkg"
+        ],
+        "signatureExitCode": 0,
+        "signatureLogFile": "Hexalith.Parties.Authentication.signature.txt.gz",
+        "signatureLogSha256": "b539042fc0bf77960cf797c269dbf7f311c8b7104859a4963e0e5502d675a82d",
+        "startedAtUtc": "2026-11-09T12:12:47.846939+00:00",
+        "completedAtUtc": "2026-11-09T12:12:48.340216+00:00",
+        "matchesHistoricalArchiveAndDlls": true,
+        "historicalSignatureLogVerified": true,
+        "storedSignatureLogSha256": "f79f4aee9a018c582b98d1848a258d2c2d129661df27f423f8a2171e05ad3f73"
+      },
+      {
+        "id": "Hexalith.Parties.Projections",
+        "version": "3.1.0",
+        "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+        "downloadUrl": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.projections/3.1.0/hexalith.parties.projections.3.1.0.nupkg",
+        "archiveSha256": "da9cf6924d2c39b413edaeb220322a4c53fb3b2d4ecb1c414007a36dc858954e",
+        "archiveBytes": 83456,
+        "signatureCommand": [
+          "dotnet",
+          "nuget",
+          "verify",
+          "--all",
+          "/tmp/parties-sync-release-resume-20261109-vhdzfytl/nuget/hexalith.parties.projections.3.1.0.nupkg"
+        ],
+        "signatureExitCode": 0,
+        "signatureLogFile": "Hexalith.Parties.Projections.signature.txt.gz",
+        "signatureLogSha256": "2f5a1cf3be8c1fc7c10db41f6c6da47f927b515f69f79c644a0aeeb6cfabc5a6",
+        "startedAtUtc": "2026-11-09T12:12:47.922557+00:00",
+        "completedAtUtc": "2026-11-09T12:12:48.453988+00:00",
+        "matchesHistoricalArchiveAndDlls": true,
+        "historicalSignatureLogVerified": true,
+        "storedSignatureLogSha256": "99d32936b5e800a3e45c1ba983a09cd032f3b6341529a901c37e1fcd0dfb7c4a"
+      },
+      {
+        "id": "Hexalith.Parties.Security",
+        "version": "3.1.0",
+        "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+        "downloadUrl": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.security/3.1.0/hexalith.parties.security.3.1.0.nupkg",
+        "archiveSha256": "42bff9e12282a76a7c6d9fc1b3901284302a9214f98d1956a0722f5529f3f629",
+        "archiveBytes": 90863,
+        "signatureCommand": [
+          "dotnet",
+          "nuget",
+          "verify",
+          "--all",
+          "/tmp/parties-sync-release-resume-20261109-vhdzfytl/nuget/hexalith.parties.security.3.1.0.nupkg"
+        ],
+        "signatureExitCode": 0,
+        "signatureLogFile": "Hexalith.Parties.Security.signature.txt.gz",
+        "signatureLogSha256": "0da74fbcf38d28d6a667dce02835ff994c248b1876ecfaf81dbcb1d0127ac763",
+        "startedAtUtc": "2026-11-09T12:12:48.340281+00:00",
+        "completedAtUtc": "2026-11-09T12:12:48.838525+00:00",
+        "matchesHistoricalArchiveAndDlls": true,
+        "historicalSignatureLogVerified": true,
+        "storedSignatureLogSha256": "1276f4b537c73ff67096d205e966c7257237a192dca5d4309baabc857ac92b0b"
+      },
+      {
+        "id": "Hexalith.Parties.Testing",
+        "version": "3.1.0",
+        "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+        "downloadUrl": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.testing/3.1.0/hexalith.parties.testing.3.1.0.nupkg",
+        "archiveSha256": "51e0f7f556dc42dad1ae23a3e0b8535ef44d7f4bbc746911a68e74540acd9cb3",
+        "archiveBytes": 33995,
+        "signatureCommand": [
+          "dotnet",
+          "nuget",
+          "verify",
+          "--all",
+          "/tmp/parties-sync-release-resume-20261109-vhdzfytl/nuget/hexalith.parties.testing.3.1.0.nupkg"
+        ],
+        "signatureExitCode": 0,
+        "signatureLogFile": "Hexalith.Parties.Testing.signature.txt.gz",
+        "signatureLogSha256": "f88b76dcb62c99e781a92d063b0dfaac74ced9754ef57757563fcc8bfd711719",
+        "startedAtUtc": "2026-11-09T12:12:48.454061+00:00",
+        "completedAtUtc": "2026-11-09T12:12:49.986849+00:00",
+        "matchesHistoricalArchiveAndDlls": true,
+        "historicalSignatureLogVerified": true,
+        "storedSignatureLogSha256": "10ca7e10bc486ee5b86e8f62cf4ad2e0a6229e89bfa150445914c0bea930f44d"
+      },
+      {
+        "id": "Hexalith.Parties.Aspire",
+        "version": "3.1.0",
+        "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+        "downloadUrl": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.aspire/3.1.0/hexalith.parties.aspire.3.1.0.nupkg",
+        "archiveSha256": "37ec7539e9da3552d40ee4613b9c20ccbfc0696a8fb34941bdf8c5f4d280a8e4",
+        "archiveBytes": 27806,
+        "signatureCommand": [
+          "dotnet",
+          "nuget",
+          "verify",
+          "--all",
+          "/tmp/parties-sync-release-resume-20261109-vhdzfytl/nuget/hexalith.parties.aspire.3.1.0.nupkg"
+        ],
+        "signatureExitCode": 0,
+        "signatureLogFile": "Hexalith.Parties.Aspire.signature.txt.gz",
+        "signatureLogSha256": "e4c9df7c25cc58423be39c2c6c0d000217c6125edb6125b045446d8010ba61fb",
+        "startedAtUtc": "2026-11-09T12:12:48.503124+00:00",
+        "completedAtUtc": "2026-11-09T12:12:49.010174+00:00",
+        "matchesHistoricalArchiveAndDlls": true,
+        "historicalSignatureLogVerified": true,
+        "storedSignatureLogSha256": "4aeabbb8e5e72e0ea295065c7312ad74d5dd656f4f58b60e905907bcb82650ea"
+      },
+      {
+        "id": "Hexalith.Parties.EventStoreExtensions",
+        "version": "3.1.0",
+        "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+        "downloadUrl": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.eventstoreextensions/3.1.0/hexalith.parties.eventstoreextensions.3.1.0.nupkg",
+        "archiveSha256": "f09f84ef6f2d803f1bbfc0811b9c8753d77730f0a8a6369de89201731a46917f",
+        "archiveBytes": 30483,
+        "signatureCommand": [
+          "dotnet",
+          "nuget",
+          "verify",
+          "--all",
+          "/tmp/parties-sync-release-resume-20261109-vhdzfytl/nuget/hexalith.parties.eventstoreextensions.3.1.0.nupkg"
+        ],
+        "signatureExitCode": 0,
+        "signatureLogFile": "Hexalith.Parties.EventStoreExtensions.signature.txt.gz",
+        "signatureLogSha256": "e23832e7eaf7c544ca1ff2f5dcef9e3be85c151943535cded903eb762244f197",
+        "startedAtUtc": "2026-11-09T12:12:48.819420+00:00",
+        "completedAtUtc": "2026-11-09T12:12:49.329325+00:00",
+        "matchesHistoricalArchiveAndDlls": true,
+        "historicalSignatureLogVerified": true,
+        "storedSignatureLogSha256": "8ee4864371fbb4dfd8909e6c0c884bdb39028dd5cd467c5cb126ff8a7b452e7d"
+      }
+    ],
+    "result": "passed"
+  },
+  "historicalManifestDigestDisposition": "The old manifestSha256 does not match the release Git blob and is not used as raw-file proof. The exact source Git inventory, all eleven IDs, signed archive hashes, DLL hashes, repository commits, fresh signatures and archived package bytes were independently checked. Preserve the original receipt; this receipt records the measured source-blob digest.",
+  "publicationArtifact": {
+    "artifactId": 13542473786,
+    "capturedAtUtc": "2026-11-09T12:14:51.752439+00:00",
+    "zipSha256": "67957cd3be084eafce423453aeeb776fe113904c4cdd958ff5776579863a326c",
+    "historicalDigestMatches": true,
+    "metadataDigest": "sha256:67957cd3be084eafce423453aeeb776fe113904c4cdd958ff5776579863a326c",
+    "metadataWorkflowRun": {
+      "id": 42296293715,
+      "repository_id": 1170072276,
+      "head_repository_id": 1170072276,
+      "head_branch": "main",
+      "head_sha": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3"
+    }
+  },
+  "archivedContainerGraphs": {
+    "result": "passed",
+    "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+    "version": "3.1.0",
+    "images": [
+      {
+        "image": "parties",
+        "indexDigest": "sha256:48d0e8db506e4ce574e8c7bd97e528a302d3fbf97754b007176904cbc1f3abfb",
+        "platforms": [
+          "linux/amd64",
+          "linux/arm64"
+        ],
+        "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+        "version": "3.1.0",
+        "archivedRawGraphVerified": true
+      },
+      {
+        "image": "parties-mcp",
+        "indexDigest": "sha256:b98d9b4ec952399b61ab4ea03435e0b7b253302fdb22e70f99ca15ac079882aa",
+        "platforms": [
+          "linux/amd64",
+          "linux/arm64"
+        ],
+        "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+        "version": "3.1.0",
+        "archivedRawGraphVerified": true
+      },
+      {
+        "image": "parties-ui",
+        "indexDigest": "sha256:66dd933f58b53ef438714e4e4bfc2fc7e5621bfdc770afd96932a545b86625c7",
+        "platforms": [
+          "linux/amd64",
+          "linux/arm64"
+        ],
+        "source": "50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+        "version": "3.1.0",
+        "archivedRawGraphVerified": true
+      }
+    ],
+    "publicPackagesMatchArchivedPackages": 11,
+    "scope": "GitHub publication artifact raw graphs; no fresh OCI registry download"
+  },
+  "durableContainerSubset": {
+    "file": "publication-container-graphs.zip",
+    "sha256": "a1ca26e9cbf09ebb5559ee295bd071462e84fb86392ddf7cb1a6cd37de02d157",
+    "scope": "Unchanged raw OCI graph files and validator receipts extracted from the digest-verified GitHub publication artifact"
+  },
+  "localGuards": [
+    {
+      "command": "bash scripts/gitlink-rc-gate.sh --worktree",
+      "exitCode": 0,
+      "result": "all root gitlinks validated or clean"
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exitCode": 0,
+      "result": "no warning-override or nested-submodule regressions"
+    }
+  ],
+  "currentSourceIsSeparate": true,
+  "newBuildTestOrRuntimeQualificationClaimed": false,
+  "newPublicationDispatched": false,
+  "frozenIntentSha256Before": "1ea1f9ca5d2568342708293bafa67e46f982295d9f6f23f407c064e6a1749b85",
+  "frozenIntentSha256After": "1ea1f9ca5d2568342708293bafa67e46f982295d9f6f23f407c064e6a1749b85",
+  "commitMessageValidation": {
+    "cliVersion": "21.2.4",
+    "nodeVersion": "v24.22.1",
+    "command": [
+      "/home/administrator/.nvm/versions/node/v24.22.1/bin/node",
+      "/home/administrator/projects/hexalith/parties/node_modules/@commitlint/cli/cli.js",
+      "--config",
+      "/home/administrator/projects/hexalith/parties/commitlint.config.mjs",
+      "--edit",
+      "/tmp/parties-sync-release-resume-20261109-vhdzfytl/commit-message.txt",
+      "--verbose"
+    ],
+    "exitCode": 0,
+    "messageFile": "commit-message.txt.gz",
+    "messageSha256": "a4da7af6b76662088392e680fe3baf5f4e70f3461780cca2b9d4b9ce64d3540a",
+    "logFile": "commitlint.log.gz",
+    "logSha256": "ada13e023c946e3ee8f051a4a7cb052128a1fc56b9ade856ace6ec8b8f093a0e"
+  },
+  "closureConsistencyCheck": {
+    "result": "passed",
+    "signedPackageLogs": 11,
+    "rawManifestMatchesReleaseGitBlob": true,
+    "archivedOciIndexes": 3,
+    "individuallyTriagedFindings": 15,
+    "completedTasks": 6,
+    "frozenIntentPreserved": true
+  }
+}

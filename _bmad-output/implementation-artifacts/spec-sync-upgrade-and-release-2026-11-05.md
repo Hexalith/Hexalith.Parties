@@ -2,7 +2,7 @@
 title: 'Synchronize, upgrade and release Parties'
 type: 'bugfix'
 created: '2026-11-05'
-status: 'in-review'
+status: 'done'
 baseline_commit: 'bb2783120c0eed620e3d4f52a2ebaf6aa510126f'
 route: 'dispatch'
 review_loop_iteration: 1
@@ -36,6 +36,16 @@ context: []
 
 </frozen-after-approval>
 
+## Completion checkpoint — 2026-11-09
+
+This task was fulfilled by the [completed November 6 continuation](spec-sync-upgrade-and-release-2026-11-06.md). Parties [v3.1.0](https://github.com/Hexalith/Hexalith.Parties/releases/tag/v3.1.0) was published on 2026-11-06 at 21:40:43 UTC from `50904cc4ba53c9b0b2c082d5872a0d276be8f5c3`. The dated pending checkpoints below are retained as execution history and are superseded by this completion evidence.
+
+Fresh verification confirms the exact release tag/source, successful release and all eight prerequisite workflows, and all eleven public signed NuGet archives with unchanged archive/DLL hashes and matching repository metadata. The digest-verified GitHub publication artifact contains the same packages and three verified raw OCI graphs, each for linux/amd64 and linux/arm64. [Closure evidence](tests/sync-release-2026-11-05-closure-2026-11-09/README.md) distinguishes these checks from new runtime execution or a fresh registry graph download.
+
+The old publication receipt's `manifestSha256` differs from the exact release Git blob. It is preserved; the [fresh receipt](tests/sync-release-2026-11-05-closure-2026-11-09/verification.json) instead binds the measured Git inventory and all eleven packages directly. The qualified dependency snapshot and its tested compatibility holds remain documented in the November 6 continuation.
+
+Current main includes later and concurrent work. Its selected checkouts were clean at capture, but four upstream tips had advanced and its newest CI was pending. This historical completion grants no acceptance to those later source changes. Five independently reviewed later/concurrent defect groups are appended to the deferred ledger; the original release identities and every existing user edit are preserved.
+
 ## Code Map
 
 - `.gitmodules`, `references/*`: ten direct dependency repositories; six are behind origin/main, all initially clean with no unpushed commits.
@@ -49,12 +59,12 @@ context: []
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `references/*` -- direct fast-forwards complete; inspect and repair relevant failing upstream CI from owning roots.
+- [x] `references/*` -- direct fast-forwards complete; inspect and repair relevant failing upstream CI from owning roots.
 - [x] Central catalog and owning tool manifests -- adopt verified stable updates and retain documented compatibility exceptions.
 - [x] Platform publication -- await successful exact tuple CI, then establish its real versioned release when needed for Parties preparation.
-- [ ] Parties tool/CI/capability files -- align the selected tuple, repair observed failures and update meaningful regression coverage.
-- [ ] Owning changes -- run focused validation, independent review, commitlint and safe pushes; commit parent pointers after their sources exist remotely.
-- [ ] Release workflow -- obtain green exact-source CI and range proof, dispatch, satisfy authorized reviewer gates and verify all registry outputs.
+- [x] Parties tool/CI/capability files -- align the selected tuple, repair observed failures and update meaningful regression coverage.
+- [x] Owning changes -- run focused validation, independent review, commitlint and safe pushes; commit parent pointers after their sources exist remotely.
+- [x] Release workflow -- obtain green exact-source CI and range proof, dispatch, satisfy authorized reviewer gates and verify all registry outputs.
 
 **Acceptance Criteria:**
 - Given synchronized clean repositories, when remote tips are compared, then all authorized changes and selected direct pointers are pushed.
@@ -104,6 +114,27 @@ Because CLI4.44.3 only makes functional observations mandatory for its older pro
 - 2026-11-05 honest suite selection: M uses253 current controls; remove only nine historical reader cases that otherwise return early under7.0.4. Keep their actual7.0.2 positives in the unchanged349-case L manifest (raw hash61689f1598dac43a9fa28dcf5319008059e0fea0f1018209b1a8e79e4f63d7b0), and retain the two real current-owner reader cases and reference checks. Exact committed253/349 runs and runtime effects remain pending.
 
 ## Review Triage Log
+
+### Resumed historical closure review — 2026-11-09
+
+All three independent layers completed before triage. The frozen baseline-to-worktree diff also contains later work from other active specs. Verified later/concurrent defects are recorded separately from the completed November 6 release; no source edits or qualified tuple substitutions were made in this closure.
+
+- R-B01: medium / defer — Diagnostic workflow refuses synchronized Builds checkout. The snapshot initializes the root Builds gitlink 27145e52ffab5623198ba5efdab5cdb71aa42d28 but requires 3c8096180ecf2aa539ac454815efbfceb8a92822. This is a later source-adoption mismatch after the completed 50904cc4 release; reconcile measured runtime authority and checkout selection without blindly blessing a new tuple.
+- R-B02: high / defer — Mandatory public verifier refuses synchronized source tuple. The CI caller supplies root gitlinks e39a9a2587ec150d550510763ab69db305d13fdb and 27145e52ffab5623198ba5efdab5cdb71aa42d28, while validate requires 0f4e27f1f78310bd731c10c19dc51bb1e0345d44 and 3c8096180ecf2aa539ac454815efbfceb8a92822 before reading evidence. The public gate was introduced in 71f61d89cf9a1aa3a60e2065f913b95b4b2a639b after this release.
+- R-B03: medium / defer — Ownership marker initialization can leak a preparation directory. 18dd525c3ee80b065bb410bc639cef89f15f163a moved marker creation/write outside the cleanup try. An I/O failure can leave an occupied directory that DeleteOwnedDirectory cannot authenticate. The released 50904cc4 source retained its initialization catch; this is a later regression.
+- R-B04: medium / patch-closed-concurrently — Diagnostic Dapr downloads lacked archive digest checks in the snapshot. Current committed d3d5e7d4de132c3e8b81d1ab04fb8c3541b8aaa4 reads pinned digest metadata, validates its schema and SHA shape, and verifies each archive before tar. The independently committed correction closes the snapshot finding; no additional edit is needed.
+- R-B05: false / reject — Private verifier accepts its two required native cases. The frozen intent explicitly requires both actual native cases. CASES names those exact two and the verifier checks unique presence, all passed outcomes and consistent counters. Whole-suite execution is enforced by the invoking test runner; the release receipt independently records all 28 actual cases. No requirement for the private evidence reader to freeze all evolving helper-test names was established.
+- R-B06: false / reject — Private verifier does not read selectorCompatibilityObserved. PartyEnvironmentTests unconditionally awaits AssertLiveSelectorCompatibilityAsync before persistence observation publication, and emits the flag as literal true. The required passing native case therefore includes those assertions. Changing only the redundant flag in a synthetic resealed document does not demonstrate a supported producer that omits the selector checks or a new false acceptance.
+- R-B07: false / reject — Private verifier ignores assembly scope labels. The loaded and copied arrays already identify distinct roles and each is checked against the exact SDK identity/body map. NativeAssemblyObservations generates fixed labels from actual process/reflection and copied-output measurements; swapping labels alone changes neither measurement nor admission. No supported producer or substituted body escaping the actual checks was shown.
+- R-B08: false / reject — Equivalent creation timestamp spellings compare unequal. The real native observation serializes createdEnvelope.Timestamp and the equal detail.CreatedAt as DateTimeOffset values in the same anonymous document/serializer. Native assertions require the values to be equal before issuance. The proposed mixed Z/+00:00 spelling is a synthetic re-encoding, not a demonstrated output of the supported producer; the actual 28-case release report passed.
+- R-B09: low / reject — Public verifier permits a far-future measuredAtUtc. The value is syntactically validated and ordered after container startup; the producer writes DateTimeOffset.UtcNow while source/run/body authority is independently checked. Replacing only this diagnostic time does not substitute any run, image or body. No normal clock/producer failure was demonstrated; adding a new execution-interval authority/tolerance surface is disproportionate for this diagnostic edge.
+- R-B10: false / reject — Observer could report empty for contradictory resourceIds/isEmpty. CompositionRunResources.IsEmpty and ResourceIds are computed read-only properties of the pinned producer. Empty five-kind inventories with unverified=false compute isEmpty=true and resourceIds=[]; the proposed contradiction cannot be serialized by that producer. Both actual release cleanup receipts and the mandatory verifier independently establish complete emptiness.
+- R-E01: high / defer — Public evidence caller tuple differs from required published tuple. Independently confirms R-B02 at the CI caller and verifier boundary. It concerns the public-profile adoption introduced after released source 50904cc4, and does not invalidate the original current-owner release proof.
+- R-E02: medium / defer — Diagnostic input fence differs from synchronized Builds selection. Independently confirms R-B01. Keep publication/runtime authority distinct from root source selection when fixing the later workflow; do not replace a qualified digest with an unqualified tip.
+- R-E03: medium / defer — Canceled asset-staging test can leave its MSBuild process running. NativeAdminUiAssetStagingTests StageAsync awaits WaitForExitAsync with the test token but has no kill/wait finally; Process.Dispose does not terminate the child. Outer directory deletion can race the still-running child. This test was added after the completed release, in the preserved November 9 preparation work.
+- R-V01: medium / defer — Split private catalog source staging lacks executed GenerateAsync regression. Preverified: existing cleanup cases invoke RunAsync via reflection, and normal CI selects configuration/cleanup classes without executing GenerateAsync. Program.cs references PublishedCatalogArtifactCohort in another source, so reverting to Program-only staging evades the selected tests but breaks runtime generation. This is a preserved concurrent development-catalog change outside the completed release snapshot.
+- R-V02: high / defer — Public evidence tuple mismatch is hidden by synthetic constants. Independently confirms R-B02; synthetic fixtures replace expected identities with verifier constants and the workflow test inspects text. A real caller/reader tuple control is needed for the later adoption.
+
 
 ### Readiness Retry-After review (three independent layers, 2026-11-06)
 

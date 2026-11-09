@@ -2313,3 +2313,24 @@ rollback: None required (test-only).
 - source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
   summary: Reconcile ordinary public evidence-reader source expectations with current committed gitlinks.
   evidence: high; resumed review VG3. Parent probe confirms validate() refuses current Platform e39a9a2587ec150d550510763ab69db305d13fdb and Builds 27145e52ffab5623198ba5efdab5cdb71aa42d28 before artifact inspection, since it requires historical published identities. This blocks the broader public gate and belongs to separate dependency/publication reconciliation; the 4.0.4 offline job is independent. Parent probes and full triage: `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to the source spec.
+
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-05.md`
+  summary: Diagnostic workflow refuses synchronized Builds checkout (medium; pre-existing later/concurrent work).
+  evidence: The snapshot initializes the root Builds gitlink 27145e52ffab5623198ba5efdab5cdb71aa42d28 but requires 3c8096180ecf2aa539ac454815efbfceb8a92822. This is a later source-adoption mismatch after the completed 50904cc4 release; reconcile measured runtime authority and checkout selection without blindly blessing a new tuple. Review findings R-B01, R-E02; durable triage in tests/sync-release-2026-11-05-closure-2026-11-09/review-triage.json.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-05.md`
+  summary: Mandatory public verifier refuses synchronized source tuple (high; pre-existing later/concurrent work).
+  evidence: The CI caller supplies root gitlinks e39a9a2587ec150d550510763ab69db305d13fdb and 27145e52ffab5623198ba5efdab5cdb71aa42d28, while validate requires 0f4e27f1f78310bd731c10c19dc51bb1e0345d44 and 3c8096180ecf2aa539ac454815efbfceb8a92822 before reading evidence. The public gate was introduced in 71f61d89cf9a1aa3a60e2065f913b95b4b2a639b after this release. Review findings R-B02, R-E01, R-V02; durable triage in tests/sync-release-2026-11-05-closure-2026-11-09/review-triage.json.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-05.md`
+  summary: Ownership marker initialization can leak a preparation directory (medium; pre-existing later/concurrent work).
+  evidence: 18dd525c3ee80b065bb410bc639cef89f15f163a moved marker creation/write outside the cleanup try. An I/O failure can leave an occupied directory that DeleteOwnedDirectory cannot authenticate. The released 50904cc4 source retained its initialization catch; this is a later regression. Review findings R-B03; durable triage in tests/sync-release-2026-11-05-closure-2026-11-09/review-triage.json.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-05.md`
+  summary: Split private catalog source staging lacks executed GenerateAsync regression (medium; pre-existing later/concurrent work).
+  evidence: Preverified: existing cleanup cases invoke RunAsync via reflection, and normal CI selects configuration/cleanup classes without executing GenerateAsync. Program.cs references PublishedCatalogArtifactCohort in another source, so reverting to Program-only staging evades the selected tests but breaks runtime generation. This is a preserved concurrent development-catalog change outside the completed release snapshot. Review findings R-V01; durable triage in tests/sync-release-2026-11-05-closure-2026-11-09/review-triage.json.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-05.md`
+  summary: Canceled asset-staging test can leave its MSBuild process running (medium; pre-existing later/concurrent work).
+  evidence: NativeAdminUiAssetStagingTests StageAsync awaits WaitForExitAsync with the test token but has no kill/wait finally; Process.Dispose does not terminate the child. Outer directory deletion can race the still-running child. This test was added after the completed release, in the preserved November 9 preparation work. Review findings R-E03; durable triage in tests/sync-release-2026-11-05-closure-2026-11-09/review-triage.json.

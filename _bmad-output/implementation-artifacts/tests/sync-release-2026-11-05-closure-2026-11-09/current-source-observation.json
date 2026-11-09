@@ -1,0 +1,108 @@
+{
+  "capturedAtUtc": "2026-11-09T12:13:02.784043+00:00",
+  "rootHead": "d3d5e7d4de132c3e8b81d1ab04fb8c3541b8aaa4",
+  "rootDirectSubmodules": [
+    {
+      "path": "references/Hexalith.EventStore",
+      "selectedGitlink": "b437879df2339692d177774d1f076936da6ebd62",
+      "checkoutHead": "b437879df2339692d177774d1f076936da6ebd62",
+      "remoteMain": "e3732d47283368f906727c83abf309154f93e9e7",
+      "checkoutMatchesSelection": true,
+      "checkoutMatchesRemoteMain": false,
+      "branch": "main",
+      "dirty": false
+    },
+    {
+      "path": "references/Hexalith.Memories",
+      "selectedGitlink": "4ff3e6866ecb6d1a497e7063e972c24259252c40",
+      "checkoutHead": "4ff3e6866ecb6d1a497e7063e972c24259252c40",
+      "remoteMain": "4ff3e6866ecb6d1a497e7063e972c24259252c40",
+      "checkoutMatchesSelection": true,
+      "checkoutMatchesRemoteMain": true,
+      "branch": "main",
+      "dirty": false
+    },
+    {
+      "path": "references/Hexalith.FrontComposer",
+      "selectedGitlink": "e972d0f06a8eec3446db0b2270fdb14eef4c1186",
+      "checkoutHead": "e972d0f06a8eec3446db0b2270fdb14eef4c1186",
+      "remoteMain": "e972d0f06a8eec3446db0b2270fdb14eef4c1186",
+      "checkoutMatchesSelection": true,
+      "checkoutMatchesRemoteMain": true,
+      "branch": "main",
+      "dirty": false
+    },
+    {
+      "path": "references/Hexalith.Tenants",
+      "selectedGitlink": "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
+      "checkoutHead": "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
+      "remoteMain": "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
+      "checkoutMatchesSelection": true,
+      "checkoutMatchesRemoteMain": true,
+      "branch": "",
+      "dirty": false
+    },
+    {
+      "path": "references/Hexalith.AI.Tools",
+      "selectedGitlink": "1745b6663ad32bb1288167135ed0f979366c53a0",
+      "checkoutHead": "1745b6663ad32bb1288167135ed0f979366c53a0",
+      "remoteMain": "1745b6663ad32bb1288167135ed0f979366c53a0",
+      "checkoutMatchesSelection": true,
+      "checkoutMatchesRemoteMain": true,
+      "branch": "main",
+      "dirty": false
+    },
+    {
+      "path": "references/Hexalith.Commons",
+      "selectedGitlink": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+      "checkoutHead": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+      "remoteMain": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+      "checkoutMatchesSelection": true,
+      "checkoutMatchesRemoteMain": true,
+      "branch": "main",
+      "dirty": false
+    },
+    {
+      "path": "references/Hexalith.Builds",
+      "selectedGitlink": "27145e52ffab5623198ba5efdab5cdb71aa42d28",
+      "checkoutHead": "27145e52ffab5623198ba5efdab5cdb71aa42d28",
+      "remoteMain": "b5eb25c630b58322fa13f1c5e384b9909b66099b",
+      "checkoutMatchesSelection": true,
+      "checkoutMatchesRemoteMain": false,
+      "branch": "main",
+      "dirty": false
+    },
+    {
+      "path": "references/Hexalith.PolymorphicSerializations",
+      "selectedGitlink": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+      "checkoutHead": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+      "remoteMain": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+      "checkoutMatchesSelection": true,
+      "checkoutMatchesRemoteMain": true,
+      "branch": "main",
+      "dirty": false
+    },
+    {
+      "path": "references/Hexalith.McpCli",
+      "selectedGitlink": "1c1f06b46bbe9e115022be8af75b10085c8ac360",
+      "checkoutHead": "1c1f06b46bbe9e115022be8af75b10085c8ac360",
+      "remoteMain": "1c18a42aa9439bfc29009951f29968cac2a71436",
+      "checkoutMatchesSelection": true,
+      "checkoutMatchesRemoteMain": false,
+      "branch": "main",
+      "dirty": false
+    },
+    {
+      "path": "references/Hexalith.Platform",
+      "selectedGitlink": "e39a9a2587ec150d550510763ab69db305d13fdb",
+      "checkoutHead": "e39a9a2587ec150d550510763ab69db305d13fdb",
+      "remoteMain": "337f5b9a3d2d9b47b0e2b9c051f00d3de8c57361",
+      "checkoutMatchesSelection": true,
+      "checkoutMatchesRemoteMain": false,
+      "branch": "main",
+      "dirty": false
+    }
+  ],
+  "readOnly": true,
+  "nestedCheckoutsInitialized": false
+}
