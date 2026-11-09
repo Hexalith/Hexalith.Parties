@@ -1,0 +1,105 @@
+[
+  {
+    "name": "root-fetch",
+    "command": [
+      "git",
+      "fetch",
+      "origin",
+      "main"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exit_code": 0,
+    "log": "root-fetch.log.gz",
+    "sha256": "4eeb1cdc795064b80981db24f64d6648267a2b6a223b7e6cb58a4ef2dffbc6fe"
+  },
+  {
+    "name": "root-divergence",
+    "command": [
+      "git",
+      "rev-list",
+      "--left-right",
+      "--count",
+      "HEAD...origin/main"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exit_code": 0,
+    "log": "root-divergence.log.gz",
+    "sha256": "f503559da72034fe07e4b8761c61592be738fe198f04bceaf0f7ce27e0f804d9"
+  },
+  {
+    "name": "warning-guard",
+    "command": [
+      "bash",
+      "scripts/check-no-warning-override.sh"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exit_code": 0,
+    "log": "warning-guard.log.gz",
+    "sha256": "315caa5fc9bf0ac255efb2d79aabdb0d6ca1be5539c23b95a077d0ecc6973a0b"
+  },
+  {
+    "name": "whitespace",
+    "command": [
+      "git",
+      "-c",
+      "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+      "diff",
+      "--check"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exit_code": 0,
+    "log": "whitespace.log.gz",
+    "sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+  },
+  {
+    "name": "owner-publication-dry-run",
+    "command": [
+      "git",
+      "push",
+      "--dry-run",
+      "origin",
+      "main"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.Tenants",
+    "exit_code": 1,
+    "log": "owner-publication-dry-run.log.gz",
+    "sha256": "75c584a61be158abfa0602c7f219fd1ba13f552a40f4e06fb4e11956831a2650"
+  },
+  {
+    "name": "node-version",
+    "command": [
+      "/home/administrator/.nvm/versions/node/v24.22.1/bin/node",
+      "--version"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exit_code": 0,
+    "log": "node-version.log.gz",
+    "sha256": "abee8d65afa95510e7e200b1183f9d1c04b0665f8e78777915fdf0bca703e9b0"
+  },
+  {
+    "name": "commitlint-version",
+    "command": [
+      "/home/administrator/.nvm/versions/node/v24.22.1/bin/node",
+      "node_modules/@commitlint/cli/cli.js",
+      "--version"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exit_code": 0,
+    "log": "commitlint-version.log.gz",
+    "sha256": "dc50072e53bbc39332fe611a0eb6ede7846918c2da1677ae17604096d6c3abf0"
+  },
+  {
+    "name": "commitlint",
+    "command": [
+      "/home/administrator/.nvm/versions/node/v24.22.1/bin/node",
+      "node_modules/@commitlint/cli/cli.js",
+      "--edit",
+      "/tmp/six-fitness-review-xg4kxqry/message.txt",
+      "--verbose"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exit_code": 0,
+    "log": "commitlint.log.gz",
+    "candidate": "message.txt.gz"
+  }
+]

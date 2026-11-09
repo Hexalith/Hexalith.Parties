@@ -302,3 +302,62 @@ independently passes 53 fixtures per Python mode. The receipt gate retains its
 historical execution scope; new run/report hashes are in the additive
 third-review companion manifest. Status remains in-review because the owner
 Contracts gate and Tenants publication remain blocked. No new work is deferred.
+
+
+### Current resumed review — 2026-11-09
+
+All three layers reviewed the historical delivery and committed follow-ups in a
+retained consecutive-commit diff, SHA-256
+`893d823bfaa873a40afb7b6c34e36edd0b5fb9f7302b7180068ab94a92eeb6d1`.
+Every finding has its own verdict below. BH-C01/03/04/05/06/07/09 and EC-C01
+share the unanchored sanitized-payload root cause; the fixed digest inventory
+binds the exact retained native XML, diffs and reviewer reports. It establishes
+consistency of the historical bytes, not independent execution attestation or
+reviewer authenticity. No historical packet or execution result is rewritten.
+
+| Finding | Verdict / resolution | Evidence |
+| --- | --- | --- |
+| BH-C01: mutable sanitized hashes bypass fixed raw execution hashes | medium / patched | Independent retained-payload mutation preserves original hashes and is accepted; anchor the complete sanitized payload inventory. |
+| BH-C02: refreshed input hashes accept changed workspace as historical inputs | medium / patched | Current workspace is accepted after refreshing supplied hashes; anchor the complete original input map and replay its recorded blobs separately. |
+| BH-C03: arbitrary replacement diff can retain review clearance | medium / patched | Replacing the owner diff and its mutable descriptor is accepted; the sanitized inventory now binds the exact historical reviewed patches. |
+| BH-C04: nonempty unrelated review text is accepted | medium / patched | The same descriptor mutation replaces the retained follow-up; fixed payload identity rejects it without claiming reviewer authentication. |
+| BH-C05: server XML assembly name can disagree with executed target | medium / patched | Altered sanitized server XML is accepted against unchanged raw execution bindings; exact payload binding rejects the alternate assembly. |
+| BH-C06: paired full-suite identity changes preserve counts | medium / patched | Synthetic owner and paired parent names evade count/pairwise checks; exact payload binding preserves complete native inventories. |
+| BH-C07: paired owner failures can conceal an unrelated regression | medium / patched | Coordinated diagnostic replacement preserves pairwise equality; fixed historical payloads prevent redefinition of both baselines. |
+| BH-C08: derived failure/skip arrays can contradict XML | medium / patched | Clearing arrays leaves native XML unchanged and is accepted; compare both arrays to the parsed native reports. |
+| BH-C09: mutation helpers omit sanitized-only corruptions | medium / patched | Existing rewrite helper changes original hashes too; add an independent path that retains original hashes while mutating parsed payloads. |
+| BH-C10: third-review companion has no executable gate | medium / patched | The historical checker never opens the newer manifest; check its immutable manifest and every referenced compressed/raw payload plus recorded inputs. |
+| EC-C01: altered native identities survive original hash bindings | medium / patched | Independent synthetic server control reproduces the sanitized-only bypass; shared inventory fix rejects it. |
+| VG-C01: evaluated package/source predicate lacks regression proof | medium / patched | A one-line predicate deletion passes all 53 previous fixtures; add an evaluated false-source-selector corruption with its specific diagnostic. |
+| VG-C02: requested evaluated mapping hash can be absent | medium / patched | Parent and projection commands request the hash but presence is optional; require it whenever the retained evaluation command requested it. |
+
+The replay helper restores all 21 exact recorded input files from their owning
+Git histories into a temporary directory; it does not change active checkouts.
+Current historical-packet preservation, protected deferred entries and frozen
+intent are checked separately. The historical input map retains its original
+bytes, including the original checker sources. The trusted checker now validates
+that stamped historical state and the third-review companion; it does not claim
+those old inputs are today's selected dependency graph.
+
+
+Current final source verification passes all six equivalent controls and all
+304 fitness tests. The full service suite passes 2,868 with the same thirteen
+existing runtime skips; both source builds have zero warnings/errors. Tenants
+Contracts passes 832 and retains the exact same 205 failing identities as the
+recorded baseline (1,037 total). Missing nested Builds fixtures remain the
+all-tests-pass blocker; no nested submodule is initialized. The selected owner
+checkout and dependency graph remain unchanged.
+
+All three independent reviewers clear correction SHA-256
+`d1dee87f58d46066a8fd936bde27b904540da553482317c06bb1f4f4fb577dae`.
+Each independently executes the portable replay; all 64 fixtures pass in both
+Python modes. The verification reviewer also confirms both relevant one-line
+mutants fail at the intended new fixture, and the edge reviewer confirms altered
+current preserved bytes, frozen intent and protected ledger entries refuse.
+GitHub now reports Tenants push permission; an actual Git publication dry run
+refuses non-fast-forward local main instead of the historical HTTP 403. No
+owner publication, merge, branch change or new dependency adoption is performed
+in this continuation. No new work is deferred, and the five protected DW entries
+remain open. The current packet and replay instructions are in
+`tests/six-fitness-failures-current-2026-11-09/`. Status remains in-review under
+the baseline's all-tests-pass requirement.

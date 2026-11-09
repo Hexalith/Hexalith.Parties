@@ -20,6 +20,25 @@ def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 
+def inventory_digest(value):
+    return digest(json.dumps(value, sort_keys=True, separators=(',', ':')).encode())
+
+
+def verify_companion(folder, root):
+    """Check the separately retained third-review packet without restamping it."""
+    blob = (folder / 'third-review-validation.json').read_bytes()
+    require(digest(blob) == '570e08c0ccf92465f93df1e40593e7e1b4cfbf8f199d0140983e0f06ac572c12',
+            'third review manifest anchor')
+    data = json.loads(blob)
+    for name, item in data['archives'].items():
+        require(Path(item['archive']).name == item['archive'], 'third review archive path')
+        archive = (folder / item['archive']).read_bytes()
+        require(digest(archive) == item['compressed_sha256'], 'third review compressed hash: ' + name)
+        require(digest(gzip.decompress(archive)) == item['sanitized_sha256'], 'third review payload hash: ' + name)
+    for name, expected in data['current_input_sha256'].items():
+        require(digest((root / name).read_bytes()) == expected, 'third review recorded input: ' + name)
+
+
 def verify(folder, root, manifest=None):
     folder, root = Path(folder), Path(root)
     data = manifest if manifest is not None else json.loads((folder / 'validation.json').read_text())
@@ -315,8 +334,8 @@ def verify(folder, root, manifest=None):
         project = Path(selection_run['command'][2]).stem
         expected_path = selection_run['cwd'] + f'/tests/{project}/bin/Debug/net10.0/{project}.dll'
         require(selected_props['TargetPath'] == expected_path, 'source selection target: ' + name)
-        if 'HexalithSourceMappingHash' in selected_props:
-            require(selected_props['HexalithSourceMappingHash'] == source_environment['HEXALITH_SOURCE_MAPPING_HASH'],
+        if 'HexalithSourceMappingHash' in selection_run['command'][4].split(':', 1)[1].split(','):
+            require(selected_props.get('HexalithSourceMappingHash') == source_environment['HEXALITH_SOURCE_MAPPING_HASH'],
                     'source selection mapping: ' + name)
 
     require(data.get('followup_review') == inventory['followup_review'], 'second review metadata')
@@ -336,6 +355,22 @@ def verify(folder, root, manifest=None):
                 and fixture_result['results'][0] == {'case': 'valid', 'result': 'accepted'}
                 and all(result['result'] == 'rejected' for result in fixture_result['results'][1:]),
                 'second review fixtures: ' + mode)
+    # Raw execution hashes do not bind sanitized bytes. Anchor the exact retained
+    # payloads as well, after semantic checks so negative fixtures keep their diagnostics.
+    for name, tree in reports.items():
+        failures = [{'name': test.get('name'), 'message': test.findtext('failure/message', '')}
+                    for test in tree.findall(".//test[@result='Fail']")]
+        skips = [{'name': test.get('name'), 'reason': test.findtext('reason')}
+                 for test in tree.findall(".//test[@result='Skip']")]
+        require(runs[name].get('failures') == failures, 'derived failures: ' + name)
+        require(runs[name].get('skips') == skips, 'derived skips: ' + name)
+    require(inventory_digest({name: item['sanitized_sha256'] for name, item in data['archives'].items()})
+            == '6db5d3a7909039bb67de13b87b39cd0765fc08d7662e2fd0d5ca9cda8dc94636',
+            'sanitized payload inventory anchor')
+    require(inventory_digest(data['post_verification_inputs'])
+            == '30b582fa16ae8dde7bdd320a4d00b4959051411c9fb7377c881f90b1ff99c100',
+            'recorded input inventory anchor')
+    verify_companion(folder, root)
     return {'evidence': 'verified', 'completion': 'in-review', 'preserved_files': len(preserved), 'owner_failures': 205}
 
 

@@ -1,0 +1,107 @@
+[
+  {
+    "path": ".config/dotnet-tools.json",
+    "revision": "18dd525c3ee80b065bb410bc639cef89f15f163a",
+    "sha256": "1f8a81955132f973e0a4f94fa146b8a37cf6841d8c2aba80ef8147f904504926"
+  },
+  {
+    "path": "Directory.Build.props",
+    "revision": "71dd8a4377dcab3d5a30a416be96263e5aa3a2f0",
+    "sha256": "9ce552be3a090a606be441c22f03bd445e6c4e4a3a6b4ebdcd98b57691357c0d"
+  },
+  {
+    "path": "Directory.Build.targets",
+    "revision": "806ed7b83b35fcc24996e58affb78ea51a0c8aa7",
+    "sha256": "7ea93c965c60650f42d6c3e43e1bd9dc2b7f93644eee5ea5a22f18773047c7bb"
+  },
+  {
+    "path": "Directory.Packages.props",
+    "revision": "aaea8719eefed2036aded6cc5d365fc732b51f3b",
+    "sha256": "04ef2dd100cfff93809d29ccba3af8b490fe0df356e85d9df8b492e11a26dad7"
+  },
+  {
+    "path": "global.json",
+    "revision": "71dd8a4377dcab3d5a30a416be96263e5aa3a2f0",
+    "sha256": "722b3c748e87aea67cd06e65b9af200bf22aa69ec601a3d1fbc6e163e1cf3bb5"
+  },
+  {
+    "path": "module/hexalith.module-manifest.v2.json",
+    "revision": "71dd8a4377dcab3d5a30a416be96263e5aa3a2f0",
+    "sha256": "d9c193b0e7b61601b8fcceb906b5dafe4769a1b9d7538a6ce164b4aa0840b348"
+  },
+  {
+    "path": "scripts/test.ps1",
+    "revision": "71dd8a4377dcab3d5a30a416be96263e5aa3a2f0",
+    "sha256": "8ed351cf51274dc487052cb5571b676b12927bff6b8be912019374e59e7444a4"
+  },
+  {
+    "path": "README.md",
+    "revision": "45a3b24873017a0020a608494d3822a778f39ede",
+    "sha256": "e6d41db9c1e224f73087fd849af02a28cb98eed5c3c6352ae6bc99d342629883"
+  },
+  {
+    "path": "docs/architecture.md",
+    "revision": "18dd525c3ee80b065bb410bc639cef89f15f163a",
+    "sha256": "ec1515bb44699f33713066e2b43a29b9989c8c6f72c92d2e8d6acdfd739f8a8a"
+  },
+  {
+    "path": "docs/project-overview.md",
+    "revision": "18dd525c3ee80b065bb410bc639cef89f15f163a",
+    "sha256": "9e6b9c230ad7e85feb9a314661e5d566efd34e08b3c991deb148e8739f028be5"
+  },
+  {
+    "path": "docs/getting-started.md",
+    "revision": "45a3b24873017a0020a608494d3822a778f39ede",
+    "sha256": "4e541e41de4574141703c44a65a5207cc12cbdb423a1e6480b2be88696582271"
+  },
+  {
+    "path": "docs/development-guide.md",
+    "revision": "71dd8a4377dcab3d5a30a416be96263e5aa3a2f0",
+    "sha256": "ccb4f19dcd1bea24cb02d971914aabfaf8ce52cfaf469463daec4afab6d2f48b"
+  },
+  {
+    "path": "tests/Hexalith.Parties.Tests/FitnessTests/DocumentationFitnessTests.cs",
+    "revision": "71dd8a4377dcab3d5a30a416be96263e5aa3a2f0",
+    "sha256": "9e97ee3f95f08138bfbc4b4d977560814ec0c5ea1e2192bb96f955d1c0b13877"
+  },
+  {
+    "path": "_bmad-output/implementation-artifacts/spec-six-fitness-failures.md",
+    "revision": "71dd8a4377dcab3d5a30a416be96263e5aa3a2f0",
+    "sha256": "c5d4216377332a4da2f5fb6c6094ee2a47f616888b15a07cbe7ccab7ea91f368"
+  },
+  {
+    "path": "_bmad-output/implementation-artifacts/tests/six-fitness-failures-resumed-2026-11-09/verify-receipt.py",
+    "revision": "71dd8a4377dcab3d5a30a416be96263e5aa3a2f0",
+    "sha256": "6e95cbf10ccb0396528811a0c41a35ecd7c8b34ab01ccc281955c14bc7f1482c"
+  },
+  {
+    "path": "references/Hexalith.Tenants/Directory.Build.props",
+    "revision": "92197735b9e1051e8391b205be264ad6181eedb2",
+    "sha256": "4003c5362c523c4d6bf9003869200c417c81dc02007eb3fed7f2ad03492c50a4"
+  },
+  {
+    "path": "references/Hexalith.Tenants/Directory.Build.targets",
+    "revision": "42c9d23adfb53a353b10c7598930f03a84426745",
+    "sha256": "f7ae6ea101206e3cbb892c4edeaf52b58e69bdbd283cd1f030e2994dad5ce8ed"
+  },
+  {
+    "path": "tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs",
+    "revision": "806ed7b83b35fcc24996e58affb78ea51a0c8aa7",
+    "sha256": "3ce1a364e70d86a2c4e3f47f343c3998ab889537c052e97b71013643c88a0697"
+  },
+  {
+    "path": "_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md",
+    "revision": "806ed7b83b35fcc24996e58affb78ea51a0c8aa7",
+    "sha256": "8daa96c486aff41cce9b52869996378d809c814279d63971e7b3e4cd6968b002"
+  },
+  {
+    "path": "references/Hexalith.Tenants/tests/Hexalith.Tenants.Contracts.Tests/PackageGovernanceTests.cs",
+    "revision": "cf36618a2c27b5722a1ff811cfbbce4528c3c105",
+    "sha256": "62d3887a73a5e77f29a1bd18aa970b9be81a5e763b111dbce32b53787ec23d23"
+  },
+  {
+    "path": "_bmad-output/implementation-artifacts/tests/six-fitness-failures-resumed-2026-11-09/test-verify-receipt.py",
+    "revision": "71dd8a4377dcab3d5a30a416be96263e5aa3a2f0",
+    "sha256": "47381c781d3b1b70fe63349ef0c8dfcdc660f0a80c4873a8aba69544f5f67892"
+  }
+]

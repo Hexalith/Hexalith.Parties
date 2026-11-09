@@ -170,6 +170,54 @@ def main():
         rewrite_json(data, work, 'recorded-execution-inventory.json',
                      lambda value: next(r for r in value['executions'] if r['name'] == final)['command'].extend(['-class', 'NoSuchClass']))
 
+    def sanitized_only(data, work, name, change):
+        original_hash = data['archives'][name]['original_sha256']
+        value = gzip.decompress((work / data['archives'][name]['archive']).read_bytes())
+        rewrite(data, work, name, change(value))
+        data['archives'][name]['original_sha256'] = original_hash
+
+    def source_property(data, work, key, value):
+        name = run(data, 'parent-source-fitness-selection')['log']
+        def change(blob):
+            payload = json.loads(blob)
+            if value is None:
+                payload['Properties'].pop(key)
+            else:
+                payload['Properties'][key] = value
+            return json.dumps(payload).encode()
+        sanitized_only(data, work, name, change)
+
+    def synthetic_server_case(blob):
+        tree = ET.fromstring(blob)
+        test = tree.find('.//test')
+        test.set('name', 'Synthetic.ControlThatDidNotRun')
+        test.set('method', 'ControlThatDidNotRun')
+        return ET.tostring(tree, encoding='utf-8')
+
+    def replaced_review(data, work):
+        name = 'blind-hunter-followup.md'
+        rewrite(data, work, name, b'Unrelated text')
+
+    def replaced_diff(data, work):
+        rewrite(data, work, 'owner-patch.diff', b'not a patch')
+        data['reviewed_diff_sha256']['owner-patch.diff'] = hashlib.sha256(b'not a patch').hexdigest()
+
+    def companion_manifest(data, work):
+        path = work / 'third-review-validation.json'
+        value = json.loads(path.read_text())
+        value['fresh_full_service']['passed'] = 0
+        path.write_text(json.dumps(value))
+
+    def replaced_recorded_input(data, work):
+        fixture = work / 'root'
+        fixture.mkdir()
+        for path in args.root.resolve().iterdir():
+            (fixture / path.name).symlink_to(path, target_is_directory=path.is_dir())
+        (fixture / 'README.md').unlink()
+        (fixture / 'README.md').write_bytes(b'Unrelated current content')
+        data['post_verification_inputs']['README.md'] = hashlib.sha256(b'Unrelated current content').hexdigest()
+        return fixture
+
     cases = [
         ('missing-XML', lambda d, w: run(d, final).pop('xml'), 'missing XML'),
         ('reduced-full-suite', xml_case(final, reduced), 'suite summary'),
@@ -223,16 +271,31 @@ def main():
         ('coordinated-execution-drift', coordinated_execution, 'execution inventory anchor'),
         ('changed-root-validated-message', lambda d, w: rewrite(d, w, 'root-message.txt', b'Invalid retained candidate\n'), 'validated commit message binding'),
         ('changed-owner-validated-message', lambda d, w: rewrite(d, w, 'owner-message.txt', b'Invalid retained candidate\n'), 'validated commit message binding'),
+        ('sanitized-only-server-identity', lambda d, w: sanitized_only(d, w, run(d, 'owner-server-socket-enabled')['xml'], synthetic_server_case), 'sanitized payload inventory anchor'),
+        ('evaluated-package-as-source', lambda d, w: source_property(d, w, 'HexalithEventStoreFromSource', 'false'), 'source selection: parent-source-fitness-selection'),
+        ('missing-evaluated-mapping-hash', lambda d, w: source_property(d, w, 'HexalithSourceMappingHash', None), 'source selection mapping'),
+        ('replaced-reviewed-diff', replaced_diff, 'sanitized payload inventory anchor'),
+        ('replaced-nonempty-review', replaced_review, 'sanitized payload inventory anchor'),
+        ('missing-derived-owner-failures', lambda d, w: run(d, 'owner-patched-contracts-full').update(failures=[]), 'derived failures'),
+        ('missing-derived-parent-skips', lambda d, w: run(d, final).update(skips=[]), 'derived skips'),
+        ('changed-third-review-manifest', companion_manifest, 'third review manifest anchor'),
+        ('missing-third-review-manifest', lambda d, w: (w / 'third-review-validation.json').unlink(), 'third-review-validation.json'),
+        ('changed-third-review-artifact', lambda d, w: (w / 'third-review-fresh-full-source.xml.gz').write_bytes(b'invalid'), 'third review compressed hash'),
+        ('refreshed-historical-input-hash', replaced_recorded_input, 'recorded input inventory anchor'),
     ]
     for name, mutation, expected in cases:
         with tempfile.TemporaryDirectory(prefix='six-fitness-gate-') as temporary:
             work = Path(temporary)
             for item in original['archives'].values():
                 shutil.copy2(folder / item['archive'], work / item['archive'])
+            shutil.copy2(folder / 'third-review-validation.json', work / 'third-review-validation.json')
+            companion = json.loads((folder / 'third-review-validation.json').read_text())
+            for item in companion['archives'].values():
+                shutil.copy2(folder / item['archive'], work / item['archive'])
             data = copy.deepcopy(original)
-            mutation(data, work)
+            alternate_root = mutation(data, work)
             try:
-                gate.verify(work, args.root, data)
+                gate.verify(work, alternate_root if isinstance(alternate_root, Path) else args.root, data)
             except (ValueError, KeyError, OSError, ET.ParseError) as error:
                 if expected not in str(error):
                     raise RuntimeError(name + ' failed for the wrong reason: ' + str(error)) from error
