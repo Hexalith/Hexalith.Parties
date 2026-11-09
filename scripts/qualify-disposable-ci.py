@@ -40,7 +40,8 @@ class _PinnedHelper:
 
 
 HELPER = _PinnedHelper()
-LOCK_REFUSALS = ('HXR037', 'HXR023')
+# Each injected lock has exactly one runtime refusal: the metadata lock HXR037, the provisioning lock HXR023.
+LOCK_REFUSALS = {'withdrawal-lock-refusal': 'HXR037', 'provisioning-lock-refusal': 'HXR023'}
 TOOL = ['dotnet', 'tool', 'run', 'hexalith-module', '--']
 RUN_ID = re.compile(r'[0-9a-f]{32}')
 LABEL = 'hexalith.g4.run'
@@ -94,6 +95,45 @@ def birth(pid):
         return None if fields[0] == 'Z' else fields[19]
     except (FileNotFoundError, ProcessLookupError):
         return None
+
+
+def tool_processes(leader, leader_birth):
+    """The gated launch leader (the tool muxer) and its live direct children; never the AppHost, DCP or test host.
+
+    Composed processes are the tool's descendants, so the first interrupt reaches only the tool, which records
+    withdrawal before it stops anything it composed.
+    """
+    if birth(leader) != leader_birth:
+        return {}
+    try:
+        session = os.getsid(leader)
+    except ProcessLookupError:
+        return {}
+    processes = {leader: leader_birth}
+    for entry in os.scandir('/proc'):
+        if not entry.name.isdigit() or int(entry.name) == leader:
+            continue
+        try:
+            fields = Path(f'/proc/{entry.name}/stat').read_text().rpartition(')')[2].split()
+        except (FileNotFoundError, ProcessLookupError, NotADirectoryError):
+            continue
+        if len(fields) > 19 and fields[0] not in ('Z', 'X') and int(fields[1]) == leader and int(fields[3]) == session:
+            processes[int(entry.name)] = fields[19]
+    return processes
+
+
+def signal_tool_processes(processes, number):
+    """Signal each tool process individually after re-checking its birth, so a reused process id is never signalled."""
+    delivered = []
+    for pid, born in sorted(processes.items()):
+        if birth(pid) != born:
+            continue
+        try:
+            os.kill(pid, number)
+        except ProcessLookupError:
+            continue
+        delivered.append(pid)
+    return delivered
 
 
 def gated_exec(item, command):
@@ -681,10 +721,11 @@ class Qualification:
         verified = HELPER.cleanup_verified(completed, result, owner)
         require(verified == expected, 'Exact-owner cleanup result did not match the explicit qualification condition')
         if not expected:
-            # An injected lock refusal counts only as the runtime's metadata or provisioning lock refusal.
+            # An injected lock refusal counts only as that lock's own runtime refusal.
             outcome = result.get('outcome') if isinstance(result, dict) else None
-            require(completed.returncode != 0 and isinstance(outcome, dict) and outcome.get('ruleId') in LOCK_REFUSALS,
-                    'Expected refusal was not the metadata or provisioning lock refusal')
+            require(tag in LOCK_REFUSALS and completed.returncode != 0 and isinstance(outcome, dict)
+                    and outcome.get('ruleId') == LOCK_REFUSALS[tag],
+                    'Expected refusal was not the injected lock\'s own runtime refusal')
         if verified:
             require(not self.containers(item), 'Independent exact-label discovery still finds owned containers')
         return result
@@ -704,8 +745,10 @@ class Qualification:
         require(birth(item['pid']) == item['birth'], 'Refusing a missing or reused controller process')
         require(os.getpgid(item['pid']) == item['processGroup'] == item['pid'], 'Refusing a foreign process group')
         owner = self.issued(item) if Path(item['receipt']).exists() else None
-        os.killpg(item['processGroup'], number)
-        self.observe('owned-process-signal', ownerRunId=owner['runId'] if owner else None, pid=item['pid'], signal=number)
+        # Only the tool's own processes; the AppHost, DCP and native test host are left to the tool or the exact down.
+        delivered = signal_tool_processes(tool_processes(item['pid'], item['birth']), number)
+        self.observe('owned-process-signal', ownerRunId=owner['runId'] if owner else None, pid=item['pid'], signal=number,
+                     toolProcessIds=delivered)
 
     def pause_host(self, item):
         state = self.state(item)
@@ -803,6 +846,8 @@ class Qualification:
         require(self.children['partial'].returncode == -signal.SIGKILL, 'Partial-startup interruption was not observed')
         self.observe('actual-partial-startup-interruption', ownerRunId=self.issued(item)['runId'], exitCode=-signal.SIGKILL)
         self.checkpoint('partial', 'cleanup')
+        # Only the tool was killed; its paused AppHost must run again so the exact down can withdraw and stop it.
+        self.resume_host(item)
         self.down(item, 'partial-startup-recovery')
         HELPER.retain_artifacts(self.issued(item), private_directory(self.evidence / item['label']))
         first = self.cleanup_outcome(item, 'partial-cleaned', required=True)

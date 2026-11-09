@@ -160,7 +160,9 @@ jobs:
           done
           echo "$tools" >> "$GITHUB_PATH"
           echo "HEXALITH_DAPR_HOME=$dapr_home" >> "$GITHUB_ENV"
-      # The reader configuration is reachable only from the steps that start owners and from its removal step.
+      # The reader file lives at a fixed path under runner.temp, so any later step in this job could read it.
+      # Only the owner-starting steps receive it as DOCKER_CONFIG, nothing exports it through GITHUB_ENV, and an
+      # always() step removes it.
       - name: Configure only the dedicated pull reader
         env:
           REGISTRY_READER_USERNAME: ${{ secrets.HEXALITH_CI_REGISTRY_USERNAME }}

@@ -265,9 +265,11 @@ class ControllerSafetyTests(unittest.TestCase):
 
     def test_reused_controller_process_is_never_signalled(self):
         controller = object.__new__(Q.Qualification)
-        with patch.object(Q, 'birth', return_value='replacement'), patch.object(Q.os, 'killpg') as kill:
+        with patch.object(Q, 'birth', return_value='replacement'), patch.object(Q.os, 'killpg') as group, \
+                patch.object(Q.os, 'kill') as kill:
             with self.assertRaises(ValueError):
                 controller.process_signal({'pid': 123, 'birth': 'original', 'processGroup': 123}, 2)
+            group.assert_not_called()
             kill.assert_not_called()
 
     def test_receipt_cannot_escape_its_recorded_owner_role(self):

@@ -80,21 +80,26 @@ class WithdrawalTests(unittest.TestCase):
 
 
 class LockRefusalTests(unittest.TestCase):
-    def test_an_injected_lock_refusal_counts_only_as_the_metadata_or_provisioning_refusal(self):
+    def test_each_injected_lock_counts_only_as_its_own_runtime_refusal(self):
         controller = object.__new__(Q.Qualification)
         controller.issued = lambda item: {'runId': 'a' * 32}
         controller.containers = lambda item: []
         remaining = {key: [] for key in ('containerIds', 'processIds', 'workspaceIds', 'claimIds', 'discoveryFailures')}
         remaining['unverified'] = True
-        for rule, accepted in (('HXR037', True), ('HXR023', True), ('HXR024', False), (None, False)):
+        cases = {('withdrawal-lock-refusal', 'HXR037'): True, ('withdrawal-lock-refusal', 'HXR023'): False,
+                 ('provisioning-lock-refusal', 'HXR023'): True, ('provisioning-lock-refusal', 'HXR037'): False,
+                 ('withdrawal-lock-refusal', 'HXR024'): False, ('provisioning-lock-refusal', None): False,
+                 ('other-refusal', 'HXR037'): False, ('other-refusal', 'HXR023'): False}
+        for (tag, rule), accepted in cases.items():
             result = {'runId': 'a' * 32, 'outcome': {'exitCode': 'TopologyOrLifecycle', 'ruleId': rule}, 'remainingResources': remaining}
             controller.tool = lambda item, arguments, tag, environment=None, value=result: (subprocess.CompletedProcess([], 3), value)
-            with self.subTest(rule=rule):
+            with self.subTest(tag=tag, rule=rule):
                 if accepted:
-                    self.assertEqual(controller.down({}, 'withdrawal-lock-refusal', expected=False), result)
+                    self.assertEqual(controller.down({}, tag, expected=False), result)
                 else:
                     with self.assertRaises(ValueError):
-                        controller.down({}, 'withdrawal-lock-refusal', expected=False)
+                        controller.down({}, tag, expected=False)
+        self.assertEqual(Q.LOCK_REFUSALS, {'withdrawal-lock-refusal': 'HXR037', 'provisioning-lock-refusal': 'HXR023'})
 
 
 class SignalOrderingTests(unittest.TestCase):

@@ -51,15 +51,41 @@ jobs:
         run: |
           set -euo pipefail
           python3 - <<'PYTHON'
+          import json
           import os
+          import re
           import xml.etree.ElementTree as ET
           from pathlib import Path
-          root = ET.parse('references/Hexalith.Builds/Props/Directory.Packages.props').getroot()
+          builds = Path('references/Hexalith.Builds')
+          root = ET.parse(builds / 'Props/Directory.Packages.props').getroot()
+          versions = {}
+          for key, element in [('CI_ASPIRE_VERSION', 'HexalithAspireAppHostSdkVersion'), ('CI_DAPR_CLI_VERSION', 'HexalithDaprCliVersion'), ('CI_DAPR_RUNTIME_VERSION', 'HexalithDaprRuntimeVersion')]:
+              node = root.find('.//' + element)
+              if node is None or node.text is None:
+                  raise ValueError('Missing verified catalog toolchain property: ' + element)
+              value = node.text.strip()
+              if not value or any(c not in '0123456789.-abcdefghijklmnopqrstuvwxyz' for c in value):
+                  raise ValueError('invalid workflow-owned toolchain version')
+              versions[key] = value
+          # Builds pins each Dapr archive digest beside the catalog versions; without them nothing is downloaded.
+          digests_path = builds / 'Props/dapr-toolchain-sha256.json'
+          if not digests_path.is_file():
+              raise ValueError('The pinned Builds catalog carries no Dapr archive digests; adopt a Builds release that pins them')
+          digests = json.loads(digests_path.read_text(encoding='utf-8'))
+          if digests.get('schema') != 'hexalith.builds.dapr-toolchain-sha256.v1':
+              raise ValueError('Unsupported Dapr archive digest schema')
+          runtime = digests.get('runtime', {}).get(versions['CI_DAPR_RUNTIME_VERSION'], {})
+          pinned = {
+              'CI_DAPR_CLI_SHA256': digests.get('cli', {}).get(versions['CI_DAPR_CLI_VERSION'], {}).get('dapr_linux_amd64.tar.gz'),
+              'CI_DAPRD_SHA256': runtime.get('daprd_linux_amd64.tar.gz'),
+              'CI_PLACEMENT_SHA256': runtime.get('placement_linux_amd64.tar.gz'),
+              'CI_SCHEDULER_SHA256': runtime.get('scheduler_linux_amd64.tar.gz'),
+          }
+          for key, value in pinned.items():
+              if not isinstance(value, str) or re.fullmatch(r'[0-9a-f]{64}', value) is None:
+                  raise ValueError('Missing or invalid pinned Dapr archive digest: ' + key)
           with Path(os.environ['GITHUB_ENV']).open('a') as stream:
-              for key, element in [('CI_ASPIRE_VERSION', 'HexalithAspireAppHostSdkVersion'), ('CI_DAPR_CLI_VERSION', 'HexalithDaprCliVersion'), ('CI_DAPR_RUNTIME_VERSION', 'HexalithDaprRuntimeVersion')]:
-                  value = root.find('.//' + element).text
-                  if not value or any(c not in '0123456789.-abcdefghijklmnopqrstuvwxyz' for c in value):
-                      raise ValueError('invalid workflow-owned toolchain version')
+              for key, value in {**versions, **pinned}.items():
                   stream.write(key + '=' + value + '\n')
           PYTHON
       - name: Prepare integration binaries
@@ -70,35 +96,58 @@ jobs:
           dapr_home="$RUNNER_TEMP/hexalith-ci-dapr"
           mkdir -p "$tools" "$dapr_home/tools" "$dapr_home/.dapr/bin"
           dotnet tool install --tool-path "$tools" Aspire.Cli --version "$CI_ASPIRE_VERSION"
+          verify_archive() {
+            if [[ ! "$1" =~ ^[0-9a-f]{64}$ ]]; then
+              echo "Refusing $2 without its pinned SHA-256 digest." >&2
+              return 1
+            fi
+            printf '%s  %s\n' "$1" "$2" | sha256sum --check --strict --quiet -
+          }
           curl --fail --location --proto '=https' --proto-redir '=https' --retry 3 "https://github.com/dapr/cli/releases/download/v$CI_DAPR_CLI_VERSION/dapr_linux_amd64.tar.gz" -o "$RUNNER_TEMP/dapr-cli.tar.gz"
+          verify_archive "${CI_DAPR_CLI_SHA256:-}" "$RUNNER_TEMP/dapr-cli.tar.gz"
           tar -xzf "$RUNNER_TEMP/dapr-cli.tar.gz" -C "$dapr_home/tools" dapr
           for binary in daprd placement scheduler; do
+            case "$binary" in
+              daprd) digest="${CI_DAPRD_SHA256:-}" ;;
+              placement) digest="${CI_PLACEMENT_SHA256:-}" ;;
+              scheduler) digest="${CI_SCHEDULER_SHA256:-}" ;;
+            esac
             curl --fail --location --proto '=https' --proto-redir '=https' --retry 3 "https://github.com/dapr/dapr/releases/download/v$CI_DAPR_RUNTIME_VERSION/${binary}_linux_amd64.tar.gz" -o "$RUNNER_TEMP/$binary.tar.gz"
+            verify_archive "$digest" "$RUNNER_TEMP/$binary.tar.gz"
             tar -xzf "$RUNNER_TEMP/$binary.tar.gz" -C "$dapr_home/.dapr/bin" "$binary"
           done
           echo "$tools" >> "$GITHUB_PATH"
           echo "HEXALITH_DAPR_HOME=$dapr_home" >> "$GITHUB_ENV"
-      - name: Authenticate pull-only integration registry
-        id: registry-login
-        shell: bash
+      # The reader file lives at a fixed path under runner.temp, so any later step in this job could read it.
+      # Only the observer step receives it as DOCKER_CONFIG, nothing exports it through GITHUB_ENV, and an
+      # always() step removes it.
+      - name: Configure only the dedicated pull reader
         env:
-          REGISTRY_PULL_USERNAME: ${{ secrets.HEXALITH_CI_REGISTRY_USERNAME }}
-          REGISTRY_PULL_PASSWORD: ${{ secrets.HEXALITH_CI_REGISTRY_PASSWORD }}
+          REGISTRY_READER_USERNAME: ${{ secrets.HEXALITH_CI_REGISTRY_USERNAME }}
+          REGISTRY_READER_PASSWORD: ${{ secrets.HEXALITH_CI_REGISTRY_PASSWORD }}
+          HEXALITH_LIFECYCLE_REGISTRY_CONFIG: ${{ runner.temp }}/hexalith-lifecycle-registry.startup-reader
         run: |
-          set -euo pipefail
-          if [[ -z "$REGISTRY_PULL_USERNAME" || -z "$REGISTRY_PULL_PASSWORD" ]]; then
-            echo '::error::Dedicated pull-only registry credentials are required.'
-            exit 1
-          fi
-          runner_temp="$(realpath -e -- "$RUNNER_TEMP")"
-          config="$(mktemp -d "$runner_temp/hexalith-ci-registry.XXXXXX")"
-          trap 'status=$?; if [ "$status" -ne 0 ]; then rm -rf -- "$config"; fi; exit "$status"' EXIT
-          chmod 700 "$config"
-          export DOCKER_CONFIG="$config"
-          printf '%s\n' "DOCKER_CONFIG=$config" "HEXALITH_CI_REGISTRY_CONFIG=$config" >> "$GITHUB_ENV"
-          printf '%s' "$REGISTRY_PULL_PASSWORD" | docker login registry.hexalith.com --username="$REGISTRY_PULL_USERNAME" --password-stdin
+          python3 - <<'PY'
+          import base64
+          import json
+          import os
+          from pathlib import Path
+          username, password = (os.environ[key] for key in ['REGISTRY_READER_USERNAME', 'REGISTRY_READER_PASSWORD'])
+          if not username or not password:
+              raise ValueError('Dedicated pull-only reader is required')
+          directory = Path(os.environ['HEXALITH_LIFECYCLE_REGISTRY_CONFIG'])
+          if directory.parent != Path(os.environ['RUNNER_TEMP']).resolve(strict=True):
+              raise ValueError('Refusing a reader directory outside the job temporary root')
+          directory.mkdir(mode=0o700)
+          token = base64.b64encode((username + ':' + password).encode()).decode()
+          descriptor = os.open(directory / 'config.json', os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+          with os.fdopen(descriptor, 'w') as output:
+              json.dump({'auths': {'registry.hexalith.com': {'auth': token}}}, output)
+          PY
       - name: Observe the actual current-owner startup before standard cleanup
         timeout-minutes: 25
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/hexalith-lifecycle-registry.startup-reader
         # The runner signals only this step's process; exec keeps the observer, and its helper, as that process.
         run: exec python3 -B scripts/observe-current-owner-startup.py
       - name: Independently finalize the exact issued owner
@@ -110,20 +159,11 @@ jobs:
           python3 references/Hexalith.Builds/Github/run-module-integration/run_module_integration.py
           finalize --receipt "$RUNNER_TEMP/hexalith-ci-owner.json"
           --evidence TestResults/module-integration --job-status "$CI_JOB_STATUS"
-      - name: Remove integration registry credentials
+      - name: Remove the private reader file
         if: always()
-        shell: bash
-        run: |
-          set -euo pipefail
-          config="${HEXALITH_CI_REGISTRY_CONFIG:-}"
-          if [[ -z "$config" ]]; then exit 0; fi
-          runner_temp="$(realpath -e -- "$RUNNER_TEMP")"
-          if [[ "$(dirname -- "$config")" != "$runner_temp" || "$(basename -- "$config")" != hexalith-ci-registry.* || -L "$config" ]]; then
-            echo '::error::Refusing to remove a foreign registry credential directory.'
-            exit 1
-          fi
-          rm -rf -- "$config"
-          [[ ! -e "$config" && ! -L "$config" ]]
+        env:
+          HEXALITH_LIFECYCLE_REGISTRY_CONFIG: ${{ runner.temp }}/hexalith-lifecycle-registry.startup-reader
+        run: python3 -B scripts/qualify-disposable-ci.py remove-reader
       - name: Retain only bounded redacted startup and helper outcome metadata
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

@@ -19,7 +19,7 @@ _spec = importlib.util.spec_from_file_location("private_current_readers", Path(_
 _readers = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_readers)
 require, held_directory, read, decode, document = (_readers.require, _readers.held_directory, _readers.read, _readers.decode, _readers.document)
-integration_phases = _readers.integration_phases
+integration_phases, invocation_accepted = _readers.integration_phases, _readers.invocation_accepted
 persisted_identity, creation_timestamp = _readers.persisted_identity, _readers.creation_timestamp
 SDK, HEX, IDENTITY = _readers.SDK, _readers.HEX, _readers.IDENTITY
 PROFILE = "platform-package"
@@ -88,7 +88,7 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
     context = {"kind": "ci", "repository": repository, "workflowRunId": run, "workflowAttempt": attempt,
                "jobId": "build-and-test", "runnerKind": "github-hosted", "operatingSystem": "Linux", "disposable": True}
     invocation = document(root, "invocation.json")
-    require(invocation == {"classification": "baseline-only", "executionContext": context, "profiles": [PROFILE]}, "foreign invocation/profile")
+    require(invocation_accepted(invocation, context, PROFILE), "foreign invocation/profile")
     result = document(root, "test-result.json")
     require(result.get("schema") == "hexalith.test-result.v1" and result.get("policyId") == "hexalith.platform.candidate-and-attachment-policy.v1", "unsupported result contract")
     bindings = result["bindings"]
@@ -102,7 +102,7 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
     require(result.get("termination", {}).get("state") == "not-yet-populated", "interrupted native execution")
     cleanup = result["cleanup"]
     require(cleanup.get("state") == "populated" and cleanup.get("disposition") == "complete" and cleanup.get("failures") == [] and cleanup.get("leftoverResourceIds") == [], "owned result cleanup incomplete")
-    execution, final_cleanup, phase_names = integration_phases(root)
+    execution, final_cleanup, phase_names = integration_phases(root, context, owner["runId"], invocation)
     for phase in (execution, final_cleanup):
         remaining = phase.get("remainingResources", {})
         require(phase.get("runId") == owner["runId"] and phase.get("outcome", {}).get("exitCode") == "Success", "execution/cleanup failed or foreign")
