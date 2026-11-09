@@ -152,7 +152,8 @@ class ToolOnlySignalTests(unittest.TestCase):
         controller.down = lambda value, tag, **options: calls.append(('down', tag))
         controller.cleanup_outcome = lambda value, checkpoint, required=False: {
             'terminalStatus': 'cancelled', 'terminalOutcome': {'exitCode': 'Cancelled'}}
-        with patch.object(Q, 'private_directory', side_effect=lambda path: path), patch.object(Q.HELPER, 'retain_artifacts'):
+        # Replacing HELPER itself keeps its lazy loader from importing the Builds submodule, which may be absent.
+        with patch.object(Q, 'private_directory', side_effect=lambda path: path), patch.object(Q, 'HELPER', Mock()):
             controller.partial_startup()
         self.assertEqual(calls[:3], [('signal', signal.SIGKILL), ('resume',), ('down', 'partial-startup-recovery')])
 
@@ -256,6 +257,56 @@ class DaprInstallExecutionTests(unittest.TestCase):
     def test_startup_diagnostics_install_step_extracts_only_verified_archives(self):
         body = run_block(step(STARTUP.read_text(), 'Prepare integration binaries'))
         self.check(body, ['bash', '--noprofile', '--norc', '-eo', 'pipefail'])
+
+
+READER_CREDENTIALS = {'REGISTRY_READER_USERNAME': 'fake-reader', 'REGISTRY_READER_PASSWORD': 'fake-reader-password'}
+READER_CONFIG = {'auths': {'registry.hexalith.com': {'auth': 'ZmFrZS1yZWFkZXI6ZmFrZS1yZWFkZXItcGFzc3dvcmQ='}}}
+
+
+class PullReaderConfigurationExecutionTests(unittest.TestCase):
+    """The real reader-step bodies run under bash with fake credentials; only an exact private config is written."""
+
+    def configure(self, workflow, outside=False, **changes):
+        text = step(workflow, 'Configure only the dedicated pull reader')
+        name = re.search(r'HEXALITH_LIFECYCLE_REGISTRY_CONFIG: \$\{\{ runner\.temp \}\}/(\S+)\n', text).group(1)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            for folder in ('runner', 'outside'):
+                (root / folder).mkdir()
+            directory = root / ('outside' if outside else 'runner') / name
+            (root / 'step.sh').write_text(run_block(text))
+            environment = {**os.environ, **READER_CREDENTIALS, 'RUNNER_TEMP': str(root / 'runner'),
+                           'HEXALITH_LIFECYCLE_REGISTRY_CONFIG': str(directory), **changes}
+            # With no umask, the observed modes are only the ones the step itself requests.
+            completed = subprocess.run(['bash', '-e', str(root / 'step.sh')], cwd=root, env=environment, umask=0,  # nosec B603
+                                       capture_output=True, text=True, timeout=60, check=False)
+            config = directory / 'config.json'
+            written = (json.loads(config.read_text()), config.stat().st_mode & 0o7777,
+                       directory.stat().st_mode & 0o7777) if config.exists() else None
+            return completed, written, directory.exists()
+
+    def check(self, workflow):
+        completed, written, _ = self.configure(workflow)
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual(written, (READER_CONFIG, 0o600, 0o700))
+        refusals = {
+            'empty-username': (False, {'REGISTRY_READER_USERNAME': ''}, 'Dedicated pull-only reader is required'),
+            'empty-password': (False, {'REGISTRY_READER_PASSWORD': ''}, 'Dedicated pull-only reader is required'),
+            'outside-runner-temp': (True, {}, 'Refusing a reader directory outside the job temporary root'),
+        }
+        for name, (outside, changes, message) in refusals.items():
+            with self.subTest(name=name):
+                completed, written, created = self.configure(workflow, outside, **changes)
+                self.assertNotEqual(completed.returncode, 0)
+                self.assertIn(message, completed.stderr)
+                self.assertIsNone(written)
+                self.assertFalse(created)
+
+    def test_lifecycle_reader_step_writes_only_the_exact_private_config(self):
+        self.check(LIFECYCLE.read_text())
+
+    def test_startup_diagnostics_reader_step_writes_only_the_exact_private_config(self):
+        self.check(STARTUP.read_text())
 
 
 class StartupDiagnosticsWorkflowTests(unittest.TestCase):

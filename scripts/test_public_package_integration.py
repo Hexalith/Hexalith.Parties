@@ -260,6 +260,7 @@ class PublicPackageEvidenceTests(unittest.TestCase):
         foreign = dict(f.context, workflowRunId="999")
         refusals = {
             "timeout-with-raw-execution": [("execution.json", execution)],
+            "timeout-with-whole-raw-layout": [("execution.json", execution), ("cleanup.json", cleanup), ("cleanup-1.json", None)],
             "raw-invocation-with-new-records": [("invocation.json", {k: v for k, v in invocation.items() if k != "timeoutSeconds"})],
             "wrapped-execution-with-raw-cleanup": [("cleanup.json", cleanup), ("cleanup-1.json", None)],
             "raw-and-per-attempt-cleanup": [("cleanup.json", cleanup)],
