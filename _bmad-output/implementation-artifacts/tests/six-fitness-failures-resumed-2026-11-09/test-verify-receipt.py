@@ -105,6 +105,44 @@ def main():
         test.remove(test.find('failure'))
         recount(tree)
 
+    def duplicate_floor(tree):
+        tests = tree.findall('.//test')
+        old = next(t for t in tests if t.get('method') == 'EventStore_package_floor_does_not_override_nested_owner_catalogsAsync')
+        entry = next(t for t in tests if t.get('method') == 'EventStorePackageFloorRunsThroughRestoreAndBuildAsync')
+        identity = old.get('id')
+        old.attrib.update(entry.attrib)
+        old.set('id', identity)
+
+    def rewrite_json(data, work, name, change):
+        value = json.loads(gzip.decompress((work / data['archives'][name]['archive']).read_bytes()))
+        change(value)
+        rewrite(data, work, name, json.dumps(value).encode())
+
+    def shared_skip(data, work):
+        for name in ['parent-source-full-socket-enabled', final]:
+            change_xml(data, work, name, swapped_skip)
+
+    def changed_failure(tree):
+        failure = tree.find(".//test[@result='Fail']/failure")
+        failure.set('exception-type', 'UnexpectedApplicationRegression')
+        failure.find('message').text = 'Unrelated application regression'
+
+    def coordinated_floor(data, work):
+        def replace(tree):
+            tests = tree.findall('.//test')
+            old = next(t for t in tests if t.get('method') == 'EventStore_package_floor_does_not_override_nested_owner_catalogsAsync')
+            duplicate = next(t for t in tests if t.get('method') == 'EventStore_package_floor_preserves_newer_catalog_and_explicit_source_selectionsAsync')
+            identity = old.get('id')
+            old.attrib.update(duplicate.attrib)
+            old.set('id', identity)
+        for name in ['owner-contracts-clean-environment-baseline', 'owner-patched-floor', 'owner-patched-contracts-full']:
+            change_xml(data, work, name, replace)
+
+    def coordinated_source_mode(data, work):
+        rewrite(data, work, 'source-environment.json', b'{}')
+        for name in ['parent-source-fitness-build', 'projections-source-build', 'owner-patched-contracts-build']:
+            run(data, name)['environment_overrides'] = {}
+
     cases = [
         ('missing-XML', lambda d, w: run(d, final).pop('xml'), 'missing XML'),
         ('reduced-full-suite', xml_case(final, reduced), 'suite summary'),
@@ -125,6 +163,24 @@ def main():
         ('hidden-owner-failure', xml_case('owner-patched-contracts-full', hidden_owner_failure), 'suite summary'),
         ('empty-DW-inventory', lambda d, w: d['protected_dw_entry_sha256'].clear(), 'protected DW inventory'),
         ('changed-frozen-intent-binding', lambda d, w: d.update(frozen_intent_sha256='0' * 64), 'frozen intent binding'),
+        ('missing-owner-test-input', lambda d, w: d['post_verification_inputs'].pop('references/Hexalith.Tenants/tests/Hexalith.Tenants.Contracts.Tests/PackageGovernanceTests.cs'), 'input inventory'),
+        ('assembly-snapshot-path', lambda d, w: rewrite_json(d, w, 'final-parent-package-assembly.json', lambda v: v.update(path='different.dll')), 'assembly snapshot selection'),
+        ('assembly-snapshot-digest', lambda d, w: rewrite_json(d, w, 'final-parent-package-assembly.json', lambda v: v.update(sha256='0' * 64)), 'assembly snapshot digest'),
+        ('build-project', lambda d, w: run(d, 'final-parent-package-build-corrected')['command'].__setitem__(2, 'different.csproj'), 'build invocation'),
+        ('build-directory', lambda d, w: run(d, 'final-parent-package-build-corrected').update(cwd='unrelated'), 'build invocation'),
+        ('build-mode', lambda d, w: run(d, 'final-parent-package-build-corrected').update(environment_overrides={'HexalithSourceMappingMode': 'source'}), 'build invocation'),
+        ('failed-package-selection', lambda d, w: run(d, 'final-parent-package-selection').update(exit_code=1), 'package selection exit'),
+        ('duplicate-floor-execution', xml_case('owner-patched-floor', duplicate_floor), 'floor inventory'),
+        ('duplicate-full-floor-execution', xml_case('owner-patched-contracts-full', duplicate_floor), 'full floor inventory'),
+        ('shared-unpermitted-skip', shared_skip, 'permitted parent skips'),
+        ('missing-projection-skip-reason', xml_case('projections-source-tests', lambda tree: tree.find(".//test[@result='Skip']").remove(tree.find(".//test[@result='Skip']/reason"))), 'projection skip reason'),
+        ('changed-owner-failure-cause', xml_case('owner-patched-contracts-full', changed_failure), 'owner failure diagnostics'),
+        ('empty-review', lambda d, w: rewrite(d, w, 'blind-hunter-followup.md', b''), 'empty review report'),
+        ('changed-revision-scope', lambda d, w: d['scope'].update(owner_selected_commit='0' * 40), 'revision scope'),
+        ('invalid-observed-revision', lambda d, w: d.update(observed_head='0' * 40), 'observed revision'),
+        ('coordinated-floor-drift', coordinated_floor, 'recorded floor inventory'),
+        ('changed-floor-anchor', lambda d, w: rewrite_json(d, w, 'recorded-floor-inventory.json', lambda v: v.pop()), 'floor inventory anchor'),
+        ('coordinated-source-mode', coordinated_source_mode, 'source environment anchor'),
     ]
     for name, mutation, expected in cases:
         with tempfile.TemporaryDirectory(prefix='six-fitness-gate-') as temporary:

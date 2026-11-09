@@ -122,6 +122,43 @@ diff hashes and current execution evidence are retained in the resumed packet.
 | BH-R10: clearance lacks exact reviewed diff binding | medium / patch | Retain all three current reviewer reports with the exact historical delivery diff hash and patch follow-up hashes. This does not reconstruct missing historical reviewer transcripts. |
 | VG-R01: restore/build scheduling lacks regression proof | medium / patch | Independent mutation demonstrates both hooks can disconnect while direct tests still pass. Group with BH-R03 and cover both normal entry targets, rejected floor/prerelease, accepted package metadata/newer version and exact source identity. |
 
+### Second resumed review — 2026-11-09
+
+All three review layers completed against the retained delivery, owning patch,
+and resumed checker diff (SHA-256
+`b5664f070a9c7db9fc0b8868186429d147d0d217a184f4cad180738c22a15e2e`).
+The verification-gap layer found no new gaps and independently reran all 40
+original receipt fixtures. Each other finding receives its own verdict below;
+BH-N05 and EC-N01 share the complete-floor-inventory correction.
+
+| Finding | Verdict / resolution | Evidence |
+| --- | --- | --- |
+| BH-N01: current bindings omit prerequisite and owner test inputs | medium / patched | Add the prerequisite fitness class, its matrix and the selected owner PackageGovernanceTests source to the mandatory inventory. Each added binding was checked against its recorded tested revision. The owner input is the selected baseline; the separately retained owner patch remains unpublished. |
+| BH-N02: assembly snapshot is ignored | low / patched | Check its path/properties against selection and reject malformed or zero digests. The collector proves this snapshot precedes the corrected build; its digest cannot establish final-binary provenance, which remains explicitly unavailable. |
+| BH-N03: build command, cwd and mode can disagree | medium / patched | Bind the four claimed successful builds to exact project arguments, owning directories and recorded source/package environments. Independent corruptions cover project, directory and mode. |
+| BH-N04: package evaluation failure can be accepted | medium / patched | Require successful evaluation and the exact selection command, directory and package environment before reading properties. |
+| BH-N05: duplicate entry controls hide an older floor case | medium / patched | Compare the complete focused and full floor-name multisets against baseline controls plus the ten exact added tuples. Unique native IDs alone cannot preserve coverage. |
+| BH-N06: both reports can move the same runtime skip | medium / patched | Pin the explicit thirteen allowed name/reason pairs with a fixed archive digest and compare both parent reports. |
+| BH-N07: projection skip lacks a required reason | low / patched | Require its exact existing published-SDK compatibility reason as well as its name. |
+| BH-N08: equal failing names can hide a new failure cause | medium / patched | Compare exception types and messages for all 205 baseline/current failures. Normalize only the two Python fixture elapsed-time differences; retain all diagnostic content. |
+| BH-N09: empty reviewer reports pass | low / patched | Reject whitespace-only reports while retaining valid no-findings reports. This checks retained content, not reviewer authenticity. |
+| BH-N10: revision metadata can contradict archived scope | medium / patched | Reconcile the manifest with scope, fixed preservation/tested revisions and the selected owner gitlink at the recorded observed head. |
+| EC-N01: duplicated floor execution can erase nested-owner coverage | medium / patched | Independently demonstrated with a preserved unique ID and total of 48; the complete inventory comparison now rejects focused and full-report variants. |
+| EC-F01: coordinated baseline/current drift can redefine floor coverage | medium / patched | Independently reproduced by replacing the nested-owner case with the same older case in all three reports. Pin the complete 48-name inventory with a fixed digest and reject coordinated drift plus alteration of the inventory anchor. |
+| VG-F01: source environments can collapse together to package mode | medium / patched | Independently reproduced with an empty environment archive and three empty build overrides. Pin the recorded source-environment digest and cover the coordinated mutation. |
+
+The original 99-file historical packets, frozen intent, dependency selections and
+five protected deferred-work entries remain unchanged. Final independent clearance
+from all three reviewers covers checker diff SHA-256
+`dd46021023d71c60f07fb0156988b212a5397feab2d226261045b84690186e00`.
+All 38 fixtures pass in normal and optimized Python (76 cases); each reviewer
+also independently reran both modes. This follow-up changes
+only the receipt checks, their regression fixtures and additive review evidence;
+it does not rerun or restamp the retained .NET execution results. No new work is
+deferred. Status remains in-review because the owner Contracts and source-build
+gates remain blocked. A fresh credential-backed publication dry run still returns
+HTTP 403 for Tenants; no unpublished gitlink is adopted.
+
 ## Final Verification
 
 - Upstream-aware owner fix published at `6deb5d5dbaad4e26405910b347d45b82deae1057`;

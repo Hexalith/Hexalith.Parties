@@ -105,8 +105,11 @@ def verify(folder, root, manifest=None):
     require(Counter(t.get('name') for t in full_before) == Counter(t.get('name') for t in full_after), 'full parent inventory')
     skip_inventory = lambda tests: sorted((t.get('name'), t.findtext('reason')) for t in tests if t.get('result') == 'Skip')
     require(skip_inventory(full_before) == skip_inventory(full_after), 'parent skip inventory')
+    require(digest(payloads['permitted-parent-skips.json']) == '6efa46b21ad98d0842fcfb0e9635f10f8d76e8e87e4e67419235f205eeef4c84', 'permitted skip anchor')
+    require(skip_inventory(full_after) == [tuple(item) for item in json.loads(payloads['permitted-parent-skips.json'])], 'permitted parent skips')
     projection_skips = reports['projections-source-tests'].findall(".//test[@result='Skip']")
     require(projection_skips[0].get('name') == 'Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.PublishedSdkPreservesLargeLegacyLiveAndRebuildCompatibilityAsync', 'projection skip identity')
+    require(projection_skips[0].findtext('reason') == 'Runs against the unchanged published SDK package; source generation behavior has its separate control.', 'projection skip reason')
     require(len(reports['owner-patched-floor'].findall('.//test')) == 48, 'floor case count')
     prefix = 'Hexalith.Tenants.Contracts.Tests.PackageGovernanceTests.EventStorePackageFloorRunsThroughRestoreAndBuildAsync'
     expected_floor = set()
@@ -118,6 +121,22 @@ def verify(folder, root, manifest=None):
     floor_cases = [t for t in reports['owner-patched-floor'].findall('.//test') if t.get('method') == prefix.rsplit('.', 1)[1]]
     require({t.get('name').replace('\\', '') for t in floor_cases} == expected_floor
             and all(t.get('result') == 'Pass' for t in floor_cases), 'entry target cases')
+    baseline_floor_methods = {
+        'EventStore_package_floor_does_not_override_nested_owner_catalogsAsync',
+        'EventStore_package_floor_preserves_newer_catalog_and_explicit_source_selectionsAsync',
+        'EventStore_package_floor_rejects_older_global_package_overridesAsync',
+    }
+    baseline_floor = [t for t in reports['owner-contracts-clean-environment-baseline'].findall('.//test')
+                      if t.get('method') in baseline_floor_methods]
+    expected_inventory = Counter(t.get('name').replace('\\', '') for t in baseline_floor)
+    expected_inventory.update(expected_floor)
+    require(digest(payloads['recorded-floor-inventory.json']) == '598ae7b0a34a92423d58a8e8be9c2110eef9096953c94211a035f80b62d12a9f', 'floor inventory anchor')
+    require(expected_inventory == Counter(json.loads(payloads['recorded-floor-inventory.json'])), 'recorded floor inventory')
+    require(Counter(t.get('name').replace('\\', '') for t in reports['owner-patched-floor'].findall('.//test'))
+            == expected_inventory, 'floor inventory')
+    full_floor = [t for t in reports['owner-patched-contracts-full'].findall('.//test')
+                  if t.get('method') in baseline_floor_methods | {prefix.rsplit('.', 1)[1]}]
+    require(Counter(t.get('name').replace('\\', '') for t in full_floor) == expected_inventory, 'full floor inventory')
 
     current = full_after
     expected = {
@@ -139,20 +158,47 @@ def verify(folder, root, manifest=None):
     patched = reports['owner-patched-contracts-full']
     failures = lambda tree: {t.get('name') for t in tree.findall(".//test[@result='Fail']")}
     require(failures(baseline) == failures(patched) and len(failures(patched)) == 205, 'owner failure baseline')
+    # Python fixture durations are the only differences in the retained failure messages.
+    failure_diagnostics = lambda tree: Counter(
+        (t.get('name'), t.find('failure').get('exception-type'),
+         re.sub(r'(?m)^(Ran [0-9]+ tests in )[0-9.]+(s)$', r'\1<elapsed>\2', t.findtext('failure/message', '')))
+        for t in tree.findall(".//test[@result='Fail']"))
+    require(failure_diagnostics(baseline) == failure_diagnostics(patched), 'owner failure diagnostics')
     require(runs['owner-contracts-clean-environment-baseline']['exit_code'] == 1
             and runs['owner-patched-contracts-full']['exit_code'] == 1, 'owner blocked exits')
     require(runs['final-parent-source-build']['exit_code'] == 1
             and b'HXW005' in payloads[runs['final-parent-source-build']['log']], 'source blocker')
-    for name in ['parent-source-fitness-build', 'projections-source-build', 'owner-patched-contracts-build',
-                 'final-parent-package-build-corrected']:
+    require(digest(payloads['source-environment.json']) == 'dc28e0f5c71d50c964bd3ac825b64635bb3f2bf5dd3673f00b5be069df0105f2', 'source environment anchor')
+    source_environment = json.loads(payloads['source-environment.json'])
+    builds = {
+        'parent-source-fitness-build': ('Hexalith.Parties.Tests', '${PARTIES_ROOT}', source_environment),
+        'projections-source-build': ('Hexalith.Parties.Projections.Tests', '${PARTIES_ROOT}', source_environment),
+        'owner-patched-contracts-build': ('Hexalith.Tenants.Contracts.Tests', '${PARTIES_ROOT}/references/Hexalith.Tenants', source_environment),
+        'final-parent-package-build-corrected': ('Hexalith.Parties.Tests', '${PARTIES_ROOT}', {}),
+    }
+    for name, (project, cwd, environment) in builds.items():
+        require(runs[name]['command'] == ['dotnet', 'build', f'tests/{project}/{project}.csproj',
+                                         '--configuration', 'Debug', '--disable-build-servers', '-m:1']
+                and runs[name]['cwd'] == cwd and runs[name]['environment_overrides'] == environment
+                and runs[name]['cleared_environment_keys'] == [], 'build invocation: ' + name)
         text = payloads[runs[name]['log']].decode()
         require(runs[name]['exit_code'] == 0 and re.search(r'\b0 Warning\(s\)', text)
                 and re.search(r'\b0 Error\(s\)', text), 'build summary: ' + name)
 
-    props = json.loads(payloads[runs['final-parent-package-selection']['log']])['Properties']
+    selection = runs['final-parent-package-selection']
+    require(selection['exit_code'] == 0, 'package selection exit')
+    require(selection['command'] == ['dotnet', 'msbuild', 'tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj', '-nologo',
+                                     '-getProperty:TargetPath,Configuration,TreatWarningsAsErrors,HexalithEventStoreVersion,HexalithEventStoreFromSource,HexalithSourceMappingMode,HexalithSourceMappingHash']
+            and selection['cwd'] == '${PARTIES_ROOT}' and selection['environment_overrides'] == {}
+            and selection['cleared_environment_keys'] == [], 'package selection invocation')
+    props = json.loads(payloads[selection['log']])['Properties']
     require(props['Configuration'] == 'Debug' and props['TreatWarningsAsErrors'].lower() == 'true', 'build policy')
     require(props['HexalithEventStoreFromSource'] in ['', 'false'] and not props['HexalithSourceMappingMode'], 'package mode')
     require(props['HexalithEventStoreVersion'] == '4.1.0', 'package selection')
+    # This snapshot predates the corrected build; its digest is not final-binary provenance.
+    snapshot = json.loads(payloads['final-parent-package-assembly.json'])
+    require(snapshot['path'] == props['TargetPath'] and snapshot['properties'] == props, 'assembly snapshot selection')
+    require(re.fullmatch(r'[0-9a-f]{64}', snapshot['sha256']) and snapshot['sha256'] != '0' * 64, 'assembly snapshot digest')
     final_run = runs['final-parent-package-full-corrected']
     require(final_run['command'][:2] == ['dotnet', props['TargetPath']], 'evaluated test target')
     require(final_run['environment_overrides'] == {}, 'package test environment')
@@ -162,6 +208,7 @@ def verify(folder, root, manifest=None):
     for stem in ['blind-hunter', 'edge-case', 'verification-gap']:
         for suffix in ['original', 'followup']:
             require(stem + '-' + suffix + '.md' in payloads, 'review report: ' + stem)
+            require(payloads[stem + '-' + suffix + '.md'].strip(), 'empty review report: ' + stem)
     for name in ['delivery.diff', 'owner-patch.diff', 'root-patch.diff']:
         require(name in payloads and digest(payloads[name]) == data['reviewed_diff_sha256'][name], 'review diff: ' + name)
     mutation = json.loads(payloads['hook-mutation.json'])
@@ -194,6 +241,17 @@ def verify(folder, root, manifest=None):
             preserved[name] = digest(original)
     require(preserved == data['preserved_files'], 'preservation inventory')
     resume = '806ed7b83b35fcc24996e58affb78ea51a0c8aa7'
+    scope = json.loads(payloads['scope.json'])
+    require(data['scope'] == scope and data['resume_revision'] == scope['resume_revision'] == resume,
+            'revision scope')
+    require(scope['baseline'] == packets[0][0] and scope['delivered'] == packets[1][0], 'revision anchors')
+    require(scope['owner_local_commit'] == '60c1bd50c63513a466be2c301b48d3c4f1d3cf72', 'recorded owner patch revision')
+    observed = data['observed_head']
+    require(observed == 'd3d5e7d4de132c3e8b81d1ab04fb8c3541b8aaa4', 'observed revision')
+    require(subprocess.check_output(['git', 'rev-parse', '--verify', observed + '^{commit}'], cwd=root, text=True).strip()
+            == observed, 'observed revision')
+    selected = subprocess.check_output(['git', 'ls-tree', observed, '--', 'references/Hexalith.Tenants'], cwd=root, text=True)
+    require(selected.split()[2] == scope['owner_selected_commit'], 'selected owner revision')
     ledger_path = '_bmad-output/implementation-artifacts/deferred-work.md'
     old_ledger = subprocess.check_output(['git', 'show', resume + ':' + ledger_path], cwd=root, text=True)
     new_ledger = (root / ledger_path).read_text()
@@ -217,9 +275,12 @@ def verify(folder, root, manifest=None):
         'global.json', 'module/hexalith.module-manifest.v2.json', 'scripts/test.ps1', 'README.md',
         'docs/architecture.md', 'docs/project-overview.md', 'docs/getting-started.md', 'docs/development-guide.md',
         'tests/Hexalith.Parties.Tests/FitnessTests/DocumentationFitnessTests.cs',
+        'tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs',
+        '_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md',
         '_bmad-output/implementation-artifacts/spec-six-fitness-failures.md',
         '_bmad-output/implementation-artifacts/tests/six-fitness-failures-resumed-2026-11-09/verify-receipt.py',
         'references/Hexalith.Tenants/Directory.Build.props', 'references/Hexalith.Tenants/Directory.Build.targets',
+        'references/Hexalith.Tenants/tests/Hexalith.Tenants.Contracts.Tests/PackageGovernanceTests.cs',
     }
     require(set(data['post_verification_inputs']) == expected_inputs, 'input inventory')
     for name, expected_hash in data['post_verification_inputs'].items():

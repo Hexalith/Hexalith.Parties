@@ -32,8 +32,11 @@ The three original review layers and corrective follow-ups are retained with
 exact diff hashes. Independent receipt review exposed four acceptance gaps;
 exact full-suite summaries, native case/skip inventories, floor argument tuples,
 six connected/detached mutation expectations and mandatory current input bindings
-now enforce them. The gate and its valid case plus 19 corruptions pass in normal
-and optimized Python (40 fixture cases); independent follow-up repeats both modes.
+now enforce them. The original gate and its valid case plus 19 corruptions passed in normal
+and optimized Python (40 fixture cases). A second three-layer review adds complete
+floor inventories, explicit allowed skips, failure-cause comparisons, build and
+selection invocation checks, assembly-snapshot checks and revision/input bindings.
+The expanded gate has one valid case plus 37 corruptions (76 cases in both modes).
 
 ```bash
 python3 _bmad-output/implementation-artifacts/tests/six-fitness-failures-resumed-2026-11-09/verify-receipt.py --receipt _bmad-output/implementation-artifacts/tests/six-fitness-failures-resumed-2026-11-09/validation.json --root .
@@ -57,3 +60,13 @@ are retained in their final forms; temporary source mappings must be regenerated
 through the pinned tool. Full ambient environments, per-mode binaries and complete
 transitive binary provenance are not retained. This is an evidence consistency
 gate, not signed execution attestation. No new work is deferred by this run.
+
+Second review evidence uses the `second-review-*` files. Added input hashes match
+the recorded observed Parties revision and selected Tenants revision. The bound
+owner test source is that selected baseline; the unpublished test patch remains
+separately retained. The assembly snapshot was collected before the corrected
+package build, so its digest cannot prove the final executed binary. Its path,
+properties and digest shape are now checked. The 205 failure diagnostics match
+before/after after normalizing only Python fixture elapsed durations. This does
+not broaden the historical environment qualification. Fresh Tenants publication
+preflight still returns HTTP 403. The retained .NET runs were not repeated here.
