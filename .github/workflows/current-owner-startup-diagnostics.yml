@@ -29,12 +29,12 @@ jobs:
       - name: Require the genuine diagnostic tool inputs
         shell: bash
         run: |
-          test "$(git -C references/Hexalith.Builds rev-parse HEAD)" = 3c8096180ecf2aa539ac454815efbfceb8a92822
+          test "$(git -C references/Hexalith.Builds rev-parse HEAD)" = 5ec1779040606be89306129a7d2b245258c9acd2
           python3 - <<'PYTHON'
           import json
           from pathlib import Path
           tool = json.loads(Path('.config/dotnet-tools.json').read_text())['tools']['hexalith.builds.module.cli']
-          assert tool['version'] == '4.45.0' and tool['rollForward'] is False
+          assert tool['version'] == '4.47.0' and tool['rollForward'] is False
           PYTHON
       - name: Test observer ownership and redaction boundaries
         run: python3 -B -m unittest discover -s tests/ci-lifecycle -p test_startup_observer.py -v

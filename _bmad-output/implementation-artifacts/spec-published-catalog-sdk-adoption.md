@@ -1,6 +1,7 @@
 ---
 title: Adopt the published catalog SDK and qualified owner artifacts
 status: in-review
+review_loop_iteration: 1
 created: 2026-10-31
 baseline_commit: 6febe55d1c711a305a5969f04b8b9fb1fa80722f
 ---
@@ -690,3 +691,206 @@ All three independent layers reviewed the full original-baseline diff before tri
 | R-G1 lifecycle verification unwired | medium | patch | Accepted verification-gap evidence: all74deterministic lifecycle controls pass manually but ordinary CI does not invoke them. Add a blocking ordinary CI invocation with its direct Builds dependency. |
 | R-G2 private configuration verification unwired | medium | patch | Accepted verification-gap evidence: the replacement Platform suite does not execute retained private catalog configuration/cleanup tests. Execute the Docker-free classes in the4.1package check using root-declared owner manifests. |
 | R-G3 local project inventory | medium | patch | scripts/test.ps1 omits the declared Platform.LifecycleTests project, causing every lane to fail inventory admission. Add it to the runner-owned project inventory. |
+
+
+### Current package and catalog evidence — 2026-11-09
+
+The [durable verification packet](tests/published-catalog-sdk-adoption-2026-11-09/verification.json) binds the official SDK archives, exact commands/logs, initial static results, focused controls, browser gate and local package consumers. SDK4.1.0 remains the latest stable version on a fresh direct nuget.org recheck. All14official archives bind source`dbc6e7e08d605ba6c6c790e3e08a15dc8bbdec8a`.
+
+Post-review checks: zero-warning Release compilation,33/33focused actual HTTP/catalog/authentication/cleanup controls,17/17receipt cases, all68browser cases, all11local packages and strict package validation. The actual client consumer executes declaration/adapter inventory; the portal consumer restores/builds. The earlier full static baseline remains6,403passes/14existing skips at its recorded source; these focused results do not renew that baseline to later externally committed sources. The affected CI controls passed153cases, with their single receipt-entrypoint failure rerun successfully after correcting the expanded fixture inventory. Independent lifecycle/controller and public/private evidence controls also pass; their simulation results supply no hosted-runtime credit.
+
+Two actual concurrent attempts failed before domain assertions. The first exposed Tenants'McpCli.Abstractions2.0.0 beside the root's2.0.1. Preparation now propagates the exact rootMcpCliVersion into every selected host and launch; actual archives/PEs and negative version/type controls remain enforced. The second exposed a new real Platform helper besideProgram.cs, omitted by the old copy step. The wrapper now copies and hashes both actual current source files, preserving the producer's unchanged qualification policy. Both attempts retain their actual failure and exact cleanup receipts: no owned processes, containers, networks or private roots remain. No runtime success is claimed.
+
+Fresh preparation completes all10artifacts with SDK4.1.0/Tenants7.0.5/Memories3.0.25/FrontComposer4.7.6/McpCli2.0.1. All10receipts validate. A resource-free invocation of the actual private wrapper then compiles and executes the actual current Platform tool against the actual prepared Parties/Tenants/Sample owners, successfully generating its canonical catalog. Actual tool inputs, public SDK identities, ownerPE hashes and generated receipt are retained in the packet. The probe's owned build directory was removed. This proves the repaired composition boundary, not live activation, persisted effects or full topology acceptance.
+
+Other workspace sessions committed and rebuilt shared inputs during verification; a readback correctly refused drift after those builds. Their changes and commits are preserved. The user has been asked whether those build/sync jobs have finished so the required live producer freeze can be established. Do not start a new live run against changing prepared outputs.
+
+Normal module package preparation with the corrected4.45.0tool now reachesHXW011: selected Platform`e39a9a2587ec150d550510763ab69db305d13fdb` has no local SemVer release tag. Historical public tuple evidence cannot qualify that source. Final concurrent/whole-assembly, normal package preparation, exact-source hostedCI/RC and release/publication gates remain outstanding. Status remainsin-review; no done or release qualification is asserted.
+
+
+### Second resumed review triage — 2026-11-09
+
+All three independent review layers completed before classification. The review uses the full original baseline plus an explicit source supplement. Committed work and concurrent user edits are preserved; the SDK composition correction is being derived without reverting them.
+
+| Finding | Verdict | Route | Evidence and action |
+| --- | --- | --- | --- |
+| S-B1 public tuple mismatch | high | patch | Current root and selected Platform both bind released Builds 27145e52ffab5623198ba5efdab5cdb71aa42d28; released Platform v1.8.0 binds e39a9a2587ec150d550510763ab69db305d13fdb. Owner tuple CI 42515643804, catalog CI 42515643848 and qualified publication 42517865717 succeed. Align both strict observers/readers to this exact published tuple; no native runtime credit follows from that identity correction. |
+| S-B2 diagnostic tuple mismatch | medium | patch | Diagnostic root initialization selects Builds 27145e52 but its assertion requires historical 3c809618. Correct only the selected-checkout assertion; immutable shared workflow definitions remain independently pinned. |
+| S-B3 GDPR selector regression | high | patch | Original published client requests include PartyDetailProjectionQueryActor for GetParty and four GDPR query wires. Enroll those exact owner selectors and test positive, foreign and wrong-owner selectors at the real SDK router. |
+| S-B4 preparation configuration | medium | patch | Three initial property probes omit the caller's requested build configuration. Pass the actual configuration to each selection probe. |
+| S-B5 generated UI staging | low | reject | The cited source wwwroot is explicitly reserved and ignored as generated native-asset staging, with no tracked authored files. Moving the staging design adds unrelated complexity; producer deletion behavior has an executed regression test. |
+| S-B6 native launch files | medium | patch | Runtime input enumeration omits extensionless apphosts and native shared libraries. Bind additions, deletions and byte changes; exercise all three mutations before the same launch entrypoint. |
+| S-B7 post-preparation rebuild | medium | bad_spec | ProjectResource launch may rebuild after preparation. The SDK composition correction must launch the exact prepared outputs or enforce evaluated build-input consistency; a caller freeze alone supplies no permanent invariant. |
+| S-B8 restored archive authenticity | medium | patch | A mutable restored archive cannot authenticate itself. Complete preparation freshly downloads every consumed public-family archive over official HTTPS, compares exact restored bytes and binds that proof through launch. A repacked local archive with unchanged nuspec/runtime is refused. |
+| S-B9 missing-outcome clock rollback | medium | defer | Identity service's empty-stream path lacks the lower completion-time check present on its populated-source path. This independent identity-authority behavior predates SDK resumption; record it without altering domain semantics in this adoption. |
+| S-B10 native withdrawal cancellation | medium | patch | The main real-service exercise omits Descriptor.RequestCancellation, unlike its anonymous companion. Link the existing token and preserve the 120-second deadline. |
+| S-E1 missing owner observation | high | bad_spec | Actual 4.1.0 concurrent startup proves Admin refuses the manually supplied owner credentials without its independently observed ActorStateOwnersPath receipt. Use the SDK's public complete composition/observer; do not fabricate a receipt or bypass its boundary. |
+| S-E2 public tuple mismatch | high | patch | Same independently verified reader/observer mismatch as S-B1; preserve exact source and release identities. |
+| S-E3 diagnostic tuple mismatch | medium | patch | Same direct checkout assertion mismatch as S-B2. |
+| S-E4 GDPR selector regression | high | patch | Same five original published query wires as S-B3; exact compatibility does not enroll arbitrary selectors. |
+| S-G1 missing automated package topology | medium | patch | Accepted verification-gap evidence: ordinary CI exercises only model/configuration/cleanup for this private AppHost. Add a blocking current-package concurrent topology job using shared Dapr setup, exact preparation, persisted effects and refusal of skipped/empty execution. |
+| S-G2 computed identity wire mismatch | high | patch | Published 4.1.0 router rejects client ProjectionType party against the two computed declarations' null selector. Omit that selector and pass actual serialized current/historical requests through the real catalog router before the producer. |
+
+The fresh ordinary package preparation now succeeds after fetching the genuine public v1.8.0 tag without changing the selected checkout. Earlier HXW011 evidence remains historical. Exact command output is retained in the resumed evidence packet.
+
+Fresh runtime preparation completed all ten artifacts with zero-warning builds. The actual concurrent method then failed after 326.015 seconds before domain assertions: Admin reports that the selected owner coordinates/private credential handoff changed, and its missing independent owner observation prevents catalog activation. Exact post-run inventory confirms no session containers, networks, processes or private directory remain. This failure grants no runtime acceptance.
+
+Current focused evidence: 19 receipt controls pass, 48 public/private evidence controls pass, 19 catalog cases pass, and 345 gateway/identity cases pass before the last historical-wire case was added. The staging regression passes under genuine package-mapping environment imports. A later Client build hit MSB3026 on a concurrently used AdminPortal output; the independent build's source and outputs are preserved. Stable producer/build custody is required before another shared-output runtime qualification.
+
+
+### Spec change log — current published composition
+
+The second resumed review proved that the manually configured Admin owner handoff cannot satisfy SDK 4.1.0's independently observed receipt boundary. Preserve every native/default/publish decision, actual authentication, prepared-archive/PE proof, complete concurrent assertions and exact cleanup. Replace only the explicit package test profile's catalog authority composition with the SDK's public composition/observer, finalized after the fixture's fresh owned Redis and endpoint overrides and before BuildAsync. Never fabricate owner observations or use unpublished/internal SDK seams. Also preserve actual prepared execution after the catalog is bound; source edits must not trigger an unverified rebuild at launch.
+
+
+### Final patch review triage — 2026-11-09
+
+All three final patch review layers completed before classification. Findings are retained individually; independently overlapping reports share the same correction without widening trust policy.
+
+| Finding | Verdict | Route | Evidence and action |
+| --- | --- | --- | --- |
+| F-B1 unenrolled finalization controls | medium | patch | The captured diff omitted the new class from offline CI. Enroll all 23 final model cases; configuration/cleanup/finalization now require at least 40 cases with skip refusal. |
+| F-B2 versioned native files | medium | patch | ELF names such as libnative.so.1 were outside suffix matching. Bind .so.* names and exercise add/change/remove mutations. |
+| F-B3 portal rebuild after preparation | medium | patch | parties-ui auto-starts and was outside the prepared set. Prepare and directly launch its exact Client/Contracts/SignalR graph without enrolling it as a catalog receiver; total preparation becomes eleven artifacts. |
+| F-B4 business Redis binding | false | reject | The only caller passes PartiesTestRedis.Configure's exact resource after it has rebound every state/pubsub component to that same new container and before finalization. The actual fixture also independently verifies loaded component routing and persisted keys on that backend. No caller selecting retained business state at this location was demonstrated. |
+| F-B5 pre-Build cleanup fault injection | maybe-false | defer | The actual concurrent case exercises complete finalization; existing owned-preparation failures exercise cleanup and CompleteOwnedTestModelAsync explicitly disposes failed composition. A fault injected after successful composition but before BuildAsync completion is still needed to establish any unowned-directory outcome. Record medium unverified; no definite cleanup defect is claimed. |
+| F-B6 missing manifest boundaries | medium | patch | Add direct empty, oversized and symlink refusal cases to the existing manifest theory. |
+| F-B7 transient archive failures | low | patch | Fresh downloads now retry three bounded transient attempts and never accept cached bytes when all attempts fail. Actual downloader controls cover refresh, retry and refusal. |
+| F-B8 older identity router | medium | patch | The retained 4.0.4 cohort now executes the same actual catalog-enforced current/historical wire path. Its zero-warning isolated build and all 322 identity cases pass without skips; enroll this check in that existing offline lane. |
+| F-B9 finalization phase attribution | low | patch | Set finalize-package-catalog before the bounded preparation call, preserving the startup deadline. |
+| F-B10 preparation instructions | low | patch | Current instructions describe ten runtime projects plus the adapter and exact PE execution; historical receipts retain their original counts. |
+| F-E1 incompatible auxiliary authority role | high | patch | Published SDK caller registration refuses aux-client plus AuthorityRole. Preserve the installed strict receiver-free profile, verify the actual SDK dedicated labelled/name-prefixed component, then remove only the competing profile selector. Genuine SDK positive and malformed/shared/foreign authority controls pass. |
+| F-E2 mutable preparation substitution | high | patch | Successful re-preparation previously validated against the latest manifest while retaining an older catalog. Every new-flow readback now requires structural equality with the originally selected receipt, including start and cached dashboard restart paths. |
+| F-G1 downloader cache control | medium | patch | Accepted verification-gap evidence: the repacking control replaced public_archive itself. New controls execute that production function with only urllib transport patched, proving stale-cache replacement and fail-closed retry exhaustion. |
+| F-G2 synthetic compilation feeds | medium | patch | Fresh official downloads cannot retrieve synthetic 9.9.9 archives. Preserve real compilation and supply independent expected fixture archives at the HTTPS transport boundary, including deliberately stale public caches that must be replaced. |
+
+The published SDK composition and final launch changes compile with zero warnings/errors in an isolated harness, and all 23 direct model controls pass without skips. The genuine 4.0.4 router additionally passes 322 identity cases. A complete combined source build, refreshed eleven-artifact preparation and actual concurrent/full runtime qualification remain separate required gates.
+
+
+### Current continuation — SDK 4.2.0 published during qualification
+
+At 2026-11-09 14:16 UTC, fresh direct official nuget.org indexes report EventStore 4.2.0 as the latest stable SDK. The user's latest-SDK instruction now selects that version; prior 4.1.0 results remain historical. Independent official Contracts, Client, Aspire and Server archives embed source `aa16227bd07f0564a3026d619a5abd973e02656f`. The actual public Aspire API diff is additive (runtime profile and SQLite startup-ordering APIs); existing composition signatures remain available. Exact 4.2.0 capability fences and an updated current offline cohort preserve 4.0.4 compatibility and refusal of unqualified versions. Shared catalog selection must follow the supported sealed package-mode policy, rather than overriding its validation.
+
+The last 4.1.0 full standalone build passed with zero warnings/errors. Its sixteen static suites produced 6,442 passes, two CI-test failures and fourteen existing skips; both failures were corrected, and the entire CI suite then passed 617/617 without skips. Actual current/historical gateway/identity cases passed 346/346; the older SDK 4.0.4 router independently passed 322/322. All eleven packed Parties artifacts pass strict package validation and client/portal consumer checks. These results do not qualify the newly published 4.2.0.
+
+The last configured browser gate passed all 68 cases with one retry. An unchanged focused repeat produced two passes and one failure. Its trace shows the export click while the Blazor connection was still starting, with no ready-export status; the existing single-export/domain assertions remain unchanged. This independent startup timing issue is recorded separately, without treating a retry as evidence of deterministic behavior.
+
+Two further actual 4.1.0 concurrent attempts failed before domain assertions. Public composition first collided with the pre-created gateway APP token parameter; deferred fixture token assignment now preserves the SDK's idempotent binding, and all thirty affected model checks pass. The next attempt reaches the SDK owner-read observer but refuses an allocated proxied HTTP listener differing from the selected fixed session Dapr port. The guard is preserved; the fix must bind the actual owned listener to that reserved port before allocation. Both attempts independently confirm no session processes, containers, networks, private roots or new SDK catalog directories remain.
+
+
+### Supported 4.2.0 prerequisite and runtime checkpoint
+
+All fourteen SDK 4.2.0 official archives authenticate source `aa16227bd07f0564a3026d619a5abd973e02656f`. An isolated complete standalone Release build passes with zero warnings/errors. Actual 4.2.0 controls pass: catalog 20, identity client 178, gateway/identity 346, finite capability 41, and configuration/cleanup/finalization/topology model 53, without skips. The current workflow and matched control-plane profile controls pass 94/94. The new public SDK guards retain exact version admission and negative controls.
+
+The original published Tenants 7.0.5 archive works with SDK 4.2.0: actual declaration/adapter discovery passes 23 routes, 23 operations and 12 adapters, with eight independent official archives and output PEs authenticated. Its source build fences are extended only to exact 4.2.0, with 224 compatibility controls, seven metadata controls and two pack controls passing. Its released artifact provenance remains `d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35`; no replacement release or provenance relabeling is inferred.
+
+Sealed module package mode intentionally rejects a consumer override of the producer catalog (HXW012). The supported route therefore updates the owning Builds catalog and coordinates the Platform pin after genuine publication. All intervening upstream changes are retained. Builds source commit `7564c965337f46a1c3b6244476b13b0fa85dd653` selects SDK 4.2.0, preserves the historical 4.1.0 authority, and adds genuine 4.2.0 authority and technical receiver enrollment. Its 390 focused/manifest/evidence controls pass without skips and Debug compilation has zero warnings/errors; its revision-bound audit is generated only after this real commit. No owner push or producer publication is claimed at this checkpoint. Platform's actual isolated 4.2.0 catalog-builder qualification also passes with the genuine released sample and unchanged legacy controls.
+
+All eleven 4.2.0 runtime artifacts now prepare successfully with fresh official archive authentication, and every completed receipt rereads successfully. The actual concurrent run uses these exact PEs, the corrected fixed owner listener, a separately downloaded and SHA-256-verified Dapr 1.19.1 executable, and the matching immutable 1.19.1 control-plane image. The bootstrap's original default remains 1.18.7; the current CI runtime job explicitly selects the catalog's exact profile and refuses unqualified profiles. The run is ongoing; persisted-state, whole-assembly, hosted CI/RC and publication acceptance remain outstanding.
+
+The [new continuation packet](tests/published-catalog-sdk-adoption-2026-11-09/continuation-sdk420-1434/verification.json) preserves these new 4.2.0 archive/build/test/preparation receipts and the previous 4.1.0 failures and results separately. It grants no live or publication acceptance.
+
+
+### Actual SDK 4.2.0 concurrent success
+
+The complete real concurrent method passed on 2026-11-09 at 14:48:59 UTC using SDK 4.2.0, authenticated published peers, exact prepared PEs, and the verified Dapr 1.19.1 native runtime/control plane. Both sessions independently verify Counter streams of two and five events, UI-owned authenticated calls, actual Greeting and rejection results, receiver credential refusals, cross-session refusal, persisted Parties events/projections, and survival after peer disposal. Status-read calls now supply one explicit authorized tenant header only on those reads. Actual missing, foreign and conflicting scopes remain forbidden. This corrects the earlier polling failure without relaxing any server policy or retrying a domain write.
+
+Independent post-run enumeration confirms both session private roots are absent, no session processes/containers/networks remain, and no new SDK catalog directories remain. The prior unrelated SDK directory is preserved. The new browser gate also passes all 68 cases without retries. Sanitized native report, exact input/result bindings, official archives, preparation and cleanup receipts are retained in the continuation packet; raw resource logs remain private. The complete integration assembly and exact-source producer/consumer publication gates remain separate outstanding acceptance requirements.
+
+
+### Complete integration assembly checkpoint — SDK 4.2.0
+
+The complete integration assembly now passes 263 cases with zero failures and 15 existing explicitly deferred or opt-in skips. No skipped case receives runtime acceptance. The preceding whole run's five failures were two wrapper/child producer-byte mismatches and three controlled command-double profile leaks. Building the child from the same prepared producer and isolating command doubles to their declared original profile preserves both exact-byte refusal and real runtime profile validation. All 22 affected harness controls pass under the real 1.19.1 outer environment, and all eleven runtime receipts remain unchanged.
+
+The successful whole run independently leaves no processes, containers, networks or private roots for any of its eight observed real topology sessions, and no new SDK catalog directories. Earlier failed command-double roots contained only verified synthetic credentials; normal cleanup-only plus validated owned-root deletion removed those three test artifacts without touching any real or unrelated resources.
+
+Tenants prerequisite PR 68 at `5293ab9dca49b6298f1e3396367627009967cbfb` passes all six exact-source hosted workflows. Its tracked CONTRIBUTING.md requires one approval and the author cannot self-approve; the user has been asked to arrange that approval or explicitly waive this documentation rule. No merge bypass is performed. Builds exact-source push CI 42638222177 passes for `a8a87160f2708322d5520742b9a0c3f93d23db78`; authorized manual release 42641950035 is publishing through its configured production gate. Genuine new release/package coordinates are still pending at this checkpoint.
+
+Platform's next exact SDK4.2 reader and private-source reference cohorts preserve the separately measured public Parties3.1 image's SDK4.1 provenance. Its public SDK4.2 executable qualification passes all 22 cases, and 91 artifact controls pass with the old SDK4.1 dictionaries and all 349 legacy obligations preserved. This permits a compatibility source checkpoint in Parties before final default/pin adoption: the future Platform private build uses its own sealed SDK4.2 mapping, while that interim Parties source may retain its older default/catalog pins. No unqualified source is described as published.
+
+
+### Compatibility checkpoint review triage — SDK 4.2.0
+
+All three independent layers completed against the full original-baseline diff before classification. The edge-case layer returned no findings. Each remaining finding receives an individual verdict below; earlier receipts and user changes remain preserved.
+
+| Finding | Verdict | Route | Evidence and action |
+| --- | --- | --- | --- |
+| C-B1 external static content unbound | medium | patch | runtime_inputs binds the static-web-assets manifest but omits its external ContentRoots. The executed probe changes an actual referenced asset without changing any bound receipt input. Include those actual roots and their inventories in preparation/readback so additions, removals and changes fail before launch. |
+| C-B2 legacy preparation substitution | medium | patch | PrepareCoreAsync rereads every receipt but discards it, unlike the newer composition path. Compare the reread to the originally selected object using the existing structural-equality guard, retaining the older SDK lane. |
+| C-B3 unenrolled finalization controls | medium | patch | Carried F-B1: the interim checkpoint intentionally retained the older workflow, which still omits the new model class. Enroll the class and enforce executed-case/skip counts before committing that checkpoint. |
+| C-B4 missing actual 4.2 compile lane | medium | patch | The interim source admits exact 4.2 but its retained offline workflow compiles only 4.0.4 and 4.1. Use the already implemented explicit 4.2 offline lane and its matched workflow controls while retaining the checkpoint's older default and source pins. |
+| C-B5 stale completion after preflight refusal | medium | patch | The preparation script removes prepared.json only after project checks and three MSBuild probes; any earlier refusal leaves a prior completed manifest. Invalidate the selected packaged-profile manifest immediately after valid options/profile-path selection, before preflight, and exercise both missing-input and failed-probe refusals. |
+| C-B6 loaded/disk identity gap | medium | defer | NativeAssemblyObservations records the loaded module MVID but hashes assembly.Location without comparing the disk PE MVID. Replacing that disk file can misattribute bytes to the already loaded module. This separate existing G4 observation contract predates the current SDK composition; record a direct PE-MVID binding follow-up. |
+| C-B7 process-id reuse interval | medium | defer | signal_tool_processes checks /proc birth and then calls os.kill by numeric PID. Exit/reuse between those operations can target an unrelated process. This independent existing G4 lifecycle controller needs a stable process handle such as pidfd; its fake controls cannot prove atomic identity. |
+| C-B8 unbounded diagnostic capture | medium | patch | RunAsync reads both streams completely into memory before retaining a 4096-character exception tail. A noisy compiler can exhaust the test process within the four-minute deadline. Drain streams with bounded retained diagnostics and exercise output larger than the bound. |
+| C-B9 surviving build servers | medium | patch | The private reader dotnet build enables persistent MSBuild/compiler servers by default; waiting for its direct process does not end those owned services. Disable all build servers and shared compilation on this invocation, preserving the existing kill-tree/uncertain-cleanup behavior. The actual catalog-builder source starts no subprocesses. |
+| C-B10 shared native asset staging | medium | patch | StageNativeAdminUiAssets copies/deletes the same source-project wwwroot for every artifacts path. Two independently prepared runs therefore mutate shared staging and receipts. Stage into each evaluated intermediate-output root, keep proper SDK static-asset metadata, and exercise two isolated preparations without shared source writes. |
+| C-G1 actual finalization launch wiring unverified | medium | patch | Accepted verification-gap evidence: existing model tests install BindPreparedLaunch themselves; they do not detect omission from CompleteCoreAsync, especially for parties-ui. Exercise actual finalization with prepared inputs and assert all actual runtime projects select dotnet exec plus their exact receipt target; subsequent selected-input drift must refuse start/restart. |
+
+These preparation corrections retain exact public archive authentication, selected receipt equality, all eleven artifacts, public SDK composition, old SDK defaults in the interim checkpoint, real authentication and complete persisted-state bodies. No deferred observation/controller issue receives qualification credit.
+
+
+### Owning-source publication progress and preserved upstream
+
+Builds' first normal release run 42641950035 failed on a GitHub HTTP500 notes push after creating immutable v4.46.0 at a8a87160f2708322d5520742b9a0c3f93d23db78, before publication. That tag remains unchanged and supplies no public-package acceptance. A narrowly scoped, tested notes-push retry is committed at 8039932ca0cbd00cff5944d4c456ebfe13e4743b. Subsequent upstream fixes are retained; current source 9b9e03f69b77e4a8e64e4185a1df1cb4bc315ba4 awaits its exact push CI42650358536 before normal successor release. Canonical catalog blob a9472e6159b0b7627b4de543651f9aa1912398ab has SHA256957818ed7df1b29b2299644afb06987393f617c5b87ff8551b9b95b52a23034d. No predicted release version or locally qualified tool hash is substituted for official publication.
+
+Parties upstream ee806fd0e82bdf6eec3a8c1f671427080dbed2ac was independently fetched, inspected and fast-forwarded without overwriting any working edits. Its focused lifecycle campaign retains full-matrix distinction and redacted failures. All106 affected deterministic lifecycle controls pass. This local controller evidence supplies no real lifecycle campaign or SDK runtime acceptance. Fresh direct official Contracts/Aspire indexes still select stable4.2.0 at16:11UTC.
+
+
+### Genuine producer release refusal and correction
+
+Current-source CI42650358536 passed all seven Builds lanes. Existing legitimate release42653985043 received its configured production approval, passed its exact-source recheck, then failed actual4.46.1 qualification before any new tag: the positive packaged module command returned3/HXW001 rather than the required2/HXR003. The notes-push retry proxy depended on a custom environment variable that the product correctly removes from child processes. Our separately queued duplicate42654023394 was cancelled; the earlier existing run was preserved. Neither failed release supplies publication acceptance.
+
+The four-file correction stores the original Git executable in the action's private directory, preserving the product environment allowlist and every expected outcome. Eight executable controls and the exact sanitized-child CLI reproduction pass. Full actual package qualification under the corrected proxy also passes, including source/package parity, evidence/refusal controls and actual packaged-seed HTTP/receiver checks. Its local dirty-source inventory truthfully remains releaseEligible=false. Exact pinned commitlint passes; clean owning commit32d2a0685663b5b47115b2c0972e4819c9a36b70 is normally pushed and awaits exact-source CI42657538253 and genuine publication. Historical v4.46.0 remains immutable.
+
+
+### Reviewed compatibility source committed
+
+All three compatibility review layers completed and all nine current preparation/verification corrections are implemented; the two independent observation/controller issues remain deferred above. The final common patch additionally removes two unused fixture collection definitions exposed by the selected catalog's newer xUnit analyzer, preserving the actual Health collection. Both standalone SDK4.1/4.2 Release builds pass with zero warnings/errors. Complete audit-enabled checkpoint CI passes633/633 and configuration/cleanup/actual-finalization controls pass51/51, with no skips. A partial local restore initially lacked required audited consumer graphs; the complete standalone restore corrects those verification inputs without changing assertions.
+
+Clean checkpoint a69fa1794555acd66709ea382290eb3d5297f03a is normally pushed from an independent clone, preserving the original workspace's working edits and HEAD. Its34reviewed files retain SDK4.1 and all ten original dependency pins while qualifying exact4.2 offline and binding all ten runtime launches. Exact full pinned commitlint passes; exact-source main CI42662230480 is running. This source checkpoint permits the pending Platform private-source binding; it is not final default4.2/published-tuple adoption.
+
+The refreshed original-workspace SDK4.2 static run passes6,156cases with14existing skips, plus all51catalog configuration/cleanup/model cases. Fresh preparation independently validates eleven receipts and1,043runtime inputs; test/producer UI PEs match. Those scratch receipts are retained before the complete standalone restore/build; final runtime preparation and actual whole-assembly acceptance must bind the resulting final outputs. Browser verification is running before that final freeze.
+
+
+### Post-review SDK4.2 full runtime acceptance
+
+The real metadata refresh exposed broad output cleanup removing SDK-generated app.css.gz after preparation. Both pre-launch guards refused before creating any live resources. Follow-up ebe1739d70a4e76447938b0bb8c53db508bf6019 limits removals to obsolete native originals and their derived output copies. Its actual SDK control fails against the old target and passes the correction, preserving completed manifest/asset hashes, current compressed files, unrelated SDK output and independent artifact roots. Exact pinned commitlint passes; normal main push and CI42665293643 are recorded.
+
+After this correction, standalone SDK4.2 builds with zero warnings/errors and all633CI tests pass without skips. Final preparation plus test-entry metadata refresh preserves every one of11receipts and equal selected/copied UI PEs. The full integration assembly passes265cases,15existing explicit deferred/opt-in skips, zero failures/errors; the complete concurrent persisted-state/authentication/isolation/disposal body executes successfully. Independent enumeration confirms all eight real session roots, processes, containers and networks are absent, no new SDK directories remain, and all11receipts still reread unchanged after the run. No skipped test receives runtime acceptance.
+
+The [post-review packet](tests/published-catalog-sdk-adoption-2026-11-09/continuation-sdk420-1434/postreview-sdk420-ebe1739d/verification.json) binds sanitized native results, exact source bytes, full static6156/14existing skips, model51, browser68without retries, preparation, post-run readbacks and cleanup. Raw resource logs remain private. The original workspace branch now includes ebe1739d through index-only alignment; all8774working file bytes, modes and links were independently preserved. Current final-default/published-tuple edits remain uncommitted and status remainsin-review.
+
+Builds' genuine v4.47.0 tag and notes are public at qualified source5ec1779040606be89306129a7d2b245258c9acd2 after exact-source CI42661065183 success and authorized production approval. Release42664680297 is still publishing; Evidence.Cli4.47.0 appears officially, while complete Module.Cli/archive/inventory readback remains pending. Partial publication grants no complete tuple authority. TenantsPR68 still has no independent review or user waiver.
+
+
+### Compatibility hosted CI and refreshed package consumers
+
+All four exact-source workflows for ebe1739d70a4e76447938b0bb8c53db508bf6019 succeed: complete main CI42665293643, CodeQL42665293365, Commitlint42665293296 and the workflow named Release Candidate Gate42665292442. Main CI includes the actual4.0.4 and4.2 offline package lanes, runner-owned package integration, UI accessibility and existing declaration/controller/publisher gates. This qualifies the clean compatibility source, while its default intentionally remains4.1.
+
+A fresh separate SDK4.2 standalone restore/build passes with NuGet audit enabled and zero warnings/errors; all11local packages strictly validate. Actual isolated client declaration/adapter execution and portal restore/build pass. The first consumer invocation inherited the packaging artifacts location and correctly refused its missing default assets file; rerunning with normal isolated consumer environment succeeds. Neither this local feed nor the compatibility policy gate substitutes for final4.2 release/public NuGet readback.
+
+
+### Genuine Builds4.47 publication accepted
+
+Normal release42664680297 completes successfully for source5ec1779040606be89306129a7d2b245258c9acd2 after exact-source CI42661065183. The actual upstream feature makes this genuine release v4.47.0; earlier predicted4.46.1 was never enrolled. Both independently downloaded official NuGet archives pass signature verification, exact nuspec source/version, actual tag/CI/release attempt bindings and cross-package Tooling byte agreement. The published inventory SHA256 is806a0fdf6fc08ea0b8a398756b04af43eb196a81d22ebbbff142dcbca9abcc0b; signed Module.Cli archive1eea9b282d1d247e1f6e9e2213c5969f7895df44105e6900c873b586c5c4f905, Tooling DLL35d0eb2b0f32ad5e3b1e4353f088800e76084b99e60f46838e6e497105f64f01, Module.AppHost DLL6aae774cfcf41e0488cf7b2517d67897f1726c68674219fea164d6998ad60ebe. Canonical catalog bloba9472e6159b0b7627b4de543651f9aa1912398ab has SHA256957818ed7df1b29b2299644afb06987393f617c5b87ff8551b9b95b52a23034d.
+
+The durable producer readback is preserved in the post-review packet. Platform is binding this genuine tuple and the clean Partiesebe1739d source before its own same-code349/current456 qualification and publication. Old image/SDK4.1 and Works1.18.7 receipts remain unchanged. This producer acceptance does not complete final Parties4.2 source/pin/CI/RC/publication requirements.
+
+
+### Platform committed current/legacy qualification and Actions recovery
+
+Platform current081178aa5cc01f5dc736ba0d1980aa80fedc6fe1 records genuine Builds4.47/5ec1779 and clean Partiesebe1739d. Real same-code legacy6749955731a13749a889a69b289881daff585613 is committed and reachable on its qualification branch, retaining its original349profile, producer/provenance/Parties source. The rebind verifier permits exactly eight metadata differences; no historical source or image provenance is relabeled.
+
+Independent clean local clones build in Release with zero warnings/errors and pass456/456current controls across30groups and349/349legacy controls across16groups, with zero failures/skips and unchanged clean source and test/dependency output identities. Exact commands, signed tool closures and every group XML are retained. Initial two enrollment failures arose from external harness output placement; coherent reruns put outputs under the ignored artifacts directory, preserve all tests/guards and pass. These local results grant no hosted, native or publication credit.
+
+Hosted tuple42671091679 and catalog42671091693 first failed with documented GitHub internal orchestration errors and unscheduled jobs. Actual actionlint1.7.12 passes. GitHub declared incidenttp8cghg7tlc4 for Actions/Checks, later reporting mitigation/monitoring; one normal recovery attempt3is executing against unchanged081178aa. All four tuple jobs and six SDK rows must pass together on that actual latest attempt before normal source publication. Historical failures and official incident evidence remain retained. TenantsPR68stillawaits independent approval or explicit user waiver.
+
+
+### Genuine published owner tuple and bounded Tenants source selection
+
+Platform v1.9.0 is actually published at081178aa5cc01f5dc736ba0d1980aa80fedc6fe1 by normal publisher42680269970. Exact tuple42671091679 attempt3 passes all four jobs,456current and349same-code legacy controls, with clean unchanged sources/outputs. Catalog42671091693 attempt3 passes all six SDK rows. The official release/tag and published source-release receipt were independently read back; the durable post-review packet now retains that tuple and both actual hosted results. Builds v4.47.0/5ec1779040606be89306129a7d2b245258c9acd2 is independently verified with its official signed archives and published inventory.
+
+The outstanding Tenants documentation rule applies to merging PR68. Root consumption can instead select its exact already pushed and CI-qualified5293ab9dca49b6298f1e3396367627009967cbfb qualification branch, consistent with this spec's existing separate-ref source-selection route. No PR merge, approval claim or waiver is performed. Public Tenants7.0.5 remains unchanged and independently qualified against actual SDK4.2 archives. The earlier question remains relevant only if an owner PR merge is later requested; it does not block this bounded source selection.
+
+Final source-selection records now preserve the previous November9 source observation as history and separately bind the three actual qualified advances. Native current-owner evidence requires source packages3.1.0 and SDK4.2.0; it refuses the older3.0.0 private package cohort. Public readers and the native image observer bind the actual new Platform/Builds tuple while preserving the immutable released image's measured SDK4.1 bytes. Final root source CI, runtime gate, RC and eleven-package publication still remain required; status remainsin-review.

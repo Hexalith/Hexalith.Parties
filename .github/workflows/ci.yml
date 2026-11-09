@@ -118,7 +118,8 @@ jobs:
             src/Hexalith.Parties.EventStoreExtensions/Hexalith.Parties.EventStoreExtensions.csproj \
             src/Hexalith.Parties/Hexalith.Parties.csproj \
             tests/Hexalith.Parties.Catalog.Tests/Hexalith.Parties.Catalog.Tests.csproj \
-            tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj; do
+            tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj \
+            tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj; do
             dotnet build "$project" --configuration Release --disable-build-servers -m:1 -warnaserror "${package_properties[@]}"
           done
           dotnet test --project tests/Hexalith.Parties.Catalog.Tests/Hexalith.Parties.Catalog.Tests.csproj \
@@ -130,6 +131,10 @@ jobs:
             --no-build --no-restore --configuration Release "${package_properties[@]}" \
             --filter-method Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.CatalogApiAvailabilityDoesNotSelectNativeHosts \
             --minimum-expected-tests 25 --fail-skips on
+          dotnet test --project tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj \
+            --no-build --no-restore --configuration Release "${package_properties[@]}" \
+            --filter-class Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests \
+            --minimum-expected-tests 322 --fail-skips on
 
   eventstore-420-package-cohort:
     name: EventStore 4.2.0 package cohort (offline)
@@ -196,6 +201,66 @@ jobs:
             --no-build --no-restore --configuration Release "${package_properties[@]}" \
             --filter-class Hexalith.Parties.Tests.Gateway.PartiesCatalogGatewaySelectorTests \
             --minimum-expected-tests 24 --fail-skips on
+
+  published-catalog-runtime:
+    name: Published catalog concurrent runtime
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: false
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Initialize recorded root dependencies
+        uses: Hexalith/Hexalith.Builds/Github/initialize-build@3c8096180ecf2aa539ac454815efbfceb8a92822
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - name: Read the selected Dapr toolchain
+        id: toolchain
+        shell: bash
+        run: |
+          python3 - <<'PYTHON'
+          import os
+          import re
+          import xml.etree.ElementTree as ET
+          root = ET.parse('references/Hexalith.Builds/Props/Directory.Packages.props').getroot()
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              for name, property in [('cli', 'HexalithDaprCliVersion'), ('runtime', 'HexalithDaprRuntimeVersion')]:
+                  value = root.find('.//' + property).text
+                  if re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', value) is None:
+                      raise ValueError('Expected an exact selected Dapr version')
+                  output.write(name + '=' + value + '\n')
+          PYTHON
+      - name: Prepare Dapr with the shared owner action
+        uses: Hexalith/Hexalith.Builds/Github/dapr-init@3c8096180ecf2aa539ac454815efbfceb8a92822
+        with:
+          version: ${{ steps.toolchain.outputs.cli }}
+          runtime-version: ${{ steps.toolchain.outputs.runtime }}
+      - name: Trust the runner HTTPS development certificate
+        run: bash scripts/prepare-aspire-https-trust.sh
+      - name: Build the test entry point before freezing runtime artifacts
+        run: dotnet build tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj --configuration Release --disable-build-servers -m:1 -warnaserror -p:HexalithUsePublishedSdkForHostedTests=true -p:CopyLocalLockFileAssemblies=true
+      - name: Prepare the exact public runtime cohort
+        run: bash scripts/prepare-aspire-runtime-hosts.sh --configuration Release
+      - name: Require concurrent catalogs, authenticated effects and complete cleanup
+        env:
+          PARTIES_MTLS_TOPOLOGY_TESTS: 'true'
+          DAPR_MTLS_RUNTIME_PROFILE: ${{ steps.toolchain.outputs.runtime }}
+        run: |
+          dotnet test --project tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj \
+            --configuration Release --no-build --no-restore \
+            --filter-method Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyIsolationTests.ConcurrentSessions_IsolateStreamsRejectCrossCallsAndSurvivePeerDisposalAsync \
+            --minimum-expected-tests 1 --fail-skips on \
+            --report-xunit-trx --results-directory TestResults/catalog-runtime
+      - name: Retain the actual runtime result
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: published-catalog-runtime-results
+          path: TestResults/catalog-runtime
+          if-no-files-found: error
 
   memories-3018-package-protocol:
     name: Memories 3.0.18 package protocol

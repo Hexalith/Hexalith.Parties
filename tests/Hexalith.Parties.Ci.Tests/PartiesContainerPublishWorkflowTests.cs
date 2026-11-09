@@ -128,7 +128,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         }
         using JsonDocument tools = JsonDocument.Parse(CiTestPaths.ReadRepoFile(".config/dotnet-tools.json"));
         JsonElement tool = tools.RootElement.GetProperty("tools").GetProperty("hexalith.builds.module.cli");
-        tool.GetProperty("version").GetString().ShouldBe("4.45.0");
+        tool.GetProperty("version").GetString().ShouldBe("4.47.0");
         tool.GetProperty("rollForward").GetBoolean().ShouldBeFalse();
         workflow.ShouldNotContain("submodules: recursive");
 
@@ -148,12 +148,23 @@ public sealed class PartiesContainerPublishWorkflowTests
             focusedRuns.ShouldNotContain("-m:1");
             packageCohort.ShouldNotContain("continue-on-error");
         }
+        string legacyCohort = ReadWorkflowJob(workflow, "eventstore-404-package-cohort");
+        legacyCohort.ShouldContain("--filter-class Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests");
+        legacyCohort.ShouldContain("--minimum-expected-tests 322 --fail-skips on");
         string latestCohort = ReadWorkflowJob(workflow, "eventstore-420-package-cohort");
         latestCohort.ShouldContain("tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj");
         latestCohort.ShouldContain("--filter-class Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogConfigurationTests");
         latestCohort.ShouldContain("--filter-class Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogPreparationCleanupTests");
         latestCohort.ShouldContain("--filter-class Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogModelFinalizationTests");
         latestCohort.ShouldContain("--minimum-expected-tests 51 --fail-skips on");
+        string catalogRuntime = ReadWorkflowJob(workflow, "published-catalog-runtime");
+        catalogRuntime.ShouldContain("scripts/prepare-aspire-runtime-hosts.sh --configuration Release");
+        catalogRuntime.ShouldContain("-p:HexalithUsePublishedSdkForHostedTests=true -p:CopyLocalLockFileAssemblies=true");
+        catalogRuntime.ShouldContain("PARTIES_MTLS_TOPOLOGY_TESTS: 'true'");
+        catalogRuntime.ShouldContain("DAPR_MTLS_RUNTIME_PROFILE: ${{ steps.toolchain.outputs.runtime }}");
+        catalogRuntime.ShouldContain("--filter-method Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyIsolationTests.ConcurrentSessions_IsolateStreamsRejectCrossCallsAndSurvivePeerDisposalAsync");
+        catalogRuntime.ShouldContain("--minimum-expected-tests 1 --fail-skips on");
+        catalogRuntime.ShouldNotContain("continue-on-error");
         string controllers = ReadWorkflowJob(workflow, "lifecycle-controller-tests");
         controllers.ShouldContain("python3 -B -m unittest discover -s tests/ci-lifecycle -v");
         controllers.ShouldContain("submodule update --init --depth 1 --checkout -- references/Hexalith.Builds");

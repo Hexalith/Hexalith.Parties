@@ -31,7 +31,7 @@ class PublicPackageEvidenceTests(unittest.TestCase):
         f.write("invocation.json", self.invocation)
         f.functional.update(profile=public.PROFILE, currentOwner=None, selectorCompatibilityObserved=True)
         platform = dict(commit=public.PLATFORM, compositionCommit=public.PLATFORM, checkoutCommit=public.PLATFORM,
-                        catalogCommit=public.BUILDS, releaseTag="v1.8.0")
+                        catalogCommit=public.BUILDS, releaseTag="v1.9.0")
         now = datetime.now(timezone.utc)
         f.functional["publicRuntime"] = dict(kind="running-owned-public-parties-image", profile=public.PROFILE,
             ownerRunId=f.owner["runId"], ownerAttemptId=f.owner["attemptId"], environmentId=f.owner["environmentId"],
@@ -150,6 +150,17 @@ class PublicPackageEvidenceTests(unittest.TestCase):
                 if mutation == "foreign-path": bodies[name]["path"] = "/foreign/" + name + ".dll"
                 f.seal()
                 with self.assertRaises(ValueError): self.check()
+
+    def test_native_sdk_bytes_cannot_replace_running_image_bytes(self):
+        f = self.fixture
+        for name, digest in public.SDK.items():
+            with self.subTest(name=name):
+                self.assertNotEqual(digest, public.IMAGE_SDK[name])
+                original = f.functional["publicRuntime"]["bodies"][name]["sha256"]
+                f.functional["publicRuntime"]["bodies"][name]["sha256"] = digest
+                f.seal()
+                with self.assertRaises(ValueError): self.check()
+                f.functional["publicRuntime"]["bodies"][name]["sha256"] = original
 
     def test_missing_renamed_duplicate_or_skipped_original_native_cases_refuse(self):
         f = self.fixture

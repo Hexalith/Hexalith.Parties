@@ -1,0 +1,101 @@
+{
+  "checkedAtUtc": "2026-11-09T12:23:45.838358+00:00",
+  "latestStableSdk": "4.1.0",
+  "sdkPackageSource": "dbc6e7e08d605ba6c6c790e3e08a15dc8bbdec8a",
+  "officialSdkArchives": 14,
+  "baselineRoot": "806ed7b83b35fcc24996e58affb78ea51a0c8aa7",
+  "observedRoot": "45a3b24873017a0020a608494d3822a778f39ede",
+  "status": "in-review",
+  "initialStatic": {
+    "projects": 16,
+    "passed": 6403,
+    "skipped": 14,
+    "failed": 0,
+    "errors": 0
+  },
+  "focusedRuntime": {
+    "passed": 33,
+    "skipped": 0,
+    "failed": 0
+  },
+  "browser": {
+    "passed": 68,
+    "failed": 0
+  },
+  "receiptCases": {
+    "passed": 17,
+    "failed": 0
+  },
+  "localPackages": 11,
+  "localPackageVersion": "1.0.0-sdk-adoption",
+  "consumerChecks": "client executed catalog inventory/adapters and portal restore/build passed",
+  "runtimeAttempts": [
+    {
+      "sessionId": "f2012c67592e",
+      "passed": false,
+      "reason": "McpCli.Abstractions2.0.0/2.0.1 mismatch before startup",
+      "ownedCleanupVerified": true
+    },
+    {
+      "sessionId": "a7218cfce60b",
+      "passed": false,
+      "reason": "copied Platform Program omitted its helper source; CS0234 before startup",
+      "ownedCleanupVerified": true
+    }
+  ],
+  "fixesAfterAttempts": [
+    "propagate and validate exact root McpCli family in preparation and launch",
+    "copy and hash every current top-level CatalogBuilder C# input"
+  ],
+  "qualificationCredit": false,
+  "remaining": [
+    "successful authenticated concurrent persisted Counter/Greeting/Parties run and whole topology assembly once shared build/sync jobs finish",
+    "successful authenticated concurrent persisted Counter/Greeting/Parties run and whole topology assembly",
+    "normal package preparation and hosted exact-source CI/release/publication gates"
+  ],
+  "packagePreparationBlocker": {
+    "exitCode": 2,
+    "ruleId": "HXW011",
+    "source": "e39a9a2587ec150d550510763ab69db305d13fdb",
+    "message": "selected Platform identity has no local SemVer release tag",
+    "commandKey": "normalPackagePreparation"
+  },
+  "paths": "${REPO_ROOT}, ${USER_HOME}, ${TMP_ROOT}, ${LOCAL_PACKAGES} and ${RUN_PRIVATE_ROOT} are normalized prefixes; original logs remain private",
+  "actualCatalogGeneration": {
+    "passed": true,
+    "sdkVersion": "4.1.0",
+    "ownerSet": [
+      "Parties",
+      "Tenants",
+      "Counter/Greeting sample"
+    ],
+    "receipt": "catalog-tool-receipt.json.gz",
+    "boundInputs": "catalog-tool-inputs.json.gz",
+    "liveQualification": false
+  },
+  "preparedArtifacts": 10,
+  "preparedArtifactsReadback": "all10 verified before final static catalog generation",
+  "requiresStableProducerInputs": true,
+  "rootWorkingTreeDirty": true,
+  "boundSources": {
+    "scripts/prepare-aspire-runtime-hosts.sh": "c40c3129ee99ac4f40217ac5ddac2816d4e95a0ae2ae299986057d38cb4181d8",
+    "scripts/validate-aspire-runtime-cohort.py": "7ec6e9700c69cf3bd5b8b2e5335bd3754274ffb0a358929b0baff69b10146d91",
+    "src/Hexalith.Parties.AppHost/PartiesDevelopmentCatalogTool.cs": "c57cfaac62157f9804f28564bc47536f3e1867e4fd69511c01084510ba4b067b",
+    "src/Hexalith.Parties.AppHost/PartiesDevelopmentCatalogBootstrap.cs": "a1f6f679847c1304ba201fedd9ddb301b256a2b5e08d5f1f2ba734b004c450ce",
+    "tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj": "6899d5cbd713f72a99168d493fdf82ecb5769be0b7316a5211ddc58b21a98537"
+  },
+  "appHostBinarySha256": "9fddefb40900dc88d8916a18464dc77ea0cee64058806ad2f37c6e462261c024",
+  "commands": {
+    "restore": "dotnet restore Hexalith.Parties.Standalone.slnx --force-evaluate --no-http-cache",
+    "standaloneBuild": "dotnet build Hexalith.Parties.Standalone.slnx --configuration Release --no-restore --disable-build-servers -m:1 -warnaserror",
+    "integrationBuild": "dotnet build tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj -c Release --disable-build-servers -m:1 -warnaserror",
+    "receiptControls": "python3 -B tests/Hexalith.Parties.Ci.Tests/runtime_cohort_receipt_cases.py",
+    "browser": "CI=true npm --prefix tests/e2e run test:ui",
+    "prepareRuntime": "bash scripts/prepare-aspire-runtime-hosts.sh --configuration Release",
+    "pack": "python3 scripts/pack-release-packages.py ${LOCAL_PACKAGES} 1.0.0-sdk-adoption",
+    "validatePackages": "python3 scripts/validate-nuget-packages.py ${LOCAL_PACKAGES}",
+    "validateConsumers": "python3 scripts/validate-consumer-package-references.py ${LOCAL_PACKAGES} --work-directory ${TMP_ROOT}/parties-catalog-sdk410-consumer",
+    "concurrent": "PARTIES_MTLS_TOPOLOGY_TESTS=true dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -method *ConcurrentSessions_IsolateStreamsRejectCrossCallsAndSurvivePeerDisposalAsync -failSkips -result-xml ${EVIDENCE_TMP}/concurrent.xml",
+    "normalPackagePreparation": "dotnet tool run hexalith-module -- prepare-build --manifest module/hexalith.module-manifest.v2.json --mode package --workspace ${FRESH_PRIVATE_WORKSPACE} --output json"
+  }
+}

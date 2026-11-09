@@ -18,13 +18,14 @@ CASES = {
     "Hexalith.Parties.Platform.IntegrationTests.PartyEnvironmentTests.RealDependencies_CreateQueryAndPersistMatchingPartyEvents",
     "Hexalith.Parties.Platform.IntegrationTests.PartyEnvironmentTests.GatewayRefusesAnonymousCommandStatusAsync",
 }
+SDK_VERSION = "4.2.0"
 SDK = {
-    "Hexalith.EventStore.Contracts": "f3f2d7f6e7edf54e187af15edec8b4f13bf7e255b186b999efa0836a0c86a739",
-    "Hexalith.EventStore.ServiceDefaults": "0e3f88ffefb12327d53f865b96bbb774beb71f7c78c9f20a3cbefa4901e9ba2d",
-    "Hexalith.EventStore.Client": "702dfb7537e990a2065fe37c0b06301cdb70c26907af42faa6acdae331a7bce6",
-    "Hexalith.EventStore.DomainService": "5d8068c8c116551efc3d545f85d41040023fa38217e5b4e73e4d225fe8e8bf78",
+    "Hexalith.EventStore.Contracts": "7e4c8823479a6c59456c5169c95d9082ccbb5d199f403f7cb7c3267c9cf9a44a",
+    "Hexalith.EventStore.ServiceDefaults": "3b618387d1adc3b98cef9823d629edace174c2bc9a8272a501e979f972fcad12",
+    "Hexalith.EventStore.Client": "5b184b6c7bc7e83251d4f48edfb6ee446a28ac4fae7c04c381c388ed8cb9cd92",
+    "Hexalith.EventStore.DomainService": "d1593c5a2b93e0a6cb8d84d946a94223403bf38c02bb7e30987f1f188ff13646",
 }
-PUBLIC_PARTIES_CONTRACTS = "b10c65c9b15aaf2b07ed1cd3eececb5d8685a62d87efa1465a777adba335eff9"
+PUBLIC_PARTIES_CONTRACTS = "99230b764de6769a803702170c174f9dbef9b0b5b0c2931b07e85045478cd654"
 HEX = re.compile(r"[a-f0-9]{64}\Z", re.ASCII)
 IDENTITY = re.compile(r"[a-f0-9]{32}\Z", re.ASCII)
 
@@ -257,12 +258,12 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
     for key in ("runId", "attemptId", "environmentId", "revision", "mappingHash", "profile"):
         require(current.get(key) == functional[key], "current owner lineage mismatch")
     require(current.get("configuration") == "Release" and current.get("qualificationCredit") is False and current.get("committedCatalogValidated") is True
-            and current.get("sdkVersion") == "4.1.0" and current.get("tenantsVersion") == "7.0.5", "wrong current owner cohort")
+            and current.get("sdkVersion") == SDK_VERSION and current.get("tenantsVersion") == "7.0.5", "wrong current owner cohort")
     identity = current["platform"]
     require(all(identity.get(key) == platform for key in ("commit", "compositionCommit", "checkoutCommit")) and identity.get("catalogCommit") == builds, "foreign Platform/catalog identity")
     require(current.get("sdkBodies") == SDK, "actual runtime SDK bodies differ")
     archives = current.get("packageArchives")
-    require(isinstance(archives, dict) and set(archives) == {"Hexalith.Parties.Contracts.3.0.0.nupkg", "Hexalith.Parties.EventStoreExtensions.3.0.0.nupkg"}
+    require(isinstance(archives, dict) and set(archives) == {"Hexalith.Parties.Contracts.3.1.0.nupkg", "Hexalith.Parties.EventStoreExtensions.3.1.0.nupkg"}
             and all(isinstance(value, str) and HEX.fullmatch(value) for value in archives.values()), "private source packages were not measured")
     runtime, catalog = current["runtimeBodies"], current["catalogBodies"]
     require(set(catalog) == {"Hexalith.Parties.Contracts", "Hexalith.Parties.EventStoreExtensions"}
@@ -283,7 +284,7 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
         for name, expected in SDK.items():
             observed = [item for item in loaded[field] if item["identity"].split(",", 1)[0] == name]
             require(len(observed) == 1 if field == "copied" or name == "Hexalith.EventStore.Contracts" else len(observed) <= 1, "native/composition SDK inventory missing")
-            require(all(item.get("sha256") == expected and ", Version=4.1.0.0," in item["identity"] for item in observed), "native/composition SDK substitution")
+            require(all(item.get("sha256") == expected and f", Version={SDK_VERSION}.0," in item["identity"] for item in observed), "native/composition SDK substitution")
     allowed = names | phase_names | {loaded_name, "invocation.json", "test-result.json", "attachments.json", "attachment-withdrawals.json"}
     require(all(name in allowed and stat.S_ISREG(os.stat(name, dir_fd=root, follow_symlinks=False).st_mode) for name in os.listdir(root)), "unreferenced or duplicate artifact substitute")
     return {"profile": PROFILE, "source": source, "runId": owner["runId"], "nativeCases": len(cases), "qualificationCredit": False}

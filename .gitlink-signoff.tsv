@@ -693,3 +693,11 @@ references/Hexalith.EventStore|b437879df2339692d177774d1f076936da6ebd62|validate
 references/Hexalith.FrontComposer|e972d0f06a8eec3446db0b2270fdb14eef4c1186|validated-advance|origin/main@e972d0f06a8e|codex-agent|2026-11-08
 references/Hexalith.McpCli|1c1f06b46bbe9e115022be8af75b10085c8ac360|validated-advance|origin/main@1c1f06b46bbe|codex-agent|2026-11-08
 references/Hexalith.Platform|e39a9a2587ec150d550510763ab69db305d13fdb|validated-advance|origin/main@e39a9a2587ec|codex-agent|2026-11-08
+
+# 2026-11-09 explicit user-delegated published SDK4.2 adoption.
+# Builds and Platform are genuine qualified public releases. Tenants names its
+# exact CI-qualified remote branch; PR68 remains unmerged pending owner review.
+# Selection grants no historical parity, deployment or rollback acceptance.
+references/Hexalith.Builds|5ec1779040606be89306129a7d2b245258c9acd2|validated-advance|v4.47.0|codex-agent|2026-11-09
+references/Hexalith.Platform|081178aa5cc01f5dc736ba0d1980aa80fedc6fe1|validated-advance|v1.9.0|codex-agent|2026-11-09
+references/Hexalith.Tenants|5293ab9dca49b6298f1e3396367627009967cbfb|validated-advance|build/qualify-eventstore-4.2|codex-agent|2026-11-09

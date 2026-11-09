@@ -1,0 +1,221 @@
+{
+  "observedAtUtc": "2026-11-09T17:45:05.588887+00:00",
+  "status": "in-review",
+  "sdkVersion": "4.2.0",
+  "sdkSource": "aa16227bd07f0564a3026d619a5abd973e02656f",
+  "runtimeAcceptance": true,
+  "concurrentRuntimeAcceptance": true,
+  "wholeAssemblyAcceptance": true,
+  "publicationAcceptance": false,
+  "runtimeBuiltAtRootHead": "ee806fd0e82bdf6eec3a8c1f671427080dbed2ac",
+  "commonCompatibilitySource": "ebe1739d70a4e76447938b0bb8c53db508bf6019",
+  "originalWorkingFilesPreserved": true,
+  "staticPassed": 6156,
+  "staticExistingSkips": 14,
+  "ciPassed": 633,
+  "catalogModelPassed": 51,
+  "browserPassed": 68,
+  "browserRetries": 0,
+  "wholeAssemblyCounts": {
+    "total": "280",
+    "passed": "265",
+    "failed": "0",
+    "skipped": "15",
+    "errors": "0",
+    "time": "410.031"
+  },
+  "actualSessionsCleaned": 8,
+  "preparedReceiptsUnchanged": 11,
+  "pending": [
+    "genuine Builds full publication",
+    "qualified Platform tuple and same-code legacy release",
+    "TenantsPR68 required independent approval or explicit waiver",
+    "final root dependency pins/fitness/source CI/RC/release and11officialpackage readback"
+  ],
+  "files": [
+    {
+      "file": "sdk420-standalone-result.json.gz",
+      "source": "/tmp/parties-sdk420-review-verification-mv_g_v22/sdk420-standalone-result.json",
+      "sha256": "44108f7706b0663401204d845b2f06f2cb84d204cc1ef102c3063059c900b9a2",
+      "compressedSha256": "72997b3cbc52965bf491f345645376e1284c18bb13755d1422fc9c74cf16d7d0"
+    },
+    {
+      "file": "static-and-models-result.json.gz",
+      "source": "/tmp/parties-sdk420-review-verification-mv_g_v22/static-and-models-result.json",
+      "sha256": "5a536a58a620b9710d0f85c760c550c2f58f406e62efcca8646aab89d3c4328a",
+      "compressedSha256": "5a6d05c5e97c5621cbaeacbdc265e6ac0cedc7beb709150013bd3c4f46a68eb8"
+    },
+    {
+      "file": "browser-result.json.gz",
+      "source": "/tmp/parties-sdk420-review-verification-mv_g_v22/browser-result.json",
+      "sha256": "7bfd90b56e3bf9ca300f739e819264402942364df51747f8a1c5503e5b611b45",
+      "compressedSha256": "d791c4871449e521d88f4d22c80b62da1d5af986380aaf95071a13c44e41e7b7"
+    },
+    {
+      "file": "staging-final-build-result.json.gz",
+      "source": "/tmp/parties-sdk420-review-verification-mv_g_v22/staging-final-build-result.json",
+      "sha256": "208a98469066eb422ab387d3578775911e5dc6303b4ced07e6968468d17229d1",
+      "compressedSha256": "9bd87cb3acae99b396f66c6485d9742c377a50e1959b1bf9e90b2732e4e8e791"
+    },
+    {
+      "file": "ci-final-result.json.gz",
+      "source": "/tmp/parties-sdk420-review-verification-mv_g_v22/ci-final-result.json",
+      "sha256": "723aabc1d022c24433652e6b3f24c72ae2c849090e576d510e625e9dac6be63d",
+      "compressedSha256": "07328b497458a4652fc58f233cb3a29a80946df3f691213a5460fc78104660fb"
+    },
+    {
+      "file": "preparation-after-staging-fix-result.json.gz",
+      "source": "/tmp/parties-sdk420-review-verification-mv_g_v22/preparation-after-staging-fix-result.json",
+      "sha256": "3d03744e9ddf014532c231c38b158fd4d722c73dc9323a1151fa4c53b8c2ff21",
+      "compressedSha256": "ca428fa22b65b823a1559442f3bfda2584fdf7e7034ae0c71b1ed8d275776953"
+    },
+    {
+      "file": "test-entry-refresh-after-staging-fix.json.gz",
+      "source": "/tmp/parties-sdk420-review-verification-mv_g_v22/test-entry-refresh-after-staging-fix.json",
+      "sha256": "82ea3f2c8544796c6a9575d14fdef9514c52eb780360144dd1bef510e4d57ca6",
+      "compressedSha256": "619c5914beeaf1206fa3d875a926d40fa56cdec17890a3c5f21784b1ce61bb23"
+    },
+    {
+      "file": "head-alignment.json.gz",
+      "source": "/tmp/parties-sdk420-review-verification-mv_g_v22/head-alignment.json",
+      "sha256": "c32aee1091f0927ee423cb1ef31de660e6654536526ba8f8efeb922418ad2447",
+      "compressedSha256": "cc9723e23a4e7858a3c4953db7f723b3407103436a8c121bcd3680048a78142b"
+    },
+    {
+      "file": "whole-inputs.json.gz",
+      "source": "/tmp/parties-sdk420-review-verification-mv_g_v22/whole-integration-after-staging-fix/inputs.json",
+      "sha256": "cc8843d4bdd2906f85742cec03387464ec47ee8820735107f35d749bb3ad1984",
+      "compressedSha256": "9399503e220580ff044870cba5595e5fd5fe9d860a18b8e59e3bbacf3e3c3462"
+    },
+    {
+      "file": "whole-result.json.gz",
+      "source": "/tmp/parties-sdk420-review-verification-mv_g_v22/whole-integration-after-staging-fix/result.json",
+      "sha256": "13cb3c8991c146704fc8f45597534b752481b92e2f57bd584deeb9c2267c853d",
+      "compressedSha256": "5982380659833dba64c0540a11cd5a15ec6ba88e69a2a22a6cad3d7506e9e4ff"
+    },
+    {
+      "file": "whole-cleanup.json.gz",
+      "source": "/tmp/parties-sdk420-review-verification-mv_g_v22/whole-integration-after-staging-fix/cleanup.json",
+      "sha256": "157e47bfcb84a3b17f266caab716eb93961544e5061c89c4026ded87ba76b995",
+      "compressedSha256": "d6ae5f18ea3e9d46c714370b5d06d226d9fb10a445a16e32e4408dba1ba56f17"
+    },
+    {
+      "file": "whole-post-run-readbacks.json.gz",
+      "source": "/tmp/parties-sdk420-review-verification-mv_g_v22/whole-integration-after-staging-fix/post-run-readbacks.json",
+      "sha256": "740d295f6c9b6bb7d93da27674ddac5c66cb151e4a0d470985cd273797664099",
+      "compressedSha256": "985b9c60b8830d26692f058298e4ee8974a80f418e254d1ad1497bcfd86979d2"
+    },
+    {
+      "file": "whole-result.xml.gz",
+      "source": "/tmp/parties-sdk420-review-verification-mv_g_v22/whole-integration-after-staging-fix/result.xml",
+      "sha256": "03e70424a9873c2c0bf9baba049cb1aa90f65e7766caced88f6e101f465d8029",
+      "compressedSha256": "1adb9d769414255a9c1a459707823591f3234e0b12d5348942879a0158cb94e0",
+      "rawSha256": "7ca8e8c7214b14c2b5bddad48171cd36d27df3c2c9c5818a436dcb0c0d6e4124",
+      "kind": "sanitized-xunit-report"
+    },
+    {
+      "file": "ci-final.xml.gz",
+      "source": "/tmp/parties-sdk420-review-verification-mv_g_v22/ci-final.xml",
+      "sha256": "53de29ef1cc8cf953c012e48b66e1275a6f57aa73c0185288ac4e2a6755e8d75",
+      "compressedSha256": "64cdcba787ba02c229c69a6ea5c8e5aa33f7c97f80e1ce419f6f4621da06efae",
+      "rawSha256": "c8192461dbb80054936c769650f02d2e6286dcd776575d99e0c1272b9de463c0",
+      "kind": "sanitized-xunit-report"
+    },
+    {
+      "file": "staging-regression-red-green.json.gz",
+      "source": "/tmp/parties-interim-sdk41-gd0tlgko-evidence/staging-regression-red-green.json",
+      "sha256": "22b599d751a70a89277e9f1739906f45421c8a085959a9fdd8612d18b0f20357",
+      "compressedSha256": "e00901ed8703daa035642b78d47b7a294fb2c3d118f6539186d18621985d00f5"
+    },
+    {
+      "file": "staging-followup-commit.json.gz",
+      "source": "/tmp/parties-interim-sdk41-gd0tlgko-evidence/staging-followup-commit.json",
+      "sha256": "ae971a1e0e02240d807bf578bf4c3a5d1cad8ee9817399133e46a0e91eb00a97",
+      "compressedSha256": "1f0e9911f73354f9e61d5e78d417544c51c99ae8ffe58a8ae8a5453fa55f6500"
+    },
+    {
+      "file": "staging-followup-commitlint.log.gz",
+      "source": "/tmp/parties-interim-sdk41-gd0tlgko-evidence/staging-followup-commitlint.log",
+      "sha256": "1dc21228b44da89afd512cab895b325890a70c776eccb2078953930966ea9df3",
+      "compressedSha256": "1bdcfcf6594579272ceb50e7fe6af9761dc257cbe8b2b772a8f126af14948929"
+    },
+    {
+      "file": "staging-metadata-followup.json.gz",
+      "source": "/tmp/parties-interim-sdk41-gd0tlgko-evidence/staging-metadata-followup.json",
+      "sha256": "3ce48b6879dd99c395f327aeb756bf286283a48dc864e19eb7cc8c3d4f63dc52",
+      "compressedSha256": "432294f806ec929956ff0fdda3ca688cfb0a18ba509ae029b1f87aba60123911"
+    },
+    {
+      "file": "prepared-prepared.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-review-hky3s7lk/runtime-profile/Release/prepared.json",
+      "sha256": "a26a22740c805c168d17bb331a7d621d913a44bfd70b26c5f4ed95dadd00a59e",
+      "compressedSha256": "cf4de479ca2634e065b835173d5da02c2964da370d9fd3793d143eb56bce2e8c"
+    },
+    {
+      "file": "prepared-a7ce49c66998300ff5f059bd4a65d14f3ef0666f1ccec6f5f2e6113fa3773475.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-review-hky3s7lk/runtime-profile/Release/a7ce49c66998300ff5f059bd4a65d14f3ef0666f1ccec6f5f2e6113fa3773475.json",
+      "sha256": "c3f30254edb39a4ed75785abfedf417d006893eaa86c1028db0141d4fb2256a6",
+      "compressedSha256": "18e43ed2a5e4ce1f5833e6197206180252c0a95b14599bdddd70b114c2572753"
+    },
+    {
+      "file": "prepared-f41f30223f0fd0526d1d01a004f84bb9e6a658924f68e39de7ea4dca17db88a7.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-review-hky3s7lk/runtime-profile/Release/f41f30223f0fd0526d1d01a004f84bb9e6a658924f68e39de7ea4dca17db88a7.json",
+      "sha256": "6814979ab4e2d211b8abb0e18a8876ee595b0d940ef830fc4aa257ec994da750",
+      "compressedSha256": "d0d45c43469a849966a76c8eb9decaa38f6c2707fbc223550f16b58434e7b3f4"
+    },
+    {
+      "file": "prepared-4b87a578f16b91637231ba4c74619e3efba021b75fab894c043815bd60cdce38.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-review-hky3s7lk/runtime-profile/Release/4b87a578f16b91637231ba4c74619e3efba021b75fab894c043815bd60cdce38.json",
+      "sha256": "c0a2e9df722c19a183fd29f2e3d89f2de91ee1f703528a957330cd1ba207dfe0",
+      "compressedSha256": "373974b3ace487c207fea76a6038d927dfd31dbbc102a2860d78d56b81f25345"
+    },
+    {
+      "file": "prepared-bb8fd8f78f62a23053137dbc2319530918b59b62025d0cfe4cd4e9df10fe9bcc.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-review-hky3s7lk/runtime-profile/Release/bb8fd8f78f62a23053137dbc2319530918b59b62025d0cfe4cd4e9df10fe9bcc.json",
+      "sha256": "a382357347c92df6bc81d39da5f44034381170664faca0f43d5b8b8cf734d302",
+      "compressedSha256": "b7dcb9467c1407db30e8620ac4aeabfb9fc6b3e48ba550954281c9fcd05c272a"
+    },
+    {
+      "file": "prepared-757f44c407f739691bb4519c9f37283216b0ba4a661524fc489dddcfa8feeb76.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-review-hky3s7lk/runtime-profile/Release/757f44c407f739691bb4519c9f37283216b0ba4a661524fc489dddcfa8feeb76.json",
+      "sha256": "ad58f10b4ebab3b54880239d15d825caaacdff25359b62352ca1419901782732",
+      "compressedSha256": "14e7509c02cd55b7abe989ccf2e9808d619b4a2d76f2327fb7b9e94454d27053"
+    },
+    {
+      "file": "prepared-a0be3bb39998b81d3d8cba5be4241be3804436148e23f48f2cf89cd13cedf7b6.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-review-hky3s7lk/runtime-profile/Release/a0be3bb39998b81d3d8cba5be4241be3804436148e23f48f2cf89cd13cedf7b6.json",
+      "sha256": "cee5a2fa788ad24cd59be59afb25feb6a8e2e23af28cf03afc6b89e8c37d8816",
+      "compressedSha256": "f74d4ad0bb77bb31c1b203835e228ee186d9cb321eb5355a23fb509a33184552"
+    },
+    {
+      "file": "prepared-e9a8fac1f7691556f15d4247ffbc7ae6691fd7a8d01cb1d14b45c28af3202fef.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-review-hky3s7lk/runtime-profile/Release/e9a8fac1f7691556f15d4247ffbc7ae6691fd7a8d01cb1d14b45c28af3202fef.json",
+      "sha256": "278d83bfa1a520b55d1ccf995c970fe16fae988d9d8c4581e195696a6bf32a30",
+      "compressedSha256": "4f32fb8e394d040e07d892b036c50d6986da3e9f906edd09991a15b04fc5e158"
+    },
+    {
+      "file": "prepared-143d0bb7baa507de1776e9e7a729840aa9cd27720828ae1f70ed8ec1b6b4d86e.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-review-hky3s7lk/runtime-profile/Release/143d0bb7baa507de1776e9e7a729840aa9cd27720828ae1f70ed8ec1b6b4d86e.json",
+      "sha256": "e7b45e7470039792731a08712bda49d8a3c84f6b7f28573b541c4e71284dff90",
+      "compressedSha256": "5361ab4e950e3bf905a330d7183e25b4d4009f7fb6c3ad0536d7d3f3b8d18de4"
+    },
+    {
+      "file": "prepared-406b9c9e7bf9c8f7b8e9a0936337c700fd81fb583c2a5df56fa8583cc9d48d74.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-review-hky3s7lk/runtime-profile/Release/406b9c9e7bf9c8f7b8e9a0936337c700fd81fb583c2a5df56fa8583cc9d48d74.json",
+      "sha256": "ca81e8bf4deba820c9ee0b192194be957d1dc66de4ac304e2b1097f61b41b397",
+      "compressedSha256": "8ce6333b32c8e5bc0649bcddef5d3300282c7ac40367225cf084c691b95ebc51"
+    },
+    {
+      "file": "prepared-c4cd929b00f7f23d0930f918c845c9f0e1367883598a269604d63aa1ed0055b6.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-review-hky3s7lk/runtime-profile/Release/c4cd929b00f7f23d0930f918c845c9f0e1367883598a269604d63aa1ed0055b6.json",
+      "sha256": "8b1fb049824427210f2752adf8dd02856ea23f77a964d32cf2eb91833cb44a56",
+      "compressedSha256": "58a402bd4be98654339de253d9bcf62052a5d06ee6b7d4131fc97833750d2172"
+    },
+    {
+      "file": "prepared-eb1b8c4fdb3cc8f47454f15c88a21c9af3a73e7fd180eabcdb2e3a754d93adfc.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-review-hky3s7lk/runtime-profile/Release/eb1b8c4fdb3cc8f47454f15c88a21c9af3a73e7fd180eabcdb2e3a754d93adfc.json",
+      "sha256": "97ecf8784c61afa612ecb0403bc982e9d263bcbc1bfb8b6bdc64054a7fa32844",
+      "compressedSha256": "56693440e7fdb7f19e337b0adeb5e9bc3b14e979936c5ced551679563df375b1"
+    }
+  ]
+}

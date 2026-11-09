@@ -1,0 +1,483 @@
+{
+  "observedAtUtc": "2026-11-09T14:35:22.971092+00:00",
+  "sourceCommit": "3b4b0fb32200bf071374e73fa0f6993dd83afbbc",
+  "sdkVersion": "4.2.0",
+  "sdkSource": "aa16227bd07f0564a3026d619a5abd973e02656f",
+  "status": "in-review",
+  "runtimeAcceptance": false,
+  "publicationAcceptance": false,
+  "notes": [
+    "Prior4.1 results retained as historical evidence only.",
+    "4.2 latest stable independently observed14:16UTC.",
+    "Configured browser gate passed with one retry; unchanged focused repeat failed1of3.",
+    "Complete4.2 concurrent method passed every unchanged functional/authentication/isolation assertion plus explicit scope refusals; independent cleanup confirms both session roots/resources and SDK directories removed.",
+    "Fresh4.2 browser68/68 passed without retries.",
+    "Whole integration assembly263passed/15existingdeferred-or-opt-in skips; no failures. No skipped case receives runtime acceptance."
+  ],
+  "artifacts": [
+    {
+      "file": "sdk420-official.json.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-official/all-sdk-proof.json",
+      "sha256": "2afe2221ef8fc9a7e3199ad8fc0e3c3a38ddfc954a30595b853a20d1ccc59c2a",
+      "compressedSha256": "8e99dbe83b5d2c85a3a94a42baf4b2c5a657f7e594ecfe6140bfcdc6f28f7a3f"
+    },
+    {
+      "file": "sdk420-build-result.json.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-build-result.json",
+      "sha256": "e7721dcce83daabcb103443ddd8f74ff02c9f73e3e8504fe3764fe522db02bdf",
+      "compressedSha256": "8ed6db4871e114a5e24e6b86689a96e644a0ba5067600725f59e831d6dfcf060"
+    },
+    {
+      "file": "sdk420-build.log.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-build.log",
+      "sha256": "dc6798159b23c2a6077d30b4d7f7fde6890fee493c221163e42a8f7a5c6041d1",
+      "compressedSha256": "3842f8bceeece3bbab9f6f01e13035acc138e9c34779be90694d82ecfa691390"
+    },
+    {
+      "file": "sdk420-restore.log.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-restore.log",
+      "sha256": "c8338a505db760a74e990d26a7fcc0b9488c80351a35f7d1b6c8baa51a152e88",
+      "compressedSha256": "5213c1128883a0b673ffe13cfb5ac56077d808b54d0d8750d00b8f781a885f71"
+    },
+    {
+      "file": "sdk420-catalog.xml.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-focused/catalog.xml",
+      "sha256": "c7fcd984372a2f943b19ed27145908f21e87091e5c9d4dad9c78b5c88e3c05c8",
+      "compressedSha256": "019798415d9630f566e79ee6db1b2955122b8582aac0441a4eabd9c1ed39669d",
+      "tests": {
+        "total": "20",
+        "passed": "20",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0"
+      }
+    },
+    {
+      "file": "sdk420-client.xml.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-focused/client.xml",
+      "sha256": "224ce9c73a4c452fcfdf37aa6efdce9b13029c6ebe1eb635dc9693e88fba2cae",
+      "compressedSha256": "e29c05f61bd42945ac2fb7ddfe0911667f38e250e9af5a05899e5b35dd3b7198",
+      "tests": {
+        "total": "178",
+        "passed": "178",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0"
+      }
+    },
+    {
+      "file": "sdk420-gateway.xml.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-focused/gateway.xml",
+      "sha256": "59f5937b59fc6f315c716fa8f947582a0ca9e5748624a250250e12046801f4b3",
+      "compressedSha256": "4df5ac2be8e9159dde36a3a36de7ccdd8ac447a895dc292fc9f5d3ec157442fe",
+      "tests": {
+        "total": "346",
+        "passed": "346",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0"
+      }
+    },
+    {
+      "file": "sdk420-capabilities.xml.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-focused/capabilities.xml",
+      "sha256": "1687df99f0d52b1f8d49b0122cc82dbd599d6ac5a8933f814c815634d3c9c622",
+      "compressedSha256": "73362fd544aa9cfe1166b7662a0af110bae9ab5986350d9fbae97b894da1adc0",
+      "tests": {
+        "total": "41",
+        "passed": "41",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0"
+      }
+    },
+    {
+      "file": "sdk420-models.xml.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-focused/models.xml",
+      "sha256": "8e2e0e6034fa1d1397d2b75ee7867b41cca8bfc26a71a009e175332b89054412",
+      "compressedSha256": "5b34deb799b5e2bd73ba67023959e713295a019ebdcb36570dedf9d923700b62",
+      "tests": {
+        "total": "53",
+        "passed": "53",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0"
+      }
+    },
+    {
+      "file": "sdk420-mtls-workflows.xml.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-focused/mtls-workflows.xml",
+      "sha256": "5fa61fc6063a843248608fd977d1e337ce6a62ef3ebee832c5135f92cc03f4be",
+      "compressedSha256": "08a5b5960863ad1d3686763b08bf43914b7f9c6c7b8dd97b62e8ac1e0fb8979c",
+      "tests": {
+        "total": "94",
+        "passed": "94",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0"
+      }
+    },
+    {
+      "file": "sdk420-preparation.log.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-preparation-qualified-peer.log",
+      "sha256": "bac5fe0e0d8d7701d2f99ec14a991ea9b21a36dd4daf3bbe3c8a8819107c6e79",
+      "compressedSha256": "4256ed3869d245686d141fd5e9562919d73f529fa8cc37d3f398a2a7ae51d97f"
+    },
+    {
+      "file": "sdk420-preparation-result.json.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-preparation-qualified-peer-result.json",
+      "sha256": "95660e1915d32b1b032a002b3a5846e71853452103f333c886508663187787d4",
+      "compressedSha256": "a4636bf3c3fa09957598ed47e20effd9f50862aab98f1a2605ee46c837fc965e"
+    },
+    {
+      "file": "previous-static-report.json.gz",
+      "source": "/tmp/parties-sdk-adoption-final-static/report.json",
+      "sha256": "f748df76300bc6cfe8ffcda904de3f8f70ff8a44c02094713ab8aeeedb99d81c",
+      "compressedSha256": "5022a873895eb89ca4c0ec85474fcc6884d4aca542bcc7a304aeae046764430d"
+    },
+    {
+      "file": "previous-ci-all.xml.gz",
+      "source": "/tmp/parties-sdk-adoption-final-ci-whole.xml",
+      "sha256": "3f88e32a99e648e19042a9fb22e69acb8878ce4d62538150882d091009453582",
+      "compressedSha256": "f3f91cf46e1d915f7e2137e55931571c6c9b8f57b41eeb40b1ff360029978952",
+      "tests": {
+        "total": "617",
+        "passed": "617",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0"
+      }
+    },
+    {
+      "file": "previous-legacy-identity.xml.gz",
+      "source": "/tmp/parties-sdk-adoption-legacy-identity-tests.xml",
+      "sha256": "48a83009ec9b8d811441791902875f67784ad63aec5709c42e5f4d83333c64d4",
+      "compressedSha256": "08710db7db9d78326a78b2fc7dbd46d9205fa40ad4d26a27eef42531c8a558f1",
+      "tests": {
+        "total": "322",
+        "passed": "322",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0"
+      }
+    },
+    {
+      "file": "previous-browser.log.gz",
+      "source": "/tmp/parties-sdk-adoption-final-browser.log",
+      "sha256": "58c616e5ff1bc6a4e0a60a40b7a0461ada59bd0646e151a3be07e7a550fc6bb0",
+      "compressedSha256": "5d9828f8be248c8ce6283de2bd6a3c9802f14323cfc2c21bb955f8375c639637"
+    },
+    {
+      "file": "previous-browser-focused.log.gz",
+      "source": "/tmp/parties-sdk-adoption-final-browser-focused.log",
+      "sha256": "74b45508b549007be6aa18d6562d8ad41eb33c28c6dca050dd496d8ca8092002",
+      "compressedSha256": "de39d529ffb6bbd3e3b47b1c790ccaac51d172f22b569777ade8028c241411c9"
+    },
+    {
+      "file": "previous-pack.log.gz",
+      "source": "/tmp/parties-sdk-adoption-final-pack.log",
+      "sha256": "f2d59f233b4c5d98d3113bdfd1ed6fc334be37c0686c38f06b1497b329c4135a",
+      "compressedSha256": "c1514a5083f012a77ad7138c11a2e024823e998acbe9a18dcb4ba67166c54db7"
+    },
+    {
+      "file": "previous-package-validation.log.gz",
+      "source": "/tmp/parties-sdk-adoption-final-package-validation.log",
+      "sha256": "34bdff97cef31c7cf6854aef98a107ee2d3a5999a33120714238c3ad3bd0b2b0",
+      "compressedSha256": "cad7aa211482b97baae07d0f8ed9c6d735436c7abd7c2117cd3a79e065edfe88"
+    },
+    {
+      "file": "previous-consumers.log.gz",
+      "source": "/tmp/parties-sdk-adoption-final-consumers.log",
+      "sha256": "450601d93749a139fc65ca47e81fa836d86638ba194b0d82e00df82b86aaf3fa",
+      "compressedSha256": "016f0dd3c602e115a3b1014541bd92241fae168aef913cc9d2518d870fa2b681"
+    },
+    {
+      "file": "previous-public-composition-cleanup.json.gz",
+      "source": "/tmp/parties-sdk-adoption-public-composition-live/cleanup.json",
+      "sha256": "089e2eb2f46a6d11b593eba0efabe2cba59eb13f7d6f2a8671bdb23083d17ce1",
+      "compressedSha256": "126e5f113843e2f596b1f24ce489e459e318b4897efb75339f2e7a3e6e613a69"
+    },
+    {
+      "file": "previous-channel-order-cleanup.json.gz",
+      "source": "/tmp/parties-sdk-adoption-channel-order-live/cleanup.json",
+      "sha256": "d17ce857f992023f1d42df2f9ccb6fb0176547ebdf091c9b9c3e46223ee026f4",
+      "compressedSha256": "fd68339aa2e91ab94b94c7f4f68b203090bf506fb6ffa8528de973882b77b190"
+    },
+    {
+      "file": "sdk420-prepared-manifest.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-yydt656n/runtime-profile/Release/prepared.json",
+      "sha256": "787db129fe643124ef5d0513ed0b928c9f524c878797d8e6364ecafb581fb361",
+      "compressedSha256": "9e93aff93b805f32c6fc920232bb66e85b8db9f46f6c93472eb4b20085912712"
+    },
+    {
+      "file": "sdk420-receipt-a7ce49c66998300ff5f059bd4a65d14f3ef0666f1ccec6f5f2e6113fa3773475.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-yydt656n/runtime-profile/Release/a7ce49c66998300ff5f059bd4a65d14f3ef0666f1ccec6f5f2e6113fa3773475.json",
+      "sha256": "0e03fdd48ddab577f114ee9cac8a669c961927cd82191709446066d957200c29",
+      "compressedSha256": "adad40565748767c28adc0b8d70f10dab36029517b09fa3af2b016f48261e80c"
+    },
+    {
+      "file": "sdk420-receipt-f41f30223f0fd0526d1d01a004f84bb9e6a658924f68e39de7ea4dca17db88a7.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-yydt656n/runtime-profile/Release/f41f30223f0fd0526d1d01a004f84bb9e6a658924f68e39de7ea4dca17db88a7.json",
+      "sha256": "e8680181711123375f79d786901ded21dc1f60dc0b9aca496f6bfcf18104f382",
+      "compressedSha256": "2899061c6994eb04a8aca586f09c8fc993da2ff583a874c62f5b715e53710d40"
+    },
+    {
+      "file": "sdk420-receipt-4b87a578f16b91637231ba4c74619e3efba021b75fab894c043815bd60cdce38.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-yydt656n/runtime-profile/Release/4b87a578f16b91637231ba4c74619e3efba021b75fab894c043815bd60cdce38.json",
+      "sha256": "51e9a473b80a7bf8e5cb0f245592e701b297eb1b1f60d075ddf2dd1c6072e1d7",
+      "compressedSha256": "9dc11430381ee68d23dd7db9109156a4d111de63b695a6383d10fccc9af8758f"
+    },
+    {
+      "file": "sdk420-receipt-bb8fd8f78f62a23053137dbc2319530918b59b62025d0cfe4cd4e9df10fe9bcc.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-yydt656n/runtime-profile/Release/bb8fd8f78f62a23053137dbc2319530918b59b62025d0cfe4cd4e9df10fe9bcc.json",
+      "sha256": "41b7a575314b87ce1786695e5eeb8d154310d820ab7a36d92cf56e933e2f710e",
+      "compressedSha256": "c5a36b0f2253331f05f075490956481cdf69262fadc3ffc2e084bb72de395c3e"
+    },
+    {
+      "file": "sdk420-receipt-757f44c407f739691bb4519c9f37283216b0ba4a661524fc489dddcfa8feeb76.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-yydt656n/runtime-profile/Release/757f44c407f739691bb4519c9f37283216b0ba4a661524fc489dddcfa8feeb76.json",
+      "sha256": "6f8198855b9bdecc18a434d4076b49b304ad44e104c096ad7c7c1d4bdf574b6c",
+      "compressedSha256": "75cc9bb77b3031645cfde7b847611aafe8cfeb6b8aa44d8702cd0f7f9c0a32b7"
+    },
+    {
+      "file": "sdk420-receipt-a0be3bb39998b81d3d8cba5be4241be3804436148e23f48f2cf89cd13cedf7b6.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-yydt656n/runtime-profile/Release/a0be3bb39998b81d3d8cba5be4241be3804436148e23f48f2cf89cd13cedf7b6.json",
+      "sha256": "84335ccc5b78b75623af8fe1800c422a4e5a2715fd948403dab611404247fa85",
+      "compressedSha256": "777c9aeff4957ae3118ec09a9fb8b4bd60fa347c315095aea738362a836f7553"
+    },
+    {
+      "file": "sdk420-receipt-e9a8fac1f7691556f15d4247ffbc7ae6691fd7a8d01cb1d14b45c28af3202fef.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-yydt656n/runtime-profile/Release/e9a8fac1f7691556f15d4247ffbc7ae6691fd7a8d01cb1d14b45c28af3202fef.json",
+      "sha256": "833825360bf468765b56f3f6b4c4d04838684bb23708cca0747aeee0a1ca9089",
+      "compressedSha256": "9a78918bebcf60ec80800ec9e3f8376b6a896ba769fe50c41a308257dda668c8"
+    },
+    {
+      "file": "sdk420-receipt-143d0bb7baa507de1776e9e7a729840aa9cd27720828ae1f70ed8ec1b6b4d86e.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-yydt656n/runtime-profile/Release/143d0bb7baa507de1776e9e7a729840aa9cd27720828ae1f70ed8ec1b6b4d86e.json",
+      "sha256": "e419dcf536fd00d0f90d2aeb9a23c10db38caff0e89f0223e8b9d2bf866e8d1e",
+      "compressedSha256": "852e104b96231d1303bc8ac5dcc35138078fd836880088fc1123d17956dd249e"
+    },
+    {
+      "file": "sdk420-receipt-406b9c9e7bf9c8f7b8e9a0936337c700fd81fb583c2a5df56fa8583cc9d48d74.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-yydt656n/runtime-profile/Release/406b9c9e7bf9c8f7b8e9a0936337c700fd81fb583c2a5df56fa8583cc9d48d74.json",
+      "sha256": "63971ff6426f7a252970b5ca2687fc3c5d2494f4d8868395fb5906cf85967d03",
+      "compressedSha256": "40cd2a9efaf95ab37de0329f4e6f46f72d9e07e920a98dc5af7bc6e000bba2f2"
+    },
+    {
+      "file": "sdk420-receipt-c4cd929b00f7f23d0930f918c845c9f0e1367883598a269604d63aa1ed0055b6.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-yydt656n/runtime-profile/Release/c4cd929b00f7f23d0930f918c845c9f0e1367883598a269604d63aa1ed0055b6.json",
+      "sha256": "9954d4746c80133540dfa41afce77cfdb2e2047af1b894f4a460adcbbd347a57",
+      "compressedSha256": "8e983fde89fb5da4826dd8e72ddb365812a782c246313f5c2a08f4e6901ee25b"
+    },
+    {
+      "file": "sdk420-receipt-eb1b8c4fdb3cc8f47454f15c88a21c9af3a73e7fd180eabcdb2e3a754d93adfc.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-yydt656n/runtime-profile/Release/eb1b8c4fdb3cc8f47454f15c88a21c9af3a73e7fd180eabcdb2e3a754d93adfc.json",
+      "sha256": "8f480249cbb6a3f1d76a887e17cbf870f799d4da9dff9f57de79a10311482d5c",
+      "compressedSha256": "bdb9a27ffd210aebdee2c66b5140de2d9c7eb2d238f84337e4ef3bcb3b40a818"
+    },
+    {
+      "file": "dapr1191-proof.json.gz",
+      "source": "/tmp/parties-sdk420-dapr-6_pgy834/proof.json",
+      "sha256": "daa938c092466d561e6caf7cca75ad4917ae43ef7b081e9c30629e05f32ab832",
+      "compressedSha256": "c02fb294f169a5001ae39907642db11173c90fded65698f71a73134e91ad7a69"
+    },
+    {
+      "file": "sdk420-concurrent-inputs.json.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-status-read-live/inputs.json",
+      "sha256": "0a7539646261d4c4442b0a7c223a58bba22d52110902ea9462782a77e21300ab",
+      "compressedSha256": "b5e327c8efa6226b29ead4537070f5477e42ab6bb253b5cb85f509dcaf1feda9"
+    },
+    {
+      "file": "sdk420-concurrent-result.json.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-status-read-live/result.json",
+      "sha256": "50e6bd55271f8424f8b7b11c64466ced514333b9a59dfe3427229dd486df462d",
+      "compressedSha256": "18b19b19aa7a285ffc12594590ac82b2972671346e72ef6a45f6fddca0f59569"
+    },
+    {
+      "file": "sdk420-concurrent-cleanup.json.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-status-read-live/cleanup.json",
+      "sha256": "fcb70d7d9c0211ea8efea91278af1b7d616b1500e77f8830b3addfdbc6dee690",
+      "compressedSha256": "eb7982430dbea7253b9d68cf29f853e6aaf2cbcc5a3179278b86f8795274d08c"
+    },
+    {
+      "file": "sdk420-concurrent.xml.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-status-read-live/concurrent.xml",
+      "sha256": "e3d00a5df9131a20c55a6c9114d2f1668bbbc6316f4dfa21c2bc7701776e7a6e",
+      "compressedSha256": "a81de803ade813f0b1059673d2a98c54fee2a92341cecead2fe9c6d0db4a8493",
+      "rawSha256": "0205dcf6df67953384c820b5e818c2d77f27ad91d9c36c7727030d961addabbd",
+      "kind": "sanitized-xunit-report",
+      "tests": {
+        "total": "1",
+        "passed": "1",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0",
+        "time": "144.025"
+      }
+    },
+    {
+      "file": "sdk420-failed-listener-inputs.json.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-listener-live/inputs.json",
+      "sha256": "926451f8a75e03468768f91e93cc3dfe6104511e18ce0658885d4f0c1d2d4ad3",
+      "compressedSha256": "0283946325b6350d8d168e6244a979ecae57baf973c6c5325de6b47b5f42e63d"
+    },
+    {
+      "file": "sdk420-failed-listener-result.json.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-listener-live/result.json",
+      "sha256": "36e5a72d5eefc7801dcc1370cea978372b0af8f9e372e4f6714cd01814c62175",
+      "compressedSha256": "d1f1336c22a5e3bc54d27f09320599b2340ff8e9aa496acb764a6bdb0e9720e4"
+    },
+    {
+      "file": "sdk420-failed-listener-cleanup.json.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-listener-live/cleanup.json",
+      "sha256": "bc5116064d05fb5619b5a84eebaa65f099a349a63251cc766344b5620a2eae45",
+      "compressedSha256": "563f07af8c060ba49bbc11473dac7a40d79f65d4fb78aae65ae2f2cf2f410bf8"
+    },
+    {
+      "file": "sdk420-failed-status-scope-inputs.json.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-status-scope-live/inputs.json",
+      "sha256": "d491ae44cf577451aa1e7cde2134d52e3ccc7b9e9180206ec94fbd0b58db1af6",
+      "compressedSha256": "65fc4d910b7cf8839cb92f0405852f02547b557fef523c8dd4257a6b594332dc"
+    },
+    {
+      "file": "sdk420-failed-status-scope-result.json.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-status-scope-live/result.json",
+      "sha256": "31a9e4ab1e1128019e061dee1431b233aa1952056fe79840048396f10bd9e999",
+      "compressedSha256": "b29897e716797d9068a6f4df05e0601a18faeb9487eff8ee0cc15280c9fb14ac"
+    },
+    {
+      "file": "sdk420-failed-status-scope-cleanup.json.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-status-scope-live/cleanup.json",
+      "sha256": "cc6560acc6382579c423553a28f0e2c807f7108148e44c92970addbfa53a6085",
+      "compressedSha256": "22e37e0df9f133ab1ecdbf45cece01a9bcebfc3c47717a77136415e9589f52f1"
+    },
+    {
+      "file": "sdk420-browser.log.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-browser.log",
+      "sha256": "360942c60a78ec2e56ec43c0fc55ccee02c1223e0a44a4bdeb4e2ced4231cb89",
+      "compressedSha256": "e7aa9b2a2b0d23ea01447149edfd263071c70fe0c12301ed02d4e5af30c13ae8"
+    },
+    {
+      "file": "sdk420-browser-result.json.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/sdk420-browser-gqcer03m/result.json",
+      "sha256": "aa924aa99d5f955c5ec963726171a32cf7e84d8283ee20d1bb3b18b881a88dfd",
+      "compressedSha256": "2ac1b989bc03882cd06fc9ff134d92c82b1c1574d8075773dc61a8fb3037815d"
+    },
+    {
+      "file": "sdk420-browser-junit.xml.gz",
+      "source": "/home/administrator/projects/hexalith/parties/artifacts/sdk420-browser-gqcer03m/junit.xml",
+      "sha256": "6da6e1f8ae505bd032f51587e9a5b84aed715bc1f54bacde09bc1167b67418cc",
+      "compressedSha256": "9b4a65d433ef827f504dad01e1d4675649d293c26947e89f4034aa36e897c591"
+    },
+    {
+      "file": "sdk420-whole-final-inputs.json.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-whole-integration-final/inputs.json",
+      "sha256": "13c06459d613b955c8c83f30d13affd8d09b887d56631f1d12fcc335dfef5ba9",
+      "compressedSha256": "51a098ce84d40852d171ab1ee2240923092f2cbf80f6ca0694b521c783389cbc"
+    },
+    {
+      "file": "sdk420-whole-final-result.json.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-whole-integration-final/result.json",
+      "sha256": "c8f2df2ba0f16aa1a25daec5ab3fbb5f609c05c2127b75e1c1de049f6c78f7a1",
+      "compressedSha256": "d771ab466e714ee62398e45fcbb662bbf6a6ea6576074053f794385acf798654"
+    },
+    {
+      "file": "sdk420-whole-final-cleanup.json.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-whole-integration-final/cleanup.json",
+      "sha256": "8a235c8b6a903937e7a47d24cd548ad02d1ad070c4bb6d81d7fce1c52fc3ca81",
+      "compressedSha256": "fdf26041f1f2aa26b4fcfc4152ea7213762a5b4268c0651ce6e60f7d86160aee"
+    },
+    {
+      "file": "sdk420-whole-final.xml.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-whole-integration-final/result.xml",
+      "sha256": "1070a0c534418af9638c4b96377d1486dd64bb1a6a0d24d2c9a06e64ffeccaac",
+      "compressedSha256": "b46f3f7b6f714ea05cbe2881c06233ffb741eb010a88db606ef561bb5f7b559f",
+      "rawSha256": "d5146d5f32fc68656062e424a643975a30657c2647bd196c2fa3457354b1059a",
+      "kind": "sanitized-xunit-report",
+      "tests": {
+        "total": "278",
+        "passed": "263",
+        "failed": "0",
+        "skipped": "15",
+        "errors": "0",
+        "time": "365.439"
+      }
+    },
+    {
+      "file": "sdk420-harness-controls.xml.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-harness-controls/result.xml",
+      "sha256": "e3c62faf83f79e7a38d246aeea63999b9ca758accfb9068fcd866e365e0a2cc7",
+      "compressedSha256": "40445fbbe68bb25f194d1ca0a8907785f782824f793c59ed664c013db51ff9ea"
+    },
+    {
+      "file": "sdk420-current-owner-tests.log.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-current-owner-tests.log",
+      "sha256": "cedc324dd1431e2b25f7cb37c5773d7c64549c1fc2fab804639429cd5464061a",
+      "compressedSha256": "87e0aebd4b3f65a781048466fdfc164289dc13828d2f2af17e6203630905fcb4"
+    },
+    {
+      "file": "sdk420-public-tests.log.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-public-tests.log",
+      "sha256": "6eb08c831a33b28c5439acaaf52c38fb2393b808c4976f667021f1b1bdb64bb3",
+      "compressedSha256": "428d013f8526ed201bd67ad2f72a2e5acd92feb5c33e4f09426ba18bfb175000"
+    },
+    {
+      "file": "sdk420-ci-all.xml.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-ci-whole/result.xml",
+      "sha256": "4ff32f8cc58ed0ce62b9abe74c21678ce6082024bebf99fc43698ade5704ab8a",
+      "compressedSha256": "efd07aa943a76fb7d78114ca43fcd24c71cbc602776fdefc68388e23722cedef"
+    },
+    {
+      "file": "sdk420-ci-all-result.json.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-ci-whole/result.json",
+      "sha256": "046d6471efb631e2a8bf709b45a1aa2c83669501b9bc638f9f3ada2314ba6c9e",
+      "compressedSha256": "0e5479e73e1bc038e31b77d33334c43c08cc2b9f223e49295ec1c64431df24ff"
+    },
+    {
+      "file": "sdk420-pack.log.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-pack.log",
+      "sha256": "f60e1eced33bb53b3e9facd7785d73e6c787d358ce7586fc2db0922fd65a62c7",
+      "compressedSha256": "f7e412bef76b37a54d2df42daa2049a8bf4cdef8222eda0bb5a1599a2dcdd2dc"
+    },
+    {
+      "file": "sdk420-package-validation.log.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-validate.log",
+      "sha256": "d8131056cb21ae289a74fec1fd01ed87346372118a8f407a58dbb6a8971675d0",
+      "compressedSha256": "71c0124d4092730056196181a7f984e9e4c9169d68f83f8ff8850ca6d116e364"
+    },
+    {
+      "file": "sdk420-consumers.log.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-consumers.log",
+      "sha256": "cfccd466c5772796a3bb83547e4b615e6355dc352db540242e23e93909b1c380",
+      "compressedSha256": "b180969a1dec93e0a0e5fe7a95788b63b082a8d1ece7aa94fb51054308225649"
+    },
+    {
+      "file": "sdk420-package-result.json.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-package-result.json",
+      "sha256": "e28213b8897a29fbc55ac18f3aaeadda141e003e3aa97b934ccc7ba7aa36aedc",
+      "compressedSha256": "2610d17d8bf6594f8b57e4266a904ff5fe1c7cc296603ce9eb98b161df12f705"
+    },
+    {
+      "file": "sdk420-static-combined-result.json.gz",
+      "source": "/tmp/parties-sdk-adoption-sdk420-static/combined-result.json",
+      "sha256": "2b10c28ed6678432ef8e1f7e54e82b4619cecafbbb6ba363547ac0e00db70efa",
+      "compressedSha256": "d0676e932ef6717ead32b092d48fe8b45700fde9daf311943d12c2cfb3a9d6eb"
+    }
+  ],
+  "updatedAtUtc": "2026-11-09T15:48:14.916048+00:00",
+  "concurrentRuntimeAcceptance": true,
+  "wholeAssemblyAcceptance": true,
+  "wholeAssemblyCounts": {
+    "total": "278",
+    "passed": "263",
+    "failed": "0",
+    "skipped": "15",
+    "errors": "0",
+    "time": "365.439"
+  },
+  "ciControlCasesPassed": 630,
+  "localSdk420PackagesQualified": 11,
+  "staticSdk420CasesPassed": 6153,
+  "staticSdk420ExistingSkips": 14,
+  "pendingFitnessAssertions": "Run after final published dependency pins and source-selection evidence are aligned."
+}

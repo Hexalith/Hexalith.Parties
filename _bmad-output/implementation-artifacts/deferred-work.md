@@ -2334,3 +2334,23 @@ rollback: None required (test-only).
 - source_spec: `_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-05.md`
   summary: Canceled asset-staging test can leave its MSBuild process running (medium; pre-existing later/concurrent work).
   evidence: NativeAdminUiAssetStagingTests StageAsync awaits WaitForExitAsync with the test token but has no kill/wait finally; Process.Dispose does not terminate the child. Outer directory deletion can race the still-running child. This test was added after the completed release, in the preserved November 9 preparation work. Review findings R-E03; durable triage in tests/sync-release-2026-11-05-closure-2026-11-09/review-triage.json.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-published-catalog-sdk-adoption.md`
+  summary: Reject a missing identity observation when UTC moves behind its source observation during re-admission.
+  evidence: medium; second resumed blind review S-B9. PartyIdentityQueryService returns Missing after the second admission on its empty-state path without the completedAt >= ObservedAt check used on its populated-state path. A clock rollback during that admission can make the source observation future-dated. This pre-existing identity authority behavior is independent of catalog SDK adoption; add a controlled TimeProvider rollback case before changing domain semantics.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-published-catalog-sdk-adoption.md`
+  summary: Establish pre-Build SDK composition cleanup under a fault after successful finalization.
+  evidence: maybe-false (medium unverified); final review F-B5. The live concurrent case exercises finalization and current failure paths explicitly dispose failed composition, but a fault injected between completed composition and BuildAsync completion is needed to prove or disprove an unowned private directory when no application instance is returned. Trace testing-builder disposal and the DI factory lifetime; do not claim a confirmed leak without that outcome.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-published-catalog-sdk-adoption.md`
+  summary: The existing consumer JSON-download-failure browser case intermittently clicks Export before Blazor interactivity is ready.
+  evidence: Unchanged tests/e2e/specs/consumer-portal-routes.spec.ts:477 passed after a configured retry, then failed once in three focused retries-disabled executions. The trace records the click during initial Blazor WebSocket connection, the initial export-ready status remains unchanged, and the operation is never retried by the test. A readiness fix should retain exactly one domain export request and all failure/retry guidance assertions.
+
+- source_spec: `spec-published-catalog-sdk-adoption.md`
+  summary: Bind native loaded-assembly observations to the disk PE module identity before attributing its hash to loaded code.
+  evidence: C-B6; NativeAssemblyObservations.Write records assembly.ManifestModule.ModuleVersionId but hashes assembly.Location without comparing the actual disk PE MVID; disk replacement can misattribute bytes.
+
+- source_spec: `spec-published-catalog-sdk-adoption.md`
+  summary: Signal lifecycle tool processes through stable process handles rather than a check followed by numeric PID signalling.
+  evidence: C-B7; qualify-disposable-ci.py signal_tool_processes checks /proc birth before os.kill, leaving a process-exit/reuse interval; use a stable pidfd and add real process replacement controls.

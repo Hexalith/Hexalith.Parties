@@ -50,7 +50,7 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, IT
 
     private async Task ExerciseRealDependenciesAsync(bool recordCanonicalObservation)
     {
-        using var bound = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        using var bound = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken, fixture.Descriptor.RequestCancellation);
         bound.CancelAfter(TimeSpan.FromSeconds(120));
         CancellationToken token = bound.Token;
         string tenant = fixture.Descriptor.SyntheticTenantId;

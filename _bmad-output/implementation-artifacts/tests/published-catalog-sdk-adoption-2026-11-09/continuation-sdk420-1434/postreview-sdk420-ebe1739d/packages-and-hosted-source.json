@@ -1,0 +1,71 @@
+{
+  "observedAtUtc": "2026-11-09T17:52:55.169412+00:00",
+  "compatibilitySource": "ebe1739d70a4e76447938b0bb8c53db508bf6019",
+  "hostedRuns": [
+    {
+      "id": 42665293643,
+      "head_sha": "ebe1739d70a4e76447938b0bb8c53db508bf6019",
+      "head_branch": "main",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "html_url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/42665293643",
+      "name": "CI"
+    },
+    {
+      "id": 42665293365,
+      "head_sha": "ebe1739d70a4e76447938b0bb8c53db508bf6019",
+      "head_branch": "main",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "html_url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/42665293365",
+      "name": "CodeQL"
+    },
+    {
+      "id": 42665293296,
+      "head_sha": "ebe1739d70a4e76447938b0bb8c53db508bf6019",
+      "head_branch": "main",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "html_url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/42665293296",
+      "name": "Commitlint"
+    },
+    {
+      "id": 42665292442,
+      "head_sha": "ebe1739d70a4e76447938b0bb8c53db508bf6019",
+      "head_branch": "main",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "html_url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/42665292442",
+      "name": "Release Candidate Gate"
+    }
+  ],
+  "sdkVersion": "4.2.0",
+  "localPackagesStrictlyValidated": 11,
+  "clientConsumerExecuted": true,
+  "portalConsumerBuilt": true,
+  "publicationAcceptance": false,
+  "notes": [
+    "Initial consumer invocation inherited packaging ArtifactsPath; clean consumer environment rerun passed.",
+    "Release Candidate Gate is its actual workflow name; this checkpoint does not assert final SDK4.2 RC/publication completion."
+  ],
+  "files": [
+    {
+      "file": "package-review-result.json.gz",
+      "sha256": "725bb536dd95219dded694638aeb2421c5453fd8be81164ce364b99ae2311b95",
+      "compressedSha256": "470d79cd515b071f4a9435c8aa9534d9645a270e0fad9b648ebeb87a23002d54"
+    },
+    {
+      "file": "package-review-consumers-attempt2.json.gz",
+      "sha256": "879aec397db753973c54d821d4f788bab68b304fefdfdb62e0d907c5c321b6a6",
+      "compressedSha256": "4482e006355f9a4090d9871dea916c347ad82337fa7efcc4f943f1ca8e795ccd"
+    }
+  ]
+}

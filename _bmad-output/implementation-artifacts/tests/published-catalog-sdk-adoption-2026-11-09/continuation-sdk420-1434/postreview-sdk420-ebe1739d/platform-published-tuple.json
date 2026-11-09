@@ -1,0 +1,82 @@
+{
+  "schema": "hexalith.platform.sdk420-publication-readback.v1",
+  "version": "1.9.0",
+  "releaseTag": "v1.9.0",
+  "sourceRevision": "081178aa5cc01f5dc736ba0d1980aa80fedc6fe1",
+  "releaseUrl": "https://github.com/Hexalith/Hexalith.Platform/releases/tag/v1.9.0",
+  "publishedAtUtc": "2026-11-09T19:08:27Z",
+  "releaseRun": 42680269970,
+  "releaseRunUrl": "https://github.com/Hexalith/Hexalith.Platform/actions/runs/42680269970",
+  "tupleRun": 42671091679,
+  "tupleAttempt": 3,
+  "tupleRunUrl": "https://github.com/Hexalith/Hexalith.Platform/actions/runs/42671091679",
+  "catalogRun": 42671091693,
+  "catalogAttempt": 3,
+  "catalogRunUrl": "https://github.com/Hexalith/Hexalith.Platform/actions/runs/42671091693",
+  "requiredTupleJobs": 4,
+  "requiredSdkJobs": 6,
+  "hostedResults": {
+    "current": {
+      "source": "081178aa5cc01f5dc736ba0d1980aa80fedc6fe1",
+      "passed": 456,
+      "failed": 0,
+      "skipped": 0,
+      "groups": 30,
+      "resultPath": "/tmp/platform-sdk420-published4470-7bsgjd_7/hosted-current-attempt3/Hexalith.Platform/Hexalith.Platform/artifacts/tuple-ci/tuple-ci-result.json",
+      "resultSha256": "568e2c6ab49aad893c06189f95263da6c1a1913f20248188613652d63947653d",
+      "sourceClean": true,
+      "testAndDependencyOutputsUnchanged": true
+    },
+    "legacy": {
+      "source": "6749955731a13749a889a69b289881daff585613",
+      "passed": 349,
+      "failed": 0,
+      "skipped": 0,
+      "groups": 16,
+      "resultPath": "/tmp/platform-sdk420-published4470-7bsgjd_7/hosted-legacy-attempt3/legacy-public-cohort/tuple-ci-result.json",
+      "resultSha256": "6e2013b114c837ec33df00ad84ba52072a9c58d30caf418d10bc57c7ab2c3fd8",
+      "sourceClean": true,
+      "testAndDependencyOutputsUnchanged": true
+    }
+  },
+  "buildsTuple": {
+    "schemaVersion": 1,
+    "candidateAcceptance": false,
+    "producer": {
+      "repository": "https://github.com/Hexalith/Hexalith.Builds.git",
+      "sourceRevision": "5ec1779040606be89306129a7d2b245258c9acd2",
+      "catalog": {
+        "path": "Props/Directory.Packages.props",
+        "blob": "a9472e6159b0b7627b4de543651f9aa1912398ab",
+        "sha256": "957818ed7df1b29b2299644afb06987393f617c5b87ff8551b9b95b52a23034d"
+      }
+    },
+    "publication": {
+      "version": "4.47.0",
+      "sourceRevision": "5ec1779040606be89306129a7d2b245258c9acd2",
+      "releaseTag": "v4.47.0",
+      "catalogSha256": "957818ed7df1b29b2299644afb06987393f617c5b87ff8551b9b95b52a23034d",
+      "archiveSha256": "1eea9b282d1d247e1f6e9e2213c5969f7895df44105e6900c873b586c5c4f905",
+      "toolingSha256": "35d0eb2b0f32ad5e3b1e4353f088800e76084b99e60f46838e6e497105f64f01",
+      "inventorySha256": "806a0fdf6fc08ea0b8a398756b04af43eb196a81d22ebbbff142dcbca9abcc0b",
+      "inventoryUrl": "https://github.com/Hexalith/Hexalith.Builds/releases/download/v4.47.0/g4-tool-package-inventory.json"
+    }
+  },
+  "publishedValidationPair": {
+    "appHostSha256": "6aae774cfcf41e0488cf7b2517d67897f1726c68674219fea164d6998ad60ebe",
+    "toolingSha256": "35d0eb2b0f32ad5e3b1e4353f088800e76084b99e60f46838e6e497105f64f01"
+  },
+  "recordedPartiesSource": "ebe1739d70a4e76447938b0bb8c53db508bf6019",
+  "legacySource": "6749955731a13749a889a69b289881daff585613",
+  "sdkVersion": "4.2.0",
+  "sdkSource": "aa16227bd07f0564a3026d619a5abd973e02656f",
+  "toolVersionRange": "[4.47.0, 5.0.0-0)",
+  "sourceReleaseReceiptPath": "/tmp/platform-sdk420-published4470-7bsgjd_7/platform-source-release/source-release-42680269970-1/source-release.json",
+  "sourceReleaseReceiptSha256": "18eff1c96b34b3408ea04011aa56d4536461db784dfec94622e65d1f57fcec33",
+  "nativeAcceptance": false,
+  "candidateAcceptance": false,
+  "storyAcceptance": false,
+  "historicalWorksProofRuntime": "1.18.7",
+  "preservedPublicPartiesImageSdkVersion": "4.1.0",
+  "remainingPlatformBlockers": []
+}

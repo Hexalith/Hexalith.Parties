@@ -1,0 +1,26 @@
+{
+  "observedAtUtc": "2026-11-09T17:54:44.348956+00:00",
+  "producerPublicationAcceptance": true,
+  "rootAdoptionPublicationAcceptance": false,
+  "version": "4.47.0",
+  "source": "5ec1779040606be89306129a7d2b245258c9acd2",
+  "ci": 42661065183,
+  "release": 42664680297,
+  "files": [
+    {
+      "file": "builds4470-tuple.json.gz",
+      "sha256": "ef8e2d55456881e21b0fe32d8b8a566e6f2dead9261f6886518701504b72e7c1",
+      "compressedSha256": "a31346e8b4fe0dda56c5982e287113e4cb52f05854aa39253004ebac79851153"
+    },
+    {
+      "file": "builds4470-publication-proof.json.gz",
+      "sha256": "c706dec7e95b59aacf91d26d7d7e252284bec8028c318a97cd7ee4136c497584",
+      "compressedSha256": "c1491734f96b5342d36bdb275951df0a63cf62e00386ad2ec7f7279f01af7f74"
+    },
+    {
+      "file": "builds4470-inventory.json.gz",
+      "sha256": "806a0fdf6fc08ea0b8a398756b04af43eb196a81d22ebbbff142dcbca9abcc0b",
+      "compressedSha256": "199696485a4ed1274a59047e480550cb08aa5a3234b2cc3277811f6415a876bf"
+    }
+  ]
+}

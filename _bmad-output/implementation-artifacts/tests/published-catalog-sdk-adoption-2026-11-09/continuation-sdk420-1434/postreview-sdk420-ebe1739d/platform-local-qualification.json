@@ -1,0 +1,44 @@
+{
+  "observedAtUtc": "2026-11-09T18:48:58.146498+00:00",
+  "localOnly": true,
+  "hostedAcceptance": false,
+  "publicationAcceptance": false,
+  "tupleRun": 42671091679,
+  "catalogRun": 42671091693,
+  "requiredLatestAttempt": 3,
+  "reports": [
+    {
+      "scope": "actual local committed tuple controls; not hosted CI or native/candidate acceptance",
+      "source": "081178aa5cc01f5dc736ba0d1980aa80fedc6fe1",
+      "requiredCount": 456,
+      "status": "passed",
+      "hosted": false,
+      "qualificationCredit": false
+    },
+    {
+      "scope": "actual local committed tuple controls; not hosted CI or native/candidate acceptance",
+      "source": "6749955731a13749a889a69b289881daff585613",
+      "requiredCount": 349,
+      "status": "passed",
+      "hosted": false,
+      "qualificationCredit": false
+    }
+  ],
+  "files": [
+    {
+      "file": "platform-local-current-2-result.json.gz",
+      "sha256": "fe867eca1c8f4986ddf7db37c85a55d527cde9a73c03599b0a01c5b1024370af",
+      "compressedSha256": "98258d80fc7426b3817f034b59932e416690eefa80a5cf5e4ce40be28f080e41"
+    },
+    {
+      "file": "platform-local-legacy-2-result.json.gz",
+      "sha256": "14127081083840300f2a2ec412ca2c0dd981419c05566af5d75317a9da21b6c0",
+      "compressedSha256": "05068bb4fbc258fa0ec3975e131477e6118efcb047d354c3fb1068f1b8ad2fe2"
+    },
+    {
+      "file": "platform-source-equivalence.json.gz",
+      "sha256": "8597974118fd235de19b074ded67c2fd14c8f4d15affcac37bd1d1c84974fe04",
+      "compressedSha256": "81ecb5065d501f06add61ddef0d49b526d0be96a372ad745146de2999bfcfac6"
+    }
+  ]
+}

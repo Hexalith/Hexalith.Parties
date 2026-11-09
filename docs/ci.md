@@ -31,13 +31,15 @@ dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.T
 
 CI runs on pushes and pull requests to `main`, scheduled nightly runs, and Pact Broker `repository_dispatch` events with type `contract_requiring_verification_published`.
 
-The repository tool manifest now selects module CLI **4.45.0**, matching the
-selected Platform's `[4.45.0, 5.0.0-0)` prerequisite. The immutable reusable
-workflow restores that exact manifest. This corrects the `HXW010` preparation
-failure in main CI `42609106160`; it does not renew the historical public
-Platform/Builds runtime tuple accepted by the downstream evidence verifier.
-Fresh native runtime, complete cleanup and hosted exact-source gates remain
-required. EventStore SDK **4.1.0** is the latest stable version verified directly
+The final adoption tool manifest selects published module CLI **4.47.0**,
+matching the new Platform source's `[4.47.0, 5.0.0-0)` prerequisite. The
+immutable reusable workflow restores that exact manifest. Builds v4.47.0 at
+`5ec1779040606be89306129a7d2b245258c9acd2` passes source CI `42661065183`
+and release `42664680297`; both official tool archives, their source metadata,
+signatures and published inventory have been independently verified. The
+former 4.45.0 pin corrected `HXW010` in main CI `42609106160` and remains a
+historical checkpoint. Final Platform/root source and publication gates remain
+required. EventStore SDK **4.2.0** is the latest stable version verified directly
 against nuget.org on 2026-11-09 and remains the effective package selection.
 
 Ordinary CI also runs the deterministic lifecycle controller tests and the
@@ -45,7 +47,47 @@ Docker-free private catalog configuration/cleanup tests. These checks execute
 the retained compatibility helpers without provisioning domain services;
 the declared Platform integration profile retains its independent runtime gate.
 
-The v2 workflow uses genuine published module CLI 4.44.13 and released
+The selected source tuple is published [Platform v1.9.0](https://github.com/Hexalith/Hexalith.Platform/releases/tag/v1.9.0)
+at `081178aa5cc01f5dc736ba0d1980aa80fedc6fe1` and Builds **v4.47.0** at
+`5ec1779040606be89306129a7d2b245258c9acd2`. Platform
+[tuple CI](https://github.com/Hexalith/Hexalith.Platform/actions/runs/42671091679)
+passes all four jobs, with 456 current and 349 same-code legacy controls;
+[SDK CI](https://github.com/Hexalith/Hexalith.Platform/actions/runs/42671091693)
+passes all six rows. Both are actual attempt 3 after the retained GitHub
+infrastructure failures. Normal
+[qualified publication](https://github.com/Hexalith/Hexalith.Platform/actions/runs/42680269970)
+succeeds for that exact source. The public observer and reader bind this tuple.
+Native SDK readers use 4.2.0; the immutable public Parties 3.1.0 image retains
+its separately measured SDK 4.1 files. These producer results supply no Parties
+runtime acceptance. Tenants' exact SDK 4.2 source guard is selected from its
+CI-qualified `build/qualify-eventstore-4.2` branch at
+`5293ab9dca49b6298f1e3396367627009967cbfb`; PR #68 remains open and unmerged.
+
+The previous published source tuple used Platform **v1.8.0** at
+`e39a9a2587ec150d550510763ab69db305d13fdb` and Builds **v4.45.0** at
+`27145e52ffab5623198ba5efdab5cdb71aa42d28`. Platform tuple CI
+[42515643804](https://github.com/Hexalith/Hexalith.Platform/actions/runs/42515643804),
+catalog CI [42515643848](https://github.com/Hexalith/Hexalith.Platform/actions/runs/42515643848)
+and qualified publication [42517865717](https://github.com/Hexalith/Hexalith.Platform/actions/runs/42517865717)
+passed for that source. Both the native image observer and public evidence reader
+required that exact tuple. These producer results grant no Parties runtime acceptance.
+
+The blocking **Published catalog concurrent runtime** job prepares the current
+public package cohort and runs the actual two-session AppHost qualification.
+It requires authenticated Counter/Greeting/Parties operations, persisted results,
+cross-session refusal, peer-disposal survival and complete owned cleanup. Its
+result is separate from the ordinary runner-owned Platform integration and the
+offline compatibility cohorts. Runtime receipts include apphosts and native
+libraries, compare restored archives with freshly downloaded nuget.org bytes,
+and reject added, removed or changed runtime files before launch. For concurrent
+local verification, build the test project and prepare runtime hosts with the
+same absolute `--artifacts-path`; preparation writes its completed manifest under
+that directory's `runtime-profile/<Configuration>/prepared.json`. Supply its
+absolute path through `Parties__Testing__PreparedRuntimeManifest`. The explicit
+package fixture uses the SDK's public catalog composition after selecting its
+fresh owned Redis and launches the exact prepared PEs without rebuilding them.
+
+The previous v2 qualification used genuine published module CLI 4.44.13 and released
 [Platform v1.7.1](https://github.com/Hexalith/Hexalith.Platform/releases/tag/v1.7.1)
 at `0f4e27f1f78310bd731c10c19dc51bb1e0345d44`, with matching published Builds
 catalog `3c8096180ecf2aa539ac454815efbfceb8a92822`. Its exact-source
@@ -106,7 +148,7 @@ Only after isolated success does the declared `platform-package` suite in
 `module/hexalith.module-manifest.v2.json` require real runner-owned services.
 The retired direct integration/Aspire/performance inputs and Dapr overrides are
 absent; the verified producer catalog selects the toolchain. The retained Aspire
-topology project and scripts remain a separate diagnostic compatibility surface.
+topology project and scripts have their own blocking published catalog runtime job.
 
 The caller maps only `HEXALITH_CI_REGISTRY_USERNAME` and
 `HEXALITH_CI_REGISTRY_PASSWORD` to `registry-pull-username/password`; secret
@@ -119,11 +161,12 @@ admission and native lifecycle acceptance still require actual hosted evidence.
 
 All independent jobs remain blocking. The original offline EventStore 4.0.4 /
 Tenants 5.11.2 / Memories 3.0.11 cohort retains its three catalog cases. A separate
-4.1.0 / 7.0.2 / 3.0.23 cohort requires ten catalog cases, canonical selector
-serialization, 33 unconditional capability evaluations and nine actual gateway
+4.2.0 / 7.0.5 / 3.0.25 cohort requires twenty catalog cases, canonical selector
+serialization, 41 unconditional capability evaluations and 24 actual gateway
 router boundary cases, including foreign-selector refusal. This lane also checks
 out the recorded EventStore configuration files required by its private test
-hosts; SDK dependencies still come from NuGet. The original 52-case
+hosts; SDK dependencies still come from NuGet. The frozen 4.0.4 lane also runs
+322 current/historical identity router cases. The original 52-case
 Memories 3.0.18 actual-client protocol job keeps SDK 4.0.4, Tenants 7.0.0 and its
 private caches. These offline checks provide no hosted lifecycle acceptance.
 Source selection is user-delegated `codex-agent` bookkeeping, not human
@@ -520,7 +563,7 @@ The required package portal specs contain no skip or optional capability gate.
 
 The retained legacy Aspire topology procedure runs `scripts/prepare-aspire-tier.sh` before its test process; v2 does not invoke it.
 The ten-minute preparation budget includes HTTPS trust and serial Release builds
-of the eight selected runtime hosts. This lane checks package compatibility:
+of the selected runtime hosts. This lane checks package compatibility:
 package-built sessions explicitly select `Parties:Testing:UsePackagedGateway=true`
 before Aspire registers the owned gateway/sample test-host pair. They run the
 centrally pinned production Gateway and DomainService packages with native settings
@@ -548,8 +591,10 @@ as zero subscriptions. Native/default/publish keep the original UI host and its
 
 `scripts/prepare-aspire-runtime-hosts.sh` prepares the package pair by default;
 the shared `--gateway-profile native` option explicitly prepares both native
-projects for a matching native run. It builds the selected pair and the six other
-real runtime hosts serially to avoid concurrent cold `dotnet run` output writes. The existing
+projects for a matching native run. It builds the selected pair and the remaining
+real runtime hosts serially. The package profile includes ten runtime projects
+and the separate Parties adapter, then launches the exact prepared PEs with
+`dotnet exec` and revalidates their original receipts at every start. The existing
 five-minute topology startup deadline remains unchanged. Package topology does
 not qualify the newer source catalog or replace Platform/source qualification.
 

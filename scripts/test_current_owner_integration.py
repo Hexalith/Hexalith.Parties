@@ -44,15 +44,15 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
             pubSubTopic="g4t-fixture.party.events", queueSession="g4t-fixture:party:party1"), sequenceNumber=1, correlationId="command1", causationId="command1", userId="g4-native-tests",
             serializationFormat="json", eventTypeName="Hexalith.Parties.Contracts.Events.PartyCreated", timestamp="2026-11-05T10:00:00Z")]
         self.functional["currentOwner"] = dict(**{key: self.functional[key] for key in ("runId", "attemptId", "environmentId", "revision", "mappingHash", "profile")},
-            configuration="Release", qualificationCredit=False, committedCatalogValidated=True, sdkVersion="4.1.0", tenantsVersion="7.0.5",
+            configuration="Release", qualificationCredit=False, committedCatalogValidated=True, sdkVersion=verify.SDK_VERSION, tenantsVersion="7.0.5",
             platform=dict(commit=self.expected["platform"], compositionCommit=self.expected["platform"], checkoutCommit=self.expected["platform"], catalogCommit=self.expected["builds"]),
             sdkBodies=verify.SDK.copy(), runtimeBodies={name: str(index) * 64 for index, name in enumerate(("Hexalith.Parties", "Hexalith.Parties.Contracts", "Hexalith.Parties.Projections", "Hexalith.Parties.Authentication", "Hexalith.Parties.Security"), 1)},
-            packageArchives={"Hexalith.Parties.Contracts.3.0.0.nupkg": "7" * 64, "Hexalith.Parties.EventStoreExtensions.3.0.0.nupkg": "8" * 64},
+            packageArchives={"Hexalith.Parties.Contracts.3.1.0.nupkg": "7" * 64, "Hexalith.Parties.EventStoreExtensions.3.1.0.nupkg": "8" * 64},
             catalogBodies={"Hexalith.Parties.Contracts": "2" * 64, "Hexalith.Parties.EventStoreExtensions": "6" * 64},
             observedExecutableOwners={"Hexalith.Parties, Version=1.0.0.0": "1" * 64}, routingCatalogRoot="e" * 64)
         self.loaded = dict(kind="real-native-sdk-assemblies", profile=verify.PROFILE, ownerRunId=self.owner["runId"], ownerAttemptId=self.owner["attemptId"],
             environmentId=self.owner["environmentId"], revision=self.expected["source"], mappingHash="d" * 64, executionContext=self.context)
-        assemblies = [dict(identity=name + ", Version=4.1.0.0, Culture=neutral, PublicKeyToken=null", sha256=digest) for name, digest in verify.SDK.items()]
+        assemblies = [dict(identity=name + f", Version={verify.SDK_VERSION}.0, Culture=neutral, PublicKeyToken=null", sha256=digest) for name, digest in verify.SDK.items()]
         self.loaded.update(loaded=assemblies, copied=copy.deepcopy(assemblies))
         self.write("loaded-assemblies-" + self.owner["runId"] + ".json", self.loaded)
         self.native = ('<TestRun><Results>' + ''.join('<UnitTestResult testName="' + name + '" outcome="Passed"/>' for name in sorted(verify.CASES))
@@ -82,6 +82,23 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
     def test_current_same_run_evidence_passes_without_qualification_credit(self):
         self.assertEqual(self.check()["nativeCases"], 2)
         self.assertFalse(self.check()["qualificationCredit"])
+
+    def test_historical_private_package_version_cannot_claim_the_current_sdk_cohort(self):
+        archives = self.functional["currentOwner"]["packageArchives"]
+        self.functional["currentOwner"]["packageArchives"] = {
+            name.replace("3.1.0", "3.0.0"): digest for name, digest in archives.items()
+        }
+        self.seal()
+        with self.assertRaisesRegex(ValueError, "private source packages were not measured"):
+            self.check()
+
+    def test_historical_sdk_version_cannot_claim_the_current_owner_cohort(self):
+        for version in ("4.1.0", "4.2.1", "4.2.0-preview.1"):
+            with self.subTest(version=version):
+                self.functional["currentOwner"]["sdkVersion"] = version
+                self.seal()
+                with self.assertRaisesRegex(ValueError, "wrong current owner cohort"):
+                    self.check()
 
     def test_new_helper_invocation_timeout_and_per_attempt_records_are_bound_to_this_job(self):
         phase = json.loads((self.root / "execution.json").read_text())

@@ -14,23 +14,31 @@ import stat
 import sys
 import xml.etree.ElementTree as ET
 
-# Reuse the existing safe bounded-file/JSON/identity readers. The private validator and every private predicate remain unchanged.
+# Share the bounded-file, JSON and identity readers with the current-owner validator.
 _spec = importlib.util.spec_from_file_location("private_current_readers", Path(__file__).with_name("verify-current-owner-integration.py"))
 _readers = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_readers)
 require, held_directory, read, decode, document = (_readers.require, _readers.held_directory, _readers.read, _readers.decode, _readers.document)
 integration_phases, invocation_accepted = _readers.integration_phases, _readers.invocation_accepted
 persisted_identity, creation_timestamp = _readers.persisted_identity, _readers.creation_timestamp
-SDK, HEX, IDENTITY = _readers.SDK, _readers.HEX, _readers.IDENTITY
+SDK, SDK_VERSION, HEX, IDENTITY = _readers.SDK, _readers.SDK_VERSION, _readers.HEX, _readers.IDENTITY
 PROFILE = "platform-package"
-PLATFORM = "e39a9a2587ec150d550510763ab69db305d13fdb"
-BUILDS = "27145e52ffab5623198ba5efdab5cdb71aa42d28"
+PLATFORM = "081178aa5cc01f5dc736ba0d1980aa80fedc6fe1"
+BUILDS = "5ec1779040606be89306129a7d2b245258c9acd2"
 IMAGE = "registry.hexalith.com/parties@sha256:48d0e8db506e4ce574e8c7bd97e528a302d3fbf97754b007176904cbc1f3abfb"
 PACKAGE_READERS = {
     "Hexalith.Parties.Contracts": "99230b764de6769a803702170c174f9dbef9b0b5b0c2931b07e85045478cd654",
     "Hexalith.Parties.EventStoreExtensions": "a48612597603ce5b8d743e28e91236a51e561369c6bcd2d9fcca092dd78f1c06",
 }
-IMAGE_BODIES = {**SDK, "Hexalith.Parties.Contracts": "b2ddfb18a7719b171ab9cf8b846675c4556d4d683ba0b5ebe8a503a6ae73d2f6"}
+# The released image retains its independently measured SDK 4.1 bodies. Native
+# readers use SDK 4.2 and must never substitute their bytes for running image files.
+IMAGE_SDK = {
+    "Hexalith.EventStore.Contracts": "f3f2d7f6e7edf54e187af15edec8b4f13bf7e255b186b999efa0836a0c86a739",
+    "Hexalith.EventStore.ServiceDefaults": "0e3f88ffefb12327d53f865b96bbb774beb71f7c78c9f20a3cbefa4901e9ba2d",
+    "Hexalith.EventStore.Client": "702dfb7537e990a2065fe37c0b06301cdb70c26907af42faa6acdae331a7bce6",
+    "Hexalith.EventStore.DomainService": "5d8068c8c116551efc3d545f85d41040023fa38217e5b4e73e4d225fe8e8bf78",
+}
+IMAGE_BODIES = {**IMAGE_SDK, "Hexalith.Parties.Contracts": "b2ddfb18a7719b171ab9cf8b846675c4556d4d683ba0b5ebe8a503a6ae73d2f6"}
 IMAGE_SIZES = {"Hexalith.Parties.Contracts": 304640, "Hexalith.EventStore.Contracts": 953344,
                "Hexalith.EventStore.Client": 1288192, "Hexalith.EventStore.DomainService": 1247744,
                "Hexalith.EventStore.ServiceDefaults": 568320}
@@ -167,7 +175,7 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
                             ("environmentId", owner["environmentId"]), ("revision", source), ("mappingHash", functional["mappingHash"]), ("executionContext", context)):
         require(runtime.get(field) == expected, "running image owner/source/job differs")
     require(runtime["platform"] == {"commit": platform, "compositionCommit": platform, "checkoutCommit": platform,
-                                   "catalogCommit": builds, "releaseTag": "v1.8.0"}, "running image public Platform/catalog differs")
+                                   "catalogCommit": builds, "releaseTag": "v1.9.0"}, "running image public Platform/catalog differs")
     image = runtime["image"]
     require(isinstance(image, dict) and set(image) == {"containerId", "runId", "imageReference", "imageContentId", "running", "startedAt"}, "unknown running image identity")
     require(HEX.fullmatch(image.get("containerId", "")) is not None and image.get("runId") == owner["runId"]
@@ -197,7 +205,7 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
         for name, digest in SDK.items():
             observed = [item for item in loaded[field] if item["identity"].split(",", 1)[0] == name]
             require(len(observed) == 1 if field == "copied" or name == "Hexalith.EventStore.Contracts" else len(observed) <= 1, "native/composition SDK inventory missing")
-            require(all(item.get("sha256") == digest and ", Version=4.1.0.0," in item["identity"] for item in observed), "native/composition SDK substitution")
+            require(all(item.get("sha256") == digest and f", Version={SDK_VERSION}.0," in item["identity"] for item in observed), "native/composition SDK substitution")
     reader_roles = public_reader_roles(loaded, source=source, run_id=owner["runId"])
     allowed = names | phase_names | {loaded_name, "invocation.json", "test-result.json", "attachments.json", "attachment-withdrawals.json"}
     require(all(name in allowed and stat.S_ISREG(os.stat(name, dir_fd=root, follow_symlinks=False).st_mode) for name in os.listdir(root)), "unreferenced or duplicate artifact substitute")

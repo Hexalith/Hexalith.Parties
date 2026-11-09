@@ -1,0 +1,22 @@
+{
+  "observedAtUtc": "2026-11-09T16:12:17.838605+00:00",
+  "compatibilityReview": "all3layersComplete",
+  "reviewFindings": {
+    "patch": 9,
+    "defer": 2
+  },
+  "owningBuildsSource": "9b9e03f69b77e4a8e64e4185a1df1cb4bc315ba4",
+  "owningBuildsSourceCi": 42650358536,
+  "publicationAcceptance": false,
+  "preservedPartialTag": "v4.46.0",
+  "partiesUpstream": "ee806fd0e82bdf6eec3a8c1f671427080dbed2ac",
+  "lifecycleControlsPassed": 106,
+  "tenantsApprovalPending": true,
+  "pending": [
+    "review corrections and refreshed runtime assets",
+    "compatibility source commit/exact-source CI",
+    "genuine Builds publication",
+    "Platform tuple publication",
+    "final Parties source fitness/CI/RC/release/public NuGet readback"
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "observedAtUtc": "2026-11-09T17:14:23.505821+00:00",
+  "commit": "a69fa1794555acd66709ea382290eb3d5297f03a",
+  "parent": "ee806fd0e82bdf6eec3a8c1f671427080dbed2ac",
+  "defaultSdk": "4.1.0",
+  "explicitSdkQualification": "4.2.0",
+  "pushed": true,
+  "exactSourceCi": 42662230480,
+  "hostedAcceptance": false,
+  "files": [
+    {
+      "file": "checkpoint-review-corrections.json.gz",
+      "sha256": "0f33791a53819fa671c48b33a40ed148e638c41944acf654f6ccd71cd4a2dcc6",
+      "compressedSha256": "a2d10d7ebce9287b4149767609fb33bb0d5e0466873ad5720e6f33b35db01a85"
+    },
+    {
+      "file": "checkpoint-commit-result.json.gz",
+      "sha256": "0d95a82c56c041d2673f7aaaef6b85e390205f0b96bf8f8c0a996292efb472f7",
+      "compressedSha256": "6104f183cd2f843db7072ed495ad8d4d560b299645c0afb4e6a232d8d466038e"
+    },
+    {
+      "file": "checkpoint-commitlint.log.gz",
+      "sha256": "9a0cd0deecd2d6bf2def3b86cd830dd425bf4f33abb3697a9edcc1e971d7aaaf",
+      "compressedSha256": "6f800afa998bd4d2718074f852338859a67e36af2bb53a31c08a60e51cddf30e"
+    },
+    {
+      "file": "checkpoint-checkpoint-standalone-result.json.gz",
+      "sha256": "d708adf17f9a3358affea0f89c53638b1f7f1df58fa2ec4d198a339eb6ae79a5",
+      "compressedSha256": "4ff3e5f0d97fb607cab52e0afd648d411f22d872ea27c0aa25667677562243ba"
+    },
+    {
+      "file": "checkpoint-root-postreview-checks-attempt2.json.gz",
+      "sha256": "9b5dd0407c4a26daba8d7732597e2688a274059a2354968a56e57b7676e9f24d",
+      "compressedSha256": "8d79858517e4c30b4f2da210cf6bd8255c4fd059696d97988347b87b2afbd765"
+    }
+  ]
+}

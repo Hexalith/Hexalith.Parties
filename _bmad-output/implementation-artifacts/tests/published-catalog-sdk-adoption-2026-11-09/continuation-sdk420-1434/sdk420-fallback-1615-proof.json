@@ -1,0 +1,36 @@
+{
+  "observedAtUtc": "2026-11-09T16:17:47.216628+00:00",
+  "source": "ee806fd0e82bdf6eec3a8c1f671427080dbed2ac",
+  "runtimeAcceptance": false,
+  "cases": 2,
+  "result": {
+    "command": [
+      "dotnet",
+      "/home/administrator/projects/hexalith/parties/artifacts/published-catalog-sdk420-yydt656n/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll",
+      "-class",
+      "*PackageCatalogFallbackTests",
+      "-failSkips",
+      "-result-xml",
+      "/tmp/parties-sdk420-fallback-controls-1615/result.xml"
+    ],
+    "exitCode": 0,
+    "completedAtUtc": "2026-11-09T16:12:49.693064+00:00"
+  },
+  "files": [
+    {
+      "file": "sdk420-fallback-1615-result.json.gz",
+      "sourceSha256": "1b6ccaab26886fa3e765eb436902d41796f06bf2c27013f295d28e85e7e5ba03",
+      "compressedSha256": "d4272dc6960fd70fe469826cbbd62d615038fd898fa6994efef8f9ba475bae2a"
+    },
+    {
+      "file": "sdk420-fallback-1615-result.xml.gz",
+      "sourceSha256": "38d79cc4695fb3413e84b755c3abc4652e7fb80bc9d70efe4467b89669fe127e",
+      "compressedSha256": "6581481e399dc09b63120c8147fe4808b35e6fd878426e1984b70fc1f825d798"
+    },
+    {
+      "file": "sdk420-fallback-1615-test.log.gz",
+      "sourceSha256": "d1511cb2436d38c47c358fdfcdd31a2d3c48b1e4e7d904323c298140ca3ab80e",
+      "compressedSha256": "9ee5c7b75e82fe36399e1c11b1b8a8d7efa05b6d5e130134d1f2e532226c7e48"
+    }
+  ]
+}

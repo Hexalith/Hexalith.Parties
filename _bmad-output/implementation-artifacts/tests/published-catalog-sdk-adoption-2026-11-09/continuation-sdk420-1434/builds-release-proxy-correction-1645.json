@@ -1,0 +1,43 @@
+{
+  "observedAtUtc": "2026-11-09T16:43:38.759741+00:00",
+  "releaseRun42653985043": "failed-before-tag",
+  "source": "9b9e03f69b77e4a8e64e4185a1df1cb4bc315ba4",
+  "newTagCreated": false,
+  "rootCause": "Notes-push proxy required HEXALITH_RELEASE_GIT, which the product child environment correctly removes; PATH still selected the proxy.",
+  "fixSource": "32d2a0685663b5b47115b2c0972e4819c9a36b70",
+  "fixSourceCi": 42657538253,
+  "fixCiState": "running",
+  "productEnvironmentAllowlistChanged": false,
+  "expectedOutcomeChanged": false,
+  "fixedActualOutcome": "HXR003 / PrerequisiteUnavailable / exit2",
+  "localQualificationPassed": true,
+  "localReleaseEligible": false,
+  "publicationAcceptance": false,
+  "files": [
+    {
+      "file": "builds-proxy-fix.patch.gz",
+      "sourceSha256": "855b0d60ddaff88c1357567a1ad006f5fe0f968fb0021e31b20b2b9009d07c35",
+      "compressedSha256": "2aa3b20b7afc65e1567a7a953c9852d23a5b90f10494028a2e24cd24957b7697"
+    },
+    {
+      "file": "builds-proxy-failure-repro.json.gz",
+      "sourceSha256": "96f84f6a3acf08bccc21db439c08d8cbebe721f2f3a9c0d4445814694988c3bf",
+      "compressedSha256": "192280823db088042301bca9770119f757adea01efb62f565a5bd79924711883"
+    },
+    {
+      "file": "builds-proxy-fixed-repro.json.gz",
+      "sourceSha256": "b7a190c3c3e5641a358ac267f871fa7379208328e6b3e29dd8600fa4ec8da9b3",
+      "compressedSha256": "4eced9f39834947b4dc986f4f73d632b28e7e10548e0231b754d06aeed83e9cf"
+    },
+    {
+      "file": "builds-proxy-commitlint.log.gz",
+      "sourceSha256": "dcc8ad678fde3bdf8652beeadff56f3418c9e83bbedffb90500e5fe0aabb54b9",
+      "compressedSha256": "b2b6bacbb65c9a519e2dc648d0b31e2ea701fe19c1dd8306a8b23390c5a565de"
+    },
+    {
+      "file": "builds-proxy-local-inventory.json.gz",
+      "sourceSha256": "2310aabe01492698e0ebe413086beec71435b91c36be562be14b12cfb36f298d",
+      "compressedSha256": "3ca8bbf057226f870ade283ab33e589f3d2cb5369c384dd0a52dcd4c73ef1e16"
+    }
+  ]
+}
