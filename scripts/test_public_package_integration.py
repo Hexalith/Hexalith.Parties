@@ -181,6 +181,41 @@ class PublicPackageEvidenceTests(unittest.TestCase):
         f.seal()
         with self.assertRaises(ValueError): self.check()
 
+    def test_per_attempt_helper_layout_is_accepted_only_when_complete_and_verified(self):
+        f = self.fixture
+        execution = json.loads((f.root / "execution.json").read_text())
+        cleanup = json.loads((f.root / "cleanup.json").read_text())
+        (f.root / "cleanup.json").unlink()
+        observed = dict(schema="hexalith.module.ci-integration-execution.v1", executionContext=f.context, processExitCode=0,
+                        launched=True, cancelled=False, timedOut=False, signals=[], outputParsed=True, result=execution,
+                        stderr=dict(bytes=0, sha256="0" * 64, excerpt="", truncated=False, redacted=True))
+        attempt = dict(schema="hexalith.module.ci-integration-cleanup.v1", status="completed", runId=f.owner["runId"],
+                       executionContext=f.context, jobStatus="", processExitCode=0, outputParsed=True, result=cleanup, verified=True)
+        f.write("execution.json", observed)
+        f.write("cleanup-1.json", attempt)
+        f.write("cleanup-2.json", dict(attempt, jobStatus="success"))
+        self.assertEqual(self.check()["runId"], f.owner["runId"])
+        refusals = (
+            ("cleanup-2.json", dict(attempt, verified=False)),
+            ("cleanup-2.json", dict(attempt, status="timed-out")),
+            ("cleanup-2.json", dict(attempt, result=dict(cleanup, remainingResources=dict(cleanup["remainingResources"], unverified=True)))),
+            ("execution.json", dict(observed, cancelled=True)),
+            ("execution.json", dict(observed, outputParsed=False, result=None)),
+        )
+        for number, (name, changed) in enumerate(refusals):
+            original = json.loads((f.root / name).read_text())
+            f.write(name, changed)
+            with self.subTest(refusal=number, name=name), self.assertRaises(ValueError):
+                self.check()
+            f.write(name, original)
+        f.write("cleanup.json", cleanup)
+        with self.subTest(layout="mixed"), self.assertRaises(ValueError):
+            self.check()
+        (f.root / "cleanup.json").unlink()
+        (f.root / "cleanup-1.json").unlink()
+        with self.subTest(layout="gap"), self.assertRaises(ValueError):
+            self.check()
+
     def test_hash_tampering_and_unreferenced_substitute_refuse(self):
         f = self.fixture
         selected = next(item for item in f.result["diagnostics"] if item["id"] == "functional-observations")

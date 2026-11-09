@@ -99,7 +99,8 @@ jobs:
           printf '%s' "$REGISTRY_PULL_PASSWORD" | docker login registry.hexalith.com --username="$REGISTRY_PULL_USERNAME" --password-stdin
       - name: Observe the actual current-owner startup before standard cleanup
         timeout-minutes: 25
-        run: python3 -B scripts/observe-current-owner-startup.py
+        # The runner signals only this step's process; exec keeps the observer, and its helper, as that process.
+        run: exec python3 -B scripts/observe-current-owner-startup.py
       - name: Independently finalize the exact issued owner
         if: always()
         timeout-minutes: 4

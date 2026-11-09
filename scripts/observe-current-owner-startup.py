@@ -81,6 +81,31 @@ def read(path):
     return value
 
 
+def helper_phase_documents(evidence):
+    """Yield the helper's raw execution and latest exact-down results in the legacy or per-attempt layout."""
+    try:
+        execution = read(evidence / 'execution.json')
+    except FileNotFoundError:
+        execution = None
+    if execution is not None and execution.get('schema') == 'hexalith.module.ci-integration-execution.v1':
+        execution = execution.get('result')
+        require(execution is None or isinstance(execution, dict))
+    if execution is not None:
+        yield 'execution.json', execution
+    numbers = sorted(int(match.group(1)) for match in (re.fullmatch(r'cleanup-([1-9][0-9]?)\.json', path.name) for path in evidence.glob('cleanup-*.json')) if match)
+    if numbers:
+        require(numbers == list(range(1, len(numbers) + 1)) and not (evidence / 'cleanup.json').exists())
+        record = read(evidence / f'cleanup-{numbers[-1]}.json')
+        require(record.get('schema') == 'hexalith.module.ci-integration-cleanup.v1')
+        if isinstance(record.get('result'), dict):
+            yield 'cleanup.json', record['result']
+        return
+    try:
+        yield 'cleanup.json', read(evidence / 'cleanup.json')
+    except FileNotFoundError:
+        return
+
+
 def exists(path):
     """Observe fixed receipt existence without opening or exporting its contents."""
     try:
@@ -301,11 +326,7 @@ class Observer:
                 read(self.receipt)
                 require(HELPER.receipt_owner(self.receipt, self.context) == self.owner)
                 evidence = self.root / 'TestResults/module-integration'
-                for name in ('execution.json', 'cleanup.json'):
-                    try:
-                        document = read(evidence / name)
-                    except FileNotFoundError:
-                        continue
+                for name, document in helper_phase_documents(evidence):
                     require(document.get('runId') == self.owner['runId'])
                     reported = document.get('outcome', {})
                     require(isinstance(reported, dict) and reported.get('exitCode') in EXIT_CODES

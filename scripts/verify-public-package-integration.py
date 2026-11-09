@@ -19,6 +19,7 @@ _spec = importlib.util.spec_from_file_location("private_current_readers", Path(_
 _readers = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_readers)
 require, held_directory, read, decode, document = (_readers.require, _readers.held_directory, _readers.read, _readers.decode, _readers.document)
+integration_phases = _readers.integration_phases
 persisted_identity, creation_timestamp = _readers.persisted_identity, _readers.creation_timestamp
 SDK, HEX, IDENTITY = _readers.SDK, _readers.HEX, _readers.IDENTITY
 PROFILE = "platform-package"
@@ -101,8 +102,8 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
     require(result.get("termination", {}).get("state") == "not-yet-populated", "interrupted native execution")
     cleanup = result["cleanup"]
     require(cleanup.get("state") == "populated" and cleanup.get("disposition") == "complete" and cleanup.get("failures") == [] and cleanup.get("leftoverResourceIds") == [], "owned result cleanup incomplete")
-    for filename in ("execution.json", "cleanup.json"):
-        phase = document(root, filename)
+    execution, final_cleanup, phase_names = integration_phases(root)
+    for phase in (execution, final_cleanup):
         remaining = phase.get("remainingResources", {})
         require(phase.get("runId") == owner["runId"] and phase.get("outcome", {}).get("exitCode") == "Success", "execution/cleanup failed or foreign")
         require(remaining.get("unverified") is False and remaining.get("isEmpty") is True
@@ -197,7 +198,7 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
             require(len(observed) == 1 if field == "copied" or name == "Hexalith.EventStore.Contracts" else len(observed) <= 1, "native/composition SDK inventory missing")
             require(all(item.get("sha256") == digest and ", Version=4.1.0.0," in item["identity"] for item in observed), "native/composition SDK substitution")
     reader_roles = public_reader_roles(loaded, source=source, run_id=owner["runId"])
-    allowed = names | {loaded_name, "invocation.json", "execution.json", "cleanup.json", "test-result.json", "attachments.json", "attachment-withdrawals.json"}
+    allowed = names | phase_names | {loaded_name, "invocation.json", "test-result.json", "attachments.json", "attachment-withdrawals.json"}
     require(all(name in allowed and stat.S_ISREG(os.stat(name, dir_fd=root, follow_symlinks=False).st_mode) for name in os.listdir(root)), "unreferenced or duplicate artifact substitute")
     return {"profile": PROFILE, "source": source, "runId": owner["runId"], "nativeCases": len(cases), "readerRoles": reader_roles, "qualificationCredit": False}
 

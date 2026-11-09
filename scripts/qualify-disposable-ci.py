@@ -21,10 +21,26 @@ import time
 from datetime import datetime, timedelta, timezone
 
 ROOT = Path(__file__).resolve().parents[1]
-_spec = importlib.util.spec_from_file_location(
-    'integration_owner', ROOT / 'references/Hexalith.Builds/Github/run-module-integration/run_module_integration.py')
-HELPER = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(HELPER)
+
+
+class _PinnedHelper:
+    """Load the pinned Builds integration helper on first use, so private reader removal never depends on it."""
+
+    _module = None
+
+    def __getattr__(self, name):
+        module = type(self)._module
+        if module is None:
+            spec = importlib.util.spec_from_file_location(
+                'integration_owner', ROOT / 'references/Hexalith.Builds/Github/run-module-integration/run_module_integration.py')
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            type(self)._module = module
+        return getattr(module, name)
+
+
+HELPER = _PinnedHelper()
+LOCK_REFUSALS = ('HXR037', 'HXR023')
 TOOL = ['dotnet', 'tool', 'run', 'hexalith-module', '--']
 RUN_ID = re.compile(r'[0-9a-f]{32}')
 LABEL = 'hexalith.g4.run'
@@ -664,6 +680,11 @@ class Qualification:
         completed, result = self.tool(item, ['down', '--run-id=' + owner['runId'], '--output=json'], tag, environment)
         verified = HELPER.cleanup_verified(completed, result, owner)
         require(verified == expected, 'Exact-owner cleanup result did not match the explicit qualification condition')
+        if not expected:
+            # An injected lock refusal counts only as the runtime's metadata or provisioning lock refusal.
+            outcome = result.get('outcome') if isinstance(result, dict) else None
+            require(completed.returncode != 0 and isinstance(outcome, dict) and outcome.get('ruleId') in LOCK_REFUSALS,
+                    'Expected refusal was not the metadata or provisioning lock refusal')
         if verified:
             require(not self.containers(item), 'Independent exact-label discovery still finds owned containers')
         return result
@@ -944,6 +965,10 @@ def main():
         value = os.environ.get('HEXALITH_LIFECYCLE_REGISTRY_CONFIG')
         remove_reader_directory(value, os.environ['RUNNER_TEMP'] if value else None)
         return 0
+    if args.command == 'wait-cancellation':
+        # Install the handlers first: constructing the controller verifies the tool, and a signal then must not be lost.
+        for number in (signal.SIGINT, signal.SIGTERM):
+            signal.signal(number, receive_signal)
     qualification = Qualification(finalizing=args.command == 'finalize')
     if args.command == 'finalize':
         return qualification.finalize(args.job_status)
@@ -960,8 +985,6 @@ def main():
         return 0
     if args.command == 'wait-cancellation':
         item = qualification.owner('cancel')
-        for number in (signal.SIGINT, signal.SIGTERM):
-            signal.signal(number, receive_signal)
         deadline = time.monotonic() + 120
         while time.monotonic() < deadline and not CANCELLED:
             require(birth(item['pid']) == item['birth'], 'Owner terminated before actual GitHub cancellation')

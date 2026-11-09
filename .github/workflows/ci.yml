@@ -318,6 +318,20 @@ jobs:
       - name: Test configuration merging and resolvers
         run: python3 -B -m unittest discover -s _bmad/scripts/tests -v
 
+  lifecycle-controller:
+    name: CI lifecycle controller tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          submodules: false
+      - name: Initialize only the pinned Builds helper
+        run: git -c submodule.recurse=false submodule update --init --depth 1 --checkout -- references/Hexalith.Builds
+      - name: Test the lifecycle controller without services
+        run: python3 -B -m unittest discover -s tests/ci-lifecycle -v
+
   platform-declaration:
     name: Parties Platform declaration
     runs-on: ubuntu-24.04

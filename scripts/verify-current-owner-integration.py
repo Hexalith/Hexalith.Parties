@@ -103,6 +103,37 @@ def document(root: Path, name: str):
     return decode(read(root, name))
 
 
+EXECUTION_SCHEMA = "hexalith.module.ci-integration-execution.v1"
+CLEANUP_SCHEMA = "hexalith.module.ci-integration-cleanup.v1"
+CLEANUP_RECORD = re.compile(r"cleanup-([1-9][0-9]?)\.json\Z", re.ASCII)
+
+
+def integration_phases(root):
+    """Return the helper's execution result, its final exact-down result and the evidence names carrying them.
+
+    The pinned Builds helper writes raw `execution.json` and `cleanup.json`. Later helpers wrap execution with
+    its process observation and keep one `cleanup-<n>.json` record per exact down. Both layouts are accepted;
+    a mixed, non-contiguous or unverified layout is refused.
+    """
+    names = set(os.listdir(root))
+    execution = document(root, "execution.json")
+    if isinstance(execution, dict) and execution.get("schema") == EXECUTION_SCHEMA:
+        require(execution.get("outputParsed") is True and execution.get("processExitCode") == 0
+                and execution.get("cancelled") is False and execution.get("timedOut") is False
+                and isinstance(execution.get("result"), dict), "integration execution was not a verified completion")
+        execution = execution["result"]
+    numbers = sorted(int(match.group(1)) for match in map(CLEANUP_RECORD.fullmatch, names) if match)
+    if not numbers:
+        return execution, document(root, "cleanup.json"), {"execution.json", "cleanup.json"}
+    require("cleanup.json" not in names and numbers == list(range(1, len(numbers) + 1)), "mixed or non-contiguous cleanup records")
+    records = [document(root, f"cleanup-{number}.json") for number in numbers]
+    require(all(isinstance(record, dict) and record.get("schema") == CLEANUP_SCHEMA for record in records), "unsupported cleanup record")
+    final = records[-1]
+    require(final.get("status") == "completed" and final.get("verified") is True and isinstance(final.get("result"), dict),
+            "final exact down was not verified")
+    return execution, final["result"], {"execution.json", *(f"cleanup-{number}.json" for number in numbers)}
+
+
 def persisted_identity(aggregate):
     """Derive the complete current SDK AggregateIdentity JSON contract from its canonical core tuple."""
     require(isinstance(aggregate, dict) and set(aggregate) == {"tenantId", "domain", "aggregateId"}, "invalid aggregate identity tuple")
@@ -144,8 +175,8 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
     require(result.get("termination", {}).get("state") == "not-yet-populated", "interrupted native execution")
     cleanup = result["cleanup"]
     require(cleanup.get("state") == "populated" and cleanup.get("disposition") == "complete" and cleanup.get("failures") == [] and cleanup.get("leftoverResourceIds") == [], "owned result cleanup incomplete")
-    for filename in ("execution.json", "cleanup.json"):
-        phase = document(root, filename)
+    execution, final_cleanup, phase_names = integration_phases(root)
+    for phase in (execution, final_cleanup):
         remaining = phase.get("remainingResources", {})
         require(phase.get("runId") == owner["runId"] and phase.get("outcome", {}).get("exitCode") == "Success", "execution/cleanup failed or foreign")
         require(remaining.get("unverified") is False and remaining.get("isEmpty") is True
@@ -230,7 +261,7 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
             observed = [item for item in loaded[field] if item["identity"].split(",", 1)[0] == name]
             require(len(observed) == 1 if field == "copied" or name == "Hexalith.EventStore.Contracts" else len(observed) <= 1, "native/composition SDK inventory missing")
             require(all(item.get("sha256") == expected and ", Version=4.1.0.0," in item["identity"] for item in observed), "native/composition SDK substitution")
-    allowed = names | {loaded_name, "invocation.json", "execution.json", "cleanup.json", "test-result.json", "attachments.json", "attachment-withdrawals.json"}
+    allowed = names | phase_names | {loaded_name, "invocation.json", "test-result.json", "attachments.json", "attachment-withdrawals.json"}
     require(all(name in allowed and stat.S_ISREG(os.stat(name, dir_fd=root, follow_symlinks=False).st_mode) for name in os.listdir(root)), "unreferenced or duplicate artifact substitute")
     return {"profile": PROFILE, "source": source, "runId": owner["runId"], "nativeCases": len(cases), "qualificationCredit": False}
 
