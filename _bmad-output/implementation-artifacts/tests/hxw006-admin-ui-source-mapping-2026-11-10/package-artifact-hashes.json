@@ -1,0 +1,10 @@
+{
+  "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll": "65c5c6759bbf95be4f0ba7bcfecc801db9d3763ba6b1b620171f3bb40f531e2f",
+  "tests/Hexalith.Parties.EventStoreAdminUI.TestHost/bin/Release/net10.0/Hexalith.Parties.EventStoreAdminUI.TestHost.dll": "25baa0e6af64db8c2697df7f20fcd587407b7da383ec9b4b4cf9bd58872f955d",
+  "references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/bin/Release/net10.0/Hexalith.EventStore.Admin.UI.dll": "df0fdbb9fdbb72c81ff3e7e6cbdf2b2e7b838f06e16f213b77b36d069c2339f3",
+  "references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/obj/project.assets.json": "d899be2bb42c14daa4760d903c44ae5a08b27a82a1e74e729e9a16d97dda5cba",
+  "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll": "52a72ba44f6d84f744912b5c82fe16640075fd9b332c369f032a22a64877fae5",
+  "tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll": "bbcb84c1c9cbd52841e153ba25c8f24c9b712100ea08bd3dd9a71e22f1f3da18",
+  "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.EventStore.Admin.UI.dll": "df0fdbb9fdbb72c81ff3e7e6cbdf2b2e7b838f06e16f213b77b36d069c2339f3",
+  "tests/Hexalith.Parties.EventStoreAdminUI.TestHost/bin/Release/net10.0/Hexalith.EventStore.Admin.UI.dll": "df0fdbb9fdbb72c81ff3e7e6cbdf2b2e7b838f06e16f213b77b36d069c2339f3"
+}

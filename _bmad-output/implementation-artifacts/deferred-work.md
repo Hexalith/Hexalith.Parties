@@ -2129,6 +2129,8 @@ exit_proof: `dotnet restore Hexalith.Parties.slnx && dotnet build Hexalith.Parti
 rollback: None required (build-only). Candidate fixes: give the nested native build its own intermediate and output paths, or stop listing `Admin.UI.csproj` directly in `Hexalith.Parties.slnx`.
 evidence: Spec 8.10 Round 8 diagnosis, 2026-11-01. A solution restore leaves Admin.UI with the project-reference graph; the lane command reproduces 522 errors right after the nested build logs "Restored …Hexalith.EventStore.Admin.UI.csproj"; the focused TestHost build passes before and after that restore; CI run `41335345599` is green for `f98e702a`.
 
+source_mapping_followup_2026_11_10: The separate HXW006 Debug conflict in the same nested native UI build is resolved by preserving mapper-owned source selectors and retaining explicit package selectors outside source mode. Fresh pinned-tool Debug and Release IntegrationTests builds pass with zero warnings/errors; each mode passes 61 catalog/Admin UI cases, 24 catalog selector cases and four build-profile controls without skips. A deliberate conflicting source override still fails with HXW006. Historical DW-202 resolution and full-solution qualification scope remain unchanged. Evidence: `tests/hxw006-admin-ui-source-mapping-2026-11-10/verification.json`; spec `spec-hxw006-admin-ui-source-mapping.md`.
+
 ### DW-203: Keep ClientPackageTests from rewriting the shared restore state of in-repo dependency projects
 
 status: done 2026-11-02
@@ -2363,6 +2365,7 @@ rollback: None required (test-only).
   status: done 2026-11-10
   resolution: Ordinary CI now executes actual GenerateAsync against selected split CatalogBuilder sources and coherent package owners, checking the receipt, SDK pin, source/owner bytes and hashes. Added the required root Platform checkout; isolated package children retain exact cohort checks while excluding inherited source-mapping hooks.
   verification: `spec-five-harness-and-identity-deferred-items.md`; `tests/five-harness-and-identity-2026-11-10/`.
+  validation_followup_2026_11_10: The former source Debug IntegrationTests HXW006 blocker recorded by the resolving harness spec is now fixed. Actual GenerateAsync and all 13 preparation/cleanup cases pass in both source Debug and package Release; see `tests/hxw006-admin-ui-source-mapping-2026-11-10/verification.json`. Original November 10 receipts remain historical and unchanged.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-05.md`
   summary: Canceled asset-staging test can leave its MSBuild process running (medium; pre-existing later/concurrent work).

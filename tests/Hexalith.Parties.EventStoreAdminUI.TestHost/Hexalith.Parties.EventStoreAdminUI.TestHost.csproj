@@ -89,7 +89,10 @@
   </Target>
   <Target Name="BuildNativeAdminUiArtifact" BeforeTargets="ResolveAssemblyReferences" DependsOnTargets="ValidateAdminUiSettingsRoot">
     <PropertyGroup>
-      <_NativeAdminUiBuildProperties>Configuration=$(Configuration);HexalithUsePublishedSdkForHostedTests=true;HexalithEventStoreVersion=$(HexalithEventStoreVersion);StaticWebAssetsEnabled=false;UseHexalithProjectReferences=false;UseNuGetDeps=true;CopyLocalLockFileAssemblies=true</_NativeAdminUiBuildProperties>
+      <_NativeAdminUiBuildProperties>Configuration=$(Configuration);HexalithUsePublishedSdkForHostedTests=true;HexalithEventStoreVersion=$(HexalithEventStoreVersion);StaticWebAssetsEnabled=false;CopyLocalLockFileAssemblies=true</_NativeAdminUiBuildProperties>
+      <!-- The inherited mapper owns source selectors and reconciles the hosted SDK edges.
+           Keep the explicit package profile only when no source mapping is active. -->
+      <_NativeAdminUiBuildProperties Condition="'$(HexalithSourceMappingMode)' != 'source'">$(_NativeAdminUiBuildProperties);UseHexalithProjectReferences=false;UseNuGetDeps=true</_NativeAdminUiBuildProperties>
     </PropertyGroup>
     <MSBuild Projects="$(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj"
              Targets="Restore;Build;GetTargetPath" Properties="$(_NativeAdminUiBuildProperties)" BuildInParallel="false">

@@ -1,0 +1,18 @@
+{
+  "source": {
+    "Hexalith.Commons.UniqueIds/1.0.0": "project",
+    "Hexalith.EventStore.Admin.Abstractions/4.2.0": "project",
+    "Hexalith.EventStore.Client/4.2.0": "project",
+    "Hexalith.EventStore.Contracts/4.2.0": "project",
+    "Hexalith.EventStore.ServiceDefaults/4.2.0": "project",
+    "Hexalith.EventStore.SignalR/4.2.0": "project"
+  },
+  "package": {
+    "Hexalith.Commons.UniqueIds/2.30.10": "package",
+    "Hexalith.EventStore.Admin.Abstractions/4.2.0": "package",
+    "Hexalith.EventStore.Client/4.2.0": "package",
+    "Hexalith.EventStore.Contracts/4.2.0": "package",
+    "Hexalith.EventStore.ServiceDefaults/4.2.0": "package",
+    "Hexalith.EventStore.SignalR/4.2.0": "package"
+  }
+}

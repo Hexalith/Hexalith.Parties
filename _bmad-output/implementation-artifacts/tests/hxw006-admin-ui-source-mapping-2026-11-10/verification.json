@@ -1,0 +1,1104 @@
+{
+  "baselineCommit": "87a7b600353b8967ab7b537c1e8dbd4a4b1b5cdc",
+  "rootGitlinks": {
+    "references/Hexalith.AI.Tools": "1745b6663ad32bb1288167135ed0f979366c53a0",
+    "references/Hexalith.Builds": "5ec1779040606be89306129a7d2b245258c9acd2",
+    "references/Hexalith.Commons": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+    "references/Hexalith.EventStore": "b437879df2339692d177774d1f076936da6ebd62",
+    "references/Hexalith.FrontComposer": "e972d0f06a8eec3446db0b2270fdb14eef4c1186",
+    "references/Hexalith.McpCli": "1c1f06b46bbe9e115022be8af75b10085c8ac360",
+    "references/Hexalith.Memories": "4ff3e6866ecb6d1a497e7063e972c24259252c40",
+    "references/Hexalith.Platform": "081178aa5cc01f5dc736ba0d1980aa80fedc6fe1",
+    "references/Hexalith.PolymorphicSerializations": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+    "references/Hexalith.Tenants": "5293ab9dca49b6298f1e3396367627009967cbfb"
+  },
+  "checks": {
+    "source-prepare": {
+      "command": [
+        "dotnet",
+        "tool",
+        "run",
+        "hexalith-module",
+        "--",
+        "prepare-build",
+        "--manifest",
+        "module/hexalith.module-manifest.v2.json",
+        "--mode",
+        "source",
+        "--workspace",
+        "/tmp/parties-hxw006-rg0qnik5/source",
+        "--output",
+        "json"
+      ],
+      "environmentOverrides": {},
+      "startedAtUtc": "2026-11-10T08:32:32.723561+00:00",
+      "finishedAtUtc": "2026-11-10T08:32:35.822972+00:00",
+      "exitCode": 0,
+      "log": "source-prepare.log.gz",
+      "logSha256": "a12b6ca070c05d5c10f209869c5841d16cd94c74aecdd678ae852848a6ec7078",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "aspire-baseline": {
+      "command": [
+        "aspire",
+        "describe",
+        "--apphost",
+        "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+        "--non-interactive",
+        "--format",
+        "Json"
+      ],
+      "environmentOverrides": {},
+      "startedAtUtc": "2026-11-10T08:32:50.817337+00:00",
+      "finishedAtUtc": "2026-11-10T08:32:51.346084+00:00",
+      "exitCode": 0,
+      "log": "aspire-baseline.log.gz",
+      "logSha256": "f67dffeb96b6df5b4d588703f7797231dc89b8cb4a42d038dd60b1735d73ed1a",
+      "logFormat": "sanitized resource name/state projection; no environment or credentials retained",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "aspire-stop": {
+      "command": [
+        "aspire",
+        "stop",
+        "--apphost",
+        "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+        "--non-interactive"
+      ],
+      "environmentOverrides": {},
+      "startedAtUtc": "2026-11-10T08:33:02.263655+00:00",
+      "finishedAtUtc": "2026-11-10T08:33:03.021092+00:00",
+      "exitCode": 0,
+      "log": "aspire-stop.log.gz",
+      "logSha256": "b458a2add04b10f3da9ad469b5ef7a0781ab1af5856384e5599d6bd6897e8973",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "source-before-build": {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "--configuration",
+        "Debug",
+        "--disable-build-servers",
+        "-m:1",
+        "--nologo",
+        "-p:RestoreForce=true"
+      ],
+      "environmentOverrides": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "a969d0173bbc6bf0f254f32d86370b4d95d78d1eada5f44d9a2704fd723d1839",
+        "Configuration": "Debug"
+      },
+      "startedAtUtc": "2026-11-10T08:33:23.785840+00:00",
+      "finishedAtUtc": "2026-11-10T08:34:56.160757+00:00",
+      "exitCode": 1,
+      "log": "source-before-build.log.gz",
+      "logSha256": "fbb720b7bf3729a6ea2fe21b3533508cf252ab5b11e902d9c2c33882b665eb79",
+      "expectedExitCode": 1,
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "ci-profile-build": {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "--configuration",
+        "Debug",
+        "--disable-build-servers",
+        "-m:1",
+        "--nologo"
+      ],
+      "environmentOverrides": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "a969d0173bbc6bf0f254f32d86370b4d95d78d1eada5f44d9a2704fd723d1839",
+        "Configuration": "Debug"
+      },
+      "startedAtUtc": "2026-11-10T08:34:53.641364+00:00",
+      "finishedAtUtc": "2026-11-10T08:34:56.213280+00:00",
+      "exitCode": 0,
+      "log": "ci-profile-build.log.gz",
+      "logSha256": "55fd674c462d1941e730752a197b3adbf523bd3a6ad97684bcdfd1af94732d05",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "profile-before-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Ci.Tests.NativeAdminUiBuildProfileTests",
+        "-failSkips",
+        "-xml",
+        "/tmp/parties-hxw006-rg0qnik5/profile-before.xml"
+      ],
+      "environmentOverrides": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "a969d0173bbc6bf0f254f32d86370b4d95d78d1eada5f44d9a2704fd723d1839",
+        "Configuration": "Debug"
+      },
+      "startedAtUtc": "2026-11-10T08:35:05.890494+00:00",
+      "finishedAtUtc": "2026-11-10T08:35:07.256592+00:00",
+      "exitCode": 1,
+      "log": "profile-before-tests.log.gz",
+      "logSha256": "6b2d062e62fefbc16609b40ccd48e5a758234b9d2ace6ccd8f82b32f6e83b499",
+      "expectedExitCode": 1,
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "profile-after-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Ci.Tests.NativeAdminUiBuildProfileTests",
+        "-failSkips",
+        "-result-xml",
+        "/tmp/parties-hxw006-rg0qnik5/profile-after.xml"
+      ],
+      "environmentOverrides": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "a969d0173bbc6bf0f254f32d86370b4d95d78d1eada5f44d9a2704fd723d1839",
+        "Configuration": "Debug"
+      },
+      "startedAtUtc": "2026-11-10T08:35:35.635330+00:00",
+      "finishedAtUtc": "2026-11-10T08:35:36.981909+00:00",
+      "exitCode": 0,
+      "log": "profile-after-tests.log.gz",
+      "logSha256": "064a45b11a9ffcd861491773f4e5f08e0dfb5249811c2933eb00e16b48bcabed",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "package-prepare": {
+      "command": [
+        "dotnet",
+        "tool",
+        "run",
+        "hexalith-module",
+        "--",
+        "prepare-build",
+        "--manifest",
+        "module/hexalith.module-manifest.v2.json",
+        "--mode",
+        "package",
+        "--workspace",
+        "/tmp/parties-hxw006-rg0qnik5/package",
+        "--output",
+        "json"
+      ],
+      "environmentOverrides": {},
+      "startedAtUtc": "2026-11-10T08:35:36.807307+00:00",
+      "finishedAtUtc": "2026-11-10T08:35:38.597771+00:00",
+      "exitCode": 0,
+      "log": "package-prepare.log.gz",
+      "logSha256": "6adbe947eb921e2b0e2c61385f9627bc74b2e39a6d4df34600a16709473fd77e",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "source-after-build": {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "--configuration",
+        "Debug",
+        "--disable-build-servers",
+        "-m:1",
+        "--nologo",
+        "-p:RestoreForce=true"
+      ],
+      "environmentOverrides": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "a969d0173bbc6bf0f254f32d86370b4d95d78d1eada5f44d9a2704fd723d1839",
+        "Configuration": "Debug"
+      },
+      "startedAtUtc": "2026-11-10T08:35:23.129229+00:00",
+      "finishedAtUtc": "2026-11-10T08:36:18.893129+00:00",
+      "exitCode": 0,
+      "log": "source-after-build.log.gz",
+      "logSha256": "6fab5683c55f9135bb0efce62d4d3d4c6ddd8ed0f16232f9e452de13fe1ccdc7",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "source-catalog-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogConfigurationTests",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogPreparationCleanupTests",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogModelFinalizationTests",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.PrivateAdminUiCompositionTests",
+        "-failSkips",
+        "-result-xml",
+        "/tmp/parties-hxw006-rg0qnik5/source-catalog.xml"
+      ],
+      "environmentOverrides": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "a969d0173bbc6bf0f254f32d86370b4d95d78d1eada5f44d9a2704fd723d1839",
+        "Configuration": "Debug"
+      },
+      "startedAtUtc": "2026-11-10T08:36:29.603246+00:00",
+      "finishedAtUtc": "2026-11-10T08:36:36.712185+00:00",
+      "exitCode": 0,
+      "log": "source-catalog-tests.log.gz",
+      "logSha256": "50ad44959283492332b9f437f88fd740db2281d941721f0f5550822975ddf19d",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "source-negative-guard": {
+      "command": [
+        "dotnet",
+        "msbuild",
+        "references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj",
+        "-target:PrepareForBuild",
+        "-p:UseHexalithProjectReferences=false",
+        "-nologo",
+        "-m:1",
+        "-nr:false"
+      ],
+      "environmentOverrides": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "a969d0173bbc6bf0f254f32d86370b4d95d78d1eada5f44d9a2704fd723d1839",
+        "Configuration": "Debug"
+      },
+      "startedAtUtc": "2026-11-10T08:36:50.427206+00:00",
+      "finishedAtUtc": "2026-11-10T08:36:50.785039+00:00",
+      "exitCode": 1,
+      "log": "source-negative-guard.log.gz",
+      "logSha256": "6ccdeeb1be3f6424fef9ad07e0d48f2280ab666d8c81ee0a05ea4a50bd3ee30b",
+      "expectedExitCode": 1,
+      "expectedDiagnostic": "HXW006",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "warning-policy": {
+      "command": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "environmentOverrides": {},
+      "startedAtUtc": "2026-11-10T08:37:23.319007+00:00",
+      "finishedAtUtc": "2026-11-10T08:37:23.548853+00:00",
+      "exitCode": 0,
+      "log": "warning-policy.log.gz",
+      "logSha256": "315caa5fc9bf0ac255efb2d79aabdb0d6ca1be5539c23b95a077d0ecc6973a0b",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "package-build": {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "--configuration",
+        "Release",
+        "--disable-build-servers",
+        "-m:1",
+        "--nologo",
+        "-p:RestoreForce=true"
+      ],
+      "environmentOverrides": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "76982f02c05ed524c4eec2c3ca33e68f075f2a16bcc77f59a02b05419a1dc96c",
+        "Configuration": "Release"
+      },
+      "startedAtUtc": "2026-11-10T08:36:55.183234+00:00",
+      "finishedAtUtc": "2026-11-10T08:37:38.785854+00:00",
+      "exitCode": 0,
+      "log": "package-build.log.gz",
+      "logSha256": "ab9c8fc50667bbf08b93190f1333cc06274a2e717b96869e8979122222bfb2cf",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "package-catalog-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogConfigurationTests",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogPreparationCleanupTests",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogModelFinalizationTests",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.PrivateAdminUiCompositionTests",
+        "-failSkips",
+        "-result-xml",
+        "/tmp/parties-hxw006-rg0qnik5/package-catalog.xml"
+      ],
+      "environmentOverrides": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "76982f02c05ed524c4eec2c3ca33e68f075f2a16bcc77f59a02b05419a1dc96c",
+        "Configuration": "Release"
+      },
+      "startedAtUtc": "2026-11-10T08:38:02.318152+00:00",
+      "finishedAtUtc": "2026-11-10T08:38:09.806300+00:00",
+      "exitCode": 0,
+      "log": "package-catalog-tests.log.gz",
+      "logSha256": "78695e07afaaf68d1add7602d5001637c2e891cd0e15da190c0e4f2e89dad64e",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "source-selector-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Tests.Gateway.PartiesCatalogGatewaySelectorTests",
+        "-failSkips",
+        "-result-xml",
+        "/tmp/parties-hxw006-rg0qnik5/source-selector.xml"
+      ],
+      "environmentOverrides": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "a969d0173bbc6bf0f254f32d86370b4d95d78d1eada5f44d9a2704fd723d1839",
+        "Configuration": "Debug"
+      },
+      "startedAtUtc": "2026-11-10T08:38:26.474741+00:00",
+      "finishedAtUtc": "2026-11-10T08:38:27.023135+00:00",
+      "exitCode": 0,
+      "log": "source-selector-tests.log.gz",
+      "logSha256": "7a1902e573c287999a26df03c3043d06b5c66ba8879d3e10a421109e33763e26",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "package-selector-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Tests.Gateway.PartiesCatalogGatewaySelectorTests",
+        "-failSkips",
+        "-result-xml",
+        "/tmp/parties-hxw006-rg0qnik5/package-selector.xml"
+      ],
+      "environmentOverrides": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "76982f02c05ed524c4eec2c3ca33e68f075f2a16bcc77f59a02b05419a1dc96c",
+        "Configuration": "Release"
+      },
+      "startedAtUtc": "2026-11-10T08:38:33.671131+00:00",
+      "finishedAtUtc": "2026-11-10T08:38:34.322801+00:00",
+      "exitCode": 0,
+      "log": "package-selector-tests.log.gz",
+      "logSha256": "bd141f25431f87c00d65bf76b35b2644dfc43720accabfc13ad049a630da3129",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "ci-package-build": {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "--configuration",
+        "Release",
+        "--disable-build-servers",
+        "-m:1",
+        "--nologo"
+      ],
+      "environmentOverrides": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "76982f02c05ed524c4eec2c3ca33e68f075f2a16bcc77f59a02b05419a1dc96c",
+        "Configuration": "Release"
+      },
+      "startedAtUtc": "2026-11-10T08:38:34.380020+00:00",
+      "finishedAtUtc": "2026-11-10T08:38:37.567143+00:00",
+      "exitCode": 0,
+      "log": "ci-package-build.log.gz",
+      "logSha256": "9f1e81b91226c208395f94ca1f93d0bd9a3c749296073ec38c645eb66e617c58",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "package-profile-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Ci.Tests.NativeAdminUiBuildProfileTests",
+        "-failSkips",
+        "-result-xml",
+        "/tmp/parties-hxw006-rg0qnik5/package-profile.xml"
+      ],
+      "environmentOverrides": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "76982f02c05ed524c4eec2c3ca33e68f075f2a16bcc77f59a02b05419a1dc96c",
+        "Configuration": "Release"
+      },
+      "startedAtUtc": "2026-11-10T08:38:42.770113+00:00",
+      "finishedAtUtc": "2026-11-10T08:38:43.994734+00:00",
+      "exitCode": 0,
+      "log": "package-profile-tests.log.gz",
+      "logSha256": "ce97fa559f3b52eac3b6d9f61f085d6c04145eede2cd380e8bec59324d142b62",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "whitespace-default": {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "environmentOverrides": {},
+      "startedAtUtc": "2026-11-10T08:39:45.270542+00:00",
+      "finishedAtUtc": "2026-11-10T08:39:45.317730+00:00",
+      "exitCode": 2,
+      "log": "whitespace-default.log.gz",
+      "logSha256": "91f93be138e735112440a11858782b4463141e0ab2c99e78df63aa0baf44dedf",
+      "disposition": "Ambient Git treats required CRLF as trailing whitespace. Retained the exact result; explicit CRLF-aware check preserves all actual whitespace checks.",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "whitespace-crlf": {
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "environmentOverrides": {},
+      "startedAtUtc": "2026-11-10T08:39:45.379837+00:00",
+      "finishedAtUtc": "2026-11-10T08:39:45.428076+00:00",
+      "exitCode": 0,
+      "log": "whitespace-crlf.log.gz",
+      "logSha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "whitespace-new-test": {
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--no-index",
+        "--check",
+        "/dev/null",
+        "tests/Hexalith.Parties.Ci.Tests/NativeAdminUiBuildProfileTests.cs"
+      ],
+      "environmentOverrides": {},
+      "startedAtUtc": "2026-11-10T08:39:45.492561+00:00",
+      "finishedAtUtc": "2026-11-10T08:39:45.494654+00:00",
+      "exitCode": 1,
+      "log": "whitespace-new-test.log.gz",
+      "logSha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "expectedExitCode": 1,
+      "disposition": "No whitespace diagnostics; no-index comparison reports that the new file differs from /dev/null. Staged final check covers it with ordinary exit semantics.",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "commitlint": {
+      "command": [
+        "node_modules/.bin/commitlint",
+        "--edit",
+        "/tmp/parties-hxw006-rg0qnik5/commit-message.txt",
+        "--verbose"
+      ],
+      "environmentOverrides": {},
+      "startedAtUtc": "2026-11-10T08:40:48.821420+00:00",
+      "finishedAtUtc": "2026-11-10T08:40:49.011171+00:00",
+      "exitCode": 0,
+      "log": "commitlint.log.gz",
+      "logSha256": "e19d847d352de5bcb593e2ef53fba903a9738fa6ee447cd606281a31a753280b",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "ci-final-source-build": {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "--configuration",
+        "Debug",
+        "--disable-build-servers",
+        "-m:1",
+        "--nologo"
+      ],
+      "environmentOverrides": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "a969d0173bbc6bf0f254f32d86370b4d95d78d1eada5f44d9a2704fd723d1839",
+        "Configuration": "Debug"
+      },
+      "startedAtUtc": "2026-11-10T08:45:42.168031+00:00",
+      "finishedAtUtc": "2026-11-10T08:45:45.314296+00:00",
+      "exitCode": 0,
+      "log": "ci-final-source-build.log.gz",
+      "logSha256": "ef5087f9d5d7fe251a1d55a0ea6653fdb52aaf09a1a37f9cc010059c19eb03c0",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "source-profile-final-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Ci.Tests.NativeAdminUiBuildProfileTests",
+        "-failSkips",
+        "-result-xml",
+        "/tmp/parties-hxw006-rg0qnik5/source-profile-final.xml"
+      ],
+      "environmentOverrides": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "a969d0173bbc6bf0f254f32d86370b4d95d78d1eada5f44d9a2704fd723d1839",
+        "Configuration": "Debug"
+      },
+      "startedAtUtc": "2026-11-10T08:45:51.678868+00:00",
+      "finishedAtUtc": "2026-11-10T08:45:52.863059+00:00",
+      "exitCode": 0,
+      "log": "source-profile-final-tests.log.gz",
+      "logSha256": "49e89f3d005df93df0fefc9905eb1876127d7e953df8aac9edbd207036384801",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "ci-final-package-build": {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "--configuration",
+        "Release",
+        "--disable-build-servers",
+        "-m:1",
+        "--nologo"
+      ],
+      "environmentOverrides": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "76982f02c05ed524c4eec2c3ca33e68f075f2a16bcc77f59a02b05419a1dc96c",
+        "Configuration": "Release"
+      },
+      "startedAtUtc": "2026-11-10T08:45:58.764621+00:00",
+      "finishedAtUtc": "2026-11-10T08:46:01.200306+00:00",
+      "exitCode": 0,
+      "log": "ci-final-package-build.log.gz",
+      "logSha256": "05b410f76760e628fc73693c10af39d4c42853dad7952b5ef1fe2357c1380587",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "package-profile-final-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Ci.Tests.NativeAdminUiBuildProfileTests",
+        "-failSkips",
+        "-result-xml",
+        "/tmp/parties-hxw006-rg0qnik5/package-profile-final.xml"
+      ],
+      "environmentOverrides": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "76982f02c05ed524c4eec2c3ca33e68f075f2a16bcc77f59a02b05419a1dc96c",
+        "Configuration": "Release"
+      },
+      "startedAtUtc": "2026-11-10T08:46:06.362773+00:00",
+      "finishedAtUtc": "2026-11-10T08:46:07.579938+00:00",
+      "exitCode": 0,
+      "log": "package-profile-final-tests.log.gz",
+      "logSha256": "95747ea8c6dac839c4ebb051e6a791dbdbc7c58bd0f972fbfd6720a94de0536a",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "source-negative-nuget-guard": {
+      "command": [
+        "dotnet",
+        "msbuild",
+        "references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj",
+        "-target:PrepareForBuild",
+        "-p:UseNuGetDeps=true",
+        "-nologo",
+        "-m:1",
+        "-nr:false"
+      ],
+      "environmentOverrides": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "a969d0173bbc6bf0f254f32d86370b4d95d78d1eada5f44d9a2704fd723d1839",
+        "Configuration": "Debug"
+      },
+      "startedAtUtc": "2026-11-10T08:47:17.769506+00:00",
+      "finishedAtUtc": "2026-11-10T08:47:18.129399+00:00",
+      "exitCode": 1,
+      "log": "source-negative-nuget-guard.log.gz",
+      "logSha256": "7f5caff560b553eb8f3f3f29d789572f378861e20f63fa822aed2ea1d192ac3e",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties",
+      "expectedExitCode": 1,
+      "expectedDiagnostic": "HXW006"
+    },
+    "review-ci-source-build": {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "--configuration",
+        "Debug",
+        "--disable-build-servers",
+        "-m:1",
+        "--nologo"
+      ],
+      "environmentOverrides": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "a969d0173bbc6bf0f254f32d86370b4d95d78d1eada5f44d9a2704fd723d1839",
+        "Configuration": "Debug"
+      },
+      "startedAtUtc": "2026-11-10T08:47:31.718199+00:00",
+      "finishedAtUtc": "2026-11-10T08:47:35.484600+00:00",
+      "exitCode": 0,
+      "log": "review-ci-source-build.log.gz",
+      "logSha256": "c22711189208e127cecfebef0e5dc07a7750c4b9575352e8b8107a1e441899e8",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "review-source-profile-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Ci.Tests.NativeAdminUiBuildProfileTests",
+        "-failSkips",
+        "-result-xml",
+        "/tmp/parties-hxw006-rg0qnik5/review-source-profile.xml"
+      ],
+      "environmentOverrides": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-hxw006-rg0qnik5/source/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "a969d0173bbc6bf0f254f32d86370b4d95d78d1eada5f44d9a2704fd723d1839",
+        "Configuration": "Debug"
+      },
+      "startedAtUtc": "2026-11-10T08:47:55.968683+00:00",
+      "finishedAtUtc": "2026-11-10T08:47:57.468282+00:00",
+      "exitCode": 0,
+      "log": "review-source-profile-tests.log.gz",
+      "logSha256": "382d2b668dad6ac04125bc949994d30387491e79b3ed6b4628d6650a7663e7d4",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "review-ci-package-build": {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "--configuration",
+        "Release",
+        "--disable-build-servers",
+        "-m:1",
+        "--nologo"
+      ],
+      "environmentOverrides": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "76982f02c05ed524c4eec2c3ca33e68f075f2a16bcc77f59a02b05419a1dc96c",
+        "Configuration": "Release"
+      },
+      "startedAtUtc": "2026-11-10T08:48:15.570033+00:00",
+      "finishedAtUtc": "2026-11-10T08:48:18.055284+00:00",
+      "exitCode": 0,
+      "log": "review-ci-package-build.log.gz",
+      "logSha256": "f7b083c693c63866062fe9845e3713cbdcfce400b95abc37d0b911056a983a5e",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "review-package-profile-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Ci.Tests.NativeAdminUiBuildProfileTests",
+        "-failSkips",
+        "-result-xml",
+        "/tmp/parties-hxw006-rg0qnik5/review-package-profile.xml"
+      ],
+      "environmentOverrides": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-hxw006-rg0qnik5/package/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "76982f02c05ed524c4eec2c3ca33e68f075f2a16bcc77f59a02b05419a1dc96c",
+        "Configuration": "Release"
+      },
+      "startedAtUtc": "2026-11-10T08:48:46.713943+00:00",
+      "finishedAtUtc": "2026-11-10T08:48:48.193297+00:00",
+      "exitCode": 0,
+      "log": "review-package-profile-tests.log.gz",
+      "logSha256": "762cc846dac6f8d3f925e97587826cdcb492d790851e3dd271335d7c455be9b0",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    },
+    "staged-whitespace": {
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "--cached",
+        "--check"
+      ],
+      "environmentOverrides": {},
+      "startedAtUtc": "2026-11-10T08:49:26.930717+00:00",
+      "finishedAtUtc": "2026-11-10T08:49:26.937157+00:00",
+      "exitCode": 0,
+      "log": "staged-whitespace.log.gz",
+      "logSha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "workingDirectory": "/home/administrator/projects/hexalith/parties"
+    }
+  },
+  "mappingInputs": {
+    "source": {
+      "fileSha256": {
+        "Hexalith.Folders.Aspire.proj": "29fbbc039781d8f1c292d42fc57a77637f86f8500e56a0175a34d7ff75235111",
+        "Hexalith.Platform.EventStoreHost.proj": "29fbbc039781d8f1c292d42fc57a77637f86f8500e56a0175a34d7ff75235111",
+        "SourceMapping.before-targets.props": "d8f1905408f2351a950f914cff9e61e14a8236c548f2d5d20c50b79afc0eb16f",
+        "SourceMapping.final.targets": "dc803c310601c63b7a62575e230a70b8a7a0950ac4d3df15ea16ae3a28a1b3fd",
+        "SourceMapping.late.props": "a6a2de023e10fa60dbbedfbea1a9fc7efb502f40bae8d5cae88cd1aa82143912",
+        "SourceMapping.model-common.props": "7805dcc1d4763e58d4b516988b2b9926ae91dcccf7a701da8fe491d3003655d9",
+        "SourceMapping.props": "0363694f252736cdfd0bcf6a567bb077940df16cc966e410153718a552769e82",
+        "SourceMapping.targets": "366f57656492ff6d6717f8bba99b38c3f3d20ce5d59aa53be70ea0a87850b3c5",
+        "SourceMapping.values.props": "7d3dd9008e9cb77bded16b5af358ca9a096c1ec746b393efab5d3043b4259a86",
+        "SourceMapping.values.targets": "d1f8b68068d372be33f105778418d4f5168360efbaf7c4aa449ec21365f4403d",
+        "__HXW_DefaultCatalog__.proj": "29fbbc039781d8f1c292d42fc57a77637f86f8500e56a0175a34d7ff75235111",
+        "catalog-versions.json": "201156011cedfbc27ece6b5e900c2f5d123d826125c9ede3a93c1712a308df30",
+        "mapping.json": "d11671a2f02f9344121f493ec876b8d35c6ea4c15cfeb1dd62d98b46be8dd54d",
+        "pinned-tree/Props/Directory.Packages.props": "f0e22388dfe62b00d4e7fe39ac1a2876d3d1c893e03d1a6bd4ef30bf36128ba3"
+      },
+      "archive": "source-mapping.tar.gz",
+      "archiveSha256": "487a5c2337f93fd51eac875c868f1c1d991d8dda24a9b240b0851e570e58e2e8"
+    },
+    "package": {
+      "fileSha256": {
+        "Hexalith.Folders.Aspire.proj": "b627a9cf183ac660bd991ab45e3e4b0bdaf372e13eefbd20fa37d447276a20cb",
+        "Hexalith.Platform.EventStoreHost.proj": "b627a9cf183ac660bd991ab45e3e4b0bdaf372e13eefbd20fa37d447276a20cb",
+        "SourceMapping.before-targets.props": "10056167e42de80e69f392acecf64aa9a291d1fb74c63ffb404ee3363397fe20",
+        "SourceMapping.final.targets": "dce7dc269929014fcee52577e066e0b5a289cabaa2de01c4ccf1d4aceb3fbfce",
+        "SourceMapping.late.props": "4fd1a80097f0e9d7af28313d6116e857ab37d88b9f4b1fb2f8510058457a9f7c",
+        "SourceMapping.model-common.props": "cda3b26591a4ffa92f9c0accb168e74773cb33bbd09283b85819d2a0bdbe70e4",
+        "SourceMapping.props": "0363694f252736cdfd0bcf6a567bb077940df16cc966e410153718a552769e82",
+        "SourceMapping.targets": "366f57656492ff6d6717f8bba99b38c3f3d20ce5d59aa53be70ea0a87850b3c5",
+        "SourceMapping.values.props": "b0662ae3d4e5e7d16a389e7cfbcadf47ca27ca64bb9a8efee6f9978fb6ac4960",
+        "SourceMapping.values.targets": "f69a4b48a8125c76c382b8899ec2145cbe9356140e72aab8d16a4e07db8582af",
+        "__HXW_DefaultCatalog__.proj": "b627a9cf183ac660bd991ab45e3e4b0bdaf372e13eefbd20fa37d447276a20cb",
+        "catalog-versions.json": "b0ab0affbdd3df00b24216e8eee4d6e09ca160031d5a898b3af2c2fd8d3093f8",
+        "catalog-versions.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "mapping.json": "ee2c9b2bb03d12c168bd3b4735770512df8cca4095e0bb14a51b359fcd831e9d",
+        "pinned-tree/Props/Directory.Packages.props": "f0e22388dfe62b00d4e7fe39ac1a2876d3d1c893e03d1a6bd4ef30bf36128ba3"
+      },
+      "archive": "package-mapping.tar.gz",
+      "archiveSha256": "7ba6d637f4a3131fdd3f1c7ad94bc4963a810dad8050dfe7666d74ef4dddc5d2"
+    }
+  },
+  "tests": {
+    "profile-before": {
+      "total": 3,
+      "failed": 1,
+      "skipped": 0,
+      "classes": {
+        "Hexalith.Parties.Ci.Tests.NativeAdminUiBuildProfileTests": 3
+      },
+      "xml": "profile-before.xml.gz",
+      "xmlSha256": "01cf157eba9a301a60b7f5ef32269885c581003419eec8c5f1c028b063439eca"
+    },
+    "profile-after": {
+      "total": 3,
+      "failed": 0,
+      "skipped": 0,
+      "classes": {
+        "Hexalith.Parties.Ci.Tests.NativeAdminUiBuildProfileTests": 3
+      },
+      "xml": "profile-after.xml.gz",
+      "xmlSha256": "e15b8f544700ae0fc8f42c840081bab3005843079b36fbf84fc310bc704b8ba2",
+      "compiledConfiguration": "Debug"
+    },
+    "source-catalog": {
+      "total": 61,
+      "failed": 0,
+      "skipped": 0,
+      "classes": {
+        "Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogPreparationCleanupTests": 13,
+        "Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogConfigurationTests": 11,
+        "Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogModelFinalizationTests": 33,
+        "Hexalith.Parties.IntegrationTests.Topology.PrivateAdminUiCompositionTests": 4
+      },
+      "xml": "source-catalog.xml.gz",
+      "xmlSha256": "8ad665afef2fc7fd07d7726b12c1565e7e868aeeb9eafb1388224b7f68f00121"
+    },
+    "package-catalog": {
+      "total": 61,
+      "failed": 0,
+      "skipped": 0,
+      "classes": {
+        "Hexalith.Parties.IntegrationTests.Topology.PrivateAdminUiCompositionTests": 4,
+        "Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogModelFinalizationTests": 33,
+        "Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogPreparationCleanupTests": 13,
+        "Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogConfigurationTests": 11
+      },
+      "xml": "package-catalog.xml.gz",
+      "xmlSha256": "89ab22aadc26f81525b2b67ba453bfb5a75fe5dc4feaee761898a5f579fec72c"
+    },
+    "source-selector": {
+      "total": 24,
+      "failed": 0,
+      "skipped": 0,
+      "classes": {
+        "Hexalith.Parties.Tests.Gateway.PartiesCatalogGatewaySelectorTests": 24
+      },
+      "xml": "source-selector.xml.gz",
+      "xmlSha256": "4e3622f4ea35a83d6cb80f26bc74a454deac1c9ad083c16693df277d5ce7f878"
+    },
+    "package-selector": {
+      "total": 24,
+      "failed": 0,
+      "skipped": 0,
+      "classes": {
+        "Hexalith.Parties.Tests.Gateway.PartiesCatalogGatewaySelectorTests": 24
+      },
+      "xml": "package-selector.xml.gz",
+      "xmlSha256": "a782771f2cccc8fe4322b0eb912790a7c950e29dd1a5a1cbd945cc33d10c165b"
+    },
+    "package-profile": {
+      "total": 3,
+      "failed": 0,
+      "skipped": 0,
+      "classes": {
+        "Hexalith.Parties.Ci.Tests.NativeAdminUiBuildProfileTests": 3
+      },
+      "xml": "package-profile.xml.gz",
+      "xmlSha256": "5ebf9b9d9f593f1b2a2d70d4acf065fd6f2e82d39d4b82c9184bf09575bdcde8",
+      "compiledConfiguration": "Release"
+    },
+    "source-profile-final": {
+      "total": 3,
+      "failed": 0,
+      "skipped": 0,
+      "classes": {
+        "Hexalith.Parties.Ci.Tests.NativeAdminUiBuildProfileTests": 3
+      },
+      "xml": "source-profile-final.xml.gz",
+      "xmlSha256": "f199356f8912bbc8b966786e541308a43141b499674aa1b588bb0aab972053b1"
+    },
+    "package-profile-final": {
+      "total": 3,
+      "failed": 0,
+      "skipped": 0,
+      "classes": {
+        "Hexalith.Parties.Ci.Tests.NativeAdminUiBuildProfileTests": 3
+      },
+      "xml": "package-profile-final.xml.gz",
+      "xmlSha256": "4a56311daa5c1d6cc7e389a42455fa0bfde049ffecadb59d3080487abd386cdb"
+    },
+    "review-source-profile": {
+      "total": 4,
+      "failed": 0,
+      "skipped": 0,
+      "classes": {
+        "Hexalith.Parties.Ci.Tests.NativeAdminUiBuildProfileTests": 4
+      },
+      "xml": "review-source-profile.xml.gz",
+      "xmlSha256": "68b071e610b3c5fa14d47be69e87f3ee0dfa83c8e433fe64e20e133386c2202e"
+    },
+    "review-package-profile": {
+      "total": 4,
+      "failed": 0,
+      "skipped": 0,
+      "classes": {
+        "Hexalith.Parties.Ci.Tests.NativeAdminUiBuildProfileTests": 4
+      },
+      "xml": "review-package-profile.xml.gz",
+      "xmlSha256": "dbfca50a3b4fe5ca6ce8e562d8cef2a8399109d122ec6066ebb402153e8c3f6d"
+    }
+  },
+  "sdk": "10.0.403",
+  "buildSettings": {
+    "TreatWarningsAsErrors": "true (repository policy; no override)",
+    "NuGetAudit": "repository default; no override",
+    "MinVerVersionOverride": "not set"
+  },
+  "testedSourceSha256": {
+    "tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj": "1e7e8922d860bc65ee6902fa7eff5679c88c278f46866d39ce5f2fda1fe08a8c",
+    "tests/Hexalith.Parties.Ci.Tests/NativeAdminUiBuildProfileTests.cs": "e6a5febf12db20269a5079367098f233cec12ddd3dcfe8b5a2359e93c1acf1c2"
+  },
+  "scope": "Focused build and catalog compatibility only; no full solution suite, deployed topology, owner acceptance or package publication qualification.",
+  "finalFocusedTotals": {
+    "passed": 178,
+    "failed": 0,
+    "skipped": 0,
+    "testReceipts": [
+      "source-catalog",
+      "package-catalog",
+      "source-selector",
+      "package-selector",
+      "review-source-profile",
+      "review-package-profile"
+    ],
+    "includesHistoricalRedAndSupersededProfileRuns": false
+  },
+  "commitlint": {
+    "message": "fix: preserve mapped native admin UI source builds\n",
+    "version": "21.2.4",
+    "configurationSha256": "7d7a89db3a7e3a78567ce79408fad48f414e1d487e93a39990e82822f850666b",
+    "packageLockSha256": "f9d8d96e168a795aa1afea103ebc2ccef1ed6552fd26be066429a5686f9e8531",
+    "check": "commitlint"
+  },
+  "gitPreflight": {
+    "fetch": [
+      "git",
+      "fetch",
+      "origin",
+      "main"
+    ],
+    "fetchExitCode": 0,
+    "head": "87a7b600353b8967ab7b537c1e8dbd4a4b1b5cdc",
+    "originMain": "87a7b600353b8967ab7b537c1e8dbd4a4b1b5cdc",
+    "divergence": "0\t0",
+    "changedSubmodules": ""
+  },
+  "apphostBaseline": {
+    "startCommand": [
+      "aspire",
+      "start",
+      "--apphost",
+      "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "--non-interactive",
+      "--format",
+      "Json"
+    ],
+    "startExitCode": 0,
+    "observationCheck": "aspire-baseline",
+    "stopCheck": "aspire-stop",
+    "scope": "Pre-edit resource-state observation only; resources were waiting on security readiness."
+  },
+  "review": {
+    "layer": "blind-hunter",
+    "implementationDefects": 0,
+    "triage": "../../spec-hxw006-admin-ui-source-mapping.md#review-triage-log",
+    "deferred": 0,
+    "patched": [
+      "R0",
+      "R3",
+      "R4",
+      "R5",
+      "R7",
+      "R8",
+      "R9"
+    ],
+    "rejectedLow": [
+      "R1",
+      "R2",
+      "R6",
+      "R10"
+    ]
+  },
+  "evidenceFilesSha256": {
+    "README.md": "5910c6608f20adf920cc807d70af20ffca21090a0fce48643d9138911fb1c4fe",
+    "aspire-baseline.log.gz": "f67dffeb96b6df5b4d588703f7797231dc89b8cb4a42d038dd60b1735d73ed1a",
+    "aspire-stop.log.gz": "b458a2add04b10f3da9ad469b5ef7a0781ab1af5856384e5599d6bd6897e8973",
+    "ci-final-package-build.log.gz": "05b410f76760e628fc73693c10af39d4c42853dad7952b5ef1fe2357c1380587",
+    "ci-final-source-build.log.gz": "ef5087f9d5d7fe251a1d55a0ea6653fdb52aaf09a1a37f9cc010059c19eb03c0",
+    "ci-package-build.log.gz": "9f1e81b91226c208395f94ca1f93d0bd9a3c749296073ec38c645eb66e617c58",
+    "ci-profile-build.log.gz": "55fd674c462d1941e730752a197b3adbf523bd3a6ad97684bcdfd1af94732d05",
+    "commitlint.log.gz": "e19d847d352de5bcb593e2ef53fba903a9738fa6ee447cd606281a31a753280b",
+    "native-dependency-modes.json": "04f8b0d9242decdacf3d00b0908470224e8353b67263b10b1cb1306f07dfb4a0",
+    "package-artifact-hashes.json": "1aeb9227539e683fcb0f94a94a171c7371a7cc004222408ed04ecdfeb30c624b",
+    "package-build.log.gz": "ab9c8fc50667bbf08b93190f1333cc06274a2e717b96869e8979122222bfb2cf",
+    "package-catalog-tests.log.gz": "78695e07afaaf68d1add7602d5001637c2e891cd0e15da190c0e4f2e89dad64e",
+    "package-catalog.xml.gz": "89ab22aadc26f81525b2b67ba453bfb5a75fe5dc4feaee761898a5f579fec72c",
+    "package-mapping.tar.gz": "7ba6d637f4a3131fdd3f1c7ad94bc4963a810dad8050dfe7666d74ef4dddc5d2",
+    "package-native-native-admin-ui-artifact.tsv.gz": "190d068f4f481c50fb1c45cb218f030a2a45b0dfe3baa04bcf8fab286eb869a9",
+    "package-native-project.assets.json.gz": "6691eaba382be10705294563f8752a2e831cccc3f79871f4f18dca08812119c5",
+    "package-prepare.json": "e9f2ee7853388483519274338c44a91436852093671fc7db9d8f7356897d2d6b",
+    "package-prepare.log.gz": "6adbe947eb921e2b0e2c61385f9627bc74b2e39a6d4df34600a16709473fd77e",
+    "package-profile-final-tests.log.gz": "95747ea8c6dac839c4ebb051e6a791dbdbc7c58bd0f972fbfd6720a94de0536a",
+    "package-profile-final.xml.gz": "4a56311daa5c1d6cc7e389a42455fa0bfde049ffecadb59d3080487abd386cdb",
+    "package-profile-tests.log.gz": "ce97fa559f3b52eac3b6d9f61f085d6c04145eede2cd380e8bec59324d142b62",
+    "package-profile.xml.gz": "5ebf9b9d9f593f1b2a2d70d4acf065fd6f2e82d39d4b82c9184bf09575bdcde8",
+    "package-selector-tests.log.gz": "bd141f25431f87c00d65bf76b35b2644dfc43720accabfc13ad049a630da3129",
+    "package-selector.xml.gz": "a782771f2cccc8fe4322b0eb912790a7c950e29dd1a5a1cbd945cc33d10c165b",
+    "profile-after-tests.log.gz": "064a45b11a9ffcd861491773f4e5f08e0dfb5249811c2933eb00e16b48bcabed",
+    "profile-after.xml.gz": "e15b8f544700ae0fc8f42c840081bab3005843079b36fbf84fc310bc704b8ba2",
+    "profile-before-tests.log.gz": "6b2d062e62fefbc16609b40ccd48e5a758234b9d2ace6ccd8f82b32f6e83b499",
+    "profile-before.xml.gz": "01cf157eba9a301a60b7f5ef32269885c581003419eec8c5f1c028b063439eca",
+    "review-ci-package-build.log.gz": "f7b083c693c63866062fe9845e3713cbdcfce400b95abc37d0b911056a983a5e",
+    "review-ci-source-build.log.gz": "c22711189208e127cecfebef0e5dc07a7750c4b9575352e8b8107a1e441899e8",
+    "review-package-profile-tests.log.gz": "762cc846dac6f8d3f925e97587826cdcb492d790851e3dd271335d7c455be9b0",
+    "review-package-profile.xml.gz": "dbfca50a3b4fe5ca6ce8e562d8cef2a8399109d122ec6066ebb402153e8c3f6d",
+    "review-source-profile-tests.log.gz": "382d2b668dad6ac04125bc949994d30387491e79b3ed6b4628d6650a7663e7d4",
+    "review-source-profile.xml.gz": "68b071e610b3c5fa14d47be69e87f3ee0dfa83c8e433fe64e20e133386c2202e",
+    "source-after-build.log.gz": "6fab5683c55f9135bb0efce62d4d3d4c6ddd8ed0f16232f9e452de13fe1ccdc7",
+    "source-artifact-hashes.json": "fe85f9d60acee9a9191b3375263f63b7f7ec652348ff48a067db74494a470395",
+    "source-before-build.log.gz": "fbb720b7bf3729a6ea2fe21b3533508cf252ab5b11e902d9c2c33882b665eb79",
+    "source-catalog-tests.log.gz": "50ad44959283492332b9f437f88fd740db2281d941721f0f5550822975ddf19d",
+    "source-catalog.xml.gz": "8ad665afef2fc7fd07d7726b12c1565e7e868aeeb9eafb1388224b7f68f00121",
+    "source-mapping.tar.gz": "487a5c2337f93fd51eac875c868f1c1d991d8dda24a9b240b0851e570e58e2e8",
+    "source-native-native-admin-ui-artifact.tsv.gz": "238346996ae4d60d4b550facb7b153c1a4b93946d0b1e6792234c38fce3bb3cf",
+    "source-native-project.assets.json.gz": "08cb02ea5a84aace25f32c83e6da23486d313792b47f5795dcdbcf8691a36003",
+    "source-negative-guard.log.gz": "6ccdeeb1be3f6424fef9ad07e0d48f2280ab666d8c81ee0a05ea4a50bd3ee30b",
+    "source-negative-nuget-guard.log.gz": "7f5caff560b553eb8f3f3f29d789572f378861e20f63fa822aed2ea1d192ac3e",
+    "source-prepare.json": "ce98fa3c461a9074f0c78f6abf762d8da8af17106f6ac0cc783d3114d7a017ea",
+    "source-prepare.log.gz": "a12b6ca070c05d5c10f209869c5841d16cd94c74aecdd678ae852848a6ec7078",
+    "source-profile-final-tests.log.gz": "49e89f3d005df93df0fefc9905eb1876127d7e953df8aac9edbd207036384801",
+    "source-profile-final.xml.gz": "f199356f8912bbc8b966786e541308a43141b499674aa1b588bb0aab972053b1",
+    "source-selector-tests.log.gz": "7a1902e573c287999a26df03c3043d06b5c66ba8879d3e10a421109e33763e26",
+    "source-selector.xml.gz": "4e3622f4ea35a83d6cb80f26bc74a454deac1c9ad083c16693df277d5ce7f878",
+    "staged-whitespace.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "warning-policy.log.gz": "315caa5fc9bf0ac255efb2d79aabdb0d6ca1be5539c23b95a077d0ecc6973a0b",
+    "whitespace-crlf.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "whitespace-default.log.gz": "91f93be138e735112440a11858782b4463141e0ab2c99e78df63aa0baf44dedf",
+    "whitespace-new-test.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+  }
+}
