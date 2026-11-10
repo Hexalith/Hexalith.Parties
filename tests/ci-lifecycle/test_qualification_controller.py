@@ -5,16 +5,51 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import re
 import socket
 import subprocess
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 SCRIPT = Path(__file__).resolve().parents[2] / 'scripts' / 'qualify-disposable-ci.py'
 SPEC = importlib.util.spec_from_file_location('qualification', SCRIPT)
 Q = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(Q)
+
+
+def retry_controller(diagnostics, events):
+    """An in-memory retry-with-peer owner whose only real filesystem state is its diagnostics directory."""
+    value = object.__new__(Q.Qualification)
+    value.journal = {'mappingHash': 'b' * 64, 'owners': [], 'observations': []}
+    value.prepared_mapping = {'Mode': 'package', 'Root': str(Q.ROOT), 'ContentHash': 'b' * 64,
+                              'Entries': [{'Identity': 'unit-source-only', 'Origin': 'source'}]}
+    value.evidence = Path(diagnostics).parent / 'retained'
+    value.issued = lambda item: {'runId': ('a' if item['label'] == 'retry' else 'c') * 32}
+    value.diagnostics = lambda item: Path(diagnostics)
+    value.observe = lambda kind, **fields: value.journal['observations'].append({'kind': kind, **fields})
+    value.begin = lambda label: {'label': label}
+    value.ready = lambda item: None
+    value.peer_scope = lambda item: {'containers': ['unit-peer'], 'claimHashes': {'unit': 'same'}}
+    value.attach = lambda *args: {'unit-admission': 'same-original-expiry'}
+    value.state = lambda item: {'testRun': None}
+    value.containers = lambda item: ['unit-owned-container']
+    value.withdrawn = lambda item, admitted: None
+    value.control = lambda item, action: None
+    value.children = {'peer': Mock()}
+    value.capture_result = lambda item: 0
+
+    def down(item, tag, expected=True):
+        events.append(('down', tag, expected))
+        if tag == 'provisioning-lock-refusal':
+            # The exact terminal and mapping the durable cleanup boundary requires; unit doubles only.
+            Q.write(Path(diagnostics) / 'selected-test.json', {
+                'runId': 'a' * 32, 'ownerId': 'a' * 32, 'terminalStatus': 'cancelled',
+                'terminalOutcome': {'exitCode': 'Cancelled'}, 'terminalAtUtc': '2026-11-03T00:00:00Z',
+                'sourceMappingHash': None, 'terminalCause': 'run-cancelled'})
+            Q.write(Path(diagnostics) / 'selected-source-mapping.json', value.prepared_mapping)
+    value.down = down
+    return value
 
 
 class ControllerSafetyTests(unittest.TestCase):
@@ -340,6 +375,142 @@ class ControllerSafetyTests(unittest.TestCase):
                     owner.launch(item)
                 spawn.assert_not_called()
             self.assertEqual(os.listdir(root / 'outside'), [])
+
+    def test_directory_admission_refuses_an_existing_leaf_not_private_to_this_user(self):
+        """An existing target owned by another uid, or open to group or other, is refused before use; shared
+        pre-existing ancestors stay admissible."""
+        for case in ('foreign-owner', 'group-bits', 'other-bits'):
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                leaf = root / 'leaf'
+                leaf.mkdir(mode=0o700)
+                if case == 'group-bits':
+                    leaf.chmod(0o750)
+                elif case == 'other-bits':
+                    leaf.chmod(0o701)
+                # Only root can create a directory for another uid, so the foreign case moves the effective owner.
+                owner = os.geteuid() + 1 if case == 'foreign-owner' else os.geteuid()
+                with patch.object(Q.os, 'geteuid', return_value=owner):
+                    with self.assertRaisesRegex(ValueError, re.escape(str(leaf))):
+                        Q.private_directory(leaf)
+                self.assertEqual(os.listdir(leaf), [])
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            shared = root / 'shared'
+            shared.mkdir()
+            shared.chmod(0o755)
+            (root / 'existing').mkdir(mode=0o700)
+            for target in (shared / 'made' / 'leaf', root / 'existing'):
+                with self.subTest(admitted=str(target.relative_to(root))):
+                    self.assertEqual(Q.private_directory(target), target)
+                    info = os.stat(target)
+                    self.assertEqual((info.st_uid, info.st_mode & 0o077), (os.geteuid(), 0))
+            self.assertEqual(os.stat(shared / 'made').st_mode & 0o777, 0o700)
+
+    def test_directory_admission_refuses_a_component_swapped_between_mkdir_and_reopen(self):
+        """Replace a component right after the call makes it; a different or non-empty directory is refused."""
+        for position in ('intermediate', 'leaf'):
+            for swap in ('different-directory', 'non-empty-directory'):
+                with self.subTest(position=position, swap=swap), tempfile.TemporaryDirectory() as temporary:
+                    root = Path(temporary)
+                    target = root / 'sub' / 'leaf'
+                    made = root / 'sub' if position == 'intermediate' else target
+                    swapped = []
+                    real_mkdir = os.mkdir
+
+                    def making(name, *args, **kwargs):
+                        result = real_mkdir(name, *args, **kwargs)
+                        if not swapped and os.fspath(name) == made.name:
+                            swapped.append(swap)
+                            made.rename(root / 'made-held')
+                            real_mkdir(made, 0o700)
+                            if swap == 'different-directory':
+                                os.chmod(made, 0o755)
+                            else:
+                                (made / 'planted').write_text('foreign')
+                        return result
+
+                    with patch.object(Q.os, 'mkdir', side_effect=making):
+                        with self.assertRaisesRegex(ValueError, 'replaced'):
+                            Q.private_directory(target)
+                    self.assertEqual(swapped, [swap])
+                    # Nothing was created inside the substituted directory, and the genuine one stays empty.
+                    self.assertEqual(os.listdir(made), [] if swap == 'different-directory' else ['planted'])
+                    self.assertEqual(os.listdir(root / 'made-held'), [])
+
+    def test_retry_locks_refuse_a_link_or_nonregular_entry_without_creating_through_it(self):
+        """Each retry lock is held only as a single-link regular file in the diagnostics directory."""
+        for name in ('attachments.lock', 'provisioning.lock'):
+            for entry in ('symlink', 'dangling-symlink', 'fifo', 'directory', 'hardlink'):
+                with self.subTest(lock=name, entry=entry), tempfile.TemporaryDirectory() as temporary:
+                    root = Path(temporary)
+                    diagnostics = root / 'diagnostics'
+                    diagnostics.mkdir()
+                    outside = root / 'outside'
+                    outside.mkdir()
+                    lock = diagnostics / name
+                    if entry in ('symlink', 'hardlink'):
+                        (outside / 'target.lock').write_text('')
+                        if entry == 'symlink':
+                            lock.symlink_to(outside / 'target.lock')
+                        else:
+                            os.link(outside / 'target.lock', lock)
+                    elif entry == 'dangling-symlink':
+                        lock.symlink_to(outside / 'created.lock')
+                    elif entry == 'fifo':
+                        os.mkfifo(lock)
+                    else:
+                        lock.mkdir()
+                    events = []
+                    value = retry_controller(diagnostics, events)
+                    with patch.object(Q.HELPER, 'retain_artifacts'), self.assertRaisesRegex(ValueError, 'linked|nonregular'):
+                        value.retry_with_peer()
+                    self.assertEqual(events, [])
+                    self.assertEqual(sorted(os.listdir(outside)), ['target.lock'] if entry in ('symlink', 'hardlink') else [])
+                    self.assertFalse(os.path.lexists(outside / 'created.lock'))
+                    if entry in ('symlink', 'hardlink'):
+                        self.assertEqual((outside / 'target.lock').read_text(), '')
+        with tempfile.TemporaryDirectory() as temporary:
+            # Ordinary locks are created private, and an existing single-link lock is reused in place so both
+            # sides contend on the same inode.
+            diagnostics = Path(temporary) / 'diagnostics'
+            diagnostics.mkdir()
+            (diagnostics / 'provisioning.lock').write_text('')
+            existing = os.stat(diagnostics / 'provisioning.lock').st_ino
+            events = []
+            value = retry_controller(diagnostics, events)
+            with patch.object(Q.HELPER, 'retain_artifacts'):
+                value.retry_with_peer()
+            self.assertEqual(events[:2], [('down', 'withdrawal-lock-refusal', False),
+                                          ('down', 'provisioning-lock-refusal', False)])
+            created = os.lstat(diagnostics / 'attachments.lock')
+            self.assertTrue(Q.stat.S_ISREG(created.st_mode))
+            self.assertEqual((created.st_mode & 0o777, created.st_nlink), (0o600, 1))
+            self.assertEqual(os.stat(diagnostics / 'provisioning.lock').st_ino, existing)
+
+    def test_launch_refuses_an_existing_launch_record_entry_or_a_separate_record_parent(self):
+        """A dangling launchRecord link counts as an existing record, and the record must share publicResult's parent."""
+        for case in ('dangling-link', 'separate-parent'):
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                (root / 'passing').mkdir(mode=0o700)
+                (root / 'other').mkdir(mode=0o700)
+                (root / 'outside').mkdir()
+                record = root / ('passing' if case == 'dangling-link' else 'other') / 'launch.json'
+                if case == 'dangling-link':
+                    record.symlink_to(root / 'outside' / 'launch.json')
+                owner = object.__new__(Q.Qualification)
+                owner.children = {}
+                # Reached only after a launch: the baseline's identity check then refuses with another message.
+                owner.recover_launch = lambda item: {'pid': 1, 'birth': '1', 'gateStatus': 'waiting'}
+                item = {'label': 'passing', 'receipt': str(root / 'passing' / 'receipt.json'),
+                        'launchRecord': str(record), 'publicResult': str(root / 'passing' / 'public-result.json')}
+                with patch.object(Q.subprocess, 'Popen') as spawn:
+                    with self.assertRaisesRegex(ValueError, '(?i)launch process record'):
+                        owner.launch(item)
+                    spawn.assert_not_called()
+                self.assertFalse(os.path.lexists(root / 'passing' / 'public-result.json'))
+                self.assertEqual(os.listdir(root / 'outside'), [])
 
     def test_peer_scope_hashes_the_validated_claim_bytes(self):
         """peer_scope digests the exact claim bytes it validated, even if the claim is replaced afterwards."""

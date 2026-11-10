@@ -1,0 +1,17 @@
+{
+  "schema": "parties.ordinary-launcher-stop-timing.v1",
+  "observedAtUtc": "2026-11-10T14:25:33.9333455+00:00",
+  "startup": {
+    "available": false,
+    "phase": "finalize-package-catalog",
+    "reason": "finalize-package-catalog: InvalidDataException: Actual runtime preparation validation failed: Runtime SDK qualification failed: Completed preparation belongs to another configuration/cohort\n"
+  },
+  "daprPathIsLauncher": false,
+  "launcherGraceSeconds": 10,
+  "quiescenceBudgetSeconds": 30,
+  "totalStopMs": null,
+  "quiescedMs": null,
+  "lastWorkerExitMs": null,
+  "survivors": [],
+  "resources": []
+}

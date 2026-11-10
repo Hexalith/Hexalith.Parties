@@ -41,8 +41,9 @@
         <section class="hx-parties-profile__section hx-parties-profile__notice" role="alert" aria-labelledby="@_failureId">
             <FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" id="@_failureId">@ConsumerPortalLabels.MyProfileFailureTitle</FluentText>
             <p>@ConsumerPortalLabels.MyProfileFailureMessage</p>
-            <FluentButton role="button" Class="hx-parties-profile__retry"
+            <FluentButton aria-disabled="@(_retryDisabled ? "true" : "false")" role="button" Class="hx-parties-profile__retry"
                           Appearance="ButtonAppearance.Outline"
+                          Disabled="@_retryDisabled"
                           OnClick="RetryAsync">
                 @ConsumerPortalLabels.MyProfileRetry
             </FluentButton>
@@ -175,6 +176,9 @@
     private string _identifierId => $"hx-parties-profile-identifiers-{_instanceId}";
     private string _stateId => $"hx-parties-profile-state-{_instanceId}";
     private string _datesId => $"hx-parties-profile-dates-{_instanceId}";
+
+    // A prerendered Retry has no Blazor listener until the circuit renders interactively; its click would be lost.
+    private bool _retryDisabled => !RendererInfo.IsInteractive;
 
     protected override Task OnInitializedAsync()
         => LoadProfileAsync();

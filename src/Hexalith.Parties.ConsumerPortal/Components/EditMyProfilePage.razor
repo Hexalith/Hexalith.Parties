@@ -48,8 +48,9 @@
         <section class="hx-parties-profile__section hx-parties-profile__notice" role="alert" aria-labelledby="@_failureId">
             <FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" id="@_failureId">@ConsumerPortalLabels.EditProfileFailureTitle</FluentText>
             <p>@ConsumerPortalLabels.EditProfileFailureMessage</p>
-            <FluentButton role="button" Class="hx-parties-profile__retry"
+            <FluentButton aria-disabled="@(_retryDisabled ? "true" : "false")" role="button" Class="hx-parties-profile__retry"
                           Appearance="ButtonAppearance.Outline"
+                          Disabled="@_retryDisabled"
                           OnClick="RetryAsync">
                 @ConsumerPortalLabels.EditProfileRetry
             </FluentButton>
@@ -213,6 +214,9 @@
 
     // Until the circuit renders interactively, a native submit would POST the prerendered form and discard typed values.
     private bool _editingDisabled => _isSaving || !RendererInfo.IsInteractive;
+
+    // A prerendered Retry has no Blazor listener until the circuit renders interactively; its click would be lost.
+    private bool _retryDisabled => !RendererInfo.IsInteractive;
 
     protected override void OnInitialized()
     {

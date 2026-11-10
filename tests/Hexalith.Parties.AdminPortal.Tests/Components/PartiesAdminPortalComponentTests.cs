@@ -29,7 +29,7 @@ using Shouldly;
 
 namespace Hexalith.Parties.AdminPortal.Tests.Components;
 
-public sealed class PartiesAdminPortalComponentTests : BunitContext
+public sealed class PartiesAdminPortalComponentTests : AdminPortalBunitContext
 {
     private const string AdminUserId = "admin-user";
 

@@ -23,7 +23,7 @@ using Shouldly;
 
 namespace Hexalith.Parties.AdminPortal.Tests.Components;
 
-public sealed class CreateEditPartyPageTests : BunitContext
+public sealed class CreateEditPartyPageTests : AdminPortalBunitContext
 {
     private const string AdminUserId = "admin-user";
 
@@ -42,6 +42,126 @@ public sealed class CreateEditPartyPageTests : BunitContext
         Services.AddScoped<AdminPortalEventStoreAdminLinks>();
         Services.AddScoped<AdminPortalGdprStateCoordinator>();
         Services.AddScoped<PartiesAdminListCoordinator>();
+    }
+
+    [Theory]
+    [InlineData("Static", false, false)]
+    [InlineData("Server", true, false)]
+    [InlineData("Static", false, true)]
+    [InlineData("Server", true, true)]
+    public void CreateAndEditRoutes_RendererInteractivity_GatesFieldsetsSaveAndCancel(string rendererName, bool isInteractive, bool edit)
+    {
+        PageRenderer = new RendererInfo(rendererName, isInteractive);
+        var api = new RecordingAdminPortalApiClient();
+        if (edit)
+        {
+            api.EnqueueDetail(new PartyDetail
+            {
+                Id = "route-party-1",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Ada Lovelace",
+                SortName = "Lovelace, Ada",
+                PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Lovelace" },
+                ContactChannels = [],
+                Identifiers = [],
+                ConsentRecords = [],
+                NameHistory = [],
+                CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+                LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+            });
+        }
+
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("scope-renderer");
+        string save = edit ? "Save changes" : "Create party";
+
+        IRenderedComponent<CreateEditPartyPage> cut = Render<CreateEditPartyPage>(p => p
+            .Add(x => x.RoutePartyId, edit ? "route-party-1" : null));
+
+        cut.WaitForAssertion(() =>
+        {
+            // Prerendered values stay visible; only the interactive circuit may accept edits or a submit.
+            FindTextInput(cut, "First name").Instance.Value.ShouldBe(edit ? "Ada" : string.Empty);
+            AngleSharp.Dom.IElement[] fieldsets = [.. cut.FindAll("fieldset")];
+            fieldsets.Length.ShouldBe(5);
+            fieldsets.ShouldAllBe(fieldset => fieldset.HasAttribute("disabled") == !isInteractive);
+            foreach (string action in new[] { save, "Cancel" })
+            {
+                AngleSharp.Dom.IElement button = cut.FindAll("fluent-button")
+                    .Single(item => item.TextContent.Trim() == action);
+                button.HasAttribute("disabled").ShouldBe(!isInteractive);
+                button.GetAttribute("aria-disabled").ShouldBe(isInteractive ? "false" : "true");
+            }
+        });
+        SetTextInput(cut, "First name", "Typed");
+        SetTextInput(cut, "Last name", "Value");
+
+        // A submit reaching the page before the circuit is interactive must issue no command and keep the values.
+        cut.Find("form").Submit();
+
+        if (isInteractive)
+        {
+            cut.WaitForAssertion(() => (api.CreateRequests.Count + api.UpdateRequests.Count).ShouldBe(1));
+            (edit ? api.UpdateRequests.Count : api.CreateRequests.Count).ShouldBe(1);
+        }
+        else
+        {
+            cut.WaitForAssertion(() =>
+            {
+                FindTextInput(cut, "First name").Instance.Value.ShouldBe("Typed");
+                FindTextInput(cut, "Last name").Instance.Value.ShouldBe("Value");
+            });
+            api.CreateRequests.ShouldBeEmpty();
+            api.UpdateRequests.ShouldBeEmpty();
+        }
+    }
+
+    [Theory]
+    [InlineData("Static", false)]
+    [InlineData("Server", true)]
+    public void OrganizationEditRoute_RendererInteractivity_GatesFieldsetsSaveAndCancel(string rendererName, bool isInteractive)
+    {
+        PageRenderer = new RendererInfo(rendererName, isInteractive);
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueDetail(EditSource(true));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("scope-renderer-organization");
+
+        IRenderedComponent<CreateEditPartyPage> cut = Render<CreateEditPartyPage>(p => p.Add(x => x.RoutePartyId, "edit-party"));
+
+        cut.WaitForAssertion(() =>
+        {
+            FindTextInput(cut, "Legal name").Instance.Value.ShouldBe("Prior organization");
+            AngleSharp.Dom.IElement[] fieldsets = [.. cut.FindAll("fieldset")];
+            fieldsets.Length.ShouldBe(5);
+            fieldsets.ShouldContain(fieldset => fieldset.QuerySelector("legend")!.TextContent == "Organization details");
+            fieldsets.ShouldAllBe(fieldset => fieldset.HasAttribute("disabled") == !isInteractive);
+            foreach (string action in new[] { "Save changes", "Cancel" })
+            {
+                AngleSharp.Dom.IElement button = cut.FindAll("fluent-button")
+                    .Single(item => item.TextContent.Trim() == action);
+                button.HasAttribute("disabled").ShouldBe(!isInteractive);
+                button.GetAttribute("aria-disabled").ShouldBe(isInteractive ? "false" : "true");
+            }
+        });
+        SetTextInput(cut, "Legal name", "Typed organization");
+
+        // A submit reaching the page before the circuit is interactive must issue no update and keep the value.
+        cut.Find("form").Submit();
+
+        if (isInteractive)
+        {
+            cut.WaitForAssertion(() => api.UpdateRequests.Count.ShouldBe(1));
+            api.UpdateRequests[0].Command.OrganizationDetails.ShouldNotBeNull().LegalName.ShouldBe("Typed organization");
+        }
+        else
+        {
+            cut.WaitForAssertion(() => FindTextInput(cut, "Legal name").Instance.Value.ShouldBe("Typed organization"));
+            api.UpdateRequests.ShouldBeEmpty();
+        }
+
+        api.CreateRequests.ShouldBeEmpty();
     }
 
     [Fact]

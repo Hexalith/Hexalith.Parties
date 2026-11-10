@@ -5,6 +5,7 @@ using Hexalith.Parties.ConsumerPortal.Services;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.FluentUI.AspNetCore.Components;
 
@@ -12,7 +13,7 @@ using Shouldly;
 
 namespace Hexalith.Parties.ConsumerPortal.Tests.Components;
 
-public sealed class MyProfilePageTests : BunitContext
+public sealed class MyProfilePageTests : ConsumerPortalBunitContext
 {
     public MyProfilePageTests()
     {
@@ -157,6 +158,36 @@ public sealed class MyProfilePageTests : BunitContext
             cut.Markup.ShouldNotContain("SECRET-ID", Case.Sensitive);
             cut.Markup.ShouldNotContain("party-erased-secret", Case.Sensitive);
         });
+    }
+
+    [Theory]
+    [InlineData("Static", false)]
+    [InlineData("Server", true)]
+    public void MyProfilePage_RendererInteractivity_GatesLoadFailureRetry(string rendererName, bool isInteractive)
+    {
+        PageRenderer = new RendererInfo(rendererName, isInteractive);
+        var client = new QueueProfileDataClient(
+            _ => Task.FromException<PartyDetail>(new InvalidOperationException("load failure")),
+            _ => Task.FromResult(CurrentPerson()));
+        Services.AddSingleton<IConsumerProfileDataClient>(client);
+
+        IRenderedComponent<MyProfilePage> cut = Render<MyProfilePage>();
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find("[role='alert']").TextContent.ShouldContain("We couldn't load your profile details.");
+            // A prerendered Retry has no listener until the circuit renders interactively; its click would be lost.
+            AngleSharp.Dom.IElement retry = cut.FindAll("fluent-button").ShouldHaveSingleItem();
+            retry.HasAttribute("disabled").ShouldBe(!isInteractive);
+            retry.GetAttribute("aria-disabled").ShouldBe(isInteractive ? "false" : "true");
+        });
+        client.CallCount.ShouldBe(1);
+        if (isInteractive)
+        {
+            cut.Find("fluent-button").Click();
+            cut.WaitForAssertion(() => cut.Markup.ShouldContain("Ada Lovelace"));
+            client.CallCount.ShouldBe(2);
+        }
     }
 
     [Fact]

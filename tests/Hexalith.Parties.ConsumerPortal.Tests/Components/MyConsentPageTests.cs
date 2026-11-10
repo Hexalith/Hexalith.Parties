@@ -48,6 +48,39 @@ public sealed class MyConsentPageTests : ConsumerPortalBunitContext
         client.LastWithdraw.ShouldBeNull();
     }
 
+    [Theory]
+    [InlineData("Static", false)]
+    [InlineData("Server", true)]
+    public void MyConsentPage_RendererInteractivity_GatesLoadFailureRetry(string rendererName, bool isInteractive)
+    {
+        PageRenderer = new RendererInfo(rendererName, isInteractive);
+        var client = new QueueConsentClient(
+            _ => Task.FromException<ConsumerConsentOverview>(new InvalidOperationException("load failure")),
+            _ => Task.FromResult(Overview()));
+        Services.AddSingleton<IConsumerConsentClient>(client);
+
+        IRenderedComponent<MyConsentPage> cut = Render<MyConsentPage>();
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.FindAll("[role='alert']").ShouldHaveSingleItem();
+            // A prerendered Retry has no listener until the circuit renders interactively; its click would be lost.
+            AngleSharp.Dom.IElement retry = cut.FindAll("fluent-button").ShouldHaveSingleItem();
+            retry.HasAttribute("disabled").ShouldBe(!isInteractive);
+            retry.GetAttribute("aria-disabled").ShouldBe(isInteractive ? "false" : "true");
+        });
+        client.OverviewCallCount.ShouldBe(1);
+        if (isInteractive)
+        {
+            cut.Find("fluent-button").Click();
+            cut.WaitForAssertion(() => cut.FindAll("[role='switch']").Count.ShouldBe(2));
+            client.OverviewCallCount.ShouldBe(2);
+        }
+
+        client.LastGrant.ShouldBeNull();
+        client.LastWithdraw.ShouldBeNull();
+    }
+
     [Fact]
     public void MyConsentPage_Loading_RendersSkeletonBeforeDataResolves()
     {

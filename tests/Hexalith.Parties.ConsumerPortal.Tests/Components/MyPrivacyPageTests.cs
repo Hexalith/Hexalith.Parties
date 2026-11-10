@@ -48,6 +48,51 @@ public sealed class MyPrivacyPageTests : ConsumerPortalBunitContext
         erasure.RequestCount.ShouldBe(0);
     }
 
+    [Theory]
+    [InlineData("Static", false)]
+    [InlineData("Server", true)]
+    public async Task MyPrivacyPage_RendererInteractivity_GatesExportDownloadAndCancelDeletionAsync(string rendererName, bool isInteractive)
+    {
+        PageRenderer = new RendererInfo(rendererName, isInteractive);
+        var export = new QueuePrivacyExportClient();
+        var erasure = new QueuePrivacyErasureClient(status: _ => Task.FromResult(new ConsumerPrivacyErasureResult(
+            ConsumerPrivacyErasureOutcome.Pending,
+            ConsumerPrivacyErasureState.ErasurePending,
+            CanCancel: true)));
+        Services.AddSingleton<IConsumerPrivacyExportClient>(export);
+        Services.Replace(ServiceDescriptor.Singleton<IConsumerPrivacyErasureClient>(erasure));
+
+        IRenderedComponent<MyPrivacyPage> cut = Render<MyPrivacyPage>();
+
+        // Prerendered markup has no Blazor listener until the circuit renders interactively; a click there would be lost.
+        cut.WaitForAssertion(() =>
+        {
+            ShouldBeGated(cut, "Export my data", isInteractive);
+            ShouldBeGated(cut, "Cancel deletion request", isInteractive);
+        });
+        export.CallCount.ShouldBe(0);
+        erasure.CancelCount.ShouldBe(0);
+
+        // A page offers Download only after an export, so reach it through the export action's own callback and
+        // observe its gate under the same renderer.
+        IRenderedComponent<FluentButton> prepare = cut.FindComponents<FluentButton>()
+            .Single(button => button.Markup.Contains("Export my data", StringComparison.Ordinal));
+        await cut.InvokeAsync(() => prepare.Instance.OnClick.InvokeAsync(new MouseEventArgs())).ConfigureAwait(true);
+
+        cut.WaitForAssertion(() => ShouldBeGated(cut, "Download JSON", isInteractive));
+        export.CallCount.ShouldBe(1);
+        JSInterop.Invocations.ShouldNotContain(invocation => invocation.Identifier == "HexalithPartiesConsumerPortal.downloadJson");
+        erasure.CancelCount.ShouldBe(0);
+
+        static void ShouldBeGated(IRenderedComponent<MyPrivacyPage> page, string action, bool interactive)
+        {
+            AngleSharp.Dom.IElement button = page.FindAll("fluent-button")
+                .Single(item => item.TextContent.Trim() == action);
+            button.HasAttribute("disabled").ShouldBe(!interactive);
+            button.GetAttribute("aria-disabled").ShouldBe(interactive ? "false" : "true");
+        }
+    }
+
     [Fact]
     public void MyPrivacyPage_InitialRender_ReplacesPlaceholderWithExportAction()
     {

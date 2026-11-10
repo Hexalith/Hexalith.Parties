@@ -116,13 +116,14 @@ def require(condition, message):
         raise ValueError(message)
 
 
-def open_unlinked(name, flags, parent, *, final=False):
+def open_unlinked(name, flags, parent, *, final=False, mode=0o600):
     """Open one component relative to its held parent; a link there is refused instead of followed.
 
     A final entry that cannot be opened as a file keeps its nonregular refusal (a socket raises ENXIO, for example).
+    The mode applies only when flags create the entry.
     """
     try:
-        return os.open(name, flags | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=parent)
+        return os.open(name, flags | os.O_NOFOLLOW | os.O_CLOEXEC, mode, dir_fd=parent)
     except OSError as error:
         if error.errno == errno.ENOENT:
             raise
@@ -137,12 +138,41 @@ def open_unlinked(name, flags, parent, *, final=False):
         raise
 
 
+def private_to_user(info):
+    """Whether a directory's status shows this effective user as owner and no group or other permission bits."""
+    return info.st_uid == os.geteuid() and not info.st_mode & 0o077
+
+
+def made_directory(component, parent, path):
+    """Reopen a component this call just made; only an empty directory private to this user is the one it made.
+
+    The reopened descriptor is readable, so emptiness is checked on the held directory itself, never by name.
+    Linux has no mkdir that returns a descriptor, so an empty 0o700 directory of this user substituted between the mkdir
+    and the reopen is indistinguishable from the one made and is still admitted.
+    """
+    try:
+        child = open_unlinked(component, os.O_RDONLY | os.O_DIRECTORY, parent)
+    except NotADirectoryError:
+        raise ValueError(f'Refusing a replaced qualification directory: {path}') from None
+    try:
+        info = os.fstat(child)
+        require(stat.S_ISDIR(info.st_mode) and private_to_user(info) and not os.listdir(child),
+                f'Refusing a replaced qualification directory: {path}')
+        return child
+    except BaseException:
+        os.close(child)
+        raise
+
+
 def held_directory(path, create=False):
-    """Return an O_PATH descriptor for a directory opened component by component without following links.
+    """Return a descriptor for a directory opened component by component without following links.
 
     Each component is opened relative to its held parent, so search permission suffices and a link at any component
-    is refused. With create, a missing component is made 0o700 relative to its held parent and then opened the same
-    way; nothing is created by path. The caller closes the descriptor.
+    is refused. With create, a missing component is made 0o700 relative to its held parent and reopened there; it is
+    admitted only as an empty directory owned by this user without group or other bits, so a directory substituted
+    between the mkdir and the reopen is refused, except an empty 0o700 directory of this same user, which no check can tell
+    from the one made. A component made concurrently by another caller is admitted as an existing one. Nothing is created
+    by path. The caller closes the descriptor.
     """
     path = Path(path).absolute()
     descriptor = os.open(path.anchor, os.O_PATH | os.O_DIRECTORY | os.O_CLOEXEC)
@@ -156,8 +186,9 @@ def held_directory(path, create=False):
                 try:
                     os.mkdir(component, 0o700, dir_fd=descriptor)
                 except FileExistsError:
-                    pass
-                child = open_unlinked(component, os.O_PATH | os.O_DIRECTORY, descriptor)
+                    child = open_unlinked(component, os.O_PATH | os.O_DIRECTORY, descriptor)
+                else:
+                    child = made_directory(component, descriptor, path)
             os.close(descriptor)
             descriptor = child
         return descriptor
@@ -203,10 +234,37 @@ def read(path, limit=8_388_608):
 def private_directory(path):
     """Admit a directory through held_directory, creating missing components 0o700; a link at any component is refused.
 
-    Existing components are admitted as they are: their owner and mode are not checked.
+    The target itself, whether it existed or was just made, must be owned by this user with no group or other bits.
+    Pre-existing shared ancestors such as / or the job's temporary root are admitted as they are.
     """
-    os.close(held_directory(path, create=True))
+    descriptor = held_directory(path, create=True)
+    try:
+        require(private_to_user(os.fstat(descriptor)),
+                f'Refusing a qualification directory that is not private to this user: {Path(path).absolute()}')
+    finally:
+        os.close(descriptor)
     return Path(path)
+
+
+def open_lock(directory, name):
+    """Open a lock file in its held directory without following a link or requiring exclusive creation.
+
+    The controller and the tool must contend on the same inode, so an existing entry is reused; it must be a
+    single-link regular file. A missing one is created 0o600. The caller closes the descriptor.
+    """
+    parent = held_directory(directory)
+    try:
+        # A link is refused by O_NOFOLLOW, so nothing is created through it; another entry type is refused by type.
+        descriptor = open_unlinked(name, os.O_RDWR | os.O_CREAT, parent, final=True, mode=0o600)
+    finally:
+        os.close(parent)
+    try:
+        info = os.fstat(descriptor)
+        require(stat.S_ISREG(info.st_mode) and info.st_nlink == 1, 'Refusing nonregular or linked qualification lock')
+        return descriptor
+    except BaseException:
+        os.close(descriptor)
+        raise
 
 
 def same_file(first, second):
@@ -697,10 +755,19 @@ class Qualification:
         return record
 
     def launch(self, item):
-        require(not Path(item['launchRecord']).exists(), 'Do not replace a previous launch process record')
         public = Path(item['publicResult']).absolute()
+        launch_record = Path(item['launchRecord']).absolute()
+        require(launch_record.parent == public.parent and launch_record.name != public.name,
+                'The launch process record must share the public result parent')
         parent = held_directory(public.parent)
         try:
+            # Any entry at the record name, including a dangling link, is a previous record; never test by path.
+            try:
+                os.lstat(launch_record.name, dir_fd=parent)
+            except FileNotFoundError:
+                pass
+            else:
+                raise ValueError('Do not replace a previous launch process record')
             descriptor = os.open(public.name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_CLOEXEC,
                                  0o600, dir_fd=parent)
         finally:
@@ -1002,8 +1069,10 @@ class Qualification:
         self.observe('actual-active-peer', ownerRunId=self.issued(peer)['runId'], scope=peer_before)
         admitted = self.attach(item, 'retry-admission')
         directory = self.diagnostics(item)
-        # Real OS locks affect only this issued owner's metadata; no production fault flag.
-        with (directory / 'attachments.lock').open('a+') as attachments, (directory / 'provisioning.lock').open('a+') as provisioning:
+        # Real OS locks affect only this issued owner's metadata; no production fault flag. Each lock is opened in
+        # the held diagnostics directory without following a link, and must be the single-link file the tool locks.
+        with os.fdopen(open_lock(directory, 'attachments.lock'), 'r+b', buffering=0) as attachments, \
+                os.fdopen(open_lock(directory, 'provisioning.lock'), 'r+b', buffering=0) as provisioning:
             fcntl.flock(attachments, fcntl.LOCK_EX | fcntl.LOCK_NB)
             fcntl.flock(provisioning, fcntl.LOCK_EX | fcntl.LOCK_NB)
             self.checkpoint('retry', 'withdrawal-refusal')

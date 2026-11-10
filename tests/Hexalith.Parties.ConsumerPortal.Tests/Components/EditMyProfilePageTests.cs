@@ -57,6 +57,37 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
         editClient.LastRequest.ShouldBeNull();
     }
 
+    [Theory]
+    [InlineData("Static", false)]
+    [InlineData("Server", true)]
+    public void EditMyProfilePage_RendererInteractivity_GatesLoadFailureRetry(string rendererName, bool isInteractive)
+    {
+        PageRenderer = new RendererInfo(rendererName, isInteractive);
+        var dataClient = new QueueProfileDataClient(
+            _ => Task.FromException<PartyDetail>(new InvalidOperationException("load failure")),
+            _ => Task.FromResult(CurrentPerson()));
+        Services.AddSingleton<IConsumerProfileDataClient>(dataClient);
+        Services.AddSingleton<IConsumerProfileEditClient>(new QueueProfileEditClient());
+
+        IRenderedComponent<EditMyProfilePage> cut = Render<EditMyProfilePage>();
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find("[role='alert']").TextContent.ShouldContain("We couldn't load the editable profile details.");
+            // A prerendered Retry has no listener until the circuit renders interactively; its click would be lost.
+            AngleSharp.Dom.IElement retry = cut.FindAll("fluent-button").ShouldHaveSingleItem();
+            retry.HasAttribute("disabled").ShouldBe(!isInteractive);
+            retry.GetAttribute("aria-disabled").ShouldBe(isInteractive ? "false" : "true");
+        });
+        dataClient.CallCount.ShouldBe(1);
+        if (isInteractive)
+        {
+            cut.Find("fluent-button").Click();
+            cut.WaitForAssertion(() => FindTextInput(cut, "First name").Instance.Value.ShouldBe("Ada"));
+            dataClient.CallCount.ShouldBe(2);
+        }
+    }
+
     [Fact]
     public void EditMyProfilePage_Loading_RendersSkeletonBeforeDataResolves()
     {

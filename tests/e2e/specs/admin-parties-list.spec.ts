@@ -1,6 +1,7 @@
 import { qualifyFrontComposerAssets } from '../helpers/frontcomposer-assets.js';
 import { expectNoBlockingAxeViolations } from '../helpers/a11y.js';
 import { expectAccordionFocusClearance } from '../helpers/accordion-focus.js';
+import { expectInteractiveShell } from '../helpers/interactive-shell.js';
 import { portalAction } from '../helpers/portal-actions.js';
 import { expect, test, type APIRequestContext, type BrowserContext, type Locator, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
@@ -11,6 +12,14 @@ const ADMIN_COOKIE = 'parties-admin-e2e';
 const REQUESTS_ROUTE = '/__parties/specimens/admin-portal/requests';
 const RESET_ROUTE = '/__parties/specimens/admin-portal/reset';
 const BASE_URL = process.env.BASE_URL ?? 'http://127.0.0.1:5072';
+
+// Holding circuit negotiation lets blazor.web.js define Fluent's elements, so the prerendered form is live custom
+// elements without any Blazor listener. Until the circuit renders, an Enter key press or a forced Save click would
+// submit the form natively, so its fieldsets, Save and Cancel must stay disabled.
+const NEGOTIATION_HELD_FORMS = [
+  { path: `${ADMIN_ROUTE}/new`, heading: 'Create party', save: 'Create party', firstName: '' },
+  { path: `${ADMIN_ROUTE}/ada-lovelace/edit`, heading: 'Edit party', save: 'Save changes', firstName: 'Ada' },
+] as const;
 
 test.describe('Admin parties list', () => {
   test.use({
@@ -538,6 +547,75 @@ test.describe('Admin parties list', () => {
     await expectNoBlockingAxeViolations(page, { route: `${ADMIN_ROUTE}/ada-lovelace/gdpr`, artifactPath: testInfo.outputPath('axe-admin-gdpr.json') });
   });
 
+  for (const form of NEGOTIATION_HELD_FORMS) {
+    test(`the ${form.path} form stays disabled and issues no command or native POST while circuit negotiation is held`, async ({ page, request }) => {
+      const documentRequests: string[] = [];
+      page.on('request', (outgoing) => {
+        if (outgoing.isNavigationRequest() && outgoing.frame() === page.mainFrame()) {
+          documentRequests.push(`${outgoing.method()} ${new URL(outgoing.url()).pathname}`);
+        }
+      });
+      let releaseNegotiation: () => void = () => undefined;
+      const negotiationHeld = new Promise<void>((resolve) => {
+        releaseNegotiation = resolve;
+      });
+      let heldNegotiations = 0;
+      await page.route((url) => url.pathname.endsWith('/_blazor/negotiate'), async (route) => {
+        heldNegotiations++;
+        await negotiationHeld;
+        await route.continue();
+      });
+      const fieldsets = page.locator('fieldset.hx-party-form__group');
+      const controls = [
+        page.getByRole('button', { name: form.save, exact: true }),
+        page.getByRole('button', { name: 'Cancel', exact: true }),
+      ];
+
+      try {
+        await page.goto(form.path);
+        await expect(page.getByRole('heading', { name: form.heading })).toBeVisible();
+        await expect.poll(() => heldNegotiations).toBe(1);
+        await expect.poll(() => page.evaluate(() => customElements.get('fluent-button') !== undefined
+          && customElements.get('fluent-text-input') !== undefined)).toBe(true);
+        await expect(page.locator('.fc-shell-root[data-fc-interactive="false"]')).toHaveCount(1);
+        await expect(prerenderedFirstNameInput(page)).toHaveValue(form.firstName);
+
+        await prerenderedFirstNameInput(page).press('Enter');
+        await controls[0].click({ force: true });
+
+        // A native submit starts its navigation inside the key press or click, so a POST or reload is already recorded here.
+        expect(documentRequests).toEqual([`GET ${form.path}`]);
+        await expect(page.locator('.fc-shell-root[data-fc-interactive="true"]')).toHaveCount(0);
+        expect(await formCommandCount(request)).toBe(0);
+        await expect(fieldsets).toHaveCount(5);
+        for (const fieldset of await fieldsets.all()) {
+          await expect(fieldset).toHaveAttribute('disabled', '');
+        }
+        for (const control of controls) {
+          await expect(control).toBeDisabled();
+        }
+        await expect(prerenderedFirstNameInput(page)).toHaveValue(form.firstName);
+      } finally {
+        releaseNegotiation();
+      }
+
+      await expectInteractiveShell(page);
+      for (const fieldset of await fieldsets.all()) {
+        await expect(fieldset).not.toHaveAttribute('disabled');
+      }
+      for (const control of controls) {
+        await expect(control).toBeEnabled();
+      }
+      expect(heldNegotiations).toBe(1);
+      expect(documentRequests).toEqual([`GET ${form.path}`]);
+      expect(await formCommandCount(request)).toBe(0);
+      await expect(page.getByRole('textbox', { name: 'First name', exact: true })).toHaveValue(form.firstName);
+      // Each field keeps an empty alert region; no submit ran, so no validation feedback was announced.
+      await expect(page.getByRole('alert').filter({ hasText: 'Fix the highlighted fields and retry.' })).toHaveCount(0);
+      expect(new URL(page.url()).pathname).toBe(form.path);
+    });
+  }
+
   test('create form submits and navigates with optimistic status', async ({ page, request }) => {
     await gotoAdmin(page);
 
@@ -545,6 +623,8 @@ test.describe('Admin parties list', () => {
     await page.waitForURL('**/admin/parties/new');
     await expect(page.getByRole('heading', { name: 'Create party' })).toBeVisible();
     await expect(page.getByRole('radiogroup', { name: 'Party type' })).toBeVisible();
+    // The form stays disabled until the circuit renders interactively.
+    await expectInteractiveShell(page);
     await page.getByRole('textbox', { name: 'First name', exact: true }).fill('Katherine');
     await page.getByRole('textbox', { name: 'Last name', exact: true }).fill('Johnson');
     await chooseOption(page, 'Contact type', 'Email');
@@ -570,6 +650,7 @@ test.describe('Admin parties list', () => {
     await page.getByRole('button', { name: 'Edit' }).click();
     await page.waitForURL('**/admin/parties/ada-lovelace/edit');
     await expect(page.getByRole('heading', { name: 'Edit party' })).toBeVisible();
+    await expectInteractiveShell(page);
     await expect(page.getByRole('textbox', { name: 'First name', exact: true })).toHaveValue('Ada');
     await page.getByRole('textbox', { name: 'Last name', exact: true }).fill('Byron');
 
@@ -585,6 +666,7 @@ test.describe('Admin parties list', () => {
   test('validation alert is assertive and preserves entered values', async ({ page }) => {
     await page.goto(`${ADMIN_ROUTE}/new`);
     await expect(page.getByRole('heading', { name: 'Create party' })).toBeVisible();
+    await expectInteractiveShell(page);
     await page.getByRole('textbox', { name: 'First name', exact: true }).fill('Katherine');
 
     await page.getByRole('button', { name: 'Create party' }).click();
@@ -596,6 +678,7 @@ test.describe('Admin parties list', () => {
   test('gateway validation rejection is announced without losing entered values', async ({ page }) => {
     await page.goto(`${ADMIN_ROUTE}/new`);
     await expect(page.getByRole('heading', { name: 'Create party' })).toBeVisible();
+    await expectInteractiveShell(page);
     await page.getByRole('textbox', { name: 'First name', exact: true }).fill('Katherine');
     await page.getByRole('textbox', { name: 'Last name', exact: true }).fill('Reject');
 
@@ -698,6 +781,15 @@ const enableAdminFixture = async (context: BrowserContext): Promise<void> => {
       sameSite: 'Lax',
     },
   ]);
+};
+
+// Before the circuit renders, the upgraded Fluent input has no accessible name yet; target the First name field's input.
+const prerenderedFirstNameInput = (page: Page): Locator =>
+  page.locator('fluent-text-input[aria-describedby$="-PersonFirstName-error"]').locator('input');
+
+const formCommandCount = async (request: APIRequestContext): Promise<number> => {
+  const snapshot = await requestSnapshot(request);
+  return snapshot.createRequests.length + snapshot.updateRequests.length;
 };
 
 const gotoAdmin = async (page: Page): Promise<void> => {

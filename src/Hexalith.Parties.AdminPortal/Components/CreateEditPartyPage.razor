@@ -43,7 +43,7 @@
                 </div>
             }
 
-            <fieldset class="hx-party-form__group" disabled="@_submitting">
+            <fieldset class="hx-party-form__group" disabled="@InputDisabled">
                 <legend>@EffectiveLabels.PartyType</legend>
                 <FluentRadioGroup role="radiogroup" Value="@_model.TypeValue"
                                   ValueChanged="@((string value) => OnTypeChanged(value))"
@@ -59,7 +59,7 @@
 
             @if (_model.SelectedType == PartyType.Person)
             {
-                <fieldset class="hx-party-form__group" disabled="@(_submitting || _detailsUnavailable)">
+                <fieldset class="hx-party-form__group" disabled="@DetailsDisabled">
                     <legend>@EffectiveLabels.PersonDetails</legend>
                     <div class="hx-party-form__grid">
                         @TextField(nameof(PartyFormModel.PersonPrefix), EffectiveLabels.Prefix, _model.PersonPrefix, OnPersonPrefixChanged)
@@ -72,7 +72,7 @@
             }
             else
             {
-                <fieldset class="hx-party-form__group" disabled="@(_submitting || _detailsUnavailable)">
+                <fieldset class="hx-party-form__group" disabled="@DetailsDisabled">
                     <legend>@EffectiveLabels.OrganizationDetails</legend>
                     <div class="hx-party-form__grid">
                         @TextField(nameof(PartyFormModel.OrganizationLegalName), EffectiveLabels.LegalName, _model.OrganizationLegalName, OnOrganizationLegalNameChanged)
@@ -86,7 +86,7 @@
                 </fieldset>
             }
 
-            <fieldset class="hx-party-form__group" disabled="@(_submitting || _detailsUnavailable)">
+            <fieldset class="hx-party-form__group" disabled="@DetailsDisabled">
                 <legend>@EffectiveLabels.ContactChannels</legend>
                 <div class="hx-party-form__grid">
                     <FluentSelect TOption="string" TValue="string"
@@ -106,7 +106,7 @@
                 </div>
             </fieldset>
 
-            <fieldset class="hx-party-form__group" disabled="@(_submitting || _detailsUnavailable)">
+            <fieldset class="hx-party-form__group" disabled="@DetailsDisabled">
                 <legend>@EffectiveLabels.Identifiers</legend>
                 <div class="hx-party-form__grid">
                     <FluentSelect TOption="string" TValue="string"
@@ -123,7 +123,7 @@
                 </div>
             </fieldset>
 
-            <fieldset class="hx-party-form__group" disabled="@_submitting">
+            <fieldset class="hx-party-form__group" disabled="@InputDisabled">
                 <legend>@EffectiveLabels.RelatedParty</legend>
                 <p class="hx-party-form__hint">@EffectiveLabels.RelatedPartyHelp</p>
                 <hexalith-party-picker @ref="_pickerElement"></hexalith-party-picker>
@@ -136,12 +136,12 @@
             </fieldset>
 
             <div class="hx-party-form__actions">
-                <FluentButton aria-disabled="@((_submitting || _detailsUnavailable) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Primary"
+                <FluentButton aria-disabled="@(DetailsDisabled ? "true" : "false")" role="button" Appearance="ButtonAppearance.Primary"
                               Type="ButtonType.Submit"
-                              Disabled="@(_submitting || _detailsUnavailable)">
+                              Disabled="@DetailsDisabled">
                     @SubmitLabel
                 </FluentButton>
-                <FluentButton aria-disabled="@(_submitting ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline" OnClick="CancelAsync" Disabled="@_submitting">
+                <FluentButton aria-disabled="@(InputDisabled ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline" OnClick="CancelAsync" Disabled="@InputDisabled">
                     @EffectiveLabels.Cancel
                 </FluentButton>
             </div>
@@ -205,6 +205,12 @@
     private string PageTitle => IsEdit ? EffectiveLabels.EditPartyTitle : EffectiveLabels.CreatePartyTitle;
 
     private string SubmitLabel => IsEdit ? EffectiveLabels.SaveChanges : EffectiveLabels.CreateParty;
+
+    // Until the circuit renders interactively, Enter or Save would POST the prerendered form natively and discard typed
+    // values, and a Cancel click would be lost, so input, Save and Cancel stay disabled, as in FrontComposer command forms.
+    private bool InputDisabled => _submitting || !RendererInfo.IsInteractive;
+
+    private bool DetailsDisabled => InputDisabled || _detailsUnavailable;
 
     protected override void OnInitialized()
     {
@@ -519,7 +525,8 @@
         CancellationTokenSource commandCts;
         lock (_workLock)
         {
-            if (_disposed != 0 || _editContext is null || _messages is null || !_canRenderForm || _isLoading || _submitting)
+            if (_disposed != 0 || _editContext is null || _messages is null || !_canRenderForm || _isLoading || _submitting
+                || !RendererInfo.IsInteractive)
             {
                 return;
             }

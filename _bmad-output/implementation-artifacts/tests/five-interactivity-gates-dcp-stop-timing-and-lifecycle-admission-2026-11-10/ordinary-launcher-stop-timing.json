@@ -1,0 +1,18 @@
+{
+  "schema": "parties.ordinary-launcher-stop-timing.v1",
+  "observedAtUtc": "2026-11-10T14:32:24.2610723+00:00",
+  "startup": {
+    "available": false,
+    "phase": "finalize-package-catalog",
+    "reason": "finalize-package-catalog: InvalidOperationException: Sequence contains no matching element",
+    "failure": "System.InvalidOperationException: Sequence contains no matching element\n   at System.Linq.ThrowHelper.ThrowNoMatchException()\n   at System.Linq.Enumerable.Single[TSource](IEnumerable\u00601 source, Func\u00602 predicate)\n   at Hexalith.Parties.AppHost.PartiesDevelopmentCatalogBootstrap.\u003C\u003Ec__DisplayClass27_0.\u003CCompleteCoreAsync\u003Eb__9(JsonNode invocation) in ${REPO}/src/Hexalith.Parties.AppHost/PartiesDevelopmentCatalogBootstrap.cs:line 360\n   at System.Linq.Enumerable.IListSelectIterator\u00602.Fill(IList\u00601 source, Span\u00601 results, Func\u00602 func)\n   at System.Linq.Enumerable.IListSelectIterator\u00602.ToList()\n   at Hexalith.Parties.AppHost.PartiesDevelopmentCatalogBootstrap.CompleteCoreAsync(IResourceBuilder\u00601 redis, CancellationToken token) in ${REPO}/src/Hexalith.Parties.AppHost/PartiesDevelopmentCatalogBootstrap.cs:line 360\n   at Hexalith.Parties.AppHost.PartiesDevelopmentCatalogBootstrap.\u003C\u003Ec__DisplayClass23_0.\u003C\u003CCompleteOwnedTestModelAsync\u003Eb__0\u003Ed.MoveNext() in ${REPO}/src/Hexalith.Parties.AppHost/PartiesDevelopmentCatalogBootstrap.cs:line 229\n--- End of stack trace from previous location ---\n   at Hexalith.Parties.AppHost.PartiesDevelopmentCatalogTool.RunOwnedPreparationAsync(String path, String owner, Func\u00601 prepare, Action\u00602 initializeMarker) in ${REPO}/src/Hexalith.Parties.AppHost/PartiesDevelopmentCatalogTool.cs:line 163\n   at Hexalith.Parties.AppHost.PartiesDevelopmentCatalogBootstrap.CompleteOwnedTestModelAsync(IDistributedApplicationBuilder builder, IResourceBuilder\u00601 redis, CancellationToken token) in ${REPO}/src/Hexalith.Parties.AppHost/PartiesDevelopmentCatalogBootstrap.cs:line 226\n   at Hexalith.Parties.AppHost.PartiesDevelopmentCatalogBootstrap.CompleteOwnedTestModelAsync(IDistributedApplicationBuilder builder, IResourceBuilder\u00601 redis, CancellationToken token) in ${REPO}/src/Hexalith.Parties.AppHost/PartiesDevelopmentCatalogBootstrap.cs:line 236\n   at Hexalith.Parties.IntegrationTests.HealthChecks.PartiesAspireTopologyFixture.InitializeAsync(CancellationToken cancellationToken) in ${REPO}/tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs:line 328"
+  },
+  "daprPathIsLauncher": false,
+  "launcherGraceSeconds": 10,
+  "quiescenceBudgetSeconds": 30,
+  "totalStopMs": null,
+  "quiescedMs": null,
+  "lastWorkerExitMs": null,
+  "survivors": [],
+  "resources": []
+}

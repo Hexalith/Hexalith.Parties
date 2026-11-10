@@ -44,8 +44,9 @@
         <section class="hx-parties-profile__section hx-parties-profile__notice" role="alert" aria-labelledby="@_failureId">
             <FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" id="@_failureId">@ConsumerPortalLabels.ConsentFailureTitle</FluentText>
             <p>@ConsumerPortalLabels.ConsentFailureMessage</p>
-            <FluentButton role="button" Class="hx-parties-profile__retry"
+            <FluentButton aria-disabled="@(RetryDisabled ? "true" : "false")" role="button" Class="hx-parties-profile__retry"
                           Appearance="ButtonAppearance.Outline"
+                          Disabled="@RetryDisabled"
                           OnClick="RetryAsync">
                 @ConsumerPortalLabels.MyProfileRetry
             </FluentButton>
@@ -398,6 +399,9 @@
     // Prerendered markup has no Blazor listener until the circuit renders interactively; a toggle there would be lost.
     private bool SwitchDisabled(ConsentToggleState row)
         => row.IsDisabled || !RendererInfo.IsInteractive;
+
+    // A prerendered Retry has no Blazor listener until the circuit renders interactively; its click would be lost.
+    private bool RetryDisabled => !RendererInfo.IsInteractive;
 
     private string PurposeId(string purposeKey)
         => $"hx-parties-consent-purpose-{_instanceId}-{purposeKey}";

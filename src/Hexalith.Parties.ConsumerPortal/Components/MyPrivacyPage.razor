@@ -41,16 +41,16 @@
                     }
 
                     <div class="hx-parties-privacy__actions">
-                        <FluentButton aria-disabled="@(_isPreparing ? "true" : "false")" role="button" Appearance="ButtonAppearance.Primary"
-                                      Disabled="@_isPreparing"
+                        <FluentButton aria-disabled="@(ExportDisabled ? "true" : "false")" role="button" Appearance="ButtonAppearance.Primary"
+                                      Disabled="@ExportDisabled"
                                       OnClick="PrepareExportAsync">
                             @ConsumerPortalLabels.PrivacyExportAction
                         </FluentButton>
 
                         @if (CanDownload)
                         {
-                            <FluentButton aria-disabled="@(_isDownloading ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
-                                          Disabled="@_isDownloading"
+                            <FluentButton aria-disabled="@(DownloadDisabled ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
+                                          Disabled="@DownloadDisabled"
                                           OnClick="DownloadAsync">
                                 @ConsumerPortalLabels.PrivacyExportDownload
                             </FluentButton>
@@ -157,8 +157,8 @@
                         }
                         else if (CanCancelErasure)
                         {
-                            <FluentButton aria-disabled="@(_erasureBusy ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
-                                          Disabled="@_erasureBusy"
+                            <FluentButton aria-disabled="@(ErasureCancelDisabled ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
+                                          Disabled="@ErasureCancelDisabled"
                                           OnClick="CancelErasureAsync">
                                 @ConsumerPortalLabels.PrivacyErasureCancelAction
                             </FluentButton>
@@ -233,6 +233,12 @@
 
     // Prerendered markup has no Blazor listener until the circuit renders interactively; a click there would be lost.
     private bool ErasureRequestDisabled => _erasureBusy || !RendererInfo.IsInteractive;
+
+    private bool ErasureCancelDisabled => _erasureBusy || !RendererInfo.IsInteractive;
+
+    private bool ExportDisabled => _isPreparing || !RendererInfo.IsInteractive;
+
+    private bool DownloadDisabled => _isDownloading || !RendererInfo.IsInteractive;
 
     private bool CanRequestErasure
         => !_confirmErasure

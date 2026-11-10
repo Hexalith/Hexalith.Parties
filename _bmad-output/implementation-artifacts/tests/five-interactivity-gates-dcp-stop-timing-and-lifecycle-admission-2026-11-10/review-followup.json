@@ -1,0 +1,174 @@
+{
+  "purpose": "Follow-up to the coordinator review: ten findings, each fixed with the smallest change; only the tests covering the edited files were run.",
+  "baselineCommit": "5e006a14c6fabb05de8b6ebb9427b7cfc7e54015",
+  "mode": "package (CI build-and-test catalog properties), Release, -warnaserror, -m:1, MinVerVersionOverride=1.0.0; same property set as verification.json",
+  "pathPlaceholders": {
+    "${REPO}": "the Parties repository root",
+    "${SCRATCH}": "session scratchpad directory",
+    "${HOME}": "the local user home"
+  },
+  "fixes": {
+    "live-test-assertions": "every captured launcher must have a DCP-reported exit code of 143; once a stop is reached, quiescence must have been observed and be within 30 s",
+    "live-test-descendant-walk": "per-task and per-child IOException guards (ENOENT/ESRCH) skip only the exited entry and keep walking its siblings",
+    "live-test-failure-observer": "every exception from BeginStop is caught and recorded as startup.observerFailure, so the fixture always runs its partial-startup teardown",
+    "live-test-skipped-launchers": "each modeled *-dapr-cli with no state, pid, start identity or launcher cmdline is recorded in skippedLaunchers with its reason; any skip fails the test when the topology was available",
+    "live-test-evidence-on-every-path": "observers are cancelled and the timing JSON written in a finally, before awaiting a still-running disposal; a run failure is recorded as runFailure",
+    "live-test-daprd-ordering": "daprdOutlivedLauncher is null unless every exit was observed, false when the launcher outlived daprd, true only when a daprd exited later; exitSamplingResolutionMs is 10",
+    "admin-organization-rows": "OrganizationEditRoute_RendererInteractivity_GatesFieldsetsSaveAndCancel Static/Server rows render the Organization details fieldset and assert the gate and a Static submit issuing no update",
+    "consumer-my-profile-retry": "/me load-failure Retry gated with !RendererInfo.IsInteractive plus aria-disabled; MyProfilePageTests now derive from ConsumerPortalBunitContext with Static/Server Retry rows",
+    "ledger-catalog-row": "names CallerAppId sample-blazor-ui (gateway accesscontrol.yaml) against the ordinary model sidecar projects; the complete mTLS profile is stated as not exercised here; prepare-aspire-runtime-hosts.sh prerequisite added to it and to the live row",
+    "d1-residual": "held_directory/made_directory docstrings and the D1 resolution state that an empty 0o700 same-user directory substituted between mkdir and reopen is still admitted"
+  },
+  "checks": {
+    "redproof-admin-organization": {
+      "description": "only the Organization details fieldset reverted to the baseline condition (_submitting || _detailsUnavailable); the razor restored byte for byte afterwards",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.AdminPortal.Tests/bin/Release/net10.0/Hexalith.Parties.AdminPortal.Tests.dll",
+        "-method",
+        "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.OrganizationEditRoute_RendererInteractivity_GatesFieldsetsSaveAndCancel",
+        "-method",
+        "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.CreateAndEditRoutes_RendererInteractivity_GatesFieldsetsSaveAndCancel"
+      ],
+      "exitCode": 1,
+      "total": 6,
+      "failed": 1,
+      "observation": "only the new organization Static row fails; the four existing person/create rows stay green, as the review found",
+      "buildLog": "review-redproof-admin-tests-build.log.gz",
+      "log": "review-redproof-bunit-admin-organization.log.gz"
+    },
+    "redproof-my-profile-retry": {
+      "description": "MyProfilePage.razor still at baseline (ungated Retry), new rows retained",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.ConsumerPortal.Tests/bin/Release/net10.0/Hexalith.Parties.ConsumerPortal.Tests.dll",
+        "-method",
+        "Hexalith.Parties.ConsumerPortal.Tests.Components.MyProfilePageTests.MyProfilePage_RendererInteractivity_GatesLoadFailureRetry"
+      ],
+      "exitCode": 1,
+      "total": 2,
+      "failed": 2,
+      "observation": "the Static row fails (Retry enabled) and the Server row fails (no aria-disabled)",
+      "buildLog": "review-redproof-consumer-tests-build.log.gz",
+      "log": "review-redproof-bunit-myprofile.log.gz"
+    },
+    "admin-create-edit-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.AdminPortal.Tests/bin/Release/net10.0/Hexalith.Parties.AdminPortal.Tests.dll",
+        "-class",
+        "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests"
+      ],
+      "exitCode": 0,
+      "total": 135,
+      "failed": 0,
+      "buildLog": "review-admin-tests-build.log.gz",
+      "log": "review-admin-create-edit-tests.log.gz"
+    },
+    "my-profile-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.ConsumerPortal.Tests/bin/Release/net10.0/Hexalith.Parties.ConsumerPortal.Tests.dll",
+        "-class",
+        "Hexalith.Parties.ConsumerPortal.Tests.Components.MyProfilePageTests"
+      ],
+      "exitCode": 0,
+      "total": 14,
+      "failed": 0,
+      "buildLog": "review-consumer-tests-build.log.gz",
+      "log": "review-myprofile-tests.log.gz"
+    },
+    "lifecycle-controller": {
+      "command": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "tests/ci-lifecycle/test_qualification_controller.py"
+      ],
+      "python": "3.14.4",
+      "exitCode": 0,
+      "ran": 29,
+      "log": "review-lifecycle-controller.log.gz"
+    },
+    "ordinary-catalog-caller-probe": {
+      "description": "temporary IntegrationTests probe (removed after the run): builds the ordinary AppHost model only, maps sidecar projects to app ids and lists each receiver ACL caller with no modeled project",
+      "probe": "ordinary_catalog_caller_probe.cs.gz",
+      "exitCode": 0,
+      "result": {
+        "modeledSidecarProjects": [
+          "eventstore",
+          "eventstore-admin",
+          "eventstore-admin-ui",
+          "parties",
+          "tenants"
+        ],
+        "unresolved": {
+          "eventstore (accesscontrol.yaml)": [
+            "sample-blazor-ui"
+          ]
+        }
+      },
+      "buildLog": "not retained (probe build); the probe compiled cleanly with -warnaserror after one CA2007 fix",
+      "log": "ordinary-catalog-caller-probe.log.gz"
+    },
+    "live-test-skip": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-method",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesOrdinaryLauncherStopTimingTests.OrdinaryLauncher_LiveDcpStop_RecordsWorkerExitTimingWithinQuiescenceBudgetAsync"
+      ],
+      "exitCode": 0,
+      "total": 1,
+      "skipped": 1,
+      "buildLog": "review-integration-build.log.gz",
+      "log": "review-live-test-skip.log.gz"
+    },
+    "live-test-opt-in": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-method",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesOrdinaryLauncherStopTimingTests.OrdinaryLauncher_LiveDcpStop_RecordsWorkerExitTimingWithinQuiescenceBudgetAsync"
+      ],
+      "environment": {
+        "PARTIES_ORDINARY_TOPOLOGY_TESTS": "true",
+        "PARTIES_ORDINARY_TOPOLOGY_TIMING_PATH": "${SCRATCH}/logs/review-ordinary-launcher-stop-timing.json"
+      },
+      "preparation": {
+        "command": [
+          "bash",
+          "scripts/prepare-aspire-runtime-hosts.sh",
+          "--gateway-profile",
+          "packaged",
+          "--configuration",
+          "Release"
+        ],
+        "exitCode": 0,
+        "log": "review-runtime-preparation.log.gz"
+      },
+      "exitCode": 1,
+      "total": 1,
+      "failed": 1,
+      "result": "unchanged outcome: finalize-package-catalog, Sequence contains no matching element; the record now carries startup.observerFailure (fixture.App unavailable, caught), runFailure null, exitSamplingResolutionMs 10 and an empty skippedLaunchers",
+      "timing": "review-ordinary-launcher-stop-timing.json",
+      "log": "review-ordinary-launcher-live.log.gz",
+      "xml": "review-ordinary-launcher-live.xml.gz"
+    }
+  },
+  "testedSourceSha256": {
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartiesOrdinaryLauncherStopTimingTests.cs": "702157269f1fc3326ec3ac74463b5394581e94d1e28494a00ba63343f1effe07",
+    "tests/Hexalith.Parties.AdminPortal.Tests/Components/CreateEditPartyPageTests.cs": "826c7649b15dc9f092fe45f3d08fbbb90d1f296880b74594d3824e316c851ea0",
+    "src/Hexalith.Parties.AdminPortal/Components/CreateEditPartyPage.razor": "286304b03fe5bcc9704352a10c06583e0eb94bdaa4be3591aa0675a0afba73a2",
+    "src/Hexalith.Parties.ConsumerPortal/Components/MyProfilePage.razor": "d74ddf7baf1c8d717ebb4c1c83c4d1c9a2803489381743cf47560164898d7c38",
+    "tests/Hexalith.Parties.ConsumerPortal.Tests/Components/MyProfilePageTests.cs": "999bcbf00c0066fdd724bc4b2edb74a05eed26ed6e4790b9717148146084f2d7",
+    "scripts/qualify-disposable-ci.py": "add9a9ba353a11ee28a3b82a2ddef83108741d77ce230bf8523ba6b5421138b6"
+  },
+  "ledgerSha256": "348658eeb2bbfd84171b6d0df5e3ba353d3cfb5832924f3238a2ade1eaabe450",
+  "notRun": [
+    "the full lanes and e2e repeats (coordinator-owned after this follow-up)",
+    "commit and commitlint (orchestrator-owned)"
+  ],
+  "localState": "the prepared Release runtime cohort was refreshed for the opt-in run; the later AdminPortal/ConsumerPortal test builds rebuilt shared src projects, so it must be refreshed again before another live run"
+}

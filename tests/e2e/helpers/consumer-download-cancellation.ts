@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test';
+import { expectInteractiveShell } from './interactive-shell.js';
 import { portalAction } from './portal-actions.js';
 
 /** Holds the browser stream-read seam while real page disposal cancels its registered service. */
@@ -9,6 +10,8 @@ export async function expectConsumerNavigationCancelsDownload(page: Page): Promi
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/me/privacy');
   await expect(page.getByRole('heading', { name: 'Data privacy', exact: true })).toBeFocused();
+  // Export stays disabled until the circuit renders interactively; a prerendered click would be lost.
+  await expectInteractiveShell(page);
   await portalAction(page, 'Export my data').click();
   await expect(page.getByRole('button', { name: 'Download JSON' })).toBeVisible();
   await page.evaluate(() => {

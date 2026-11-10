@@ -33,9 +33,10 @@ const PRE_INTERACTIVE_ACTIONS = [
 
 // Holding circuit negotiation lets blazor.web.js define Fluent's elements, so the prerendered controls are live
 // custom elements without any Blazor listener. Each must stay disabled: a forced Save click or an Enter key press
-// would otherwise submit the edit form natively, and a switch or erasure click would be lost.
-const NEGOTIATION_HELD_ACTIONS = [
+// would otherwise submit the edit form natively, and a switch, erasure, export or cancellation click would be lost.
+const NEGOTIATION_HELD_ACTIONS: readonly NegotiationHeldAction[] = [
   {
+    title: '/me/edit',
     path: '/me/edit',
     heading: 'Edit profile',
     controls: (page: Page) => [page.getByRole('button', { name: 'Save changes' })],
@@ -45,6 +46,7 @@ const NEGOTIATION_HELD_ACTIONS = [
     },
   },
   {
+    title: '/me/consent',
     path: '/me/consent',
     heading: 'Consent',
     controls: (page: Page) => [
@@ -54,12 +56,28 @@ const NEGOTIATION_HELD_ACTIONS = [
     act: (page: Page) => page.getByRole('switch', { name: 'Marketing emails' }).click({ force: true }),
   },
   {
+    title: '/me/privacy',
     path: '/me/privacy',
     heading: 'Data privacy',
     controls: (page: Page) => [portalAction(page, 'Delete my data')],
     act: (page: Page) => portalAction(page, 'Delete my data').click({ force: true }),
   },
-] as const;
+  {
+    title: '/me/privacy Export my data',
+    path: '/me/privacy',
+    heading: 'Data privacy',
+    controls: (page: Page) => [portalAction(page, 'Export my data')],
+    act: (page: Page) => portalAction(page, 'Export my data').click({ force: true }),
+  },
+  {
+    title: '/me/privacy Cancel deletion request',
+    path: '/me/privacy',
+    heading: 'Data privacy',
+    erasureStatus: 'pending',
+    controls: (page: Page) => [page.getByRole('button', { name: 'Cancel deletion request', exact: true })],
+    act: (page: Page) => page.getByRole('button', { name: 'Cancel deletion request', exact: true }).click({ force: true }),
+  },
+];
 
 test.describe('Consumer portal route shells', () => {
   test.use({
@@ -103,6 +121,8 @@ test.describe('Consumer portal route shells', () => {
           await expectInteractiveShell(page);
           await expectAccordionFocusClearance(page.getByRole('switch', { name: 'Marketing emails', exact: true }));
         } else if (route.path === '/me/privacy') {
+          // Export stays disabled, and so unfocusable, until the circuit renders interactively.
+          await expectInteractiveShell(page);
           await expectAccordionFocusClearance(portalAction(page, 'Export my data'));
         }
       }
@@ -238,8 +258,11 @@ test.describe('Consumer portal route shells', () => {
   }
 
   for (const site of NEGOTIATION_HELD_ACTIONS) {
-    test(`a ${site.path} control stays disabled and issues no command or native POST while circuit negotiation is held`, async ({ context, page, request }) => {
+    test(`a ${site.title} control stays disabled and issues no command or native POST while circuit negotiation is held`, async ({ context, page, request }) => {
       await enableConsumerFixture(context);
+      if (site.erasureStatus) {
+        await enableConsumerErasureStatusFixture(context, site.erasureStatus);
+      }
       const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
       const documentRequests: string[] = [];
       page.on('request', (outgoing) => {
@@ -293,7 +316,17 @@ test.describe('Consumer portal route shells', () => {
       expect(documentRequests).toEqual([`GET ${site.path}`]);
       expect(await domainCommandCount(request)).toBe(0);
       await expect(page.getByRole('dialog')).toHaveCount(0);
-      await expect(page.locator('.hx-parties-profile').getByRole('status').filter({ hasText: /Saved|Deletion requested/ })).toHaveCount(0);
+      if (site.erasureStatus === 'pending') {
+        // The pending request is untouched: it still offers cancellation and was not cancelled.
+        await expect(page.getByRole('status').filter({ hasText: 'You can cancel until deletion begins' })).toBeVisible();
+        await expect(page.getByText('Deletion request cancelled.')).toHaveCount(0);
+      } else {
+        await expect(page.locator('.hx-parties-profile').getByRole('status').filter({ hasText: /Saved|Deletion requested/ })).toHaveCount(0);
+      }
+      if (site.title === '/me/privacy Export my data') {
+        await expect(page.getByRole('status').filter({ hasText: 'Ready to prepare your export.' })).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Download JSON' })).toHaveCount(0);
+      }
       if (site.path === '/me/edit') {
         await expect(page.getByRole('group', { name: 'Editable details' })).not.toHaveAttribute('disabled');
         await expect(firstNameInput(page)).toHaveValue('Consumer');
@@ -807,6 +840,15 @@ const expectConsentSwitchDescription = async (control: Locator, expectedTextPart
     expect(descriptionText).toContain(expected);
   }
 };
+
+interface NegotiationHeldAction {
+  title: string;
+  path: string;
+  heading: string;
+  erasureStatus?: 'pending';
+  controls: (page: Page) => Locator[];
+  act: (page: Page) => Promise<unknown>;
+}
 
 interface AdminPortalE2eSnapshot {
   updateRequests: AdminPortalRequestCapture[];
