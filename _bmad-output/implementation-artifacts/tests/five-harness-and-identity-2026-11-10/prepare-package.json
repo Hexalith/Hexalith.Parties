@@ -1,0 +1,24 @@
+{
+  "status": "prepared",
+  "outcome": {
+    "exitCode": "Success",
+    "phase": "None",
+    "category": "None",
+    "ruleId": null
+  },
+  "diagnostics": [],
+  "buildPreparation": {
+    "workspace": "/tmp/parties-five-harness-xwidBbll/package",
+    "mode": "package",
+    "mappingHash": "76982f02c05ed524c4eec2c3ca33e68f075f2a16bcc77f59a02b05419a1dc96c",
+    "environment": {
+      "CustomBeforeDirectoryBuildProps": "/tmp/parties-five-harness-xwidBbll/package/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "/tmp/parties-five-harness-xwidBbll/package/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "/tmp/parties-five-harness-xwidBbll/package/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "/tmp/parties-five-harness-xwidBbll/package/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "/tmp/parties-five-harness-xwidBbll/package/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "76982f02c05ed524c4eec2c3ca33e68f075f2a16bcc77f59a02b05419a1dc96c",
+      "Configuration": "Release"
+    }
+  }
+}

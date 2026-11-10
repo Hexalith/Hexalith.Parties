@@ -1,0 +1,318 @@
+{
+  "baselineCommit": "57ac6b8d259073d2d489c3c5ae1e21ce00b1ab99",
+  "rootGitlinks": {
+    "Hexalith.AI.Tools": "1745b6663ad32bb1288167135ed0f979366c53a0",
+    "Hexalith.Builds": "5ec1779040606be89306129a7d2b245258c9acd2",
+    "Hexalith.Commons": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+    "Hexalith.EventStore": "b437879df2339692d177774d1f076936da6ebd62",
+    "Hexalith.FrontComposer": "e972d0f06a8eec3446db0b2270fdb14eef4c1186",
+    "Hexalith.McpCli": "1c1f06b46bbe9e115022be8af75b10085c8ac360",
+    "Hexalith.Memories": "4ff3e6866ecb6d1a497e7063e972c24259252c40",
+    "Hexalith.Platform": "081178aa5cc01f5dc736ba0d1980aa80fedc6fe1",
+    "Hexalith.PolymorphicSerializations": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+    "Hexalith.Tenants": "5293ab9dca49b6298f1e3396367627009967cbfb"
+  },
+  "checks": {
+    "service-build-retry": {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "--configuration",
+        "Debug",
+        "--no-restore",
+        "--disable-build-servers",
+        "-m:1",
+        "--nologo"
+      ],
+      "exitCode": 0,
+      "log": "service-build-retry.log.gz"
+    },
+    "identity-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests",
+        "-failSkips",
+        "-xml",
+        "/tmp/parties-five-harness-xwidBbll/identity-tests.xml"
+      ],
+      "exitCode": 0,
+      "log": "identity-tests.log.gz"
+    },
+    "lifecycle-final-restore": {
+      "command": [
+        "dotnet",
+        "restore",
+        "tests/Hexalith.Parties.Platform.LifecycleTests/Hexalith.Parties.Platform.LifecycleTests.csproj",
+        "--force",
+        "--disable-build-servers",
+        "-m:1",
+        "--nologo"
+      ],
+      "exitCode": 0,
+      "log": "lifecycle-final-restore.log.gz"
+    },
+    "lifecycle-final-build": {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Platform.LifecycleTests/Hexalith.Parties.Platform.LifecycleTests.csproj",
+        "--configuration",
+        "Debug",
+        "--no-restore",
+        "--disable-build-servers",
+        "-m:1",
+        "--nologo"
+      ],
+      "exitCode": 0,
+      "log": "lifecycle-final-build.log.gz"
+    },
+    "persistence-cancellation-final-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Platform.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.Platform.IntegrationTests.dll",
+        "--filter-class",
+        "Hexalith.Parties.Platform.IntegrationTests.FunctionalObservationWriterTests",
+        "--minimum-expected-tests",
+        "2",
+        "--fail-skips",
+        "on"
+      ],
+      "exitCode": 0,
+      "log": "persistence-cancellation-final-tests.log.gz"
+    },
+    "ci-final-build": {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "--configuration",
+        "Debug",
+        "--disable-build-servers",
+        "-m:1",
+        "--nologo"
+      ],
+      "exitCode": 0,
+      "log": "ci-final-build.log.gz"
+    },
+    "ci-final-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests",
+        "-failSkips",
+        "-result-xml",
+        "/tmp/parties-five-harness-xwidBbll/ci-final-tests.xml"
+      ],
+      "exitCode": 0,
+      "log": "ci-final-tests.log.gz"
+    },
+    "integration-final-build": {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "--configuration",
+        "Release",
+        "--disable-build-servers",
+        "-m:1",
+        "--nologo"
+      ],
+      "exitCode": 0,
+      "log": "integration-final-build.log.gz"
+    },
+    "catalog-final-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogPreparationCleanupTests",
+        "-failSkips",
+        "-result-xml",
+        "/tmp/parties-five-harness-xwidBbll/catalog-final-tests.xml"
+      ],
+      "exitCode": 0,
+      "log": "catalog-final-tests.log.gz"
+    },
+    "scripts-final-tests": {
+      "command": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts",
+        "-v"
+      ],
+      "exitCode": 0,
+      "log": "scripts-final-tests.log.gz"
+    }
+  },
+  "tests": {
+    "identity": 325,
+    "pythonScripts": 85,
+    "ciWorkflow": 70,
+    "catalogPreparation": 13,
+    "nativeCancellationAndObservation": 2,
+    "total": 495,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testedSourceSha256": {
+    ".github/workflows/ci.yml": "e07b8be8b4a0798608da8dd24a753f4f5e5c36fc7dc1e258291f73914eeabf39",
+    "scripts/test_platform_declaration.py": "c596685195aeb9576ab9604f163c785b501b434b03ac7ee83fb3b4232740a49d",
+    "src/Hexalith.Parties.AppHost/PartiesDevelopmentCatalogTool.cs": "9adba8aaade7092c4b7a1040d1b597201c8508985d581c89fe0a1e82fe9d8fe1",
+    "src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs": "3dbe0851bb2d433dbe5f60e31c43be2aee0d1fbd8136c189986cbbfe100e83b3",
+    "tests/Hexalith.Parties.Ci.Tests/PartiesContainerPublishWorkflowTests.cs": "11cb7310a335e88e6db8ed45a898463ac69d25042a9cad0de399e278eafbd331",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/DevelopmentCatalogPreparationCleanupTests.cs": "8f12314cb7a6498f468dd66e9a9256b6a55dad952a904287d4a181d2b8e0a752",
+    "tests/Hexalith.Parties.Platform.IntegrationTests/FunctionalObservationWriterTests.cs": "3f026ce2e7f64af14acd24c9c7d0855757ccf897246f58b69c80c2d084214f02",
+    "tests/Hexalith.Parties.Platform.IntegrationTests/PartyEnvironmentTests.cs": "23cac8d395c1f208d5910f40b2cfc67e6a09f8c3668c6dc7e2503d844351c87a",
+    "tests/Hexalith.Parties.Platform.IntegrationTests/PartyPersistenceAssertions.cs": "2a6e830536d9218890f6837e7db45bdf7c87104966e897c99c5a83260aeccd3f",
+    "tests/Hexalith.Parties.Platform.LifecycleTests/LifecycleQualificationTests.cs": "2d5b29edc8b81ca3640f6e935bc1060dbd3afb08e5ea79f4b9a995ed3406edb7",
+    "tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs": "db2a77339335854a298ec9c09eb6b9af9c99d120ff7d644965d79b3063731538"
+  },
+  "testedAssemblySha256": {
+    "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll": "bd44f9618b774219ef709a811555a5c65b0417ca8123c285c65dc14dc0016bd3",
+    "src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Parties.dll": "dc7ce60ca82c6bd394d74a10164ef5a7efab8a173b4c8af09892932b6bf3f575",
+    "tests/Hexalith.Parties.Platform.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.Platform.IntegrationTests.dll": "4c6c9e48d204ba580b06f2fb424149d11869a95a92c0e04e310bfc6d22a5d907",
+    "tests/Hexalith.Parties.Platform.LifecycleTests/bin/Debug/net10.0/Hexalith.Parties.Platform.LifecycleTests.dll": "00c8b428a44971d00b7bf00c66b9db96677fbbe64d1a4f6c62450f0b65d46961",
+    "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll": "9ed692b762186120a210cba2a6a2d66c4f52901ef4126fdd09cf5cd837802f86",
+    "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll": "42a0388873b21f3dca8a7cdc6898b9828a2ecb8ec35e5f649b01f3fa6c2699db",
+    "src/Hexalith.Parties.AppHost/bin/Release/net10.0/Hexalith.Parties.AppHost.dll": "a010770e97ce9ebcf3baa390094084026979c314b8c6f1f3839144f16514d96a"
+  },
+  "sourceBuildBlocker": {
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "--configuration",
+      "Debug",
+      "--disable-build-servers",
+      "-m:1",
+      "--nologo"
+    ],
+    "exitCode": 1,
+    "rule": "HXW006",
+    "detail": "EventStore.Admin.UI inherited UseHexalithProjectReferences=false where the source mapping expects true.",
+    "log": "integration-build.log.gz",
+    "disposition": "Existing source Debug integration build conflict remains. Serialized package Release fallback compiles and executes the affected catalog controls without weakening mapping or warning gates."
+  },
+  "resolvedRestoreFailure": {
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "--configuration",
+      "Debug",
+      "--disable-build-servers",
+      "-m:1",
+      "--nologo"
+    ],
+    "exitCode": 1,
+    "rule": "HXW005",
+    "log": "service-build.log.gz",
+    "resolution": "Force restore through the same pinned source mapping, then build without restore; service-build-retry passes with zero warnings/errors."
+  },
+  "otherResolvedValidationFailures": [
+    {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogPreparationCleanupTests",
+        "-failSkips",
+        "-result-xml",
+        "/tmp/parties-five-harness-xwidBbll/catalog-tests.xml"
+      ],
+      "exitCode": 1,
+      "rule": "HXW006",
+      "log": "catalog-tests.log.gz",
+      "resolution": "Prepared fixture uses active build configuration; intentional private package children isolate inherited mapping hooks while enforcing actual restored SDK cohorts."
+    },
+    {
+      "command": [
+        "python3",
+        "-B",
+        "scripts/verify-public-package-integration.py",
+        "/tmp/parties-five-evidence-real-8p2f1zf1/artifact",
+        "--source",
+        "84e3df796ac977041a21ec7bd8e5789bdc44241a",
+        "--platform",
+        "081178aa5cc01f5dc736ba0d1980aa80fedc6fe1",
+        "--builds",
+        "5ec1779040606be89306129a7d2b245258c9acd2"
+      ],
+      "exitCode": 1,
+      "resolution": "The initial CLI invocation omitted required GitHub context; rerun with the original artifact repository/run/attempt passes. See prior-artifact-compatibility-corrected-context.json."
+    }
+  ],
+  "review": {
+    "findings": [
+      {
+        "id": "R1",
+        "verdict": "medium",
+        "finding": "Clean offline CI omitted Platform checkout needed by actual generator.",
+        "resolution": "Added root dependency and workflow contract guard."
+      },
+      {
+        "id": "R2",
+        "verdict": "medium",
+        "finding": "Pre-cancellation alone missed lost token linkage after work starts.",
+        "resolution": "Shared lifetime controls cancel a real stalled loopback HTTP body in both unchanged native facts."
+      },
+      {
+        "id": "R3",
+        "verdict": "medium",
+        "finding": "Temporary child build SDK was not pinned.",
+        "resolution": "Copy exact global.json into reader and fixture."
+      },
+      {
+        "id": "R4",
+        "verdict": "medium",
+        "finding": "Fixture hardcoded Debug in Release CI.",
+        "resolution": "Use executing assembly configuration; isolated package children remove only the owning source-mapping environment contract."
+      },
+      {
+        "id": "R5",
+        "verdict": "low",
+        "finding": "Prepared owner/adapter bytes and hash entries lacked regression assertions.",
+        "resolution": "Verify both actual staged bytes and inputHashes entries."
+      },
+      {
+        "id": "R6",
+        "verdict": "low",
+        "finding": "Late foreign directory admission lacked direct control.",
+        "resolution": "Added marker/content preservation and staging cleanup assertions."
+      },
+      {
+        "id": "R7",
+        "verdict": "low",
+        "finding": "Cleanup refusal lacked primary/secondary failure preservation assertions.",
+        "resolution": "Added exact original exception, attached cleanup exception and foreign-content assertions."
+      }
+    ],
+    "addressed": 7,
+    "deferred": 0,
+    "followup": "Independent follow-up inspected final deadline, environment isolation and added controls; no confirmed new defects."
+  },
+  "commitlint": {
+    "version": "21.2.4",
+    "command": [
+      "node_modules/.bin/commitlint",
+      "--edit",
+      "/tmp/parties-five-harness-xwidBbll/commit-message.txt",
+      "--verbose"
+    ],
+    "message": "fix: close five harness and identity deferrals\n",
+    "exitCode": 0,
+    "problems": 0,
+    "warnings": 0,
+    "log": "commitlint.log.gz"
+  },
+  "scope": "Local focused source tests, private catalog generation and historical-artifact compatibility only; no fresh hosted lifecycle, deployment, full solution or production qualification. No dependency or root submodule selection changed.",
+  "qualificationCredit": false
+}

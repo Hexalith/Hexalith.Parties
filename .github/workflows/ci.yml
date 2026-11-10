@@ -150,7 +150,7 @@ jobs:
           global-json-file: global.json
       - name: Initialize recorded catalog and gateway settings
         run: |
-          git -c submodule.recurse=false submodule update --init --depth 1 --checkout -- references/Hexalith.Builds references/Hexalith.EventStore references/Hexalith.Tenants references/Hexalith.Memories
+          git -c submodule.recurse=false submodule update --init --depth 1 --checkout -- references/Hexalith.Builds references/Hexalith.Platform references/Hexalith.EventStore references/Hexalith.Tenants references/Hexalith.Memories
           git submodule status -- references/Hexalith.Builds references/Hexalith.EventStore
       - name: Build public packages and run focused catalog qualification
         shell: bash

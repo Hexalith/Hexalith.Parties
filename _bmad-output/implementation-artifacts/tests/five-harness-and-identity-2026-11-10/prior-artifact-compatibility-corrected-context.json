@@ -1,0 +1,28 @@
+{
+  "command": [
+    "python3",
+    "-B",
+    "scripts/verify-public-package-integration.py",
+    "/tmp/parties-five-evidence-real-8p2f1zf1/artifact",
+    "--source",
+    "84e3df796ac977041a21ec7bd8e5789bdc44241a",
+    "--platform",
+    "081178aa5cc01f5dc736ba0d1980aa80fedc6fe1",
+    "--builds",
+    "5ec1779040606be89306129a7d2b245258c9acd2"
+  ],
+  "context": {
+    "disposable": true,
+    "jobId": "build-and-test",
+    "kind": "ci",
+    "operatingSystem": "Linux",
+    "repository": "Hexalith/Hexalith.Parties",
+    "runnerKind": "github-hosted",
+    "workflowAttempt": 1,
+    "workflowRunId": "42690523916"
+  },
+  "exitCode": 0,
+  "stdout": "{\"nativeCases\": 28, \"profile\": \"platform-package\", \"qualificationCredit\": false, \"readerRoles\": {\"copiedContracts\": \"public-nuget\", \"loadedContracts\": \"caller-source-test-dto\"}, \"runId\": \"e429d588196a690fe1718559caf34191\", \"source\": \"84e3df796ac977041a21ec7bd8e5789bdc44241a\"}\n",
+  "stderr": "",
+  "scope": "Unchanged genuine historical artifact only; no new runtime qualification"
+}

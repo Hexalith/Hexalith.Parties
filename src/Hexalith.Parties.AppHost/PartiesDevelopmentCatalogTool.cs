@@ -32,6 +32,7 @@ internal static class PartiesDevelopmentCatalogTool
             Path.Combine("src", "Hexalith.Platform.CatalogBuilder", "Hexalith.Platform.CatalogBuilder.csproj"));
         string build = Path.Combine(directory, "reader");
         CreatePrivateDirectory(build);
+        File.Copy(Path.Combine(repositoryRoot.FullName, "global.json"), Path.Combine(build, "global.json"));
         string project = Path.Combine(build, "Hexalith.Platform.CatalogBuilder.csproj");
         XDocument xml = XDocument.Load(template);
         xml.Root!.AddFirst(new XElement("Import", new XAttribute("Project", Path.Combine(repositoryRoot.FullName, "Directory.Packages.props"))));
@@ -129,25 +130,49 @@ internal static class PartiesDevelopmentCatalogTool
         {
             throw new InvalidDataException("A catalog preparation directory is already occupied.");
         }
-        Directory.CreateDirectory(path);
-        if (!OperatingSystem.IsWindows())
-        {
-            File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-        }
+        if (OperatingSystem.IsWindows()) { Directory.CreateDirectory(path); }
+        else { Directory.CreateDirectory(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute); }
     }
 
-    /// <summary>Runs preparation in a new owned directory and removes it after a fully stopped preparation failure.</summary>
-    internal static async Task RunOwnedPreparationAsync(string path, string owner, Func<Task> prepare)
+    /// <summary>Admits a fully initialized private directory atomically and removes stopped failed preparation.</summary>
+    /// <param name="path">The final private preparation directory.</param>
+    /// <param name="owner">The marker identifying this invocation.</param>
+    /// <param name="prepare">Preparation that may begin only after ownership admission.</param>
+    /// <param name="initializeMarker">An optional controlled marker writer for initialization failure tests.</param>
+    internal static async Task RunOwnedPreparationAsync(string path, string owner, Func<Task> prepare,
+        Action<StreamWriter, string>? initializeMarker = null)
     {
-        CreatePrivateDirectory(path);
-        using (var marker = new StreamWriter(new FileStream(Path.Combine(path, ".owner"), FileMode.CreateNew)))
+        if (Directory.Exists(path))
         {
-            marker.Write(owner);
+            throw new InvalidDataException("A catalog preparation directory is already occupied.");
         }
-        try { await prepare().ConfigureAwait(false); }
+        string staging = path + ".preparing-" + Guid.NewGuid().ToString("N");
+        bool staged = false;
+        bool admitted = false;
+        try
+        {
+            CreatePrivateDirectory(staging);
+            staged = true;
+            using (var marker = new StreamWriter(new FileStream(Path.Combine(staging, ".owner"), FileMode.CreateNew)))
+            {
+                if (initializeMarker is null) { marker.Write(owner); }
+                else { initializeMarker(marker, owner); }
+            }
+            Directory.Move(staging, path);
+            admitted = true;
+            await prepare().ConfigureAwait(false);
+        }
         catch (Exception failure)
         {
-            if (!failure.Data.Contains("CatalogOwnedProcessStillRunning")) { DeleteOwnedDirectory(path, owner); }
+            try
+            {
+                if (staged && !admitted) { Directory.Delete(staging, recursive: true); }
+                else if (admitted && !failure.Data.Contains("CatalogOwnedProcessStillRunning")) { DeleteOwnedDirectory(path, owner); }
+            }
+            catch (Exception cleanup)
+            {
+                failure.Data["CatalogOwnedDirectoryCleanupFailure"] = cleanup;
+            }
             throw;
         }
     }
@@ -175,7 +200,23 @@ internal static class PartiesDevelopmentCatalogTool
             start.ArgumentList.Add(argument);
         }
         start.Environment["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
+        ConfigurePublishedPackageProcess(start);
         return RunProcessAsync(start, Path.Combine(directory, log), token);
+    }
+
+    /// <summary>Keeps intentional private package builds independent of a parent's mapped source build.</summary>
+    /// <param name="start">The isolated published-package process configuration.</param>
+    internal static void ConfigurePublishedPackageProcess(ProcessStartInfo start)
+    {
+        foreach (string name in new[]
+        {
+            "CustomBeforeDirectoryBuildProps", "CustomAfterMicrosoftCommonProps",
+            "CustomBeforeDirectoryBuildTargets", "CustomAfterDirectoryBuildTargets",
+            "AfterMicrosoftNETSdkTargets", "HEXALITH_SOURCE_MAPPING_HASH", "Configuration",
+        })
+        {
+            start.Environment.Remove(name);
+        }
     }
 
     /// <summary>Drains both owned process streams while retaining only bounded diagnostic tails.</summary>

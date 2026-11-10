@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Net;
+using System.Net.Sockets;
 
 namespace Hexalith.Parties.Platform.IntegrationTests;
 
@@ -12,6 +14,15 @@ public sealed class FunctionalObservationWriterTests(ITestOutputHelper output)
     [Fact]
     public async Task DuplicateCanonicalWriteRefusesWhileRecheckPreservesOriginalBytesAsync()
     {
+        // An expired lifecycle may not start persistence, even before a handoff is consumed.
+        using var canceled = new CancellationTokenSource();
+        await canceled.CancelAsync().ConfigureAwait(true);
+        var assertions = new PartyPersistenceAssertions(new PlatformEnvironmentFixture(), output);
+        OperationCanceledException cancellation = await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            assertions.ExecuteAsync(canceled.Token)).ConfigureAwait(true);
+        Assert.Equal(canceled.Token, cancellation.CancellationToken);
+        await AssertPersistenceReadCancelsAsync().ConfigureAwait(true);
+
         string root = Path.Combine(Path.GetTempPath(), "parties-observation-io-" + Guid.NewGuid().ToString("N"));
         string directory = Path.Combine(root, "native-tests");
         Directory.CreateDirectory(directory);
@@ -46,6 +57,15 @@ public sealed class FunctionalObservationWriterTests(ITestOutputHelper output)
     [Fact]
     public async Task RecheckRequiresOriginalAndPreservesOutputOwnershipBoundsAsync()
     {
+        // Re-admission uses the same remaining lifetime as initial persistence.
+        using var canceled = new CancellationTokenSource();
+        await canceled.CancelAsync().ConfigureAwait(true);
+        var assertions = new PartyPersistenceAssertions(new PlatformEnvironmentFixture(), output);
+        OperationCanceledException cancellation = await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            assertions.RecheckAsync(canceled.Token)).ConfigureAwait(true);
+        Assert.Equal(canceled.Token, cancellation.CancellationToken);
+        await AssertPersistenceReadCancelsAsync().ConfigureAwait(true);
+
         string root = Path.Combine(Path.GetTempPath(), "parties-observation-io-" + Guid.NewGuid().ToString("N"));
         string directory = Path.Combine(root, "native-tests");
         Directory.CreateDirectory(directory);
@@ -64,5 +84,24 @@ public sealed class FunctionalObservationWriterTests(ITestOutputHelper output)
         {
             Directory.Delete(root, recursive: true);
         }
+    }
+    private static async Task AssertPersistenceReadCancelsAsync()
+    {
+        using var caller = new CancellationTokenSource();
+        using var request = new CancellationTokenSource();
+        using CancellationTokenSource operation = PartyEnvironmentTests.CreatePersistenceDeadline(caller.Token, request.Token);
+        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        using var client = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { Timeout = Timeout.InfiniteTimeSpan };
+        Task<HttpResponseMessage> pending = client.GetAsync(new Uri($"http://127.0.0.1:{port}/"), HttpCompletionOption.ResponseHeadersRead, operation.Token);
+        using TcpClient peer = await listener.AcceptTcpClientAsync(TestContext.Current.CancellationToken).ConfigureAwait(true);
+        await peer.GetStream().WriteAsync("HTTP/1.1 200 OK\r\nContent-Length: 1024\r\n\r\n"u8.ToArray(), TestContext.Current.CancellationToken).ConfigureAwait(true);
+        using HttpResponseMessage response = await pending.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken).ConfigureAwait(true);
+        Task<byte[]> body = response.Content.ReadAsByteArrayAsync(operation.Token);
+        Assert.False(body.IsCompleted);
+        await caller.CancelAsync().ConfigureAwait(true);
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => body.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken)).ConfigureAwait(true);
+        Assert.False(request.IsCancellationRequested);
     }
 }

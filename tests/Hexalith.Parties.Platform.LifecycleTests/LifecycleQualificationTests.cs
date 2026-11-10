@@ -21,7 +21,7 @@ public sealed class LifecycleQualificationTests(PlatformEnvironmentFixture fixtu
         string control = Path.Combine(directory, "control.json");
         _ = await ReadActionAsync(control, runId, bound.Token).ConfigureAwait(true);
 
-        await new PartyEnvironmentTests(fixture, output).RealDependencies_CreateQueryAndPersistMatchingPartyEvents().ConfigureAwait(true);
+        await new PartyPersistenceAssertions(fixture, output).ExecuteAsync(bound.Token).ConfigureAwait(true);
 
         string descriptor = Environment.GetEnvironmentVariable("HEXALITH_TEST_ENVIRONMENT_PATH") ?? throw new InvalidOperationException("The real runner descriptor is required.");
         byte[] descriptorBytes = await File.ReadAllBytesAsync(descriptor, bound.Token).ConfigureAwait(true);
@@ -41,7 +41,7 @@ public sealed class LifecycleQualificationTests(PlatformEnvironmentFixture fixtu
             if (action == "pass")
             {
                 bound.Token.ThrowIfCancellationRequested();
-                await new PartyPersistenceAssertions(fixture, output).RecheckAsync().ConfigureAwait(true);
+                await new PartyPersistenceAssertions(fixture, output).RecheckAsync(bound.Token).ConfigureAwait(true);
                 return;
             }
 

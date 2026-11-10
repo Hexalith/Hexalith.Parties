@@ -2272,10 +2272,16 @@ rollback: None required (test-only).
 - source_spec: `spec-published-catalog-sdk-adoption.md`
   summary: Bind G4 public image measurements to the issued execution interval.
   evidence: R-B4: the current public verifier accepts a2099measurement timestamp; check actual execution start/end and future-time refusal.
+  status: done 2026-11-10
+  resolution: Already delivered by the prior integration-evidence correction: measurements are bounded by the persistence interval and ordered after image start. All 24 public reader controls and the unchanged genuine hosted artifact pass; reconciled this stale entry without changing the reader.
+  verification: `spec-five-harness-and-identity-deferred-items.md`; `tests/five-harness-and-identity-2026-11-10/`.
 
 - source_spec: `spec-published-catalog-sdk-adoption.md`
   summary: Propagate the lifecycle qualification deadline through both nested persistence operations.
   evidence: R-B7: LifecycleQualificationTests creates240s cancellation but nested persistence and recheck use independent120s lifetimes; add bounded cancellation at the shared operation boundary.
+  status: done 2026-11-10
+  resolution: Initial persistence and recheck now receive the same lifecycle token and link it with runner/test cancellation under the existing 120-second cap. Existing native facts exercise expired admission and caller cancellation during a real stalled HTTP body read; native reporter identities are preserved.
+  verification: `spec-five-harness-and-identity-deferred-items.md`; `tests/five-harness-and-identity-2026-11-10/`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
   summary: Run the lifecycle controller safety tests automatically.
@@ -2347,10 +2353,16 @@ rollback: None required (test-only).
 - source_spec: `_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-05.md`
   summary: Ownership marker initialization can leak a preparation directory (medium; pre-existing later/concurrent work).
   evidence: 18dd525c3ee80b065bb410bc639cef89f15f163a moved marker creation/write outside the cleanup try. An I/O failure can leave an occupied directory that DeleteOwnedDirectory cannot authenticate. The released 50904cc4 source retained its initialization catch; this is a later regression. Review findings R-B03; durable triage in tests/sync-release-2026-11-05-closure-2026-11-09/review-triage.json.
+  status: done 2026-11-10
+  resolution: Initialize markers in private sibling staging and atomically admit complete ownership. Partial initialization and admission failures clean only that staging directory; competing and foreign owners survive. Controls verify partial writes, retries, late file/directory claims, cleanup refusal and unreaped-process retention.
+  verification: `spec-five-harness-and-identity-deferred-items.md`; `tests/five-harness-and-identity-2026-11-10/`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-05.md`
   summary: Split private catalog source staging lacks executed GenerateAsync regression (medium; pre-existing later/concurrent work).
   evidence: Preverified: existing cleanup cases invoke RunAsync via reflection, and normal CI selects configuration/cleanup classes without executing GenerateAsync. Program.cs references PublishedCatalogArtifactCohort in another source, so reverting to Program-only staging evades the selected tests but breaks runtime generation. This is a preserved concurrent development-catalog change outside the completed release snapshot. Review findings R-V01; durable triage in tests/sync-release-2026-11-05-closure-2026-11-09/review-triage.json.
+  status: done 2026-11-10
+  resolution: Ordinary CI now executes actual GenerateAsync against selected split CatalogBuilder sources and coherent package owners, checking the receipt, SDK pin, source/owner bytes and hashes. Added the required root Platform checkout; isolated package children retain exact cohort checks while excluding inherited source-mapping hooks.
+  verification: `spec-five-harness-and-identity-deferred-items.md`; `tests/five-harness-and-identity-2026-11-10/`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-05.md`
   summary: Canceled asset-staging test can leave its MSBuild process running (medium; pre-existing later/concurrent work).
@@ -2362,6 +2374,9 @@ rollback: None required (test-only).
 - source_spec: `_bmad-output/implementation-artifacts/spec-published-catalog-sdk-adoption.md`
   summary: Reject a missing identity observation when UTC moves behind its source observation during re-admission.
   evidence: medium; second resumed blind review S-B9. PartyIdentityQueryService returns Missing after the second admission on its empty-state path without the completedAt >= ObservedAt check used on its populated-state path. A clock rollback during that admission can make the source observation future-dated. This pre-existing identity authority behavior is independent of catalog SDK adoption; add a controlled TimeProvider rollback case before changing domain semantics.
+  status: done 2026-11-10
+  resolution: The empty-source branch compares its single completion UTC sample with the authoritative observation before returning Missing. Controlled rollback/equality/forward tick cases pass with authority valid throughout; all 325 identity handler controls pass.
+  verification: `spec-five-harness-and-identity-deferred-items.md`; `tests/five-harness-and-identity-2026-11-10/`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-published-catalog-sdk-adoption.md`
   summary: Establish pre-Build SDK composition cleanup under a fault after successful finalization.

@@ -887,6 +887,45 @@ public sealed class PartyIdentityQueryHandlerTests
         withdrawn.Evidence.ShouldBeNull();
     }
 
+    /// <summary>A complete empty source remains missing only when final admission does not precede its observation.</summary>
+    /// <param name="completionOffsetTicks">The completion time relative to the source observation.</param>
+    /// <param name="expectedOutcome">The outcome at the specified completion boundary.</param>
+    [Theory]
+    [InlineData(-1, PartyIdentityOutcome.Unavailable)]
+    [InlineData(0, PartyIdentityOutcome.Missing)]
+    [InlineData(1, PartyIdentityOutcome.Missing)]
+    public async Task EmptyAuthoritativeSource_RechecksObservationAfterAdmission(int completionOffsetTicks, PartyIdentityOutcome expectedOutcome)
+    {
+        var fixture = Service();
+        var query = Envelope(new ResolvePartyIdentity("tenant-a", "party-1"));
+        DateTimeOffset observedAt = Start.AddHours(12);
+        DateTimeOffset now = observedAt.AddSeconds(1);
+        AuthoritativeStreamReadResult source = await fixture.Reader.ReadAsync(new("tenant-a", "party", "party-1"), TestContext.Current.CancellationToken);
+        fixture.Reader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<CancellationToken>())
+            .Returns(source with { Stream = source.Stream! with { ObservedAt = observedAt } });
+        IdentityAdmissionEvidence grant = fixture.Authority.Admit(query).Evidence! with
+        {
+            IssuedAt = Start,
+            ExpiresAt = observedAt.AddDays(1),
+        };
+        int admissions = 0;
+        fixture.Authority.Admit(Arg.Any<QueryEnvelope>()).Returns(_ =>
+        {
+            if (Interlocked.Increment(ref admissions) == 2) { now = observedAt.AddTicks(completionOffsetTicks); }
+            return new PartyIdentityAdmissionResult(grant, null);
+        });
+        TimeProvider clock = Substitute.For<TimeProvider>();
+        ConfigureSystemTimer(clock);
+        clock.GetUtcNow().Returns(_ => now);
+        var service = new PartyIdentityQueryService(fixture.Authority, clock, fixture.Reader, fixture.Custody, identityOptions: fixture.Options);
+
+        PartyIdentityResult result = await service.ResolveAsync(query, TestContext.Current.CancellationToken);
+
+        admissions.ShouldBe(2, "The regression must reach re-admission after the empty source passes its initial observation check.");
+        result.Outcome.ShouldBe(expectedOutcome);
+        result.Evidence.ShouldBeNull();
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]

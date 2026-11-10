@@ -88,7 +88,8 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
             {
                 IdentityAdmissionEvidence? missingAuthority = (await deadline.RunAsync(_ => authority.Admit(envelope)).ConfigureAwait(false)).Evidence;
                 deadline.ThrowIfCancellationRequested();
-                return new(SameAuthority(admitted, missingAuthority, timeProvider.GetUtcNow())
+                DateTimeOffset missingCompletedAt = timeProvider.GetUtcNow();
+                return new(missingCompletedAt >= read.Stream!.ObservedAt && SameAuthority(admitted, missingAuthority, missingCompletedAt)
                     ? PartyIdentityOutcome.Missing : PartyIdentityOutcome.Unavailable, null);
             }
 

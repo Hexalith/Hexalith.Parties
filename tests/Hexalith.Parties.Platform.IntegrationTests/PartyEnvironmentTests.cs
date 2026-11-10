@@ -28,7 +28,13 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, IT
     /// <returns>The bounded real-service assertions and single canonical observation.</returns>
     [Fact]
     public Task RealDependencies_CreateQueryAndPersistMatchingPartyEvents() =>
-        ExerciseRealDependenciesAsync(recordCanonicalObservation: true);
+        ExerciseRealDependenciesAsync(recordCanonicalObservation: true, TestContext.Current.CancellationToken);
+
+    /// <summary>Runs initial persistence under the owning lifecycle operation's deadline.</summary>
+    /// <param name="cancellationToken">The caller's remaining operation lifetime.</param>
+    /// <returns>The complete dependency assertions and canonical observation.</returns>
+    internal Task ExerciseRealDependenciesAsync(CancellationToken cancellationToken) =>
+        ExerciseRealDependenciesAsync(recordCanonicalObservation: true, cancellationToken);
 
     /// <summary>Verifies the live full Parties gateway rejects an anonymous command-status request.</summary>
     /// <returns>The real gateway authorization check on the issued environment.</returns>
@@ -44,15 +50,17 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, IT
     }
 
     /// <summary>Rechecks the full real persistence path after a qualification hold without rewriting the first observation.</summary>
+    /// <param name="cancellationToken">The caller's remaining operation lifetime.</param>
     /// <returns>The bounded real-service command, query and exact-stream assertions.</returns>
-    internal Task RecheckRealDependenciesAsync() =>
-        ExerciseRealDependenciesAsync(recordCanonicalObservation: false);
+    internal Task RecheckRealDependenciesAsync(CancellationToken cancellationToken) =>
+        ExerciseRealDependenciesAsync(recordCanonicalObservation: false, cancellationToken);
 
-    private async Task ExerciseRealDependenciesAsync(bool recordCanonicalObservation)
+    private async Task ExerciseRealDependenciesAsync(bool recordCanonicalObservation, CancellationToken cancellationToken)
     {
-        using var bound = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken, fixture.Descriptor.RequestCancellation);
-        bound.CancelAfter(TimeSpan.FromSeconds(120));
+        cancellationToken.ThrowIfCancellationRequested();
+        using CancellationTokenSource bound = CreatePersistenceDeadline(cancellationToken, fixture.Descriptor.RequestCancellation);
         CancellationToken token = bound.Token;
+        token.ThrowIfCancellationRequested();
         string tenant = fixture.Descriptor.SyntheticTenantId;
         // The declared Tenants API owns system-scope routing; fixtures never infer its internal query bindings.
         using HttpResponseMessage tenantResponse = await fixture.Tenants.GetAsync($"/api/tenants/{Uri.EscapeDataString(tenant)}", token).ConfigureAwait(true);
@@ -137,6 +145,17 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, IT
             memoriesRegistryObserved = memoriesDocument.RootElement.GetProperty("id").GetString() == tenant
                 && memoriesDocument.RootElement.GetProperty("status").GetString() == "active",
         }, recordCanonicalObservation, token).ConfigureAwait(true);
+    }
+
+    /// <summary>Bounds persistence by both operation ownership and the current runner request.</summary>
+    /// <param name="cancellationToken">The caller's remaining qualification lifetime.</param>
+    /// <param name="requestCancellation">The descriptor's active request lifetime.</param>
+    /// <returns>The linked finite persistence lifetime owned by the caller.</returns>
+    internal static CancellationTokenSource CreatePersistenceDeadline(CancellationToken cancellationToken, CancellationToken requestCancellation)
+    {
+        var bound = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, TestContext.Current.CancellationToken, requestCancellation);
+        bound.CancelAfter(TimeSpan.FromSeconds(120));
+        return bound;
     }
 
     /// <summary>Requires the currently observed registry tenant to be the active run tenant.</summary>

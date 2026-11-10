@@ -152,6 +152,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         legacyCohort.ShouldContain("--filter-class Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests");
         legacyCohort.ShouldContain("--minimum-expected-tests 322 --fail-skips on");
         string latestCohort = ReadWorkflowJob(workflow, "eventstore-420-package-cohort");
+        latestCohort.ShouldContain("-- references/Hexalith.Builds references/Hexalith.Platform references/Hexalith.EventStore");
         latestCohort.ShouldContain("tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj");
         latestCohort.ShouldContain("--filter-class Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogConfigurationTests");
         latestCohort.ShouldContain("--filter-class Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogPreparationCleanupTests");
