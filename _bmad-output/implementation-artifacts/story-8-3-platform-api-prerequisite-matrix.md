@@ -128,7 +128,48 @@ all six canonical parity receipts remain Unvalidated until actually rerun.
 | PolymorphicSerializations | `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`) | `git ls-tree HEAD references/Hexalith.PolymorphicSerializations` -> `160000 commit bce4eb9f45c6b131b960ab4fa39e50ff01e51960 references/Hexalith.PolymorphicSerializations`; synchronized source selection; qualification still requires its own executed proof. |
 | Tenants | `8e20524574901d71ad5f4876804c64c3c6c87b88` (`v7.0.3-2-g8e205245`) | `git ls-tree HEAD references/Hexalith.Tenants` -> `160000 commit 8e20524574901d71ad5f4876804c64c3c6c87b88 references/Hexalith.Tenants`; synchronized source selection; qualification still requires its own executed proof. |
 
-### Current source observation — 2026-11-09 (published SDK 4.2 adoption)
+### Current source observation — 2026-11-10 (synchronized main sources)
+
+This observes the root selections that Parties
+`5e006a14c6fabb05de8b6ebb9427b7cfc7e54015` advanced on November 10, with
+Builds and Platform reset to the published pair the ordinary public gate
+requires. The advanced Platform `d7c74e8a5d5627a8773fb36652813fe743de3d6f`
+(`v1.10.0-19-gd7c74e8a`) has no release tag (`prepare-build` HXW011) and pins
+Builds `da4e896b164f35c0b830a32b975203bb922280f9` against the advanced Builds
+`11f8534fc89a2c4a18a984307e927abb6d6c7ff3` (HXW009), and
+`scripts/verify-public-package-integration.py` accepts only Platform
+`081178aa5cc01f5dc736ba0d1980aa80fedc6fe1` with Builds
+`5ec1779040606be89306129a7d2b245258c9acd2`. Builds therefore stays `v4.47.0`
+and Platform `v1.9.0`; with them `prepare-build` reports Success. AI.Tools,
+EventStore, FrontComposer, McpCli, Memories and Tenants keep their advanced
+`origin/main` commits, each a forward advance recorded in `.gitlink-signoff.tsv`
+under explicit user delegation, attributed to claude-agent. The effective
+package graph is unchanged.
+
+The graph selects EventStore `4.2.0`, Commons `2.30.10`, PolymorphicSerializations `1.19.8`, FrontComposer `4.7.6`, Memories `3.0.25`, Tenants `7.0.5`, and McpCli `2.0.1`.
+
+Selection does not revalidate historical parity receipts. All six canonical
+parity receipts remain Unvalidated; this is source-selection bookkeeping, not a
+new human I16/I20 approval. Runtime, exact-source CI, publication, custody,
+rollback deletion and candidate acceptance require their own bound evidence.
+Describe strings use the nearest release anchors, including `--match v2.0.1`
+for McpCli, avoiding operational tags. The published SDK 4.2 selection and every
+dated approval remain preserved below.
+
+| Root dependency | Current source identity | Release use |
+| --- | --- | --- |
+| AI.Tools | `8a3885dd22aea88edd57771cfe592c382df2c583` (`8a3885dd`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| Builds | `5ec1779040606be89306129a7d2b245258c9acd2` (`v4.47.0`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| Commons | `11555ace9efcae2928a00122dcba91243e5a8a1a` (`v2.30.10`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| EventStore | `3de922e1140e26fe2e0151682ee656fcf675b26b` (`v4.2.0-4-g3de922e1`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| FrontComposer | `01fc48e3955a8cec47ab1602f5cd5c8e286801da` (`v4.7.6-26-g01fc48e3`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| McpCli | `7f61892fc7807f2fe8ab90d9ef33f16bca1470f6` (`v2.0.1-57-g7f61892f`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| Memories | `1143ba17a2336f0d718fcff71e049c06350a45a2` (`v3.0.25-2-g1143ba17`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| Platform | `081178aa5cc01f5dc736ba0d1980aa80fedc6fe1` (`v1.9.0`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| PolymorphicSerializations | `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| Tenants | `019aa0a82d021e08475a68fc50eff3b6a0e6c111` (`v7.0.6-4-g019aa0a8`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+
+### Historical source observation — 2026-11-09 (published SDK 4.2 adoption)
 
 The requested SDK adoption selects genuine published Builds v4.47.0 and
 Platform v1.9.0, with exact module CLI 4.47.0. Builds source CI 42661065183

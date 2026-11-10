@@ -701,3 +701,16 @@ references/Hexalith.Platform|e39a9a2587ec150d550510763ab69db305d13fdb|validated-
 references/Hexalith.Builds|5ec1779040606be89306129a7d2b245258c9acd2|validated-advance|v4.47.0|codex-agent|2026-11-09
 references/Hexalith.Platform|081178aa5cc01f5dc736ba0d1980aa80fedc6fe1|validated-advance|v1.9.0|codex-agent|2026-11-09
 references/Hexalith.Tenants|5293ab9dca49b6298f1e3396367627009967cbfb|validated-advance|build/qualify-eventstore-4.2|codex-agent|2026-11-09
+
+# 2026-11-10 explicit user-delegated synchronization of the 5e006a14 /pushall
+# advance. Builds and Platform are reset to the published v4.47.0 / v1.9.0 pair
+# recorded 2026-11-09: the advanced Platform had no release tag and pinned a
+# different Builds, and the ordinary public gate accepts only that pair. Each
+# line below is a verified forward source selection on its origin/main only;
+# it grants no qualification, runtime, publication or release acceptance.
+references/Hexalith.AI.Tools|8a3885dd22aea88edd57771cfe592c382df2c583|validated-advance|origin/main@8a3885dd22ae|claude-agent|2026-11-10
+references/Hexalith.EventStore|3de922e1140e26fe2e0151682ee656fcf675b26b|validated-advance|origin/main@3de922e1140e|claude-agent|2026-11-10
+references/Hexalith.FrontComposer|01fc48e3955a8cec47ab1602f5cd5c8e286801da|validated-advance|origin/main@01fc48e3955a|claude-agent|2026-11-10
+references/Hexalith.McpCli|7f61892fc7807f2fe8ab90d9ef33f16bca1470f6|validated-advance|origin/main@7f61892fc780|claude-agent|2026-11-10
+references/Hexalith.Memories|1143ba17a2336f0d718fcff71e049c06350a45a2|validated-advance|origin/main@1143ba17a233|claude-agent|2026-11-10
+references/Hexalith.Tenants|019aa0a82d021e08475a68fc50eff3b6a0e6c111|validated-advance|origin/main@019aa0a82d02|claude-agent|2026-11-10

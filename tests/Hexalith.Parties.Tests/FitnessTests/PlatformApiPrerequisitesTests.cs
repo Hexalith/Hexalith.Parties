@@ -58,13 +58,28 @@ public sealed class PlatformApiPrerequisitesTests
     ];
 
     // Committed source observations are separate from historical migration/parity approvals.
-    private const string CurrentSelectedEventStoreSha = "b437879df2339692d177774d1f076936da6ebd62";
-    private const string CurrentSelectedEventStoreDescribe = "v4.1.0-55-gb437879d";
+    private const string CurrentSelectedEventStoreSha = "3de922e1140e26fe2e0151682ee656fcf675b26b";
+    private const string CurrentSelectedEventStoreDescribe = "v4.2.0-4-g3de922e1";
     // Observe the synchronized source independently of the upstream package release tag.
-    private const string CurrentSelectedEventStoreTag = "v4.1.0";
+    private const string CurrentSelectedEventStoreTag = "v4.2.0";
     // Current committed selections are observed independently of historical approvals
     // and executed parity receipts.
     private static readonly IReadOnlyDictionary<string, string> CurrentSelectedGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["references/Hexalith.AI.Tools"] = "8a3885dd22aea88edd57771cfe592c382df2c583",
+        ["references/Hexalith.Builds"] = "5ec1779040606be89306129a7d2b245258c9acd2",
+        ["references/Hexalith.Commons"] = "11555ace9efcae2928a00122dcba91243e5a8a1a",
+        ["references/Hexalith.EventStore"] = "3de922e1140e26fe2e0151682ee656fcf675b26b",
+        ["references/Hexalith.FrontComposer"] = "01fc48e3955a8cec47ab1602f5cd5c8e286801da",
+        ["references/Hexalith.McpCli"] = "7f61892fc7807f2fe8ab90d9ef33f16bca1470f6",
+        ["references/Hexalith.Memories"] = "1143ba17a2336f0d718fcff71e049c06350a45a2",
+        ["references/Hexalith.Platform"] = "081178aa5cc01f5dc736ba0d1980aa80fedc6fe1",
+        ["references/Hexalith.PolymorphicSerializations"] = "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+        ["references/Hexalith.Tenants"] = "019aa0a82d021e08475a68fc50eff3b6a0e6c111",
+    };
+
+    // The 2026-11-09 published SDK 4.2 selection; dated rows written while it was current keep these identities.
+    private static readonly IReadOnlyDictionary<string, string> PreviousSelectedGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["references/Hexalith.AI.Tools"] = "1745b6663ad32bb1288167135ed0f979366c53a0",
         ["references/Hexalith.Builds"] = "5ec1779040606be89306129a7d2b245258c9acd2",
@@ -80,16 +95,16 @@ public sealed class PlatformApiPrerequisitesTests
 
     private static readonly IReadOnlyDictionary<string, string> CurrentSelectedSourceDescribes = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        ["references/Hexalith.AI.Tools"] = "1745b666",
+        ["references/Hexalith.AI.Tools"] = "8a3885dd",
         ["references/Hexalith.Builds"] = "v4.47.0",
         ["references/Hexalith.Commons"] = "v2.30.10",
-        ["references/Hexalith.EventStore"] = "v4.1.0-55-gb437879d",
-        ["references/Hexalith.FrontComposer"] = "v4.7.6-25-ge972d0f0",
-        ["references/Hexalith.McpCli"] = "v2.0.1-31-g1c1f06b4",
-        ["references/Hexalith.Memories"] = "v3.0.25-1-g4ff3e686",
+        ["references/Hexalith.EventStore"] = "v4.2.0-4-g3de922e1",
+        ["references/Hexalith.FrontComposer"] = "v4.7.6-26-g01fc48e3",
+        ["references/Hexalith.McpCli"] = "v2.0.1-57-g7f61892f",
+        ["references/Hexalith.Memories"] = "v3.0.25-2-g1143ba17",
         ["references/Hexalith.Platform"] = "v1.9.0",
         ["references/Hexalith.PolymorphicSerializations"] = "v1.19.8-1-gbce4eb9f",
-        ["references/Hexalith.Tenants"] = "v7.0.5-4-g5293ab9d",
+        ["references/Hexalith.Tenants"] = "v7.0.6-4-g019aa0a8",
     };
 
     private static readonly string[] RequiredAbsentPayloadProtectionPaths =
@@ -876,6 +891,7 @@ public sealed class PlatformApiPrerequisitesTests
         {
             string describe = CurrentSelectedSourceDescribes[path];
             AssertCurrentSourceRow(currentSelection, path, identity, describe);
+            string previousIdentity = PreviousSelectedGitlinks[path];
             string historicalIdentity = path switch
             {
                 EventStoreRelativePath => "a9205f511b4f96b5daf94d65369d6dee63e0c623",
@@ -885,7 +901,7 @@ public sealed class PlatformApiPrerequisitesTests
                 "references/Hexalith.FrontComposer" => "fbe01c913cb863abb0fd4a317d370d36fff593b3",
                 "references/Hexalith.Tenants" => "33835a03e92579a26400e7cb7cf68d666c715b3e",
                 "references/Hexalith.McpCli" => "2e80701c31aafdf00abee05ac469a45ed76dfdf5",
-                _ => identity,
+                _ => previousIdentity,
             };
             advanceRow.ShouldContain($"{path["references/Hexalith.".Length..]} `{historicalIdentity}`");
             // The preceding published tuple remains independently bound as dated history.
@@ -897,7 +913,7 @@ public sealed class PlatformApiPrerequisitesTests
                 "references/Hexalith.McpCli" => "ae4a317f208829681dc8eec36a308bc36f3f9715",
                 "references/Hexalith.Platform" => "0f4e27f1f78310bd731c10c19dc51bb1e0345d44",
                 "references/Hexalith.Tenants" => "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
-                _ => identity,
+                _ => previousIdentity,
             };
             string synchronizedIdentity = path switch
             {
@@ -919,7 +935,7 @@ public sealed class PlatformApiPrerequisitesTests
                 "references/Hexalith.Builds" => "27145e52ffab5623198ba5efdab5cdb71aa42d28",
                 "references/Hexalith.Platform" => "e39a9a2587ec150d550510763ab69db305d13fdb",
                 "references/Hexalith.Tenants" => "d88aef6b52d7e8a2e2d81132b1d76b7e1d1f0f35",
-                _ => identity,
+                _ => previousIdentity,
             };
             synchronizedMainSelection.ShouldContain($"{path["references/Hexalith.".Length..]} `{synchronizedMainIdentity}`");
             AssertSelectedSourceObservation(root, path, identity);
@@ -2863,7 +2879,7 @@ public sealed class PlatformApiPrerequisitesTests
 
     private static string ReadCurrentSourceSelection(string matrix)
     {
-        const string currentHeading = "### Current source observation — 2026-11-09";
+        const string currentHeading = "### Current source observation — 2026-11-10";
         int currentStart = matrix.IndexOf(currentHeading, StringComparison.Ordinal);
         currentStart.ShouldBeGreaterThanOrEqualTo(0, currentHeading);
         int historicalStart = matrix.IndexOf("### Historical source observation", currentStart, StringComparison.Ordinal);
