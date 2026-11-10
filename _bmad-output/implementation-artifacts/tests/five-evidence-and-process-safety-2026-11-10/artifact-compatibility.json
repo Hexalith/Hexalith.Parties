@@ -1,0 +1,44 @@
+{
+  "command": [
+    "python3",
+    "-B",
+    "scripts/verify-public-package-integration.py",
+    "/tmp/parties-five-evidence-real-8p2f1zf1/artifact",
+    "--source",
+    "84e3df796ac977041a21ec7bd8e5789bdc44241a",
+    "--platform",
+    "081178aa5cc01f5dc736ba0d1980aa80fedc6fe1",
+    "--builds",
+    "5ec1779040606be89306129a7d2b245258c9acd2"
+  ],
+  "environmentContext": {
+    "disposable": true,
+    "jobId": "build-and-test",
+    "kind": "ci",
+    "operatingSystem": "Linux",
+    "repository": "Hexalith/Hexalith.Parties",
+    "runnerKind": "github-hosted",
+    "workflowAttempt": 1,
+    "workflowRunId": "42690523916"
+  },
+  "exitCode": 0,
+  "stdout": "{\"nativeCases\": 28, \"profile\": \"platform-package\", \"qualificationCredit\": false, \"readerRoles\": {\"copiedContracts\": \"public-nuget\", \"loadedContracts\": \"caller-source-test-dto\"}, \"runId\": \"e429d588196a690fe1718559caf34191\", \"source\": \"84e3df796ac977041a21ec7bd8e5789bdc44241a\"}\n",
+  "stderr": "",
+  "scope": "Compatibility with the unchanged genuine prior-run artifact; no fresh runtime or deployment qualification",
+  "artifact": {
+    "repository": "Hexalith/Hexalith.Parties",
+    "workflowRunId": 42690523916,
+    "name": "module-integration-diagnostics",
+    "files": {
+      "cleanup-1.json": "daa0f4bbff4f3978636826f38eefc22f5184cef790d0c38cb6072ad600614400",
+      "cleanup-2.json": "3689f28428f2952f53358dfd147013fdc2fdf0e6229a8562c7b7180c42511b49",
+      "execution.json": "cbb4773bd272b91b1859e66cad6f25789f56323067c2b7657fc77b79d613c07d",
+      "functional-observations-aca0d3ea7e5b063bc4f0e4eb469aba44088f89884603258a1e4b2bfdcf304edb.json": "aca0d3ea7e5b063bc4f0e4eb469aba44088f89884603258a1e4b2bfdcf304edb",
+      "invocation.json": "94f05d4050b459051183d6e8770b03d34e569d6c583fa38dbd23bcbc2d7fcb57",
+      "lifecycle-a19b4f1cb5308bd380ee6ad90e79b8fc08761f09efb183110eb614852ed1567c.json": "a19b4f1cb5308bd380ee6ad90e79b8fc08761f09efb183110eb614852ed1567c",
+      "loaded-assemblies-e429d588196a690fe1718559caf34191.json": "f4a321d3fd4ec882598e76d5e8ec5d098c58b2b69d916c24f216fb4df9fb33b1",
+      "native-4f3765e3aca624975befa5534a8c690371d4416f7b6e576823c6e5998d90ef5a.trx": "4f3765e3aca624975befa5534a8c690371d4416f7b6e576823c6e5998d90ef5a",
+      "test-result.json": "33c2e9da91bf63489ebbcd3b89e149f7c7162c361fd1fe2f6bab0325e02f5b99"
+    }
+  }
+}

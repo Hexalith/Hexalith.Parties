@@ -1,0 +1,36 @@
+{
+  "layer": "blind-hunter",
+  "findings": [
+    {
+      "id": "R1",
+      "verdict": "medium",
+      "route": "patch",
+      "finding": "The loaded fixture polluted the global native assembly inventory during parallel execution.",
+      "resolution": "The same replacement control now loads System.Text.Json and replaces it with System.Linq; both identities are excluded by native inventory filtering."
+    },
+    {
+      "id": "R2",
+      "verdict": "medium",
+      "route": "patch",
+      "finding": "A staging command exiting before an output-holding descendant left the orphan alive.",
+      "evidence": "Reviewer reflection control with an early-exiting shell retained an orphan after 10.4 seconds.",
+      "resolution": "Reuse the existing exclusive PackageTestProcessSupervisor, retaining ownership until descendants terminate and are reaped. The additional real detached-child/parent-exit control passes."
+    },
+    {
+      "id": "R3",
+      "verdict": "medium",
+      "route": "patch",
+      "finding": "Cleanup timeout could masquerade as expected caller cancellation.",
+      "resolution": "Convert cleanup deadline cancellation to TimeoutException and assert the cancellation exception carries the exact caller token."
+    },
+    {
+      "id": "R4",
+      "verdict": "low",
+      "route": "patch",
+      "finding": "Normal process reaping could remove /proc metadata between existence check and read.",
+      "resolution": "Read directly and accept FileNotFoundException/DirectoryNotFoundException. The supervisor owns and reaps the real staging child."
+    }
+  ],
+  "followup": "Static recheck found no remaining confirmed defects in the three C# files. Final rebuilt native and staging controls pass.",
+  "deferred": 0
+}

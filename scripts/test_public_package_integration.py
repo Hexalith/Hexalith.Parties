@@ -94,6 +94,9 @@ class PublicPackageEvidenceTests(unittest.TestCase):
         self.assertEqual(result["profile"], "platform-package")
         self.assertFalse(result["qualificationCredit"])
 
+    def test_persisted_effects_require_the_exact_issued_synthetic_tenant(self):
+        private_fixture.check_synthetic_tenant_boundaries(self, self.fixture, self.check)
+
     def test_counts_and_event_sequences_require_json_integers(self):
         f = self.fixture
         for field in ("eventCount", "metadataSequence", "sequenceNumber"):

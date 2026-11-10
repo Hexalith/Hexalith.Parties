@@ -158,6 +158,110 @@ class ToolOnlySignalTests(unittest.TestCase):
         self.assertEqual(calls[:3], [('signal', signal.SIGKILL), ('resume',), ('down', 'partial-startup-recovery')])
 
 
+class StableProcessHandleTests(unittest.TestCase):
+    """Real process exits cannot redirect an admitted signal to a replacement process."""
+
+    def launch(self):
+        child = subprocess.Popen([sys.executable, '-B', '-c', 'import sys; sys.stdin.buffer.read()'],  # nosec B603
+                                 stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        self.addCleanup(self.stop, child)
+        self.assertIsNone(child.poll())
+        return child
+
+    @staticmethod
+    def stop(child):
+        if child.poll() is None:
+            child.kill()
+        child.wait(timeout=10)
+        child.stdin.close()
+
+    def assert_closed(self, opened):
+        self.assertEqual(len(opened), 1)
+        with self.assertRaises(OSError):
+            os.fstat(opened[0])
+
+    @staticmethod
+    def capture_open(opened):
+        original = os.pidfd_open
+
+        def capture(pid):
+            descriptor = original(pid)
+            opened.append(descriptor)
+            return descriptor
+
+        return capture
+
+    def test_owned_process_receives_signal_through_a_closed_afterward_handle(self):
+        child = self.launch()
+        born = Q.birth(child.pid)
+        opened = []
+        with patch.object(Q.os, 'pidfd_open', side_effect=self.capture_open(opened)), \
+                patch.object(Q.os, 'kill') as numeric:
+            self.assertEqual(Q.signal_tool_processes({child.pid: born}, signal.SIGTERM), [child.pid])
+            numeric.assert_not_called()
+        self.assertEqual(child.wait(timeout=10), -signal.SIGTERM)
+        self.assert_closed(opened)
+
+    def test_foreign_birth_is_refused_after_open_and_closes_the_handle(self):
+        child = self.launch()
+        opened = []
+        with patch.object(Q.os, 'pidfd_open', side_effect=self.capture_open(opened)), \
+                patch.object(Q.signal, 'pidfd_send_signal') as send, patch.object(Q.os, 'kill') as numeric:
+            self.assertEqual(Q.signal_tool_processes({child.pid: 'foreign-birth'}, signal.SIGTERM), [])
+            send.assert_not_called()
+            numeric.assert_not_called()
+        self.assertIsNone(child.poll())
+        self.assert_closed(opened)
+
+    def test_exit_after_identity_check_keeps_signal_bound_to_the_dead_process(self):
+        original = self.launch()
+        born = Q.birth(original.pid)
+        opened = []
+        replacements = []
+        send = signal.pidfd_send_signal
+
+        def replace_after_check(pid):
+            self.assertEqual(pid, original.pid)
+            self.assertEqual(Q.os.readlink('/proc/self/fd/' + str(opened[0])), 'anon_inode:[pidfd]')
+            # The admitted process really exits after the handle is held. A new
+            # unrelated process must survive the attempted delivery to that handle.
+            send(opened[0], signal.SIGKILL)
+            original.wait(timeout=10)
+            replacements.append(self.launch())
+            return born
+
+        with patch.object(Q.os, 'pidfd_open', side_effect=self.capture_open(opened)), \
+                patch.object(Q, 'birth', side_effect=replace_after_check), patch.object(Q.os, 'kill') as numeric:
+            self.assertEqual(Q.signal_tool_processes({original.pid: born}, signal.SIGTERM), [])
+            numeric.assert_not_called()
+        self.assertEqual(original.returncode, -signal.SIGKILL)
+        self.assertEqual(len(replacements), 1)
+        self.assertIsNone(replacements[0].poll())
+        self.assert_closed(opened)
+
+    def test_process_exited_before_open_has_no_signal_or_numeric_fallback(self):
+        child = self.launch()
+        born = Q.birth(child.pid)
+        self.stop(child)
+        with patch.object(Q.signal, 'pidfd_send_signal') as send, patch.object(Q.os, 'kill') as numeric:
+            self.assertEqual(Q.signal_tool_processes({child.pid: born}, signal.SIGTERM), [])
+            send.assert_not_called()
+            numeric.assert_not_called()
+
+    def test_signal_failure_closes_handle_without_numeric_fallback(self):
+        child = self.launch()
+        born = Q.birth(child.pid)
+        opened = []
+        with patch.object(Q.os, 'pidfd_open', side_effect=self.capture_open(opened)), \
+                patch.object(Q.signal, 'pidfd_send_signal', side_effect=PermissionError('refused')), \
+                patch.object(Q.os, 'kill') as numeric:
+            with self.assertRaises(PermissionError):
+                Q.signal_tool_processes({child.pid: born}, signal.SIGTERM)
+            numeric.assert_not_called()
+        self.assertIsNone(child.poll())
+        self.assert_closed(opened)
+
+
 def step(workflow, name):
     return workflow.split('      - name: ' + name + '\n', 1)[1].split('\n      - ', 1)[0]
 

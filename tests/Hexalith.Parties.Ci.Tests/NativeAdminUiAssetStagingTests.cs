@@ -52,12 +52,10 @@ public sealed class NativeAdminUiAssetStagingTests
                         "--disable-build-servers", "-m:1", "-nr:false", "-p:NuGetAudit=false"];
                 foreach (string argument in arguments) { start.ArgumentList.Add(argument); }
                 start.ArgumentList.Add("-p:HexalithEventStoreRoot=" + Path.Combine(root, "sdk"));
-                using Process process = Process.Start(start)!;
-                Task<string> stdout = process.StandardOutput.ReadToEndAsync(TestContext.Current.CancellationToken);
-                Task<string> stderr = process.StandardError.ReadToEndAsync(TestContext.Current.CancellationToken);
-                await process.WaitForExitAsync(TestContext.Current.CancellationToken).ConfigureAwait(true);
-                string output = await stdout.ConfigureAwait(true);
-                process.ExitCode.ShouldBe(0, output + await stderr.ConfigureAwait(true));
+                using PackageTestProcessSupervisor supervisor = new(start, 10_000);
+                using Process process = Process.Start(supervisor.StartInfo)!;
+                (string output, string error) = await CaptureStagingProcessAsync(process, supervisor, TestContext.Current.CancellationToken).ConfigureAwait(true);
+                process.ExitCode.ShouldBe(0, output + error);
                 JsonDocument built = JsonDocument.Parse(File.ReadAllText(Directory.GetFiles(artifacts, "staticwebassets.build.json", SearchOption.AllDirectories).Single()));
                 string staged = AssertSdkMetadata(built, artifacts);
                 using JsonDocument runtime = JsonDocument.Parse(File.ReadAllText(Directory.GetFiles(artifacts, "Host.staticwebassets.runtime.json", SearchOption.AllDirectories).Single()));
@@ -103,6 +101,124 @@ public sealed class NativeAdminUiAssetStagingTests
             File.Exists(Path.Combine(Path.GetDirectoryName(project)!, "wwwroot", "css", "app.css")).ShouldBeFalse();
         }
         finally { if (Directory.Exists(root)) { Directory.Delete(root, recursive: true); } }
+    }
+
+    /// <summary>Cancellation reaps the real MSBuild child and closes descendant output before deleting the fixture.</summary>
+    [Fact]
+    public async Task CanceledStagingReapsMsbuildBeforeFixtureDeletion()
+    {
+        if (!OperatingSystem.IsLinux()) { Assert.Skip("The owned subprocess liveness control requires Linux."); }
+        string root = Directory.CreateTempSubdirectory("parties-staging-cancellation-").FullName;
+        try
+        {
+            string ready = Path.Combine(root, "ready");
+            File.WriteAllText(Path.Combine(root, "hold.py"), """
+                import os, pathlib, time
+                ready = pathlib.Path(__file__).with_name('ready')
+                staged = ready.with_suffix('.new')
+                staged.write_text(str(os.getpid()))
+                staged.replace(ready)
+                while True:
+                    time.sleep(0.05)
+                """);
+            string project = Path.Combine(root, "Hold.proj");
+            new XDocument(new XElement("Project", new XElement("Target", new XAttribute("Name", "Hold"),
+                new XElement("Exec", new XAttribute("Command", "python3 \"hold.py\""))))).Save(project);
+            ProcessStartInfo start = new("dotnet")
+            {
+                WorkingDirectory = root, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false,
+            };
+            PackageTestProcess.RemoveSourceMappingEnvironment(start);
+            foreach (string argument in new[] { "msbuild", project, "-target:Hold", "-m:1", "-nr:false" }) { start.ArgumentList.Add(argument); }
+            using PackageTestProcessSupervisor supervisor = new(start, 10_000);
+            using Process process = Process.Start(supervisor.StartInfo)!;
+            using CancellationTokenSource canceled = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+            Task<(string Output, string Error)> running = CaptureStagingProcessAsync(process, supervisor, canceled.Token);
+            try
+            {
+                using CancellationTokenSource readyDeadline = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+                readyDeadline.CancelAfter(TimeSpan.FromSeconds(30));
+                while (!File.Exists(ready)) { await Task.Delay(25, readyDeadline.Token).ConfigureAwait(true); }
+            }
+            finally
+            {
+                canceled.Cancel();
+                OperationCanceledException cancellation = await Should.ThrowAsync<OperationCanceledException>(() => running).ConfigureAwait(true);
+                cancellation.CancellationToken.ShouldBe(canceled.Token);
+            }
+            process.HasExited.ShouldBeTrue();
+            int child = int.Parse(File.ReadAllText(ready), System.Globalization.CultureInfo.InvariantCulture);
+            string stat = $"/proc/{child}/stat";
+            try
+            {
+                File.ReadAllText(stat).Split(") ", 2, StringSplitOptions.None)[1][0].ShouldBe('Z', "No staging descendant may keep running after cancellation.");
+            }
+            catch (FileNotFoundException) { }
+            catch (DirectoryNotFoundException) { }
+            Directory.Delete(root, recursive: true);
+            Directory.Exists(root).ShouldBeFalse();
+        }
+        finally { if (Directory.Exists(root)) { Directory.Delete(root, recursive: true); } }
+    }
+
+    /// <summary>The existing supervisor reaps detached children even after the staging command exits first.</summary>
+    [Fact]
+    public async Task StagingRootExitReapsDescendantsBeforeReturning()
+    {
+        if (!OperatingSystem.IsLinux()) { Assert.Skip("Detached descendant containment requires Linux."); }
+        string root = Directory.CreateTempSubdirectory("parties-staging-root-exit-").FullName;
+        try
+        {
+            string ready = Path.Combine(root, "child");
+            ProcessStartInfo start = new("python3")
+            {
+                WorkingDirectory = root, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false,
+            };
+            start.ArgumentList.Add("-c");
+            start.ArgumentList.Add("import pathlib, subprocess, sys; child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(45)'], start_new_session=True); pathlib.Path('child').write_text(str(child.pid))");
+            using PackageTestProcessSupervisor supervisor = new(start, 10_000);
+            using Process process = Process.Start(supervisor.StartInfo)!;
+            await CaptureStagingProcessAsync(process, supervisor, TestContext.Current.CancellationToken).ConfigureAwait(true);
+            process.ExitCode.ShouldBe(0);
+            int child = int.Parse(File.ReadAllText(ready), System.Globalization.CultureInfo.InvariantCulture);
+            Directory.Exists($"/proc/{child}").ShouldBeFalse("The supervisor must reap the orphan before returning its parent's successful exit.");
+            Directory.Delete(root, recursive: true);
+        }
+        finally { if (Directory.Exists(root)) { Directory.Delete(root, recursive: true); } }
+    }
+
+    /// <summary>Always finishes child exit and output capture under an independent cleanup deadline.</summary>
+    /// <param name="process">The started staging process owned by this test.</param>
+    /// <param name="supervisor">The existing process-tree owner, retained until descendant cleanup completes.</param>
+    /// <param name="cancellationToken">The caller's execution deadline, independent of cleanup.</param>
+    /// <returns>The completed standard output and error streams.</returns>
+    private static async Task<(string Output, string Error)> CaptureStagingProcessAsync(Process process, PackageTestProcessSupervisor supervisor, CancellationToken cancellationToken)
+    {
+        Task<string> stdout = process.StandardOutput.ReadToEndAsync();
+        Task<string> stderr = process.StandardError.ReadToEndAsync();
+        try { await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false); }
+        finally
+        {
+            using CancellationTokenSource cleanup = new(TimeSpan.FromSeconds(10));
+            if (supervisor.IsContained) { supervisor.RequestTermination(); }
+            else if (!process.HasExited)
+            {
+                try { process.Kill(entireProcessTree: true); }
+                catch (InvalidOperationException) when (process.HasExited) { }
+                catch (System.ComponentModel.Win32Exception) when (process.HasExited) { }
+            }
+            try
+            {
+                await process.WaitForExitAsync(cleanup.Token).ConfigureAwait(false);
+                await Task.WhenAll(stdout, stderr).WaitAsync(cleanup.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException exception) when (cleanup.IsCancellationRequested)
+            {
+                throw new TimeoutException("The staging process cleanup exceeded its independent deadline.", exception);
+            }
+            supervisor.EnsureCleanupSucceeded(process.StartInfo.FileName);
+        }
+        return (await stdout.ConfigureAwait(false), await stderr.ConfigureAwait(false));
     }
 
     private static Dictionary<string, string> AssetInventory(string artifacts) => Directory.EnumerateFiles(artifacts, "*", SearchOption.AllDirectories)

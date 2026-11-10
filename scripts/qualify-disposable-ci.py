@@ -180,16 +180,23 @@ def tool_processes(leader, leader_birth):
 
 
 def signal_tool_processes(processes, number):
-    """Signal each tool process individually after re-checking its birth, so a reused process id is never signalled."""
+    """Bind each signal to a stable process handle before verifying the recorded birth."""
     delivered = []
     for pid, born in sorted(processes.items()):
-        if birth(pid) != born:
-            continue
         try:
-            os.kill(pid, number)
+            descriptor = os.pidfd_open(pid)
         except ProcessLookupError:
             continue
-        delivered.append(pid)
+        try:
+            if birth(pid) != born:
+                continue
+            try:
+                signal.pidfd_send_signal(descriptor, number)
+            except ProcessLookupError:
+                continue
+            delivered.append(pid)
+        finally:
+            os.close(descriptor)
     return delivered
 
 

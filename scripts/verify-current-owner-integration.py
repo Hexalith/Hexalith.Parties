@@ -224,6 +224,20 @@ def integration_phases(root, context, run_id, invocation):
     return execution["result"], final["result"], {"execution.json", *(f"cleanup-{number}.json" for number in numbers)}
 
 
+def issued_synthetic_tenant(bindings):
+    """Read the canonical synthetic tenant issued by the owning environment."""
+    require(isinstance(bindings, dict), "issued synthetic tenant bindings missing")
+    environment = bindings.get("environment")
+    require(isinstance(environment, dict), "issued synthetic tenant environment missing")
+    isolation = environment.get("isolation")
+    require(isinstance(isolation, dict) and isolation.get("state") == "populated", "issued synthetic tenant isolation missing")
+    tenant = isolation.get("syntheticTenantId")
+    require(isinstance(tenant, str) and len(tenant) <= 64
+            and re.fullmatch(r"g4t-[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", tenant, re.ASCII) is not None,
+            "invalid issued synthetic tenant")
+    return tenant
+
+
 def persisted_identity(aggregate):
     """Derive the complete current SDK AggregateIdentity JSON contract from its canonical core tuple."""
     require(isinstance(aggregate, dict) and set(aggregate) == {"tenantId", "domain", "aggregateId"}, "invalid aggregate identity tuple")
@@ -255,6 +269,7 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
     result = document(root, "test-result.json")
     require(result.get("schema") == "hexalith.test-result.v1" and result.get("policyId") == "hexalith.platform.candidate-and-attachment-policy.v1", "unsupported result contract")
     bindings = result["bindings"]
+    synthetic_tenant = issued_synthetic_tenant(bindings)
     owner = bindings["run"]
     for key in ("runId", "attemptId", "environmentId"):
         require(isinstance(owner.get(key), str) and IDENTITY.fullmatch(owner[key]) is not None, "invalid owner identity")
@@ -313,7 +328,7 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
     require(isinstance(events, list) and len(events) > 0
             and type(functional.get("eventCount")) is int and type(functional.get("metadataSequence")) is int
             and functional["eventCount"] == len(events) == functional["metadataSequence"], "persisted sequence mismatch")
-    require(aggregate.get("tenantId", "").startswith("g4t-") and aggregate.get("domain") == "party" and aggregate.get("aggregateId"), "foreign persisted aggregate")
+    require(aggregate["tenantId"] == synthetic_tenant and aggregate["domain"] == "party", "persisted aggregate differs from issued synthetic tenant")
     require(functional["projection"].get("id") == aggregate["aggregateId"] and functional["projection"].get("freshness") in ("current", "Current"), "projection differs from persisted aggregate")
     for sequence, event in enumerate(events, 1):
         require(event.get("identity") == expected_identity and type(event.get("sequenceNumber")) is int and event["sequenceNumber"] == sequence

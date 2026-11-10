@@ -1,0 +1,174 @@
+{
+  "baselineCommit": "a0ce69344ae58568a7d97f25264e90489ec06ada",
+  "preparation": {
+    "command": [
+      "dotnet",
+      "tool",
+      "run",
+      "hexalith-module",
+      "--",
+      "prepare-build",
+      "--manifest",
+      "/home/administrator/projects/hexalith/parties/module/hexalith.module-manifest.v2.json",
+      "--workspace",
+      "/tmp/parties-five-process-safety-Bgx2Qxx5/source",
+      "--mode",
+      "source",
+      "--output",
+      "json"
+    ],
+    "toolVersion": "4.47.0",
+    "status": "prepared",
+    "environment": {
+      "CustomBeforeDirectoryBuildProps": "/tmp/parties-five-process-safety-Bgx2Qxx5/source/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "/tmp/parties-five-process-safety-Bgx2Qxx5/source/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "/tmp/parties-five-process-safety-Bgx2Qxx5/source/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "/tmp/parties-five-process-safety-Bgx2Qxx5/source/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "/tmp/parties-five-process-safety-Bgx2Qxx5/source/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "a969d0173bbc6bf0f254f32d86370b4d95d78d1eada5f44d9a2704fd723d1839",
+      "Configuration": "Debug"
+    }
+  },
+  "checks": {
+    "scripts-tests": {
+      "command": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts",
+        "-v"
+      ],
+      "exitCode": 0,
+      "log": "scripts-tests.log.gz"
+    },
+    "lifecycle-tests": {
+      "command": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/ci-lifecycle",
+        "-v"
+      ],
+      "exitCode": 0,
+      "log": "lifecycle-tests.log.gz"
+    },
+    "ci-build": {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "--configuration",
+        "Debug",
+        "--no-restore",
+        "--disable-build-servers",
+        "-m:1",
+        "--nologo"
+      ],
+      "exitCode": 0,
+      "log": "ci-build.log.gz"
+    },
+    "native-build": {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj",
+        "--configuration",
+        "Debug",
+        "--disable-build-servers",
+        "-m:1",
+        "--nologo"
+      ],
+      "exitCode": 0,
+      "log": "native-build.log.gz"
+    },
+    "staging-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Ci.Tests.NativeAdminUiAssetStagingTests"
+      ],
+      "exitCode": 0,
+      "log": "staging-tests.log.gz"
+    },
+    "native-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Platform.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.Platform.IntegrationTests.dll",
+        "--filter-class",
+        "Hexalith.Parties.Platform.IntegrationTests.NativeAssemblyObservationTests",
+        "--minimum-expected-tests",
+        "4",
+        "--fail-skips",
+        "on"
+      ],
+      "exitCode": 0,
+      "log": "native-tests.log.gz"
+    }
+  },
+  "tests": {
+    "scripts": 85,
+    "lifecycle": 111,
+    "staging": 3,
+    "nativeAssembly": 4,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testedSourceSha256": {
+    "scripts/qualify-disposable-ci.py": "3c42d06ea2ee8c1044e3821bf9f3a349d9c3b65f15620275b0a9eeee6f1cee07",
+    "scripts/test_current_owner_integration.py": "f009cb34dbd4917da54e13e4e157b3e6c20a17c04b0988de6fa188dd626d5cec",
+    "scripts/test_public_package_integration.py": "2c15c8f2410db8f432775e02b0194a6b3129fe1899fd533e402f356bba2bc476",
+    "scripts/verify-current-owner-integration.py": "c5a8715000752545d48001bc65e82361ddd3bac646b3bfe6e680256f4b598d4a",
+    "scripts/verify-public-package-integration.py": "b1a4e2b0cb84657b147706e5749966fec28051dca4a4ca6dbb7f322366104537",
+    "tests/Hexalith.Parties.Ci.Tests/NativeAdminUiAssetStagingTests.cs": "16bbf3e5cbe5ee5c9826315d68f1bfb7911f2a3a103074ba0a8bc4a426164cb5",
+    "tests/Hexalith.Parties.Platform.IntegrationTests/NativeAssemblyObservationTests.cs": "eface55d3536e6c50b0aa1343ccd4c5b3b3231e9a4f34092ee88cda9ca24b8dd",
+    "tests/Hexalith.Parties.Platform.IntegrationTests/NativeAssemblyObservations.cs": "b88d3280a47de6dbc2bbb090f9583cc769889731d40f2b19b76ce4225c803ca8",
+    "tests/ci-lifecycle/test_loop2_fixes.py": "5f5adab34fffef7a6325e41eeb8ada809e9736f2caca40c6550f3b1686cecc73"
+  },
+  "qualificationCredit": false,
+  "runtimeOrDeploymentQualified": false,
+  "review": {
+    "findings": 4,
+    "resolved": 4,
+    "remaining": 0,
+    "deferred": 0,
+    "receipt": "review.json"
+  },
+  "commitlint": {
+    "version": "21.2.4",
+    "command": [
+      "node_modules/.bin/commitlint",
+      "--edit",
+      "/tmp/parties-five-process-safety-Bgx2Qxx5/commit-message.txt",
+      "--verbose"
+    ],
+    "exitCode": 0,
+    "problems": 0,
+    "warnings": 0,
+    "log": "commitlint.log.gz"
+  },
+  "resolvedValidationFailure": {
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj",
+      "--configuration",
+      "Debug",
+      "--no-restore",
+      "--disable-build-servers",
+      "-m:1",
+      "--nologo"
+    ],
+    "exitCode": 1,
+    "rule": "HXW005",
+    "cause": "Shared restore state contained package/source duplicates.",
+    "resolution": "Restore through the same pinned source mapping; final build passes with zero warnings/errors. No validation gate was relaxed.",
+    "log": "native-no-restore-failure.log.gz"
+  }
+}

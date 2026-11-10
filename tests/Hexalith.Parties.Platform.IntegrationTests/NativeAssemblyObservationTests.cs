@@ -1,5 +1,7 @@
 namespace Hexalith.Parties.Platform.IntegrationTests;
 
+using System.Reflection;
+using System.Runtime.Loader;
 using System.Security.Cryptography;
 using System.Text.Json;
 
@@ -44,7 +46,7 @@ public sealed class NativeAssemblyObservationTests
         }
         finally { Directory.Delete(directory, recursive: true); }
     }
-    /// <summary>Reads a real local output file as metadata without loading it for evidence.</summary>
+    /// <summary>Separates copied-file metadata from loaded identity and refuses a replaced disk module.</summary>
     [Fact]
     public void CopiedOutputReportsActualFileHashWithoutLoadingIt()
     {
@@ -52,7 +54,7 @@ public sealed class NativeAssemblyObservationTests
         try
         {
             string path = Path.Combine(directory, "Hexalith.LocalControl.dll");
-            File.Copy(typeof(NativeAssemblyObservationTests).Assembly.Location, path);
+            File.Copy(typeof(JsonDocument).Assembly.Location, path);
             AppDomain.CurrentDomain.GetAssemblies().Any(value => !value.IsDynamic && value.Location == path).ShouldBeFalse();
             object[] observations = NativeAssemblyObservations.ReadCompositionOutput(path);
             AppDomain.CurrentDomain.GetAssemblies().Any(value => !value.IsDynamic && value.Location == path).ShouldBeFalse();
@@ -61,6 +63,24 @@ public sealed class NativeAssemblyObservationTests
             observed.GetProperty("scope").GetString().ShouldBe("copied-native-composition-output");
             observed.GetProperty("copiedPath").GetString().ShouldBe(path);
             observed.GetProperty("sha256").GetString().ShouldBe(Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(path))));
+
+            AssemblyLoadContext context = new("native-module-identity-control", isCollectible: true);
+            try
+            {
+                Assembly loaded = context.LoadFromAssemblyPath(path);
+                using JsonDocument matching = JsonDocument.Parse(JsonSerializer.Serialize(NativeAssemblyObservations.ReadLoadedAssembly(loaded)));
+                matching.RootElement.GetProperty("moduleVersionId").GetGuid().ShouldBe(loaded.ManifestModule.ModuleVersionId);
+                matching.RootElement.GetProperty("sha256").GetString().ShouldBe(observed.GetProperty("sha256").GetString());
+                matching.RootElement.GetProperty("scope").GetString().ShouldBe("loaded-native-test-process");
+
+                // Replace the directory entry, preserving the inode mapped by the live assembly.
+                string replacement = Path.Combine(directory, "replacement.dll");
+                File.Copy(typeof(Enumerable).Assembly.Location, replacement);
+                typeof(Enumerable).Assembly.ManifestModule.ModuleVersionId.ShouldNotBe(loaded.ManifestModule.ModuleVersionId);
+                File.Move(replacement, path, overwrite: true);
+                Should.Throw<InvalidDataException>(() => NativeAssemblyObservations.ReadLoadedAssembly(loaded));
+            }
+            finally { context.Unload(); }
         }
         finally { Directory.Delete(directory, recursive: true); }
     }

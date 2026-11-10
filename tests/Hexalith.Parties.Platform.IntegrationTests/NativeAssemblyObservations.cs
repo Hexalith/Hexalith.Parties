@@ -2,6 +2,8 @@ namespace Hexalith.Parties.Platform.IntegrationTests;
 
 using System.Diagnostics;
 using System.Reflection;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -20,19 +22,7 @@ internal static class NativeAssemblyObservations
                 || assembly.GetName().Name == "StackExchange.Redis"))
             .OrderBy(assembly => assembly.FullName, StringComparer.Ordinal)
             .Take(65)
-            .Select(assembly =>
-            {
-                using FileStream bytes = File.OpenRead(assembly.Location);
-                return new
-                {
-                    scope = "loaded-native-test-process",
-                    identity = assembly.FullName,
-                    informationalVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion,
-                    moduleVersionId = assembly.ManifestModule.ModuleVersionId,
-                    loadedPath = assembly.Location,
-                    sha256 = Convert.ToHexStringLower(SHA256.HashData(bytes)),
-                };
-            }).ToArray();
+            .Select(ReadLoadedAssembly).ToArray();
         var copied = ReadCompositionOutput(binding.ModelAssemblyPath);
         string observation = JsonSerializer.Serialize(new
         {
@@ -51,6 +41,29 @@ internal static class NativeAssemblyObservations
             throw new InvalidOperationException("The native loaded-assembly observation exceeds its bounded diagnostic contract.");
         output.WriteLine(observation);
         RetainHostedObservation(observation, binding);
+    }
+
+    /// <summary>Checks disk module identity before attributing its file hash to a loaded assembly.</summary>
+    /// <param name="assembly">The assembly already loaded by the native test process.</param>
+    /// <returns>The loaded identity and hash of its matching held disk image.</returns>
+    internal static object ReadLoadedAssembly(Assembly assembly)
+    {
+        using FileStream bytes = File.OpenRead(assembly.Location);
+        using PEReader image = new(bytes, PEStreamOptions.LeaveOpen);
+        MetadataReader metadata = image.GetMetadataReader();
+        Guid moduleVersionId = assembly.ManifestModule.ModuleVersionId;
+        if (metadata.GetGuid(metadata.GetModuleDefinition().Mvid) != moduleVersionId)
+            throw new InvalidDataException("The disk PE module differs from the loaded native assembly.");
+        bytes.Position = 0;
+        return new
+        {
+            scope = "loaded-native-test-process",
+            identity = assembly.FullName,
+            informationalVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion,
+            moduleVersionId,
+            loadedPath = assembly.Location,
+            sha256 = Convert.ToHexStringLower(SHA256.HashData(bytes)),
+        };
     }
 
     /// <summary>Measures actual copied native model output without loading assemblies merely for diagnostics.</summary>

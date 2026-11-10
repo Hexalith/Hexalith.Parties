@@ -128,6 +128,38 @@ def check_execution_boundaries(test, fixture, check):
     fixture.seal()
 
 
+def check_synthetic_tenant_boundaries(test, fixture, check):
+    """Reseal coherent foreign effects and malformed issued tenant bindings through each reader."""
+    original_environment = copy.deepcopy(fixture.result["bindings"]["environment"])
+    original_functional = copy.deepcopy(fixture.functional)
+    fixture.functional["aggregate"]["tenantId"] = "g4t-foreign"
+    for event in fixture.functional["events"]:
+        event["identity"] = {key: value.replace("g4t-fixture", "g4t-foreign") for key, value in event["identity"].items()}
+    fixture.seal()
+    with test.assertRaisesRegex(ValueError, "issued synthetic tenant"): check()
+    fixture.functional = copy.deepcopy(original_functional)
+    for field, values in (("environment", (None, [], "invalid", True, 1, "missing")),
+                          ("isolation", (None, [], "invalid", True, 1, {}, "missing")),
+                          ("state", (None, "not-yet-populated", "missing")),
+                          ("syntheticTenantId", (None, [], {}, True, 1, "", "g4t-", "G4T-fixture", "g4t-foreign",
+                                                 "g4t-space tenant", "g4t-trailing-", "g4t-" + "a" * 61, "missing"))):
+        for value in values:
+            with test.subTest(field=field, value=value):
+                fixture.result["bindings"]["environment"] = copy.deepcopy(original_environment)
+                target = (fixture.result["bindings"] if field == "environment" else
+                          fixture.result["bindings"]["environment"] if field == "isolation" else
+                          fixture.result["bindings"]["environment"]["isolation"])
+                if value == "missing":
+                    del target[field]
+                else:
+                    target[field] = value
+                fixture.seal()
+                with test.assertRaisesRegex(ValueError, "issued synthetic tenant"): check()
+    fixture.result["bindings"]["environment"] = original_environment
+    fixture.seal()
+    check()
+
+
 class CurrentOwnerEvidenceTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -143,7 +175,9 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
         for name in ("execution.json", "cleanup.json"):
             self.write(name, phase)
         self.result = dict(schema="hexalith.test-result.v1", policyId="hexalith.platform.candidate-and-attachment-policy.v1",
-            bindings=dict(run=self.owner, environment=dict(mode="package", executionContext=self.context), candidate=dict(classification="baseline-only"),
+            bindings=dict(run=self.owner, environment=dict(mode="package", executionContext=self.context,
+                          isolation=dict(state="populated", syntheticTenantId="g4t-fixture", dataIsolationId="g4r-fixture",
+                                         resourceScopeId=self.owner["environmentId"], catalogScopeId="fixture-catalog")), candidate=dict(classification="baseline-only"),
                           deadlines=dict(execution=dict(state="populated", origin="test-execution-started", originAt="2026-11-05T10:00:00Z",
                                                         effectiveSeconds=120, expiresAt="2026-11-05T10:02:00Z"))),
             terminal=dict(outcome="passed", cause="tests-completed", recordedAt="2026-11-05T10:00:09Z"), termination=dict(state="not-yet-populated"),
@@ -335,10 +369,14 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
                     "snapshotKey": actor + ":snapshot", "pipelineKeyPrefix": actor + ":pipeline:",
                     "pubSubTopic": "g4t-b155e4bb4ff9.party.events", "queueSession": actor}
         self.functional["aggregate"] = {key: captured[key] for key in ("tenantId", "domain", "aggregateId")}
+        self.result["bindings"]["environment"]["isolation"]["syntheticTenantId"] = captured["tenantId"]
         self.functional["events"][0]["identity"] = captured
         self.functional["projection"]["id"] = captured["aggregateId"]
         self.seal()
         self.assertEqual(self.check()["nativeCases"], 2)
+
+    def test_persisted_effects_require_the_exact_issued_synthetic_tenant(self):
+        check_synthetic_tenant_boundaries(self, self, self.check)
 
     def test_every_core_and_computed_persisted_identity_field_is_required_and_exact(self):
         original = copy.deepcopy(self.functional["events"][0]["identity"])

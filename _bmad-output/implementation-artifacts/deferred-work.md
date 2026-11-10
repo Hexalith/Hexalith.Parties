@@ -2265,6 +2265,9 @@ rollback: None required (test-only).
 - source_spec: `spec-published-catalog-sdk-adoption.md`
   summary: Bind persisted public/private G4 aggregate tenant to the declared synthetic tenant.
   evidence: R-B2: validators currently accept any g4t- tenant prefix; use result.bindings.environment.isolation.syntheticTenantId and coherent foreign-tenant refusal controls.
+  status: done 2026-11-10
+  resolution: Both readers now require populated isolation metadata and exact equality to the issued synthetic tenant. Coherently resealed foreign-tenant and malformed-binding controls pass; the unchanged genuine hosted artifact also passes.
+  verification: `spec-five-evidence-and-process-safety-deferred-items.md`; `tests/five-evidence-and-process-safety-2026-11-10/`.
 
 - source_spec: `spec-published-catalog-sdk-adoption.md`
   summary: Bind G4 public image measurements to the issued execution interval.
@@ -2277,6 +2280,9 @@ rollback: None required (test-only).
 - source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
   summary: Run the lifecycle controller safety tests automatically.
   evidence: medium; resumed review BH1. No checked workflow invokes the full tests/ci-lifecycle discovery; the verification-gap layer independently confirms the process-birth refusal test is omitted. This later lifecycle work predates this resumed qualification and is independent of the 4.0.4 offline job. Parent probes and full triage: `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to the source spec.
+  status: done 2026-11-10
+  resolution: Already delivered: ordinary main/PR CI and diagnostic qualification both run full tests/ci-lifecycle discovery. Reconciled the stale entry after executing all 111 controls, including process-birth refusal and the workflow registration guards. No workflow change was needed.
+  verification: `spec-five-evidence-and-process-safety-deferred-items.md`; `tests/five-evidence-and-process-safety-2026-11-10/`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
   summary: Determine whether the supplemental public/private result readers need the full released contract validator.
@@ -2349,6 +2355,9 @@ rollback: None required (test-only).
 - source_spec: `_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-05.md`
   summary: Canceled asset-staging test can leave its MSBuild process running (medium; pre-existing later/concurrent work).
   evidence: NativeAdminUiAssetStagingTests StageAsync awaits WaitForExitAsync with the test token but has no kill/wait finally; Process.Dispose does not terminate the child. Outer directory deletion can race the still-running child. This test was added after the completed release, in the preserved November 9 preparation work. Review findings R-E03; durable triage in tests/sync-release-2026-11-05-closure-2026-11-09/review-triage.json.
+  status: done 2026-11-10
+  resolution: Staging reuses the existing exclusive process supervisor, awaits termination/reaping and drains output under a separate cleanup deadline before fixture deletion. Caller cancellation is distinguished from cleanup timeout. Real MSBuild cancellation, detached-child/parent-exit and unchanged asset controls pass.
+  verification: `spec-five-evidence-and-process-safety-deferred-items.md`; `tests/five-evidence-and-process-safety-2026-11-10/`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-published-catalog-sdk-adoption.md`
   summary: Reject a missing identity observation when UTC moves behind its source observation during re-admission.
@@ -2365,7 +2374,13 @@ rollback: None required (test-only).
 - source_spec: `spec-published-catalog-sdk-adoption.md`
   summary: Bind native loaded-assembly observations to the disk PE module identity before attributing its hash to loaded code.
   evidence: C-B6; NativeAssemblyObservations.Write records assembly.ManifestModule.ModuleVersionId but hashes assembly.Location without comparing the actual disk PE MVID; disk replacement can misattribute bytes.
+  status: done 2026-11-10
+  resolution: Native diagnostics compare the disk PE MVID to the loaded module before hashing the same held stream. The real loaded-copy/replacement control passes without entering the global Hexalith inventory; existing native reporter names and count remain unchanged.
+  verification: `spec-five-evidence-and-process-safety-deferred-items.md`; `tests/five-evidence-and-process-safety-2026-11-10/`.
 
 - source_spec: `spec-published-catalog-sdk-adoption.md`
   summary: Signal lifecycle tool processes through stable process handles rather than a check followed by numeric PID signalling.
   evidence: C-B7; qualify-disposable-ci.py signal_tool_processes checks /proc birth before os.kill, leaving a process-exit/reuse interval; use a stable pidfd and add real process replacement controls.
+  status: done 2026-11-10
+  resolution: The controller opens a pidfd before checking birth, signals only through that handle and closes it on every path. Real exit/replacement, foreign-birth, successful-delivery and failure controls pass; withdrawal-before-AppHost-stop ordering is preserved.
+  verification: `spec-five-evidence-and-process-safety-deferred-items.md`; `tests/five-evidence-and-process-safety-2026-11-10/`.

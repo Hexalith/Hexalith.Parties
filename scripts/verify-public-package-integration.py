@@ -20,6 +20,7 @@ _spec.loader.exec_module(_readers)
 require, held_directory, read, decode, document = (_readers.require, _readers.held_directory, _readers.read, _readers.decode, _readers.document)
 integration_phases, invocation_accepted = _readers.integration_phases, _readers.invocation_accepted
 persisted_identity, creation_timestamp = _readers.persisted_identity, _readers.creation_timestamp
+issued_synthetic_tenant = _readers.issued_synthetic_tenant
 native_execution, observation_timestamp = _readers.native_execution, _readers.observation_timestamp
 SDK, SDK_VERSION, HEX, IDENTITY = _readers.SDK, _readers.SDK_VERSION, _readers.HEX, _readers.IDENTITY
 PROFILE = "platform-package"
@@ -105,6 +106,7 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
     result = document(root, "test-result.json")
     require(result.get("schema") == "hexalith.test-result.v1" and result.get("policyId") == "hexalith.platform.candidate-and-attachment-policy.v1", "unsupported result contract")
     bindings = result["bindings"]
+    synthetic_tenant = issued_synthetic_tenant(bindings)
     owner = bindings["run"]
     for key in ("runId", "attemptId", "environmentId"):
         require(isinstance(owner.get(key), str) and IDENTITY.fullmatch(owner[key]) is not None, "invalid owner identity")
@@ -164,7 +166,7 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
     require(isinstance(events, list) and len(events) > 0
             and type(functional.get("eventCount")) is int and type(functional.get("metadataSequence")) is int
             and functional["eventCount"] == len(events) == functional["metadataSequence"], "persisted sequence mismatch")
-    require(aggregate.get("tenantId", "").startswith("g4t-") and aggregate.get("domain") == "party" and aggregate.get("aggregateId"), "foreign persisted aggregate")
+    require(aggregate["tenantId"] == synthetic_tenant and aggregate["domain"] == "party", "persisted aggregate differs from issued synthetic tenant")
     require(functional["projection"].get("id") == aggregate["aggregateId"] and functional["projection"].get("freshness") in ("current", "Current"), "projection differs from persisted aggregate")
     for sequence, event in enumerate(events, 1):
         require(event.get("identity") == expected_identity and type(event.get("sequenceNumber")) is int and event["sequenceNumber"] == sequence
