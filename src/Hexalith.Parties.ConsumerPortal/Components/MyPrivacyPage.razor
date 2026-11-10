@@ -148,9 +148,9 @@
                     <div class="hx-parties-privacy__actions">
                         @if (CanRequestErasure)
                         {
-                            <FluentButton aria-disabled="@(_erasureBusy ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
+                            <FluentButton aria-disabled="@(ErasureRequestDisabled ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
                                           class="hx-parties-privacy__danger-action"
-                                          Disabled="@_erasureBusy"
+                                          Disabled="@ErasureRequestDisabled"
                                           OnClick="BeginErasureConfirmation">
                                 @ConsumerPortalLabels.PrivacyErasureAction
                             </FluentButton>
@@ -230,6 +230,9 @@
             };
 
     private bool _erasureBusy => _isLoadingErasure || _isRequestingErasure || _isCancellingErasure;
+
+    // Prerendered markup has no Blazor listener until the circuit renders interactively; a click there would be lost.
+    private bool ErasureRequestDisabled => _erasureBusy || !RendererInfo.IsInteractive;
 
     private bool CanRequestErasure
         => !_confirmErasure

@@ -7,6 +7,7 @@ using Hexalith.Parties.ConsumerPortal.Services;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.FluentUI.AspNetCore.Components;
 
@@ -14,12 +15,46 @@ using Shouldly;
 
 namespace Hexalith.Parties.ConsumerPortal.Tests.Components;
 
-public sealed class EditMyProfilePageTests : BunitContext
+public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
 {
     public EditMyProfilePageTests()
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddFluentUIComponents();
+    }
+
+    [Theory]
+    [InlineData("Static", false)]
+    [InlineData("Server", true)]
+    public void EditMyProfilePage_RendererInteractivity_GatesFieldsetAndSave(string rendererName, bool isInteractive)
+    {
+        PageRenderer = new RendererInfo(rendererName, isInteractive);
+        var editClient = new QueueProfileEditClient();
+        Services.AddSingleton<IConsumerProfileDataClient>(new QueueProfileDataClient(_ => Task.FromResult(CurrentPerson())));
+        Services.AddSingleton<IConsumerProfileEditClient>(editClient);
+
+        IRenderedComponent<EditMyProfilePage> cut = Render<EditMyProfilePage>();
+
+        cut.WaitForAssertion(() =>
+        {
+            // Prerendered values stay visible; only the interactive circuit may accept edits or a submit.
+            FindTextInput(cut, "First name").Instance.Value.ShouldBe("Ada");
+            cut.Find("fieldset").HasAttribute("disabled").ShouldBe(!isInteractive);
+            foreach (string action in new[] { "Save changes", "Cancel" })
+            {
+                // Cancel sits in the gated fieldset too, so its own state must agree with the native one.
+                AngleSharp.Dom.IElement button = cut.FindAll("fluent-button")
+                    .Single(item => item.TextContent.Trim() == action);
+                button.HasAttribute("disabled").ShouldBe(!isInteractive);
+                button.GetAttribute("aria-disabled").ShouldBe(isInteractive ? "false" : "true");
+            }
+
+            IRenderedComponent<FluentButton>[] actions = [.. cut.FindComponents<FluentButton>()
+                .Where(button => button.Instance.Type is ButtonType.Submit or ButtonType.Button)];
+            actions.Length.ShouldBe(2);
+            actions.ShouldAllBe(button => button.Instance.Disabled == !isInteractive);
+        });
+        editClient.LastRequest.ShouldBeNull();
     }
 
     [Fact]

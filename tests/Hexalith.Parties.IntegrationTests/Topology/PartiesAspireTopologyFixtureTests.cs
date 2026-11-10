@@ -8,11 +8,15 @@ using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Testing;
 
+using CommunityToolkit.Aspire.Hosting.Dapr;
+
 using Hexalith.Parties.IntegrationTests.HealthChecks;
 using Hexalith.Parties.TestInfrastructure;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 using Shouldly;
 
@@ -101,6 +105,57 @@ public sealed class PartiesAspireTopologyFixtureTests
 
         Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT").ShouldBe(previousEnvironment);
     }
+
+    /// <summary>The fixture wraps only an ordinary CLI in its subreaper launcher, once, and removes it on disposal.</summary>
+    /// <param name="configured">The configured Dapr path's file name; "dapr" is an ordinary CLI.</param>
+    [Theory]
+    [InlineData("dapr")]
+    [InlineData("dapr-session")]
+    [InlineData(PartiesDaprCliSubreaper.LauncherName)]
+    public async Task ConfiguredDaprPath_WrapsOnlyAnOrdinaryCliInTheFixtureSubreaper(string configured)
+    {
+        if (!OperatingSystem.IsLinux()) { Assert.Skip("Linux subreaper installation."); }
+        string configuredPath = Path.Combine(Path.GetTempPath(), $"parties-dapr-path-{Guid.NewGuid():N}", configured);
+        string? effective = null;
+        string? launcherBody = null;
+        var fixture = new PartiesAspireTopologyFixture(
+            async (session, cancellationToken) =>
+            {
+                IDistributedApplicationTestingBuilder builder = await DistributedApplicationTestingBuilder.CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>(
+                    [.. session.Arguments(false, false), "--Parties:Testing:UsePackagedGateway=false"], cancellationToken).ConfigureAwait(false);
+                builder.Services.Configure<DaprOptions>(options => options.DaprPath = configuredPath);
+                return builder;
+            },
+            (application, _) =>
+            {
+                effective = application.Services.GetRequiredService<IOptions<DaprOptions>>().Value.DaprPath;
+                launcherBody = effective is not null && File.Exists(effective) ? File.ReadAllText(effective) : null;
+                throw new InvalidOperationException("controlled startup failure after reading the Dapr options");
+            });
+        try
+        {
+            await fixture.InitializeAsync().ConfigureAwait(true);
+            fixture.UnavailableReason.ShouldNotBeNull().ShouldContain("controlled startup failure after reading the Dapr options");
+        }
+        finally
+        {
+            await fixture.DisposeAsync().ConfigureAwait(true);
+        }
+
+        if (configured == "dapr")
+        {
+            Path.GetFileName(effective).ShouldBe(PartiesDaprCliSubreaper.LauncherName);
+            Path.GetDirectoryName(effective).ShouldNotBe(Path.GetDirectoryName(configuredPath));
+            launcherBody.ShouldNotBeNull().Split('\n').ShouldContain("CLI = " + JsonSerializer.Serialize(configuredPath));
+            Directory.Exists(Path.GetDirectoryName(effective)).ShouldBeFalse("The fixture removes its private launcher after disposal.");
+        }
+        else
+        {
+            // The session launcher keeps its PID continuity, and an existing launcher is never wrapped again.
+            effective.ShouldBe(configuredPath);
+        }
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

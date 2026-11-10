@@ -177,6 +177,170 @@ class ControllerSafetyTests(unittest.TestCase):
                     self.assertEqual(Q.read(target), {'genuine': True})
                 self.assertEqual(swapped, [swap])
 
+    def test_writer_and_directory_admission_refuse_a_parent_swapped_after_the_check(self):
+        """Swap an ancestor to a link right after its admission check; nothing may be created or written through it."""
+        for operation in ('write', 'directory'):
+            with self.subTest(operation=operation), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                parent = root / 'meta'
+                parent.mkdir()
+                (parent / 'x.json').write_text('{"genuine": true}')
+                (root / 'outside').mkdir()
+                (root / 'outside' / 'x.json').write_text('{"foreign": true}')
+                swapped = []
+
+                def replace():
+                    if not swapped:
+                        swapped.append(operation)
+                        parent.rename(root / 'meta-held')
+                        parent.symlink_to(root / 'outside', target_is_directory=True)
+
+                real_open, real_stat, real_lstat = os.open, os.stat, os.lstat
+
+                def opening(name, *args, **kwargs):
+                    # A held walk admits each component by opening it: swap just before that open.
+                    if os.fspath(name) == 'meta':
+                        replace()
+                    return real_open(name, *args, **kwargs)
+
+                def checking(name, *args, **kwargs):
+                    # A by-name walk checks the whole ancestor first: swap right after its no-follow probe.
+                    result = real_stat(name, *args, **kwargs)
+                    if os.fspath(name) == os.fspath(parent) and not kwargs.get('follow_symlinks', True):
+                        replace()
+                    return result
+
+                def probing(name, *args, **kwargs):
+                    result = real_lstat(name, *args, **kwargs)
+                    if os.fspath(name) == os.fspath(parent):
+                        replace()
+                    return result
+
+                with patch.object(Q.os, 'open', side_effect=opening), patch.object(Q.os, 'stat', side_effect=checking), \
+                        patch.object(Q.os, 'lstat', side_effect=probing):
+                    with self.assertRaisesRegex(ValueError, 'linked'):
+                        if operation == 'write':
+                            Q.write(parent / 'x.json', {'replacement': True})
+                        else:
+                            Q.private_directory(parent / 'sub' / 'leaf')
+                self.assertEqual(swapped, [operation])
+                self.assertEqual(sorted(os.listdir(root / 'outside')), ['x.json'])
+                self.assertEqual((root / 'outside' / 'x.json').read_text(), '{"foreign": true}')
+                self.assertEqual(sorted(os.listdir(root / 'meta-held')), ['x.json'])
+                self.assertEqual((root / 'meta-held' / 'x.json').read_text(), '{"genuine": true}')
+
+    def test_writer_refuses_a_parent_swapped_after_admission(self):
+        """Replace the admitted parent before the temporary file exists; the writer must refuse, not follow or move it."""
+        for swap, refusal in (('symlink', 'linked'), ('directory', 'replaced')):
+            with self.subTest(swap=swap), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                parent = root / 'meta'
+                parent.mkdir()
+                (parent / 'x.json').write_text('{"genuine": true}')
+                (root / 'outside').mkdir()
+                (root / 'outside' / 'x.json').write_text('{"foreign": true}')
+                swapped = []
+                real_open = os.open
+
+                def opening(name, *args, **kwargs):
+                    entry = os.path.basename(os.fspath(name))
+                    if not swapped and entry.startswith('x.json.') and entry.endswith('.new'):
+                        swapped.append(entry)
+                        parent.rename(root / 'meta-held')
+                        if swap == 'symlink':
+                            parent.symlink_to(root / 'outside', target_is_directory=True)
+                        else:
+                            # A real directory is no link, so only the held parent's identity check refuses it.
+                            parent.mkdir()
+                    return real_open(name, *args, **kwargs)
+
+                with patch.object(Q.os, 'open', side_effect=opening):
+                    with self.assertRaisesRegex(ValueError, refusal):
+                        Q.write(parent / 'x.json', {'replacement': True})
+                self.assertEqual(len(swapped), 1)
+                self.assertEqual(sorted(os.listdir(root / 'outside')), ['x.json'])
+                self.assertEqual((root / 'outside' / 'x.json').read_text(), '{"foreign": true}')
+                if swap == 'directory':
+                    self.assertEqual(os.listdir(parent), [])
+                # The refused temporary is removed from the held directory, and the genuine file is unchanged.
+                self.assertEqual(sorted(os.listdir(root / 'meta-held')), ['x.json'])
+                self.assertEqual((root / 'meta-held' / 'x.json').read_text(), '{"genuine": true}')
+
+    def test_writer_never_installs_a_final_entry_swapped_before_replace(self):
+        """Swap the temporary or destination entry right before the rename; only the written file may be installed."""
+        for swap in ('temporary-symlink', 'temporary-hardlink', 'destination-symlink', 'destination-hardlink'):
+            with self.subTest(swap=swap), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                parent = root / 'meta'
+                parent.mkdir()
+                target = parent / 'x.json'
+                target.write_text('{"genuine": true}')
+                (root / 'outside').mkdir()
+                foreign = root / 'outside' / 'x.json'
+                foreign.write_text('{"foreign": true}')
+                swapped = []
+                real_replace = os.replace
+
+                def replacing(source, destination, *args, **kwargs):
+                    if not swapped:
+                        swapped.append(swap)
+                        entry = parent / (os.path.basename(os.fspath(source)) if swap.startswith('temporary') else 'x.json')
+                        entry.rename(root / 'held')
+                        if swap.endswith('symlink'):
+                            entry.symlink_to(foreign)
+                        else:
+                            os.link(foreign, entry)
+                    return real_replace(source, destination, *args, **kwargs)
+
+                with patch.object(Q.os, 'replace', side_effect=replacing):
+                    if swap.startswith('temporary'):
+                        with self.assertRaisesRegex(ValueError, 'Unsafe evidence destination'):
+                            Q.write(target, {'replacement': True})
+                    else:
+                        Q.write(target, {'replacement': True})
+                self.assertEqual(swapped, [swap])
+                self.assertEqual(foreign.read_text(), '{"foreign": true}')
+                if swap.startswith('temporary'):
+                    # A refused install never leaves a foreign link at the destination.
+                    self.assertFalse(os.path.lexists(target))
+                else:
+                    info = os.lstat(target)
+                    self.assertTrue(Q.stat.S_ISREG(info.st_mode))
+                    self.assertEqual((info.st_nlink, info.st_mode & 0o777), (1, 0o600))
+                    self.assertEqual(Q.read(target), {'replacement': True})
+                    self.assertEqual(os.stat(foreign).st_nlink, 1)
+                self.assertEqual(sorted(name for name in os.listdir(parent) if name != 'x.json'), [])
+
+    def test_ordinary_write_keeps_private_modes_and_atomic_replacement(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            target = root / 'created' / 'nested' / 'x.json'
+            Q.write(target, {'first': True})
+            Q.write(target, {'second': True})
+            self.assertEqual(Q.read(target), {'second': True})
+            self.assertEqual(target.read_text(), json.dumps({'second': True}, indent=2, sort_keys=True) + '\n')
+            self.assertEqual((target.stat().st_mode & 0o777, target.stat().st_nlink), (0o600, 1))
+            for directory in (root / 'created', root / 'created' / 'nested'):
+                self.assertEqual(directory.stat().st_mode & 0o777, 0o700)
+            self.assertEqual(os.listdir(target.parent), ['x.json'])
+            self.assertEqual(Q.private_directory(root / 'created' / 'nested'), root / 'created' / 'nested')
+
+    def test_public_result_is_created_in_its_held_parent_without_following_a_link(self):
+        """A launch whose public-result parent became a link refuses before any output file or child exists."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / 'outside').mkdir()
+            (root / 'passing').symlink_to(root / 'outside', target_is_directory=True)
+            owner = object.__new__(Q.Qualification)
+            item = {'label': 'passing', 'receipt': str(root / 'passing' / 'receipt.json'),
+                    'launchRecord': str(root / 'passing' / 'launch.json'),
+                    'publicResult': str(root / 'passing' / 'public-result.json')}
+            with patch.object(Q.subprocess, 'Popen') as spawn:
+                with self.assertRaisesRegex(ValueError, 'linked'):
+                    owner.launch(item)
+                spawn.assert_not_called()
+            self.assertEqual(os.listdir(root / 'outside'), [])
+
     def test_peer_scope_hashes_the_validated_claim_bytes(self):
         """peer_scope digests the exact claim bytes it validated, even if the claim is replaced afterwards."""
         with tempfile.TemporaryDirectory() as temporary:

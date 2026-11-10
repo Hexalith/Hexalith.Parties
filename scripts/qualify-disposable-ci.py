@@ -17,7 +17,6 @@ import signal
 import stat
 import subprocess
 import sys
-import tempfile
 import time
 from datetime import datetime, timedelta, timezone
 
@@ -138,21 +137,46 @@ def open_unlinked(name, flags, parent, *, final=False):
         raise
 
 
-def read_bytes(path, limit=8_388_608):
-    """Read bounded metadata bytes from one descriptor opened component by component without following links.
+def held_directory(path, create=False):
+    """Return an O_PATH descriptor for a directory opened component by component without following links.
 
-    Ancestors are held as O_PATH descriptors (search permission suffices), and size and link count are checked on
-    the open file before its bytes are read from it. A symbolic link at any component or a hard-linked file is
-    refused. A file or ancestor replaced after it was opened cannot change the result, because the bytes come only
-    from the held descriptor and the path is never reopened by name.
+    Each component is opened relative to its held parent, so search permission suffices and a link at any component
+    is refused. With create, a missing component is made 0o700 relative to its held parent and then opened the same
+    way; nothing is created by path. The caller closes the descriptor.
     """
     path = Path(path).absolute()
     descriptor = os.open(path.anchor, os.O_PATH | os.O_DIRECTORY | os.O_CLOEXEC)
     try:
-        for component in path.parts[1:-1]:
-            child = open_unlinked(component, os.O_PATH | os.O_DIRECTORY, descriptor)
+        for component in path.parts[1:]:
+            try:
+                child = open_unlinked(component, os.O_PATH | os.O_DIRECTORY, descriptor)
+            except FileNotFoundError:
+                if not create:
+                    raise
+                try:
+                    os.mkdir(component, 0o700, dir_fd=descriptor)
+                except FileExistsError:
+                    pass
+                child = open_unlinked(component, os.O_PATH | os.O_DIRECTORY, descriptor)
             os.close(descriptor)
             descriptor = child
+        return descriptor
+    except BaseException:
+        os.close(descriptor)
+        raise
+
+
+def read_bytes(path, limit=8_388_608):
+    """Read bounded metadata bytes from one descriptor opened component by component without following links.
+
+    Ancestors are held through held_directory, and size and link count are checked on the open file before its
+    bytes are read from it. A symbolic link at any component or a hard-linked file is refused. A file or ancestor
+    replaced after it was opened cannot change the result, because the bytes come only from the held descriptor and
+    the path is never reopened by name.
+    """
+    path = Path(path).absolute()
+    descriptor = held_directory(path.parent)
+    try:
         child = open_unlinked(path.name, os.O_RDONLY | os.O_NONBLOCK | os.O_NOCTTY, descriptor, final=True)
         os.close(descriptor)
         descriptor = child
@@ -177,24 +201,76 @@ def read(path, limit=8_388_608):
 
 
 def private_directory(path):
-    path = Path(path)
-    require(not any(part.is_symlink() for part in (path, *path.parents)), 'Refusing linked qualification path')
-    path.mkdir(parents=True, exist_ok=True, mode=0o700)
-    return path
+    """Admit a directory through held_directory, creating missing components 0o700; a link at any component is refused.
+
+    Existing components are admitted as they are: their owner and mode are not checked.
+    """
+    os.close(held_directory(path, create=True))
+    return Path(path)
+
+
+def same_file(first, second):
+    return (first.st_dev, first.st_ino) == (second.st_dev, second.st_ino)
 
 
 def write(path, value):
-    path = Path(path)
-    private_directory(path.parent)
-    require(not path.exists() or (not path.is_symlink() and path.stat().st_nlink == 1), 'Unsafe evidence destination')
-    descriptor, temporary = tempfile.mkstemp(prefix=path.name + '.', suffix='.new', dir=path.parent)
+    """Atomically replace JSON metadata inside its held parent without creating, writing or renaming by path.
+
+    The temporary file is created exclusively without following links (0o600), written and fsynced through its own
+    descriptor, and renamed relative to the held parent. A parent that no longer resolves to the held directory is
+    refused before the rename, and a destination entry that is not the written file afterwards is removed and refused.
+    """
+    path = Path(path).absolute()
+    body = (json.dumps(value, indent=2, sort_keys=True) + '\n').encode()
+    parent = held_directory(path.parent, create=True)
+    temporary = None
     try:
-        with os.fdopen(descriptor, 'w') as output:
-            json.dump(value, output, indent=2, sort_keys=True)
-            output.write('\n')
-        os.replace(temporary, path)
+        try:
+            existing = os.lstat(path.name, dir_fd=parent)
+        except FileNotFoundError:
+            existing = None
+        require(existing is None or (stat.S_ISREG(existing.st_mode) and existing.st_nlink == 1),
+                'Unsafe evidence destination')
+        for _ in range(100):
+            candidate = f'{path.name}.{os.urandom(6).hex()}.new'
+            try:
+                descriptor = os.open(candidate, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_CLOEXEC,
+                                     0o600, dir_fd=parent)
+            except FileExistsError:
+                continue
+            temporary = candidate
+            break
+        else:
+            raise FileExistsError(errno.EEXIST, 'No unused temporary qualification metadata name')
+        with os.fdopen(descriptor, 'wb') as output:
+            output.write(body)
+            output.flush()
+            os.fsync(output.fileno())
+            written = os.fstat(output.fileno())
+        current = held_directory(path.parent)
+        try:
+            require(same_file(os.fstat(current), os.fstat(parent)), 'Refusing replaced qualification path')
+        finally:
+            os.close(current)
+        os.replace(temporary, path.name, src_dir_fd=parent, dst_dir_fd=parent)
+        temporary = None
+        try:
+            installed = os.lstat(path.name, dir_fd=parent)
+        except FileNotFoundError:
+            installed = None
+        if installed is None or not same_file(installed, written):
+            if installed is not None:
+                os.unlink(path.name, dir_fd=parent)
+            raise ValueError('Unsafe evidence destination')
     finally:
-        Path(temporary).unlink(missing_ok=True)
+        try:
+            if temporary is not None:
+                try:
+                    os.unlink(temporary, dir_fd=parent)
+                except OSError:
+                    pass  # Never replace the original outcome; a leftover temporary is never read as metadata.
+        finally:
+            os.close(parent)
 
 
 def birth(pid):
@@ -622,7 +698,13 @@ class Qualification:
 
     def launch(self, item):
         require(not Path(item['launchRecord']).exists(), 'Do not replace a previous launch process record')
-        descriptor = os.open(item['publicResult'], os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+        public = Path(item['publicResult']).absolute()
+        parent = held_directory(public.parent)
+        try:
+            descriptor = os.open(public.name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_CLOEXEC,
+                                 0o600, dir_fd=parent)
+        finally:
+            os.close(parent)
         child = None
         try:
             with os.fdopen(descriptor, 'w') as stream:

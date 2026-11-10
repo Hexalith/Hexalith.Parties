@@ -522,6 +522,153 @@ public sealed class PartiesTopologyCleanupTests
             .Message.ShouldContain("backing resources were retained");
     }
 
+    /// <summary>A runtime orphaned by an ordinary CLI before the first poll is adopted by the subreaper, then terminated.</summary>
+    /// <param name="runtimeIgnoresTerminate">Whether the runtime ignores the forwarded SIGTERM, requiring post-grace SIGKILL.</param>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task OrdinaryCliWrapper_ExitingBeforeFirstPoll_LeavesItsRuntimeAdoptedThenTerminated(bool runtimeIgnoresTerminate)
+    {
+        if (!OperatingSystem.IsLinux()) { Assert.Skip("Linux subreaper custody control."); }
+        TimeSpan grace = TimeSpan.FromSeconds(1);
+        string directory = Path.Combine(Path.GetTempPath(), $"parties-subreaper-control-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        // The stand-in CLI forks a runtime, waits until the runtime has set its SIGTERM disposition, publishes both
+        // identities atomically and exits at once.
+        string cli = Path.Combine(directory, "fake-dapr");
+        string runtimeScript = "import signal,sys,time\n"
+            + (runtimeIgnoresTerminate ? "signal.signal(signal.SIGTERM,signal.SIG_IGN)\n" : string.Empty)
+            + "open(sys.argv[1],'w').close()\ntime.sleep(3600)\n";
+        File.WriteAllText(cli, "#!/usr/bin/env -S python3 -I\nimport os,subprocess,sys,time\narmed=sys.argv[0]+'.armed'\n"
+            + "child=subprocess.Popen([sys.executable,'-I','-c'," + System.Text.Json.JsonSerializer.Serialize(runtimeScript) + ",armed])\n"
+            + "while not os.path.exists(armed): time.sleep(0.01)\n"
+            + "open(sys.argv[0]+'.tmp','w').write(str(os.getpid())+' '+str(child.pid))\nos.replace(sys.argv[0]+'.tmp',sys.argv[0]+'.ready')\n");
+        if (OperatingSystem.IsLinux()) { File.SetUnixFileMode(cli, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute); }
+        var fixture = new PartiesAspireTopologyFixture();
+        await using var fixtureLifetime = fixture.ConfigureAwait(true);
+        string launcher = PartiesDaprCliSubreaper.Create(Path.Combine(directory, "launcher"), cli, grace);
+        var start = new ProcessStartInfo(launcher) { UseShellExecute = false };
+        foreach (string argument in new[] { "run", "--app-id", "owned-app" }) { start.ArgumentList.Add(argument); }
+        start.Environment[PartiesAspireTopologyFixture.WorkerOwnershipVariable] = fixture.WorkerOwnershipMarker;
+        using Process unrelated = Process.Start(new ProcessStartInfo("sleep") { ArgumentList = { "3600" }, UseShellExecute = false }).ShouldNotBeNull();
+        using Process wrapper = Process.Start(start).ShouldNotBeNull();
+        int runtimeId = 0;
+        long runtimeStarted = 0;
+        try
+        {
+            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            string ready = cli + ".ready";
+            while (!File.Exists(ready)) { await Task.Delay(10, deadline.Token).ConfigureAwait(true); }
+            int[] ids = File.ReadAllText(ready).Split(' ').Select(value => int.Parse(value, CultureInfo.InvariantCulture)).ToArray();
+            runtimeId = ids[1];
+            runtimeStarted = PartiesAspireTopologyFixture.ReadWorkerStartIdentity(runtimeId)!.Value;
+            // Nothing has observed the wrapper yet. Wait until the CLI has exited, leaving its runtime orphaned.
+            while (PartiesAspireTopologyFixture.ReadWorkerStartIdentity(ids[0]) is not null) { await Task.Delay(10, deadline.Token).ConfigureAwait(true); }
+            PartiesAspireTopologyFixture.IsWorkerRunning(runtimeId, runtimeStarted).ShouldBeTrue();
+            IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(new DistributedApplicationOptions { DisableDashboard = true });
+            builder.Services.Configure<DaprOptions>(options => options.DaprPath = launcher);
+            IResourceBuilder<ExecutableResource> host = builder.AddExecutable("owned-app", "unused", ".").WithDaprSidecar();
+            string cliName = host.Resource.Annotations.OfType<DaprSidecarAnnotation>().Single().Sidecar.Name + "-cli";
+            IResourceBuilder<ExecutableResource> resource = builder.AddResource(new ExecutableResource(cliName, "unused", "."));
+            DistributedApplication? application = null;
+            int stops = 0;
+            var stopElapsed = TimeSpan.Zero;
+            _ = resource.WithCommand(KnownResourceCommands.StopCommand, "Stop", async _ =>
+            {
+                stops++;
+                var stopwatch = Stopwatch.StartNew();
+                // As the orchestrator does, signal only the observed wrapper; the subreaper forwards it.
+                using Process terminate = Process.Start(new ProcessStartInfo("kill")
+                {
+                    ArgumentList = { "-TERM", wrapper.Id.ToString(CultureInfo.InvariantCulture) },
+                    UseShellExecute = false,
+                }).ShouldNotBeNull();
+                await terminate.WaitForExitAsync(deadline.Token).ConfigureAwait(false);
+                await wrapper.WaitForExitAsync(deadline.Token).ConfigureAwait(false);
+                stopElapsed = stopwatch.Elapsed;
+                await application!.ResourceNotifications.PublishUpdateAsync(resource.Resource, snapshot => snapshot with
+                {
+                    State = new ResourceStateSnapshot(KnownResourceStates.Exited, null), Commands = [],
+                }).ConfigureAwait(false);
+                return CommandResults.Success();
+            });
+            application = builder.Build();
+            await using var applicationLifetime = application.ConfigureAwait(true);
+            await application.ResourceNotifications.PublishUpdateAsync(host.Resource, snapshot => snapshot with
+            { State = new ResourceStateSnapshot(KnownResourceStates.NotStarted, null) }).ConfigureAwait(true);
+            await application.ResourceNotifications.PublishUpdateAsync(resource.Resource, snapshot => snapshot with
+            {
+                State = new ResourceStateSnapshot(KnownResourceStates.Running, null),
+                Properties = [new ResourcePropertySnapshot("executable.pid", wrapper.Id)],
+                Commands = [new ResourceCommandSnapshot(KnownResourceCommands.StopCommand, ResourceCommandState.Enabled, "Stop", null, null, null, null, null, false)],
+            }).ConfigureAwait(true);
+            // The first observation runs only now, after the CLI already exited.
+            fixture.CaptureOwnedWorkers(application);
+            var captured = typeof(PartiesAspireTopologyFixture).GetField("_ownedWorkers", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .GetValue(fixture).ShouldBeOfType<ConcurrentDictionary<int, long>>();
+            captured.ShouldContainKeyAndValue(runtimeId, runtimeStarted, "The orphaned runtime must remain a child of the observed wrapper PID.");
+            await fixture.QuiesceStartedWorkersAsync(application, deadline.Token).ConfigureAwait(true);
+            stops.ShouldBe(1);
+            PartiesAspireTopologyFixture.IsWorkerRunning(runtimeId, runtimeStarted).ShouldBeFalse();
+            wrapper.HasExited.ShouldBeTrue();
+            wrapper.ExitCode.ShouldBe(128 + 15, "The subreaper exits with the forwarded SIGTERM only after reaping every child.");
+            // A runtime that ignores SIGTERM is killed once the grace period ends, not left to the overall deadline.
+            stopElapsed.ShouldBeLessThan(grace + TimeSpan.FromSeconds(1.5));
+            if (runtimeIgnoresTerminate) { stopElapsed.ShouldBeGreaterThanOrEqualTo(grace - TimeSpan.FromMilliseconds(100)); }
+            unrelated.HasExited.ShouldBeFalse();
+        }
+        finally
+        {
+            if (runtimeId > 0 && PartiesAspireTopologyFixture.IsWorkerRunning(runtimeId, runtimeStarted))
+            {
+                using Process runtime = Process.GetProcessById(runtimeId);
+                runtime.Kill();
+            }
+            await ReapOwnedProcessAsync(wrapper, terminate: !wrapper.HasExited).ConfigureAwait(true);
+            await ReapOwnedProcessAsync(unrelated, terminate: !unrelated.HasExited).ConfigureAwait(true);
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    /// <summary>Under a configured subreaper, a marked wrapper PID that is not the launcher cannot establish custody.</summary>
+    [Fact]
+    public async Task OrdinaryCliWrapper_UnderSubreaperRefusesAnyOtherObservedWrapper()
+    {
+        if (!OperatingSystem.IsLinux()) { Assert.Skip("Linux subreaper custody guard."); }
+        var fixture = new PartiesAspireTopologyFixture();
+        await using var fixtureLifetime = fixture.ConfigureAwait(true);
+        var start = new ProcessStartInfo("sleep") { ArgumentList = { "3600" }, UseShellExecute = false };
+        start.Environment[PartiesAspireTopologyFixture.WorkerOwnershipVariable] = fixture.WorkerOwnershipMarker;
+        using Process other = Process.Start(start).ShouldNotBeNull();
+        try
+        {
+            IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(new DistributedApplicationOptions { DisableDashboard = true });
+            builder.Services.Configure<DaprOptions>(options => options.DaprPath = Path.Combine(Path.GetTempPath(), $"parties-unused-{Guid.NewGuid():N}", PartiesDaprCliSubreaper.LauncherName));
+            IResourceBuilder<ExecutableResource> host = builder.AddExecutable("guarded-app", "unused", ".").WithDaprSidecar();
+            string cliName = host.Resource.Annotations.OfType<DaprSidecarAnnotation>().Single().Sidecar.Name + "-cli";
+            IResourceBuilder<ExecutableResource> cli = builder.AddResource(new ExecutableResource(cliName, "unused", "."));
+            int stops = 0;
+            _ = cli.WithCommand(KnownResourceCommands.StopCommand, "Stop", _ => { stops++; return Task.FromResult(CommandResults.Success()); });
+            await using DistributedApplication application = builder.Build();
+            await application.ResourceNotifications.PublishUpdateAsync(host.Resource, snapshot => snapshot with
+            { State = new ResourceStateSnapshot(KnownResourceStates.NotStarted, null) }).ConfigureAwait(true);
+            await application.ResourceNotifications.PublishUpdateAsync(cli.Resource, snapshot => snapshot with
+            {
+                State = new ResourceStateSnapshot(KnownResourceStates.Running, null),
+                Properties = [new ResourcePropertySnapshot("executable.pid", other.Id)],
+                Commands = [new ResourceCommandSnapshot(KnownResourceCommands.StopCommand, ResourceCommandState.Enabled, "Stop", null, null, null, null, null, false)],
+            }).ConfigureAwait(true);
+            fixture.CaptureOwnedWorkers(application);
+            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            (await Should.ThrowAsync<InvalidOperationException>(() => fixture.QuiesceStartedWorkersAsync(application, deadline.Token)).ConfigureAwait(true))
+                .Message.ShouldContain("not this fixture's subreaper launcher");
+            stops.ShouldBe(0);
+            // The refusal keeps the existing fallback: the exact marked worker is terminated, backing removal is not authorized.
+            await other.WaitForExitAsync(deadline.Token).ConfigureAwait(true);
+        }
+        finally { await ReapOwnedProcessAsync(other, terminate: !other.HasExited).ConfigureAwait(true); }
+    }
+
     /// <summary>A stale sidecar PID cannot acquire an unrelated lifetime, even after observation retries.</summary>
     /// <param name="otherFixtureMarker">Whether the stale PID belongs to another fixture lifetime.</param>
     [Theory]

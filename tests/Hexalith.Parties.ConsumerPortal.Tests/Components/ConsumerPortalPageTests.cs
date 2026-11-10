@@ -11,7 +11,7 @@ using Shouldly;
 
 namespace Hexalith.Parties.ConsumerPortal.Tests.Components;
 
-public sealed class ConsumerPortalPageTests : BunitContext
+public sealed class ConsumerPortalPageTests : ConsumerPortalBunitContext
 {
     public ConsumerPortalPageTests()
     {

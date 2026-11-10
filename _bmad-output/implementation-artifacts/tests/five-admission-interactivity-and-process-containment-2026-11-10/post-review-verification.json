@@ -1,0 +1,65 @@
+{
+  "purpose": "Full Verification-section rerun after step-04 review patches T1-T11 (orchestrator-run).",
+  "baselineCommit": "7181fa29db850a75d88462f7099342b251a7af1a",
+  "treeHead": "7181fa29db850a75d88462f7099342b251a7af1a",
+  "mode": "package (CI build-and-test catalog properties), Release, -warnaserror, -m:1, MinVerVersionOverride=1.0.0; same property set as ../verification.json",
+  "pathPlaceholders": {
+    "${POST_REVIEW_ROOT}": "session scratchpad output directory for this run",
+    "${SCRATCH}": "session scratchpad directory"
+  },
+  "exitCodes": {
+    "build-service": 0,
+    "build-integration": 0,
+    "build-consumer": 0,
+    "build-ui": 0,
+    "service-full-tests": 0,
+    "consumer-tests": 0,
+    "integration-process-only": 0,
+    "fitness-after-ledger": 0,
+    "scripts-tests": 0,
+    "scripts-tests-py312": 0,
+    "lifecycle-tests": 0,
+    "lifecycle-tests-py312": 1,
+    "e2e-typecheck": 0,
+    "e2e-consumer-portal": 0
+  },
+  "results": {
+    "builds": "service, integration, consumer-portal tests and UI server: 0 warnings, 0 errors",
+    "service-full-tests": "2964 total, 0 failed, 13 skipped (unchanged environment-gated count)",
+    "consumer-tests": "91 total, 0 failed",
+    "integration-process-only": "83 total, 0 failed, 11 skipped (Docker/runtime-gated); classes PartiesTopologyCleanupTests, DaprMtlsBootstrapTests, PartiesPublishEnvironmentTests, PartiesAspireTopologyFixtureTests",
+    "fitness-after-ledger": "196 total, 0 failed (PlatformApiPrerequisitesTests, EpicEightClosureFitnessTests, after the D1/D2 ledger appends)",
+    "scripts-tests": "74 OK (3.14); 74 OK, 2 skipped (3.12)",
+    "lifecycle-tests": "120 OK (3.14)",
+    "lifecycle-tests-py312": "120 run, 8 errors: all AttributeError for os.pidfd_open / signal.pidfd_send_signal missing in the local CPython 3.12.13 build, in test_loop2_fixes and test_launch_recovery; pre-existing environment, no new-test errors",
+    "e2e-typecheck": "exit 0",
+    "e2e-consumer-portal": "155 passed, 0 failed over --repeat-each=5 --retries=0 (CI=1 PLAYWRIGHT_SKIP_WEBSERVER=1, package-mode Release UI on 127.0.0.1:5072 with the playwright webServer environment)"
+  },
+  "notRun": [
+    "live DCP ordinary-profile topology",
+    "Docker-gated suites",
+    "hosted lifecycle qualification",
+    "source-mode Debug builds",
+    "Hexalith.Parties.UI.Tests (does not reference the changed consumer pages)"
+  ],
+  "logs": [
+    "build-consumer.log.gz",
+    "build-integration.log.gz",
+    "build-service.log.gz",
+    "build-ui.log.gz",
+    "consumer-tests.log.gz",
+    "consumer-tests.xml.gz",
+    "e2e-consumer-portal.log.gz",
+    "e2e-typecheck.log.gz",
+    "fitness-after-ledger.log.gz",
+    "integration-process-only.log.gz",
+    "integration-process-only.xml.gz",
+    "lifecycle-tests-py312.log.gz",
+    "lifecycle-tests.log.gz",
+    "scripts-tests-py312.log.gz",
+    "scripts-tests.log.gz",
+    "service-full-tests.log.gz",
+    "service-full-tests.xml.gz",
+    "ui-server.log.gz"
+  ]
+}

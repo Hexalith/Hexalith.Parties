@@ -1,0 +1,118 @@
+{
+  "status": "open-upstream-sidecar-publisher",
+  "sdk": "Aspire.Hosting 13.6.4 (Aspire.AppHost.Sdk 13.6.4)",
+  "toolkit": "CommunityToolkit.Aspire.Hosting.Dapr 13.6.2-beta.959",
+  "previousRecord": "../five-publish-and-process-safety-2026-10-23/sdk-sidecar-emission.json (Aspire.Hosting 13.6.3, Toolkit 13.6.1-beta.935)",
+  "notes": {
+    "evidenceRoot": "${EVIDENCE_ROOT} stands for a private scratch directory outside the repository; the publisher wrote each manifest there and the packet keeps its gzipped copy (rawManifest).",
+    "rawManifestSha256": "SHA-256 of the uncompressed manifest bytes exactly as the publisher wrote them, before gzip; the .json.gz copies decompress to those bytes.",
+    "acaMemoriesContainerApp": "aca-memories-containerapp.module.bicep.gz is memories-containerapp.module.bicep, written by the aca manifest publish above next to its --output-path manifest; it was not produced by a separate step."
+  },
+  "build": "AppHost built package-mode Release with -warnaserror through tests/Hexalith.Parties.IntegrationTests (integration-build.log.gz)",
+  "records": [
+    {
+      "target": "docker",
+      "command": [
+        "dotnet",
+        "src/Hexalith.Parties.AppHost/bin/Release/net10.0/Hexalith.Parties.AppHost.dll",
+        "--operation=publish",
+        "--publisher=manifest",
+        "--output-path=${EVIDENCE_ROOT}/five-admission-sdk-sidecar-docker.json",
+        "--PUBLISH_TARGET=docker",
+        "--PartiesUi:OidcClientSecret=model-only-secret"
+      ],
+      "publisherExitCode": 0,
+      "publisherLog": "manifest-docker.log.gz",
+      "rawManifest": "five-admission-sdk-sidecar-docker.json.gz",
+      "rawManifestSha256": "652dd2aad6706b235b67772807d51ef0a9b03f57c180e8170b9d75b9186fc73e",
+      "appType": "project.v1",
+      "appSecretReferences": {
+        "APP_API_TOKEN": "{memories-app-api-token.value}",
+        "DAPR_API_TOKEN": "{memories-dapr-api-token.value}"
+      },
+      "sidecarType": "dapr.v0",
+      "sidecarKeys": [
+        "dapr",
+        "type"
+      ],
+      "sidecarEnvironmentPresent": false,
+      "sidecarSecretBindings": {
+        "APP_API_TOKEN": null,
+        "DAPR_API_TOKEN": null
+      },
+      "positivePairingRequirementSatisfied": false
+    },
+    {
+      "target": "k8s",
+      "command": [
+        "dotnet",
+        "src/Hexalith.Parties.AppHost/bin/Release/net10.0/Hexalith.Parties.AppHost.dll",
+        "--operation=publish",
+        "--publisher=manifest",
+        "--output-path=${EVIDENCE_ROOT}/five-admission-sdk-sidecar-k8s.json",
+        "--PUBLISH_TARGET=k8s",
+        "--PartiesUi:OidcClientSecret=model-only-secret"
+      ],
+      "publisherExitCode": 0,
+      "publisherLog": "manifest-k8s.log.gz",
+      "rawManifest": "five-admission-sdk-sidecar-k8s.json.gz",
+      "rawManifestSha256": "6a74c8c485ef2db286818b90178c374c702b8cfa195c05a8d56eef60f1acef01",
+      "appType": "project.v1",
+      "appSecretReferences": {
+        "APP_API_TOKEN": "{memories-app-api-token.value}",
+        "DAPR_API_TOKEN": "{memories-dapr-api-token.value}"
+      },
+      "sidecarType": "dapr.v0",
+      "sidecarKeys": [
+        "dapr",
+        "type"
+      ],
+      "sidecarEnvironmentPresent": false,
+      "sidecarSecretBindings": {
+        "APP_API_TOKEN": null,
+        "DAPR_API_TOKEN": null
+      },
+      "positivePairingRequirementSatisfied": false
+    },
+    {
+      "target": "aca",
+      "command": [
+        "dotnet",
+        "src/Hexalith.Parties.AppHost/bin/Release/net10.0/Hexalith.Parties.AppHost.dll",
+        "--operation=publish",
+        "--publisher=manifest",
+        "--output-path=${EVIDENCE_ROOT}/five-admission-sdk-sidecar-aca.json",
+        "--PUBLISH_TARGET=aca",
+        "--PartiesUi:OidcClientSecret=model-only-secret"
+      ],
+      "publisherExitCode": 0,
+      "publisherLog": "manifest-aca.log.gz",
+      "rawManifest": "five-admission-sdk-sidecar-aca.json.gz",
+      "rawManifestSha256": "2e8b2cc9665e9b82ce6587874843e1a022248bf93ab842bfb712425c0cb657a1",
+      "appType": "project.v1",
+      "appSecretReferences": {
+        "APP_API_TOKEN": "{memories-app-api-token.value}",
+        "DAPR_API_TOKEN": "{memories-dapr-api-token.value}"
+      },
+      "sidecarType": "dapr.v0",
+      "sidecarKeys": [
+        "dapr",
+        "type"
+      ],
+      "sidecarEnvironmentPresent": false,
+      "sidecarSecretBindings": {
+        "APP_API_TOKEN": null,
+        "DAPR_API_TOKEN": null
+      },
+      "positivePairingRequirementSatisfied": false
+    }
+  ],
+  "acaMemoriesContainerApp": {
+    "module": "aca-memories-containerapp.module.bicep.gz",
+    "sha256": "3274c49c495f4ff6ddde0b44dd9d1670876cbc2204234f3567090412caabf2b9",
+    "daprConfigurationPresent": false,
+    "observation": "APP_API_TOKEN and DAPR_API_TOKEN are app-container secretRefs (app-api-token, dapr-api-token); the module declares no Dapr block, so no sidecar receives them"
+  },
+  "toolkitInspection": "Decompiled 13.6.2-beta.959 DaprDistributedApplicationLifecycleHook: the sidecar ManifestPublishingCallbackAnnotation writes type dapr.v0 and a dapr object (application, appId, components, config, ports, paths) and no environment; sidecar EnvironmentCallbackAnnotations are copied only to the run-mode -cli executable, which is excluded from the manifest.",
+  "scope": "Actual manifest CLI emission on the current pins. Bindings are absent for every target, so no positive emission assertion was added and the ledger entry stays open. No publisher plumbing or dependency change was made."
+}

@@ -1,0 +1,466 @@
+{
+  "baselineCommit": "7181fa29db850a75d88462f7099342b251a7af1a",
+  "rootGitlinks": {
+    "Directory.Build.targets": "3db00e0ee697303e809551a8c860fcd05cb61fd9",
+    "Hexalith.AI.Tools": "1745b6663ad32bb1288167135ed0f979366c53a0",
+    "Hexalith.Builds": "5ec1779040606be89306129a7d2b245258c9acd2",
+    "Hexalith.Commons": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+    "Hexalith.EventStore": "b437879df2339692d177774d1f076936da6ebd62",
+    "Hexalith.FrontComposer": "e972d0f06a8eec3446db0b2270fdb14eef4c1186",
+    "Hexalith.McpCli": "1c1f06b46bbe9e115022be8af75b10085c8ac360",
+    "Hexalith.Memories": "4ff3e6866ecb6d1a497e7063e972c24259252c40",
+    "Hexalith.Platform": "081178aa5cc01f5dc736ba0d1980aa80fedc6fe1",
+    "Hexalith.PolymorphicSerializations": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+    "Hexalith.Tenants": "5293ab9dca49b6298f1e3396367627009967cbfb"
+  },
+  "mode": "package (CI build-and-test catalog properties), Release, -warnaserror",
+  "checks": {
+    "final-service-build": {
+      "exitCode": 0,
+      "log": "final-service-build.log.gz",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "--configuration",
+        "Release",
+        "--disable-build-servers",
+        "-m:1",
+        "-warnaserror",
+        "--nologo",
+        "-p:HexalithEventStoreVersion=4.2.0",
+        "-p:HexalithTenantsVersion=7.0.5",
+        "-p:HexalithMemoriesVersion=3.0.25",
+        "-p:UseHexalithProjectReferences=false",
+        "-p:UseNuGetDeps=true",
+        "-p:EventStoreFromSource=false",
+        "-p:HexalithEventStoreFromSource=false",
+        "-p:HexalithTenantsFromSource=false",
+        "-p:HexalithMemoriesFromSource=false",
+        "-p:HexalithCommonsFromSource=false",
+        "-p:HexalithCommonsHttpFromSource=false",
+        "-p:HexalithMcpCliFromSource=false",
+        "-p:RestoreSources=https://api.nuget.org/v3/index.json",
+        "-p:MinVerVersionOverride=1.0.0"
+      ]
+    },
+    "integration-build": {
+      "exitCode": 0,
+      "log": "integration-build.log.gz",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "--configuration",
+        "Release",
+        "--disable-build-servers",
+        "-m:1",
+        "-warnaserror",
+        "--nologo",
+        "-p:HexalithEventStoreVersion=4.2.0",
+        "-p:HexalithTenantsVersion=7.0.5",
+        "-p:HexalithMemoriesVersion=3.0.25",
+        "-p:UseHexalithProjectReferences=false",
+        "-p:UseNuGetDeps=true",
+        "-p:EventStoreFromSource=false",
+        "-p:HexalithEventStoreFromSource=false",
+        "-p:HexalithTenantsFromSource=false",
+        "-p:HexalithMemoriesFromSource=false",
+        "-p:HexalithCommonsFromSource=false",
+        "-p:HexalithCommonsHttpFromSource=false",
+        "-p:HexalithMcpCliFromSource=false",
+        "-p:RestoreSources=https://api.nuget.org/v3/index.json",
+        "-p:MinVerVersionOverride=1.0.0"
+      ],
+      "note": "also builds the AppHost used for the manifest publishes"
+    },
+    "consumer-portal-tests-build": {
+      "exitCode": 0,
+      "log": "consumer-tests-build.log.gz",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj",
+        "--configuration",
+        "Release",
+        "--disable-build-servers",
+        "-m:1",
+        "-warnaserror",
+        "--nologo",
+        "-p:HexalithEventStoreVersion=4.2.0",
+        "-p:HexalithTenantsVersion=7.0.5",
+        "-p:HexalithMemoriesVersion=3.0.25",
+        "-p:UseHexalithProjectReferences=false",
+        "-p:UseNuGetDeps=true",
+        "-p:EventStoreFromSource=false",
+        "-p:HexalithEventStoreFromSource=false",
+        "-p:HexalithTenantsFromSource=false",
+        "-p:HexalithMemoriesFromSource=false",
+        "-p:HexalithCommonsFromSource=false",
+        "-p:HexalithCommonsHttpFromSource=false",
+        "-p:HexalithMcpCliFromSource=false",
+        "-p:RestoreSources=https://api.nuget.org/v3/index.json",
+        "-p:MinVerVersionOverride=1.0.0"
+      ]
+    },
+    "ui-server-build": {
+      "exitCode": 0,
+      "log": "ui-build.log.gz",
+      "command": [
+        "dotnet",
+        "build",
+        "src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj",
+        "--configuration",
+        "Release",
+        "--disable-build-servers",
+        "-m:1",
+        "-warnaserror",
+        "--nologo",
+        "-p:HexalithEventStoreVersion=4.2.0",
+        "-p:HexalithTenantsVersion=7.0.5",
+        "-p:HexalithMemoriesVersion=3.0.25",
+        "-p:UseHexalithProjectReferences=false",
+        "-p:UseNuGetDeps=true",
+        "-p:EventStoreFromSource=false",
+        "-p:HexalithEventStoreFromSource=false",
+        "-p:HexalithTenantsFromSource=false",
+        "-p:HexalithMemoriesFromSource=false",
+        "-p:HexalithCommonsFromSource=false",
+        "-p:HexalithCommonsHttpFromSource=false",
+        "-p:HexalithMcpCliFromSource=false",
+        "-p:RestoreSources=https://api.nuget.org/v3/index.json",
+        "-p:MinVerVersionOverride=1.0.0"
+      ]
+    },
+    "service-full-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "-xml",
+        "service-full-tests.xml"
+      ],
+      "exitCode": 0,
+      "total": 2964,
+      "failed": 0,
+      "skipped": 13,
+      "skipReason": "environment-gated actual-provider and owned Memories runtime facts (unchanged count)",
+      "log": "service-full-tests.log.gz",
+      "xml": "service-full-tests.xml.gz"
+    },
+    "consumer-portal-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.ConsumerPortal.Tests/bin/Release/net10.0/Hexalith.Parties.ConsumerPortal.Tests.dll",
+        "-xml",
+        "consumer-tests.xml"
+      ],
+      "exitCode": 0,
+      "total": 91,
+      "failed": 0,
+      "skipped": 0,
+      "newCases": "three renderer theories (Static and Server rows) for the edit, consent and privacy pages",
+      "log": "consumer-tests.log.gz",
+      "xml": "consumer-tests.xml.gz"
+    },
+    "integration-process-only": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.DaprMtlsBootstrapTests",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests",
+        "-xml",
+        "integration-process-only.xml"
+      ],
+      "exitCode": 0,
+      "total": 67,
+      "failed": 0,
+      "skipped": 11,
+      "skipReason": "four Docker-gated LiveShutdown modes and seven runtime-gated MemoriesProductionStartup rows",
+      "log": "integration-process-only.log.gz",
+      "xml": "integration-process-only.xml.gz"
+    },
+    "fitness-after-ledger": {
+      "description": "ledger/spec-reading fitness classes rerun after the deferred-work.md and spec edits",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests",
+        "-class",
+        "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests"
+      ],
+      "exitCode": 0,
+      "total": 196,
+      "failed": 0,
+      "log": "fitness-after-ledger.log.gz"
+    },
+    "scripts-tests": {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts",
+        "-p",
+        "test_*_integration.py",
+        "-v"
+      ],
+      "python": "3.14.4",
+      "exitCode": 0,
+      "ran": 74,
+      "skipped": 0,
+      "log": "scripts-tests.log.gz"
+    },
+    "scripts-tests-py312": {
+      "command": [
+        "python3.12",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts",
+        "-p",
+        "test_*_integration.py"
+      ],
+      "python": "3.12.13 (no jsonschema)",
+      "exitCode": 0,
+      "ran": 74,
+      "skipped": 2,
+      "log": "scripts-tests-py312.log.gz"
+    },
+    "lifecycle-tests": {
+      "command": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/ci-lifecycle",
+        "-v"
+      ],
+      "python": "3.14.4",
+      "exitCode": 0,
+      "ran": 120,
+      "log": "lifecycle-tests.log.gz"
+    },
+    "lifecycle-tests-py312": {
+      "command": [
+        "python3.12",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/ci-lifecycle"
+      ],
+      "python": "3.12.13",
+      "exitCode": 1,
+      "ran": 120,
+      "errors": 9,
+      "observation": "all 9 errors are the local 3.12 build lacking os.pidfd_open/signal.pidfd_send_signal; baseline 7181fa29 has the same 9 errors in 115 tests",
+      "log": "lifecycle-tests-py312.log.gz",
+      "headLog": "lifecycle-tests-py312-head.log.gz"
+    },
+    "redproof-lifecycle-write": {
+      "description": "baseline 7181fa29 scripts/qualify-disposable-ci.py restored (git archive copy), new controls retained; run on Python 3.14 and 3.12",
+      "command": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "tests/ci-lifecycle/test_qualification_controller.py",
+        "-v"
+      ],
+      "exitCode": 1,
+      "ran": 25,
+      "failuresPerVersion": 6,
+      "errorsPerVersion": 1,
+      "failedSubtests": [
+        "writer/directory parent swap after the check: write",
+        "writer/directory parent swap after the check: directory",
+        "parent swap after admission",
+        "temporary-symlink before replace",
+        "temporary-hardlink before replace",
+        "ordinary write: intermediate directory 0o775 instead of 0o700"
+      ],
+      "erroredTests": [
+        "linked publicResult parent: AttributeError after creating the file through the link"
+      ],
+      "passingOnBaseline": "destination-symlink and destination-hardlink: rename already replaces the final entry without following it",
+      "logs": [
+        "redproof-lifecycle-write.log.gz",
+        "redproof-lifecycle-write-py312.log.gz"
+      ]
+    },
+    "redproof-bunit": {
+      "description": "baseline 7181fa29 EditMyProfilePage/MyConsentPage/MyPrivacyPage.razor restored, new tests retained",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.ConsumerPortal.Tests/bin/Release/net10.0/Hexalith.Parties.ConsumerPortal.Tests.dll",
+        "-class",
+        "Hexalith.Parties.ConsumerPortal.Tests.Components.EditMyProfilePageTests",
+        "-class",
+        "Hexalith.Parties.ConsumerPortal.Tests.Components.MyConsentPageTests",
+        "-class",
+        "Hexalith.Parties.ConsumerPortal.Tests.Components.MyPrivacyPageTests"
+      ],
+      "exitCode": 1,
+      "total": 55,
+      "failed": 4,
+      "observation": "all three Static rows fail (controls enabled); the consent Server row also fails because baseline switches carry no aria-disabled attribute",
+      "buildLog": "redproof-ui-build.log.gz",
+      "log": "redproof-bunit.log.gz"
+    },
+    "e2e-typecheck": {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "workingDirectory": "tests/e2e",
+      "exitCode": 0,
+      "log": "e2e-typecheck.log.gz"
+    },
+    "e2e-consumer-portal": {
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "specs/consumer-portal-routes.spec.ts",
+        "--project=chromium",
+        "--retries=0",
+        "--repeat-each=5",
+        "--reporter=list"
+      ],
+      "workingDirectory": "tests/e2e",
+      "environment": {
+        "CI": "1",
+        "PLAYWRIGHT_SKIP_WEBSERVER": "1"
+      },
+      "server": "package-mode Release src/Hexalith.Parties.UI (same -p properties) via dotnet run --no-build on http://127.0.0.1:5072 with the playwright.config.ts webServer environment",
+      "exitCode": 0,
+      "passed": 155,
+      "failed": 0,
+      "targetCasePasses": "5/5 for each of the three negotiation-held controls, the three blazor.web.js-held controls and the two accordion cases",
+      "log": "e2e-consumer-portal.log.gz"
+    },
+    "redproof-e2e-negotiation-held": {
+      "description": "UI rebuilt with the baseline 7181fa29 consumer pages; committed spec unchanged",
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "specs/consumer-portal-routes.spec.ts",
+        "--project=chromium",
+        "--retries=0",
+        "--reporter=list",
+        "--grep",
+        "negotiation is held"
+      ],
+      "exitCode": 1,
+      "failed": 3,
+      "observation": "/me/consent and /me/privacy controls are enabled; on /me/edit, Enter in First name natively submits and the page no longer offers Save",
+      "log": "redproof-e2e-negotiation-held.log.gz"
+    },
+    "redproof-native-submit-probe": {
+      "description": "temporary probe spec (removed) against the baseline UI: negotiation held, type into First name, then Enter or a forced Save click",
+      "probe": "native_submit_probe.spec.ts.gz",
+      "exitCode": 0,
+      "head": {
+        "enter": [
+          "GET /me/edit",
+          "POST /me/edit"
+        ],
+        "save": [
+          "GET /me/edit",
+          "POST /me/edit"
+        ],
+        "typedValueAfter": "<absent> for both"
+      },
+      "log": "redproof-native-submit-probe-head.log.gz"
+    },
+    "redproof-integration-subreaper": {
+      "description": "baseline 7181fa29 PartiesAspireTopologyFixture.cs restored and PartiesDaprCliSubreaper.Create reduced to returning the CLI path (the CLI runs directly, as at baseline); new tests retained",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-method",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests.OrdinaryCliWrapper_ExitingBeforeFirstPoll_LeavesItsRuntimeAdoptedThenTerminated",
+        "-method",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests.OrdinaryCliWrapper_UnderSubreaperRefusesAnyOtherObservedWrapper"
+      ],
+      "exitCode": 1,
+      "total": 2,
+      "failed": 2,
+      "observation": "the orphaned runtime is not captured (not adopted); a marked non-launcher wrapper is accepted as custody",
+      "buildLog": "redproof-integration-build.log.gz",
+      "log": "redproof-integration-subreaper.log.gz"
+    },
+    "redproof-integration-no-subreaper": {
+      "description": "final fixture; launcher script with the prctl(PR_SET_CHILD_SUBREAPER) call disabled",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-method",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests.OrdinaryCliWrapper_ExitingBeforeFirstPoll_LeavesItsRuntimeAdoptedThenTerminated"
+      ],
+      "exitCode": 1,
+      "total": 1,
+      "failed": 1,
+      "observation": "the orphan is reparented away from the wrapper and is not captured",
+      "log": "redproof-integration-no-subreaper.log.gz"
+    },
+    "launcher-real-dapr-probe": {
+      "description": "launcher body extracted from PartiesDaprCliSubreaper.cs wrapping /usr/local/bin/dapr (CLI and runtime 1.19.1), run as DCP would and stopped with SIGTERM",
+      "script": "real_dapr_probe.sh.gz",
+      "healthz": 204,
+      "processTree": "python3 launcher -> dapr CLI -> daprd",
+      "launcherExitCode": 143,
+      "stopMilliseconds": 621,
+      "cliAfterStop": "gone",
+      "daprdAfterStop": "gone",
+      "portsReleased": true,
+      "log": "launcher-real-dapr-probe.log.gz"
+    },
+    "sidecar-manifest-emission": {
+      "record": "sdk-sidecar-emission.json",
+      "exitCode": 0,
+      "result": "memories-dapr has no env and no APP_API_TOKEN/DAPR_API_TOKEN binding for docker, k8s or aca; entry stays open"
+    }
+  },
+  "testedSourceSha256": {
+    "scripts/qualify-disposable-ci.py": "fddb28bc8b525ed7ae5d1fbadc6f1dda01b310f9cd248d460c3b5815f6552231",
+    "tests/ci-lifecycle/test_qualification_controller.py": "45ce5fdb69f4783df731c206a897a009e0b5ce97b972f015a672e756733a63d2",
+    "src/Hexalith.Parties.ConsumerPortal/Components/EditMyProfilePage.razor": "46df03c4bdd8506438a9934220b25e031da1ac546424490dc02d260b47d58b79",
+    "src/Hexalith.Parties.ConsumerPortal/Components/MyConsentPage.razor": "53bbc47112ffc8db8120bc4d0f751340238d7fc049c13a8b52ce05a4ad161222",
+    "src/Hexalith.Parties.ConsumerPortal/Components/MyPrivacyPage.razor": "ad00691147a195b785e8971c28a6aa4afe26e40640cb3fa540829bfef5ae68b5",
+    "tests/Hexalith.Parties.ConsumerPortal.Tests/Components/ConsumerPortalBunitContext.cs": "bb89db8baafc3284288d7cadef03dcfa06ce05dc4c648f6bc1dd6ddc3c0cbccb",
+    "tests/Hexalith.Parties.ConsumerPortal.Tests/Components/ConsumerPortalPageTests.cs": "eeae11ad472bf2713cfb6e8f58b3da6afab5d58228ba81c2f8663c8922ecae1b",
+    "tests/Hexalith.Parties.ConsumerPortal.Tests/Components/EditMyProfilePageTests.cs": "9cd4178e8644364778b501ecd5db87f36c6e738afc44e14e7470a9c0c95359af",
+    "tests/Hexalith.Parties.ConsumerPortal.Tests/Components/MyConsentPageTests.cs": "7bebcdc8d4c9ee6579dd078f776b54fbeb4a2d98fce64a8b09241c4c752ab128",
+    "tests/Hexalith.Parties.ConsumerPortal.Tests/Components/MyPrivacyPageTests.cs": "084529e4dc26df5be8a861ce3d1b7d1022d92d80b21ed7009eabdf7d98756521",
+    "tests/e2e/specs/consumer-portal-routes.spec.ts": "c4b985f9f7ab01af8d0f2bc2db208444d38d0f18ba3da0118b9b95870b69ab82",
+    "tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesDaprCliSubreaper.cs": "f2ac8feea2521437600380b26a6934ef125d4a2431d44d8887bca8f385c041dd",
+    "tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs": "0737be1f81ee833c57847c522752e94054016d1fe5f828bd1da6f8ff0fdd297e",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartiesTopologyCleanupTests.cs": "b70bfcbc3e69e3774fbdee5b6e90d0242f15818bc120840695db0b8f673b74c6"
+  },
+  "ledgerSha256": "1cb4b240a892c21756cbac337ebea61d6b022a331153990393c4c54a17caca9c",
+  "notRun": [
+    "a live DCP ordinary-profile topology through the launcher (no unskipped local ordinary test; CI ordinary runs use dapr-session)",
+    "Docker-backed topology and integration suites (LiveShutdown, Memories production startup)",
+    "source-mode (pinned hexalith-module mapping) Debug builds",
+    "hosted lifecycle qualification or any hosted CI run",
+    "commit and commitlint (orchestrator-owned)"
+  ],
+  "qualificationCredit": "Three deferrals closed (held-descriptor writes, negotiation-held control, CLI wrapper quiescence). The sidecar token emission entry and its dependent stay open with fresh evidence; the slow-filesystem entry is reassigned to Platform with no code-fix credit. No production, owner-acceptance or dependency-publication gate receives credit.",
+  "investigations": {
+    "slowFilesystemTrace": "Parties has no snapshot capture or export code. Platform 081178aa src/Hexalith.Platform.Composition/PlatformCurrentOwnerSourceState.cs:26-67 hashes every eligible input with synchronous File.ReadAllBytes after PlatformCurrentOwnerSourceInventory.Read (:14-17,79) checks the deadline; spec-sync-upgrade-and-release-2026-11-05.md IB-05 cites the 1138-directory/8202-entry owner.",
+    "adminEditForm": "src/Hexalith.Parties.AdminPortal/Components/CreateEditPartyPage.razor:35-148 has the same pre-interactive native-submit hazard; deferred by owner decision."
+  }
+}

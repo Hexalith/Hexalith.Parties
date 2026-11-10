@@ -76,7 +76,7 @@
                 <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Stretch" Width="100%" VerticalGap="var(--spacingVerticalS)" Style="padding: var(--spacingVerticalS) var(--spacingHorizontalS); min-width: 0; box-sizing: border-box;">
                     <div>
                         <EditForm EditContext="_editContext" FormName="@_formName" OnSubmit="SubmitAsync" class="hx-parties-edit-profile__form">
-                            <fieldset class="hx-parties-profile__section hx-parties-edit-profile__fieldset" disabled="@_isSaving">
+                            <fieldset class="hx-parties-profile__section hx-parties-edit-profile__fieldset" disabled="@_editingDisabled">
                                 <legend>@ConsumerPortalLabels.EditProfileEditableFieldsTitle</legend>
 
                                 @if (!string.IsNullOrWhiteSpace(_formAlert))
@@ -113,14 +113,14 @@
                                 }
 
                                 <div class="hx-parties-edit-profile__actions">
-                                    <FluentButton aria-disabled="@(_isSaving ? "true" : "false")" role="button" Appearance="ButtonAppearance.Primary"
+                                    <FluentButton aria-disabled="@(_editingDisabled ? "true" : "false")" role="button" Appearance="ButtonAppearance.Primary"
                                                   Type="ButtonType.Submit"
-                                                  Disabled="@_isSaving">
+                                                  Disabled="@_editingDisabled">
                                         @ConsumerPortalLabels.EditProfileSave
                                     </FluentButton>
-                                    <FluentButton aria-disabled="@(_isSaving ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
+                                    <FluentButton aria-disabled="@(_editingDisabled ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
                                                   Type="ButtonType.Button"
-                                                  Disabled="@_isSaving"
+                                                  Disabled="@_editingDisabled"
                                                   OnClick="CancelAsync">
                                         @ConsumerPortalLabels.EditProfileCancel
                                     </FluentButton>
@@ -210,6 +210,9 @@
     private string _identifierId => $"hx-parties-edit-identifiers-{_instanceId}";
     private string _alertId => $"hx-parties-edit-alert-{_instanceId}";
     private string _formName => $"edit-my-profile-{_instanceId}";
+
+    // Until the circuit renders interactively, a native submit would POST the prerendered form and discard typed values.
+    private bool _editingDisabled => _isSaving || !RendererInfo.IsInteractive;
 
     protected override void OnInitialized()
     {

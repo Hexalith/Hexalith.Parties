@@ -1667,6 +1667,7 @@ archived: 2026-10-21
   implementation_2026_10_23: The publish model configures external HTTPS OIDC authority/issuer, audience, asymmetric algorithms and tenant claim. App env emission contains secret parameter references; matching sidecar annotations are model-only proof. Actual app startup/liveness and missing-input controls pass with real Dapr/Redis/FalkorDB and an explicitly operator-configured sidecar; producer validators remain intact. All 20 final controls pass while an unrelated listener occupies 50002/9090; internal gRPC is allocated and unused metrics disabled. Authenticated Dapr outbound health and app-id metadata pass, missing/wrong sidecar tokens return 401, and a stopped-sidecar control fails readiness.
   remaining_gate_2026_10_23: Actual Aspire.Hosting 13.6.3 SDK manifest emission for docker/k8s/aca produces memories-dapr as dapr.v0 without APP_API_TOKEN or DAPR_API_TOKEN bindings. Selected CommunityToolkit.Aspire.Hosting.Dapr 13.6.1-beta.935 drops sidecar environment annotations. Positive sidecar token publication is an upstream publisher/adaptor gate; no generic publisher plumbing or dependency change was added. Effective algorithm replacement also remains gated: actual producer binding retains initialized HS256 alongside configured RS256/ES256. Deployment, Parties bearer forwarding and search remain unqualified.
   verification_2026_10_23: `tests/five-publish-and-process-safety-2026-10-23/`.
+  evidence_2026_11_10: The sidecar-token gate this entry depends on is still unmet on the current 13.6.4/13.6.2-beta.959 pins: memories-dapr carries no token binding in docker, k8s or aca manifests. See the sidecar token emission entry and `tests/five-admission-interactivity-and-process-containment-2026-11-10/sdk-sidecar-emission.json`.
 
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-72-production-publish-environments.md`
@@ -1788,10 +1789,13 @@ archived: 2026-10-21
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-sdk-runtime-deferred-items.md`
   summary: Qualify descendant-process quiescence when a Dapr CLI wrapper exits before its runtime child.
   evidence: Unverified medium: the current fixture observes DCP executable PID/start identities and qualified listener cleanup, but the reviewer could not establish that an escaped daprd child is impossible before backing removal. A controlled producer-owned wrapper/orphan case or exact CLI/DCP descendant-stop contract would settle the claim; normal 22/22 live results alone do not establish this broader guarantee.
-  status: open
+  status: done 2026-11-10
   implementation_2026_10_23: Both generated mTLS launchers have executed PID-continuity proof. Early descendant observation retains exact PID/start identities across wrapper exit; controlled captured-child, separate-session, retry and unrelated-worker cases pass. An already-lost ordinary CLI wrapper now fails closed and retains backing resources.
   remaining_gate_2026_10_23: Polling cannot prove the ordinary CLI launch-to-first-observation race. Do not infer blanket orphan containment from a handshake-delayed control. Live direct-exec matrix results and any blocked modes are recorded separately from this unqualified ordinary CLI path.
   verification_2026_10_23: `tests/five-publish-and-process-safety-2026-10-23/`.
+  resolution: The topology fixture now runs every ordinary (non dapr-session) Dapr CLI under a test-owned PR_SET_CHILD_SUBREAPER launcher. It forwards SIGTERM/SIGINT to every child, kills children left after a 10 s grace period and exits only after reaping all of them, so a runtime orphaned before the first poll stays a child of the observed wrapper PID. Under the configured launcher, custody also requires that PID to run the exact launcher. A process-only control, where a fake CLI forks a child and exits before the first poll, shows the child adopted, then terminated by the forwarded stop. It fails on the reverted fixture with the CLI run directly and with the prctl removed. The real dapr 1.19.1 CLI under the launcher forwards SIGTERM, daprd exits and the launcher exits 143. The mTLS dapr-session path and its PID-continuity proof are unchanged.
+  remaining_gate_2026_11_10: No unskipped local test starts the ordinary profile under DCP, and CI ordinary runs select the dapr-session launcher, so live DCP stop timing through the launcher is not exercised; tracked as the open "Exercise the ordinary-profile subreaper launcher's stop timing under live DCP" entry.
+  verification_2026_11_10: `spec-five-admission-interactivity-and-process-containment-deferred-items.md`; `tests/five-admission-interactivity-and-process-containment-2026-11-10/`.
 
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-memories-recovery-deferred-items.md`
@@ -1864,6 +1868,7 @@ archived: 2026-10-21
   summary: Deliver supported Dapr sidecar secret-token emission through the selected SDK/target publisher before qualifying Memories publish authentication.
   status: open
   evidence: Actual SDK CLI manifests for docker/k8s/aca contain both Memories app secret references but no env/token bindings on memories-dapr. Selected Toolkit 13.6.1-beta.935 custom dapr.v0 callback and SDK 13.6.3 outer writer do not serialize these annotations. The omission predates the caller configuration and also affects existing generic helpers. App-only startup with an operator-configured sidecar is separate evidence; require owner-supported publisher delivery and full positive app/sidecar manifest proof.
+  evidence_2026_11_10: Fresh actual manifest publishes on the current pins (Aspire.Hosting and AppHost SDK 13.6.4, CommunityToolkit.Aspire.Hosting.Dapr 13.6.2-beta.959) for docker, k8s and aca still emit memories with both secret references and memories-dapr as dapr.v0 with no env, APP_API_TOKEN or DAPR_API_TOKEN binding; the aca memories container-app module has no Dapr block. The 13.6.2-beta.959 dapr.v0 callback writes no environment. The entry stays open and no emission assertion was added. Evidence: `tests/five-admission-interactivity-and-process-containment-2026-11-10/sdk-sidecar-emission.json`.
 
 - source_spec: `spec-five-owner-config-and-recovery-deferred-items.md`
   summary: Make Memories MCP explicit JWT algorithm lists replace initialized defaults through registered configuration.
@@ -2228,6 +2233,9 @@ rollback: None required (test-only).
 - source_spec: `/tmp/parties-release-20261105/parties-runtime-r5/_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-05.md`
   summary: Unverified medium risk that a pathological blocked regular filesystem can outlast synchronous snapshot I/O deadline checks.
   evidence: L2-B6 identifies synchronous regular-file open/read/write operations; actual8191-file source capture/export passes in11.258seconds. A controlled slow-filesystem reproducer is required to establish a practical overrun. No source/runtime qualification is granted by this deferral.
+  status: open
+  owner: Hexalith.Platform (reassigned 2026-11-10 by owner decision; ledger-only, no Parties code-fix credit)
+  trace_2026_11_10: Parties has no snapshot capture or export code, and the source spec under /tmp no longer exists. The nearest match is Platform 081178aa src/Hexalith.Platform.Composition/PlatformCurrentOwnerSourceState.cs:26-67: Capture and RequireUnchanged check the optional deadline only inside PlatformCurrentOwnerSourceInventory.Read (PlatformCurrentOwnerSourceInventory.cs:14-17,79, before and between git ls-tree calls), then Hash() runs a synchronous File.ReadAllBytes for every eligible input with no further deadline check. spec-sync-upgrade-and-release-2026-11-05.md IB-05 cites the actual 1138-directory/8202-entry owner. A slow-filesystem reproducer and any fix belong in Platform.
 
 - source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-06.md`
   summary: Evaluate fixed digest verification for the manual Dapr diagnostic toolchain archives (unverified medium).
@@ -2465,6 +2473,9 @@ rollback: None required (test-only).
 - source_spec: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`
   summary: Apply the held-descriptor policy to qualification metadata writes and directory admission.
   evidence: medium; review finding (pre-existing). write() and private_directory() in scripts/qualify-disposable-ci.py check ancestors for links by name, then mkdir, mkstemp(dir=...) and os.replace by path. That leaves the check-then-use interval this change closed for read(). Hosted roots come from the Builds helper's real_path job roots, so hostile reachability is unproven; add a post-admission swap control before changing the writer.
+  status: done 2026-11-10
+  resolution: write(), private_directory() and the launch publicResult now share read()'s held O_PATH ancestor walk. Missing components are made 0o700 with mkdir(dir_fd=); the temporary file is created O_CREAT|O_EXCL|O_NOFOLLOW 0o600 in the held parent, fsynced and renamed with src_dir_fd/dst_dir_fd. A parent that no longer resolves to the held directory is refused before the rename, and a destination entry that is not the written file afterwards is removed and refused. On the reverted script, parent swaps after the check and after admission, temporary-entry swaps before the rename and a linked publicResult parent all write through the link or succeed (6 failures, 1 error); all are refused now. Destination-entry swaps were already replaced rather than followed and stay pinned.
+  verification: `spec-five-admission-interactivity-and-process-containment-deferred-items.md`; `tests/five-admission-interactivity-and-process-containment-2026-11-10/`.
 
 - source_spec: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`
   summary: Bind the CI owner receipt read to the checked path in the Builds integration helper.
@@ -2473,3 +2484,31 @@ rollback: None required (test-only).
 - source_spec: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`
   summary: Add a circuit-negotiation-held consumer control, and decide the pre-interactive edit form submission.
   evidence: low; review finding plus probe. The committed control holds blazor.web.js as specified, where Fluent elements are inert. Holding _blazor/negotiate instead lets the scripts load: Save then submits the edit form natively (POST /me/edit) and reloads the page, discarding typed values without a command, while consent and erasure clicks are lost. The guarded cases now wait; a negotiation-held control and the native-submit UX need a separate decision.
+  status: done 2026-11-10
+  resolution: Owner decision 2026-11-10: until RendererInfo.IsInteractive, the edit fieldset and Save, both consent switches and Delete my data render disabled with aria-disabled true, matching FrontComposer's generated command forms. A new control holds POST _blazor/negotiate after Fluent's elements are defined, then presses Enter in First name and force-clicks Save, a switch and Delete my data: the controls stay disabled, no command or native POST is issued and the values are kept. On the reverted pages all three cases fail, and a probe records POST /me/edit with the typed value lost for both Enter and Save. bUnit Static and Server renderer cases pin both states. The blazor.web.js-held control remains, with forced clicks past the now-disabled buttons. The admin form is deferred separately.
+  verification: `spec-five-admission-interactivity-and-process-containment-deferred-items.md`; `tests/five-admission-interactivity-and-process-containment-2026-11-10/`.
+
+- source_spec: `spec-five-admission-interactivity-and-process-containment-deferred-items.md`
+  summary: Gate the admin create/edit party form until the circuit is interactive.
+  evidence: medium; owner decision 2026-11-10 recorded the same hazard without changing the admin page. src/Hexalith.Parties.AdminPortal/Components/CreateEditPartyPage.razor:35-148 renders an EditForm with a per-instance FormName whose fieldsets and Submit button are disabled only by _submitting/_detailsUnavailable, so a pre-interactive Save or Enter can submit natively, as /me/edit did. Apply the RendererInfo.IsInteractive gate with a negotiation-held admin control.
+  status: open
+
+- source_spec: `spec-five-admission-interactivity-and-process-containment-deferred-items.md`
+  summary: Decide whether the remaining prerendered consumer actions need the interactivity gate.
+  evidence: low; implementation observation. The owner decision gated only the edit fieldset and Save, the consent switches and Delete my data. Export my data, Cancel deletion request while a deletion is pending, and the load-failure Retry buttons (EditMyProfilePage.razor:51-55, MyConsentPage.razor:47-51) still accept pre-interactive clicks that are lost without a command or native POST; the e2e cases that use Export and Cancel already wait for interactivity.
+  status: open
+
+- source_spec: `spec-five-admission-interactivity-and-process-containment-deferred-items.md`
+  summary: Exercise the ordinary-profile subreaper launcher's stop timing under live DCP.
+  evidence: medium; remaining gate of the closed CLI wrapper quiescence entry. The dapr-subreaper launcher is proved by process-only controls (adoption, forwarded SIGTERM, post-grace SIGKILL, launcher identity) and a direct real-CLI probe, but no unskipped test starts the ordinary profile under DCP: local health E2E cases are statically skipped and CI ordinary runs select the dapr-session mTLS launcher. Run an ordinary-profile topology through the launcher and record DCP stop timing against the 10 s grace and the 30 s quiescence budget, including whether DCP escalates to SIGKILL before the launcher has reaped its children.
+  status: open
+
+- source_spec: `spec-five-admission-interactivity-and-process-containment-deferred-items.md`
+  summary: Check owner and mode when qualification directory admission accepts an existing component, and bind a freshly made component to the directory it created.
+  evidence: low; review finding D1 (pre-existing). held_directory(create=True) refuses links but admits any existing component regardless of owner or permission bits, as baseline mkdir(parents=True, exist_ok=True) did; a component it creates is then reopened by name, so a same-user writer could substitute a different real directory between mkdir and open. Settle with a leaf-level fstat owner/mode check (shared ancestors such as /tmp must stay admissible) and a swap control.
+  status: open
+
+- source_spec: `spec-five-admission-interactivity-and-process-containment-deferred-items.md`
+  summary: Apply the held-descriptor policy to the qualification lock files and the launch-record existence check.
+  evidence: low; review finding D2 (pre-existing, outside the write()/private_directory() entry). scripts/qualify-disposable-ci.py:1001 opens attachments.lock and provisioning.lock with Path.open('a+') by path, following links and using the umask mode, and launch() checks Path(item['launchRecord']).exists() by name (:695) before the held publicResult create. Hosted reachability is unproven; add a link/swap control before changing them.
+  status: open

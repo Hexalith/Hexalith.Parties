@@ -72,7 +72,7 @@
                                         <FluentSwitch Label="@row.Purpose.Label"
                                                       Value="@row.CurrentValue"
                                                       ValueChanged="@(value => ToggleConsentAsync(row.Purpose.Key, value))"
-                                                      Disabled="@row.IsDisabled"
+                                                      Disabled="@SwitchDisabled(row)"
                                                       AdditionalAttributes="@SwitchAttributes(row)" />
                                     </div>
                                     <p id="@PurposeId(row.Purpose.Key)" class="hx-parties-consent__description">@row.Purpose.Description</p>
@@ -391,8 +391,13 @@
             ["role"] = "switch",
             ["aria-label"] = row.Purpose.Label,
             ["aria-checked"] = row.CurrentValue ? "true" : "false",
+            ["aria-disabled"] = SwitchDisabled(row) ? "true" : "false",
             ["aria-describedby"] = $"{PurposeId(row.Purpose.Key)} {BasisId(row.Purpose.Key)}",
         };
+
+    // Prerendered markup has no Blazor listener until the circuit renders interactively; a toggle there would be lost.
+    private bool SwitchDisabled(ConsentToggleState row)
+        => row.IsDisabled || !RendererInfo.IsInteractive;
 
     private string PurposeId(string purposeKey)
         => $"hx-parties-consent-purpose-{_instanceId}-{purposeKey}";

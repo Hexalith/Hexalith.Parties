@@ -70,6 +70,9 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     internal string WorkerOwnershipMarker { get; } = Guid.NewGuid().ToString("N");
 
     private readonly ConcurrentDictionary<int, long> _ownedWorkers = [];
+    // Forwarded CLI termination may outlast daprd's default five-second graceful shutdown before children are killed.
+    private static readonly TimeSpan s_cliTerminationGrace = TimeSpan.FromSeconds(10);
+    private string? _cliLauncherDirectory;
     private CancellationTokenSource? _workerObservationCancellation;
     private Task? _workerObservation;
     private string[]? _workerResourceNames;
@@ -195,6 +198,22 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
 
             InitializationPhase = "create-builder";
             _builder = await _createBuilder(Session, cts.Token).ConfigureAwait(false);
+            if (OperatingSystem.IsLinux())
+            {
+                // The mTLS session launcher already execs daprd in place. Run every ordinary CLI under this
+                // fixture's subreaper, so a runtime orphaned before the first observation stays a child of the
+                // observed wrapper PID. Without an installed CLI the hosting integration keeps its own refusal.
+                _ = _builder.Services.PostConfigure<DaprOptions>(options =>
+                {
+                    if (Path.GetFileName(options.DaprPath) != "dapr-session"
+                        && !PartiesDaprCliSubreaper.IsLauncher(options.DaprPath)
+                        && (options.DaprPath ?? PartiesDaprCliSubreaper.ResolveDefaultCli()) is { } cli)
+                    {
+                        _cliLauncherDirectory ??= Path.Combine(Path.GetTempPath(), $"parties-dapr-cli-{Guid.NewGuid():N}");
+                        options.DaprPath = PartiesDaprCliSubreaper.Create(_cliLauncherDirectory, Path.GetFullPath(cli), s_cliTerminationGrace);
+                    }
+                });
+            }
             bool privateCatalogUi = PartiesCatalogParticipantStartup.HasModeledAdminUi(_builder.Resources);
 
             PartiesMtlsProfile.ConfigureInternalGrpcEndpoints(_builder, Session);
@@ -664,6 +683,14 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                     _workerObservationCancellation = null;
                     _workerObservation = null;
                 }
+                // Every launched worker has exited. The private launcher is best-effort litter, never a cleanup failure.
+                if (_cliLauncherDirectory is { } launcherDirectory)
+                {
+                    try { Directory.Delete(launcherDirectory, recursive: true); }
+                    catch (DirectoryNotFoundException) { }
+                    catch (IOException) { }
+                    catch (UnauthorizedAccessException) { }
+                }
                 _ownedWorkers.Clear();
                 _workerResourceNames = null;
             },
@@ -814,7 +841,10 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         string[] hosts = model.Resources.OfType<ProjectResource>().Select(resource => resource.Name).ToArray();
         HashSet<string> sidecarNames = model.Resources.SelectMany(resource => resource.Annotations.OfType<DaprSidecarAnnotation>())
             .Select(sidecar => sidecar.Sidecar.Name + "-cli").ToHashSet(StringComparer.Ordinal);
-        bool directRuntimeLauncher = Path.GetFileName(application.Services.GetService<IOptions<DaprOptions>>()?.Value.DaprPath) == "dapr-session";
+        string? daprPath = application.Services.GetService<IOptions<DaprOptions>>()?.Value.DaprPath;
+        bool directRuntimeLauncher = Path.GetFileName(daprPath) == "dapr-session";
+        // An ordinary CLI under the fixture's subreaper keeps every orphan as a child of the observed wrapper PID.
+        string? subreaperLauncher = PartiesDaprCliSubreaper.IsLauncher(daprPath) ? daprPath : null;
         string[] executables = model.Resources.OfType<ExecutableResource>().Select(resource => resource.Name)
             .Concat(sidecarNames)
             .Distinct(StringComparer.Ordinal).ToArray();
@@ -837,7 +867,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 {
                     if (application.ResourceNotifications.TryGetCurrentState(name, out ResourceEvent? sidecarState))
                     {
-                        try { EnsureCliWrapperOwnership(sidecarState.Snapshot); }
+                        try { EnsureCliWrapperOwnership(sidecarState.Snapshot, subreaperLauncher); }
                         catch (InvalidOperationException)
                         {
                             TerminateOwnedWorkers();
@@ -883,7 +913,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                     && command.State == ResourceCommandState.Enabled)) { return null; }
             if (sidecarNames.Contains(name) && !directRuntimeLauncher)
             {
-                try { EnsureCliWrapperOwnership(state.Snapshot); }
+                try { EnsureCliWrapperOwnership(state.Snapshot, subreaperLauncher); }
                 catch (InvalidOperationException)
                 {
                     TerminateOwnedWorkers();
@@ -921,7 +951,8 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
 
     /// <summary>On Linux, fails closed when the ordinary CLI disappears before SDK-owned stop can prove custody.</summary>
     /// <param name="snapshot">The current ordinary CLI snapshot.</param>
-    internal void EnsureCliWrapperOwnership(CustomResourceSnapshot snapshot)
+    /// <param name="subreaperLauncher">The configured subreaper launcher, when the ordinary CLI runs under it.</param>
+    internal void EnsureCliWrapperOwnership(CustomResourceSnapshot snapshot, string? subreaperLauncher = null)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         // Preserve SDK stop and root-exit observations elsewhere. This guard
@@ -934,6 +965,12 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             || snapshot.State?.Text == KnownResourceStates.Exited || snapshot.State?.Text == KnownResourceStates.Finished)
         {
             throw new InvalidOperationException("An ordinary Dapr CLI wrapper exited before runtime custody could be proved; backing resources were retained. Polling does not qualify unobserved descendants.");
+        }
+        // Orphans are adopted by the observed PID only when it is the subreaper itself; any other wrapper keeps the
+        // unqualified launch-to-first-observation race, so refuse it rather than infer containment.
+        if (subreaperLauncher is not null && (!PartiesDaprCliSubreaper.IsRunning(pid, subreaperLauncher) || !IsOwnedLifetime(pid, started)))
+        {
+            throw new InvalidOperationException("The observed Dapr CLI wrapper is not this fixture's subreaper launcher; backing resources were retained.");
         }
     }
 

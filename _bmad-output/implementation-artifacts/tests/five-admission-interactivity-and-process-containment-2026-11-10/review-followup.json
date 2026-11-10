@@ -1,0 +1,116 @@
+{
+  "scope": "Coordinator review follow-up; only the tests covering edited files were run. verification.json remains the pre-review record.",
+  "changes": [
+    "write(): new real-directory parent swap subtest reaches the same_file refusal; cleanup unlink catches OSError and the parent closes in a nested finally",
+    "private_directory() docstring: only created components are made 0o700; existing components are admitted unchecked",
+    "EditMyProfilePage Cancel: aria-disabled and Disabled follow _editingDisabled; the renderer theory asserts Save and Cancel",
+    "fixture: launcher directory removal moved after the mTLS cleanup and observation cancellation, best-effort",
+    "launcher: dead SIGXFZ entry removed",
+    "new seam theory drives the fixture PostConfigure: ordinary CLI wrapped once, dapr-session and an existing launcher unchanged, launcher removed on disposal",
+    "adoption control is a theory; its SIGTERM-ignoring runtime needs the post-grace SIGKILL (1 s grace)",
+    "ledger: new open live-DCP stop-timing entry referenced from the CLI-quiescence row; Retry buttons added to the remaining-actions entry",
+    "sdk-sidecar-emission.json: notes for EVIDENCE_ROOT, the hashed bytes and the aca bicep source"
+  ],
+  "checks": {
+    "lifecycle-controller": {
+      "command": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "tests/ci-lifecycle/test_qualification_controller.py",
+        "-v"
+      ],
+      "exitCode": 0,
+      "ran": 25,
+      "pythonVersions": [
+        "3.14.4",
+        "3.12.13"
+      ],
+      "logs": [
+        "review-lifecycle-controller.log.gz",
+        "review-lifecycle-controller-py312.log.gz"
+      ]
+    },
+    "redproof-same-file-pass": {
+      "description": "same script with require(same_file(...), 'Refusing replaced qualification path') replaced by pass",
+      "exitCode": 1,
+      "failed": [
+        "test_writer_refuses_a_parent_swapped_after_admission (swap='directory')"
+      ],
+      "log": "review-redproof-same-file-pass.log.gz"
+    },
+    "edit-page-bunit": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.ConsumerPortal.Tests/bin/Release/net10.0/Hexalith.Parties.ConsumerPortal.Tests.dll",
+        "-class",
+        "Hexalith.Parties.ConsumerPortal.Tests.Components.EditMyProfilePageTests"
+      ],
+      "exitCode": 0,
+      "total": 17,
+      "failed": 0,
+      "buildLog": "review-consumer-tests-build.log.gz",
+      "log": "review-edit-page-tests.log.gz"
+    },
+    "integration-focused": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-method",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests.ConfiguredDaprPath_WrapsOnlyAnOrdinaryCliInTheFixtureSubreaper",
+        "-method",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests.InitializationFailure_ReportsActualReasonAndRestoresEnvironmentOnDisposal",
+        "-method",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests.OrdinaryCliWrapper_ExitingBeforeFirstPoll_LeavesItsRuntimeAdoptedThenTerminated",
+        "-method",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests.OrdinaryCliWrapper_UnderSubreaperRefusesAnyOtherObservedWrapper"
+      ],
+      "exitCode": 0,
+      "total": 8,
+      "failed": 0,
+      "buildLog": "review-integration-build.log.gz",
+      "log": "review-integration-focused.log.gz"
+    },
+    "redproof-integration": {
+      "description": "PostConfigure lambda built but not registered (cast to Action<DaprOptions>) and the launcher deadline recomputed every loop (no escalation); new controls retained",
+      "exitCode": 1,
+      "total": 5,
+      "failed": 2,
+      "failedCases": [
+        "ConfiguredDaprPath_WrapsOnlyAnOrdinaryCliInTheFixtureSubreaper(configured: \"dapr\")",
+        "OrdinaryCliWrapper_ExitingBeforeFirstPoll_LeavesItsRuntimeAdoptedThenTerminated(runtimeIgnoresTerminate: True)"
+      ],
+      "buildLog": "review-redproof-integration-build.log.gz",
+      "log": "review-redproof-integration.log.gz"
+    },
+    "fitness-after-ledger": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests",
+        "-class",
+        "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests"
+      ],
+      "exitCode": 0,
+      "total": 196,
+      "failed": 0,
+      "log": "review-fitness-after-ledger.log.gz"
+    }
+  },
+  "testedSourceSha256": {
+    "scripts/qualify-disposable-ci.py": "7c38b51d986ea41567e371920e69e3002e25b9ab2fcece997b4ffe06c329e3e2",
+    "tests/ci-lifecycle/test_qualification_controller.py": "716b83fc969458ef8faf602c3007ebae321068ab2cd1eeb0f5c45bc7f65087e1",
+    "src/Hexalith.Parties.ConsumerPortal/Components/EditMyProfilePage.razor": "5423b1b4da1f6db90ec2ac6d8b21332bf56c4af5ca5b5eac6f2236eafb2ad281",
+    "tests/Hexalith.Parties.ConsumerPortal.Tests/Components/EditMyProfilePageTests.cs": "4ea42240f681ada2286079b195095e59c817da3168a4eb151229fbb4efc64672",
+    "tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs": "6ee0c3ff8529d632a4845cd274fec5ac42ea058ec6ef200154e666808d5530a7",
+    "tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesDaprCliSubreaper.cs": "774444e5b1c849bad82440f7b35a8f1a8086f2e4510c180e7ec5aec8ea96b2bf",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartiesAspireTopologyFixtureTests.cs": "0f0c958a7114b8e9e5505d10d1fa6c99a7cddcbf93053827fc98aa6fc294ace0",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartiesTopologyCleanupTests.cs": "eef18dd4d35788614bea49badbf649e8e14dc95052c5b82c85902b151bdc506a"
+  },
+  "ledgerSha256": "4d5d6d7172bae9a66aefbb0be8d02a07f6e8ffd0aad817e357e29b2f3ec56c6d",
+  "notRun": [
+    "full suites, e2e repeats and the remaining IntegrationTests classes (coordinator-owned full verification)"
+  ]
+}

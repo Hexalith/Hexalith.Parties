@@ -6,6 +6,7 @@ using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
 
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.FluentUI.AspNetCore.Components;
 
@@ -13,12 +14,38 @@ using Shouldly;
 
 namespace Hexalith.Parties.ConsumerPortal.Tests.Components;
 
-public sealed class MyConsentPageTests : BunitContext
+public sealed class MyConsentPageTests : ConsumerPortalBunitContext
 {
     public MyConsentPageTests()
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddFluentUIComponents();
+    }
+
+    [Theory]
+    [InlineData("Static", false)]
+    [InlineData("Server", true)]
+    public void MyConsentPage_RendererInteractivity_GatesConsentSwitches(string rendererName, bool isInteractive)
+    {
+        PageRenderer = new RendererInfo(rendererName, isInteractive);
+        var client = new QueueConsentClient(_ => Task.FromResult(Overview()));
+        Services.AddSingleton<IConsumerConsentClient>(client);
+
+        IRenderedComponent<MyConsentPage> cut = Render<MyConsentPage>();
+
+        cut.WaitForAssertion(() =>
+        {
+            foreach (string label in new[] { "Marketing emails", "Product updates" })
+            {
+                Switch(cut, label).Instance.Disabled.ShouldBe(!isInteractive);
+                Switch(cut, label).Instance.Value.ShouldBeFalse();
+            }
+
+            cut.FindAll("[role='switch']").Count.ShouldBe(2);
+            cut.FindAll("[role='switch']").All(item => item.GetAttribute("aria-disabled") == (isInteractive ? "false" : "true")).ShouldBeTrue();
+        });
+        client.LastGrant.ShouldBeNull();
+        client.LastWithdraw.ShouldBeNull();
     }
 
     [Fact]

@@ -23,11 +23,42 @@ const CONSUMER_ROUTES = [
 ] as const;
 
 // The un-upgraded consent switch has no box until Fluent's script, loaded through blazor.web.js, defines it,
-// so its click event is dispatched directly; the visible prerendered buttons receive real pointer clicks.
+// so its click event is dispatched directly; the visible prerendered buttons receive real pointer clicks. Those
+// buttons are disabled until the circuit renders interactively, so the clicks are forced past actionability.
 const PRE_INTERACTIVE_ACTIONS = [
-  { path: '/me/edit', heading: 'Edit profile', click: (page: Page) => page.getByRole('button', { name: 'Save changes' }).click() },
+  { path: '/me/edit', heading: 'Edit profile', click: (page: Page) => page.getByRole('button', { name: 'Save changes' }).click({ force: true }) },
   { path: '/me/consent', heading: 'Consent', click: (page: Page) => page.getByRole('switch', { name: 'Marketing emails' }).dispatchEvent('click') },
-  { path: '/me/privacy', heading: 'Data privacy', click: (page: Page) => portalAction(page, 'Delete my data').click() },
+  { path: '/me/privacy', heading: 'Data privacy', click: (page: Page) => portalAction(page, 'Delete my data').click({ force: true }) },
+] as const;
+
+// Holding circuit negotiation lets blazor.web.js define Fluent's elements, so the prerendered controls are live
+// custom elements without any Blazor listener. Each must stay disabled: a forced Save click or an Enter key press
+// would otherwise submit the edit form natively, and a switch or erasure click would be lost.
+const NEGOTIATION_HELD_ACTIONS = [
+  {
+    path: '/me/edit',
+    heading: 'Edit profile',
+    controls: (page: Page) => [page.getByRole('button', { name: 'Save changes' })],
+    act: async (page: Page) => {
+      await firstNameInput(page).press('Enter');
+      await page.getByRole('button', { name: 'Save changes' }).click({ force: true });
+    },
+  },
+  {
+    path: '/me/consent',
+    heading: 'Consent',
+    controls: (page: Page) => [
+      page.getByRole('switch', { name: 'Marketing emails' }),
+      page.getByRole('switch', { name: 'Product updates' }),
+    ],
+    act: (page: Page) => page.getByRole('switch', { name: 'Marketing emails' }).click({ force: true }),
+  },
+  {
+    path: '/me/privacy',
+    heading: 'Data privacy',
+    controls: (page: Page) => [portalAction(page, 'Delete my data')],
+    act: (page: Page) => portalAction(page, 'Delete my data').click({ force: true }),
+  },
 ] as const;
 
 test.describe('Consumer portal route shells', () => {
@@ -65,8 +96,11 @@ test.describe('Consumer portal route shells', () => {
         await expect(header).toBeInViewport();
         expect(await content.evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
         if (route.path === '/me/edit') {
+          // Save and the consent switches stay disabled, and so unfocusable, until the circuit renders interactively.
+          await expectInteractiveShell(page);
           await expectAccordionFocusClearance(page.getByRole('button', { name: 'Save changes', exact: true }));
         } else if (route.path === '/me/consent') {
+          await expectInteractiveShell(page);
           await expectAccordionFocusClearance(page.getByRole('switch', { name: 'Marketing emails', exact: true }));
         } else if (route.path === '/me/privacy') {
           await expectAccordionFocusClearance(portalAction(page, 'Export my data'));
@@ -198,6 +232,74 @@ test.describe('Consumer portal route shells', () => {
       expect(await domainCommandCount(request)).toBe(0);
       await expect(page.getByRole('dialog')).toHaveCount(0);
       await expect(page.locator('.hx-parties-profile').getByRole('status').filter({ hasText: /Saved|Deletion requested/ })).toHaveCount(0);
+      expect(new URL(page.url()).pathname).toBe(site.path);
+      expect(browserVisibleDataRequests).toEqual([]);
+    });
+  }
+
+  for (const site of NEGOTIATION_HELD_ACTIONS) {
+    test(`a ${site.path} control stays disabled and issues no command or native POST while circuit negotiation is held`, async ({ context, page, request }) => {
+      await enableConsumerFixture(context);
+      const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
+      const documentRequests: string[] = [];
+      page.on('request', (outgoing) => {
+        if (outgoing.isNavigationRequest() && outgoing.frame() === page.mainFrame()) {
+          documentRequests.push(`${outgoing.method()} ${new URL(outgoing.url()).pathname}`);
+        }
+      });
+      let releaseNegotiation: () => void = () => undefined;
+      const negotiationHeld = new Promise<void>((resolve) => {
+        releaseNegotiation = resolve;
+      });
+      let heldNegotiations = 0;
+      await page.route((url) => url.pathname.endsWith('/_blazor/negotiate'), async (route) => {
+        heldNegotiations++;
+        await negotiationHeld;
+        await route.continue();
+      });
+
+      try {
+        await page.goto(site.path);
+        await expect(page.getByRole('heading', { name: site.heading })).toBeVisible();
+        await expect.poll(() => heldNegotiations).toBe(1);
+        await expect.poll(() => page.evaluate(() => customElements.get('fluent-button') !== undefined
+          && customElements.get('fluent-switch') !== undefined)).toBe(true);
+        await expect(page.locator('.fc-shell-root[data-fc-interactive="false"]')).toHaveCount(1);
+        if (site.path === '/me/edit') {
+          await expect(firstNameInput(page)).toHaveValue('Consumer');
+        }
+
+        await site.act(page);
+
+        // A native submit starts its navigation inside the click, so a POST or reload is already recorded here.
+        expect(documentRequests).toEqual([`GET ${site.path}`]);
+        await expect(page.locator('.fc-shell-root[data-fc-interactive="true"]')).toHaveCount(0);
+        expect(await domainCommandCount(request)).toBe(0);
+        if (site.path === '/me/edit') {
+          await expect(page.getByRole('group', { name: 'Editable details' })).toHaveAttribute('disabled', '');
+        }
+        for (const control of site.controls(page)) {
+          await expect(control).toBeDisabled();
+        }
+      } finally {
+        releaseNegotiation();
+      }
+
+      await expectInteractiveShell(page);
+      for (const control of site.controls(page)) {
+        await expect(control).toBeEnabled();
+      }
+      expect(heldNegotiations).toBe(1);
+      expect(documentRequests).toEqual([`GET ${site.path}`]);
+      expect(await domainCommandCount(request)).toBe(0);
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      await expect(page.locator('.hx-parties-profile').getByRole('status').filter({ hasText: /Saved|Deletion requested/ })).toHaveCount(0);
+      if (site.path === '/me/edit') {
+        await expect(page.getByRole('group', { name: 'Editable details' })).not.toHaveAttribute('disabled');
+        await expect(firstNameInput(page)).toHaveValue('Consumer');
+      } else if (site.path === '/me/consent') {
+        await expect(page.getByRole('switch', { name: 'Marketing emails' })).toHaveAttribute('aria-checked', 'false');
+      }
       expect(new URL(page.url()).pathname).toBe(site.path);
       expect(browserVisibleDataRequests).toEqual([]);
     });
@@ -556,6 +658,9 @@ test.describe('Consumer portal route shells', () => {
     expect(browserVisibleDataRequests).toEqual([]);
   });
 });
+
+// Before the circuit renders, the upgraded Fluent input has no accessible name yet; target its labelled host's input.
+const firstNameInput = (page: Page): Locator => page.locator('fluent-text-input[aria-label="First name"]').locator('input');
 
 const enableAdminFixture = async (context: BrowserContext): Promise<void> => {
   await context.addCookies([

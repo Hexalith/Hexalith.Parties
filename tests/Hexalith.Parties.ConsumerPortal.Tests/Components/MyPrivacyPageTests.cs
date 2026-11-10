@@ -4,6 +4,7 @@ using Hexalith.Parties.ConsumerPortal.Components;
 using Hexalith.Parties.ConsumerPortal.Services;
 using Hexalith.Parties.Contracts.Models;
 
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -14,7 +15,7 @@ using Shouldly;
 
 namespace Hexalith.Parties.ConsumerPortal.Tests.Components;
 
-public sealed class MyPrivacyPageTests : BunitContext
+public sealed class MyPrivacyPageTests : ConsumerPortalBunitContext
 {
     public MyPrivacyPageTests()
     {
@@ -22,6 +23,29 @@ public sealed class MyPrivacyPageTests : BunitContext
         Services.TryAddSingleton<IConsumerPrivacyErasureClient>(new QueuePrivacyErasureClient());
         Services.TryAddSingleton<IConsumerPrivacyProcessingClient>(new QueuePrivacyProcessingClient());
         JSInterop.SetupVoid("HexalithPartiesConsumerPortal.downloadJson", _ => true);
+    }
+
+    [Theory]
+    [InlineData("Static", false)]
+    [InlineData("Server", true)]
+    public void MyPrivacyPage_RendererInteractivity_GatesErasureRequest(string rendererName, bool isInteractive)
+    {
+        PageRenderer = new RendererInfo(rendererName, isInteractive);
+        var erasure = new QueuePrivacyErasureClient();
+        Services.AddSingleton<IConsumerPrivacyExportClient>(new QueuePrivacyExportClient());
+        Services.Replace(ServiceDescriptor.Singleton<IConsumerPrivacyErasureClient>(erasure));
+
+        IRenderedComponent<MyPrivacyPage> cut = Render<MyPrivacyPage>();
+
+        cut.WaitForAssertion(() =>
+        {
+            AngleSharp.Dom.IElement request = cut.FindAll("fluent-button")
+                .Single(button => button.TextContent.Contains("Delete my data", StringComparison.Ordinal));
+            request.HasAttribute("disabled").ShouldBe(!isInteractive);
+            request.GetAttribute("aria-disabled").ShouldBe(isInteractive ? "false" : "true");
+        });
+        cut.FindAll("[role='dialog']").Count.ShouldBe(0);
+        erasure.RequestCount.ShouldBe(0);
     }
 
     [Fact]
