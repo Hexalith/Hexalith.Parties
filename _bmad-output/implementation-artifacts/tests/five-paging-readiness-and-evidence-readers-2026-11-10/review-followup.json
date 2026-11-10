@@ -1,0 +1,231 @@
+{
+  "scope": "Step-04 review loop on the pushed 3eccce24; fixes ship in the follow-up commit. Rows S1-S17 in the spec Review Triage Log.",
+  "reviewedCommit": "3eccce242d27c2f8248824354a1f403c7b4ea57b",
+  "rootGitlinks": {
+    "Directory.Build.targets": "3db00e0ee697303e809551a8c860fcd05cb61fd9",
+    "Hexalith.AI.Tools": "1745b6663ad32bb1288167135ed0f979366c53a0",
+    "Hexalith.Builds": "5ec1779040606be89306129a7d2b245258c9acd2",
+    "Hexalith.Commons": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+    "Hexalith.EventStore": "b437879df2339692d177774d1f076936da6ebd62",
+    "Hexalith.FrontComposer": "e972d0f06a8eec3446db0b2270fdb14eef4c1186",
+    "Hexalith.McpCli": "1c1f06b46bbe9e115022be8af75b10085c8ac360",
+    "Hexalith.Memories": "4ff3e6866ecb6d1a497e7063e972c24259252c40",
+    "Hexalith.Platform": "081178aa5cc01f5dc736ba0d1980aa80fedc6fe1",
+    "Hexalith.PolymorphicSerializations": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+    "Hexalith.Tenants": "5293ab9dca49b6298f1e3396367627009967cbfb"
+  },
+  "testedSourceSha256": {
+    "docs/api-contracts.md": "34d22483bf94e89469714325a60a29c3d993a8783bf5b38c2a23c13128d647cc",
+    "scripts/qualify-disposable-ci.py": "e299ff285f8bd7595cc42d4600794fa12336c72d0fccf16b4727b931827e83eb",
+    "scripts/test_current_owner_integration.py": "17e2d99fd9173ceadbee79d28a3316e1029fe664b894d37d2f7f348299da0d06",
+    "scripts/verify-current-owner-integration.py": "ada417139c0dd8813af831fd83e634e0cc34e583b273cb9a3980a7c184a47f92",
+    "tests/ci-lifecycle/test_qualification_controller.py": "70977f5888ed0149510276f9eb777aac1f1eedbca4d058df7461cd78d0333e11",
+    "tests/e2e/specs/consumer-portal-routes.spec.ts": "5b33b252bcd0a2cf64a446fdff5be61cf5c48bc0d07216ca37663382a6a7fbab",
+    "_bmad-output/implementation-artifacts/deferred-work.md": "10b4cd6b12c2df313eb349ebcfa1d37c566925ce2e540ec0e29c5d043844fc9e"
+  },
+  "checks": {
+    "redproof-review-lifecycle": {
+      "description": "scripts/qualify-disposable-ci.py temporarily given (1) a reopen-by-name return before the descriptor read and (2) a hash-by-name peer claim digest, then restored with git checkout; second run isolates (2)",
+      "command": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "tests/ci-lifecycle/test_qualification_controller.py",
+        "-k",
+        "descriptor_check",
+        "-k",
+        "peer_scope"
+      ],
+      "exitCode": 1,
+      "expected": "4 descriptor-swap subtests and the peer_scope test fail; peer_scope fails alone under (2)",
+      "log": "redproof-review-lifecycle.log.gz",
+      "logSha256": "903f4c09761eb9844d4903416fd9bdbb224dbcd1429f70764388ba83c9451bff"
+    },
+    "redproof-review-gitlink": {
+      "description": "RESULT_SCHEMA_BUILDS_COMMIT temporarily set to the historical 3c8096180ecf2aa539ac454815efbfceb8a92822, then restored",
+      "command": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts",
+        "-p",
+        "test_current_owner_integration.py",
+        "-k",
+        "gitlink"
+      ],
+      "exitCode": 1,
+      "log": "redproof-review-gitlink.log.gz",
+      "logSha256": "3520ecd3753b1429902d12401bf6cf9aea569bc23146c1cf54bdc73d77d3f534"
+    },
+    "scripts-tests": {
+      "command": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts",
+        "-p",
+        "test_*_integration.py"
+      ],
+      "exitCode": 0,
+      "total": 74,
+      "skipped": 0,
+      "log": "review-scripts-tests.log.gz",
+      "logSha256": "56e31b589cb8b85d4f579e0e521454c270d7f3322104f500844ba6775e081dad"
+    },
+    "scripts-tests-ci-like": {
+      "description": "git clone --depth 1 of 3eccce24 without submodules, patched reader and test copied in; references/Hexalith.Builds empty as in the CI job",
+      "command": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts",
+        "-p",
+        "test_*_integration.py",
+        "-v"
+      ],
+      "exitCode": 0,
+      "total": 74,
+      "skipped": 3,
+      "observation": "the gitlink binding test runs (not skipped); only the checkout-dependent schema checks skip",
+      "log": "scripts-tests-ci-like-review.log.gz",
+      "logSha256": "b3a22bb779d81d8824363cbe1168ec2500c94d3993d88a07f70b1b0425013da6"
+    },
+    "lifecycle-tests": {
+      "command": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/ci-lifecycle",
+        "-v"
+      ],
+      "exitCode": 0,
+      "total": 115,
+      "log": "review-lifecycle-tests.log.gz",
+      "logSha256": "b94b69337977e7720d67a4bc753d2ea3dcdec13413a84615a8e4c7e50dd4e907"
+    },
+    "service-full-tests": {
+      "description": "existing package-mode Release DLL (no C# change in the follow-up); reruns docs/ledger-reading fitness tests",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "-xml",
+        "review-service-full-tests.xml"
+      ],
+      "buildProperties": [
+        "-p:HexalithEventStoreVersion=4.2.0",
+        "-p:HexalithTenantsVersion=7.0.5",
+        "-p:HexalithMemoriesVersion=3.0.25",
+        "-p:UseHexalithProjectReferences=false",
+        "-p:UseNuGetDeps=true",
+        "-p:MinVerVersionOverride=1.0.0"
+      ],
+      "exitCode": 0,
+      "total": 2964,
+      "failed": 0,
+      "skipped": 13,
+      "log": "review-service-full-tests.log.gz",
+      "logSha256": "075cb81413b91a81bc89a24990120a29f5fc60de6209c67d64462690eeb31d5b",
+      "xml": "review-service-full-tests.xml.gz"
+    },
+    "e2e-typecheck": {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "workingDirectory": "tests/e2e",
+      "exitCode": 0,
+      "log": "review-e2e-typecheck.log.gz",
+      "logSha256": "e330df87d6d805b1088a07bb3542585afe9a908ee234a91d291477723e259b6b"
+    },
+    "e2e-consumer-portal": {
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "specs/consumer-portal-routes.spec.ts",
+        "--project=chromium",
+        "--retries=0",
+        "--repeat-each=5",
+        "--reporter=list"
+      ],
+      "workingDirectory": "tests/e2e",
+      "environment": {
+        "CI": "1"
+      },
+      "server": "playwright.config.ts webServer: package-mode Release src/Hexalith.Parties.UI, dotnet run --no-build on http://127.0.0.1:5072",
+      "exitCode": 0,
+      "passed": 140,
+      "failed": 0,
+      "targetCasePasses": "15/15 pre-interactive control runs with the single blazor.web.js request assertion",
+      "log": "review-e2e-consumer-portal.log.gz",
+      "logSha256": "3145cbefe775b829f4fa0fdf5f79b7ef361d2adc02e06ca75a01f7d5697764fe"
+    },
+    "genuine-artifact-retained": {
+      "archive": "genuine-42690523916-module-integration-diagnostics.tar.gz",
+      "archiveSha256": "2f49ecdb02744c6376c8b5220cef7a3c2037c84653b8183004d05fb20404a782",
+      "description": "deterministic tar.gz (sorted, mtime 0) of the unchanged run 42690523916 module-integration-diagnostics artifact; file hashes equal artifact-compatibility.json",
+      "readerCommand": [
+        "python3",
+        "-B",
+        "scripts/verify-public-package-integration.py",
+        "<extracted>/artifact",
+        "--source",
+        "84e3df796ac977041a21ec7bd8e5789bdc44241a",
+        "--platform",
+        "081178aa5cc01f5dc736ba0d1980aa80fedc6fe1",
+        "--builds",
+        "5ec1779040606be89306129a7d2b245258c9acd2"
+      ],
+      "readerEnvironment": {
+        "GITHUB_REPOSITORY": "Hexalith/Hexalith.Parties",
+        "GITHUB_RUN_ID": "42690523916",
+        "GITHUB_RUN_ATTEMPT": "1"
+      },
+      "readerExitCode": 0,
+      "log": "review-genuine-reader.log.gz",
+      "logSha256": "f4551915c32541f52c8e10403f211b665f43e2d399d44bdd78ebbb99ba936e20",
+      "schemaCheck": "jsonschema Draft202012Validator with FormatChecker over artifact/test-result.json against references/Hexalith.Builds/schemas/hexalith.test-result.v1.json (sha256 9773678f...7e39)",
+      "releasedSchemaErrors": 0
+    },
+    "commitlint-pushed-message": {
+      "command": [
+        "npx",
+        "--no-install",
+        "commitlint",
+        "--edit",
+        "review-commit-3eccce24-message.txt"
+      ],
+      "version": "@commitlint/cli@21.2.4",
+      "exitCode": 0,
+      "messageSha256": "95121d00c90c0d5c9af6f9a801a17ed3f2d7ae3103f99e18499ce6fd36b2db0d",
+      "message": "review-commit-3eccce24-message.txt.gz"
+    },
+    "commitlint-followup-message": {
+      "command": [
+        "npx",
+        "--no-install",
+        "commitlint",
+        "--edit",
+        "review-followup-commit-message.txt"
+      ],
+      "version": "@commitlint/cli@21.2.4",
+      "exitCode": 0,
+      "message": "review-followup-commit-message.txt.gz",
+      "messageSha256": "85e7a1587ad4adad919249c92b900a1f1b07cde3e078e800959ce122dab6460d"
+    }
+  }
+}

@@ -142,6 +142,80 @@ class ControllerSafetyTests(unittest.TestCase):
                 self.assertEqual(swapped, [swap])
                 self.assertEqual((root / 'outside' / 'x.json').read_text(), '{"foreign": true}')
 
+    def test_metadata_swapped_after_the_descriptor_check_returns_the_held_bytes(self):
+        """Swap the file or its parent after fstat admits the descriptor; only the held bytes may be returned."""
+        for swap in ('parent-symlink', 'file-symlink', 'file-hardlink', 'file-replaced'):
+            with self.subTest(swap=swap), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                (root / 'meta').mkdir()
+                target = root / 'meta' / 'x.json'
+                target.write_text('{"genuine": true}')
+                (root / 'outside').mkdir()
+                (root / 'outside' / 'x.json').write_text('{"foreign": true}')
+                swapped = []
+                real_fstat = os.fstat
+
+                def admitted(descriptor):
+                    # A reader that reopened the path by name after this check would now read the foreign bytes.
+                    result = real_fstat(descriptor)
+                    if not swapped:
+                        swapped.append(swap)
+                        if swap == 'parent-symlink':
+                            (root / 'meta').rename(root / 'meta-held')
+                            (root / 'meta').symlink_to(root / 'outside', target_is_directory=True)
+                        else:
+                            target.rename(root / 'x.json.held')
+                            if swap == 'file-symlink':
+                                target.symlink_to(root / 'outside' / 'x.json')
+                            elif swap == 'file-hardlink':
+                                os.link(root / 'outside' / 'x.json', target)
+                            else:
+                                target.write_text('{"foreign": true}')
+                    return result
+
+                with patch.object(Q.os, 'fstat', side_effect=admitted):
+                    self.assertEqual(Q.read(target), {'genuine': True})
+                self.assertEqual(swapped, [swap])
+
+    def test_peer_scope_hashes_the_validated_claim_bytes(self):
+        """peer_scope digests the exact claim bytes it validated, even if the claim is replaced afterwards."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            run_id = 'a' * 32
+            claim = 'c' * 64
+            claims = root / 'g4-runs' / 'claims'
+            (claims / 'owners').mkdir(parents=True)
+            (root / 'workspace').mkdir()
+            Q.write(claims / 'owners' / (run_id + '.json'), [claim])
+            genuine = json.dumps({'OwnerRunId': run_id}).encode()
+            (claims / (claim + '.json')).write_bytes(genuine)
+            value = object.__new__(Q.Qualification)
+            value.issued = lambda item: {'runId': run_id, 'stateDirectory': str(root / 'g4-runs')}
+            value.state = lambda item: {'status': 'Ready', 'testRun': None, 'workspace': str(root / 'workspace'),
+                                        'appHostProcessId': os.getpid()}
+            value.containers = lambda item: ['container']
+            real_fstat = os.fstat
+            replaced = []
+
+            def admitted(descriptor):
+                result = real_fstat(descriptor)
+                if not replaced and os.readlink(f'/proc/self/fd/{descriptor}').endswith(claim + '.json'):
+                    replaced.append(True)
+                    (claims / (claim + '.json')).rename(claims / 'held.json')
+                    (claims / (claim + '.json')).write_text(json.dumps({'OwnerRunId': run_id, 'replaced': True}))
+                return result
+
+            with patch.object(Q.os, 'fstat', side_effect=admitted):
+                scope = value.peer_scope({'label': 'peer'})
+            self.assertEqual(replaced, [True])
+            self.assertEqual(scope['claimHashes'], {claim: Q.hashlib.sha256(genuine).hexdigest()})
+            for invalid in ([run_id], {'OwnerRunId': 'b' * 32}):
+                with self.subTest(claim=invalid):
+                    (claims / (claim + '.json')).unlink()
+                    (claims / (claim + '.json')).write_text(json.dumps(invalid))
+                    with self.assertRaisesRegex(ValueError, 'Peer claim ownership changed'):
+                        value.peer_scope({'label': 'peer'})
+
     def test_missing_or_unknown_cleanup_never_verifies_zero_resources(self):
         owner = {'runId': 'a' * 32}
         completed = subprocess.CompletedProcess([], 0)

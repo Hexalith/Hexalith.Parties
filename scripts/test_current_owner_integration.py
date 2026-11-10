@@ -6,6 +6,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import subprocess
 import time
 from unittest import mock
 from pathlib import Path
@@ -310,6 +311,18 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
         self.assertEqual(verify.RESULT_SCHEMA_SHA256, RELEASED_RESULT_SCHEMA_SHA256)
         self.assertEqual(verify.RESULT_REQUIRED, frozenset(RELEASED_RESULT_REQUIRED))
         self.assertEqual(verify.RESULT_BINDINGS_REQUIRED, frozenset(RELEASED_BINDINGS_REQUIRED))
+
+    def test_reader_schema_constants_are_bound_to_the_committed_builds_gitlink(self):
+        """Runs without the submodule checkout (CI): a Builds gitlink bump fails until the reader keys are re-derived."""
+        repository = Path(__file__).resolve().parents[1]
+        try:
+            listing = subprocess.run(["git", "ls-tree", "HEAD", "references/Hexalith.Builds"], cwd=repository,
+                                     capture_output=True, text=True, check=True, timeout=30).stdout.split()
+        except (FileNotFoundError, subprocess.CalledProcessError):
+            self.skipTest("not a git checkout of the Parties repository")
+        self.assertEqual(listing[:2], ["160000", "commit"])
+        self.assertEqual(listing[2], verify.RESULT_SCHEMA_BUILDS_COMMIT,
+                         "Builds moved: re-derive RESULT_SCHEMA_SHA256 and the required key sets from its test-result schema")
 
     def test_reader_required_keys_are_bound_to_the_released_schema_hash(self):
         body = released_result_schema()

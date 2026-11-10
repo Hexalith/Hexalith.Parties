@@ -418,6 +418,10 @@ including zero, which the EventStore gateway also refuses. After envelope
 identity validation, any other size, offset or cursor-with-offset pairing
 rejects with `reason=invalid-page` before any detail or processing read, so
 party existence, store outages and model validation cannot take precedence.
+List/search classify a cursor combined with an offset as `invalid-cursor`;
+processing reports the same pairing as `invalid-page`, as the gateway does,
+because processing never accepts an offset as a position. Both reasons share
+HTTP 400 and `reasonCode=query_invalid_page`.
 Processing cursors bind tenant, party, user, size, the stored
 processing revision and its bucket generation, so they are decoded only after
 those reads; a missing revision returns `read-model-unavailable` first.

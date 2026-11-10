@@ -152,6 +152,12 @@ in the new packet with the same shape, gzipping the logs.
 - Verification: see `tests/five-paging-readiness-and-evidence-readers-2026-11-10/verification.json`.
   Not run: source-mode Debug builds, Docker topology suites, hosted
   qualification, owned Memories runtime facts.
+- Review follow-up (patches S1–S13): see
+  `tests/five-paging-readiness-and-evidence-readers-2026-11-10/review-followup.json`.
+  Results: scripts 74/74; CI-like clone 74 (3 checkout skips); lifecycle 115;
+  service 2964, 0 failed, 13 skipped; e2e 140/140 over five retries-disabled
+  repeats; typecheck clean. Red-proofs: descriptor swap, `peer_scope` alone,
+  and the stale Builds pin.
 
 ## Review Triage Log
 
@@ -181,3 +187,72 @@ Blind review (one layer), 10 findings:
   then use the path.
 - R10 low, deferred (Builds-owned): the receipt read in `issued()` reopens
   through Builds `receipt_owner()`.
+
+Step-04 review of the pushed `3eccce24` (three layers: Blind Hunter, Edge Case
+Hunter, Verification Gap; none skipped). R1–R10 above came from the
+implementation subagent's own pass. The subagent committed and pushed before
+this review because the Intent says "commit and push"; these fixes ship as a
+follow-up commit. Rows below give the verdict and route; reporters are in
+brackets.
+
+- S1 medium, patched [BH1, VG3, ECH3]: CI runs the reader tests without the
+  Builds checkout, so the schema-binding test skipped and a Builds bump could
+  change the required keys silently. VG3's fix (initialize the submodule in
+  CI) conflicts with the frozen "no new CI dependency" rule. Instead, the
+  reader pins `RESULT_SCHEMA_BUILDS_COMMIT`, and a test compares it with
+  `git ls-tree HEAD references/Hexalith.Builds`. That test runs in a fresh
+  clone without submodules, and fails when the pin is the stale `3c809618`.
+- S2 medium, patched [VG1]: no test swapped the file after the descriptor's
+  `fstat`, so a reopen by name could have returned unnoticed. New subtests
+  swap the parent, a symlink, a hard link and a regular replacement after
+  `fstat`, and require the held bytes. All four fail when
+  `return Path(path).read_bytes()` is injected.
+- S3 medium, patched [VG2]: no test ran the real `peer_scope` claim loop. A new
+  test drives it with real claim files, replaces the claim after `fstat`, and
+  requires the digest of the validated bytes. It also covers array and
+  foreign-owner claims. The test fails when the hash-by-name regression alone
+  is injected.
+- S4 low, patched [BH3]: the `read_bytes` docstring claimed a replaced regular
+  file is "refused". It now says links are refused and later replacements
+  cannot change the returned bytes.
+- S5 false [BH5, ECH1]: the stricter reader does not newly refuse hosted
+  paths. Builds `prepare_module_build.py:121` builds the mapping workspace
+  under `real_path(temporary_root)`. `control()` already runs
+  `private_directory()` on `stateDirectory.parent`, so a linked state-root
+  ancestor was refused at baseline. The workflow also requires a resolved
+  `RUNNER_TEMP`.
+- S6 low, patched [BH7, ECH5]: the control's pathname check could not see a
+  native same-path POST reload. It now also requires a single `blazor.web.js`
+  request, and the comment claims only what is observed.
+- S7 low, rejected [BH6, ECH4, VG-other]: the post-release zero checks have no
+  settle time. Blazor has no mechanism to replay pre-circuit DOM events, and a
+  settle wait adds timing complexity. The meaningful check runs while the
+  script is held.
+- S8 carried low, deferred [BH8, ECH6]: same claim as R4. The committed control
+  passes on baseline by construction, and a negotiation-held control is
+  already in the ledger.
+- S9 low, patched [BH9]: closed stale rows cited this packet, which has no
+  matching check. They now cite the hxw006 source-selector check, the
+  workflow digest steps and their tests, and the committed gitlink
+  equalities.
+- S10 low, patched [BH10]: the genuine 42690523916 artifact is now kept in the
+  packet as a deterministic tarball. The public reader (exit 0) and the
+  released schema (0 errors) rerun against the extracted copy.
+- S11 low, patched [BH11]: the pushed message (sha256 `95121d00…`) was
+  revalidated with pinned commitlint 21.2.4 (exit 0).
+- S12 low, patched [BH12]: the evidence descriptions said "HEAD" where they
+  meant baseline `5e5d42e3`.
+- S13 low, patched [BH14]: `docs/api-contracts.md` now explains why processing
+  reports `invalid-page` where list/search report `invalid-cursor`.
+- S14 low, rejected [BH2, ECH2]: a present but non-object contract value raises
+  `AttributeError`, so the gate fails closed with a traceback. The producer
+  validates the schema, so such a value is unreachable from it, and the fix
+  adds guards.
+- S15 low, rejected [BH4]: opening the final entry before `fstat` could touch a
+  device node. A same-user writer cannot place one there: symlinks are
+  refused, `mknod` needs privilege, and hard links cannot cross into `/dev`.
+- S16 false [BH13]: the new ledger rows use the format this workflow
+  prescribes; a missing status already reads as open.
+- S17 low, rejected [BH15]: the "environment missing" branch of
+  `issued_synthetic_tenant` is now unreachable through `validate()`, so a
+  direct test would only cover dead defensive code.

@@ -33,7 +33,9 @@ TRX_ID = re.compile(r"[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}\Z", re.ASCII)
 PERSISTENCE_CASE = "Hexalith.Parties.Platform.IntegrationTests.PartyEnvironmentTests.RealDependencies_CreateQueryAndPersistMatchingPartyEvents"
 # Required keys of the released hexalith.test-result.v1 schema (Builds 5ec17790, sha256 below). The producer, Builds
 # TestResultWriter, validates the whole document against that schema before publishing it, so these readers need no
-# schema validator: this stdlib guard only detects producer drift without adding a CI dependency.
+# schema validator: this stdlib guard only detects producer drift without adding a CI dependency. A test binds
+# RESULT_SCHEMA_BUILDS_COMMIT to the committed Builds gitlink, so a Builds bump fails until these keys are re-derived.
+RESULT_SCHEMA_BUILDS_COMMIT = "5ec1779040606be89306129a7d2b245258c9acd2"
 RESULT_SCHEMA_SHA256 = "9773678febac38025fae837154341d9036ce8aa94e66b0d30c7e15ee668d7e39"
 RESULT_REQUIRED = frozenset({"schema", "policyId", "bindings", "diagnostics", "terminal", "termination", "retention", "cleanup"})
 RESULT_BINDINGS_REQUIRED = frozenset({"run", "tool", "candidate", "decision", "reuseLineage", "environment", "artifacts", "suite",

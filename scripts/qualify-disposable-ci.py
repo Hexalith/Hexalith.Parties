@@ -142,8 +142,9 @@ def read_bytes(path, limit=8_388_608):
     """Read bounded metadata bytes from one descriptor opened component by component without following links.
 
     Ancestors are held as O_PATH descriptors (search permission suffices), and size and link count are checked on
-    the open file before its bytes are read from it, so a linked, hard-linked or replaced file or ancestor is
-    refused and never reopened by name.
+    the open file before its bytes are read from it. A symbolic link at any component or a hard-linked file is
+    refused. A file or ancestor replaced after it was opened cannot change the result, because the bytes come only
+    from the held descriptor and the path is never reopened by name.
     """
     path = Path(path).absolute()
     descriptor = os.open(path.anchor, os.O_PATH | os.O_DIRECTORY | os.O_CLOEXEC)

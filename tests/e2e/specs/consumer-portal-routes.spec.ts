@@ -191,8 +191,10 @@ test.describe('Consumer portal route shells', () => {
         releaseScript();
       }
 
-      // No Blazor listener existed when the click fired, so once interactive it has neither submitted nor been replayed.
+      // No Blazor listener existed when the click fired. Once interactive, no command has arrived, and the single
+      // blazor.web.js request shows the click did not submit the form natively and reload the page.
       await expectInteractiveShell(page);
+      expect(heldScriptRequests).toBe(1);
       expect(await domainCommandCount(request)).toBe(0);
       await expect(page.getByRole('dialog')).toHaveCount(0);
       await expect(page.locator('.hx-parties-profile').getByRole('status').filter({ hasText: /Saved|Deletion requested/ })).toHaveCount(0);

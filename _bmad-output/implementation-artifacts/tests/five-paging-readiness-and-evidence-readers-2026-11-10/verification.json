@@ -106,7 +106,7 @@
       "xml": "processing-focused.xml.gz"
     },
     "redproof-processing": {
-      "description": "HEAD PartySdkQueryService.ProcessingBuckets.cs, new (10, 0, cursor) row retained",
+      "description": "baseline 5e5d42e3 PartySdkQueryService.ProcessingBuckets.cs, new (10, 0, cursor) row retained",
       "command": [
         "dotnet",
         "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
@@ -199,7 +199,7 @@
       "log": "scripts-tests-ci-like.log.gz"
     },
     "redproof-readers": {
-      "description": "HEAD verify-current-owner-integration.py and verify-public-package-integration.py restored, new tests retained",
+      "description": "baseline 5e5d42e3 verify-current-owner-integration.py and verify-public-package-integration.py restored, new tests retained",
       "command": [
         "python3",
         "-m",
@@ -268,12 +268,12 @@
       "exitCode": 1,
       "ran": 113,
       "errors": 8,
-      "observation": "all 8 errors are the local 3.12 build lacking os.pidfd_open; the same 8 occur on HEAD, which also has the stale boundary error",
+      "observation": "all 8 errors are the local 3.12 build lacking os.pidfd_open; the same 8 occur on baseline 5e5d42e3, which also has the stale boundary error",
       "log": "lifecycle-tests-py312.log.gz",
       "headLog": "lifecycle-tests-py312-head.log.gz"
     },
     "redproof-lifecycle-read": {
-      "description": "HEAD scripts/qualify-disposable-ci.py restored, new controls retained; run on Python 3.14 and 3.12",
+      "description": "baseline 5e5d42e3 scripts/qualify-disposable-ci.py restored, new controls retained; run on Python 3.14 and 3.12",
       "command": [
         "python3",
         "-B",
@@ -343,7 +343,7 @@
       "log": "e2e-consumer-portal.log.gz"
     },
     "redproof-e2e-negotiation-delay": {
-      "description": "temporary harness (removed): HEAD and guarded copies of consumer-portal-routes.spec.ts whose beforeEach delays POST _blazor/negotiate by 3 s via page.route, run from a config extending playwright.config.ts with testDir ./redproof-tmp",
+      "description": "temporary harness (removed): baseline 5e5d42e3 and guarded copies of consumer-portal-routes.spec.ts whose beforeEach delays POST _blazor/negotiate by 3 s via page.route, run from a config extending playwright.config.ts with testDir ./redproof-tmp",
       "grep": "saves editable profile|validation preserves typed values|grants and withdraws consent|requests and cancels erasure",
       "exitCode": 1,
       "head": {

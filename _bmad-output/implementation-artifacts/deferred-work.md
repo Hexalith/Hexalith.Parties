@@ -2234,7 +2234,7 @@ rollback: None required (test-only).
   evidence: B4: version-pinned official HTTPS downloads are present, but no wrong bytes were demonstrated. Settle with an actual mutable-asset/compromise scenario or an applicable checksum policy; preserve the qualified runtime versions and normal failure gates.
   status: done 2026-11-10
   resolution: Already delivered by `2849c5b4`/`4c0167b8`: the lifecycle and startup-diagnostics workflows verify every Dapr archive against the digests Builds pins in Props/dapr-toolchain-sha256.json. They refuse before download when no digest is pinned, and never extract a refused archive. Reconciled this stale entry; no new credit.
-  verification: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`; `tests/five-paging-readiness-and-evidence-readers-2026-11-10/`.
+  verification: digest verification steps in `.github/workflows/ci-lifecycle-qualification.yml` and `.github/workflows/current-owner-startup-diagnostics.yml`; refusal controls in `tests/ci-lifecycle/test_review_fixes.py` and `tests/ci-lifecycle/test_loop2_fixes.py`, run in the lifecycle lane of `tests/five-paging-readiness-and-evidence-readers-2026-11-10/`.
 
 - source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-06.md`
   summary: Reject lifecycle reacknowledgements whose message ID or descriptor conflicts with the existing correlation.
@@ -2254,7 +2254,7 @@ rollback: None required (test-only).
   evidence: On 2026-11-09, pinned hexalith-module 4.44.13 prepare-build succeeds with HXW010/HXW011 observations, but its generated Debug source environment gives CS0234 for eventstore::Hexalith.EventStore.Queries types at PartiesCatalogGatewaySelectorTests.cs lines 20–22. The source SDK/Parties host compile and the selected-package build plus 952 handler/gateway tests pass. Exact command/environment and diagnostics are retained in tests/dw-27-invalid-page-failure-2026-11-09/validation.json.
   status: done 2026-11-10
   resolution: Already delivered by `0be5b476` (spec-catalog-selector-source-build.md): the selector test resolves the three query types through the global Gateway assembly in both modes. Reconciled this stale entry; no code change and no new credit.
-  verification: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`; `tests/five-paging-readiness-and-evidence-readers-2026-11-10/`.
+  verification: `tests/hxw006-admin-ui-source-mapping-2026-11-10/verification.json` check `source-selector-tests` (mapped source Debug selector class, exit 0). This batch did not rerun source mode.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-27-invalid-page-failure.md`
   summary: Reconcile the current dependency observation fitness controls with their immutable historical records.
@@ -2367,7 +2367,7 @@ rollback: None required (test-only).
   evidence: maybe-false (medium unverified); resumed review BH10. The workflows download exact release URLs over HTTPS without a separate pinned digest. No altered executable or failed release authenticity condition was demonstrated. Establish the owner supply-chain requirement and trusted digest source before treating this hardening proposal as a confirmed defect. Parent probes and full triage: `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to the source spec.
   status: done 2026-11-10
   resolution: Already delivered by `2849c5b4`/`4c0167b8`: the policy is digest verification against the Builds-pinned Props/dapr-toolchain-sha256.json, refusing before download or extraction. Reconciled this stale entry; no new credit.
-  verification: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`; `tests/five-paging-readiness-and-evidence-readers-2026-11-10/`.
+  verification: digest verification steps in `.github/workflows/ci-lifecycle-qualification.yml` and `.github/workflows/current-owner-startup-diagnostics.yml`; refusal controls in `tests/ci-lifecycle/test_review_fixes.py` and `tests/ci-lifecycle/test_loop2_fixes.py`, run in the lifecycle lane of `tests/five-paging-readiness-and-evidence-readers-2026-11-10/`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
   summary: Reconcile ordinary public evidence-reader source expectations with current committed gitlinks.
@@ -2382,14 +2382,14 @@ rollback: None required (test-only).
   evidence: The snapshot initializes the root Builds gitlink 27145e52ffab5623198ba5efdab5cdb71aa42d28 but requires 3c8096180ecf2aa539ac454815efbfceb8a92822. This is a later source-adoption mismatch after the completed 50904cc4 release; reconcile measured runtime authority and checkout selection without blindly blessing a new tuple. Review findings R-B01, R-E02; durable triage in tests/sync-release-2026-11-05-closure-2026-11-09/review-triage.json.
   status: done 2026-11-10
   resolution: Already delivered by `a69fa179`/`0ec80012`: current-owner-startup-diagnostics requires the committed Builds gitlink 5ec17790 rather than the historical 3c809618 checkout. Reconciled this stale entry; no new credit.
-  verification: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`; `tests/five-paging-readiness-and-evidence-readers-2026-11-10/`.
+  verification: the Builds pin in `.github/workflows/current-owner-startup-diagnostics.yml` equals `git ls-tree HEAD references/Hexalith.Builds` (5ec17790).
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-05.md`
   summary: Mandatory public verifier refuses synchronized source tuple (high; pre-existing later/concurrent work).
   evidence: The CI caller supplies root gitlinks e39a9a2587ec150d550510763ab69db305d13fdb and 27145e52ffab5623198ba5efdab5cdb71aa42d28, while validate requires 0f4e27f1f78310bd731c10c19dc51bb1e0345d44 and 3c8096180ecf2aa539ac454815efbfceb8a92822 before reading evidence. The public gate was introduced in 71f61d89cf9a1aa3a60e2065f913b95b4b2a639b after this release. Review findings R-B02, R-E01, R-V02; durable triage in tests/sync-release-2026-11-05-closure-2026-11-09/review-triage.json.
   status: done 2026-11-10
   resolution: Already delivered by `a69fa179`/`0ec80012`: the mandatory public verifier now expects the committed Platform 081178aa / Builds 5ec17790 tuple that CI supplies. Reconciled this stale entry; no new credit.
-  verification: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`; `tests/five-paging-readiness-and-evidence-readers-2026-11-10/`.
+  verification: PLATFORM/BUILDS in `scripts/verify-public-package-integration.py` equal the committed gitlinks; `artifact-compatibility` in `tests/five-paging-readiness-and-evidence-readers-2026-11-10/verification.json`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-05.md`
   summary: Ownership marker initialization can leak a preparation directory (medium; pre-existing later/concurrent work).
