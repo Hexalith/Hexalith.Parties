@@ -157,6 +157,12 @@ Hexalith.Parties/
     Hexalith.Memories/               # Optional rich-search submodule
 ```
 
+## Legacy compatibility surfaces
+
+These are versioned compatibility binaries. They are not retired and stay outside every Hexalith.Platform composition.
+
+- `Hexalith.Parties.Mcp` (container `parties-mcp`): removal gate "Parties inventory gates; replacement evidence and approved withdrawal for every row" ([technical-tools inventory 1.0.2](https://github.com/Hexalith/Hexalith.McpCli/blob/c70ca9784da393cb1929741c6a6c9564717eace5/_bmad-output/implementation-artifacts/technical-tools-migration-inventory-v1.md) PS05; [Parties inventory 1.2.0](https://github.com/Hexalith/Hexalith.McpCli/blob/c70ca9784da393cb1929741c6a6c9564717eace5/_bmad-output/implementation-artifacts/parties-migration-inventory-v1.md)). Retirement is blocked: the McpCli Story 5.4 verdict is `retirement-blocked`, with G01–G06 open ([owner approval](https://github.com/Hexalith/Hexalith.McpCli/blob/c70ca9784da393cb1929741c6a6c9564717eace5/_bmad-output/implementation-artifacts/evidence/story-5-4-owner-approval/owner-approval.json)).
+
 ## Positioning
 
 Hexalith.Parties manages **party records** -- people and organizations with contact channels and identifiers. It is **not** an authentication provider, CRM, or identity server. Use it as the party/contact data backbone behind your own application logic.
