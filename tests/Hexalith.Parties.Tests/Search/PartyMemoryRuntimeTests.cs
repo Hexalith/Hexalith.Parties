@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
@@ -80,6 +81,7 @@ public sealed class PartyMemoryRuntimeTests
         string intentKey = mappingKey.Replace("memory-mapping", "memory-ingestion", StringComparison.Ordinal);
         bool terminalUnitAbsenceObserved = false;
         bool survivorsVerified = false;
+        bool qualificationCompleted = false;
         string diagnosticPath = Path.ChangeExtension(Path.GetFullPath(path!), ".provisioning.json");
         try
         {
@@ -297,18 +299,22 @@ public sealed class PartyMemoryRuntimeTests
         PartyMemoryIngestionInventory? fenced = (await restartedSdk.GetAsync<PartyMemoryIngestionInventory>(config.StateStoreName, intentKey, token)).Value;
         fenced.ShouldNotBeNull().CleanupRequested.ShouldBeTrue();
         fenced.Intents.ShouldBeEmpty();
+        qualificationCompleted = true;
         }
         finally
         {
-            await File.WriteAllTextAsync(Path.ChangeExtension(path!, ".authority.json"), JsonSerializer.Serialize(new
-            { TenantId = tenant, CaseId = caseId, UnitIds = authorityUnitIds.Distinct().ToArray(), SurvivorCaseId = survivorCaseId, OtherTenantId = otherTenant, OtherCaseId = otherCaseId, SurvivorsVerified = survivorsVerified, Requests = ingestionRequests.Observations }), CancellationToken.None).ConfigureAwait(true);
-            // Qualification owns these synthetic resources even when provisioning or assertions fail.
-            await TeardownAsync(config, http, tenant, party, caseId, mappingKey, intentKey,
-                terminalUnitAbsenceObserved, diagnosticPath).ConfigureAwait(true);
+            // Qualification owns these synthetic resources even when provisioning, assertions or the authority receipt fail.
             string otherMapping = PartyMemoryUnitMappingStore.BuildKey(otherTenant, "survivor");
-            await TeardownAsync(config, otherHttp, otherTenant, "survivor", otherCaseId, otherMapping,
-                otherMapping.Replace("memory-mapping", "memory-ingestion", StringComparison.Ordinal), true,
-                Path.ChangeExtension(diagnosticPath, ".survivor.json")).ConfigureAwait(true);
+            await PersistAuthorityThenTeardownAsync(
+                Path.ChangeExtension(path!, ".authority.json"),
+                () => JsonSerializer.Serialize(new
+                { TenantId = tenant, CaseId = caseId, UnitIds = authorityUnitIds.Distinct().ToArray(), SurvivorCaseId = survivorCaseId, OtherTenantId = otherTenant, OtherCaseId = otherCaseId, SurvivorsVerified = survivorsVerified, Requests = ingestionRequests.Observations }),
+                qualificationCompleted,
+                () => TeardownAsync(config, http, tenant, party, caseId, mappingKey, intentKey,
+                    terminalUnitAbsenceObserved, diagnosticPath),
+                () => TeardownAsync(config, otherHttp, otherTenant, "survivor", otherCaseId, otherMapping,
+                    otherMapping.Replace("memory-mapping", "memory-ingestion", StringComparison.Ordinal), true,
+                    Path.ChangeExtension(diagnosticPath, ".survivor.json"))).ConfigureAwait(true);
         }
     }
 
@@ -623,6 +629,198 @@ public sealed class PartyMemoryRuntimeTests
         {
             File.Delete(receiptPath);
         }
+    }
+
+    /// <summary>An unwritable authority receipt cannot skip either actual owned teardown receipt.</summary>
+    /// <param name="qualificationCompleted">Whether the qualification body completed without a primary failure.</param>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task AuthorityReceiptFailureStillTearsDownPrimaryAndSurvivor(bool qualificationCompleted)
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        var state = new PartyMemoryTestReadModelStore();
+        var config = new PartyMemoryRuntimeConfiguration { StateStoreName = "synthetic-store" };
+        string tenant = "synthetic-" + Guid.NewGuid().ToString("N");
+        string otherTenant = "synthetic-survivor-" + Guid.NewGuid().ToString("N");
+        string mappingKey = PartyMemoryUnitMappingStore.BuildKey(tenant, "synthetic-party");
+        string otherMapping = PartyMemoryUnitMappingStore.BuildKey(otherTenant, "survivor");
+        var deletes = new List<string>();
+        using var transport = new PartySearchErasureHttpHandler((request, _) =>
+        {
+            if (request.Method == HttpMethod.Delete)
+            {
+                lock (deletes)
+                {
+                    deletes.Add(request.RequestUri!.AbsolutePath);
+                }
+
+                return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.NoContent));
+            }
+
+            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.NotFound) { Content = JsonContent.Create(new { code = "TENANT_NOT_FOUND" }) });
+        });
+        using var http = PartyMemoryRecoveryTests.Http(transport);
+        string root = Path.Combine(Path.GetTempPath(), "parties-authority-" + Guid.NewGuid().ToString("N"));
+        string diagnosticPath = Path.Combine(root, "runtime.provisioning.json");
+        string authorityPath = Path.Combine(root, "runtime.authority.json");
+        // A directory at the receipt path makes the actual file write fail.
+        Directory.CreateDirectory(authorityPath);
+        try
+        {
+            Task finalization = PersistAuthorityThenTeardownAsync(authorityPath, () => "{}", qualificationCompleted,
+                () => TeardownAsync(config, http, tenant, "synthetic-party", "case", mappingKey,
+                    mappingKey.Replace("memory-mapping", "memory-ingestion", StringComparison.Ordinal), true, diagnosticPath, state),
+                () => TeardownAsync(config, http, otherTenant, "survivor", "other-case", otherMapping,
+                    otherMapping.Replace("memory-mapping", "memory-ingestion", StringComparison.Ordinal), true,
+                    Path.ChangeExtension(diagnosticPath, ".survivor.json"), state));
+            if (qualificationCompleted)
+            {
+                Exception failure = await Should.ThrowAsync<Exception>(finalization);
+                (failure is IOException or UnauthorizedAccessException).ShouldBeTrue(failure.GetType().FullName);
+            }
+            else
+            {
+                await finalization.ConfigureAwait(true);
+            }
+
+            using JsonDocument primary = JsonDocument.Parse(await File.ReadAllTextAsync(Path.ChangeExtension(diagnosticPath, ".teardown.json"), token));
+            primary.RootElement.GetProperty("TenantId").GetString().ShouldBe(tenant);
+            using JsonDocument survivor = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(root, "runtime.provisioning.survivor.teardown.json"), token));
+            survivor.RootElement.GetProperty("TenantId").GetString().ShouldBe(otherTenant);
+            string Route(string path) => new Uri(http.BaseAddress!, path).AbsolutePath;
+            deletes.ShouldBe([
+                Route(MemoriesRoutes.CasePath(tenant, "case")), Route(MemoriesRoutes.TenantPath(tenant)),
+                Route(MemoriesRoutes.CasePath(otherTenant, "other-case")), Route(MemoriesRoutes.TenantPath(otherTenant))]);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    /// <summary>Every finalization step runs in order; failures surface only for a completed qualification and never replace its failure.</summary>
+    /// <param name="failure">The injected finalization failure.</param>
+    /// <param name="qualificationCompleted">Whether the qualification body completed without a primary failure.</param>
+    [Theory]
+    [InlineData("none", true)]
+    [InlineData("serialization", true)]
+    [InlineData("serialization", false)]
+    [InlineData("primary-teardown", true)]
+    [InlineData("primary-teardown", false)]
+    [InlineData("survivor-teardown", true)]
+    [InlineData("both-teardowns", true)]
+    [InlineData("both-teardowns", false)]
+    public async Task AuthorityFinalizationRunsBothTeardownsAndPreservesTheOwningFailure(string failure, bool qualificationCompleted)
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        string authorityPath = Path.Combine(Path.GetTempPath(), "parties-authority-" + Guid.NewGuid().ToString("N") + ".json");
+        var calls = new List<string>();
+        var serializationFailure = new InvalidOperationException("synthetic-authority-serialization");
+        var primaryFailure = new InvalidOperationException("synthetic-primary-teardown");
+        var survivorFailure = new InvalidOperationException("synthetic-survivor-teardown");
+        try
+        {
+            Task finalization = PersistAuthorityThenTeardownAsync(authorityPath,
+                () => failure == "serialization" ? throw serializationFailure : "{\"Authority\":true}",
+                qualificationCompleted,
+                () =>
+                {
+                    calls.Add("primary");
+                    return failure is "primary-teardown" or "both-teardowns" ? Task.FromException(primaryFailure) : Task.CompletedTask;
+                },
+                () =>
+                {
+                    calls.Add("survivor");
+                    return failure is "survivor-teardown" or "both-teardowns" ? Task.FromException(survivorFailure) : Task.CompletedTask;
+                });
+            if (failure == "none" || !qualificationCompleted)
+            {
+                // The propagating qualification failure, if any, is never replaced by finalization failures.
+                await finalization.ConfigureAwait(true);
+            }
+            else if (failure == "both-teardowns")
+            {
+                (await Should.ThrowAsync<AggregateException>(finalization)).InnerExceptions.ShouldBe([primaryFailure, survivorFailure]);
+            }
+            else
+            {
+                Exception expected = failure switch
+                {
+                    "serialization" => serializationFailure,
+                    "primary-teardown" => primaryFailure,
+                    _ => survivorFailure,
+                };
+                (await Should.ThrowAsync<InvalidOperationException>(finalization)).ShouldBeSameAs(expected);
+            }
+
+            calls.ShouldBe(["primary", "survivor"]);
+            if (failure == "serialization")
+            {
+                File.Exists(authorityPath).ShouldBeFalse();
+            }
+            else
+            {
+                (await File.ReadAllTextAsync(authorityPath, token)).ShouldBe("{\"Authority\":true}");
+            }
+        }
+        finally
+        {
+            File.Delete(authorityPath);
+        }
+    }
+
+    /// <summary>Persists the final authority receipt, then always runs both owned teardowns.</summary>
+    /// <param name="authorityPath">The private authority receipt path.</param>
+    /// <param name="authority">Produces the serialized authority receipt.</param>
+    /// <param name="qualificationCompleted">Whether the qualification body completed without a primary failure.</param>
+    /// <param name="primaryTeardown">Tears down the primary synthetic tenant.</param>
+    /// <param name="survivorTeardown">Tears down the foreign-tenant survivor.</param>
+    /// <returns>A task that represents the finalization.</returns>
+    /// <remarks>
+    /// Every step runs even when an earlier one fails. Finalization failures surface only after both teardowns and only
+    /// when the qualification completed; otherwise the propagating qualification failure is preserved and they are reported.
+    /// </remarks>
+    private static async Task PersistAuthorityThenTeardownAsync(string authorityPath, Func<string> authority,
+        bool qualificationCompleted, Func<Task> primaryTeardown, Func<Task> survivorTeardown)
+    {
+        List<Exception> failures = [];
+        async Task RunAsync(Func<Task> step)
+        {
+            try
+            {
+                await step().ConfigureAwait(true);
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+            {
+                failures.Add(ex);
+            }
+        }
+
+        await RunAsync(() => File.WriteAllTextAsync(authorityPath, authority(), CancellationToken.None)).ConfigureAwait(true);
+        await RunAsync(primaryTeardown).ConfigureAwait(true);
+        await RunAsync(survivorTeardown).ConfigureAwait(true);
+        if (failures.Count == 0)
+        {
+            return;
+        }
+
+        if (!qualificationCompleted)
+        {
+            foreach (Exception failure in failures)
+            {
+                TestContext.Current.TestOutputHelper?.WriteLine("Owned finalization failed after the qualification failure (" + failure.GetType().Name + "); operator cleanup may be required.");
+            }
+
+            return;
+        }
+
+        if (failures.Count == 1)
+        {
+            ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        }
+
+        throw new AggregateException("Owned qualification finalization failed.", failures);
     }
 
     private static async Task TeardownAsync(PartyMemoryRuntimeConfiguration config, HttpClient http,

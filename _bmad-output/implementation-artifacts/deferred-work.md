@@ -2217,6 +2217,9 @@ rollback: None required (test-only).
 - source_spec: `spec-five-subscription-and-package-adoption-deferred-items.md`
   summary: Guarantee standalone runtime-child teardown when final authority receipt persistence fails.
   evidence: Review pass 2 BH2-07; baseline writes runtime.authority.json before both teardown calls in the same finally. A filesystem failure skips child-level teardown. The owned wrapper independently disposes its topology, but standalone configured runs need nested cleanup/failure preservation.
+  status: done 2026-11-10
+  resolution: The authority receipt is written inside a finalization helper that always runs both owned teardowns afterwards. Serialization, write and teardown failures surface only after both teardowns and only for a completed qualification, so a propagating qualification failure is never replaced. Real unwritable-receipt and injected serialization/primary/survivor teardown controls pass.
+  verification: `spec-five-cleanup-readiness-and-processing-paging-deferred-items.md`; `tests/five-cleanup-readiness-and-processing-paging-2026-11-10/`.
 
 - source_spec: `spec-five-subscription-and-package-adoption-deferred-items.md`
   summary: Extend authoritative native stream and replay qualification to every recorded canonical Memories output.
@@ -2255,10 +2258,16 @@ rollback: None required (test-only).
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-27-invalid-page-failure.md`
   summary: Assess the processing-history query's existing invalid-cursor classification separately from list/search paging.
   evidence: ReadProcessingPageAsync in src/Hexalith.Parties/Queries/PartySdkQueryService.ProcessingBuckets.cs returns InvalidPage after failed cursor decoding or invalid decoded positions; ProcessingFirstPageWithoutRevisionAuthorityReturnsReadModelUnavailableAsync preserves that response. This predates the current review and is separate from DW-27's list/search goal. A follow-up must decide compatibility before changing the processing-query contract.
+  status: done 2026-11-10
+  resolution: Owner decision 2026-11-10: processing cursor decode, scope and decoded-position failures return invalid-cursor, aligned with list/search, and are documented in docs/api-contracts.md. Actual stale-cursor and substitute decode controls pass; HTTP 400 query_invalid_page is unchanged.
+  verification: `spec-five-cleanup-readiness-and-processing-paging-deferred-items.md`; `tests/five-cleanup-readiness-and-processing-paging-2026-11-10/`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-27-invalid-page-failure.md`
   summary: Assess paging-validation precedence for the separate processing-history query.
   evidence: GetProcessingRecordsAsync reads detail and processing models before ReadProcessingPageAsync validates independent page size/offset inputs. Missing detail, model corruption or store failure can take precedence over invalid page sizes, including publicly admitted sizes 101/200. This existing ordering is outside DW-27's list/search change; establish the intended existence/revision precedence before altering it.
+  status: done 2026-11-10
+  resolution: Owner decision 2026-11-10: unsupported processing page sizes or offsets reject as invalid-page after envelope validation and before any detail or processing read. 48 controls across existing/missing/outage/corrupt models, cursor pairings and the gateway mapping pass.
+  verification: `spec-five-cleanup-readiness-and-processing-paging-deferred-items.md`; `tests/five-cleanup-readiness-and-processing-paging-2026-11-10/`.
 
 - source_spec: `spec-published-catalog-sdk-adoption.md`
   summary: Validate the complete released G4 test-result schema before public evidence acceptance.
@@ -2384,10 +2393,16 @@ rollback: None required (test-only).
 - source_spec: `_bmad-output/implementation-artifacts/spec-published-catalog-sdk-adoption.md`
   summary: Establish pre-Build SDK composition cleanup under a fault after successful finalization.
   evidence: maybe-false (medium unverified); final review F-B5. The live concurrent case exercises finalization and current failure paths explicitly dispose failed composition, but a fault injected between completed composition and BuildAsync completion is needed to prove or disprove an unowned private directory when no application instance is returned. Trace testing-builder disposal and the DI factory lifetime; do not claim a confirmed leak without that outcome.
+  status: done 2026-11-10
+  resolution: Confirmed and fixed: a BuildAsync fault after successful finalization retained the private catalog directory (red-proof), and a built but never-started application released it only through asynchronous DI disposal after fixture disposal returned. The fixture now releases the pending owned composition before builder disposal; bootstrap disposal shares one attempt and keeps the owned-process refusal. Both actual finalization facts pass.
+  verification: `spec-five-cleanup-readiness-and-processing-paging-deferred-items.md`; `tests/five-cleanup-readiness-and-processing-paging-2026-11-10/`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-published-catalog-sdk-adoption.md`
   summary: The existing consumer JSON-download-failure browser case intermittently clicks Export before Blazor interactivity is ready.
   evidence: Unchanged tests/e2e/specs/consumer-portal-routes.spec.ts:477 passed after a configured retry, then failed once in three focused retries-disabled executions. The trace records the click during initial Blazor WebSocket connection, the initial export-ready status remains unchanged, and the operation is never retried by the test. A readiness fix should retain exactly one domain export request and all failure/retry guidance assertions.
+  status: done 2026-11-10
+  resolution: A shared helper waits for the FrontComposer shell interactive marker before Export in this case and the sibling export case, retaining one export request and all guidance assertions. Five retries-disabled repeats pass 125/125 consumer-portal cases, including 5/5 for this case.
+  verification: `spec-five-cleanup-readiness-and-processing-paging-deferred-items.md`; `tests/five-cleanup-readiness-and-processing-paging-2026-11-10/`.
 
 - source_spec: `spec-published-catalog-sdk-adoption.md`
   summary: Bind native loaded-assembly observations to the disk PE module identity before attributing its hash to loaded code.
@@ -2402,3 +2417,11 @@ rollback: None required (test-only).
   status: done 2026-11-10
   resolution: The controller opens a pidfd before checking birth, signals only through that handle and closes it on every path. Real exit/replacement, foreign-birth, successful-delivery and failure controls pass; withdrawal-before-AppHost-stop ordering is preserved.
   verification: `spec-five-evidence-and-process-safety-deferred-items.md`; `tests/five-evidence-and-process-safety-2026-11-10/`.
+
+- source_spec: `spec-five-cleanup-readiness-and-processing-paging-deferred-items.md`
+  summary: Decide whether processing history should refuse a nonblank cursor combined with offset zero, as list/search do.
+  evidence: low; review finding. IsSupportedProcessingPaging accepts Offset 0 with a cursor while list/search TryResolvePaging rejects any offset with a cursor as invalid-cursor. This pre-existing processing behavior is now documented as accepted; changing it alters the public contract and needs an owner decision.
+
+- source_spec: `spec-five-cleanup-readiness-and-processing-paging-deferred-items.md`
+  summary: Wait for FrontComposer interactivity before the remaining consumer-portal edit, consent and erasure interactions.
+  evidence: medium if real, unobserved; review finding. The /me/edit Save changes, /me/consent Marketing emails and /me/privacy Delete my data cases interact right after prerendered content appears; no flake was observed in 125 retries-disabled runs. Settle with a reproduced flake or trace, then apply tests/e2e/helpers/interactive-shell.ts at those sites.

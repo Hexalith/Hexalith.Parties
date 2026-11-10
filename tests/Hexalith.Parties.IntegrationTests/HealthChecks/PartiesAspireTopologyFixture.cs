@@ -634,8 +634,21 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                         // Retain the builder as well; disposing it would dispose the same app.
                         return;
                     }
-                    await _builder.DisposeAsync().ConfigureAwait(false);
-                    _builder = null;
+                    try
+                    {
+#if HEXALITH_EVENTSTORE_QUERY_SELECTOR_BINDINGS
+                        // A Build fault leaves no application DI to dispose the catalog subscriber, and a
+                        // built application's DI can finish disposing it only after this cleanup returns.
+                        // Release the owned composition now; a later DI disposal is a no-op.
+                        await apphost::Hexalith.Parties.AppHost.PartiesDevelopmentCatalogBootstrap
+                            .ReleaseUnstartedOwnedTestModelAsync(_builder).ConfigureAwait(false);
+#endif
+                    }
+                    finally
+                    {
+                        await _builder.DisposeAsync().ConfigureAwait(false);
+                        _builder = null;
+                    }
                 }
             },
             async () =>

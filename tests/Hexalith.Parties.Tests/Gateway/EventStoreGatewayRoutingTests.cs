@@ -33,6 +33,7 @@ using Hexalith.EventStore.Server.Queries;
 using Hexalith.EventStore.Testing.Fakes;
 using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.Contracts.Commands;
+using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Contracts.Events;
@@ -792,6 +793,80 @@ public sealed class EventStoreGatewayRoutingTests
         if (expectedReason == "invalid-page")
         {
             codec.ReceivedCalls().ShouldBeEmpty();
+        }
+    }
+
+    /// <summary>
+    /// Verifies actual processing-history paging failures reach safe gateway ProblemDetails.
+    /// </summary>
+    /// <param name="pageSize">The public envelope page size.</param>
+    /// <param name="cursor">The optional protected cursor.</param>
+    /// <param name="expectedReason">The expected safe public reason.</param>
+    /// <returns>A task that represents the verification.</returns>
+    [Theory]
+    [InlineData(101, null, "invalid-page")]
+    [InlineData(200, null, "invalid-page")]
+    [InlineData(101, "protected.cursor.payload", "invalid-page")]
+    [InlineData(20, "protected.cursor.payload", "invalid-cursor")]
+    public async Task PostQueries_ActualProcessingPagingFailure_MapsSafeProblemAsync(int pageSize, string? cursor, string expectedReason)
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel
+            {
+                Detail = new PartyDetail
+                {
+                    Id = "party-1",
+                    Type = PartyType.Person,
+                    IsActive = true,
+                    DisplayName = "Ada Lovelace",
+                    SortName = "Lovelace, Ada",
+                    CreatedAt = DateTimeOffset.UtcNow.AddDays(-1),
+                    LastModifiedAt = DateTimeOffset.UtcNow.AddMinutes(-1),
+                },
+            }, "detail"));
+        store.GetAsync<PartyProcessingSdkReadModel>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(new PartyProcessingSdkReadModel(), "revision"));
+        IQueryCursorCodec codec = Substitute.For<IQueryCursorCodec>();
+        var service = new PartySdkQueryService(
+            store, Options.Create(new PartySdkReadModelOptions()), TimeProvider.System, Substitute.For<IPartySearchProvider>(),
+            Substitute.For<IPartyErasureRecordStore>(), codec, new PartySdkLastKnownReadModelCache(), NullLogger<PartySdkQueryService>.Instance);
+        using var transport = new PartyPagingActorInvocationHandler(new GetProcessingRecordsQueryHandler(service));
+        var router = new QueryRouter(new ActorProxyFactory(new ActorProxyOptions
+        {
+            HttpEndpoint = "http://dapr-transport.test",
+            UseJsonSerialization = true,
+        }, transport), NullLogger<QueryRouter>.Instance);
+        using var factory = new EventStoreGatewayTestFactory(customQueryRouter: router);
+        using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["query:read"]);
+
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", new
+        {
+            tenant = "tenant-a",
+            domain = PartyDetailQueryTypes.PartyDomain,
+            aggregateId = "party-1",
+            queryType = PartyDetailQueryTypes.GetProcessingRecordsQueryType,
+            projectionType = PartyDetailQueryTypes.ProjectionType,
+            entityId = "party-1",
+            projectionActorType = PartyDetailQueryTypes.ActorTypeName,
+            payload = JsonSerializer.SerializeToElement(new { }),
+            paging = new { pageSize, cursor },
+        });
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        JsonElement problem = await response.Content.ReadFromJsonAsync<JsonElement>();
+        problem.GetProperty("reasonCode").GetString().ShouldBe("query_invalid_page");
+        problem.GetProperty("reason").GetString().ShouldBe(expectedReason);
+        problem.GetRawText().ShouldNotContain("protected.cursor.payload");
+        transport.Envelopes.ShouldHaveSingleItem().QueryType.ShouldBe(PartyDetailQueryTypes.GetProcessingRecordsQueryType);
+        if (expectedReason == "invalid-page")
+        {
+            store.ReceivedCalls().ShouldBeEmpty();
+            codec.ReceivedCalls().ShouldBeEmpty();
+        }
+        else
+        {
+            codec.ReceivedCalls().ShouldNotBeEmpty();
         }
     }
 

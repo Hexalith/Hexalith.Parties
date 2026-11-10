@@ -41,6 +41,8 @@ internal sealed class PartiesDevelopmentCatalogBootstrap : IDistributedApplicati
     private readonly string _owner = Guid.NewGuid().ToString("N");
     private bool _ownsDirectory;
     private bool _cleanupBlocked;
+    private readonly Lock _disposalGate = new();
+    private Task? _disposal;
     private readonly Dictionary<string, JsonObject> _prepared = new(StringComparer.Ordinal);
     private JsonObject? _families;
 
@@ -232,6 +234,24 @@ internal sealed class PartiesDevelopmentCatalogBootstrap : IDistributedApplicati
             bootstrap._cleanupBlocked = failure.Data.Contains("CatalogOwnedProcessStillRunning");
             if (!bootstrap._cleanupBlocked) { await bootstrap.DisposeAsync().ConfigureAwait(false); }
             throw;
+        }
+    }
+
+    /// <summary>Releases an enrolled package fixture whose application has not deterministically disposed this subscriber.</summary>
+    /// <remarks>
+    /// A Build fault leaves no application DI to dispose this factory singleton, so the finalized composition and
+    /// private directory would be retained. A built application's DI can finish disposing it only after the caller's
+    /// disposal returns. Disposal is idempotent: an already disposed subscriber is no longer pending, and directory
+    /// deletion keeps its owned-process refusal. Callers must invoke this only after every owned worker has quiesced.
+    /// </remarks>
+    /// <param name="builder">The fixture builder that registered the package profile.</param>
+    /// <returns>A task that represents the release.</returns>
+    internal static async Task ReleaseUnstartedOwnedTestModelAsync(IDistributedApplicationBuilder builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        if (Pending.TryGetValue(builder.Services, out PartiesDevelopmentCatalogBootstrap? bootstrap))
+        {
+            await bootstrap.DisposeAsync().ConfigureAwait(false);
         }
     }
 
@@ -701,7 +721,28 @@ internal sealed class PartiesDevelopmentCatalogBootstrap : IDistributedApplicati
     }
 
     /// <inheritdoc />
-    public async ValueTask DisposeAsync()
+    /// <remarks>
+    /// Application DI can finish disposing this subscriber in the background while a fixture releases an unstarted
+    /// model. Concurrent callers share one attempt; a completed attempt is final. A failed composition disposal can be
+    /// retried, but it permanently blocks directory deletion because owned processes can no longer be proven stopped.
+    /// </remarks>
+    public ValueTask DisposeAsync()
+    {
+        Task disposal;
+        lock (_disposalGate)
+        {
+            if (_disposal is null || _disposal.IsFaulted || _disposal.IsCanceled)
+            {
+                _disposal = DisposeCoreAsync();
+            }
+
+            disposal = _disposal;
+        }
+
+        return new ValueTask(disposal);
+    }
+
+    private async Task DisposeCoreAsync()
     {
 #if HEXALITH_EVENTSTORE_QUERY_SELECTOR_BINDINGS
         if (_composition is not null)

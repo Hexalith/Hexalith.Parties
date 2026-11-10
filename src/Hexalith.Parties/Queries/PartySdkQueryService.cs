@@ -125,6 +125,12 @@ public sealed partial class PartySdkQueryService(
             return QueryResult.Failure(QueryAdapterFailureReason.InvalidEnvelope);
         }
 
+        // Unsupported page sizes and offsets precede detail existence, outages and model validation.
+        if (!IsSupportedProcessingPaging(query.Paging))
+        {
+            return QueryResult.Failure(QueryAdapterFailureReason.InvalidPage);
+        }
+
         try
         {
             (ReadModelEntry<PartyDetailSdkReadModel> detail, bool detailDegraded) = await ReadDetailModelAsync(

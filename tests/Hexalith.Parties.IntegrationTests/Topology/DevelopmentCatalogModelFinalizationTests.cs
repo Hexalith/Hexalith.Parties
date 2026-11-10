@@ -37,8 +37,18 @@ public sealed class DevelopmentCatalogModelFinalizationTests
 {
 #if HEXALITH_EVENTSTORE_QUERY_SELECTOR_BINDINGS
     /// <summary>The actual fixture caller finalizes all modeled runtime projects and refuses replacement preparation on restart.</summary>
+    /// <returns>A task that represents the verification.</returns>
     [Fact]
     public async Task ActualFixtureFinalizationBindsEveryRuntimeIncludingThePortal()
+        => await RunActualFixtureFinalizationAsync(faultBeforeBuild: false).ConfigureAwait(true);
+
+    /// <summary>A fault after successful package finalization and before Build completes still releases the owned private catalog.</summary>
+    /// <returns>A task that represents the verification.</returns>
+    [Fact]
+    public async Task FaultBeforeBuildAfterFinalizationReleasesOwnedCatalog()
+        => await RunActualFixtureFinalizationAsync(faultBeforeBuild: true).ConfigureAwait(true);
+
+    private static async Task RunActualFixtureFinalizationAsync(bool faultBeforeBuild)
     {
         string directory = Path.Combine(Path.GetTempPath(), "parties-complete-model-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
@@ -104,6 +114,14 @@ public sealed class DevelopmentCatalogModelFinalizationTests
                         Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(file))).ShouldBe(hash!.GetValue<string>());
                     return Task.FromResult(current.DeepClone().AsObject());
                 });
+                if (faultBeforeBuild)
+                {
+                    // AddResource admits this name under the default policy. Aspire Build re-validates it
+                    // under the last policy after the suspended entry point resumes, so BuildAsync itself
+                    // faults after package finalization and returns no application.
+                    _ = builder.AddResource(new ParameterResource("parties-build-fault", _ => "fault"))
+                        .WithAnnotation(new NameValidationPolicyAnnotation { MaxLength = 1 });
+                }
                 return builder;
             }, async (app, token) =>
             {
@@ -136,13 +154,34 @@ public sealed class DevelopmentCatalogModelFinalizationTests
                 byName["parties-ui"]["completedNs"] = 2;
                 await Should.ThrowAsync<InvalidDataException>(() => selectedBuilder!.Eventing.PublishAsync(
                     new BeforeResourceStartedEvent(portal, app.Services), token)).ConfigureAwait(false);
+                Directory.EnumerateDirectories(directory, "parties-*-catalog").ShouldHaveSingleItem();
                 observed = true;
                 throw new InvalidOperationException("Model inspection finished before any infrastructure start.");
             });
-            await using var lifetime = fixture.ConfigureAwait(true);
-            await fixture.InitializeAsync(TestContext.Current.CancellationToken).ConfigureAwait(true);
-            observed.ShouldBeTrue(fixture.UnavailableReason);
-            fixture.IsAvailable.ShouldBeFalse();
+            bool faulted = false;
+            fixture.ObserveInitializationFailureAsync = failure =>
+            {
+                // Runs before partial-startup teardown: the finalized private catalog still exists.
+                Directory.EnumerateDirectories(directory, "parties-*-catalog").ToArray().ShouldHaveSingleItem(fixture.UnavailableReason);
+                faulted = failure is ArgumentException && failure.Message.Contains("parties-build-fault", StringComparison.Ordinal)
+                    && fixture.InitializationPhase == "build-application";
+                return Task.CompletedTask;
+            };
+
+            await using (fixture.ConfigureAwait(true))
+            {
+                await fixture.InitializeAsync(TestContext.Current.CancellationToken).ConfigureAwait(true);
+                fixture.IsAvailable.ShouldBeFalse();
+                faulted.ShouldBe(faultBeforeBuild, fixture.UnavailableReason);
+                observed.ShouldBe(!faultBeforeBuild, fixture.UnavailableReason);
+            }
+
+            // Neither path starts the application. A Build fault leaves no application DI, and a built
+            // application's DI can finish only after fixture disposal returns, so the fixture must
+            // release the owned composition and private directory before its disposal completes.
+            Directory.EnumerateDirectories(directory, "parties-*-catalog").ToArray().ShouldBeEmpty();
+            // A later release after fixture disposal is an idempotent no-op.
+            await Bootstrap.ReleaseUnstartedOwnedTestModelAsync(selectedBuilder!).ConfigureAwait(true);
         }
         finally { Directory.Delete(directory, recursive: true); }
     }

@@ -60,7 +60,187 @@ public sealed class PartySdkQueryHandlerTests
         result.PayloadBytes.ShouldBeNull();
         unavailable = false;
         var invalid = await service.GetProcessingRecordsAsync(envelope with { Paging = new QueryPagingOptions(PageSize: 10, Cursor: "invalid-cursor") }, token);
-        invalid.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidPage);
+        invalid.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidCursor);
+    }
+
+    /// <summary>
+    /// Gets unsupported processing page sizes and offsets combined with each read-model failure state.
+    /// </summary>
+    public static TheoryData<int?, int?, string?, string> ProcessingUnsupportedPagingCases
+    {
+        get
+        {
+            var cases = new TheoryData<int?, int?, string?, string>();
+            (int? Size, int? Offset, string? Cursor)[] paging =
+            [
+                (int.MinValue, null, null), (-1, null, null), (0, null, null), (101, null, null), (200, null, null), (int.MaxValue, null, null),
+                (10, 5, null), (10, -1, null), (101, 5, null), (0, null, "protected.cursor.payload"), (101, null, "protected.cursor.payload"), (10, 5, "protected.cursor.payload"),
+            ];
+            foreach ((int? size, int? offset, string? cursor) in paging)
+            {
+                foreach (string scenario in new[] { "existing", "missing", "outage", "corrupt" })
+                {
+                    cases.Add(size, offset, cursor, scenario);
+                }
+            }
+
+            return cases;
+        }
+    }
+
+    /// <summary>
+    /// Verifies unsupported processing paging precedes detail existence, store outages and model validation.
+    /// </summary>
+    /// <param name="pageSize">The envelope page size.</param>
+    /// <param name="offset">The envelope offset.</param>
+    /// <param name="cursor">The optional protected cursor, never decoded.</param>
+    /// <param name="scenario">The configured read-model state; each would fail differently if read first.</param>
+    /// <returns>A task that represents the verification.</returns>
+    [Theory]
+    [MemberData(nameof(ProcessingUnsupportedPagingCases))]
+    public async Task ProcessingUnsupportedPaging_FailsBeforeAnyReadModelAccessAsync(int? pageSize, int? offset, string? cursor, string scenario)
+    {
+        var token = TestContext.Current.CancellationToken;
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        IQueryCursorCodec codec = Substitute.For<IQueryCursorCodec>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), token).Returns(_ => scenario switch
+        {
+            "missing" => Task.FromResult(new ReadModelEntry<PartyDetailSdkReadModel>(null, null)),
+            "outage" => Task.FromException<ReadModelEntry<PartyDetailSdkReadModel>>(new IOException("store unavailable")),
+            _ => Task.FromResult(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel { Detail = Detail("party-1") }, "detail")),
+        });
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), token).Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(
+            scenario == "corrupt" ? new PartyProcessingSdkReadModel { BucketGeneration = "generation-1", RecordCount = 3 } : new PartyProcessingSdkReadModel(),
+            "revision"));
+        var service = CreateService(store, cursorCodec: codec);
+
+        var result = await service.GetProcessingRecordsAsync(
+            CreateDetailEnvelope("GetProcessingRecords") with { Paging = new QueryPagingOptions(PageSize: pageSize, Cursor: cursor, Offset: offset) },
+            token);
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidPage);
+        result.PayloadBytes.ShouldBeNull();
+        store.ReceivedCalls().ShouldBeEmpty();
+        codec.ReceivedCalls().ShouldBeEmpty();
+        JsonSerializer.Serialize(result).ShouldNotContain("protected.cursor.payload");
+    }
+
+    /// <summary>
+    /// Verifies the supported processing paging boundaries still reach the read models and succeed.
+    /// </summary>
+    /// <param name="pageSize">The envelope page size, or the default when absent.</param>
+    /// <param name="offset">The envelope offset.</param>
+    /// <returns>A task that represents the verification.</returns>
+    [Theory]
+    [InlineData(1, null)]
+    [InlineData(100, null)]
+    [InlineData(1, 0)]
+    [InlineData(100, 0)]
+    [InlineData(null, null)]
+    public async Task ProcessingSupportedPagingBoundaries_ReadAndSucceedAsync(int? pageSize, int? offset)
+    {
+        var token = TestContext.Current.CancellationToken;
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), token)
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel { Detail = Detail("party-1") }, "detail"));
+        var model = new PartyProcessingSdkReadModel { Records = [new ProcessingActivityRecord { TenantId = "tenant-a", PartyId = "party-1", SequenceNumber = 1, EventType = "PartyUpdated", Timestamp = s_now, Summary = "Retained fact." }] };
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), token)
+            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(model, "revision"));
+        var service = CreateService(store);
+
+        var result = await service.GetProcessingRecordsAsync(
+            CreateDetailEnvelope("GetProcessingRecords") with { Paging = new QueryPagingOptions(PageSize: pageSize, Offset: offset) },
+            token);
+
+        result.Success.ShouldBeTrue();
+        result.Metadata!.Paging!.PageSize.ShouldBe(pageSize ?? 20);
+        result.Metadata.Paging.TotalCount.ShouldBe(1);
+    }
+
+    /// <summary>
+    /// Verifies processing cursor decode, scope and decoded-position failures use the cursor category.
+    /// </summary>
+    /// <param name="scenario">The cursor failure under test.</param>
+    /// <returns>A task that represents the verification.</returns>
+    [Theory]
+    [InlineData("malformed")]
+    [InlineData("foreign-scope")]
+    [InlineData("non-numeric-position")]
+    [InlineData("negative-position")]
+    [InlineData("signed-position")]
+    [InlineData("overflow-position")]
+    public async Task ProcessingCursorFailures_ReturnInvalidCursorWithoutPayloadAsync(string scenario)
+    {
+        var token = TestContext.Current.CancellationToken;
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), token)
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel { Detail = Detail("party-1") }, "detail"));
+        var model = new PartyProcessingSdkReadModel { Records = [new ProcessingActivityRecord { TenantId = "tenant-a", PartyId = "party-1", SequenceNumber = 1, EventType = "PartyUpdated", Timestamp = s_now, Summary = "Retained fact." }] };
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), token)
+            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(model, "revision"));
+        IQueryCursorCodec codec = Substitute.For<IQueryCursorCodec>();
+        codec.TryDecode(Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string>(), out Arg.Any<string?>(), out Arg.Any<string?>())
+            .Returns(call =>
+            {
+                (bool decoded, string? position, string? failure) = scenario switch
+                {
+                    "malformed" => (false, (string?)null, (string?)"malformed"),
+                    "foreign-scope" => (false, null, "wrong-scope"),
+                    "non-numeric-position" => (true, "not-a-number", null),
+                    "negative-position" => (true, "-1", null),
+                    "overflow-position" => (true, "99999999999999999999", null),
+                    _ => (true, "+1", null),
+                };
+                call[3] = position;
+                call[4] = failure;
+                return decoded;
+            });
+        var service = CreateService(store, cursorCodec: codec);
+
+        var result = await service.GetProcessingRecordsAsync(
+            CreateDetailEnvelope("GetProcessingRecords") with { Paging = new QueryPagingOptions(PageSize: 10, Cursor: "protected.cursor.payload") },
+            token);
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidCursor);
+        result.PayloadBytes.ShouldBeNull();
+        JsonSerializer.Serialize(result).ShouldNotContain("protected.cursor.payload");
+        codec.ReceivedCalls().ShouldNotBeEmpty();
+    }
+
+    /// <summary>
+    /// Verifies an actual processing cursor continues under its issued revision and is refused as invalid-cursor after an append.
+    /// </summary>
+    /// <returns>A task that represents the verification.</returns>
+    [Fact]
+    public async Task ProcessingActualCursorAfterRevisionChange_ReturnsInvalidCursorAsync()
+    {
+        var token = TestContext.Current.CancellationToken;
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), token)
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel { Detail = Detail("party-1") }, "detail"));
+        var model = new PartyProcessingSdkReadModel
+        {
+            Records = [.. Enumerable.Range(1, 3).Select(sequence => new ProcessingActivityRecord
+            { TenantId = "tenant-a", PartyId = "party-1", SequenceNumber = sequence, EventType = "PartyUpdated", Timestamp = s_now, Summary = "Retained fact." })],
+        };
+        string revision = "revision-1";
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), token)
+            .Returns(_ => Task.FromResult(new ReadModelEntry<PartyProcessingSdkReadModel>(model, revision)));
+        var service = CreateService(store);
+        var envelope = CreateDetailEnvelope("GetProcessingRecords");
+
+        var first = await service.GetProcessingRecordsAsync(envelope with { Paging = new QueryPagingOptions(PageSize: 1) }, token);
+        string cursor = first.Metadata!.Paging!.NextCursor.ShouldNotBeNull();
+        (await service.GetProcessingRecordsAsync(envelope with { Paging = new QueryPagingOptions(PageSize: 1, Cursor: cursor) }, token))
+            .Success.ShouldBeTrue();
+        revision = "revision-2";
+        var stale = await service.GetProcessingRecordsAsync(envelope with { Paging = new QueryPagingOptions(PageSize: 1, Cursor: cursor) }, token);
+
+        stale.Success.ShouldBeFalse();
+        stale.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidCursor);
+        stale.PayloadBytes.ShouldBeNull();
     }
 
     [Theory]

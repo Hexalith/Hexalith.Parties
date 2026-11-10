@@ -13,23 +13,24 @@ public sealed partial class PartySdkQueryService
     {
         PartyProcessingBucketValidation.ValidateCoverage(model);
         int size = query.Paging!.PageSize ?? 20;
-        if (size is < 1 or > 100 || query.Paging.Offset is not null and not 0)
-        {
-            return QueryResult.Failure(QueryAdapterFailureReason.InvalidPage);
-        }
         string scope = QueryCursorScope.Create().Add("tenant", query.TenantId).Add("party", party).Add("user", query.UserId)
                     .Add("page-size", size.ToString(CultureInfo.InvariantCulture)).Add("revision", etag)
                     .Add("generation", model.BucketGeneration).Build();
         if (string.IsNullOrEmpty(etag))
             return QueryResult.Failure(PartySdkQueryFailureReason.ReadModelUnavailable);
-        if (!TryDecodeCursor(query, scope, out string? position, out _))
+        if (!TryDecodeCursor(query, scope, out string? position, out string? cursorFailureReason))
         {
-            return QueryResult.Failure(QueryAdapterFailureReason.InvalidPage);
+            if (!string.IsNullOrWhiteSpace(cursorFailureReason))
+            {
+                LogCursorRejected(query.QueryType, cursorFailureReason);
+            }
+
+            return QueryResult.Failure(QueryAdapterFailureReason.InvalidCursor);
         }
         long after = -1;
         if (!string.IsNullOrEmpty(position) && (!long.TryParse(position, NumberStyles.None, CultureInfo.InvariantCulture, out after) || after < 0))
         {
-            return QueryResult.Failure(QueryAdapterFailureReason.InvalidPage);
+            return QueryResult.Failure(QueryAdapterFailureReason.InvalidCursor);
         }
         var records = new List<ProcessingActivityRecord>(size + 1);
         if (model.BucketGeneration is null)
@@ -53,6 +54,14 @@ public sealed partial class PartySdkQueryService
         return Success(items, PartyDetailQueryTypes.ProjectionType, model, etag, timeProvider.GetUtcNow(), degraded,
             new QueryPagingMetadata(size, NextCursor: next, TotalCount: model.BucketGeneration is null ? model.Records.Count : model.RecordCount, HasMore: more));
     }
+
+    /// <summary>
+    /// Validates processing-history envelope paging before any read-model access.
+    /// </summary>
+    /// <param name="paging">The optional envelope paging options.</param>
+    /// <returns><see langword="true"/> when the page size is 1–100 and the offset is absent or zero.</returns>
+    private static bool IsSupportedProcessingPaging(QueryPagingOptions? paging)
+        => paging is null || ((paging.PageSize ?? 20) is >= 1 and <= 100 && paging.Offset is null or 0);
 
     private async Task<IReadOnlyList<ProcessingActivityRecord>> ReadAllProcessingRecordsAsync(string tenant, string party,
         PartyProcessingSdkReadModel model, string? etag, CancellationToken token)

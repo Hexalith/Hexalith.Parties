@@ -412,6 +412,18 @@ code, `reason=invalid-cursor`, and detail `The supplied cursor is invalid.`.
 The public gateway retains its maximum page size of 200; schema validation
 can reject a request before it reaches Parties.
 
+`GetProcessingRecords` is cursor-only: it supports page sizes 1–100 and no
+offset other than zero. After envelope identity validation, any other size or
+offset is outside that range and rejects with `reason=invalid-page` before any
+detail or processing read, so party existence, store outages and model
+validation cannot take precedence. A nonblank cursor with offset zero remains
+accepted. Processing cursors bind tenant, party, user, size, the stored
+processing revision and its bucket generation, so they are decoded only after
+those reads; a missing revision returns `read-model-unavailable` first.
+Malformed, foreign-scope or invalid decoded-position cursors return
+`reason=invalid-cursor`. Appending a processing record changes the revision, so
+a client receiving `invalid-cursor` restarts from the first page.
+
 `tests/conformance-vectors/mcpcli-v1/` contains seven vectors bound to the local
 `0.0.0-story410` artifact, with prerequisite creates and original write-vector
 Query postconditions retained. Shared McpCli validation and both-head replay

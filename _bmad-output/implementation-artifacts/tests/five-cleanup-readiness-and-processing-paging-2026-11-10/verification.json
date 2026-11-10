@@ -1,0 +1,266 @@
+{
+  "baselineCommit": "64085d9f3b24f56bcffe63a9c2d7eb84f38e1fca",
+  "rootGitlinks": {
+    "Hexalith.AI.Tools": "1745b6663ad32bb1288167135ed0f979366c53a0",
+    "Hexalith.Builds": "5ec1779040606be89306129a7d2b245258c9acd2",
+    "Hexalith.Commons": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+    "Hexalith.EventStore": "b437879df2339692d177774d1f076936da6ebd62",
+    "Hexalith.FrontComposer": "e972d0f06a8eec3446db0b2270fdb14eef4c1186",
+    "Hexalith.McpCli": "1c1f06b46bbe9e115022be8af75b10085c8ac360",
+    "Hexalith.Memories": "4ff3e6866ecb6d1a497e7063e972c24259252c40",
+    "Hexalith.Platform": "081178aa5cc01f5dc736ba0d1980aa80fedc6fe1",
+    "Hexalith.PolymorphicSerializations": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+    "Hexalith.Tenants": "5293ab9dca49b6298f1e3396367627009967cbfb"
+  },
+  "mode": "package (CI build-and-test catalog properties), Release, -warnaserror",
+  "checks": {
+    "final-service-build": {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "--configuration",
+        "Release",
+        "--disable-build-servers",
+        "-m:1",
+        "-warnaserror",
+        "--nologo",
+        "-p:HexalithEventStoreVersion=4.2.0",
+        "-p:HexalithTenantsVersion=7.0.5",
+        "-p:HexalithMemoriesVersion=3.0.25",
+        "-p:UseHexalithProjectReferences=false",
+        "-p:UseNuGetDeps=true",
+        "-p:EventStoreFromSource=false",
+        "-p:HexalithEventStoreFromSource=false",
+        "-p:HexalithTenantsFromSource=false",
+        "-p:HexalithMemoriesFromSource=false",
+        "-p:HexalithCommonsFromSource=false",
+        "-p:HexalithCommonsHttpFromSource=false",
+        "-p:HexalithMcpCliFromSource=false",
+        "-p:RestoreSources=https://api.nuget.org/v3/index.json",
+        "-p:MinVerVersionOverride=1.0.0"
+      ],
+      "exitCode": 0,
+      "log": "final-Hexalith.Parties.Tests.log.gz"
+    },
+    "final-integration-build": {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "--configuration",
+        "Release",
+        "--disable-build-servers",
+        "-m:1",
+        "-warnaserror",
+        "--nologo",
+        "-p:HexalithEventStoreVersion=4.2.0",
+        "-p:HexalithTenantsVersion=7.0.5",
+        "-p:HexalithMemoriesVersion=3.0.25",
+        "-p:UseHexalithProjectReferences=false",
+        "-p:UseNuGetDeps=true",
+        "-p:EventStoreFromSource=false",
+        "-p:HexalithEventStoreFromSource=false",
+        "-p:HexalithTenantsFromSource=false",
+        "-p:HexalithMemoriesFromSource=false",
+        "-p:HexalithCommonsFromSource=false",
+        "-p:HexalithCommonsHttpFromSource=false",
+        "-p:HexalithMcpCliFromSource=false",
+        "-p:RestoreSources=https://api.nuget.org/v3/index.json",
+        "-p:MinVerVersionOverride=1.0.0"
+      ],
+      "exitCode": 0,
+      "log": "final-Hexalith.Parties.IntegrationTests.log.gz"
+    },
+    "service-full-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "-xml",
+        "service-full-tests.xml"
+      ],
+      "exitCode": 0,
+      "total": 2958,
+      "failed": 0,
+      "skipped": 13,
+      "log": "service-full-tests.log.gz",
+      "xml": "service-full-tests.xml.gz"
+    },
+    "catalog-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogModelFinalizationTests",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogConfigurationTests",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogPreparationCleanupTests",
+        "-failSkips",
+        "-xml",
+        "catalog-tests.xml"
+      ],
+      "exitCode": 0,
+      "total": 58,
+      "failed": 0,
+      "skipped": 0,
+      "ciMinimumExpected": 51,
+      "log": "catalog-tests.log.gz",
+      "xml": "catalog-tests.xml.gz"
+    },
+    "final-finalization-recheck": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogModelFinalizationTests",
+        "-failSkips"
+      ],
+      "exitCode": 0,
+      "total": 34,
+      "log": "final-finalization-recheck.log.gz"
+    },
+    "e2e-typecheck": {
+      "command": [
+        "npx",
+        "tsc",
+        "--noEmit"
+      ],
+      "workingDirectory": "tests/e2e",
+      "exitCode": 0,
+      "log": "e2e-typecheck.log.gz"
+    },
+    "e2e-consumer-portal": {
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "specs/consumer-portal-routes.spec.ts",
+        "--project=chromium",
+        "--retries=0",
+        "--repeat-each=5",
+        "--reporter=list"
+      ],
+      "workingDirectory": "tests/e2e",
+      "environment": {
+        "CI": "1",
+        "PLAYWRIGHT_SKIP_WEBSERVER": "1"
+      },
+      "server": "package-mode Release src/Hexalith.Parties.UI (same -p properties) on http://127.0.0.1:5072 with the playwright.config.ts webServer environment",
+      "exitCode": 0,
+      "passed": 125,
+      "failed": 0,
+      "targetCasePasses": "5/5 JSON-download-failure retry guidance; 5/5 export own data",
+      "note": "CI=1 makes the asset qualifier read the served bin/Release package metadata; without it the qualifier compares against stale bin/Debug source metadata and two unrelated cases fail on FrontComposer asset hashes.",
+      "log": "e2e-consumer-portal.log.gz"
+    },
+    "redproof-processing": {
+      "description": "HEAD PartySdkQueryService.cs and PartySdkQueryService.ProcessingBuckets.cs restored, new tests retained",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "-method",
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.ProcessingUnsupportedPaging_FailsBeforeAnyReadModelAccessAsync",
+        "-method",
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.ProcessingCursorFailures_ReturnInvalidCursorWithoutPayloadAsync",
+        "-method",
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.ProcessingActualCursorAfterRevisionChange_ReturnsInvalidCursorAsync",
+        "-method",
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.ProcessingFirstPageWithoutRevisionAuthorityReturnsReadModelUnavailableAsync",
+        "-method",
+        "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests.PostQueries_ActualProcessingPagingFailure_MapsSafeProblemAsync"
+      ],
+      "exitCode": 1,
+      "total": 62,
+      "failed": 62,
+      "expected": "all fail",
+      "log": "redproof-processing.log.gz",
+      "xml": "redproof-processing.xml.gz"
+    },
+    "redproof-catalog": {
+      "description": "fixture ReleaseUnstartedOwnedTestModelAsync call replaced by a no-op",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogModelFinalizationTests"
+      ],
+      "exitCode": 1,
+      "total": 34,
+      "failed": 1,
+      "failedTest": "FaultBeforeBuildAfterFinalizationReleasesOwnedCatalog",
+      "observation": "the private parties-<session>-catalog directory survives fixture disposal after a BuildAsync fault",
+      "log": "redproof-catalog.log.gz",
+      "xml": "redproof-catalog.xml.gz"
+    },
+    "fitness-after-ledger": {
+      "description": "ledger/spec-reading fitness classes rerun after the deferred-work.md and spec edits",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests",
+        "-class",
+        "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests"
+      ],
+      "exitCode": 0,
+      "total": 196,
+      "failed": 0,
+      "log": "fitness-after-ledger.log.gz"
+    }
+  },
+  "focusedResults": {
+    "processingUnsupportedPaging": 48,
+    "processingSupportedBoundaries": 5,
+    "processingCursorFailures": 6,
+    "processingActualStaleCursor": 1,
+    "processingRevisionAuthority": 3,
+    "gatewayProcessingPaging": 4,
+    "authorityReceiptFailureTeardown": 2,
+    "authorityFinalizationFailurePreservation": 8,
+    "privateTeardown": 5,
+    "catalogFinalization": 2,
+    "partySdkQueryHandlerTestsClass": 935,
+    "eventStoreGatewayRoutingTestsClass": 81,
+    "partyMemoryRuntimeTestsClass": {
+      "passed": 15,
+      "skipped": 2,
+      "skipReason": "environment-gated owned Memories runtime (PARTIES_MEMORIES_RUNTIME_CONFIG)"
+    }
+  },
+  "investigations": {
+    "unstartedDisposal": "Instrumented run: a built but never-started application's DI disposes the catalog subscriber asynchronously (ServiceProviderEngineScope.DisposeAsync continuation after PipelineActivityReporter.DisposeAsync) after fixture disposal returns; a BuildAsync fault leaves no DI disposal at all.",
+    "abandonedEntryPoint": "Throwing before BuildAsync disposes a DistributedApplicationTestingBuilder whose suspended AppHost entry point then resumes and builds/runs in the background, corrupting later fixture tests (collection-modified / resource-id mismatch). The fault is therefore injected inside Build via a stricter NameValidationPolicyAnnotation, which completes the entry point."
+  },
+  "testedSourceSha256": {
+    "docs/api-contracts.md": "4f127d687d869561c3d96d5efd6a8f03a9b71328da7fc1655b8b2b36ee6b9b97",
+    "src/Hexalith.Parties.AppHost/PartiesDevelopmentCatalogBootstrap.cs": "0685603f893762e42e861ebc8a6afa34ea018ef4466c26427b796334bd876906",
+    "src/Hexalith.Parties/Queries/PartySdkQueryService.ProcessingBuckets.cs": "e2408a5859b5803f7fe63edfc9e4e4582ea4b03fae6297c0dc6d68e0f3333487",
+    "src/Hexalith.Parties/Queries/PartySdkQueryService.cs": "1290106649e0e32af9ef88ecbf06540dadda95792ee8c6ff1bc519aea0a4bc43",
+    "tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs": "e5d29bf1b213db124391c9991518ec1c5db4f6de96896ae69328b9427d97ff4d",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/DevelopmentCatalogModelFinalizationTests.cs": "5cf8c369b154d51216f13b3436d5e7381bc9a36ac9572bf89bf6a39d3cf46068",
+    "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs": "f2390cceb6908bd8088c7774fd8bd5f6caa9a64e00d2477531be891dacf2da71",
+    "tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs": "8ffa4af725daff8592b210705cf062870308242ecc5814838a6ef7a7b9c9d41e",
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeTests.cs": "9358c505783ae4f7eea9cf5a80dfc5d258e92e32e06e409b452915e06ad391cf",
+    "tests/e2e/specs/consumer-portal-routes.spec.ts": "840b805683e1738ac04481e71bf30a9df2d2d83a60c786a2c2d3e6deceb269f3",
+    "tests/e2e/helpers/interactive-shell.ts": "003d8248334df9eeca1408c1b2712d22bc3ea759d5e4028664be46065680ecd0"
+  },
+  "notRun": [
+    "source-mode (pinned hexalith-module mapping) Debug builds",
+    "Docker-backed topology suites",
+    "owned Memories runtime facts (environment-gated skips)"
+  ],
+  "qualificationCredit": "None beyond the five closed deferrals; no production, owner-acceptance or dependency-publication gate receives credit.",
+  "ledgerSha256": "33e52e25c26f8e431a02bf8ff47aa6eeff8856b7cbbdb6c4334bdc92cee647bb",
+  "commitlint": {
+    "command": [
+      "node_modules/.bin/commitlint",
+      "--edit",
+      "<message file>"
+    ],
+    "version": "@commitlint/cli@21.2.4",
+    "exitCode": 0,
+    "subject": "fix: close five cleanup and paging deferrals",
+    "log": "commitlint.log.gz"
+  }
+}

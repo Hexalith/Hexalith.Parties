@@ -3,6 +3,7 @@ import { qualifyFrontComposerAssets } from '../helpers/frontcomposer-assets.js';
 import { readFile } from 'node:fs/promises';
 import { expectNoBlockingAxeViolations } from '../helpers/a11y.js';
 import { expectAccordionFocusClearance } from '../helpers/accordion-focus.js';
+import { expectInteractiveShell } from '../helpers/interactive-shell.js';
 import { portalAction } from '../helpers/portal-actions.js';
 import { expect, test, type APIRequestContext, type BrowserContext, type Locator, type Page } from '@playwright/test';
 
@@ -264,6 +265,7 @@ test.describe('Consumer portal route shells', () => {
 
     await expect(page.getByRole('heading', { name: 'Export my data' })).toBeVisible();
     await expect(page.getByText('Machine-readable JSON')).toBeVisible();
+    await expectInteractiveShell(page);
     await portalAction(page, 'Export my data').click();
 
     await expect(page.getByRole('status').filter({ hasText: 'Your JSON export is ready.' })).toContainText('Your JSON export is ready.');
@@ -479,6 +481,7 @@ test.describe('Consumer portal route shells', () => {
     const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
 
     await page.goto('/me/privacy');
+    await expectInteractiveShell(page);
     await page.evaluate(() => {
       HTMLAnchorElement.prototype.click = () => {
         throw new Error('download unavailable');
