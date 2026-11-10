@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import errno
 import fcntl
 import hashlib
 import importlib.util
@@ -116,13 +117,62 @@ def require(condition, message):
         raise ValueError(message)
 
 
-def read(path):
-    path = Path(path)
-    require(not path.is_symlink(), 'Refusing linked qualification metadata')
-    info = path.stat()
-    require(stat.S_ISREG(info.st_mode) and info.st_nlink == 1 and info.st_size <= 8_388_608,
-            'Refusing nonregular or oversized qualification metadata')
-    return json.loads(path.read_text())
+def open_unlinked(name, flags, parent, *, final=False):
+    """Open one component relative to its held parent; a link there is refused instead of followed.
+
+    A final entry that cannot be opened as a file keeps its nonregular refusal (a socket raises ENXIO, for example).
+    """
+    try:
+        return os.open(name, flags | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=parent)
+    except OSError as error:
+        if error.errno == errno.ENOENT:
+            raise
+        try:
+            mode = os.lstat(name, dir_fd=parent).st_mode
+        except OSError:
+            raise error from None
+        if stat.S_ISLNK(mode):
+            raise ValueError('Refusing linked qualification metadata') from None
+        if final and not stat.S_ISREG(mode):
+            raise ValueError('Refusing nonregular or oversized qualification metadata') from None
+        raise
+
+
+def read_bytes(path, limit=8_388_608):
+    """Read bounded metadata bytes from one descriptor opened component by component without following links.
+
+    Ancestors are held as O_PATH descriptors (search permission suffices), and size and link count are checked on
+    the open file before its bytes are read from it, so a linked, hard-linked or replaced file or ancestor is
+    refused and never reopened by name.
+    """
+    path = Path(path).absolute()
+    descriptor = os.open(path.anchor, os.O_PATH | os.O_DIRECTORY | os.O_CLOEXEC)
+    try:
+        for component in path.parts[1:-1]:
+            child = open_unlinked(component, os.O_PATH | os.O_DIRECTORY, descriptor)
+            os.close(descriptor)
+            descriptor = child
+        child = open_unlinked(path.name, os.O_RDONLY | os.O_NONBLOCK | os.O_NOCTTY, descriptor, final=True)
+        os.close(descriptor)
+        descriptor = child
+        info = os.fstat(descriptor)
+        require(stat.S_ISREG(info.st_mode) and info.st_nlink == 1 and info.st_size <= limit,
+                'Refusing nonregular or oversized qualification metadata')
+        body = bytearray()
+        while len(body) <= limit:
+            chunk = os.read(descriptor, min(65536, limit + 1 - len(body)))
+            if not chunk:
+                break
+            body.extend(chunk)
+        require(len(body) <= limit, 'Refusing nonregular or oversized qualification metadata')
+        return bytes(body)
+    finally:
+        os.close(descriptor)
+
+
+def read(path, limit=8_388_608):
+    """Read bounded JSON metadata through read_bytes; see it for the link and replacement refusals."""
+    return json.loads(read_bytes(path, limit).decode('utf-8'))
 
 
 def private_directory(path):
@@ -505,10 +555,11 @@ class Qualification:
         claims = {}
         for claim in claim_ids:
             require(isinstance(claim, str) and re.fullmatch(r'[0-9a-f]{64}', claim), 'Peer claim identity is invalid')
-            path = claims_root / (claim + '.json')
-            record = read(path)
-            require(record.get('OwnerRunId') == owner['runId'], 'Peer claim ownership changed')
-            claims[claim] = hashlib.sha256(path.read_bytes()).hexdigest()
+            # Hash the same held bytes that were validated; never reopen the claim by name.
+            body = read_bytes(claims_root / (claim + '.json'))
+            record = json.loads(body.decode('utf-8'))
+            require(isinstance(record, dict) and record.get('OwnerRunId') == owner['runId'], 'Peer claim ownership changed')
+            claims[claim] = hashlib.sha256(body).hexdigest()
         return {'containers': sorted(self.containers(item)), 'workspace': str(workspace),
                 'appHostProcessId': pid, 'appHostBirth': birth(pid), 'claimHashes': claims}
 

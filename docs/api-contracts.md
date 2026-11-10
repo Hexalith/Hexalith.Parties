@@ -413,11 +413,12 @@ The public gateway retains its maximum page size of 200; schema validation
 can reject a request before it reaches Parties.
 
 `GetProcessingRecords` is cursor-only: it supports page sizes 1–100 and no
-offset other than zero. After envelope identity validation, any other size or
-offset is outside that range and rejects with `reason=invalid-page` before any
-detail or processing read, so party existence, store outages and model
-validation cannot take precedence. A nonblank cursor with offset zero remains
-accepted. Processing cursors bind tenant, party, user, size, the stored
+offset other than zero, and a nonblank cursor cannot combine with any offset,
+including zero, which the EventStore gateway also refuses. After envelope
+identity validation, any other size, offset or cursor-with-offset pairing
+rejects with `reason=invalid-page` before any detail or processing read, so
+party existence, store outages and model validation cannot take precedence.
+Processing cursors bind tenant, party, user, size, the stored
 processing revision and its bucket generation, so they are decoded only after
 those reads; a missing revision returns `read-model-unavailable` first.
 Malformed, foreign-scope or invalid decoded-position cursors return

@@ -18,6 +18,22 @@ SPEC = importlib.util.spec_from_file_location("current_owner", Path(__file__).wi
 verify = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(verify)
 
+# Literal released hexalith.test-result.v1 required keys (Builds 5ec17790, schema sha256 9773678f...7e39),
+# written independently of the reader's constants so a dropped constant cannot hide its own refusal.
+RELEASED_RESULT_REQUIRED = ("schema", "policyId", "bindings", "diagnostics", "terminal", "termination", "retention", "cleanup")
+RELEASED_BINDINGS_REQUIRED = ("run", "tool", "candidate", "decision", "reuseLineage", "environment", "artifacts", "suite",
+                              "attachments", "deadlines")
+RELEASED_RESULT_SCHEMA_SHA256 = "9773678febac38025fae837154341d9036ce8aa94e66b0d30c7e15ee668d7e39"
+BUILDS_RESULT_SCHEMA = Path(__file__).resolve().parents[1] / "references/Hexalith.Builds/schemas/hexalith.test-result.v1.json"
+
+
+def released_result_schema():
+    """Return the released schema bytes only when the Builds checkout provides them; CI runs without submodules."""
+    try:
+        return BUILDS_RESULT_SCHEMA.read_bytes()
+    except (FileNotFoundError, NotADirectoryError):
+        return None
+
 
 def native_report(names):
     """Use the real MTP TRX ownership/timing shape with deterministic synthetic IDs."""
@@ -154,9 +170,42 @@ def check_synthetic_tenant_boundaries(test, fixture, check):
                 else:
                     target[field] = value
                 fixture.seal()
-                with test.assertRaisesRegex(ValueError, "issued synthetic tenant"): check()
+                # The released contract requires bindings.environment, so its absence refuses at that guard first.
+                expected = "released contract field" if (field, value) == ("environment", "missing") else "issued synthetic tenant"
+                with test.assertRaisesRegex(ValueError, expected): check()
     fixture.result["bindings"]["environment"] = original_environment
     fixture.seal()
+    check()
+
+
+def check_required_contract_keys(test, fixture, check):
+    """Refuse a sealed result lacking any key the released schema requires at the top level or in bindings."""
+    fixture.seal()
+    original = copy.deepcopy(fixture.result)
+    for scope, keys in (("result", RELEASED_RESULT_REQUIRED), ("bindings", RELEASED_BINDINGS_REQUIRED)):
+        for key in keys:
+            with test.subTest(scope=scope, key=key):
+                changed = copy.deepcopy(original)
+                del (changed if scope == "result" else changed["bindings"])[key]
+                fixture.write("test-result.json", changed)  # Written directly: seal() would restore diagnostics.
+                with test.assertRaisesRegex(ValueError, "unsupported result contract|released contract field"): check()
+    fixture.write("test-result.json", original)
+    check()
+
+
+def check_released_schema(test, fixture, check):
+    """Validate the sealed fixture with the full released schema only when jsonschema and the Builds schema both exist."""
+    body = released_result_schema()
+    if body is None or importlib.util.find_spec("jsonschema") is None:
+        test.skipTest("the full released-schema check needs jsonschema and the Builds schema checkout")
+    import jsonschema
+    test.assertEqual(hashlib.sha256(body).hexdigest(), RELEASED_RESULT_SCHEMA_SHA256)
+    # FormatChecker asserts date-time/uri only when jsonschema's optional format extras are installed; the schema's
+    # own utc/endpoint patterns are enforced either way.
+    fixture.seal()
+    validator = jsonschema.Draft202012Validator(json.loads(body), format_checker=jsonschema.FormatChecker())
+    sealed = json.loads((fixture.root / "test-result.json").read_text(encoding="utf-8"))
+    test.assertEqual(sorted(error.message for error in validator.iter_errors(sealed)), [])
     check()
 
 
@@ -168,20 +217,38 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
         self.expected = dict(repository="Hexalith/Hexalith.Parties", run="123", attempt=2, source="a" * 40, platform="b" * 40, builds="c" * 40)
         self.context = dict(kind="ci", repository=self.expected["repository"], workflowRunId="123", workflowAttempt=2,
                             jobId="build-and-test", runnerKind="github-hosted", operatingSystem="Linux", disposable=True)
-        self.owner = dict(runId="1" * 32, attemptId="2" * 32, environmentId="3" * 32, ownerRunId="1" * 32, role="owner")
+        self.owner = dict(runId="1" * 32, attemptId="2" * 32, attemptSequence=1, environmentId="3" * 32, ownerRunId="1" * 32, role="owner")
         self.write("invocation.json", dict(classification="baseline-only", executionContext=self.context, profiles=[verify.PROFILE]))
         phase = dict(runId=self.owner["runId"], outcome=dict(exitCode="Success"), remainingResources=dict(unverified=False, isEmpty=True,
                      containerIds=[], processIds=[], workspaceIds=[], claimIds=[], discoveryFailures=[], resourceIds=[]))
         for name in ("execution.json", "cleanup.json"):
             self.write(name, phase)
+        # Shaped like the genuine hosted 42690523916 result: valid under the released hexalith.test-result.v1 schema.
         self.result = dict(schema="hexalith.test-result.v1", policyId="hexalith.platform.candidate-and-attachment-policy.v1",
-            bindings=dict(run=self.owner, environment=dict(mode="package", executionContext=self.context,
-                          isolation=dict(state="populated", syntheticTenantId="g4t-fixture", dataIsolationId="g4r-fixture",
-                                         resourceScopeId=self.owner["environmentId"], catalogScopeId="fixture-catalog")), candidate=dict(classification="baseline-only"),
-                          deadlines=dict(execution=dict(state="populated", origin="test-execution-started", originAt="2026-11-05T10:00:00Z",
-                                                        effectiveSeconds=120, expiresAt="2026-11-05T10:02:00Z"))),
-            terminal=dict(outcome="passed", cause="tests-completed", recordedAt="2026-11-05T10:00:09Z"), termination=dict(state="not-yet-populated"),
-            cleanup=dict(state="populated", disposition="complete", failures=[], leftoverResourceIds=[]), diagnostics=[])
+            bindings=dict(run=self.owner, tool=dict(state="not-yet-populated"),
+                          candidate=dict(state="populated", classification="baseline-only", reason="No authenticated candidate request was selected."),
+                          decision=dict(state="not-yet-populated"), reuseLineage=dict(state="not-yet-populated"),
+                          environment=dict(composition=dict(id="parties", contentIdentity="sha256:" + "5" * 64), mode="package", executionContext=self.context,
+                                           catalog=dict(commit=self.expected["builds"], instanceId=self.owner["environmentId"] + "-catalog"),
+                                           isolation=dict(state="populated", syntheticTenantId="g4t-fixture", dataIsolationId="g4r-fixture",
+                                                          resourceScopeId=self.owner["environmentId"], catalogScopeId="fixture-catalog"),
+                                           resources=[dict(resourceId="parties", moduleId="parties",
+                                                           endpoints=[dict(name="http", protocol="http", uri="http://localhost:5000/")])],
+                                           readiness=dict(state="populated", status="ready", observedAt="2026-11-05T09:59:59Z",
+                                                          resources=[dict(resourceId="parties", status="ready", observedAt="2026-11-05T09:59:59Z", diagnosticIds=[])]),
+                                           startupTasks=dict(state="populated", tasks=[])),
+                          artifacts=dict(expected=dict(state="not-yet-populated"), loaded=dict(state="not-yet-populated")),
+                          suite=dict(declared=dict(state="not-yet-populated"), completion=dict(state="not-yet-populated")),
+                          attachments=dict(state="populated", holds=[]),
+                          deadlines=dict(startup=dict(state="populated", origin="environment-requested", originAt="2026-11-05T09:58:00Z", effectiveSeconds=600,
+                                                      expiresAt="2026-11-05T10:08:00Z", override=dict(state="not-overridden")),
+                                         execution=dict(state="populated", origin="test-execution-started", originAt="2026-11-05T10:00:00Z",
+                                                        effectiveSeconds=120, expiresAt="2026-11-05T10:02:00Z", configurationContentIdentity="sha256:" + "4" * 64))),
+            terminal=dict(outcome="passed", cause="tests-completed", recordedAt="2026-11-05T10:00:09Z", diagnosticIds=[]), termination=dict(state="not-yet-populated"),
+            retention=dict(state="populated", disposition="not-retained", failureRunIds=[], retainedResourceIds=[],
+                           reason="local-failure-retention-not-established", recordedAt="2026-11-05T10:00:10Z"),
+            cleanup=dict(state="populated", disposition="complete", attemptId="4" * 32, observedAt="2026-11-05T10:00:10Z", ownedResourceIds=["resource:parties"],
+                         failures=[], leftoverResourceIds=[], diagnosticIds=[]), diagnostics=[])
         self.functional = dict(**{key: self.owner[key] for key in ("runId", "attemptId", "environmentId")}, profile=verify.PROFILE,
             revision=self.expected["source"], mappingHash="d" * 64, executionContext=self.context, status="functional-observations-passed", qualificationCredit=False,
             aggregate=dict(tenantId="g4t-fixture", domain="party", aggregateId="party1"), commandId="command1", eventCount=1, metadataSequence=1,
@@ -232,6 +299,26 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
     def test_current_same_run_evidence_passes_without_qualification_credit(self):
         self.assertEqual(self.check()["nativeCases"], 2)
         self.assertFalse(self.check()["qualificationCredit"])
+
+    def test_results_missing_any_released_required_key_are_refused(self):
+        check_required_contract_keys(self, self, self.check)
+
+    def test_rebuilt_fixture_satisfies_the_full_released_schema_when_available(self):
+        check_released_schema(self, self, self.check)
+
+    def test_reader_required_keys_match_the_literal_released_key_sets(self):
+        self.assertEqual(verify.RESULT_SCHEMA_SHA256, RELEASED_RESULT_SCHEMA_SHA256)
+        self.assertEqual(verify.RESULT_REQUIRED, frozenset(RELEASED_RESULT_REQUIRED))
+        self.assertEqual(verify.RESULT_BINDINGS_REQUIRED, frozenset(RELEASED_BINDINGS_REQUIRED))
+
+    def test_reader_required_keys_are_bound_to_the_released_schema_hash(self):
+        body = released_result_schema()
+        if body is None:
+            self.skipTest("the Builds schema checkout is absent (CI runs with submodules: false)")
+        schema = json.loads(body)
+        self.assertEqual(hashlib.sha256(body).hexdigest(), verify.RESULT_SCHEMA_SHA256)
+        self.assertEqual(frozenset(schema["required"]), verify.RESULT_REQUIRED)
+        self.assertEqual(frozenset(schema["$defs"]["bindings"]["required"]), verify.RESULT_BINDINGS_REQUIRED)
 
     def test_selector_proof_requires_the_boolean_true(self):
         for value in (None, False, "true", 1):
@@ -290,6 +377,7 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
         timing.update(state="not-declared", originAt="2026-11-05T11:00:00+01:00")
         timing.pop("expiresAt")
         timing.pop("effectiveSeconds")
+        timing.pop("configurationContentIdentity")
         self.functional["observedAtUtc"] = "2026-11-05T11:00:06.0000000+01:00"
         self.seal()
         self.check()

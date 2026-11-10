@@ -94,6 +94,12 @@ class PublicPackageEvidenceTests(unittest.TestCase):
         self.assertEqual(result["profile"], "platform-package")
         self.assertFalse(result["qualificationCredit"])
 
+    def test_results_missing_any_released_required_key_are_refused(self):
+        private_fixture.check_required_contract_keys(self, self.fixture, self.check)
+
+    def test_rebuilt_fixture_satisfies_the_full_released_schema_when_available(self):
+        private_fixture.check_released_schema(self, self.fixture, self.check)
+
     def test_persisted_effects_require_the_exact_issued_synthetic_tenant(self):
         private_fixture.check_synthetic_tenant_boundaries(self, self.fixture, self.check)
 

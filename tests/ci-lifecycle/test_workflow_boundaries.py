@@ -117,10 +117,11 @@ class WorkflowBoundaryTests(unittest.TestCase):
             self.assertIsNotNone(project)
             self.assertEqual(project.find('Build').attrib['Project'], 'false')
         source = (ROOT / 'tests/Hexalith.Parties.Platform.LifecycleTests/LifecycleQualificationTests.cs').read_text()
-        assertion = 'RealDependencies_CreateQueryAndPersistMatchingPartyEvents()'
+        # 87a7b600 runs the persistence assertions and their recheck under the one lifecycle token.
+        assertion = 'new PartyPersistenceAssertions(fixture, output).ExecuteAsync(bound.Token)'
         self.assertLess(source.index(assertion), source.index('realPersistenceAssertionsPassed = true'))
         self.assertEqual(source.count(assertion), 1)
-        recheck = 'new PartyPersistenceAssertions(fixture, output).RecheckAsync()'
+        recheck = 'new PartyPersistenceAssertions(fixture, output).RecheckAsync(bound.Token)'
         self.assertEqual(source.count(recheck), 1)
         self.assertGreater(source.index(recheck), source.index('if (action == "pass")'))
         self.assertNotIn('Skip', source)

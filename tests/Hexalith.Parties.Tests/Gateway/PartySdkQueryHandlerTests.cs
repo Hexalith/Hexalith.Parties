@@ -75,6 +75,7 @@ public sealed class PartySdkQueryHandlerTests
             [
                 (int.MinValue, null, null), (-1, null, null), (0, null, null), (101, null, null), (200, null, null), (int.MaxValue, null, null),
                 (10, 5, null), (10, -1, null), (101, 5, null), (0, null, "protected.cursor.payload"), (101, null, "protected.cursor.payload"), (10, 5, "protected.cursor.payload"),
+                (10, 0, "protected.cursor.payload"),
             ];
             foreach ((int? size, int? offset, string? cursor) in paging)
             {
@@ -155,6 +156,34 @@ public sealed class PartySdkQueryHandlerTests
 
         result.Success.ShouldBeTrue();
         result.Metadata!.Paging!.PageSize.ShouldBe(pageSize ?? 20);
+        result.Metadata.Paging.TotalCount.ShouldBe(1);
+    }
+
+    /// <summary>
+    /// Verifies a blank cursor with offset zero is still a supported first-page request; only a nonblank cursor refuses an offset.
+    /// </summary>
+    /// <param name="cursor">The blank cursor value.</param>
+    /// <returns>A task that represents the verification.</returns>
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task ProcessingBlankCursorWithZeroOffset_ReadsFirstPageAsync(string cursor)
+    {
+        var token = TestContext.Current.CancellationToken;
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), token)
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel { Detail = Detail("party-1") }, "detail"));
+        var model = new PartyProcessingSdkReadModel { Records = [new ProcessingActivityRecord { TenantId = "tenant-a", PartyId = "party-1", SequenceNumber = 1, EventType = "PartyUpdated", Timestamp = s_now, Summary = "Retained fact." }] };
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), token)
+            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(model, "revision"));
+        var service = CreateService(store);
+
+        var result = await service.GetProcessingRecordsAsync(
+            CreateDetailEnvelope("GetProcessingRecords") with { Paging = new QueryPagingOptions(PageSize: 10, Cursor: cursor, Offset: 0) },
+            token);
+
+        result.Success.ShouldBeTrue();
+        result.Metadata!.Paging!.PageSize.ShouldBe(10);
         result.Metadata.Paging.TotalCount.ShouldBe(1);
     }
 

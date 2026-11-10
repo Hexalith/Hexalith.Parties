@@ -2232,6 +2232,9 @@ rollback: None required (test-only).
 - source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-06.md`
   summary: Evaluate fixed digest verification for the manual Dapr diagnostic toolchain archives (unverified medium).
   evidence: B4: version-pinned official HTTPS downloads are present, but no wrong bytes were demonstrated. Settle with an actual mutable-asset/compromise scenario or an applicable checksum policy; preserve the qualified runtime versions and normal failure gates.
+  status: done 2026-11-10
+  resolution: Already delivered by `2849c5b4`/`4c0167b8`: the lifecycle and startup-diagnostics workflows verify every Dapr archive against the digests Builds pins in Props/dapr-toolchain-sha256.json. They refuse before download when no digest is pinned, and never extract a refused archive. Reconciled this stale entry; no new credit.
+  verification: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`; `tests/five-paging-readiness-and-evidence-readers-2026-11-10/`.
 
 - source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-06.md`
   summary: Reject lifecycle reacknowledgements whose message ID or descriptor conflicts with the existing correlation.
@@ -2249,10 +2252,16 @@ rollback: None required (test-only).
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-27-invalid-page-failure.md`
   summary: Repair the current source-mapped service-test catalog-selector aliases without weakening source validation.
   evidence: On 2026-11-09, pinned hexalith-module 4.44.13 prepare-build succeeds with HXW010/HXW011 observations, but its generated Debug source environment gives CS0234 for eventstore::Hexalith.EventStore.Queries types at PartiesCatalogGatewaySelectorTests.cs lines 20–22. The source SDK/Parties host compile and the selected-package build plus 952 handler/gateway tests pass. Exact command/environment and diagnostics are retained in tests/dw-27-invalid-page-failure-2026-11-09/validation.json.
+  status: done 2026-11-10
+  resolution: Already delivered by `0be5b476` (spec-catalog-selector-source-build.md): the selector test resolves the three query types through the global Gateway assembly in both modes. Reconciled this stale entry; no code change and no new credit.
+  verification: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`; `tests/five-paging-readiness-and-evidence-readers-2026-11-10/`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-27-invalid-page-failure.md`
   summary: Reconcile the current dependency observation fitness controls with their immutable historical records.
   evidence: On 2026-11-09, the unchanged package full suite passes 2848 tests, skips 13, and fails four PlatformApiPrerequisitesTests: CommittedSelectionObservations_PreservePackageGraphAndImmutableConsumptionRefusals, Matrix_ValidationEvidenceCommandsAreReproducible, and CommittedSourceSelections_RecordOverridesAndRefuseInvalidImmutableConsumption for McpCli and Platform. Current committed gitlinks and EventStore sprint state differ from the dated expected observations. Preserve historical receipts and investigate the current observation policy; see tests/dw-27-invalid-page-failure-2026-11-09/validation.json.
+  status: done 2026-11-10
+  resolution: Already delivered by `806ed7b8` (spec-dw-27-prerequisite-observations.md): source observations align with the committed selections, and historical approvals are preserved. The current package suite runs PlatformApiPrerequisitesTests green. Reconciled this stale entry; no new credit.
+  verification: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`; `tests/five-paging-readiness-and-evidence-readers-2026-11-10/`.
 
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-27-invalid-page-failure.md`
@@ -2272,6 +2281,9 @@ rollback: None required (test-only).
 - source_spec: `spec-published-catalog-sdk-adoption.md`
   summary: Validate the complete released G4 test-result schema before public evidence acceptance.
   evidence: R-B1: the current passing fixture lacks schema-required tool/suite/artifacts/deadlines bindings; require the actual released schema and real-result controls.
+  status: done 2026-11-10
+  resolution: Both readers now refuse a result missing any top-level or bindings key the released hexalith.test-result.v1 schema requires, using constants bound to its sha256 9773678f...7e39 (Builds 5ec17790). The shared fixture is rebuilt in the genuine hosted shape: 0 full-schema errors, from 18. Missing-key controls fail on the reverted readers. A full-schema check runs when jsonschema and the Builds schema are both present; CI adds no dependency. The unchanged genuine 42690523916 artifact still passes. Complete validation stays with the producer (see the full-validator entry below).
+  verification: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`; `tests/five-paging-readiness-and-evidence-readers-2026-11-10/`.
 
 - source_spec: `spec-published-catalog-sdk-adoption.md`
   summary: Bind persisted public/private G4 aggregate tenant to the declared synthetic tenant.
@@ -2304,6 +2316,9 @@ rollback: None required (test-only).
 - source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
   summary: Determine whether the supplemental public/private result readers need the full released contract validator.
   evidence: maybe-false (medium unverified); resumed review BH2. Both readers accept their intentionally minimal synthetic fixtures. The owning CLI produces the real result first; no malformed production result was demonstrated. Trace that released producer/validator contract and construct a reachable invalid artifact to settle the claim. Parent probes and full triage: `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to the source spec.
+  status: done 2026-11-10
+  resolution: Settled by trace: not needed. Builds TestResultWriter.cs:194-200 validates every generated result against the embedded released schema (same sha256 9773678f...7e39, format validation required) before File.Move publishes it, so a schema-invalid result cannot come from the producer. After-the-fact tampering can recompute every hash, so a reader-side validator adds no authenticity. The stdlib required-key guard catches producer drift without a CI dependency.
+  verification: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`; `tests/five-paging-readiness-and-evidence-readers-2026-11-10/`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
   summary: Bind native TRX timestamps and execution identity to the current integration owner.
@@ -2343,23 +2358,38 @@ rollback: None required (test-only).
 - source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
   summary: Determine whether lifecycle metadata can reach a symlinked parent after directory admission.
   evidence: maybe-false (medium unverified); resumed review BH8. The standalone read() follows a symlinked parent in a parent probe. private_directory() rejects linked ancestor paths during admission, so hostile hosted-path reachability is unproven. Trace every caller and demonstrate a post-admission directory replacement to settle it. Parent probes and full triage: `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to the source spec.
+  status: done 2026-11-10
+  resolution: Confirmed and fixed. A parent probe showed read() returned replacement bytes after a post-check parent-symlink, file-symlink or hard-link swap, and it followed a static linked parent. All 18 metadata callers go through read(), which now holds each ancestor as an O_PATH descriptor and opens the next component with O_NOFOLLOW, then checks size and link count on the descriptor it reads. The peer claim digest now hashes those same held bytes instead of reopening the claim by name. Linked-parent and swap controls fail on the reverted reader; existing symlink, hard-link, oversized and missing outcomes are unchanged.
+  verification: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`; `tests/five-paging-readiness-and-evidence-readers-2026-11-10/`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
   summary: Determine the required Dapr executable archive integrity policy for diagnostic workflows.
   evidence: maybe-false (medium unverified); resumed review BH10. The workflows download exact release URLs over HTTPS without a separate pinned digest. No altered executable or failed release authenticity condition was demonstrated. Establish the owner supply-chain requirement and trusted digest source before treating this hardening proposal as a confirmed defect. Parent probes and full triage: `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to the source spec.
+  status: done 2026-11-10
+  resolution: Already delivered by `2849c5b4`/`4c0167b8`: the policy is digest verification against the Builds-pinned Props/dapr-toolchain-sha256.json, refusing before download or extraction. Reconciled this stale entry; no new credit.
+  verification: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`; `tests/five-paging-readiness-and-evidence-readers-2026-11-10/`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
   summary: Reconcile ordinary public evidence-reader source expectations with current committed gitlinks.
   evidence: high; resumed review VG3. Parent probe confirms validate() refuses current Platform e39a9a2587ec150d550510763ab69db305d13fdb and Builds 27145e52ffab5623198ba5efdab5cdb71aa42d28 before artifact inspection, since it requires historical published identities. This blocks the broader public gate and belongs to separate dependency/publication reconciliation; the 4.0.4 offline job is independent. Parent probes and full triage: `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to the source spec.
+  status: done 2026-11-10
+  resolution: Already delivered by `a69fa179`/`0ec80012`: the public reader requires Platform 081178aa and Builds 5ec17790, which equal the committed root gitlinks, and the unchanged genuine hosted artifact passes validate(). Reconciled this stale entry; no new credit.
+  verification: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`; `tests/five-paging-readiness-and-evidence-readers-2026-11-10/`.
 
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-05.md`
   summary: Diagnostic workflow refuses synchronized Builds checkout (medium; pre-existing later/concurrent work).
   evidence: The snapshot initializes the root Builds gitlink 27145e52ffab5623198ba5efdab5cdb71aa42d28 but requires 3c8096180ecf2aa539ac454815efbfceb8a92822. This is a later source-adoption mismatch after the completed 50904cc4 release; reconcile measured runtime authority and checkout selection without blindly blessing a new tuple. Review findings R-B01, R-E02; durable triage in tests/sync-release-2026-11-05-closure-2026-11-09/review-triage.json.
+  status: done 2026-11-10
+  resolution: Already delivered by `a69fa179`/`0ec80012`: current-owner-startup-diagnostics requires the committed Builds gitlink 5ec17790 rather than the historical 3c809618 checkout. Reconciled this stale entry; no new credit.
+  verification: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`; `tests/five-paging-readiness-and-evidence-readers-2026-11-10/`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-05.md`
   summary: Mandatory public verifier refuses synchronized source tuple (high; pre-existing later/concurrent work).
   evidence: The CI caller supplies root gitlinks e39a9a2587ec150d550510763ab69db305d13fdb and 27145e52ffab5623198ba5efdab5cdb71aa42d28, while validate requires 0f4e27f1f78310bd731c10c19dc51bb1e0345d44 and 3c8096180ecf2aa539ac454815efbfceb8a92822 before reading evidence. The public gate was introduced in 71f61d89cf9a1aa3a60e2065f913b95b4b2a639b after this release. Review findings R-B02, R-E01, R-V02; durable triage in tests/sync-release-2026-11-05-closure-2026-11-09/review-triage.json.
+  status: done 2026-11-10
+  resolution: Already delivered by `a69fa179`/`0ec80012`: the mandatory public verifier now expects the committed Platform 081178aa / Builds 5ec17790 tuple that CI supplies. Reconciled this stale entry; no new credit.
+  verification: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`; `tests/five-paging-readiness-and-evidence-readers-2026-11-10/`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-05.md`
   summary: Ownership marker initialization can leak a preparation directory (medium; pre-existing later/concurrent work).
@@ -2421,7 +2451,25 @@ rollback: None required (test-only).
 - source_spec: `spec-five-cleanup-readiness-and-processing-paging-deferred-items.md`
   summary: Decide whether processing history should refuse a nonblank cursor combined with offset zero, as list/search do.
   evidence: low; review finding. IsSupportedProcessingPaging accepts Offset 0 with a cursor while list/search TryResolvePaging rejects any offset with a cursor as invalid-cursor. This pre-existing processing behavior is now documented as accepted; changing it alters the public contract and needs an owner decision.
+  status: done 2026-11-10
+  resolution: Owner decision 2026-11-10: a nonblank cursor with offset 0 is invalid-page before any detail or processing read, matching the EventStore gateway and the existing processing offset rule; docs/api-contracts.md updated. The new (10, 0, cursor) row reaches the store in all four states on the reverted code and now passes; a null offset with a cursor is unchanged.
+  verification: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`; `tests/five-paging-readiness-and-evidence-readers-2026-11-10/`.
 
 - source_spec: `spec-five-cleanup-readiness-and-processing-paging-deferred-items.md`
   summary: Wait for FrontComposer interactivity before the remaining consumer-portal edit, consent and erasure interactions.
   evidence: medium if real, unobserved; review finding. The /me/edit Save changes, /me/consent Marketing emails and /me/privacy Delete my data cases interact right after prerendered content appears; no flake was observed in 125 retries-disabled runs. Settle with a reproduced flake or trace, then apply tests/e2e/helpers/interactive-shell.ts at those sites.
+  status: done 2026-11-10
+  resolution: Settled with a reproduction. With circuit negotiation delayed, the unguarded consent and erasure cases fail on HEAD: the click is lost and no command is issued. The edit cases were incidentally protected because fill waits for the editable input. A new control holds blazor.web.js and shows a pre-interactive click issues no command on all three routes. expectInteractiveShell now precedes all four sites, keeping one domain request and the status assertions.
+  verification: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`; `tests/five-paging-readiness-and-evidence-readers-2026-11-10/`.
+
+- source_spec: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`
+  summary: Apply the held-descriptor policy to qualification metadata writes and directory admission.
+  evidence: medium; review finding (pre-existing). write() and private_directory() in scripts/qualify-disposable-ci.py check ancestors for links by name, then mkdir, mkstemp(dir=...) and os.replace by path. That leaves the check-then-use interval this change closed for read(). Hosted roots come from the Builds helper's real_path job roots, so hostile reachability is unproven; add a post-admission swap control before changing the writer.
+
+- source_spec: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`
+  summary: Bind the CI owner receipt read to the checked path in the Builds integration helper.
+  evidence: low; review finding (pre-existing, Builds-owned). Qualification.issued() checks the receipt with is_symlink() by name, and the pinned Builds receipt_owner() then reads real_path(receipt).read_text(), which reopens it and resolves links. Fix in Hexalith.Builds, then adopt it; Parties must not edit the submodule.
+
+- source_spec: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`
+  summary: Add a circuit-negotiation-held consumer control, and decide the pre-interactive edit form submission.
+  evidence: low; review finding plus probe. The committed control holds blazor.web.js as specified, where Fluent elements are inert. Holding _blazor/negotiate instead lets the scripts load: Save then submits the edit form natively (POST /me/edit) and reloads the page, discarding typed values without a command, while consent and erasure clicks are lost. The guarded cases now wait; a negotiation-held control and the native-submit UX need a separate decision.

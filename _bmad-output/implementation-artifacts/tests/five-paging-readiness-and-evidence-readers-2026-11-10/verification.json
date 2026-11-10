@@ -1,0 +1,423 @@
+{
+  "baselineCommit": "5e5d42e3c31b39ca9f2ea51a2072e101754dd8e1",
+  "rootGitlinks": {
+    "Directory.Build.targets": "3db00e0ee697303e809551a8c860fcd05cb61fd9",
+    "Hexalith.AI.Tools": "1745b6663ad32bb1288167135ed0f979366c53a0",
+    "Hexalith.Builds": "5ec1779040606be89306129a7d2b245258c9acd2",
+    "Hexalith.Commons": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+    "Hexalith.EventStore": "b437879df2339692d177774d1f076936da6ebd62",
+    "Hexalith.FrontComposer": "e972d0f06a8eec3446db0b2270fdb14eef4c1186",
+    "Hexalith.McpCli": "1c1f06b46bbe9e115022be8af75b10085c8ac360",
+    "Hexalith.Memories": "4ff3e6866ecb6d1a497e7063e972c24259252c40",
+    "Hexalith.Platform": "081178aa5cc01f5dc736ba0d1980aa80fedc6fe1",
+    "Hexalith.PolymorphicSerializations": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+    "Hexalith.Tenants": "5293ab9dca49b6298f1e3396367627009967cbfb"
+  },
+  "mode": "package (CI build-and-test catalog properties), Release, -warnaserror",
+  "checks": {
+    "final-service-build": {
+      "exitCode": 0,
+      "log": "final-service-build.log.gz",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "--configuration",
+        "Release",
+        "--disable-build-servers",
+        "-m:1",
+        "-warnaserror",
+        "--nologo",
+        "-p:HexalithEventStoreVersion=4.2.0",
+        "-p:HexalithTenantsVersion=7.0.5",
+        "-p:HexalithMemoriesVersion=3.0.25",
+        "-p:UseHexalithProjectReferences=false",
+        "-p:UseNuGetDeps=true",
+        "-p:EventStoreFromSource=false",
+        "-p:HexalithEventStoreFromSource=false",
+        "-p:HexalithTenantsFromSource=false",
+        "-p:HexalithMemoriesFromSource=false",
+        "-p:HexalithCommonsFromSource=false",
+        "-p:HexalithCommonsHttpFromSource=false",
+        "-p:HexalithMcpCliFromSource=false",
+        "-p:RestoreSources=https://api.nuget.org/v3/index.json",
+        "-p:MinVerVersionOverride=1.0.0"
+      ]
+    },
+    "ui-server-build": {
+      "exitCode": 0,
+      "log": "ui-build.log.gz",
+      "command": [
+        "dotnet",
+        "build",
+        "src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj",
+        "--configuration",
+        "Release",
+        "--disable-build-servers",
+        "-m:1",
+        "-warnaserror",
+        "--nologo",
+        "-p:HexalithEventStoreVersion=4.2.0",
+        "-p:HexalithTenantsVersion=7.0.5",
+        "-p:HexalithMemoriesVersion=3.0.25",
+        "-p:UseHexalithProjectReferences=false",
+        "-p:UseNuGetDeps=true",
+        "-p:EventStoreFromSource=false",
+        "-p:HexalithEventStoreFromSource=false",
+        "-p:HexalithTenantsFromSource=false",
+        "-p:HexalithMemoriesFromSource=false",
+        "-p:HexalithCommonsFromSource=false",
+        "-p:HexalithCommonsHttpFromSource=false",
+        "-p:HexalithMcpCliFromSource=false",
+        "-p:RestoreSources=https://api.nuget.org/v3/index.json",
+        "-p:MinVerVersionOverride=1.0.0"
+      ]
+    },
+    "service-full-tests": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "-xml",
+        "service-full-tests.xml"
+      ],
+      "exitCode": 0,
+      "total": 2964,
+      "failed": 0,
+      "skipped": 13,
+      "skipReason": "environment-gated actual-provider and owned Memories runtime facts (unchanged count)",
+      "log": "service-full-tests.log.gz",
+      "xml": "service-full-tests.xml.gz"
+    },
+    "processing-focused": {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests",
+        "-class",
+        "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests",
+        "-xml",
+        "processing-focused.xml"
+      ],
+      "exitCode": 0,
+      "total": 1022,
+      "failed": 0,
+      "log": "processing-focused.log.gz",
+      "xml": "processing-focused.xml.gz"
+    },
+    "redproof-processing": {
+      "description": "HEAD PartySdkQueryService.ProcessingBuckets.cs, new (10, 0, cursor) row retained",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "-method",
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.ProcessingUnsupportedPaging_FailsBeforeAnyReadModelAccessAsync",
+        "-xml",
+        "redproof-processing.xml"
+      ],
+      "exitCode": 1,
+      "total": 52,
+      "failed": 4,
+      "expected": "the four (10, 0, cursor) rows fail",
+      "observation": "reverted code reached the store: invalid-cursor, actor-not-found-infrastructure and actor-exception instead of invalid-page",
+      "buildLog": "redproof-build.log.gz",
+      "log": "redproof-processing.log.gz",
+      "xml": "redproof-processing.xml.gz"
+    },
+    "fitness-after-ledger": {
+      "description": "ledger/spec-reading fitness classes rerun after the deferred-work.md and spec edits",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests",
+        "-class",
+        "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests"
+      ],
+      "exitCode": 0,
+      "total": 196,
+      "failed": 0,
+      "log": "fitness-after-ledger.log.gz"
+    },
+    "scripts-tests": {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts",
+        "-p",
+        "test_*_integration.py",
+        "-v"
+      ],
+      "python": "3.14.4",
+      "exitCode": 0,
+      "ran": 73,
+      "skipped": 0,
+      "log": "scripts-tests.log.gz"
+    },
+    "scripts-tests-py312": {
+      "command": [
+        "python3.12",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts",
+        "-p",
+        "test_*_integration.py"
+      ],
+      "python": "3.12.13 (no jsonschema)",
+      "exitCode": 0,
+      "ran": 73,
+      "skipped": 2,
+      "log": "scripts-tests-py312.log.gz"
+    },
+    "scripts-tests-ci-like": {
+      "description": "copies of the four reader files, test_public_reader_role_integration.py and the retained TRX in a tree without references/; python3 -S hides jsonschema",
+      "command": [
+        "python3",
+        "-S",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts",
+        "-p",
+        "test_*_integration.py",
+        "-v"
+      ],
+      "exitCode": 0,
+      "ran": 73,
+      "skipped": 3,
+      "skippedTests": [
+        "schema-hash binding (no Builds schema)",
+        "private full-schema check",
+        "public full-schema check"
+      ],
+      "log": "scripts-tests-ci-like.log.gz"
+    },
+    "redproof-readers": {
+      "description": "HEAD verify-current-owner-integration.py and verify-public-package-integration.py restored, new tests retained",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts",
+        "-p",
+        "test_*_integration.py"
+      ],
+      "exitCode": 1,
+      "ran": 73,
+      "failures": 24,
+      "errors": 12,
+      "observation": "missing retention/tool/decision/reuseLineage/artifacts/suite/attachments results are accepted; missing bindings/run/candidate/terminal/cleanup raise KeyError, not a refusal",
+      "log": "redproof-readers.log.gz"
+    },
+    "redproof-fixture-schema": {
+      "description": "shared fixture test-result.json validated with jsonschema Draft 2020-12 against the released schema",
+      "command": [
+        "python3",
+        "-B",
+        "fixture_schema_errors.py",
+        "<scripts dir>",
+        "references/Hexalith.Builds/schemas/hexalith.test-result.v1.json"
+      ],
+      "headSchemaErrors": 18,
+      "finalSchemaErrors": 0,
+      "probe": "fixture_schema_errors.py.gz",
+      "logs": [
+        "redproof-fixture-schema.json.gz",
+        "final-fixture-schema.json.gz"
+      ]
+    },
+    "artifact-compatibility": {
+      "record": "artifact-compatibility.json",
+      "exitCode": 0
+    },
+    "lifecycle-tests": {
+      "command": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/ci-lifecycle",
+        "-v"
+      ],
+      "python": "3.14.4",
+      "exitCode": 0,
+      "ran": 113,
+      "log": "lifecycle-tests.log.gz"
+    },
+    "lifecycle-tests-py312": {
+      "command": [
+        "python3.12",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/ci-lifecycle"
+      ],
+      "python": "3.12.13",
+      "exitCode": 1,
+      "ran": 113,
+      "errors": 8,
+      "observation": "all 8 errors are the local 3.12 build lacking os.pidfd_open; the same 8 occur on HEAD, which also has the stale boundary error",
+      "log": "lifecycle-tests-py312.log.gz",
+      "headLog": "lifecycle-tests-py312-head.log.gz"
+    },
+    "redproof-lifecycle-read": {
+      "description": "HEAD scripts/qualify-disposable-ci.py restored, new controls retained; run on Python 3.14 and 3.12",
+      "command": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "tests/ci-lifecycle/test_qualification_controller.py",
+        "-v"
+      ],
+      "exitCode": 1,
+      "ran": 18,
+      "failedPerVersion": 5,
+      "failedSubtests": [
+        "linkedParent link/dir/x.json",
+        "linkedParent plain/dir/x.json",
+        "swap parent-symlink",
+        "swap file-symlink",
+        "swap file-hardlink"
+      ],
+      "log": "redproof-lifecycle-read.log.gz"
+    },
+    "swap-probe": {
+      "command": [
+        "python3",
+        "-B",
+        "head_swap_probe.py",
+        "<qualify-disposable-ci.py>"
+      ],
+      "probe": "head_swap_probe.py.gz",
+      "head": "returns the replacement {'foreign': true} for parent-symlink, file-symlink and file-hardlink swaps",
+      "final": "refuses all three (linked, linked, nonregular)",
+      "logs": [
+        "redproof-head-swap-probe.log.gz",
+        "final-swap-probe.log.gz"
+      ]
+    },
+    "e2e-typecheck": {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "workingDirectory": "tests/e2e",
+      "exitCode": 0,
+      "log": "e2e-typecheck.log.gz"
+    },
+    "e2e-consumer-portal": {
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "specs/consumer-portal-routes.spec.ts",
+        "--project=chromium",
+        "--retries=0",
+        "--repeat-each=5",
+        "--reporter=list"
+      ],
+      "workingDirectory": "tests/e2e",
+      "environment": {
+        "CI": "1",
+        "PLAYWRIGHT_SKIP_WEBSERVER": "1"
+      },
+      "server": "package-mode Release src/Hexalith.Parties.UI (same -p properties) via dotnet run --no-build on http://127.0.0.1:5072 with the playwright.config.ts webServer environment",
+      "exitCode": 0,
+      "passed": 140,
+      "failed": 0,
+      "targetCasePasses": "5/5 for each of the four guarded cases and each of the three pre-interactive controls",
+      "log": "e2e-consumer-portal.log.gz"
+    },
+    "redproof-e2e-negotiation-delay": {
+      "description": "temporary harness (removed): HEAD and guarded copies of consumer-portal-routes.spec.ts whose beforeEach delays POST _blazor/negotiate by 3 s via page.route, run from a config extending playwright.config.ts with testDir ./redproof-tmp",
+      "grep": "saves editable profile|validation preserves typed values|grants and withdraws consent|requests and cancels erasure",
+      "exitCode": 1,
+      "head": {
+        "passed": 2,
+        "failed": 2,
+        "failedCases": [
+          "grants and withdraws consent (no add-consent request)",
+          "requests and cancels erasure (no confirmation dialog)"
+        ],
+        "passedNote": "both edit cases passed: fill waits for the editable input, which arrived only after the circuit (probe: fill completed with data-fc-interactive=true after a 5 s hold)"
+      },
+      "guarded": {
+        "passed": 4,
+        "failed": 0
+      },
+      "log": "redproof-e2e-negotiation-delay.log.gz"
+    },
+    "commitlint": {
+      "command": [
+        "node_modules/.bin/commitlint",
+        "--edit",
+        "<message file>"
+      ],
+      "version": "@commitlint/cli@21.2.4",
+      "exitCode": 0,
+      "subject": "fix: close five paging and evidence-reader deferrals",
+      "log": "commitlint.log.gz"
+    }
+  },
+  "testedSourceSha256": {
+    "docs/api-contracts.md": "3dabb4811b9ce965fb25c2c0c5828ac1137f22eb5de3fea06f92bb2ae0b1557a",
+    "scripts/qualify-disposable-ci.py": "82f7b05864530e0c6b3d08641efbf8c46a333a31a9d591daf7a0fc220e507557",
+    "scripts/test_current_owner_integration.py": "c8b4c052f4418b5d6d22d969e72bee6c3805c2c09b70bf9f6cb9457a70e8a3f1",
+    "scripts/test_public_package_integration.py": "2d3a211cc5cf8fad31dcaa0771ad7cd9a162474e71b370a646e2eaf6e0c1a1a8",
+    "scripts/verify-current-owner-integration.py": "03374375960fcac575fe8f9f40085c22dc189d5a95028be2e73a1eab9b147254",
+    "scripts/verify-public-package-integration.py": "4a6e7bb0d4d726f5ae33cbe1822c42cffff5ad30049907391308bf0fb353dcdb",
+    "src/Hexalith.Parties/Queries/PartySdkQueryService.ProcessingBuckets.cs": "a04fd1d2b1c7522d04678e7919691897697acdc439bcb9a31ed56036dafa882b",
+    "tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs": "a10cfdcc6542d8bcf20a8e6a746c8d44bdf05a73f65282575ec9e6eeb5b4bf9c",
+    "tests/ci-lifecycle/test_qualification_controller.py": "64c89fc2658cc64e0f792a4a274d21274abc360d069422d403a8fbe523cd70cc",
+    "tests/ci-lifecycle/test_workflow_boundaries.py": "29286a34ad8673f544cfb2a0983ca89ae511e0359cf70fc4c57e22642893e6d2",
+    "tests/e2e/specs/consumer-portal-routes.spec.ts": "d9fc45103e13937dd63779f321defb4a9c5e39ea360182a943c3a7c7e0abb701"
+  },
+  "ledgerSha256": "4485249363ba2874034ff49cc0df7a94cbd69137585fa971ddcd1b0cf06a545f",
+  "notRun": [
+    "source-mode (pinned hexalith-module mapping) Debug builds",
+    "Docker-backed topology and integration suites",
+    "hosted lifecycle qualification or any hosted CI run",
+    "owned Memories runtime facts (environment-gated skips)"
+  ],
+  "qualificationCredit": "None beyond the five closed deferrals; the seven stale rows and the CI assertion repair receive no new credit, and no production, owner-acceptance or dependency-publication gate receives credit.",
+  "investigations": {
+    "negotiationHeldClicks": "Probe (not committed): with POST _blazor/negotiate held, Fluent elements are defined; Save submits the edit form natively (POST /me/edit) and reloads the page without a command; consent and erasure clicks are lost. Deferred as a negotiation-held control plus a native-submit UX decision.",
+    "fullValidatorTrace": "Builds 5ec17790 src/libraries/Hexalith.Builds.Tooling/TestEnvironment/TestResultWriter.cs:194-200 validates the generated result with TestEnvironmentContractReader.ReadResult (embedded schema from ../../../schemas/hexalith.test-result.v1.json, sha256 9773678f...7e39, RequireFormatValidation) before File.Move publishes it."
+  },
+  "review": {
+    "layers": 1,
+    "findings": 10,
+    "patched": [
+      "R1",
+      "R2",
+      "R3",
+      "R5",
+      "R6",
+      "R8"
+    ],
+    "partlyPatchedDeferred": [
+      "R4"
+    ],
+    "deferred": [
+      "R9",
+      "R10"
+    ],
+    "resolved": [
+      "R7"
+    ]
+  }
+}

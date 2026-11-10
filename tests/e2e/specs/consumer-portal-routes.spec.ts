@@ -22,6 +22,14 @@ const CONSUMER_ROUTES = [
   { path: '/me/privacy', heading: 'Data privacy', status: 'Ready to prepare your export.' },
 ] as const;
 
+// The un-upgraded consent switch has no box until Fluent's script, loaded through blazor.web.js, defines it,
+// so its click event is dispatched directly; the visible prerendered buttons receive real pointer clicks.
+const PRE_INTERACTIVE_ACTIONS = [
+  { path: '/me/edit', heading: 'Edit profile', click: (page: Page) => page.getByRole('button', { name: 'Save changes' }).click() },
+  { path: '/me/consent', heading: 'Consent', click: (page: Page) => page.getByRole('switch', { name: 'Marketing emails' }).dispatchEvent('click') },
+  { path: '/me/privacy', heading: 'Data privacy', click: (page: Page) => portalAction(page, 'Delete my data').click() },
+] as const;
+
 test.describe('Consumer portal route shells', () => {
   test.use({
     locale: 'en-US',
@@ -155,6 +163,44 @@ test.describe('Consumer portal route shells', () => {
     expect(browserVisibleDataRequests).toEqual([]);
   });
 
+  for (const site of PRE_INTERACTIVE_ACTIONS) {
+    test(`a pre-interactive ${site.path} click issues no command while blazor.web.js is held`, async ({ context, page, request }) => {
+      await enableConsumerFixture(context);
+      const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
+      let releaseScript: () => void = () => undefined;
+      const scriptHeld = new Promise<void>((resolve) => {
+        releaseScript = resolve;
+      });
+      let heldScriptRequests = 0;
+      await page.route('**/_framework/blazor.web.js', async (route) => {
+        heldScriptRequests++;
+        await scriptHeld;
+        await route.continue();
+      });
+
+      try {
+        // The parser-blocking script never arrives, so wait for the prerendered markup instead of the load event.
+        await page.goto(site.path, { waitUntil: 'commit' });
+        await expect(page.getByRole('heading', { name: site.heading })).toBeVisible();
+        await expect.poll(() => heldScriptRequests).toBe(1);
+        await expect(page.locator('.fc-shell-root[data-fc-interactive="false"]')).toHaveCount(1);
+        await site.click(page);
+        await expect(page.locator('.fc-shell-root[data-fc-interactive="true"]')).toHaveCount(0);
+        expect(await domainCommandCount(request)).toBe(0);
+      } finally {
+        releaseScript();
+      }
+
+      // No Blazor listener existed when the click fired, so once interactive it has neither submitted nor been replayed.
+      await expectInteractiveShell(page);
+      expect(await domainCommandCount(request)).toBe(0);
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      await expect(page.locator('.hx-parties-profile').getByRole('status').filter({ hasText: /Saved|Deletion requested/ })).toHaveCount(0);
+      expect(new URL(page.url()).pathname).toBe(site.path);
+      expect(browserVisibleDataRequests).toEqual([]);
+    });
+  }
+
   test('bound Consumer saves editable profile details through the self-scoped command path', async ({ context, page, request }) => {
     await enableConsumerFixture(context);
     const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
@@ -163,6 +209,7 @@ test.describe('Consumer portal route shells', () => {
     await expect(page.getByRole('heading', { name: 'Edit profile' })).toBeVisible();
     await expect(page.getByRole('textbox', { name: 'First name', exact: true })).toHaveValue('Consumer');
     await expect(page.getByRole('textbox', { name: 'Last name', exact: true })).toHaveValue('Consumer');
+    await expectInteractiveShell(page);
 
     await page.getByRole('textbox', { name: 'First name', exact: true }).fill('Updated');
     await page.getByRole('button', { name: 'Save changes' }).click();
@@ -182,6 +229,7 @@ test.describe('Consumer portal route shells', () => {
 
     await page.goto('/me/edit');
     await expect(page.getByRole('heading', { name: 'Edit profile' })).toBeVisible();
+    await expectInteractiveShell(page);
     await page.getByRole('textbox', { name: 'First name', exact: true }).fill('Typed');
     await page.getByRole('textbox', { name: 'Last name', exact: true }).fill('');
 
@@ -229,6 +277,7 @@ test.describe('Consumer portal route shells', () => {
     await page.goto('/me/consent');
     const marketing = page.getByRole('switch', { name: 'Marketing emails' });
     await expect(marketing).toHaveAttribute('aria-checked', 'false');
+    await expectInteractiveShell(page);
 
     await marketing.click();
 
@@ -397,6 +446,7 @@ test.describe('Consumer portal route shells', () => {
     await expect(page.getByRole('heading', { name: 'Delete my data' })).toBeVisible();
     await expect(page.getByText('You can cancel until deletion begins')).toBeVisible();
     await expect(page.getByText("Once it's done, it's permanent - we can't undo it.")).toBeVisible();
+    await expectInteractiveShell(page);
 
     await portalAction(page, 'Delete my data').click();
     await expect(page.getByRole('dialog', { name: 'Confirm deletion request' })).toBeVisible();
@@ -605,6 +655,16 @@ const latestErasureRequest = async (request: APIRequestContext): Promise<AdminPo
 const latestCancelErasureRequest = async (request: APIRequestContext): Promise<AdminPortalRequestCapture | undefined> => {
   const snapshot = await requestSnapshot(request);
   return snapshot.cancelErasureRequests.at(-1);
+};
+
+const domainCommandCount = async (request: APIRequestContext): Promise<number> => {
+  const snapshot = await requestSnapshot(request);
+  return snapshot.updateRequests.length
+    + snapshot.addConsentRequests.length
+    + snapshot.revokeConsentRequests.length
+    + snapshot.exportRequests.length
+    + snapshot.erasureRequests.length
+    + snapshot.cancelErasureRequests.length;
 };
 
 const gdprRequestCounts = async (request: APIRequestContext): Promise<GdprRequestCounts> => {

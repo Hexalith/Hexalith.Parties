@@ -20,7 +20,7 @@ _spec.loader.exec_module(_readers)
 require, held_directory, read, decode, document = (_readers.require, _readers.held_directory, _readers.read, _readers.decode, _readers.document)
 integration_phases, invocation_accepted = _readers.integration_phases, _readers.invocation_accepted
 persisted_identity, creation_timestamp = _readers.persisted_identity, _readers.creation_timestamp
-issued_synthetic_tenant = _readers.issued_synthetic_tenant
+issued_synthetic_tenant, result_contract = _readers.issued_synthetic_tenant, _readers.result_contract
 native_execution, observation_timestamp = _readers.native_execution, _readers.observation_timestamp
 SDK, SDK_VERSION, HEX, IDENTITY = _readers.SDK, _readers.SDK_VERSION, _readers.HEX, _readers.IDENTITY
 PROFILE = "platform-package"
@@ -104,8 +104,7 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
     invocation = document(root, "invocation.json")
     require(invocation_accepted(invocation, context, PROFILE), "foreign invocation/profile")
     result = document(root, "test-result.json")
-    require(result.get("schema") == "hexalith.test-result.v1" and result.get("policyId") == "hexalith.platform.candidate-and-attachment-policy.v1", "unsupported result contract")
-    bindings = result["bindings"]
+    bindings = result_contract(result)
     synthetic_tenant = issued_synthetic_tenant(bindings)
     owner = bindings["run"]
     for key in ("runId", "attemptId", "environmentId"):

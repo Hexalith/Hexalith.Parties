@@ -31,6 +31,13 @@ HEX = re.compile(r"[a-f0-9]{64}\Z", re.ASCII)
 IDENTITY = re.compile(r"[a-f0-9]{32}\Z", re.ASCII)
 TRX_ID = re.compile(r"[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}\Z", re.ASCII)
 PERSISTENCE_CASE = "Hexalith.Parties.Platform.IntegrationTests.PartyEnvironmentTests.RealDependencies_CreateQueryAndPersistMatchingPartyEvents"
+# Required keys of the released hexalith.test-result.v1 schema (Builds 5ec17790, sha256 below). The producer, Builds
+# TestResultWriter, validates the whole document against that schema before publishing it, so these readers need no
+# schema validator: this stdlib guard only detects producer drift without adding a CI dependency.
+RESULT_SCHEMA_SHA256 = "9773678febac38025fae837154341d9036ce8aa94e66b0d30c7e15ee668d7e39"
+RESULT_REQUIRED = frozenset({"schema", "policyId", "bindings", "diagnostics", "terminal", "termination", "retention", "cleanup"})
+RESULT_BINDINGS_REQUIRED = frozenset({"run", "tool", "candidate", "decision", "reuseLineage", "environment", "artifacts", "suite",
+                                      "attachments", "deadlines"})
 
 
 def require(value: bool, message: str) -> None:
@@ -224,6 +231,16 @@ def integration_phases(root, context, run_id, invocation):
     return execution["result"], final["result"], {"execution.json", *(f"cleanup-{number}.json" for number in numbers)}
 
 
+def result_contract(result):
+    """Return the bindings of a supported result that carries every released top-level and bindings key."""
+    require(isinstance(result, dict) and result.get("schema") == "hexalith.test-result.v1"
+            and result.get("policyId") == "hexalith.platform.candidate-and-attachment-policy.v1", "unsupported result contract")
+    require(RESULT_REQUIRED <= result.keys(), "result lacks a released contract field")
+    bindings = result["bindings"]
+    require(isinstance(bindings, dict) and RESULT_BINDINGS_REQUIRED <= bindings.keys(), "result bindings lack a released contract field")
+    return bindings
+
+
 def issued_synthetic_tenant(bindings):
     """Read the canonical synthetic tenant issued by the owning environment."""
     require(isinstance(bindings, dict), "issued synthetic tenant bindings missing")
@@ -267,8 +284,7 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
     invocation = document(root, "invocation.json")
     require(invocation_accepted(invocation, context, PROFILE), "foreign invocation/profile")
     result = document(root, "test-result.json")
-    require(result.get("schema") == "hexalith.test-result.v1" and result.get("policyId") == "hexalith.platform.candidate-and-attachment-policy.v1", "unsupported result contract")
-    bindings = result["bindings"]
+    bindings = result_contract(result)
     synthetic_tenant = issued_synthetic_tenant(bindings)
     owner = bindings["run"]
     for key in ("runId", "attemptId", "environmentId"):

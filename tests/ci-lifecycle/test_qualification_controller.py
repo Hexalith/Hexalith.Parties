@@ -5,6 +5,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import socket
 import subprocess
 import tempfile
 import unittest
@@ -47,6 +48,99 @@ class ControllerSafetyTests(unittest.TestCase):
                 with self.subTest(write=path.name), self.assertRaises(ValueError):
                     Q.write(path, {'replacement': True})
             self.assertEqual(original.read_text(), '{}')
+            # A linked ancestor is refused even though the final component is an ordinary single-link file.
+            (root / 'real' / 'dir').mkdir(parents=True)
+            (root / 'real' / 'dir' / 'x.json').write_text('{"foreign": true}')
+            (root / 'link').symlink_to(root / 'real', target_is_directory=True)
+            (root / 'plain').mkdir()
+            (root / 'plain' / 'dir').symlink_to(root / 'real' / 'dir', target_is_directory=True)
+            for path in (root / 'link' / 'dir' / 'x.json', root / 'plain' / 'dir' / 'x.json'):
+                with self.subTest(linkedParent=str(path.relative_to(root))), self.assertRaisesRegex(ValueError, 'linked'):
+                    Q.read(path)
+            self.assertEqual(Q.read(root / 'real' / 'dir' / 'x.json'), {'foreign': True})
+
+    def test_oversized_nonregular_and_missing_metadata_keep_their_outcomes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            oversized = root / 'oversized.json'
+            with oversized.open('wb') as output:
+                output.truncate(8_388_609)
+            fifo = root / 'fifo.json'
+            os.mkfifo(fifo)
+            (root / 'directory.json').mkdir()
+            listener = socket.socket(socket.AF_UNIX)
+            previous = os.getcwd()
+            try:
+                os.chdir(root)  # A relative bind keeps the socket path inside the AF_UNIX length limit.
+                listener.bind('socket.json')
+            finally:
+                os.chdir(previous)
+            self.addCleanup(listener.close)
+            for path in (oversized, fifo, root / 'directory.json', root / 'socket.json'):
+                with self.subTest(path=path.name), self.assertRaisesRegex(ValueError, 'nonregular or oversized'):
+                    Q.read(path)
+            # Ancestors need only search permission, as for the previous path-based reader.
+            (root / 'search-only').mkdir()
+            (root / 'search-only' / 'x.json').write_text('{"searchable": true}')
+            (root / 'search-only').chmod(0o311)
+            try:
+                self.assertEqual(Q.read(root / 'search-only' / 'x.json'), {'searchable': True})
+            finally:
+                (root / 'search-only').chmod(0o755)
+            with self.assertRaises(FileNotFoundError):
+                Q.read(root / 'missing' / 'x.json')
+            (root / 'empty.json').write_text('')
+            with self.assertRaises(json.JSONDecodeError):
+                Q.read(root / 'empty.json')
+
+    def test_metadata_swapped_after_link_checks_is_refused_not_followed(self):
+        """Replace the metadata or its parent right after the reader's own link checks, then require a refusal."""
+        for swap in ('parent-symlink', 'file-symlink', 'file-hardlink'):
+            with self.subTest(swap=swap), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                (root / 'meta').mkdir()
+                target = root / 'meta' / 'x.json'
+                target.write_text('{"genuine": true}')
+                (root / 'outside').mkdir()
+                (root / 'outside' / 'x.json').write_text('{"foreign": true}')
+                trigger = 'meta' if swap == 'parent-symlink' else 'x.json'
+                swapped = []
+
+                def replace():
+                    if swapped:
+                        return
+                    swapped.append(swap)
+                    if swap == 'parent-symlink':
+                        (root / 'meta').rename(root / 'meta-held')
+                        (root / 'meta').symlink_to(root / 'outside', target_is_directory=True)
+                    else:
+                        target.rename(root / 'x.json.held')
+                        if swap == 'file-symlink':
+                            target.symlink_to(root / 'outside' / 'x.json')
+                        else:
+                            os.link(root / 'outside' / 'x.json', target)
+
+                real_open, real_stat = os.open, os.stat
+
+                def opening(name, *args, **kwargs):
+                    # A component-wise reader opens each name itself: swap just before that open.
+                    if os.fspath(name) == trigger:
+                        replace()
+                    return real_open(name, *args, **kwargs)
+
+                def checking(name, *args, **kwargs):
+                    # A path-based reader checks the whole path first: swap right after its following stat.
+                    # Python 3.12 routes is_symlink() through os.stat(follow_symlinks=False); skip that probe.
+                    result = real_stat(name, *args, **kwargs)
+                    if os.fspath(name) == os.fspath(target) and kwargs.get('follow_symlinks', True):
+                        replace()
+                    return result
+
+                with patch.object(Q.os, 'open', side_effect=opening), patch.object(Q.os, 'stat', side_effect=checking):
+                    with self.assertRaisesRegex(ValueError, 'linked|nonregular'):
+                        Q.read(target)
+                self.assertEqual(swapped, [swap])
+                self.assertEqual((root / 'outside' / 'x.json').read_text(), '{"foreign": true}')
 
     def test_missing_or_unknown_cleanup_never_verifies_zero_resources(self):
         owner = {'runId': 'a' * 32}

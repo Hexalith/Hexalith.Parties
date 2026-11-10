@@ -59,9 +59,13 @@ public sealed partial class PartySdkQueryService
     /// Validates processing-history envelope paging before any read-model access.
     /// </summary>
     /// <param name="paging">The optional envelope paging options.</param>
-    /// <returns><see langword="true"/> when the page size is 1–100 and the offset is absent or zero.</returns>
+    /// <returns>
+    /// <see langword="true"/> when the page size is 1–100 and the offset is absent, or zero without a nonblank cursor;
+    /// a cursor combined with any offset is refused, as the EventStore gateway refuses it.
+    /// </returns>
     private static bool IsSupportedProcessingPaging(QueryPagingOptions? paging)
-        => paging is null || ((paging.PageSize ?? 20) is >= 1 and <= 100 && paging.Offset is null or 0);
+        => paging is null || ((paging.PageSize ?? 20) is >= 1 and <= 100
+            && (paging.Offset is null || (paging.Offset == 0 && string.IsNullOrWhiteSpace(paging.Cursor))));
 
     private async Task<IReadOnlyList<ProcessingActivityRecord>> ReadAllProcessingRecordsAsync(string tenant, string party,
         PartyProcessingSdkReadModel model, string? etag, CancellationToken token)
