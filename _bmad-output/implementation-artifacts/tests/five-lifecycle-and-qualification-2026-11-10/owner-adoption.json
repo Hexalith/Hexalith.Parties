@@ -1,0 +1,8 @@
+{
+  "ownerCommit": "7ace06c5c50406b9021fc95d8d87cf962b5180dd",
+  "describe": "v4.7.6-27-g7ace06c5",
+  "remoteMainVerified": "7ace06c5c50406b9021fc95d8d87cf962b5180dd",
+  "verificationCommand": "git ls-remote origin refs/heads/main",
+  "publishedFrontComposerVersion": "4.7.6",
+  "packageVersionChanged": false
+}

@@ -1,0 +1,55 @@
+{
+  "parentBaselineRevision": "7987bf1ef709ea6fb812eed56607a9778c24f033",
+  "ownerBaselineRevision": "01fc48e3955a8cec47ab1602f5cd5c8e286801da",
+  "ownerEvidence": "references/Hexalith.FrontComposer/_bmad-output/implementation-artifacts/tests/lifecycle-alias-and-reader-2026-11-10/verification.json",
+  "sourceSha256": {
+    "tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessCapture.cs": "5cf91d202e847c4b60ef3df3ce95e86011c6f796ac5148686a1d8b9341998ffd",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessCaptureTests.cs": "007438d0acc6d9f89a087b4c1a1d40f99f689031f918160cae6bf57adc341cbd",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartiesOrdinaryLauncherStopTimingTests.cs": "5a15128a404b13248a492c1393aa2702cc262c3858194e11caa6db90f4b92a26",
+    "tests/e2e/package.json": "d3b5b8d1c7539be085b992dd15831df2c9d7250bd74016fabc5fe53adf29e6eb",
+    "tests/README.md": "b041d11d8697c4a8e1d5760a51dea64ffb3682ecdef55d5d4558aadf03d1dad8",
+    "_bmad-output/implementation-artifacts/deferred-work.md": "ddd05bd929839ef6a4bc72721c5e0ff3ed80883b9bf22badb86ce64932c3f092",
+    "_bmad-output/implementation-artifacts/spec-five-lifecycle-and-qualification-deferred-items.md": "2c2dd611c8ecf69d5dbb0deabbd52ac67721c19850405b8969d93cba6db3683f"
+  },
+  "observer": {
+    "configuration": "Release",
+    "buildCommand": "dotnet build tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj --configuration Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+    "testCommand": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -class *OrdinaryLauncherProcessCaptureTests -result-xml /tmp/five-observer-final-green.xml",
+    "baselineExtraction": {
+      "total": 11,
+      "failed": 10,
+      "skipped": 0
+    },
+    "corrected": {
+      "total": 11,
+      "failed": 0,
+      "skipped": 0
+    },
+    "testAssemblySha256": "50e1bd35050cd42a36bfbf28c4eaafb8f17e1378b72c2db59c2741fd7cf68fa0"
+  },
+  "browser": {
+    "node": "24.22.1",
+    "npm": "11.19.1",
+    "CI": "true",
+    "retries": 0,
+    "total": 81,
+    "failed": 0,
+    "skipped": 0,
+    "formatterCases": 2,
+    "failureControls": {
+      "test:ui": 1,
+      "test:portals": 1
+    },
+    "commands": "browser-commands.json"
+  },
+  "redactions": [
+    "aspire-baseline.log: dashboard query parameter t redacted; original kept outside repository at /tmp/five-aspire-baseline-unredacted.log"
+  ],
+  "captureStage": "local-implementation-handoff-before-orchestrator-review",
+  "pendingAtCapture": [
+    "consumer source Debug and package Release builds/current-selection fitness",
+    "fresh runtime preparation and ordinary live stop timing",
+    "workflow review",
+    "owner commit/push followed by exact source adoption and parent commit/push"
+  ]
+}

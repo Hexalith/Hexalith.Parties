@@ -1,0 +1,14 @@
+{
+  "command": [
+    "/home/administrator/.nvm/versions/node/v24.22.1/bin/node",
+    "node_modules/@commitlint/cli/cli.js",
+    "--edit",
+    "/tmp/five-lifecycle-parties-commit-message.txt",
+    "--verbose"
+  ],
+  "message": "fix: close five lifecycle and qualification deferrals\n\nAdopt the reviewed FrontComposer lifecycle fixes by exact source revision.\nRefuse incomplete launcher timing observations and enroll formatter tests\nin the maintained browser gates.\n",
+  "exitCode": 0,
+  "output": "\u29d7   --- input ---\nfix: close five lifecycle and qualification deferrals\n\nAdopt the reviewed FrontComposer lifecycle fixes by exact source revision.\nRefuse incomplete launcher timing observations and enroll formatter tests\nin the maintained browser gates.\n\u2714   found 0 problems, 0 warnings\n",
+  "nodeVersion": "v24.22.1",
+  "installedCommitlintVersion": "21.2.4"
+}

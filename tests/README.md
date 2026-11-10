@@ -98,9 +98,12 @@ xUnit v3 runs under Microsoft.Testing.Platform here. For focused filters, build 
 ## Browser UI and visual checks
 
 From `tests/e2e`, `npm run test:ui` runs the accessibility specimen and the admin,
-consumer and picker browser flows together, retaining one complete report. This
-is the blocking CI command. `npm run test:portals` runs only those three portal
-specs; `npm run test:a11y` runs only the specimen.
+consumer and picker browser flows plus both shared portal display formatter cases,
+retaining one complete report. This is the blocking CI command.
+`npm run test:portals` runs the admin, consumer, picker and formatter specs;
+`npm run test:a11y` runs only the specimen. Run `CI=true npm run test:ui -- --retries=0`
+to qualify the maintained gate without retries. Both commands include
+`specs/shared-portal-display-formatters.spec.ts`; a failed formatter case blocks success.
 
 `npm run test:visual` compares the deterministic specimen with the committed
 Chromium/Linux PNG under `specs/parties-accessibility.spec.ts-snapshots/`.
@@ -834,3 +837,21 @@ or skipped control supplies no refresh or erasure acceptance.
 The focused runtime child is `SelectedMemoriesRefreshAndCleanupPersistAcrossClientRecreation`.
 It recreates clients and adapters while the selected services remain running. The original
 full/default `SelectedMemoriesIngestionAndCleanupPersistAcrossRestart` fact is unchanged.
+
+## Ordinary launcher capture qualification (2026-11-10)
+
+`OrdinaryLauncherProcessCaptureTests` inject task enumeration, children, identity,
+process-role, access and malformed-PID failures. Unreadable subtrees retain diagnostics
+while remaining siblings are captured and the owner can complete cleanup. Every launcher
+must have both a CLI and daprd descendant with a start identity; a role observed under
+another launcher cannot fill that gap. A complete-tree positive control remains eligible
+for the live timing checks.
+
+The opt-in `PartiesOrdinaryLauncherStopTimingTests` uses the same capture helper and
+records `captureFailures` in its JSON before refusing incomplete evidence after cleanup.
+Prepare the selected runtime cohort after all test builds with
+`bash scripts/prepare-aspire-runtime-hosts.sh --gateway-profile packaged --configuration Release`,
+then invoke the built test class with `PARTIES_ORDINARY_TOPOLOGY_TESTS=true` and
+`PARTIES_ORDINARY_TOPOLOGY_TIMING_PATH` set to a fresh evidence path. The live gate
+still requires readiness, launcher exit 143, observed worker exits and quiescence
+within 30 seconds. Ordinary live tests remain opt-in locally and disabled in CI.

@@ -714,3 +714,8 @@ references/Hexalith.FrontComposer|01fc48e3955a8cec47ab1602f5cd5c8e286801da|valid
 references/Hexalith.McpCli|7f61892fc7807f2fe8ab90d9ef33f16bca1470f6|validated-advance|origin/main@7f61892fc780|claude-agent|2026-11-10
 references/Hexalith.Memories|1143ba17a2336f0d718fcff71e049c06350a45a2|validated-advance|origin/main@1143ba17a233|claude-agent|2026-11-10
 references/Hexalith.Tenants|019aa0a82d021e08475a68fc50eff3b6a0e6c111|validated-advance|origin/main@019aa0a82d02|claude-agent|2026-11-10
+
+# 2026-11-10 approved five-deferral lifecycle source adoption.
+# Owner source reviewed and verified: 531 MCP tests; package 4.7.6 unchanged.
+# This records the pushed exact source commit, not package/deployment parity.
+references/Hexalith.FrontComposer|7ace06c5c50406b9021fc95d8d87cf962b5180dd|validated-advance|v4.7.6-27-g7ace06c5|codex-agent|2026-11-10

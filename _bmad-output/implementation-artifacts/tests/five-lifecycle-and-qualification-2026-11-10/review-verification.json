@@ -1,0 +1,258 @@
+[
+  {
+    "label": "owner-review-build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.FrontComposer.Mcp.Tests/Hexalith.FrontComposer.Mcp.Tests.csproj",
+      "--configuration",
+      "Debug",
+      "-m:1",
+      "-p:NuGetAudit=false",
+      "-p:MinVerVersionOverride=1.0.0"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer",
+    "exitCode": 0,
+    "elapsedSeconds": 2.41,
+    "log": "references/Hexalith.FrontComposer/_bmad-output/implementation-artifacts/tests/lifecycle-alias-and-reader-2026-11-10/owner-review-build.log.gz"
+  },
+  {
+    "label": "owner-review-full",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.FrontComposer.Mcp.Tests/bin/Debug/net10.0/Hexalith.FrontComposer.Mcp.Tests.dll",
+      "-result-xml",
+      "/tmp/five-owner-review-full.xml"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer",
+    "exitCode": 0,
+    "elapsedSeconds": 5.89,
+    "log": "references/Hexalith.FrontComposer/_bmad-output/implementation-artifacts/tests/lifecycle-alias-and-reader-2026-11-10/owner-review-full.log.gz"
+  },
+  {
+    "label": "review-source-build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "--configuration",
+      "Debug",
+      "-m:1",
+      "-p:NuGetAudit=false",
+      "-p:MinVerVersionOverride=1.0.0"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exitCode": 0,
+    "elapsedSeconds": 36.24,
+    "log": "_bmad-output/implementation-artifacts/tests/five-lifecycle-and-qualification-2026-11-10/review-source-build.log.gz",
+    "environmentOverrides": {
+      "CustomBeforeDirectoryBuildProps": "/tmp/parties-five-lifecycle-source-20261110/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "/tmp/parties-five-lifecycle-source-20261110/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "/tmp/parties-five-lifecycle-source-20261110/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "/tmp/parties-five-lifecycle-source-20261110/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "/tmp/parties-five-lifecycle-source-20261110/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "a969d0173bbc6bf0f254f32d86370b4d95d78d1eada5f44d9a2704fd723d1839",
+      "Configuration": "Debug"
+    }
+  },
+  {
+    "label": "review-source-controls",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "*OrdinaryLauncherProcessCaptureTests",
+      "-class",
+      "*DevelopmentCatalogConfigurationTests",
+      "-result-xml",
+      "/tmp/five-review-source.xml"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exitCode": 0,
+    "elapsedSeconds": 0.46,
+    "log": "_bmad-output/implementation-artifacts/tests/five-lifecycle-and-qualification-2026-11-10/review-source-controls.log.gz"
+  },
+  {
+    "label": "review-package-build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "--configuration",
+      "Release",
+      "-m:1",
+      "-p:NuGetAudit=false",
+      "-p:MinVerVersionOverride=1.0.0"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exitCode": 0,
+    "elapsedSeconds": 11.99,
+    "log": "_bmad-output/implementation-artifacts/tests/five-lifecycle-and-qualification-2026-11-10/review-package-build.log.gz"
+  },
+  {
+    "label": "review-package-controls",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "*OrdinaryLauncherProcessCaptureTests",
+      "-class",
+      "*DevelopmentCatalog*",
+      "-class",
+      "*PartiesTopologyCleanupTests",
+      "-result-xml",
+      "/tmp/five-review-package.xml"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exitCode": 0,
+    "elapsedSeconds": 10.25,
+    "log": "_bmad-output/implementation-artifacts/tests/five-lifecycle-and-qualification-2026-11-10/review-package-controls.log.gz"
+  },
+  {
+    "label": "review-runtime-preparation",
+    "command": [
+      "bash",
+      "scripts/prepare-aspire-runtime-hosts.sh",
+      "--gateway-profile",
+      "packaged",
+      "--configuration",
+      "Release"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exitCode": 0,
+    "elapsedSeconds": 68.7,
+    "log": "_bmad-output/implementation-artifacts/tests/five-lifecycle-and-qualification-2026-11-10/review-runtime-preparation.log.gz"
+  },
+  {
+    "label": "review-live-timing",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "*PartiesOrdinaryLauncherStopTimingTests",
+      "-result-xml",
+      "/tmp/five-review-live.xml"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exitCode": 1,
+    "elapsedSeconds": 60.65,
+    "log": "_bmad-output/implementation-artifacts/tests/five-lifecycle-and-qualification-2026-11-10/review-live-timing.log.gz",
+    "environmentOverrides": {
+      "PARTIES_ORDINARY_TOPOLOGY_TESTS": "true",
+      "PARTIES_ORDINARY_TOPOLOGY_TIMING_PATH": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-lifecycle-and-qualification-2026-11-10/review-ordinary-launcher-stop-timing.json"
+    }
+  },
+  {
+    "label": "final-review-source-build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "--configuration",
+      "Debug",
+      "-m:1",
+      "-p:NuGetAudit=false",
+      "-p:MinVerVersionOverride=1.0.0"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exitCode": 0,
+    "elapsedSeconds": 25.35,
+    "log": "_bmad-output/implementation-artifacts/tests/five-lifecycle-and-qualification-2026-11-10/final-review-source-build.log.gz",
+    "environmentOverrides": {
+      "CustomBeforeDirectoryBuildProps": "/tmp/parties-five-lifecycle-source-20261110/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "/tmp/parties-five-lifecycle-source-20261110/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "/tmp/parties-five-lifecycle-source-20261110/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "/tmp/parties-five-lifecycle-source-20261110/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "/tmp/parties-five-lifecycle-source-20261110/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "a969d0173bbc6bf0f254f32d86370b4d95d78d1eada5f44d9a2704fd723d1839",
+      "Configuration": "Debug"
+    }
+  },
+  {
+    "label": "final-review-source-controls",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "*OrdinaryLauncherProcessCaptureTests",
+      "-class",
+      "*DevelopmentCatalogConfigurationTests",
+      "-result-xml",
+      "/tmp/five-review-source.xml"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exitCode": 0,
+    "elapsedSeconds": 0.41,
+    "log": "_bmad-output/implementation-artifacts/tests/five-lifecycle-and-qualification-2026-11-10/final-review-source-controls.log.gz"
+  },
+  {
+    "label": "final-review-package-build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "--configuration",
+      "Release",
+      "-m:1",
+      "-p:NuGetAudit=false",
+      "-p:MinVerVersionOverride=1.0.0"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exitCode": 0,
+    "elapsedSeconds": 18.49,
+    "log": "_bmad-output/implementation-artifacts/tests/five-lifecycle-and-qualification-2026-11-10/final-review-package-build.log.gz"
+  },
+  {
+    "label": "final-review-package-controls",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "*OrdinaryLauncherProcessCaptureTests",
+      "-class",
+      "*DevelopmentCatalog*",
+      "-class",
+      "*PartiesTopologyCleanupTests",
+      "-result-xml",
+      "/tmp/five-review-package.xml"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exitCode": 0,
+    "elapsedSeconds": 10.25,
+    "log": "_bmad-output/implementation-artifacts/tests/five-lifecycle-and-qualification-2026-11-10/final-review-package-controls.log.gz"
+  },
+  {
+    "label": "final-review-runtime-preparation",
+    "command": [
+      "bash",
+      "scripts/prepare-aspire-runtime-hosts.sh",
+      "--gateway-profile",
+      "packaged",
+      "--configuration",
+      "Release"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exitCode": 0,
+    "elapsedSeconds": 70.19,
+    "log": "_bmad-output/implementation-artifacts/tests/five-lifecycle-and-qualification-2026-11-10/final-review-runtime-preparation.log.gz"
+  },
+  {
+    "label": "final-review-live-timing",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "*PartiesOrdinaryLauncherStopTimingTests",
+      "-result-xml",
+      "/tmp/five-review-live.xml"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exitCode": 0,
+    "elapsedSeconds": 57.75,
+    "log": "_bmad-output/implementation-artifacts/tests/five-lifecycle-and-qualification-2026-11-10/final-review-live-timing.log.gz",
+    "environmentOverrides": {
+      "PARTIES_ORDINARY_TOPOLOGY_TESTS": "true",
+      "PARTIES_ORDINARY_TOPOLOGY_TIMING_PATH": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-lifecycle-and-qualification-2026-11-10/final-ordinary-launcher-stop-timing.json"
+    }
+  }
+]

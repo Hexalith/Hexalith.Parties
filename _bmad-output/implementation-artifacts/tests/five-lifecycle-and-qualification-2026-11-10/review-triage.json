@@ -1,0 +1,74 @@
+[
+  {
+    "id": "BH1",
+    "verdict": "maybe-false",
+    "route": "defer",
+    "evidence": "Empty task enumeration can bypass diagnostics in the model, but no real Linux procfs empty-task result was demonstrated for an admitted live process. The same loop existed before extraction. Record medium unverified; settle using an actual procfs exit/task-enumeration reproduction."
+  },
+  {
+    "id": "BH2",
+    "verdict": "medium",
+    "route": "defer",
+    "evidence": "Identity is read before comm and not rechecked. The edge harness changes identity during comm and the helper retains stale identities without refusal. This lifetime race existed in the original traversal; group with E1."
+  },
+  {
+    "id": "BH3",
+    "verdict": "false",
+    "route": "reject",
+    "evidence": "TryReadSnapshot is internal. Its only production consumer is LifecycleTracker, which reads ProtocolName and returns only snapshot JSON. No production recipient can mutate retained descriptor collections through the public result; caller-owned collection mutation is independently copied and tested."
+  },
+  {
+    "id": "BH4",
+    "verdict": "low",
+    "route": "patch",
+    "evidence": "The children-read row performs a separate successful capture after the failed root, so it does not prove continuation in the failing traversal. Correct the injected task layout directly."
+  },
+  {
+    "id": "BH5",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "The local sleep finally does not execute fixture disposal or the actual timing refusal. Group with VG1 and add an injected failure through the actual runner, retaining diagnostics and cleanup observations."
+  },
+  {
+    "id": "BH6",
+    "verdict": "low",
+    "route": "patch",
+    "evidence": "The new empty-role refusal branch lacks its whitespace comm control. Add the direct test row without changing production behavior."
+  },
+  {
+    "id": "BH7",
+    "verdict": "low",
+    "route": "patch",
+    "evidence": "The event releases immediately after scheduling; no arrival barrier establishes that contenders reached the start. Coordinate arrivals before releasing both race tests."
+  },
+  {
+    "id": "BH8",
+    "verdict": "low",
+    "route": "patch",
+    "evidence": "The new clone control covers enum/map mutation but not Parameters or DerivablePropertyNames mutation. Add independent caller-collection controls."
+  },
+  {
+    "id": "BH9",
+    "verdict": "low",
+    "route": "patch",
+    "evidence": "The implementation-handoff spec hash predates orchestrator notes. Preserve that historical receipt, explicitly identify its capture stage and provide final-content hashes separately."
+  },
+  {
+    "id": "BH10",
+    "verdict": "low",
+    "route": "patch",
+    "evidence": "README and pending fields still describe the handoff while later commands completed consumer/live gates. Label historical state and publish one current completion summary with links to later evidence."
+  },
+  {
+    "id": "E1",
+    "verdict": "medium",
+    "route": "defer",
+    "evidence": "Same verified pre-existing identity/role race as BH2: the temporary reflection harness retains stored identities 20/30 while simulated current identities advance to 21/31, with no capture refusals. Group with BH2; current live packet has no observed churn."
+  },
+  {
+    "id": "VG1",
+    "verdict": "medium",
+    "route": "patch",
+    "evidence": "Pre-verified regression gap: deleting the real timing refusal leaves helper controls and complete live evidence green. Add actual-runner incomplete capture refusal, retained diagnostics and completed owned cleanup; group with BH5."
+  }
+]

@@ -2247,15 +2247,26 @@ rollback: None required (test-only).
 - source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-06.md`
   summary: Reject lifecycle reacknowledgements whose message ID or descriptor conflicts with the existing correlation.
   evidence: B6: FrontComposer baseline6059af7e GetOrCreateEntry returns an existing correlation unchanged, while TrackAcknowledged can return the newly supplied unmapped message ID. This predates this synchronization; add same-principal changed-message/descriptor tests in the owning follow-up.
+  implementation_2026_11_10: Source correction and final regression proof implemented locally: changed messages/descriptors refuse before subscription, transitions or retry guidance; structural clones and retained caller-collection snapshots remain compatible. Owner lifecycle 119/119 and full MCP 529/529 pass. Workflow review, owner push and exact source adoption remain pending. Evidence: `tests/five-lifecycle-and-qualification-2026-11-10/verification.json`; spec `spec-five-lifecycle-and-qualification-deferred-items.md`.
+  status: done 2026-11-10
+  resolution_2026_11_10: Changed messages and structurally different descriptors refuse before subscriptions, transitions or retry guidance mutate; identical and racing retries retain coherent snapshots. Reviewed owner source 7ace06c5c50406b9021fc95d8d87cf962b5180dd is pushed and selected. Final owner suite: 531/531, zero skips. Published FrontComposer 4.7.6 is unchanged; source follow-up complete.
+  verification: `spec-five-lifecycle-and-qualification-deferred-items.md`; `tests/five-lifecycle-and-qualification-2026-11-10/final-verification.json`.
 
 - source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-06.md`
   summary: Enforce FrontComposer lifecycle uniqueness across correlation and message aliases.
   evidence: B7: both baseline6059af7e and current code check dictionaries separately while lookup prioritizes correlations; a new correlation equal to another message can shadow that handle. Cover both alias directions and preserve tenant/user hidden-unknown behavior.
+  implementation_2026_11_10: Both aliases reserve under the capacity lock before publication. Both collision directions, foreign owners, equal aliases, conflicting/identical races, capacity and eviction/reuse pass owner controls. Source proof only; review, owner push and exact source adoption remain pending. Evidence: `tests/five-lifecycle-and-qualification-2026-11-10/verification.json`; spec `spec-five-lifecycle-and-qualification-deferred-items.md`.
+  status: done 2026-11-10
+  resolution_2026_11_10: Both aliases reserve atomically across index roles. Coordinated same/foreign-owner races, equal aliases, capacity, eviction and reuse pass in the reviewed owner source 7ace06c5c50406b9021fc95d8d87cf962b5180dd, pushed and selected. Final owner suite: 531/531, zero skips. Package/deployment qualification remains separate.
+  verification: `spec-five-lifecycle-and-qualification-deferred-items.md`; `tests/five-lifecycle-and-qualification-2026-11-10/final-verification.json`.
 
 - source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-06.md`
   summary: Qualify lifecycle ownership/admission behavior under a changing context accessor (unverified medium).
   evidence: B8: ReadCoreAsync captures ownership context before ResolveAsync obtains context again. The ordinary HTTP path has no demonstrated identity mutation. Settle with a supported changing-accessor reproduction, including authentication loss, then choose a bound-context or fail-closed equivalence check.
-
+  implementation_2026_11_10: Supported changing-accessor/authentication-loss regressions reproduce the second-context defect and now pass: the tracker binds the validated reader into internal admission. Unusable/foreign readers and schema refusal retain hidden-unknown behavior. Source proof only; review, owner push and exact source adoption remain pending. Evidence: `tests/five-lifecycle-and-qualification-2026-11-10/verification.json`; spec `spec-five-lifecycle-and-qualification-deferred-items.md`.
+  status: done 2026-11-10
+  resolution_2026_11_10: Supported changing-accessor and authentication-loss controls settle the claim: ownership and admission share one validated reader, while hidden-unknown and schema refusal remain intact. Reviewed owner source 7ace06c5c50406b9021fc95d8d87cf962b5180dd is pushed and selected; 531/531 MCP controls pass. No ordinary HTTP exploit or deployed behavior is inferred.
+  verification: `spec-five-lifecycle-and-qualification-deferred-items.md`; `tests/five-lifecycle-and-qualification-2026-11-10/final-verification.json`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-27-invalid-page-failure.md`
   summary: Repair the current source-mapped service-test catalog-selector aliases without weakening source validation.
@@ -2561,9 +2572,23 @@ rollback: None required (test-only).
 - source_spec: `spec-five-ordinary-topology-admin-actions-and-state-checks-deferred-items.md`
   summary: Enroll the shared portal formatter browser controls in the maintained CI UI scripts.
   evidence: low; review finding BH3, pre-existing. tests/e2e/package.json test:ui and test:portals omit shared-portal-display-formatters.spec.ts, although both repaired cases pass when selected directly. CI calls test:ui, so those cases can become stale independently again. Add the file to the intended maintained gate and qualify its CI execution.
-  status: open
+  status: done 2026-11-10
+  implementation_2026_11_10: Both test:ui and test:portals include the formatter spec. Pinned-toolchain CI UI gate passes 81/81 with retries disabled; both formatter cases execute. Temporary formatter assertion injections produce exit 1 in both maintained commands, and the original file is restored before final green. Workflow review remains pending. Evidence: `tests/five-lifecycle-and-qualification-2026-11-10/verification.json`; spec `spec-five-lifecycle-and-qualification-deferred-items.md`.
+  resolution_2026_11_10: Both maintained commands discover and execute both formatter cases. Pinned Node 24.22.1/npm 11.19.1 local CI-shaped UI gate passes 81/81 without retries; injected formatter failures make both commands exit 1. Review is complete; original formatter bytes are restored.
+  verification: `spec-five-lifecycle-and-qualification-deferred-items.md`; `tests/five-lifecycle-and-qualification-2026-11-10/final-verification.json`.
 
 - source_spec: `spec-five-ordinary-topology-admin-actions-and-state-checks-deferred-items.md`
   summary: Refuse incomplete CLI and runtime capture in ordinary launcher timing qualification.
   evidence: medium; review finding BH7, pre-existing observer behavior. CaptureDescendants tolerates per-process I/O failures and the test does not require both cli and daprd roles for each launcher. The executed current packet has both roles for all five resources and all exits are observed, so its qualification stands. Add a controlled descendant-read failure and require incomplete observations to refuse qualification before a future run can count.
-  status: open
+  status: done 2026-11-10
+  implementation_2026_11_10: Hardened observer records read/identity/role failures, continues siblings, and requires CLI plus daprd for every launcher before timing qualifies after cleanup. Eleven focused controls pass; ten fail against an extracted copy of original suppression behavior. The separate fresh live ordinary timing rerun and review remain pending. Evidence: `tests/five-lifecycle-and-qualification-2026-11-10/verification.json`; spec `spec-five-lifecycle-and-qualification-deferred-items.md`.
+  resolution_2026_11_10: Read/identity/role refusals are retained and every launcher requires CLI plus daprd capture. Twelve focused controls pass, including same-traversal children and empty-role rows. Actual live runner controls pass 2/2: complete capture qualifies and injected incomplete capture refuses after owned quiescence, exit-143 launchers and application disposal, with distinct retained diagnostics. Two pre-existing observer concerns remain separately deferred.
+  verification: `spec-five-lifecycle-and-qualification-deferred-items.md`; `tests/five-lifecycle-and-qualification-2026-11-10/final-verification.json`.
+
+- source_spec: `spec-five-lifecycle-and-qualification-deferred-items.md`
+  summary: Determine whether a real ordinary-launcher procfs task enumeration can return an empty set while omitted descendants remain relevant.
+  evidence: Review BH1, medium unverified and pre-existing: both the original traversal and extracted helper accept an empty task-directory array without a refusal. Other branches can supply the required roles. No real procfs empty-task observation was demonstrated; settle with an owned Linux process/task-exit reproducer before changing the guard.
+
+- source_spec: `spec-five-lifecycle-and-qualification-deferred-items.md`
+  summary: Revalidate process lifetimes across ordinary-launcher identity, role and descendant observations.
+  evidence: Review BH2/E1, pre-existing medium: a controlled reflection harness changes simulated start identities during comm reads, and the unchanged traversal records stale identities for CLI/daprd without capture refusal; exit checks then regard replacements as gone. This ordering predates extraction. Qualify an actual process-lifetime-change boundary and retain fail-closed reread coverage without weakening cleanup ownership. Current complete live evidence observed no such churn.

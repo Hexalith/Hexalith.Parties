@@ -35,6 +35,41 @@ public sealed class PartiesOrdinaryLauncherStopTimingTests
     [Fact]
     public async Task OrdinaryLauncher_LiveDcpStop_RecordsWorkerExitTimingWithinQuiescenceBudgetAsync()
     {
+        RequireLiveOptIn();
+        await RunTimingAsync(new PartiesAspireTopologyFixture(), new OrdinaryLauncherProcessCapture()).ConfigureAwait(true);
+    }
+
+    /// <summary>Requires the actual timing runner to refuse an injected incomplete capture after owned cleanup.</summary>
+    /// <returns>A task completing after the refusal and retained cleanup evidence are verified.</returns>
+    [Fact]
+    public async Task OrdinaryLauncher_LiveDcpStop_IncompleteCaptureRefusesAfterOwnedCleanupAsync()
+    {
+        RequireLiveOptIn();
+        var fixture = new PartiesAspireTopologyFixture();
+        var capture = new OrdinaryLauncherProcessCapture(enumerateTasks: _ => throw new IOException("Injected incomplete capture."));
+        string timingPath = (Environment.GetEnvironmentVariable(TimingPathVariable)
+            ?? Path.Combine(Path.GetTempPath(), "parties-ordinary-" + Path.GetRandomFileName())) + ".incomplete.json";
+        ShouldAssertException? refusal = null;
+        try { await RunTimingAsync(fixture, capture, timingPath).ConfigureAwait(true); }
+        catch (ShouldAssertException exception) { refusal = exception; }
+        refusal.ShouldNotBeNull().Message.ShouldContain("Incomplete process capture cannot qualify stop timing.");
+        using JsonDocument document = JsonDocument.Parse(await File.ReadAllTextAsync(timingPath, TestContext.Current.CancellationToken).ConfigureAwait(true));
+        JsonElement record = document.RootElement;
+        record.GetProperty("startup").GetProperty("available").GetBoolean().ShouldBeTrue();
+        record.GetProperty("captureFailures").GetArrayLength().ShouldBeGreaterThan(0);
+        record.GetProperty("survivors").GetArrayLength().ShouldBe(0);
+        record.GetProperty("quiescedMs").ValueKind.ShouldBe(JsonValueKind.Number);
+        record.GetProperty("resources").GetArrayLength().ShouldBeGreaterThan(0);
+        foreach (JsonElement resource in record.GetProperty("resources").EnumerateArray())
+        {
+            resource.GetProperty("launcherExitCode").GetInt32().ShouldBe(143);
+        }
+        // This getter is usable after successful initialization, and is cleared only by application disposal.
+        Should.Throw<InvalidOperationException>(() => fixture.App);
+    }
+
+    private static void RequireLiveOptIn()
+    {
         if (!string.Equals(Environment.GetEnvironmentVariable(OptInVariable), "true", StringComparison.OrdinalIgnoreCase))
         {
             Assert.Skip($"Set {OptInVariable}=true to record ordinary-profile launcher stop timing under the local DCP; it is never set in CI.");
@@ -42,8 +77,11 @@ public sealed class PartiesOrdinaryLauncherStopTimingTests
 
         // An explicit opt-in must never become a qualifying skip.
         OperatingSystem.IsLinux().ShouldBeTrue("The dapr-subreaper launcher and its process observations are Linux-only.");
+    }
 
-        var fixture = new PartiesAspireTopologyFixture();
+    private static async Task RunTimingAsync(PartiesAspireTopologyFixture fixture, OrdinaryLauncherProcessCapture capture,
+        string? timingPathOverride = null)
+    {
         var workers = new ConcurrentDictionary<int, (long Started, string Role, string Resource)>();
         var launchers = new ConcurrentDictionary<string, int>(StringComparer.Ordinal);
         var skipped = new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
@@ -69,7 +107,7 @@ public sealed class PartiesOrdinaryLauncherStopTimingTests
         {
             if (stop is not null) { return; }
             daprPath = application.Services.GetService<IOptions<DaprOptions>>()?.Value.DaprPath;
-            CaptureLaunchers(application, daprPath, workers, launchers, skipped);
+            CaptureLaunchers(application, daprPath, workers, launchers, skipped, capture);
             stop = Stopwatch.StartNew();
             Stopwatch clock = stop;
             sampler = SampleExitsAsync(workers, exits, clock, observation.Token);
@@ -117,14 +155,16 @@ public sealed class PartiesOrdinaryLauncherStopTimingTests
             totalStopMs = stop?.Elapsed.TotalMilliseconds;
             await Task.Delay(TimeSpan.FromMilliseconds(100)).ConfigureAwait(true);
             await observation.CancelAsync().ConfigureAwait(true);
-            if (sampler is not null) { await sampler.ConfigureAwait(true); }
-            if (watcher is not null) { await watcher.ConfigureAwait(true); }
+            try { if (sampler is not null) { await sampler.ConfigureAwait(true); } }
+            catch (Exception exception) { observerFailure += "Exit sampler: " + exception; }
+            try { if (watcher is not null) { await watcher.ConfigureAwait(true); } }
+            catch (Exception exception) { observerFailure += "DCP watcher: " + exception; }
             string timing = JsonSerializer.Serialize(BuildRecord(available, unavailableReason, initializationFailure, observerFailure, runFailure,
-                initializationPhase, daprPath, workers, launchers, skipped, exits, stopping, terminal, totalStopMs, quiescedMs),
+                initializationPhase, daprPath, workers, launchers, skipped, exits, stopping, terminal, totalStopMs, quiescedMs, capture),
                 new JsonSerializerOptions { WriteIndented = true });
             TestContext.Current.TestOutputHelper?.WriteLine(timing);
             Console.WriteLine(timing);
-            if (Environment.GetEnvironmentVariable(TimingPathVariable) is { Length: > 0 } timingPath)
+            if ((timingPathOverride ?? Environment.GetEnvironmentVariable(TimingPathVariable)) is { Length: > 0 } timingPath)
             {
                 await File.WriteAllTextAsync(timingPath, timing + "\n", CancellationToken.None).ConfigureAwait(true);
             }
@@ -142,6 +182,9 @@ public sealed class PartiesOrdinaryLauncherStopTimingTests
             skipped.ShouldBeEmpty("Modeled *-dapr-cli launchers were not captured: "
                 + string.Join("; ", skipped.Select(item => item.Key + ": " + item.Value)));
         }
+
+        observerFailure.ShouldBeNull("Process observation failed; cleanup was completed but timing cannot qualify.");
+        capture.QualificationFailures(launchers, workers).ShouldBeEmpty("Incomplete process capture cannot qualify stop timing.");
 
         foreach ((int id, (long started, string role, string resource)) in workers)
         {
@@ -166,7 +209,7 @@ public sealed class PartiesOrdinaryLauncherStopTimingTests
 
     private static void CaptureLaunchers(DistributedApplication application, string? daprPath,
         ConcurrentDictionary<int, (long Started, string Role, string Resource)> workers, ConcurrentDictionary<string, int> launchers,
-        ConcurrentDictionary<string, string> skipped)
+        ConcurrentDictionary<string, string> skipped, OrdinaryLauncherProcessCapture capture)
     {
         DistributedApplicationModel model = application.Services.GetRequiredService<DistributedApplicationModel>();
         IEnumerable<string> names = model.Resources.SelectMany(resource => resource.Annotations.OfType<DaprSidecarAnnotation>())
@@ -200,39 +243,7 @@ public sealed class PartiesOrdinaryLauncherStopTimingTests
 
             launchers[name] = id;
             workers[id] = (started, "launcher", name);
-            CaptureDescendants(id, name, workers);
-        }
-    }
-
-    private static void CaptureDescendants(int parent, string resource, ConcurrentDictionary<int, (long Started, string Role, string Resource)> workers)
-    {
-        string[] tasks;
-        try { tasks = Directory.GetDirectories($"/proc/{parent}/task"); }
-        catch (IOException) { return; }
-
-        foreach (string task in tasks)
-        {
-            string[] children;
-            try { children = File.ReadAllText(Path.Combine(task, "children")).Split(' ', StringSplitOptions.RemoveEmptyEntries); }
-            catch (IOException) { continue; }
-
-            foreach (string child in children)
-            {
-                int id = int.Parse(child, CultureInfo.InvariantCulture);
-                try
-                {
-                    if (PartiesAspireTopologyFixture.ReadWorkerStartIdentity(id) is not long started) { continue; }
-                    string name = File.ReadAllText($"/proc/{id}/comm").Trim();
-                    workers[id] = (started, name switch { "daprd" => "daprd", "dapr" => "cli", _ => name }, resource);
-                }
-                catch (IOException)
-                {
-                    // This child exited mid-walk (ENOENT or ESRCH); keep walking its siblings.
-                    continue;
-                }
-
-                CaptureDescendants(id, resource, workers);
-            }
+            capture.CaptureDescendants(id, name, workers);
         }
     }
 
@@ -281,7 +292,8 @@ public sealed class PartiesOrdinaryLauncherStopTimingTests
         string? runFailure, string initializationPhase, string? daprPath,
         ConcurrentDictionary<int, (long Started, string Role, string Resource)> workers, ConcurrentDictionary<string, int> launchers,
         ConcurrentDictionary<string, string> skipped, ConcurrentDictionary<int, double> exits, ConcurrentDictionary<string, double> stopping,
-        ConcurrentDictionary<string, (string? State, int? ExitCode, double ObservedMs)> terminal, double? totalStopMs, double? quiescedMs)
+        ConcurrentDictionary<string, (string? State, int? ExitCode, double ObservedMs)> terminal, double? totalStopMs, double? quiescedMs,
+        OrdinaryLauncherProcessCapture capture)
     {
         static double? Exit(ConcurrentDictionary<int, double> exits, int id) => exits.TryGetValue(id, out double value) ? Math.Round(value, 1) : null;
         static string? Bounded(string? text) => text is { Length: > 8000 } ? text[..8000] : text;
@@ -325,6 +337,7 @@ public sealed class PartiesOrdinaryLauncherStopTimingTests
         return new
         {
             schema = "parties.ordinary-launcher-stop-timing.v1",
+            captureFailures = capture.QualificationFailures(launchers, workers),
             observedAtUtc = DateTimeOffset.UtcNow,
             startup = new
             {

@@ -1,0 +1,96 @@
+[
+  {
+    "label": "versions",
+    "cwd": "/home/administrator/projects/hexalith/parties/tests/e2e",
+    "argv": [
+      "bash",
+      "-c",
+      "node --version; npm --version"
+    ],
+    "exitCode": 0
+  },
+  {
+    "label": "failure-ui",
+    "cwd": "/home/administrator/projects/hexalith/parties/tests/e2e",
+    "argv": [
+      "npm",
+      "run",
+      "test:ui",
+      "--",
+      "--retries=0",
+      "--grep",
+      "Shared portal display formatters"
+    ],
+    "exitCode": 1
+  },
+  {
+    "label": "failure-portals",
+    "cwd": "/home/administrator/projects/hexalith/parties/tests/e2e",
+    "argv": [
+      "npm",
+      "run",
+      "test:portals",
+      "--",
+      "--retries=0",
+      "--grep",
+      "Shared portal display formatters"
+    ],
+    "exitCode": 1
+  },
+  {
+    "label": "typecheck",
+    "cwd": "/home/administrator/projects/hexalith/parties/tests/e2e",
+    "argv": [
+      "npm",
+      "run",
+      "typecheck"
+    ],
+    "exitCode": 0
+  },
+  {
+    "label": "config",
+    "cwd": "/home/administrator/projects/hexalith/parties/tests/e2e",
+    "argv": [
+      "npm",
+      "run",
+      "test:config"
+    ],
+    "exitCode": 0
+  },
+  {
+    "label": "ui-discovery",
+    "cwd": "/home/administrator/projects/hexalith/parties/tests/e2e",
+    "argv": [
+      "npm",
+      "run",
+      "test:ui",
+      "--",
+      "--list"
+    ],
+    "exitCode": 0
+  },
+  {
+    "label": "portals-discovery",
+    "cwd": "/home/administrator/projects/hexalith/parties/tests/e2e",
+    "argv": [
+      "npm",
+      "run",
+      "test:portals",
+      "--",
+      "--list"
+    ],
+    "exitCode": 0
+  },
+  {
+    "label": "ui",
+    "cwd": "/home/administrator/projects/hexalith/parties/tests/e2e",
+    "argv": [
+      "npm",
+      "run",
+      "test:ui",
+      "--",
+      "--retries=0"
+    ],
+    "exitCode": 0
+  }
+]

@@ -1,0 +1,80 @@
+{
+  "stage": "completed-local-verification-before-authorized-parties-push",
+  "parentBaselineRevision": "7987bf1ef709ea6fb812eed56607a9778c24f033",
+  "ownerCommit": "7ace06c5c50406b9021fc95d8d87cf962b5180dd",
+  "ownerRemoteVerified": true,
+  "testedSourceSelectionCommit": "160f6119c87f69f7da2a227afcdc17ab5ac1d2de",
+  "sourceSha256": {
+    ".gitlink-signoff.tsv": "dc5828d9680efcaaa6d13f478c1c8d72e3471396034cea045203ace97b5abfd6",
+    "_bmad-output/implementation-artifacts/deferred-work.md": "23a5e772ba3685f287293a3b306fe020f76545e024f2135af7c33e556479f31f",
+    "_bmad-output/implementation-artifacts/spec-five-lifecycle-and-qualification-deferred-items.md": "d4ef892a6cf22ad450bcb5df155c6e595a70658aca7e9544f7c1e526d72fc3bd",
+    "_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md": "b45e0c982c0ad963669b2f0b804e580148ad43bac2efb7bb7dfeaa5e2d85945a",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessCapture.cs": "5cf91d202e847c4b60ef3df3ce95e86011c6f796ac5148686a1d8b9341998ffd",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessCaptureTests.cs": "ca3172421f49cbc45f8ff9d509e38111661924da28e36f44e17f1c9b66b55bbd",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartiesOrdinaryLauncherStopTimingTests.cs": "e96f242fa09ccc43e6864d4fefb96334b037b2220cfbb5e3583f114c08b088c2",
+    "tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs": "4ad67e737c9b8f422cdc5f727e46ccef6088127214fe3fbf236a5e1c120f6992",
+    "tests/README.md": "b041d11d8697c4a8e1d5760a51dea64ffb3682ecdef55d5d4558aadf03d1dad8",
+    "tests/e2e/package.json": "d3b5b8d1c7539be085b992dd15831df2c9d7250bd74016fabc5fe53adf29e6eb",
+    "_bmad-output/implementation-artifacts/tests/five-lifecycle-and-qualification-2026-11-10/README.md": "f85cb9a4949b0aa64b195dce5a69ffb1d6dbeda39d0c29af763c3c01650ab214"
+  },
+  "results": {
+    "ownerMcp": {
+      "passed": 531,
+      "failed": 0,
+      "skipped": 0
+    },
+    "sourceControls": {
+      "passed": 28,
+      "failed": 0,
+      "skipped": 0
+    },
+    "packageControls": {
+      "passed": 103,
+      "failed": 0,
+      "skipped": 4
+    },
+    "browser": {
+      "passed": 81,
+      "failed": 0,
+      "skipped": 0,
+      "retries": 0
+    },
+    "ordinaryLive": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    "fitness": {
+      "total": 159,
+      "passed": 159,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "review": {
+    "layers": [
+      "blind-hunter",
+      "edge-case-hunter",
+      "verification-gap"
+    ],
+    "skippedLayers": [],
+    "unresolvedImplementationFindings": 0,
+    "preexistingDeferrals": 2,
+    "triage": "review-triage.json"
+  },
+  "currentReceipts": [
+    "review-verification.json",
+    "post-commit-verification.json",
+    "final-source-fitness.xml.gz",
+    "final-review-live-timing.xml.gz",
+    "final-ordinary-launcher-stop-timing.json",
+    "final-ordinary-launcher-stop-timing.json.incomplete.json",
+    "owner-adoption.json"
+  ],
+  "boundaries": [
+    "Published FrontComposer remains 4.7.6; lifecycle fixes qualify the exact selected source only.",
+    "Four mTLS opt-in skips grant no live mTLS qualification.",
+    "No deployment or production reconciliation is claimed."
+  ],
+  "finalAmendment": "Completion status and evidence only; selected source, source code and evaluated package graph remain verified."
+}

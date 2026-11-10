@@ -1,0 +1,100 @@
+{
+  "schema": "parties.ordinary-launcher-stop-timing.v1",
+  "captureFailures": [
+    "eventstore-dapr-cli: task enumeration for pid 3651942: System.IO.IOException: Injected incomplete capture.\n   at Hexalith.Parties.IntegrationTests.Topology.PartiesOrdinaryLauncherStopTimingTests.\u003C\u003Ec.\u003COrdinaryLauncher_LiveDcpStop_IncompleteCaptureRefusesAfterOwnedCleanupAsync\u003Eb__6_0(Int32 _) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.IntegrationTests/Topology/PartiesOrdinaryLauncherStopTimingTests.cs:line 49\n   at Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessCapture.CaptureDescendants(Int32 parent, String resource, ConcurrentDictionary\u00602 workers, HashSet\u00601 visited) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessCapture.cs:line 60",
+    "eventstore-admin-dapr-cli: task enumeration for pid 3651941: System.IO.IOException: Injected incomplete capture.\n   at Hexalith.Parties.IntegrationTests.Topology.PartiesOrdinaryLauncherStopTimingTests.\u003C\u003Ec.\u003COrdinaryLauncher_LiveDcpStop_IncompleteCaptureRefusesAfterOwnedCleanupAsync\u003Eb__6_0(Int32 _) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.IntegrationTests/Topology/PartiesOrdinaryLauncherStopTimingTests.cs:line 49\n   at Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessCapture.CaptureDescendants(Int32 parent, String resource, ConcurrentDictionary\u00602 workers, HashSet\u00601 visited) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessCapture.cs:line 60",
+    "eventstore-admin-ui-dapr-cli: task enumeration for pid 3652114: System.IO.IOException: Injected incomplete capture.\n   at Hexalith.Parties.IntegrationTests.Topology.PartiesOrdinaryLauncherStopTimingTests.\u003C\u003Ec.\u003COrdinaryLauncher_LiveDcpStop_IncompleteCaptureRefusesAfterOwnedCleanupAsync\u003Eb__6_0(Int32 _) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.IntegrationTests/Topology/PartiesOrdinaryLauncherStopTimingTests.cs:line 49\n   at Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessCapture.CaptureDescendants(Int32 parent, String resource, ConcurrentDictionary\u00602 workers, HashSet\u00601 visited) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessCapture.cs:line 60",
+    "parties-dapr-cli: task enumeration for pid 3652358: System.IO.IOException: Injected incomplete capture.\n   at Hexalith.Parties.IntegrationTests.Topology.PartiesOrdinaryLauncherStopTimingTests.\u003C\u003Ec.\u003COrdinaryLauncher_LiveDcpStop_IncompleteCaptureRefusesAfterOwnedCleanupAsync\u003Eb__6_0(Int32 _) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.IntegrationTests/Topology/PartiesOrdinaryLauncherStopTimingTests.cs:line 49\n   at Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessCapture.CaptureDescendants(Int32 parent, String resource, ConcurrentDictionary\u00602 workers, HashSet\u00601 visited) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessCapture.cs:line 60",
+    "tenants-dapr-cli: task enumeration for pid 3652189: System.IO.IOException: Injected incomplete capture.\n   at Hexalith.Parties.IntegrationTests.Topology.PartiesOrdinaryLauncherStopTimingTests.\u003C\u003Ec.\u003COrdinaryLauncher_LiveDcpStop_IncompleteCaptureRefusesAfterOwnedCleanupAsync\u003Eb__6_0(Int32 _) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.IntegrationTests/Topology/PartiesOrdinaryLauncherStopTimingTests.cs:line 49\n   at Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessCapture.CaptureDescendants(Int32 parent, String resource, ConcurrentDictionary\u00602 workers, HashSet\u00601 visited) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessCapture.cs:line 60",
+    "parties-dapr-cli: no cli descendant with a live start identity was captured",
+    "parties-dapr-cli: no daprd descendant with a live start identity was captured",
+    "eventstore-dapr-cli: no cli descendant with a live start identity was captured",
+    "eventstore-dapr-cli: no daprd descendant with a live start identity was captured",
+    "eventstore-admin-ui-dapr-cli: no cli descendant with a live start identity was captured",
+    "eventstore-admin-ui-dapr-cli: no daprd descendant with a live start identity was captured",
+    "eventstore-admin-dapr-cli: no cli descendant with a live start identity was captured",
+    "eventstore-admin-dapr-cli: no daprd descendant with a live start identity was captured",
+    "tenants-dapr-cli: no cli descendant with a live start identity was captured",
+    "tenants-dapr-cli: no daprd descendant with a live start identity was captured"
+  ],
+  "observedAtUtc": "2026-11-10T22:24:52.5755085+00:00",
+  "startup": {
+    "available": true,
+    "phase": "eventstore-health-endpoint",
+    "reason": null,
+    "failure": null,
+    "observerFailure": null
+  },
+  "runFailure": null,
+  "daprPathIsLauncher": true,
+  "launcherGraceSeconds": 10,
+  "quiescenceBudgetSeconds": 30,
+  "exitSamplingResolutionMs": 10,
+  "totalStopMs": 13264.4,
+  "quiescedMs": 9653.7,
+  "lastWorkerExitMs": 9217.3,
+  "skippedLaunchers": [],
+  "survivors": [],
+  "resources": [
+    {
+      "resource": "eventstore-admin-dapr-cli",
+      "launcherPid": 3651941,
+      "stopIssuedMs": 9126.2,
+      "launcherExitMs": 9217.3,
+      "launcherExitAfterStopIssuedMs": 91.1,
+      "dcpState": "Finished",
+      "launcherExitCode": 143,
+      "launcherExit": "143 (SIGTERM forwarded, every child reaped)",
+      "descendants": [],
+      "daprdOutlivedLauncher": null
+    },
+    {
+      "resource": "eventstore-admin-ui-dapr-cli",
+      "launcherPid": 3652114,
+      "stopIssuedMs": 9126.5,
+      "launcherExitMs": 9198.6,
+      "launcherExitAfterStopIssuedMs": 72.1,
+      "dcpState": "Finished",
+      "launcherExitCode": 143,
+      "launcherExit": "143 (SIGTERM forwarded, every child reaped)",
+      "descendants": [],
+      "daprdOutlivedLauncher": null
+    },
+    {
+      "resource": "eventstore-dapr-cli",
+      "launcherPid": 3651942,
+      "stopIssuedMs": 9125.3,
+      "launcherExitMs": 9198.6,
+      "launcherExitAfterStopIssuedMs": 73.3,
+      "dcpState": "Finished",
+      "launcherExitCode": 143,
+      "launcherExit": "143 (SIGTERM forwarded, every child reaped)",
+      "descendants": [],
+      "daprdOutlivedLauncher": null
+    },
+    {
+      "resource": "parties-dapr-cli",
+      "launcherPid": 3652358,
+      "stopIssuedMs": 9127.7,
+      "launcherExitMs": 9190.2,
+      "launcherExitAfterStopIssuedMs": 62.5,
+      "dcpState": "Finished",
+      "launcherExitCode": 143,
+      "launcherExit": "143 (SIGTERM forwarded, every child reaped)",
+      "descendants": [],
+      "daprdOutlivedLauncher": null
+    },
+    {
+      "resource": "tenants-dapr-cli",
+      "launcherPid": 3652189,
+      "stopIssuedMs": 9126.9,
+      "launcherExitMs": 9191,
+      "launcherExitAfterStopIssuedMs": 64.1,
+      "dcpState": "Finished",
+      "launcherExitCode": 143,
+      "launcherExit": "143 (SIGTERM forwarded, every child reaped)",
+      "descendants": [],
+      "daprdOutlivedLauncher": null
+    }
+  ]
+}

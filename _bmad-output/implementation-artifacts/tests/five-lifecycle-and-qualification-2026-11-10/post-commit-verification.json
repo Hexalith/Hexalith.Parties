@@ -1,0 +1,57 @@
+{
+  "testedCommit": "160f6119c87f69f7da2a227afcdc17ab5ac1d2de",
+  "frontComposerGitlink": "160000 commit 7ace06c5c50406b9021fc95d8d87cf962b5180dd\treferences/Hexalith.FrontComposer",
+  "checks": [
+    {
+      "label": "final-fitness-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "--configuration",
+        "Release",
+        "-m:1",
+        "-p:NuGetAudit=false",
+        "-p:MinVerVersionOverride=1.0.0"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 6.25
+    },
+    {
+      "label": "final-fitness",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "*ArchitecturalFitnessTests",
+        "-class",
+        "*AppHostTenantsTopologyTests",
+        "-class",
+        "*PlatformApiPrerequisitesTests",
+        "-result-xml",
+        "/tmp/five-final-fitness.xml"
+      ],
+      "exitCode": 1,
+      "elapsedSeconds": 39.22
+    },
+    {
+      "label": "final-source-fitness",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "*ArchitecturalFitnessTests",
+        "-class",
+        "*AppHostTenantsTopologyTests",
+        "-class",
+        "*PlatformApiPrerequisitesTests",
+        "-result-xml",
+        "/tmp/five-final-source-fitness.xml"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 70.72
+    }
+  ],
+  "matrixSha256": "b45e0c982c0ad963669b2f0b804e580148ad43bac2efb7bb7dfeaa5e2d85945a",
+  "initialGraphMetadataRefusal": "post-commit-initial-verification.json"
+}
