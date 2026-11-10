@@ -1,8 +1,8 @@
 @{
     RenderFragment sectionContent = @<text>
-    <FluentButton aria-disabled="@((!CanExport) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
-                  Disabled="@(!CanExport)"
-                  OnClick="Export">
+    <FluentButton aria-disabled="@((!CanExportAction) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
+                  Disabled="@(!CanExportAction)"
+                  OnClick="ExportAsync">
         @Labels.ExportPartyData
     </FluentButton>
     @if (!string.IsNullOrWhiteSpace(DisabledReason))
@@ -50,6 +50,8 @@ else
     [Parameter]
     public bool CanExport { get; set; }
 
+    private bool CanExportAction => RendererInfo.IsInteractive && CanExport;
+
     [Parameter]
     public string? DisabledReason { get; set; }
 
@@ -58,4 +60,6 @@ else
 
     [Parameter]
     public EventCallback Export { get; set; }
+    private Task ExportAsync()
+        => CanExportAction ? Export.InvokeAsync() : Task.CompletedTask;
 }

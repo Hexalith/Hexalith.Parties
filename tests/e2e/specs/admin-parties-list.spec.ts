@@ -547,6 +547,64 @@ test.describe('Admin parties list', () => {
     await expectNoBlockingAxeViolations(page, { route: `${ADMIN_ROUTE}/ada-lovelace/gdpr`, artifactPath: testInfo.outputPath('axe-admin-gdpr.json') });
   });
 
+  test('admin command panels stay disabled and issue no operation while circuit negotiation is held', async ({ page, request }) => {
+    await page.goto(`${ADMIN_ROUTE}/ada-lovelace/gdpr`);
+    await expectInteractiveShell(page);
+    const detail = page.getByLabel('Party detail');
+    await detail.getByRole('textbox', { name: 'Channel id', exact: true }).fill('held-channel');
+    await detail.getByRole('textbox', { name: 'Purpose', exact: true }).fill('held-purpose');
+    await detail.getByRole('button', { name: 'Add consent', exact: true }).click();
+    await expect(detail.getByRole('button', { name: 'Revoke consent', exact: true })).toBeVisible();
+    let releaseNegotiation: () => void = () => undefined;
+    const negotiationHeld = new Promise<void>((resolve) => { releaseNegotiation = resolve; });
+    let heldNegotiations = 0;
+    await page.route((url) => url.pathname.endsWith('/_blazor/negotiate'), async (route) => {
+      heldNegotiations++;
+      await negotiationHeld;
+      await route.continue();
+    });
+    const actions = ['Edit', 'GDPR operations', 'Request erasure', 'Refresh erasure status',
+      'Restrict processing', 'Lift restriction', 'Add consent', 'Revoke consent', 'Export party data', 'Processing records'];
+    const before = await gdprRequestCounts(request);
+    const erasuresBefore = (await requestSnapshot(request)).erasureRequests;
+    try {
+      await page.goto(`${ADMIN_ROUTE}/ada-lovelace/gdpr`);
+      await expect.poll(() => heldNegotiations).toBe(1);
+      await expect.poll(() => page.evaluate(() => customElements.get('fluent-button') !== undefined)).toBe(true);
+      await expect(page.locator('.fc-shell-root[data-fc-interactive="false"]')).toHaveCount(1);
+      for (const name of actions) {
+        // Action buttons are Fluent elements; the identically named accordion headings are native buttons.
+        const action = detail.locator('fluent-button').filter({ hasText: new RegExp(`^\\s*${name}\\s*$`) });
+        await expect(action).toHaveCount(1);
+        await expect(action).toBeDisabled();
+        await expect(action).toHaveAttribute('aria-disabled', 'true');
+        await action.click({ force: true });
+      }
+      expect(await gdprRequestCounts(request)).toEqual(before);
+      expect((await requestSnapshot(request)).erasureRequests).toEqual(erasuresBefore);
+      await expect(detail.getByRole('dialog')).toHaveCount(0);
+      await expect(detail.getByRole('group', { name: 'Confirm restriction' })).toHaveCount(0);
+      await expect(detail.getByRole('group', { name: 'Confirm revoke consent' })).toHaveCount(0);
+      expect(new URL(page.url()).pathname).toBe(`${ADMIN_ROUTE}/ada-lovelace/gdpr`);
+    } finally {
+      releaseNegotiation();
+    }
+    await expectInteractiveShell(page);
+    for (const name of ['Edit', 'Request erasure', 'Restrict processing', 'Revoke consent', 'Export party data', 'Processing records']) {
+      await expect(detail.locator('fluent-button').filter({ hasText: new RegExp(`^\\s*${name}\\s*$`) })).toBeEnabled();
+    }
+    await expect(detail.locator('fluent-button').filter({ hasText: /^\s*Lift restriction\s*$/ })).toBeDisabled();
+    await expect(detail.locator('fluent-button').filter({ hasText: /^\s*Add consent\s*$/ })).toBeDisabled();
+    expect(heldNegotiations).toBe(1);
+    expect(await gdprRequestCounts(request)).toEqual(before);
+    expect((await requestSnapshot(request)).erasureRequests).toEqual(erasuresBefore);
+    await expect(detail.getByRole('dialog')).toHaveCount(0);
+    for (const name of ['Confirm restriction', 'Confirm lift restriction', 'Confirm revoke consent']) {
+      await expect(detail.getByRole('group', { name, exact: true })).toHaveCount(0);
+    }
+    expect(new URL(page.url()).pathname).toBe(`${ADMIN_ROUTE}/ada-lovelace/gdpr`);
+  });
+
   for (const form of NEGOTIATION_HELD_FORMS) {
     test(`the ${form.path} form stays disabled and issues no command or native POST while circuit negotiation is held`, async ({ page, request }) => {
       const documentRequests: string[] = [];

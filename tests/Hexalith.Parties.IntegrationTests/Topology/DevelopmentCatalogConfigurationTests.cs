@@ -12,6 +12,40 @@ namespace Hexalith.Parties.IntegrationTests.Topology;
 /// <summary>Checks private transport narrowing against real owner declarations without proposing any catalog or authority.</summary>
 public sealed class DevelopmentCatalogConfigurationTests
 {
+    /// <summary>Selected ordinary and complete identities bound both the private ACL and its invocation observations.</summary>
+    /// <param name="complete">Whether optional sample callers participate.</param>
+    /// <param name="suffix">The isolated Dapr identity suffix.</param>
+    [Theory]
+    [InlineData(false, "")]
+    [InlineData(true, "")]
+    [InlineData(false, "isolated")]
+    [InlineData(true, "isolated")]
+    public void GatewayRetainsOnlySelectedDaprCallers(bool complete, string suffix)
+    {
+        string source = Source("accesscontrol.yaml");
+        byte[] original = File.ReadAllBytes(source);
+        var selected = Apps.Where(pair => complete || pair.Key is not ("sample" or "sample-blazor-ui"))
+            .ToDictionary(pair => pair.Key, pair => pair.Value + (suffix.Length == 0 ? "" : "-" + suffix));
+        WithTemporaryConfiguration(configuration =>
+        {
+            foreach (JsonNode? policy in configuration["spec"]!["accessControl"]!["policies"]!.AsArray())
+            {
+                policy!["appId"] = policy["appId"]!.GetValue<string>() + (suffix.Length == 0 ? "" : "-" + suffix);
+            }
+        }, path =>
+        {
+            var rendered = CatalogConfiguration.Receiver(path, Declaration("Hexalith.EventStore"), "gateway", selected, auxiliary: false, technical: true);
+            string[] callers = rendered.Invocations.Select(rule => rule!["CallerAppId"]!.GetValue<string>()).Distinct().Order(StringComparer.Ordinal).ToArray();
+            string[] expected = new[] { "eventstore-admin", "tenants", "parties" }.Concat(complete ? ["sample-blazor-ui"] : Array.Empty<string>())
+                .Select(caller => selected[caller]).Order(StringComparer.Ordinal).ToArray();
+            callers.ShouldBe(expected);
+            rendered.Configuration["spec"]!["accessControl"]!["policies"]!.AsArray()
+                .Select(policy => policy!["appId"]!.GetValue<string>()).Order(StringComparer.Ordinal).ShouldBe(expected);
+            rendered.Configuration["spec"]!["accessControl"]!["defaultAction"]!.GetValue<string>().ShouldBe("deny");
+        });
+        File.ReadAllBytes(source).ShouldBe(original);
+    }
+
     /// <summary>The technical receiver retains every existing bounded owner grant for SDK endpoint qualification.</summary>
     [Fact]
     public void GatewayRetainsAllExistingTechnicalGrantsForSdkQualification()
@@ -87,6 +121,18 @@ public sealed class DevelopmentCatalogConfigurationTests
             .Add(new JsonObject { ["name"] = "/api/v1/commands", ["httpVerb"] = new JsonArray("POST"), ["action"] = "deny" }),
             path => Should.Throw<InvalidDataException>(() => CatalogConfiguration.Receiver(path,
                 Declaration("Hexalith.EventStore"), "gateway", Apps, auxiliary, technical: true)).Message.ShouldContain("Deny-bearing"));
+    }
+
+    /// <summary>An absent optional caller's deny still refuses before that caller can be filtered out.</summary>
+    [Fact]
+    public void DenyBearingAbsentCallerRefusesBeforeTopologyNarrowing()
+    {
+        var selected = Apps.Where(pair => pair.Key != "sample-blazor-ui").ToDictionary();
+        WithTemporaryConfiguration(source => source["spec"]!["accessControl"]!["policies"]!.AsArray()
+            .Single(policy => policy!["appId"]!.GetValue<string>() == "sample-blazor-ui")!["operations"]!.AsArray()
+            .Add(new JsonObject { ["name"] = "/api/v1/commands", ["httpVerb"] = new JsonArray("POST"), ["action"] = "deny" }),
+            path => Should.Throw<InvalidDataException>(() => CatalogConfiguration.Receiver(path,
+                Declaration("Hexalith.EventStore"), "gateway", selected, auxiliary: false, technical: true)).Message.ShouldContain("Deny-bearing"));
     }
 
     /// <summary>The UI's private client-only configuration has no incoming grants in the non-mTLS profile.</summary>

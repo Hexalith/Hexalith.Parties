@@ -27,7 +27,7 @@
             @if (_acceptedCommand.ExpectedUpdate is not null)
             {
                 <FluentButton role="button" Appearance="ButtonAppearance.Outline" OnClick="RefreshSelectedPartyAsync"
-                              Disabled="@_isDetailLoading" aria-label="@($"{EffectiveLabels.Retry}: {EffectiveLabels.DetailRegion}")">
+                              Disabled="@(!RendererInfo.IsInteractive || _isDetailLoading)" aria-disabled="@((!RendererInfo.IsInteractive || _isDetailLoading) ? "true" : "false")" aria-label="@($"{EffectiveLabels.Retry}: {EffectiveLabels.DetailRegion}")">
                     @EffectiveLabels.Retry
                 </FluentButton>
             }
@@ -90,12 +90,12 @@
                          AriaLabel="@EffectiveLabels.ModifiedBefore"
                          Placeholder="@EffectiveLabels.DateFilterPlaceholder"
                          Disabled="@FiltersDisabledInSearchMode" />
-        <FluentButton role="button" Appearance="ButtonAppearance.Primary" OnClick="NavigateToCreateParty">@EffectiveLabels.CreateParty</FluentButton>
-        <FluentButton role="button" Appearance="ButtonAppearance.Primary" OnClick="SubmitSearchAsync">@EffectiveLabels.Submit</FluentButton>
-        <FluentButton role="button" Appearance="ButtonAppearance.Outline" OnClick="ClearFiltersAsync">@EffectiveLabels.Clear</FluentButton>
+        <FluentButton Disabled="@(!RendererInfo.IsInteractive)" aria-disabled="@(!RendererInfo.IsInteractive ? "true" : "false")" role="button" Appearance="ButtonAppearance.Primary" OnClick="NavigateToCreateParty">@EffectiveLabels.CreateParty</FluentButton>
+        <FluentButton Disabled="@(!RendererInfo.IsInteractive)" aria-disabled="@(!RendererInfo.IsInteractive ? "true" : "false")" role="button" Appearance="ButtonAppearance.Primary" OnClick="SubmitSearchAsync">@EffectiveLabels.Submit</FluentButton>
+        <FluentButton Disabled="@(!RendererInfo.IsInteractive)" aria-disabled="@(!RendererInfo.IsInteractive ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline" OnClick="ClearFiltersAsync">@EffectiveLabels.Clear</FluentButton>
         @if (RetryAvailable)
         {
-            <FluentButton role="button" Appearance="ButtonAppearance.Outline"
+            <FluentButton Disabled="@(!RendererInfo.IsInteractive)" aria-disabled="@(!RendererInfo.IsInteractive ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
                           AutoFocus="@(_pendingFocus == FocusTarget.RetryButton)"
                           OnClick="RetryAsync">
                 @EffectiveLabels.Retry
@@ -105,8 +105,8 @@
 
     <div class="hx-parties-admin__search-modes" aria-label="@EffectiveLabels.SearchModesRegion">
         <FluentButton aria-disabled="true" role="button" Disabled="true">@EffectiveLabels.DisplayNameMode</FluentButton>
-        <FluentButton aria-disabled="@((!IsRichSearchAvailable) ? "true" : "false")" role="button" Disabled="@(!IsRichSearchAvailable)">@EffectiveLabels.EmailMode</FluentButton>
-        <FluentButton aria-disabled="@((!IsRichSearchAvailable) ? "true" : "false")" role="button" Disabled="@(!IsRichSearchAvailable)">@EffectiveLabels.IdentifierMode</FluentButton>
+        <FluentButton aria-disabled="@((!RendererInfo.IsInteractive || !IsRichSearchAvailable) ? "true" : "false")" role="button" Disabled="@(!RendererInfo.IsInteractive || !IsRichSearchAvailable)">@EffectiveLabels.EmailMode</FluentButton>
+        <FluentButton aria-disabled="@((!RendererInfo.IsInteractive || !IsRichSearchAvailable) ? "true" : "false")" role="button" Disabled="@(!RendererInfo.IsInteractive || !IsRichSearchAvailable)">@EffectiveLabels.IdentifierMode</FluentButton>
     </div>
 
     <div class="hx-parties-admin__layout" data-detail-open="@(DetailSurfaceOpen ? "true" : "false")">
@@ -124,7 +124,7 @@
                             DisplayMode="DataGridDisplayMode.Table"
                             aria-label="@EffectiveLabels.PartiesGrid">
                 <TemplateColumn Title="@EffectiveLabels.DisplayNameColumn" Context="row">
-                    <FluentButton role="button" Appearance="ButtonAppearance.Subtle"
+                    <FluentButton Disabled="@(!RendererInfo.IsInteractive)" aria-disabled="@(!RendererInfo.IsInteractive ? "true" : "false")" role="button" Appearance="ButtonAppearance.Subtle"
                                   Class="@RowButtonClass(row)"
                                   AutoFocus="@ShouldAutoFocusRow(row)"
                                   @ref="_rowButtonRefs[row.Id]"
@@ -156,15 +156,15 @@
                     <p>@EmptyText</p>
                     @if (HasActiveFilters)
                     {
-                        <FluentButton role="button" Appearance="ButtonAppearance.Outline" OnClick="ClearFiltersAsync">@EffectiveLabels.Clear</FluentButton>
+                        <FluentButton Disabled="@(!RendererInfo.IsInteractive)" aria-disabled="@(!RendererInfo.IsInteractive ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline" OnClick="ClearFiltersAsync">@EffectiveLabels.Clear</FluentButton>
                     }
                 </div>
             }
 
             <nav class="hx-parties-admin__paging" aria-label="@EffectiveLabels.PagingRegion">
-                <FluentButton aria-disabled="@((_page <= 1 || _isLoading) ? "true" : "false")" role="button" Disabled="@(_page <= 1 || _isLoading)" OnClick="PreviousPageAsync">@EffectiveLabels.Previous</FluentButton>
+                <FluentButton aria-disabled="@((!RendererInfo.IsInteractive || _page <= 1 || _isLoading) ? "true" : "false")" role="button" Disabled="@(!RendererInfo.IsInteractive || _page <= 1 || _isLoading)" OnClick="PreviousPageAsync">@EffectiveLabels.Previous</FluentButton>
                 <span>@EffectiveLabels.Page @_page @EffectiveLabels.Of @_totalPages, @_totalCount @EffectiveLabels.TotalCount</span>
-                <FluentButton aria-disabled="@((!_hasNextPage || _isLoading) ? "true" : "false")" role="button" Disabled="@(!_hasNextPage || _isLoading)" OnClick="NextPageAsync">@EffectiveLabels.Next</FluentButton>
+                <FluentButton aria-disabled="@((!RendererInfo.IsInteractive || !_hasNextPage || _isLoading) ? "true" : "false")" role="button" Disabled="@(!RendererInfo.IsInteractive || !_hasNextPage || _isLoading)" OnClick="NextPageAsync">@EffectiveLabels.Next</FluentButton>
             </nav>
         </div>
 
@@ -182,7 +182,7 @@
                 <div class="hx-parties-admin__detail-header">
                     <h2 tabindex="-1" @ref="_detailHeadingRef">@DetailHeadingText</h2>
                     <div class="hx-parties-admin__detail-actions">
-                        <FluentButton role="button" Appearance="ButtonAppearance.Outline" OnClick="CloseDetailAsync">@EffectiveLabels.DetailClose</FluentButton>
+                        <FluentButton Disabled="@(!RendererInfo.IsInteractive)" aria-disabled="@(!RendererInfo.IsInteractive ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline" OnClick="CloseDetailAsync">@EffectiveLabels.DetailClose</FluentButton>
                         <FluentButton aria-disabled="@((!CanEditSelectedParty) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
                                       Disabled="@(!CanEditSelectedParty)"
                                       OnClick="NavigateToEditParty">
@@ -538,13 +538,13 @@
             && detail.NameHistory.Count == 0;
 
     private bool CanEditSelectedParty
-        => _detail is not null
+        => RendererInfo.IsInteractive && _detail is not null
             && !IsPartialDetail
             && !_detail.IsErased
             && AdminPortalRouteIds.IsSafe(_detail.Id);
 
     private bool CanNavigateSelectedPartyGdpr
-        => _detail is not null
+        => RendererInfo.IsInteractive && _detail is not null
             && !IsPartialDetail
             && !_detail.IsErased
             && AdminPortalRouteIds.IsSafe(_detail.Id);

@@ -74,6 +74,12 @@ internal static class PartiesDevelopmentCatalogConfiguration
                     throw new InvalidDataException("The private catalog profile cannot qualify a default-open caller.");
                 }
                 string caller = policy["appId"]!.GetValue<string>();
+                if (!selectedApps.Values.Contains(caller, StringComparer.Ordinal))
+                {
+                    // Optional hosts grant no authority in this private topology. Bound the
+                    // actual ACL and its invocation observations to the same modeled Dapr IDs.
+                    continue;
+                }
                 JsonArray grants = new();
                 foreach (JsonNode? operation in policy["operations"]!.AsArray())
                 {

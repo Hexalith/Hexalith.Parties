@@ -34,7 +34,7 @@ public sealed class LifecycleQualificationTests(PlatformEnvironmentFixture fixtu
             descriptorSha256 = Convert.ToHexStringLower(SHA256.HashData(descriptorBytes)),
             realPersistenceAssertionsPassed = true,
         });
-        await File.WriteAllTextAsync(Path.Combine(directory, "execution-ready.json"), ready, bound.Token).ConfigureAwait(true);
+        await QualificationExecutionMarker.PublishAsync(directory, ready, bound.Token).ConfigureAwait(true);
         while (true)
         {
             string action = await ReadActionAsync(control, runId, bound.Token).ConfigureAwait(true);

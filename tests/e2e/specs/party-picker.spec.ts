@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type BrowserContext, type Locator, type Page } from '@playwright/test';
+import { expectInteractiveShell } from '../helpers/interactive-shell.js';
 
 const ADMIN_ROUTE = '/admin/parties';
 const ADMIN_COOKIE = 'parties-admin-e2e';
@@ -85,6 +86,7 @@ test.describe('Party picker combobox', () => {
     await enableAdminFixture(context);
 
     await page.goto(`${ADMIN_ROUTE}/new`);
+    await expectInteractiveShell(page);
     await expect(page.getByRole('heading', { name: 'Create party' })).toBeVisible();
 
     const picker = page.locator('hexalith-party-picker');
@@ -107,6 +109,7 @@ test.describe('Party picker combobox', () => {
 
 const gotoPicker = async (page: Page): Promise<void> => {
   await page.goto(PICKER_ROUTE);
+  await expectInteractiveShell(page);
   await expect(page.getByTestId('parties-picker-specimen-ready'), `${PICKER_ROUTE} missing ready marker`).toBeVisible();
   await expect(page.getByRole('combobox', { name: 'Search parties' })).toBeVisible();
 };

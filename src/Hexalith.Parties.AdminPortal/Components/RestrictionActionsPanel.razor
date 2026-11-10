@@ -5,13 +5,13 @@
                      Label="@Labels.GdprRestrictionReason"
                      AriaLabel="@Labels.GdprRestrictionReason" />
     <div class="hx-parties-admin__gdpr-actions">
-        <FluentButton aria-disabled="@((!CanRestrict) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
-                      Disabled="@(!CanRestrict)"
+        <FluentButton aria-disabled="@((!CanRestrictAction) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
+                      Disabled="@(!CanRestrictAction)"
                       OnClick="@(() => BeginConfirmation(RestrictionAction.Restrict))">
             @Labels.RestrictProcessing
         </FluentButton>
-        <FluentButton aria-disabled="@((!CanLift) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
-                      Disabled="@(!CanLift)"
+        <FluentButton aria-disabled="@((!CanLiftAction) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
+                      Disabled="@(!CanLiftAction)"
                       OnClick="@(() => BeginConfirmation(RestrictionAction.Lift))">
             @Labels.LiftRestriction
         </FluentButton>
@@ -89,8 +89,12 @@ else
     [Parameter]
     public bool CanRestrict { get; set; }
 
+    private bool CanRestrictAction => RendererInfo.IsInteractive && CanRestrict;
+
     [Parameter]
     public bool CanLift { get; set; }
+
+    private bool CanLiftAction => RendererInfo.IsInteractive && CanLift;
 
     [Parameter]
     public string? DisabledReason { get; set; }
@@ -147,7 +151,7 @@ else
     }
 
     private bool IsPendingActionDisabled(RestrictionAction action)
-        => action == RestrictionAction.Restrict ? !CanRestrict : !CanLift;
+        => action == RestrictionAction.Restrict ? !CanRestrictAction : !CanLiftAction;
 
     private string ConfirmationTitle(RestrictionAction action)
         => action == RestrictionAction.Restrict

@@ -1,0 +1,22 @@
+{
+  "scripts/qualify-disposable-ci.py": "88c98ee133ff7d3b2133af18392492f9055778cc5e02b46956723d17221f1727",
+  "src/Hexalith.Parties.AdminPortal/Components/ConsentManagementPanel.razor": "d94903e221afa4a4a997a7b7075596f6e62e87cff4a55ac4ab4ca0835fa95028",
+  "src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor": "582f139471dd4408034ac7d568739ccea85f273ee5cf1ae85903830416a9469b",
+  "src/Hexalith.Parties.AdminPortal/Components/PartyGdprOperationsPanel.razor": "8c11680d0d6cd57bd1ccbdcdf53ba4fd9a87fc9ec441536c9de73ff2803f4a13",
+  "src/Hexalith.Parties.AdminPortal/Components/PortabilityExportPanel.razor": "a7104dc6f4d520a35fc4c5712e5e346411d5de548e5a16e75efb8bfa145a5dba",
+  "src/Hexalith.Parties.AdminPortal/Components/ProcessingRecordsPanel.razor": "49c92fe29711ba9e06e67e9847a3b97180c682b293723a0505171b36c62494e5",
+  "src/Hexalith.Parties.AdminPortal/Components/RestrictionActionsPanel.razor": "3030a21ea4d3b72e7253d4bca7ef3a3c2b23e724be8b9184f85de47774920f2d",
+  "src/Hexalith.Parties.AppHost/PartiesDevelopmentCatalogConfiguration.cs": "8c479c58f0a81c880543837ff57ba5529865fff6f96f5506cb6c6425b6359e23",
+  "tests/Hexalith.Parties.AdminPortal.Tests/Components/AdminActionInteractivityTests.cs": "981e02d4936c5cea85ce0a77b0d1a47e9659d4ce2f9cbd8ebb3037af4db37c46",
+  "tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs": "52cfa3baa9b95f314548f0254ac278a5909ee501244f6eaf72eee7c55cf7d71f",
+  "tests/Hexalith.Parties.IntegrationTests/Topology/DevelopmentCatalogConfigurationTests.cs": "e43d3fcb75aa59695b5ba3c641ac81d6f51d5420a9dddcb576bd40c21ec3db1e",
+  "tests/Hexalith.Parties.IntegrationTests/Topology/PartiesOrdinaryLauncherStopTimingTests.cs": "640d0e0e2ed90656331b180e49a3367675ea56dbaeeb2c91f33419445eef9c87",
+  "tests/Hexalith.Parties.Platform.LifecycleTests/LifecycleQualificationTests.cs": "4910458276fbe8ea68ed6c89b97e20cfb25a4d59e60da906e93f33467b488135",
+  "tests/Hexalith.Parties.Platform.LifecycleTests/QualificationExecutionMarker.cs": "3b416655c73c3c3503ef2232246b08b9b44e14ed60660c1e5e46540baad75140",
+  "tests/Hexalith.Parties.Platform.LifecycleTests/QualificationExecutionMarkerTests.cs": "988dce41b61e9204e3535679a1fe32e47b1c90fd591fbed2b8bc4d189074f8bb",
+  "tests/ci-lifecycle/test_launch_recovery.py": "8730a382772add4892556a07868f70a953a7fb51086856fbe23d73bea3369650",
+  "tests/ci-lifecycle/test_qualification_controller.py": "e8fa0c44e2da029b0abc7e13f49e16c15022eb95c0d288e4b92afdc502770bf6",
+  "tests/e2e/specs/admin-parties-list.spec.ts": "11907a5749bff716e066921d8a5559977f07bf32d1e88d514b967559373cff74",
+  "tests/e2e/specs/party-picker.spec.ts": "b27ba4cbefdf5bb5349a141dcd87c481827d02bce6bedd4a6b557ee99752b249",
+  "tests/e2e/specs/shared-portal-display-formatters.spec.ts": "901aeaa2ba55428c50b795b60c7f556e596be4a5dbc76776ad2c25be3f77e600"
+}

@@ -1,0 +1,18 @@
+{
+  "scripts/qualify-disposable-ci.py": "28e6eabfcf1b1c2307bbc011355e7d75e33a6f5246fce69afde1c975e3e0f51a",
+  "src/Hexalith.Parties.AdminPortal/Components/ConsentManagementPanel.razor": "d94903e221afa4a4a997a7b7075596f6e62e87cff4a55ac4ab4ca0835fa95028",
+  "src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor": "7f7f3e130ade4e9994fa7e81ec5c73429b1c0a5afd5f707cc25b7efd075acadc",
+  "src/Hexalith.Parties.AdminPortal/Components/PartyGdprOperationsPanel.razor": "8c11680d0d6cd57bd1ccbdcdf53ba4fd9a87fc9ec441536c9de73ff2803f4a13",
+  "src/Hexalith.Parties.AdminPortal/Components/PortabilityExportPanel.razor": "a7104dc6f4d520a35fc4c5712e5e346411d5de548e5a16e75efb8bfa145a5dba",
+  "src/Hexalith.Parties.AdminPortal/Components/ProcessingRecordsPanel.razor": "49c92fe29711ba9e06e67e9847a3b97180c682b293723a0505171b36c62494e5",
+  "src/Hexalith.Parties.AdminPortal/Components/RestrictionActionsPanel.razor": "3030a21ea4d3b72e7253d4bca7ef3a3c2b23e724be8b9184f85de47774920f2d",
+  "src/Hexalith.Parties.AppHost/PartiesDevelopmentCatalogConfiguration.cs": "8c479c58f0a81c880543837ff57ba5529865fff6f96f5506cb6c6425b6359e23",
+  "tests/Hexalith.Parties.AdminPortal.Tests/Components/AdminActionInteractivityTests.cs": "9a51026108004a6cf8099c9d3237b1aeb97dca63639f946cf42e4967ad717f81",
+  "tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs": "7bc21e6831a55d15346cadff8d7d073a97f99bcde112f895ef7ee3d634e0fffc",
+  "tests/Hexalith.Parties.IntegrationTests/Topology/DevelopmentCatalogConfigurationTests.cs": "e43d3fcb75aa59695b5ba3c641ac81d6f51d5420a9dddcb576bd40c21ec3db1e",
+  "tests/Hexalith.Parties.IntegrationTests/Topology/PartiesOrdinaryLauncherStopTimingTests.cs": "640d0e0e2ed90656331b180e49a3367675ea56dbaeeb2c91f33419445eef9c87",
+  "tests/ci-lifecycle/test_launch_recovery.py": "8730a382772add4892556a07868f70a953a7fb51086856fbe23d73bea3369650",
+  "tests/ci-lifecycle/test_qualification_controller.py": "fdbd4274fdf9f5c33151ebef30668006bff7932c86064aacec1294d9669070ba",
+  "tests/e2e/specs/admin-parties-list.spec.ts": "9ac16a3d72cbee01422b08ef125a021e14f7c53279c26e4062adab624c3d497e",
+  "tests/e2e/specs/shared-portal-display-formatters.spec.ts": "b68a728d2c2ad09313f53f8b8c048370a09015cc370581d5cc9ac4bd604c949f"
+}

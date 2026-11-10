@@ -1,0 +1,114 @@
+{
+  "gates": [
+    {
+      "name": "lifecycle",
+      "command": "python3 -B -m unittest discover -s tests/ci-lifecycle -v",
+      "exitCode": 0,
+      "log": "final-lifecycle.log.gz"
+    },
+    {
+      "name": "source-admin",
+      "command": "dotnet tests/Hexalith.Parties.AdminPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.Tests.dll",
+      "exitCode": 0,
+      "log": "final-source-admin.log.gz"
+    },
+    {
+      "name": "package-integration",
+      "command": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -class '*DevelopmentCatalog*' -class '*PartiesTopologyCleanupTests'",
+      "exitCode": 0,
+      "log": "final-package-integration.log.gz"
+    },
+    {
+      "name": "repository-fitness",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -class '*ArchitecturalFitnessTests' -class '*AppHostTenantsTopologyTests' -class '*PlatformApiPrerequisitesTests'",
+      "exitCode": 0,
+      "log": "final-repository-fitness.log.gz"
+    },
+    {
+      "name": "publisher",
+      "command": "dotnet tests/Hexalith.Parties.Platform.LifecycleTests/bin/Release/net10.0/Hexalith.Parties.Platform.LifecycleTests.dll --filter-class Hexalith.Parties.Platform.LifecycleTests.QualificationExecutionMarkerTests",
+      "exitCode": 0,
+      "log": "final-publisher.log.gz"
+    },
+    {
+      "name": "package-admin-build",
+      "command": "dotnet build tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj --configuration Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "exitCode": 0,
+      "log": "final-package-admin-build.log.gz"
+    },
+    {
+      "name": "source-publisher-build",
+      "command": "python3 - <<'PY'\nfrom pathlib import Path\nimport json,os,subprocess\npacket=Path('_bmad-output/implementation-artifacts/tests/five-ordinary-topology-admin-actions-and-state-checks-2026-11-10')\nenvironment=os.environ.copy()\nenvironment.update(json.loads((packet/'source-preparation.json').read_text())['buildPreparation']['environment'])\nwith (packet/'final-source-publisher-build.log').open('w') as log:\n result=subprocess.run(['dotnet','build','tests/Hexalith.Parties.Platform.LifecycleTests/Hexalith.Parties.Platform.LifecycleTests.csproj','--configuration','Debug','-m:1','-p:NuGetAudit=false','-p:MinVerVersionOverride=1.0.0'],env=environment,stdout=log,stderr=subprocess.STDOUT)\nraise SystemExit(result.returncode)\nPY",
+      "exitCode": 0,
+      "log": "final-source-publisher-build.log.gz"
+    },
+    {
+      "name": "typecheck",
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "log": "final-typecheck.log.gz"
+    },
+    {
+      "name": "browser-ui-and-formatters",
+      "command": "CI=true npm run test:ui -- specs/shared-portal-display-formatters.spec.ts --retries=0",
+      "cwd": "tests/e2e",
+      "exitCode": 1,
+      "log": "final-browser-ui-and-formatters.log.gz",
+      "expectedFailure": true,
+      "disposition": "Reproduced a pre-existing picker hydration race; fixed and superseded by the passing browser sequence."
+    },
+    {
+      "name": "package-admin",
+      "command": "dotnet tests/Hexalith.Parties.AdminPortal.Tests/bin/Release/net10.0/Hexalith.Parties.AdminPortal.Tests.dll",
+      "exitCode": 0,
+      "log": "final-package-admin.log.gz"
+    },
+    {
+      "name": "source-publisher",
+      "command": "dotnet tests/Hexalith.Parties.Platform.LifecycleTests/bin/Debug/net10.0/Hexalith.Parties.Platform.LifecycleTests.dll --filter-class Hexalith.Parties.Platform.LifecycleTests.QualificationExecutionMarkerTests",
+      "exitCode": 0,
+      "log": "final-source-publisher.log.gz"
+    },
+    {
+      "name": "source-catalog",
+      "command": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll -class '*DevelopmentCatalogConfigurationTests'",
+      "exitCode": 0,
+      "log": "final-source-catalog.log.gz"
+    },
+    {
+      "name": "picker-readiness-repeat",
+      "command": "CI=true npm run test -- specs/party-picker.spec.ts --project=chromium --repeat-each=5 --retries=0",
+      "cwd": "tests/e2e",
+      "exitCode": 0,
+      "log": "final-picker-readiness-repeat.log.gz"
+    },
+    {
+      "name": "final-browser-sequence",
+      "command": "python3 - <<'PY'\nfrom pathlib import Path\nimport json,os,subprocess\npacket=Path('_bmad-output/implementation-artifacts/tests/five-ordinary-topology-admin-actions-and-state-checks-2026-11-10').resolve()\nenvironment=os.environ.copy(); environment['CI']='true'\nsteps=[('browser-ui-and-formatters-after-readiness',['npm','run','test:ui','--','specs/shared-portal-display-formatters.spec.ts','--retries=0']),('held-negotiation-repeat',['npm','run','test','--','specs/admin-parties-list.spec.ts','--project=chromium','--grep','negotiation is held','--repeat-each=5','--retries=0'])]\nresults=[]\nfor name,command in steps:\n log=packet/('final-'+name+'.log')\n with log.open('w') as stream: result=subprocess.run(command,cwd='tests/e2e',env=environment,stdout=stream,stderr=subprocess.STDOUT)\n results.append({'name':name,'command':command,'cwd':'tests/e2e','environment':{'CI':'true'},'exit_code':result.returncode,'log':log.name})\n (packet/'final-browser-runs.json').write_text(json.dumps(results,indent=2)+'\\n')\n if result.returncode: raise SystemExit(result.returncode)\nPY",
+      "exitCode": 0
+    },
+    {
+      "name": "final-typecheck-after-readiness",
+      "command": "npm run typecheck",
+      "exitCode": 0
+    }
+  ],
+  "summary": {
+    "sourceAdminPassed": 354,
+    "packageAdminPassed": 354,
+    "lifecyclePassed": 139,
+    "repositoryFitnessPassed": 159,
+    "packageIntegrationPassed": 91,
+    "packageIntegrationOptInSkipped": 4,
+    "sourceCatalogPassed": 16,
+    "localPublisherPassedPerMode": 2,
+    "localPublisherHostedQualificationCredit": false,
+    "browserPassed": 81,
+    "negotiationRepeatPassed": 15,
+    "pickerRepeatPassed": 15,
+    "liveOrdinaryPassed": 1,
+    "quiescenceMilliseconds": 10070.6
+  },
+  "liveEvidence": "ordinary-launcher-stop-timing.json",
+  "browserStepEvidence": "final-browser-runs.json"
+}

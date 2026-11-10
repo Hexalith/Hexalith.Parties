@@ -1,8 +1,8 @@
 @{
     RenderFragment sectionContent = @<text>
-    <FluentButton aria-disabled="@((!CanRefresh) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
-                  Disabled="@(!CanRefresh)"
-                  OnClick="Refresh">
+    <FluentButton aria-disabled="@((!CanRefreshAction) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
+                  Disabled="@(!CanRefreshAction)"
+                  OnClick="RefreshAsync">
         @Labels.ProcessingRecords
     </FluentButton>
     @if (!string.IsNullOrWhiteSpace(DisabledReason))
@@ -88,6 +88,8 @@ else
     [Parameter]
     public bool CanRefresh { get; set; } = true;
 
+    private bool CanRefreshAction => RendererInfo.IsInteractive && CanRefresh;
+
     [Parameter]
     public string? DisabledReason { get; set; }
 
@@ -114,4 +116,6 @@ else
             ? trimmed
             : trimmed[..MaxSummaryLength] + "...";
     }
+    private Task RefreshAsync()
+        => CanRefreshAction ? Refresh.InvokeAsync() : Task.CompletedTask;
 }

@@ -52,6 +52,43 @@ def independent_finalizer(original):
 
 
 class LaunchRecoveryTests(unittest.TestCase):
+    def test_launch_recovery_refuses_a_dangling_record_instead_of_polling_for_absence(self):
+        with tempfile.TemporaryDirectory() as directory:
+            owner = controller(directory)
+            root = Q.private_directory(owner.temporary / 'passing')
+            record = root / 'launch.json'
+            record.symlink_to(root / 'missing-target')
+            item = {'label': 'passing', 'receipt': str(root / 'receipt.json'),
+                    'publicResult': str(root / 'public-result.json'), 'launchRecord': str(record)}
+            with patch.object(Q.time, 'monotonic', side_effect=[0, 6]), patch.object(Q.time, 'sleep') as sleep:
+                with self.assertRaisesRegex(ValueError, 'linked'):
+                    owner.recover_launch(item)
+                sleep.assert_not_called()
+
+    def test_launch_recovery_validates_the_record_bytes_from_its_held_descriptor(self):
+        with tempfile.TemporaryDirectory() as directory:
+            owner = controller(directory)
+            root = Q.private_directory(owner.temporary / 'passing')
+            path = root / 'launch.json'
+            item = {'label': 'passing', 'receipt': str(root / 'receipt.json'),
+                    'publicResult': str(root / 'public-result.json'), 'launchRecord': str(path)}
+            record = {key: item[key] for key in ('label', 'receipt', 'publicResult')}
+            record.update(pid=123, birth='456', processGroup=123, gateStatus='closed')
+            Q.write(path, record)
+            original = Q.os.fstat
+            swapped = []
+            def admitting(descriptor):
+                info = original(descriptor)
+                if not swapped and info.st_ino == path.stat().st_ino:
+                    swapped.append(True)
+                    path.rename(root / 'held.json')
+                    path.symlink_to(root / 'missing-target')
+                return info
+            with patch.object(Q.os, 'fstat', side_effect=admitting), patch.object(Q, 'birth', return_value=None):
+                self.assertEqual(owner.recover_launch(item), record)
+            self.assertEqual(swapped, [True])
+            self.assertEqual(item['pid'], 123)
+
     def test_failed_intent_save_never_starts_a_process(self):
         with tempfile.TemporaryDirectory() as directory:
             owner = controller(directory)

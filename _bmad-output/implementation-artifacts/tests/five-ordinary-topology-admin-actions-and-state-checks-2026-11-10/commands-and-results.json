@@ -1,0 +1,307 @@
+{
+  "baselineCommit": "ef298d60d21e0a7113672276ea2c0c7e5f512cc3",
+  "spec": "spec-five-ordinary-topology-admin-actions-and-state-checks-deferred-items.md",
+  "gates": [
+    {
+      "gate": "pre-edit Aspire baseline",
+      "command": "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "exitCode": 0,
+      "log": "aspire-baseline.log.gz"
+    },
+    {
+      "gate": "pre-edit Aspire resource state",
+      "command": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "exitCode": 0,
+      "log": "aspire-baseline-state.log.gz"
+    },
+    {
+      "gate": "pre-edit Aspire stop",
+      "command": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "exitCode": 0
+    },
+    {
+      "gate": "source preparation",
+      "command": "dotnet tool run hexalith-module -- prepare-build --manifest module/hexalith.module-manifest.v2.json --workspace /tmp/parties-five-ordinary-source-20261110 --mode source --output json",
+      "exitCode": 0,
+      "receipt": "source-preparation.json"
+    },
+    {
+      "gate": "catalog baseline",
+      "command": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -method '*GatewayRetainsOnlySelectedDaprCallers'",
+      "exitCode": 1,
+      "total": 4,
+      "passed": 2,
+      "failed": 2,
+      "log": "catalog-baseline.log.gz"
+    },
+    {
+      "gate": "admin standalone baseline",
+      "command": "dotnet tests/Hexalith.Parties.AdminPortal.Tests/bin/Release/net10.0/Hexalith.Parties.AdminPortal.Tests.dll -class '*AdminActionInteractivityTests'",
+      "exitCode": 1,
+      "total": 4,
+      "passed": 1,
+      "failed": 3,
+      "log": "admin-standalone-baseline.log.gz"
+    },
+    {
+      "gate": "admin parent baseline",
+      "command": "dotnet tests/Hexalith.Parties.AdminPortal.Tests/bin/Release/net10.0/Hexalith.Parties.AdminPortal.Tests.dll -method '*PartiesAdminPortal_ActionsRequireInteractiveRenderer'",
+      "exitCode": 1,
+      "total": 2,
+      "passed": 1,
+      "failed": 1,
+      "log": "admin-parent-baseline.log.gz"
+    },
+    {
+      "gate": "lifecycle baseline replay",
+      "command": "python3 -B _bmad-output/implementation-artifacts/tests/five-ordinary-topology-admin-actions-and-state-checks-2026-11-10/run-lifecycle-baseline.py",
+      "exitCode": 1,
+      "total": 41,
+      "originalControllerControlsPassed": 29,
+      "failedAssertions": 16,
+      "incorrectErrorOutcomes": 2,
+      "log": "lifecycle-baseline.log.gz"
+    },
+    {
+      "gate": "source admin build",
+      "command": "dotnet build tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj --configuration Debug -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "environmentFrom": "source-preparation.json:buildPreparation.environment",
+      "exitCode": 0,
+      "log": "admin-source-build.log.gz"
+    },
+    {
+      "gate": "source admin tests",
+      "command": "dotnet tests/Hexalith.Parties.AdminPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.Tests.dll",
+      "exitCode": 0,
+      "passed": 339,
+      "skipped": 0,
+      "log": "admin-source-tests.log.gz"
+    },
+    {
+      "gate": "source integration build",
+      "command": "dotnet build tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj --configuration Debug -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "environmentFrom": "source-preparation.json:buildPreparation.environment",
+      "exitCode": 0,
+      "log": "catalog-final-source-build.log.gz"
+    },
+    {
+      "gate": "source model and cleanup controls",
+      "command": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll -class '*DevelopmentCatalog*' -class '*PartiesTopologyCleanupTests'",
+      "exitCode": 0,
+      "passed": 90,
+      "skipped": 4,
+      "log": "integration-source-controls.log.gz"
+    },
+    {
+      "gate": "final source catalog controls",
+      "command": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll -class '*DevelopmentCatalogConfigurationTests'",
+      "exitCode": 0,
+      "passed": 16,
+      "skipped": 0,
+      "log": "catalog-final-source-controls.log.gz"
+    },
+    {
+      "gate": "package integration build",
+      "command": "dotnet build tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj --configuration Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "exitCode": 0,
+      "log": "catalog-final-package-build.log.gz"
+    },
+    {
+      "gate": "final package catalog model and cleanup controls",
+      "command": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -class '*DevelopmentCatalog*' -class '*PartiesTopologyCleanupTests'",
+      "exitCode": 0,
+      "passed": 91,
+      "skipped": 4,
+      "log": "catalog-final-package-controls.log.gz"
+    },
+    {
+      "gate": "package admin build",
+      "command": "dotnet build tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj --configuration Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "exitCode": 0,
+      "log": "admin-package-build.log.gz"
+    },
+    {
+      "gate": "package admin tests",
+      "command": "dotnet tests/Hexalith.Parties.AdminPortal.Tests/bin/Release/net10.0/Hexalith.Parties.AdminPortal.Tests.dll",
+      "exitCode": 0,
+      "passed": 339,
+      "skipped": 0,
+      "log": "admin-package-tests.log.gz"
+    },
+    {
+      "gate": "repository fitness",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -class '*ArchitecturalFitnessTests' -class '*AppHostTenantsTopologyTests' -class '*PlatformApiPrerequisitesTests'",
+      "exitCode": 0,
+      "passed": 159,
+      "skipped": 0,
+      "log": "repository-fitness.log.gz"
+    },
+    {
+      "gate": "lifecycle tests",
+      "command": "python3 -B -m unittest discover -s tests/ci-lifecycle -v",
+      "exitCode": 0,
+      "passed": 137,
+      "skipped": 0,
+      "log": "lifecycle-after.log.gz"
+    },
+    {
+      "gate": "typescript",
+      "cwd": "tests/e2e",
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "log": "e2e-typecheck.log.gz"
+    },
+    {
+      "gate": "formatter baseline",
+      "cwd": "tests/e2e",
+      "command": "CI=true npm run test -- specs/shared-portal-display-formatters.spec.ts --project=chromium --retries=0",
+      "exitCode": 1,
+      "failed": 2,
+      "log": "formatter-baseline.log.gz"
+    },
+    {
+      "gate": "admin held baseline",
+      "cwd": "tests/e2e",
+      "command": "CI=true npm run test -- specs/admin-parties-list.spec.ts --project=chromium --grep 'admin command panels stay disabled' --retries=0",
+      "exitCode": 1,
+      "failed": 1,
+      "log": "admin-held-baseline.log.gz"
+    },
+    {
+      "gate": "full browser ui",
+      "cwd": "tests/e2e",
+      "command": "CI=true npm run test:ui -- --retries=0",
+      "exitCode": 0,
+      "passed": 79,
+      "skipped": 0,
+      "log": "e2e-ui.log.gz"
+    },
+    {
+      "gate": "formatter browser",
+      "cwd": "tests/e2e",
+      "command": "CI=true npm run test -- specs/shared-portal-display-formatters.spec.ts --project=chromium --retries=0",
+      "exitCode": 0,
+      "passed": 2,
+      "skipped": 0,
+      "log": "formatter-after.log.gz"
+    },
+    {
+      "gate": "held negotiation repeat",
+      "cwd": "tests/e2e",
+      "command": "CI=true npm run test -- specs/admin-parties-list.spec.ts --project=chromium --grep 'negotiation is held' --repeat-each=5 --retries=0",
+      "exitCode": 0,
+      "passed": 15,
+      "skipped": 0,
+      "log": "e2e-held-repeat-five.log.gz"
+    },
+    {
+      "gate": "runtime host preparation after test builds",
+      "command": "bash scripts/prepare-aspire-runtime-hosts.sh --gateway-profile packaged --configuration Release",
+      "exitCode": 0,
+      "log": "runtime-host-preparation.log.gz",
+      "receipt": "runtime-profile/prepared.json"
+    },
+    {
+      "gate": "ordinary live DCP stop",
+      "command": "PARTIES_ORDINARY_TOPOLOGY_TESTS=true PARTIES_ORDINARY_TOPOLOGY_TIMING_PATH=/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-ordinary-topology-admin-actions-and-state-checks-2026-11-10/ordinary-launcher-stop-timing.json dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -class '*PartiesOrdinaryLauncherStopTimingTests'",
+      "exitCode": 0,
+      "passed": 1,
+      "skipped": 0,
+      "log": "ordinary-launcher-stop-timing.log.gz",
+      "receipt": "ordinary-launcher-stop-timing.json"
+    },
+    {
+      "gate": "diff whitespace",
+      "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
+      "exitCode": 0
+    },
+    {
+      "gate": "review detail visibility baseline build",
+      "command": "dotnet build tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj --configuration Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "exitCode": 0,
+      "log": "review-detail-visibility-baseline-build.log.gz"
+    },
+    {
+      "gate": "review detail visibility regression",
+      "command": "tests/Hexalith.Parties.AdminPortal.Tests/bin/Release/net10.0/Hexalith.Parties.AdminPortal.Tests.dll -method '*PartiesAdminPortal_ActionsRequireInteractiveRenderer'",
+      "exitCode": 1,
+      "total": 2,
+      "passed": 1,
+      "failed": 1,
+      "log": "review-detail-visibility-baseline.log.gz",
+      "observation": "Static route detail has data-detail-open=false under the introduced renderer guard; Server passes."
+    },
+    {
+      "gate": "review detail visibility source build",
+      "command": "dotnet build tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj --configuration Debug -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "environmentFrom": "source-preparation.json:buildPreparation.environment",
+      "exitCode": 0,
+      "log": "review-detail-visibility-source-build.log.gz"
+    },
+    {
+      "gate": "review detail visibility source tests",
+      "command": "tests/Hexalith.Parties.AdminPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.Tests.dll",
+      "exitCode": 0,
+      "passed": 339,
+      "skipped": 0,
+      "log": "review-detail-visibility-source-tests.log.gz"
+    },
+    {
+      "gate": "review detail visibility package build",
+      "command": "dotnet build tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj --configuration Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "exitCode": 0,
+      "log": "review-detail-visibility-package-build.log.gz"
+    },
+    {
+      "gate": "review detail visibility package tests",
+      "command": "tests/Hexalith.Parties.AdminPortal.Tests/bin/Release/net10.0/Hexalith.Parties.AdminPortal.Tests.dll",
+      "exitCode": 0,
+      "passed": 339,
+      "skipped": 0,
+      "log": "review-detail-visibility-package-tests.log.gz"
+    },
+    {
+      "gate": "review detail visibility browser host build",
+      "command": "dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj --configuration Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "exitCode": 0,
+      "log": "review-detail-visibility-ui-build.log.gz"
+    },
+    {
+      "gate": "review detail visibility browser controls",
+      "cwd": "tests/e2e",
+      "command": "CI=true npm run test -- specs/admin-parties-list.spec.ts specs/shared-portal-display-formatters.spec.ts --project=chromium --retries=0",
+      "exitCode": 0,
+      "passed": 28,
+      "skipped": 0,
+      "log": "review-detail-visibility-browser.log.gz"
+    },
+    {
+      "gate": "review detail visibility held negotiation repeat",
+      "cwd": "tests/e2e",
+      "command": "CI=true npm run test -- specs/admin-parties-list.spec.ts --project=chromium --grep 'negotiation is held' --repeat-each=5 --retries=0",
+      "exitCode": 0,
+      "passed": 15,
+      "skipped": 0,
+      "log": "review-detail-visibility-held-repeat-five.log.gz"
+    },
+    {
+      "gate": "review detail visibility whitespace",
+      "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
+      "exitCode": 0
+    }
+  ],
+  "runtimeEvidenceAfterReview": {
+    "rerun": false,
+    "reason": "The correction restores only route-detail presentation visibility; catalog construction, application startup, Dapr identity/authorization, resource graph and launcher/stop behavior are unchanged.",
+    "historicalImplementationHashes": "runtime-implementation-files.json",
+    "historicalArtifacts": [
+      "ordinary-launcher-stop-timing.json",
+      "ordinary-launcher-stop-timing.log.gz",
+      "runtime-profile/prepared.json",
+      "runtime-profile/*.json.gz"
+    ],
+    "currentImplementationHashes": "implementation-files.json",
+    "note": "The earlier preparation receipts describe the actual earlier live run, not the post-correction browser-host rebuild."
+  },
+  "followupEvidence": "review-followups.json"
+}

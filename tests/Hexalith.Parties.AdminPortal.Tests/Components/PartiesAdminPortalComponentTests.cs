@@ -33,6 +33,183 @@ public sealed class PartiesAdminPortalComponentTests : AdminPortalBunitContext
 {
     private const string AdminUserId = "admin-user";
 
+    /// <summary>The parent and operations panel apply the same renderer gate to otherwise authorized actions.</summary>
+    /// <param name="interactive">Whether the Server circuit is interactive.</param>
+    /// <param name="page">The current server page.</param>
+    /// <param name="richSearch">Whether rich search is available.</param>
+    [Theory]
+    [InlineData(false, 1, false)]
+    [InlineData(false, 1, true)]
+    [InlineData(false, 2, false)]
+    [InlineData(false, 2, true)]
+    [InlineData(true, 1, false)]
+    [InlineData(true, 1, true)]
+    [InlineData(true, 2, false)]
+    [InlineData(true, 2, true)]
+    public void PartiesAdminPortal_ActionsRequireInteractiveRenderer(bool interactive, int page, bool richSearch)
+    {
+        PageRenderer = new(interactive ? "Server" : "Static", interactive);
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueRichSearchCapability(richSearch ? AdminPortalRichSearchCapability.Available() : AdminPortalRichSearchCapability.LocalOnly());
+        api.EnqueueList(new PagedResult<PartyIndexEntry>
+        {
+            Items = [IndexEntry("party-renderer", "Renderer Party", PartyType.Person, true)],
+            Page = page, PageSize = 20, TotalCount = 40, TotalPages = 2,
+        });
+        api.EnqueueDetail(Detail("party-renderer", "Renderer Party", PartyType.Person, isActive: true));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        var cut = RenderAuthorized("scope-renderer", routePartyId: "party-renderer");
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Operational summary");
+            cut.Find(".hx-parties-admin__layout").GetAttribute("data-detail-open").ShouldBe("true");
+            cut.Find("aside.hx-parties-admin__detail").GetAttribute("data-sheet-open").ShouldBe("true");
+            foreach (string action in new[] { "Create party", "Search", "Clear", "Renderer Party", "Back to list", "Edit", "GDPR operations", "Request erasure", "Refresh erasure status", "Restrict processing", "Export party data", "Processing records" })
+            {
+                var button = FindFluentButton(cut, action);
+                button.HasAttribute("disabled").ShouldBe(!interactive, action);
+                button.GetAttribute("aria-disabled").ShouldBe(interactive ? "false" : "true", action);
+            }
+            foreach (var (action, disabled) in new[]
+            {
+                ("Previous", !interactive || page == 1), ("Next", !interactive || page == 2),
+                ("Email", !interactive || !richSearch), ("Identifier", !interactive || !richSearch),
+                ("Display name", true),
+            })
+            {
+                var button = FindFluentButton(cut, action);
+                button.HasAttribute("disabled").ShouldBe(disabled, action);
+                button.GetAttribute("aria-disabled").ShouldBe(disabled ? "true" : "false", action);
+            }
+            cut.FindAll("fluent-button").Where(button => button.TextContent.Trim() == "Retry").ShouldBeEmpty();
+        });
+        api.ErasureRequests.ShouldBeEmpty();
+        api.ExportRequests.ShouldBeEmpty();
+        api.ProcessingRecordRequests.ShouldBeEmpty();
+    }
+
+    /// <summary>The conditional list retry is gated by both renderer and failure availability.</summary>
+    /// <param name="interactive">Whether the Server circuit is interactive.</param>
+    /// <param name="retryable">Whether the backend failure permits retry.</param>
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public void PartiesAdminPortal_RendererListRetryPreservesAvailability(bool interactive, bool retryable)
+    {
+        PageRenderer = new(interactive ? "Server" : "Static", interactive);
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueListFailure(retryable ? AdminPortalQueryFailureKind.TransientFailure : AdminPortalQueryFailureKind.ContractUnavailable);
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        var cut = RenderAuthorized("scope-renderer-retry");
+        cut.WaitForAssertion(() =>
+        {
+            var retries = cut.FindAll(".hx-parties-admin__toolbar fluent-button").Where(button => button.TextContent.Trim() == "Retry").ToArray();
+            retries.Length.ShouldBe(retryable ? 1 : 0);
+            if (retryable)
+            {
+                retries[0].HasAttribute("disabled").ShouldBe(!interactive);
+                retries[0].GetAttribute("aria-disabled").ShouldBe(interactive ? "false" : "true");
+            }
+        });
+    }
+
+    /// <summary>A real page transition keeps both paging actions disabled while the request is pending.</summary>
+    [Fact]
+    public async Task PartiesAdminPortal_RendererPagingRetainsBusyGuardAsync()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(new PagedResult<PartyIndexEntry>
+        {
+            Items = [IndexEntry("paging", "Paging row", PartyType.Person, true)],
+            Page = 1, PageSize = 20, TotalCount = 60, TotalPages = 3,
+        });
+        var pending = new TaskCompletionSource<AdminPortalQueryResult<PagedResult<PartyIndexEntry>>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        api.EnqueueList(_ => pending.Task);
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        var cut = RenderAuthorized("scope-renderer-paging");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Next").HasAttribute("disabled").ShouldBeFalse());
+        var next = cut.FindComponents<FluentButton>().Single(button => button.Find("fluent-button").TextContent.Trim() == "Next").Instance;
+        Task loading = cut.InvokeAsync(() => next.OnClick.InvokeAsync());
+        try
+        {
+            cut.WaitForAssertion(() =>
+            {
+                api.ListRequests.Count.ShouldBe(2);
+                foreach (var button in cut.FindAll("nav.hx-parties-admin__paging fluent-button"))
+                {
+                    button.HasAttribute("disabled").ShouldBeTrue();
+                    button.GetAttribute("aria-disabled").ShouldBe("true");
+                }
+            });
+        }
+        finally
+        {
+            pending.SetResult(new(new PagedResult<PartyIndexEntry>
+            {
+                Items = [IndexEntry("paging", "Paging row", PartyType.Person, true)],
+                Page = 2, PageSize = 20, TotalCount = 60, TotalPages = 3,
+            }, AdminPortalQueryMetadata.Empty));
+            await loading.WaitAsync(TimeSpan.FromSeconds(10)).ConfigureAwait(true);
+        }
+        cut.WaitForAssertion(() => cut.FindAll("nav.hx-parties-admin__paging fluent-button")
+            .ShouldAllBe(button => !button.HasAttribute("disabled")));
+    }
+
+    /// <summary>A legitimately accepted edit's retry stays disabled while its detail read is pending.</summary>
+    [Fact]
+    public async Task PartiesAdminPortal_RendererAcceptedEditRetryRetainsLoadingGuardAsync()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        SeedTenant("scope-renderer-edit", AdminUserId, TenantRole.TenantOwner);
+        _authProvider.SetAuthenticated(AdminUserId, "scope-renderer-edit");
+        var source = Detail("renderer-edit", "Renderer edit", PartyType.Person, true) with
+        {
+            PersonDetails = new() { FirstName = "Before", LastName = "Edit" },
+        };
+        using var cut = Render<PartiesAdminPortal>();
+        cut.WaitForAssertion(() => api.ListRequests.Count.ShouldBe(1));
+        api.EnqueueDetail(source);
+        using (var form = Render<CreateEditPartyPage>(parameters => parameters.Add(page => page.RoutePartyId, source.Id)))
+        {
+            form.WaitForAssertion(() => form.Find("form").ShouldNotBeNull());
+            var input = form.FindComponents<FluentTextInput>().Single(component => component.Instance.Label == "First name");
+            await form.InvokeAsync(() => input.Instance.ValueChanged.InvokeAsync("After")).ConfigureAwait(true);
+            form.Find("form").Submit();
+            form.WaitForAssertion(() => api.UpdateRequests.Count.ShouldBe(1));
+        }
+        api.EnqueueList(Page(IndexEntry(source.Id, source.DisplayName, source.Type, true)));
+        var pending = new TaskCompletionSource<AdminPortalQueryResult<PartyDetail>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        bool readStarted = false;
+        api.EnqueueDetail(_ => { readStarted = true; return pending.Task; });
+        Task loading = cut.InvokeAsync(() => cut.Instance.SetParametersAsync(ParameterView.FromDictionary(
+            new Dictionary<string, object?> { [nameof(PartiesAdminPortal.RoutePartyId)] = source.Id })));
+        const string selector = ".hx-parties-admin__header fluent-button[aria-label='Retry: Party detail']";
+        try
+        {
+            cut.WaitForAssertion(() =>
+            {
+                readStarted.ShouldBeTrue();
+                cut.Find(selector).HasAttribute("disabled").ShouldBeTrue();
+                cut.Find(selector).GetAttribute("aria-disabled").ShouldBe("true");
+            });
+        }
+        finally
+        {
+            pending.SetResult(new(source, AdminPortalQueryMetadata.Empty));
+            await loading.WaitAsync(TimeSpan.FromSeconds(10)).ConfigureAwait(true);
+        }
+        await cut.InvokeAsync(() => Task.CompletedTask).ConfigureAwait(true);
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find(".hx-parties-admin__detail-header").TextContent.ShouldContain(source.DisplayName);
+            cut.Find(selector).HasAttribute("disabled").ShouldBeFalse();
+            cut.Find(selector).GetAttribute("aria-disabled").ShouldBe("false");
+        });
+    }
+
     private readonly TestAuthenticationStateProvider _authProvider = new();
     private readonly InMemoryTenantProjectionStore _tenantStore = new();
 

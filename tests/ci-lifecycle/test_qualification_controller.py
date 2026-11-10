@@ -796,5 +796,287 @@ class ControllerSafetyTests(unittest.TestCase):
         self.assertFalse(observations[0][1]['candidateAcceptance'])
 
 
+class MetadataDecisionTests(unittest.TestCase):
+    """Every optional metadata decision distinguishes genuine absence from an unsafe or malformed entry."""
+
+    def controller(self, root):
+        value = object.__new__(Q.Qualification)
+        value.temporary = root
+        value.evidence = root / 'evidence'
+        value.context = {'unit': 'controller-simulation'}
+        value.children = {}
+        value.journal = {'owners': [], 'observations': []}
+        value.save = Mock()
+        value.observe = Mock()
+        return value
+
+    def dangling(self, path):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.symlink_to(path.parent / 'missing-target')
+
+    def test_optional_records_admit_only_absence_or_a_regular_json_object(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            path = root / 'record.json'
+            self.assertIsNone(Q.optional_read(path))
+            for body in ('', '{', 'null', '[]', 'true', '"record"'):
+                with self.subTest(body=body):
+                    path.write_text(body)
+                    with self.assertRaises(ValueError):
+                        Q.optional_read(path)
+            path.write_text('{}')
+            self.assertEqual(Q.optional_read(path), {})
+            with patch.object(Q, 'read_bytes', side_effect=PermissionError('unit denied metadata')):
+                with self.assertRaises(PermissionError):
+                    Q.optional_read(path)
+
+    def test_journal_and_inputs_do_not_treat_linked_entries_as_absent(self):
+        for name in ('journal.json', 'inputs.json'):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                workspace, runner = root / 'workspace', root / 'runner'
+                workspace.mkdir()
+                runner.mkdir()
+                (workspace / '.config').mkdir()
+                (workspace / '.config/dotnet-tools.json').write_text('{}')
+                preparation = root / 'mapping'
+                preparation.mkdir()
+                Q.write(preparation / 'mapping.json', {'Root': str(workspace), 'ContentHash': 'a' * 64})
+                target = (runner / 'hexalith-ci-qualification' if name == 'journal.json'
+                          else workspace / 'TestResults/ci-lifecycle') / name
+                self.dangling(target)
+                target.parent.chmod(0o700)
+                helper = Mock()
+                helper.ci_context.return_value = {'unit': 'context'}
+                helper.job_root.side_effect = lambda key: workspace if key == 'GITHUB_WORKSPACE' else runner
+                with patch.object(Q, 'ROOT', workspace), patch.object(Q, 'HELPER', helper), \
+                     patch.object(Q.subprocess, 'check_output', return_value='unit-head'), \
+                     patch.dict(os.environ, {'GITHUB_SHA': 'unit-head', 'HEXALITH_SOURCE_MAPPING_HASH': 'a' * 64,
+                                           'CustomAfterMicrosoftCommonProps': str(preparation / 'SourceMapping.props')}), \
+                     patch.object(Q.Qualification, 'save'), patch.object(Q, 'write') as write:
+                    with self.assertRaisesRegex(ValueError, 'linked'):
+                        Q.Qualification()
+                    write.assert_not_called()
+
+    def test_state_fallback_occurs_only_for_absent_primary_metadata(self):
+        for entry in ('absent', 'dangling', 'malformed'):
+            with self.subTest(entry=entry), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                value = self.controller(root)
+                owner = {'runId': 'a' * 32, 'stateDirectory': str(root)}
+                value.issued = lambda _: owner
+                state = {'runId': owner['runId'], 'executionContext': value.context}
+                Q.write(root / 'diagnostics' / owner['runId'] / 'owner.json', state)
+                primary = root / (owner['runId'] + '.json')
+                if entry == 'dangling':
+                    self.dangling(primary)
+                elif entry == 'malformed':
+                    primary.write_text('{')
+                if entry == 'absent':
+                    self.assertEqual(value.state({}), state)
+                else:
+                    with self.assertRaises(ValueError):
+                        value.state({})
+
+    def test_receipt_decisions_refuse_dangling_entries_before_poll_signal_or_observation(self):
+        for site in ('poll', 'finish-unissued', 'capture-result', 'process-signal', 'finalize-owner'):
+            with self.subTest(site=site), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                value = self.controller(root)
+                receipt = root / 'receipt.json'
+                self.dangling(receipt)
+                public = root / 'public-result.json'
+                public.write_text('{}')
+                item = {'label': 'passing', 'receipt': str(receipt), 'publicResult': str(public),
+                        'pid': 123, 'birth': 'unit-birth', 'processGroup': 123}
+                value.recover_launch = lambda _: {'pid': 123, 'birth': 'unit-birth', 'gateStatus': 'closed'}
+                value.finish_unissued_launch = Mock(return_value=True) if site == 'finalize-owner' else value.finish_unissued_launch
+                value.settled_child = Mock()
+                value.issued = Mock(return_value={'runId': 'a' * 32})
+                with patch.object(Q.time, 'monotonic', side_effect=[0, 0, 10]), patch.object(Q.time, 'sleep'), \
+                     patch.object(Q, 'birth', return_value='gone' if site == 'finish-unissued' else 'unit-birth'), \
+                     patch.object(Q.os, 'getpgid', return_value=123), patch.object(Q, 'tool_processes', return_value=[]), \
+                     patch.object(Q, 'signal_tool_processes') as signal_workers:
+                    with self.assertRaisesRegex(ValueError, 'linked'):
+                        if site == 'poll':
+                            value.poll(item, lambda: True, 1)
+                        elif site == 'finish-unissued':
+                            value.finish_unissued_launch(item)
+                        elif site == 'capture-result':
+                            value.children['passing'] = Mock(poll=lambda: 0, returncode=0)
+                            value.capture_result(item)
+                        elif site == 'process-signal':
+                            value.process_signal(item, Q.signal.SIGINT)
+                        else:
+                            value.finalize_owner(item, 'failure', [])
+                    signal_workers.assert_not_called()
+
+    def test_receipt_admission_requires_single_link_regular_bytes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            value = self.controller(root)
+            receipt = root / 'passing/receipt.json'
+            receipt.parent.mkdir()
+            original = root / 'original.json'
+            original.write_text('{}')
+            os.link(original, receipt)
+            with patch.object(Q.HELPER, 'receipt_owner', return_value={'unit': 'should-not-be-called'}) as helper:
+                with self.assertRaisesRegex(ValueError, 'nonregular'):
+                    value.issued({'label': 'passing', 'receipt': str(receipt)})
+                helper.assert_not_called()
+
+    def test_empty_public_result_cannot_skip_admission_through_a_link(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            value = self.controller(root)
+            empty = root / 'empty.json'
+            empty.write_text('')
+            public = root / 'public-result.json'
+            public.symlink_to(empty)
+            value.children['passing'] = Mock(poll=lambda: 0, returncode=0)
+            with self.assertRaisesRegex(ValueError, 'linked'):
+                value.capture_result({'label': 'passing', 'publicResult': str(public)})
+
+    def test_zero_exit_child_cannot_admit_a_non_object_public_result(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            value = self.controller(root)
+            public = root / 'public-result.json'
+            value.children['passing'] = Mock(poll=lambda: 0, returncode=0)
+            value.receipt_present = Mock(return_value=False)
+            item = {'label': 'passing', 'publicResult': str(public)}
+            for body in ('[]', 'null', 'true', '"result"'):
+                with self.subTest(body=body):
+                    public.write_text(body)
+                    with self.assertRaisesRegex(ValueError, 'must be an object'):
+                        value.capture_result(item)
+                    value.observe.assert_not_called()
+            public.write_text('{}')
+            self.assertEqual(value.capture_result(item), 0)
+            value.observe.assert_called_once_with('public-execution-result', ownerRunId=None, exitCode=0, result={})
+
+    def test_execution_marker_refuses_linked_or_malformed_entries_instead_of_polling(self):
+        for entry in ('dangling', 'malformed'):
+            with self.subTest(entry=entry), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                value = self.controller(root)
+                owner = {'runId': 'a' * 32, 'stateDirectory': str(root / 'state')}
+                value.issued = lambda _: owner
+                value.poll = lambda item, predicate, seconds: predicate()
+                value.record_images = Mock()
+                marker = root / 'ci-qualification' / owner['runId'] / 'execution-ready.json'
+                marker.parent.mkdir(parents=True)
+                if entry == 'dangling':
+                    self.dangling(marker)
+                else:
+                    marker.write_text('{')
+                with self.assertRaises(ValueError):
+                    value.ready({'label': 'passing'})
+                value.record_images.assert_not_called()
+
+    def test_cancellation_snapshot_records_terminal_link_refusal(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            value = self.controller(root)
+            owner = {'runId': 'a' * 32, 'stateDirectory': str(root), 'attemptId': 'b' * 32,
+                     'environmentId': 'c' * 32, 'executionContext': value.context}
+            value.issued = lambda _: owner
+            value.diagnostics = lambda _: root
+            Q.write(root / (owner['runId'] + '.json'), {**owner, 'status': 'Starting', 'updatedAt': Q.now()})
+            self.dangling(root / 'selected-test.json')
+            item = {'cancellationPhase': 'startup'}
+            value.cancellation_snapshot(item)
+            self.assertEqual(item['cancellationSnapshot']['failureType'], 'ValueError')
+
+    def test_attachment_checks_refuse_links_before_and_after_the_negative_probe(self):
+        for boundary in ('before', 'after'):
+            with self.subTest(boundary=boundary), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                value = self.controller(root)
+                value.context = {'jobId': 'unit-job'}
+                value.state = lambda _: {'runId': 'a' * 32, 'manifestHash': 'unit-manifest'}
+                value.diagnostics = lambda _: root
+                attachments = root / 'attachments.json'
+                if boundary == 'before':
+                    self.dangling(attachments)
+                def tool(*args):
+                    if boundary == 'after':
+                        self.dangling(attachments)
+                    return Mock(returncode=1), {'diagnostics': [{'ruleId': 'HXR033'}]}
+                value.tool = Mock(side_effect=tool)
+                with self.assertRaisesRegex(ValueError, 'linked'):
+                    value.attach({}, 'unit-negative-probe', negative=True)
+                self.assertEqual(value.tool.call_count, 0 if boundary == 'before' else 1)
+
+    def test_terminal_link_refusal_cannot_prevent_exact_owner_cleanup(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            value = self.controller(root)
+            receipt = root / 'receipt.json'
+            receipt.write_text('{}')
+            self.dangling(root / 'selected-test.json')
+            item = {'label': 'cancel', 'receipt': str(receipt), 'cancellationPhase': 'startup'}
+            value.issued = lambda _: {'runId': 'a' * 32}
+            value.diagnostics = lambda _: root
+            value.recover_launch = Mock()
+            value.cleanup_owned = Mock(return_value=None)
+            value.settled_child = Mock()
+            value.finalize_cancellation = Mock()
+            with self.assertRaisesRegex(ValueError, 'pre-cleanup first outcome'):
+                value.finalize_owner(item, 'cancelled', [])
+            value.cleanup_owned.assert_called_once_with(item, {'runId': 'a' * 32}, 'cancelled')
+            value.settled_child.assert_called_once_with(item)
+
+    def test_nested_terminal_refusal_cleans_the_exact_owner_and_retains_uncertainty(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            value = self.controller(root)
+            receipt = root / 'receipt.json'
+            receipt.write_text('{}')
+            terminal = root / 'selected-test.json'
+            terminal.write_text('{"nested":' + '[' * 2000 + '0' + ']' * 2000 + '}')
+            # Exercise the stdlib recursive decoder even when the accelerator admits deep arrays iteratively.
+            decoder = json.JSONDecoder()
+            decoder.scan_once = json.scanner.py_make_scanner(decoder)
+            with patch.object(Q.json, 'loads', side_effect=decoder.decode):
+                with self.assertRaisesRegex(ValueError, 'decoder depth limit'):
+                    Q.optional_read(terminal)
+            item = {'label': 'cancel', 'receipt': str(receipt), 'cancellationPhase': 'startup'}
+            value.journal['owners'] = [item]
+            owner = {'runId': 'a' * 32}
+            value.issued = lambda _: owner
+            value.diagnostics = lambda _: root
+            value.recover_launch = Mock()
+            value.cleanup_owned = Mock(return_value=None)
+            value.settled_child = Mock()
+            value.finalize_cancellation = Mock()
+            observations = []
+            value.observe = lambda kind, **fields: observations.append({'kind': kind, **fields})
+            with patch.object(Q.json, 'loads', side_effect=decoder.decode):
+                self.assertEqual(value.finalize('cancelled'), 1)
+            value.cleanup_owned.assert_called_once_with(item, owner, 'cancelled')
+            value.settled_child.assert_called_once_with(item)
+            value.finalize_cancellation.assert_not_called()
+            final = observations[-1]
+            self.assertEqual(final['issuedOwners'], 1)
+            self.assertFalse(final['issuedOwnersCleanupVerified'])
+            self.assertEqual(final['failures'][0]['failureType'], 'ValueError')
+
+    def test_wait_cancellation_refuses_terminal_link_before_forwarding_signal(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.dangling(root / 'selected-test.json')
+            value = Mock()
+            value.owner.return_value = {'pid': 123, 'birth': 'unit-birth'}
+            value.diagnostics.return_value = root
+            with patch.object(Q, 'Qualification', return_value=value), \
+                 patch.object(Q.sys, 'argv', ['qualify-disposable-ci.py', 'wait-cancellation']), \
+                 patch.object(Q, 'CANCELLED', [{'signal': Q.signal.SIGTERM}]), patch.object(Q.signal, 'signal'):
+                with self.assertRaisesRegex(ValueError, 'linked'):
+                    Q.main()
+                value.resume_host.assert_not_called()
+                value.process_signal.assert_not_called()
+
+
 if __name__ == '__main__':
     unittest.main()

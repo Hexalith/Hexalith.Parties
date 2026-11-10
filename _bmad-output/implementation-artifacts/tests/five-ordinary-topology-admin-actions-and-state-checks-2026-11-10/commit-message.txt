@@ -1,0 +1,5 @@
+fix: close five topology and admin deferrals
+
+Match private catalogs to the selected topology and gate admin actions.
+Use held metadata reads and retain exact cleanup on refusal.
+Repair formatter checks and record live launcher stop timing.

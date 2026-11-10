@@ -231,6 +231,27 @@ def read(path, limit=8_388_608):
     return json.loads(read_bytes(path, limit).decode('utf-8'))
 
 
+def optional_read_bytes(path, limit=8_388_608):
+    """Return held metadata bytes, or None only when a component is genuinely absent."""
+    try:
+        return read_bytes(path, limit)
+    except FileNotFoundError:
+        return None
+
+
+def optional_read(path, limit=8_388_608):
+    """Admit an optional JSON object once; unsafe or malformed records never become absence."""
+    body = optional_read_bytes(path, limit)
+    if body is None:
+        return None
+    try:
+        value = json.loads(body.decode('utf-8'))
+    except RecursionError:
+        raise ValueError('Qualification metadata exceeds the decoder depth limit') from None
+    require(isinstance(value, dict), 'Qualification metadata must be an object')
+    return value
+
+
 def private_directory(path):
     """Admit a directory through held_directory, creating missing components 0o700; a link at any component is refused.
 
@@ -575,7 +596,8 @@ class Qualification:
             require(mapping.get('Root') == str(ROOT) and mapping.get('ContentHash') == os.environ['HEXALITH_SOURCE_MAPPING_HASH'],
                     'Qualification mapping differs from the strict prepared source')
         self.prepared_mapping = mapping
-        self.journal = read(self.journal_path) if self.journal_path.exists() else {
+        journal = optional_read(self.journal_path)
+        self.journal = journal if journal is not None else {
             'schema': 'hexalith.ci-lifecycle-qualification.v1', 'classification': 'baseline-only',
             'source': head, 'mappingHash': mapping['ContentHash'] if mapping else None,
             'executionContext': self.context, 'owners': [], 'observations': []}
@@ -586,7 +608,7 @@ class Qualification:
         if mapping is not None:
             require(self.journal['mappingHash'] == mapping['ContentHash'], 'Prepared mapping changed within this job')
         self.save()
-        if mapping is not None and not (self.evidence / 'inputs.json').exists():
+        if mapping is not None and optional_read(self.evidence / 'inputs.json') is None:
             write(self.evidence / 'inputs.json', {'source': head, 'executionContext': self.context,
                   'toolManifestSha256': hashlib.sha256((ROOT / '.config/dotnet-tools.json').read_bytes()).hexdigest(),
                   'mappingHash': mapping['ContentHash'], 'platformIdentity': mapping.get('PlatformIdentity'),
@@ -631,17 +653,25 @@ class Qualification:
     def issued(self, item):
         require(item.get('label') in ('passing', 'failing', 'peer', 'retry', 'partial', 'cancel'), 'Unknown controller owner role')
         expected = self.temporary / item['label'] / 'receipt.json'
-        require(Path(item['receipt']) == expected and not expected.is_symlink(), 'Receipt escaped its issued controller role')
+        require(Path(item['receipt']) == expected, 'Receipt escaped its issued controller role')
+        read_bytes(expected)
         return HELPER.receipt_owner(expected, self.context)
+
+    def receipt_present(self, item):
+        """Check receipt admission as held regular-file bytes, leaving owner validation to issued()."""
+        return optional_read_bytes(Path(item['receipt'])) is not None
 
     def state(self, item):
         owner = self.issued(item)
         directory = Path(owner['stateDirectory'])
         paths = [directory / (owner['runId'] + '.json'), directory / 'diagnostics' / owner['runId'] / 'owner.json']
-        path = next((path for path in paths if path.exists()), None)
-        if path is None:
+        value = None
+        for path in paths:
+            value = optional_read(path)
+            if value is not None:
+                break
+        if value is None:
             raise FileNotFoundError('Owner metadata has not yet been published')
-        value = read(path)
         require(value.get('runId') == owner['runId'] and value.get('executionContext') == self.context,
                 'Owner metadata lost its actual job binding')
         return value
@@ -712,8 +742,7 @@ class Qualification:
     def poll(self, item, predicate, seconds):
         deadline = time.monotonic() + seconds
         while time.monotonic() < deadline:
-            path = Path(item['receipt'])
-            if path.exists():
+            if self.receipt_present(item):
                 self.issued(item)
                 try:
                     if predicate():
@@ -736,11 +765,12 @@ class Qualification:
         require(Path(item['launchRecord']) == expected, 'Launch record escaped its exact controller role')
         private_directory(expected.parent)
         deadline = time.monotonic() + 5
-        while not expected.exists() and time.monotonic() < deadline:
+        record = optional_read(expected)
+        while record is None and time.monotonic() < deadline:
             time.sleep(0.05)
-        if not expected.exists():
+            record = optional_read(expected)
+        if record is None:
             raise QualificationRefusal('HXLQ107')
-        record = read(expected)
         require(isinstance(record, dict), 'Launch process record is malformed')
         require(all(record.get(key) == item[key] for key in ('label', 'receipt', 'publicResult')),
                 'Launch process record differs from its durable role/receipt intent')
@@ -793,7 +823,7 @@ class Qualification:
         if birth(record['pid']) == record['birth']:
             self.process_signal(item, signal.SIGINT)
             self.settled_child(item)
-        if Path(item['receipt']).exists():
+        if self.receipt_present(item):
             return False
         record = self.recover_launch(item)
         require(birth(record['pid']) != record['birth'], 'Unissued launch child is still able to execute')
@@ -832,11 +862,8 @@ class Qualification:
         else:
             def executing():
                 marker = controls / 'execution-ready.json'
-                if not marker.exists():
-                    return False
-                try:
-                    value = read(marker)
-                except json.JSONDecodeError:
+                value = optional_read(marker)
+                if value is None:
                     return False
                 require(value.get('runId') == self.issued(item)['runId'] and value.get('realPersistenceAssertionsPassed') is True,
                         'Fixture checkpoint is missing its actual owner or real persistence assertion')
@@ -861,7 +888,8 @@ class Qualification:
             snapshot['stateUpdatedAtUtc'] = state['updatedAt']
             snapshot['stateTestTerminal'] = first_outcome(state['testRun']) if state.get('testRun') is not None else None
             terminal = self.diagnostics(item) / 'selected-test.json'
-            snapshot['firstOutcome'] = first_outcome(read(terminal)) if terminal.exists() else None
+            record = optional_read(terminal)
+            snapshot['firstOutcome'] = first_outcome(record) if record is not None else None
             snapshot['nativeExecution'] = None
             if item.get('executionCheckpoint'):
                 snapshot['nativeExecution'] = owned_native_process(item['executionCheckpoint']['processId'], owner['runId'])
@@ -887,9 +915,11 @@ class Qualification:
         child = self.children.get(item['label'])
         if child is not None and child.poll() is not None:
             path = Path(item['publicResult'])
-            if path.stat().st_size:
-                value = read(path)
-                self.observe('public-execution-result', ownerRunId=self.issued(item)['runId'] if Path(item['receipt']).exists() else None,
+            body = read_bytes(path)
+            if body:
+                value = json.loads(body.decode('utf-8'))
+                require(isinstance(value, dict), 'Qualification public result must be an object')
+                self.observe('public-execution-result', ownerRunId=self.issued(item)['runId'] if self.receipt_present(item) else None,
                              exitCode=child.returncode, result=value)
             return child.returncode
         return None
@@ -904,10 +934,10 @@ class Qualification:
         if negative:
             environment['GITHUB_JOB'] = self.context['jobId'] + '-disjoint-negative-probe'
         attachments = self.diagnostics(item) / 'attachments.json'
-        before = read(attachments) if attachments.exists() else None
+        before = optional_read(attachments)
         completed, result = self.tool(item, command, tag, environment)
         if negative:
-            require((read(attachments) if attachments.exists() else None) == before, 'Negative probe recorded an attachment')
+            require(optional_read(attachments) == before, 'Negative probe recorded an attachment')
             require(completed.returncode != 0 and result.get('attachment') is None, 'Disjoint job probe was accepted')
             require(any(value.get('ruleId') == 'HXR033' for value in result.get('diagnostics', [])), 'Missing job-context refusal')
             self.observe('negative-context-only', callerJob=environment['GITHUB_JOB'], actualJob=self.context['jobId'])
@@ -1011,7 +1041,7 @@ class Qualification:
     def process_signal(self, item, number):
         require(birth(item['pid']) == item['birth'], 'Refusing a missing or reused controller process')
         require(os.getpgid(item['pid']) == item['processGroup'] == item['pid'], 'Refusing a foreign process group')
-        owner = self.issued(item) if Path(item['receipt']).exists() else None
+        owner = self.issued(item) if self.receipt_present(item) else None
         # Only the tool's own processes; the AppHost, DCP and native test host are left to the tool or the exact down.
         delivered = signal_tool_processes(tool_processes(item['pid'], item['birth']), number)
         self.observe('owned-process-signal', ownerRunId=owner['runId'] if owner else None, pid=item['pid'], signal=number,
@@ -1194,13 +1224,13 @@ class Qualification:
 
     def finalize_owner(self, item, job_status, issued):
         launch_error = None
-        if not Path(item['receipt']).exists():
+        if not self.receipt_present(item):
             try:
                 if self.finish_unissued_launch(item):
                     return False
             except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
                 launch_error = error
-        if not Path(item['receipt']).exists():
+        if not self.receipt_present(item):
             raise ValueError('Launch or allocation remains unverified') from launch_error
         owner = self.issued(item)
         item['runId'] = owner['runId']
@@ -1211,10 +1241,12 @@ class Qualification:
             launch_error = error
         prior, prior_error = None, False
         terminal = self.diagnostics(item) / 'selected-test.json'
-        if item.get('cancellationPhase') and terminal.exists():
+        if item.get('cancellationPhase'):
             try:
-                prior = first_outcome(read(terminal))
-                self.observe('terminal-before-independent-finalization', ownerRunId=owner['runId'], firstOutcome=prior)
+                record = optional_read(terminal)
+                if record is not None:
+                    prior = first_outcome(record)
+                    self.observe('terminal-before-independent-finalization', ownerRunId=owner['runId'], firstOutcome=prior)
             except (OSError, ValueError, KeyError, TypeError):
                 prior_error = True
         resume_failure = self.cleanup_owned(item, owner, job_status)
@@ -1332,8 +1364,9 @@ def main():
         item['cancellationSignals'] = list(CANCELLED)
         qualification.cancellation_snapshot(item)
         terminal = qualification.diagnostics(item) / 'selected-test.json'
-        if terminal.exists():
-            item['terminalBeforeSignalForward'] = first_outcome(read(terminal))
+        record = optional_read(terminal)
+        if record is not None:
+            item['terminalBeforeSignalForward'] = first_outcome(record)
         qualification.save()
         qualification.observe('external-cancellation-signal', signals=item['cancellationSignals'],
                               terminalBeforeSignalForward=item.get('terminalBeforeSignalForward'))

@@ -66,8 +66,8 @@
                         </div>
                     </ChildContent>
                     <ActionTemplate>
-                        <FluentButton aria-disabled="@(_isBusy ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
-                                      Disabled="@_isBusy"
+                        <FluentButton aria-disabled="@((!RendererInfo.IsInteractive || _isBusy) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
+                                      Disabled="@(!RendererInfo.IsInteractive || _isBusy)"
                                       OnClick="CancelErasure">
                             @Labels.GdprCancel
                         </FluentButton>
@@ -103,8 +103,8 @@
         }
         @if (CanRetryVerification)
         {
-            <FluentButton aria-disabled="@(_isBusy ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
-                          Disabled="@_isBusy"
+            <FluentButton aria-disabled="@((!RendererInfo.IsInteractive || _isBusy) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
+                          Disabled="@(!RendererInfo.IsInteractive || _isBusy)"
                           OnClick="RetryVerificationAsync">
                 @Labels.GdprRetryVerification
             </FluentButton>
@@ -297,7 +297,7 @@
             || _erasureStatus?.Status is "ErasurePending" or "KeyDestroyed" or "VerificationInProgress" or "Verified" or "Complete" or "Erased";
 
     private bool CanRequestErasure
-        => _gdprCapability.CanRequestErasure && !_isBusy && !Party.IsErased && !IsErasurePending;
+        => RendererInfo.IsInteractive && _gdprCapability.CanRequestErasure && !_isBusy && !Party.IsErased && !IsErasurePending;
 
     private bool CanConfirmErasure
         => CanRequestErasure && HasMatchingErasureConfirmation;
@@ -307,16 +307,16 @@
             && string.Equals(_erasureTypedName, Party.DisplayName, StringComparison.Ordinal);
 
     private bool CanRefreshErasureStatus
-        => _gdprCapability.CanReadErasureStatus && !_isBusy;
+        => RendererInfo.IsInteractive && _gdprCapability.CanReadErasureStatus && !_isBusy;
 
     private bool CanRestrict
-        => _gdprCapability.CanRestrictProcessing && !_isBusy && !Party.IsRestricted && !Party.IsErased && !IsErasurePending;
+        => RendererInfo.IsInteractive && _gdprCapability.CanRestrictProcessing && !_isBusy && !Party.IsRestricted && !Party.IsErased && !IsErasurePending;
 
     private bool CanLiftRestriction
-        => _gdprCapability.CanLiftRestriction && !_isBusy && Party.IsRestricted && !Party.IsErased && !IsErasurePending;
+        => RendererInfo.IsInteractive && _gdprCapability.CanLiftRestriction && !_isBusy && Party.IsRestricted && !Party.IsErased && !IsErasurePending;
 
     private bool CanAddConsent
-        => _gdprCapability.CanManageConsent
+        => RendererInfo.IsInteractive && _gdprCapability.CanManageConsent
             && !_isBusy
             && !Party.IsErased
             && !IsErasurePending
@@ -324,18 +324,18 @@
             && !string.IsNullOrWhiteSpace(_consentPurpose);
 
     private bool CanRevokeConsent
-        => _gdprCapability.CanManageConsent && !_isBusy && !Party.IsErased && !IsErasurePending;
+        => RendererInfo.IsInteractive && _gdprCapability.CanManageConsent && !_isBusy && !Party.IsErased && !IsErasurePending;
 
     private bool CanExport
-        => _gdprCapability.CanExportData && !_isBusy;
+        => RendererInfo.IsInteractive && _gdprCapability.CanExportData && !_isBusy;
 
     private bool CanRetryVerification
-        => _gdprCapability.CanRetryVerification
+        => RendererInfo.IsInteractive && _gdprCapability.CanRetryVerification
             && !_isBusy
             && _erasureStatus?.Status is "VerificationPartial" or "VerificationFailed" or "Partial" or "Failed";
 
     private bool CanLoadProcessingRecords
-        => _gdprCapability.CanReadProcessingRecords && !_isBusy;
+        => RendererInfo.IsInteractive && _gdprCapability.CanReadProcessingRecords && !_isBusy;
 
     private string? ErasureDisabledReason
         => _gdprCapability.CanRequestErasure
@@ -736,7 +736,7 @@
     }
 
     private Task RefreshErasureStatusFromUiAsync()
-        => RefreshErasureStatusAsync();
+        => CanRefreshErasureStatus ? RefreshErasureStatusAsync() : Task.CompletedTask;
 
     private async Task RetryVerificationAsync()
     {

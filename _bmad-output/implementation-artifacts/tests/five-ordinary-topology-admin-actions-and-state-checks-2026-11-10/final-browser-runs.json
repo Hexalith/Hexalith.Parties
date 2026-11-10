@@ -1,0 +1,40 @@
+[
+  {
+    "name": "browser-ui-and-formatters-after-readiness",
+    "command": [
+      "npm",
+      "run",
+      "test:ui",
+      "--",
+      "specs/shared-portal-display-formatters.spec.ts",
+      "--retries=0"
+    ],
+    "cwd": "tests/e2e",
+    "environment": {
+      "CI": "true"
+    },
+    "exit_code": 0,
+    "log": "final-browser-ui-and-formatters-after-readiness.log"
+  },
+  {
+    "name": "held-negotiation-repeat",
+    "command": [
+      "npm",
+      "run",
+      "test",
+      "--",
+      "specs/admin-parties-list.spec.ts",
+      "--project=chromium",
+      "--grep",
+      "negotiation is held",
+      "--repeat-each=5",
+      "--retries=0"
+    ],
+    "cwd": "tests/e2e",
+    "environment": {
+      "CI": "true"
+    },
+    "exit_code": 0,
+    "log": "final-held-negotiation-repeat.log"
+  }
+]

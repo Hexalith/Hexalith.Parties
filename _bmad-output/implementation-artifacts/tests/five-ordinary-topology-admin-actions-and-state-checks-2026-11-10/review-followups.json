@@ -1,0 +1,66 @@
+{
+  "scope": "Only controls covering the review edits were executed; final broad verification belongs to the orchestrator.",
+  "gates": [
+    {
+      "gate": "publisher build",
+      "command": "dotnet build tests/Hexalith.Parties.Platform.LifecycleTests/Hexalith.Parties.Platform.LifecycleTests.csproj --configuration Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "exitCode": 0,
+      "log": "review-followups-publisher-build.log.gz"
+    },
+    {
+      "gate": "isolated publisher boundary",
+      "command": "dotnet tests/Hexalith.Parties.Platform.LifecycleTests/bin/Release/net10.0/Hexalith.Parties.Platform.LifecycleTests.dll --filter-class Hexalith.Parties.Platform.LifecycleTests.QualificationExecutionMarkerTests",
+      "exitCode": 0,
+      "passed": 2,
+      "skipped": 0,
+      "log": "review-followups-publisher-tests.log.gz",
+      "hostedCredit": false
+    },
+    {
+      "gate": "prepared source admin build",
+      "command": "dotnet build tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj --configuration Debug -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "environmentFrom": "source-preparation.json:buildPreparation.environment",
+      "exitCode": 0,
+      "log": "review-followups-admin-build.log.gz"
+    },
+    {
+      "gate": "parent renderer controls",
+      "command": "dotnet tests/Hexalith.Parties.AdminPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.Tests.dll -method '*PartiesAdminPortal_ActionsRequireInteractiveRenderer' -method '*PartiesAdminPortal_Renderer*'",
+      "exitCode": 0,
+      "passed": 14,
+      "skipped": 0,
+      "log": "review-followups-parent-renderer-tests.log.gz"
+    },
+    {
+      "gate": "standalone callback and confirmation controls",
+      "command": "dotnet tests/Hexalith.Parties.AdminPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.Tests.dll -class '*AdminActionInteractivityTests'",
+      "exitCode": 0,
+      "passed": 7,
+      "skipped": 0,
+      "log": "review-followups-standalone-tests.log.gz"
+    },
+    {
+      "gate": "metadata object and recursion controls",
+      "command": "PYTHONPATH=tests/ci-lifecycle python3 -B -m unittest -v test_qualification_controller.MetadataDecisionTests.test_zero_exit_child_cannot_admit_a_non_object_public_result test_qualification_controller.MetadataDecisionTests.test_nested_terminal_refusal_cleans_the_exact_owner_and_retains_uncertainty test_qualification_controller.MetadataDecisionTests.test_optional_records_admit_only_absence_or_a_regular_json_object test_qualification_controller.MetadataDecisionTests.test_terminal_link_refusal_cannot_prevent_exact_owner_cleanup",
+      "exitCode": 0,
+      "passed": 4,
+      "log": "review-followups-python-targeted.log.gz"
+    },
+    {
+      "gate": "affected browser controls",
+      "cwd": "tests/e2e",
+      "command": "CI=true npm run test -- specs/admin-parties-list.spec.ts specs/shared-portal-display-formatters.spec.ts --project=chromium --grep 'admin command panels stay disabled|Shared portal display formatters' --retries=0",
+      "exitCode": 0,
+      "passed": 3,
+      "skipped": 0,
+      "log": "review-followups-browser-tests.log.gz"
+    },
+    {
+      "gate": "typescript compiler",
+      "cwd": "tests/e2e",
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "log": "review-followups-typecheck.log.gz"
+    }
+  ]
+}

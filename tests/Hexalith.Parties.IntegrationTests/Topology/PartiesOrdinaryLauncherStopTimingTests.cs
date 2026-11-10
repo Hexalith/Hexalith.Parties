@@ -161,6 +161,7 @@ public sealed class PartiesOrdinaryLauncherStopTimingTests
 
         quiescedMs.ShouldNotBeNull("The fixture reached a stop but never observed owned-worker quiescence.");
         TimeSpan.FromMilliseconds(quiescedMs.Value).ShouldBeLessThanOrEqualTo(s_quiescenceBudget);
+        available.ShouldBeTrue($"Only a ready ordinary topology qualifies live stop timing; partial startup teardown remains diagnostic evidence: {unavailableReason}");
     }
 
     private static void CaptureLaunchers(DistributedApplication application, string? daprPath,

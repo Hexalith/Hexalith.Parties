@@ -16,9 +16,9 @@
                       OptionText="Labels.LawfulBasisLabel"
                       Label="@Labels.GdprLawfulBasis"
                       AriaLabel="@Labels.GdprLawfulBasis" />
-        <FluentButton aria-disabled="@((!CanAdd) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
-                      Disabled="@(!CanAdd)"
-                      OnClick="Add">
+        <FluentButton aria-disabled="@((!CanAddAction) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
+                      Disabled="@(!CanAddAction)"
+                      OnClick="AddAsync">
             @Labels.AddConsent
         </FluentButton>
     </div>
@@ -50,8 +50,8 @@
                     </dl>
                     @if (consent.IsActive)
                     {
-                        <FluentButton aria-disabled="@((!CanRevoke) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Subtle"
-                                      Disabled="@(!CanRevoke)"
+                        <FluentButton aria-disabled="@((!CanRevokeAction) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Subtle"
+                                      Disabled="@(!CanRevokeAction)"
                                       OnClick="@(() => BeginRevokeConfirmation(consent.ConsentId))">
                             @Labels.RevokeConsent
                         </FluentButton>
@@ -62,13 +62,13 @@
                                 <p>@Labels.GdprConfirmRevokeConsentMessage</p>
                                 <p role="status" aria-live="polite" data-gdpr-confirmation-live>@Labels.GdprConfirmationOpened</p>
                                 <div class="hx-parties-admin__gdpr-actions">
-                                    <FluentButton aria-disabled="@((!CanRevoke) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
-                                                  Disabled="@(!CanRevoke)"
+                                    <FluentButton aria-disabled="@((!CanRevokeAction) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
+                                                  Disabled="@(!CanRevokeAction)"
                                                   OnClick="CancelRevokeConfirmation">
                                         @Labels.GdprCancel
                                     </FluentButton>
-                                    <FluentButton aria-disabled="@((!CanRevoke) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
-                                                  Disabled="@(!CanRevoke)"
+                                    <FluentButton aria-disabled="@((!CanRevokeAction) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
+                                                  Disabled="@(!CanRevokeAction)"
                                                   OnClick="ConfirmRevokeAsync">
                                         @Labels.GdprConfirm
                                     </FluentButton>
@@ -147,8 +147,12 @@ else
     [Parameter]
     public bool CanAdd { get; set; }
 
+    private bool CanAddAction => RendererInfo.IsInteractive && CanAdd;
+
     [Parameter]
     public bool CanRevoke { get; set; }
+
+    private bool CanRevokeAction => RendererInfo.IsInteractive && CanRevoke;
 
     [Parameter]
     public string? DisabledReason { get; set; }
@@ -168,7 +172,7 @@ else
         }
 
         if (_pendingRevokeConsentId is not null
-            && (!CanRevoke || !ConsentRecords.Any(consent =>
+            && (!CanRevokeAction || !ConsentRecords.Any(consent =>
                 consent.IsActive && string.Equals(consent.ConsentId, _pendingRevokeConsentId, StringComparison.Ordinal))))
         {
             _pendingRevokeConsentId = null;
@@ -179,7 +183,7 @@ else
 
     private void BeginRevokeConfirmation(string consentId)
     {
-        if (!CanRevoke)
+        if (!CanRevokeAction)
         {
             return;
         }
@@ -191,7 +195,7 @@ else
 
     private async Task ConfirmRevokeAsync()
     {
-        if (_pendingRevokeConsentId is null || !CanRevoke)
+        if (_pendingRevokeConsentId is null || !CanRevokeAction)
         {
             return;
         }
@@ -215,4 +219,7 @@ else
             System.Globalization.CultureInfo.CurrentCulture,
             PartyDisplayFormat.CompactDateFormat,
             Labels.MissingDate);
+
+    private Task AddAsync()
+        => CanAddAction ? Add.InvokeAsync() : Task.CompletedTask;
 }
