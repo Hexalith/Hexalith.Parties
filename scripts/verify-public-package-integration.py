@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime
 import hashlib
 import importlib.util
 import json
@@ -21,6 +20,7 @@ _spec.loader.exec_module(_readers)
 require, held_directory, read, decode, document = (_readers.require, _readers.held_directory, _readers.read, _readers.decode, _readers.document)
 integration_phases, invocation_accepted = _readers.integration_phases, _readers.invocation_accepted
 persisted_identity, creation_timestamp = _readers.persisted_identity, _readers.creation_timestamp
+native_execution, observation_timestamp = _readers.native_execution, _readers.observation_timestamp
 SDK, SDK_VERSION, HEX, IDENTITY = _readers.SDK, _readers.SDK_VERSION, _readers.HEX, _readers.IDENTITY
 PROFILE = "platform-package"
 PLATFORM = "081178aa5cc01f5dc736ba0d1980aa80fedc6fe1"
@@ -161,17 +161,20 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
     aggregate = functional["aggregate"]
     expected_identity = persisted_identity(aggregate)
     events = functional["events"]
-    require(isinstance(events, list) and len(events) > 0 and functional.get("eventCount") == len(events) == functional.get("metadataSequence"), "persisted sequence mismatch")
+    require(isinstance(events, list) and len(events) > 0
+            and type(functional.get("eventCount")) is int and type(functional.get("metadataSequence")) is int
+            and functional["eventCount"] == len(events) == functional["metadataSequence"], "persisted sequence mismatch")
     require(aggregate.get("tenantId", "").startswith("g4t-") and aggregate.get("domain") == "party" and aggregate.get("aggregateId"), "foreign persisted aggregate")
     require(functional["projection"].get("id") == aggregate["aggregateId"] and functional["projection"].get("freshness") in ("current", "Current"), "projection differs from persisted aggregate")
     for sequence, event in enumerate(events, 1):
-        require(event.get("identity") == expected_identity and event.get("sequenceNumber") == sequence
+        require(event.get("identity") == expected_identity and type(event.get("sequenceNumber")) is int and event["sequenceNumber"] == sequence
                 and event.get("correlationId") == functional["commandId"] == event.get("causationId")
                 and event.get("userId") == "g4-native-tests" and event.get("serializationFormat") == "json", "persisted event identity mismatch")
     created = [event for event in events if event.get("eventTypeName") == "Hexalith.Parties.Contracts.Events.PartyCreated"]
     require(len(created) == 1 and creation_timestamp(created[0].get("timestamp")) == creation_timestamp(functional["projection"].get("createdAt")), "PartyCreated/projection timestamp mismatch")
     require(functional.get("tenantsNativeQueryObserved") is True and functional.get("memoriesRegistryObserved") is True, "real reference-owner assertions absent")
     require(functional.get("selectorCompatibilityObserved") is True, "SDK selector compatibility assertions absent")
+    persistence_start, observed = native_execution(report, cases, result, functional)
     require("currentOwner" in functional and functional["currentOwner"] is None, "ordinary evidence cannot promote a private current-owner proof")
     runtime = functional.get("publicRuntime")
     require(isinstance(runtime, dict) and set(runtime) == {"kind", "profile", "ownerRunId", "ownerAttemptId", "environmentId", "revision", "mappingHash", "executionContext", "platform", "image", "bodies", "measuredAtUtc", "qualificationCredit"}, "measured ordinary runtime evidence missing or unknown")
@@ -188,8 +191,9 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
             and re.fullmatch(r"sha256:[a-f0-9]{64}", image.get("imageContentId", ""), re.ASCII) is not None, "foreign, mutable or stopped public image")
     require(isinstance(image.get("startedAt"), str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z", image["startedAt"], re.ASCII) is not None,
             "running image start timestamp is unavailable")
-    measured = datetime.fromisoformat(creation_timestamp(runtime["measuredAtUtc"]))
-    require(datetime.fromisoformat(image["startedAt"]) <= measured, "running image started after its measurement")
+    measured = observation_timestamp(runtime["measuredAtUtc"])
+    require(persistence_start <= measured <= observed, "running image measurement lies outside observed execution")
+    require(observation_timestamp(image["startedAt"]) <= measured, "running image started after its measurement")
     bodies = runtime["bodies"]
     require(isinstance(bodies, dict) and set(bodies) == set(IMAGE_BODIES), "running image body set is incomplete or unknown")
     for name, digest in IMAGE_BODIES.items():

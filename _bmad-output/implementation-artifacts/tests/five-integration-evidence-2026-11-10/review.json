@@ -1,0 +1,42 @@
+{
+  "review": "blind-hunter",
+  "findings": [
+    {
+      "id": "R1",
+      "verdict": "low",
+      "route": "patch",
+      "finding": "Submicrosecond timestamp truncation",
+      "resolution": "Integer nanosecond comparisons and exact fractional boundary controls"
+    },
+    {
+      "id": "R2",
+      "verdict": "medium",
+      "route": "patch",
+      "finding": "Malformed deadline objects escape sanitized refusal",
+      "resolution": "Deliberate dictionary checks and ValueError controls in both readers"
+    },
+    {
+      "id": "R3",
+      "verdict": "medium",
+      "route": "patch",
+      "finding": "Inconsistent populated and undeclared deadline fields",
+      "resolution": "Duration/expiry equality and mutually consistent state controls"
+    },
+    {
+      "id": "R4",
+      "verdict": "medium",
+      "route": "patch",
+      "finding": "Terminal processing timestamp incorrectly restricted to child expiry",
+      "resolution": "Native finish bounded by expiry with later-recording positive control"
+    },
+    {
+      "id": "R5",
+      "verdict": "medium",
+      "route": "patch",
+      "finding": "Image measurement before persistence case accepted",
+      "resolution": "Case-start lower bound and pre-case measurement refusal control"
+    }
+  ],
+  "followupReview": "All five resolved; no remaining defects found in these corrections; 65 focused integration-reader tests passed",
+  "deferredFindings": []
+}

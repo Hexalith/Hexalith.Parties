@@ -1,0 +1,15 @@
+{
+  "command": [
+    "python3",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "scripts",
+    "-v"
+  ],
+  "exitCode": 0,
+  "log": "python-tests.log.gz",
+  "uncompressedLogSha256": "cab2f41a9f72cb2c125bd2d3bb66d0e0c739155b78bc95edfa502a125cc61bd1"
+}

@@ -1,0 +1,50 @@
+{
+  "baselineCommit": "c9eb1fe37373b2b25d3759a4ac8f33ac46754e17",
+  "scope": [
+    "BH3 native TRX timing and execution identities",
+    "BH4 private selector compatibility",
+    "BH5 integer sequence/count representations",
+    "BH6 public observation execution interval",
+    "BH7 private assembly scopes"
+  ],
+  "command": "python3 -B -m unittest discover -s scripts -v",
+  "result": {
+    "exitCode": 0,
+    "tests": 83,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "focusedCommand": "python3 -B -m unittest discover -s scripts -p 'test_*integration.py' -q",
+  "focusedResult": {
+    "exitCode": 0,
+    "tests": 65,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "historicalReporterCompatibility": "Retained actual xUnit 4.0.3 ordinary-native.trx.gz parsed with its namespace, real times, definitions and execution references; no fresh runtime claim",
+  "qualificationCredit": false,
+  "runtimeOrDeploymentQualified": false,
+  "actualArtifactCompatibility": {
+    "exitCode": 0,
+    "workflowRunId": 42690523916,
+    "artifact": "module-integration-diagnostics",
+    "nativeCases": 28,
+    "unchangedArtifact": true,
+    "receipt": "actual-artifact-compatibility.json"
+  },
+  "review": {
+    "findings": 5,
+    "resolved": 5,
+    "remaining": 0,
+    "deferred": 0,
+    "receipt": "review.json"
+  },
+  "testedSourceSha256": {
+    "scripts/verify-current-owner-integration.py": "aa699f2098575c4b241c70f4c9b4ce04205e81593f77a185ed2b4dc8684a5d73",
+    "scripts/verify-public-package-integration.py": "04341d1315690d0334863616ea4ecb6502f5ffe7676e7189c53bf775d00eda49",
+    "scripts/test_current_owner_integration.py": "29c075d5667936858acd51bea4c21a06105ceac24ed2be19502376fb5e1b505c",
+    "scripts/test_public_package_integration.py": "97e49eb406fc532275bb8adf6f7785e46eed3a0b92b900c772b764dd448c8a02"
+  }
+}

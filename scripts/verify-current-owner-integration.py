@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import argparse
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timezone
+from decimal import Decimal
 import hashlib
 import json
 import os
@@ -28,6 +29,8 @@ SDK = {
 PUBLIC_PARTIES_CONTRACTS = "99230b764de6769a803702170c174f9dbef9b0b5b0c2931b07e85045478cd654"
 HEX = re.compile(r"[a-f0-9]{64}\Z", re.ASCII)
 IDENTITY = re.compile(r"[a-f0-9]{32}\Z", re.ASCII)
+TRX_ID = re.compile(r"[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}\Z", re.ASCII)
+PERSISTENCE_CASE = "Hexalith.Parties.Platform.IntegrationTests.PartyEnvironmentTests.RealDependencies_CreateQueryAndPersistMatchingPartyEvents"
 
 
 def require(value: bool, message: str) -> None:
@@ -98,6 +101,69 @@ def creation_timestamp(value):
             "creation timestamp must be a present offset timestamp")
     require(datetime.fromisoformat(value).utcoffset() is not None, "creation timestamp requires an offset")
     return value
+
+
+def observation_timestamp(value):
+    """Compare offset timestamps exactly, retaining .NET ticks and Docker nanoseconds."""
+    match = re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.(\d{1,9}))?(?:Z|[+-]\d{2}:\d{2})", value) if isinstance(value, str) else None
+    require(match is not None, "observation timestamp requires an offset")
+    instant = datetime.fromisoformat(value)
+    seconds = ((instant.toordinal() * 24 + instant.hour) * 60 + instant.minute) * 60 + instant.second
+    return (seconds - int(instant.utcoffset().total_seconds())) * 1_000_000_000 + int((match[1] or "0").ljust(9, "0"))
+
+
+def native_execution(report, cases, result, functional):
+    """Bind real reporter identities and observations to the runner's issued execution interval."""
+    deadlines = result["bindings"].get("deadlines")
+    require(isinstance(deadlines, dict), "issued execution timing missing")
+    execution = deadlines.get("execution")
+    require(isinstance(execution, dict), "issued execution timing missing")
+    require(execution.get("state") in ("populated", "not-declared")
+            and execution.get("origin") == "test-execution-started", "issued execution timing missing")
+    issued = observation_timestamp(execution.get("originAt"))
+    terminal = observation_timestamp(result["terminal"].get("recordedAt"))
+    require(issued <= terminal <= observation_timestamp(datetime.now(timezone.utc).isoformat()), "invalid issued execution interval")
+    deadline = terminal
+    if execution["state"] == "populated":
+        deadline = observation_timestamp(execution.get("expiresAt"))
+        seconds = execution.get("effectiveSeconds")
+        require(type(seconds) in (int, float) and Decimal(str(seconds)).is_finite()
+                and Decimal(str(seconds)) > 0 and Decimal(str(seconds)) * 1_000_000_000 == deadline - issued,
+                "issued execution deadline is inconsistent")
+    else:
+        require(not {"expiresAt", "effectiveSeconds", "configurationContentIdentity"} & execution.keys(),
+                "undeclared execution has deadline fields")
+    require(report.tag.rsplit("}", 1)[-1] == "TestRun" and TRX_ID.fullmatch(report.get("id", "")) is not None,
+            "native report execution identity missing")
+    times = [item for item in report if item.tag.rsplit("}", 1)[-1] == "Times"]
+    require(len(times) == 1, "native report timing missing or ambiguous")
+    creation, queuing, start, finish = (observation_timestamp(times[0].get(key)) for key in ("creation", "queuing", "start", "finish"))
+    require(issued <= creation <= queuing <= start <= finish <= terminal, "native report lies outside issued execution")
+    require(finish <= deadline, "native execution exceeded its issued deadline")
+    definitions = [item for item in report.iter() if item.tag.rsplit("}", 1)[-1] == "UnitTest"]
+    require(len(definitions) == len(cases), "native execution definitions differ")
+    bindings = {}
+    for definition in definitions:
+        identifier = definition.get("id", "")
+        executions = [item for item in definition if item.tag.rsplit("}", 1)[-1] == "Execution"]
+        require(TRX_ID.fullmatch(identifier) is not None and identifier not in bindings and len(executions) == 1,
+                "native execution definitions missing or duplicated")
+        bindings[identifier] = (definition.get("name"), executions[0].get("id"))
+    seen = set()
+    persistence = []
+    for case in cases:
+        identifier, execution_id = case.get("testId", ""), case.get("executionId", "")
+        require(TRX_ID.fullmatch(execution_id) is not None and execution_id not in seen
+                and bindings.pop(identifier, None) == (case.get("testName"), execution_id), "native case execution identity differs")
+        seen.add(execution_id)
+        case_start, case_end = (observation_timestamp(case.get(key)) for key in ("startTime", "endTime"))
+        require(start <= case_start <= case_end <= finish, "native case lies outside report execution")
+        if case.get("testName") == PERSISTENCE_CASE:
+            persistence.append((case_start, case_end))
+    require(len(persistence) == 1, "native persistence execution missing or duplicated")
+    observed = observation_timestamp(functional.get("observedAtUtc"))
+    require(persistence[0][0] <= observed <= persistence[0][1], "functional observation lies outside native persistence execution")
+    return persistence[0][0], observed
 
 
 def document(root: Path, name: str):
@@ -244,16 +310,20 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
     aggregate = functional["aggregate"]
     expected_identity = persisted_identity(aggregate)
     events = functional["events"]
-    require(isinstance(events, list) and len(events) > 0 and functional.get("eventCount") == len(events) == functional.get("metadataSequence"), "persisted sequence mismatch")
+    require(isinstance(events, list) and len(events) > 0
+            and type(functional.get("eventCount")) is int and type(functional.get("metadataSequence")) is int
+            and functional["eventCount"] == len(events) == functional["metadataSequence"], "persisted sequence mismatch")
     require(aggregate.get("tenantId", "").startswith("g4t-") and aggregate.get("domain") == "party" and aggregate.get("aggregateId"), "foreign persisted aggregate")
     require(functional["projection"].get("id") == aggregate["aggregateId"] and functional["projection"].get("freshness") in ("current", "Current"), "projection differs from persisted aggregate")
     for sequence, event in enumerate(events, 1):
-        require(event.get("identity") == expected_identity and event.get("sequenceNumber") == sequence
+        require(event.get("identity") == expected_identity and type(event.get("sequenceNumber")) is int and event["sequenceNumber"] == sequence
                 and event.get("correlationId") == functional["commandId"] == event.get("causationId")
                 and event.get("userId") == "g4-native-tests" and event.get("serializationFormat") == "json", "persisted event identity mismatch")
     created = [event for event in events if event.get("eventTypeName") == "Hexalith.Parties.Contracts.Events.PartyCreated"]
     require(len(created) == 1 and creation_timestamp(created[0].get("timestamp")) == creation_timestamp(functional["projection"].get("createdAt")), "PartyCreated/projection timestamp mismatch")
     require(functional.get("tenantsNativeQueryObserved") is True and functional.get("memoriesRegistryObserved") is True, "real reference-owner assertions absent")
+    require(functional.get("selectorCompatibilityObserved") is True, "SDK selector compatibility assertions absent")
+    native_execution(report, cases, result, functional)
     current = functional["currentOwner"]
     for key in ("runId", "attemptId", "environmentId", "revision", "mappingHash", "profile"):
         require(current.get(key) == functional[key], "current owner lineage mismatch")
@@ -279,6 +349,9 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
             and loaded.get("environmentId") == owner["environmentId"] and loaded.get("revision") == source
             and loaded.get("mappingHash") == functional["mappingHash"] and loaded.get("executionContext") == context, "native source observation differs")
     for field in ("loaded", "copied"):
+        require(isinstance(loaded.get(field), list) and 0 < len(loaded[field]) <= 64, "native assembly inventory is empty or oversized")
+        require(all(isinstance(item, dict) and item.get("scope") == ("loaded-native-test-process" if field == "loaded" else "copied-native-composition-output")
+                    for item in loaded[field]), "native assembly role differs")
         identities = [item["identity"].split(",", 1)[0] for item in loaded[field]]
         require(len(identities) == len(set(identities)), "duplicate observed assemblies")
         for name, expected in SDK.items():

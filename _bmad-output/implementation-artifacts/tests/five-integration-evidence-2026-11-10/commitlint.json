@@ -1,0 +1,13 @@
+{
+  "command": [
+    "node_modules/.bin/commitlint",
+    "--edit",
+    "/tmp/parties-five-integration-evidence-commit.txt",
+    "--verbose"
+  ],
+  "pinnedVersion": "21.2.4",
+  "exitCode": 0,
+  "message": "fix: close five integration evidence gaps\n",
+  "log": "commitlint.log.gz",
+  "uncompressedLogSha256": "fc5e8aad8c6dee456959460340835691d611592798bceeeabf7f05272c85d94b"
+}

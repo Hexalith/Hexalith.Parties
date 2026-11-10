@@ -2285,22 +2285,37 @@ rollback: None required (test-only).
 - source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
   summary: Bind native TRX timestamps and execution identity to the current integration owner.
   evidence: medium; resumed review BH3. The supplemental public validator accepts a resealed report with all required names but Times in 1900. Its name/counter checks do not bind the native report to the current functional observation interval. This is a later integration-reader issue. Parent probes and full triage: `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to the source spec.
+  status: done 2026-11-10
+  resolution: Both readers now bind report/case times and matching reporter execution definitions to the owner-issued interval and persistence observation; retained real xUnit TRX compatibility and resealed refusal controls pass.
+  verification: `spec-five-integration-evidence-deferred-items.md`; `tests/five-integration-evidence-2026-11-10/`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
   summary: Require selector compatibility observations in the private current-owner reader.
   evidence: medium; resumed review BH4. The public reader now refuses false after a concurrent correction; the private reader still accepts selectorCompatibilityObserved=false in the parent probe. Preserve the other session correction and defer only the remaining private-reader issue. Parent probes and full triage: `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to the source spec.
+  status: done 2026-11-10
+  resolution: The private reader requires selectorCompatibilityObserved to be the boolean true; absent, false, numeric and string substitutes are refused.
+  verification: `spec-five-integration-evidence-deferred-items.md`; `tests/five-integration-evidence-2026-11-10/`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
   summary: Reject boolean and non-integer sequence/count representations in integration evidence.
   evidence: medium; resumed review BH5. Parent probes confirm both public/private readers accept metadataSequence=true and eventCount=1.0. Equality to len(events) does not enforce the advertised integer representation. This affects later evidence readers, not the 4.0.4 codec/build proof. Parent probes and full triage: `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to the source spec.
+  status: done 2026-11-10
+  resolution: Both readers require JSON integer eventCount, metadataSequence and sequenceNumber values before exact count/order comparison.
+  verification: `spec-five-integration-evidence-deferred-items.md`; `tests/five-integration-evidence-2026-11-10/`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
   summary: Bound public runtime and functional observation times to their recorded execution interval.
   evidence: medium; resumed review BH6. The public reader accepts measuredAtUtc in 2999 and observedAtUtc in 1900; its only measurement ordering check compares image start with measurement. The offline cohort job does not use this reader. Parent probes and full triage: `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to the source spec.
+  status: done 2026-11-10
+  resolution: Both readers bind functional observation time to the current persistence case; the public reader additionally requires persistence-case start <= image measurement <= functional observation and preserves exact image-start ordering.
+  verification: `spec-five-integration-evidence-deferred-items.md`; `tests/five-integration-evidence-2026-11-10/`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
   summary: Enforce loaded-process and copied-output assembly scopes in the private evidence reader.
   evidence: medium; resumed review BH7. Parent probes relabel both inventories copied-static-image without refusal. The public reader enforces their distinct scopes, while the private reader currently checks identities/hashes alone. Parent probes and full triage: `tests/eventstore-4.0.4-resumed-2026-11-09/receipt.json` relative to the source spec.
+  status: done 2026-11-10
+  resolution: The private reader requires bounded nonempty inventories with loaded-native-test-process and copied-native-composition-output scopes, preserving existing identity/hash checks.
+  verification: `spec-five-integration-evidence-deferred-items.md`; `tests/five-integration-evidence-2026-11-10/`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-qualify-eventstore-4.0.4-for-mcpcli.md`
   summary: Determine whether lifecycle metadata can reach a symlinked parent after directory admission.

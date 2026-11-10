@@ -1,6 +1,6 @@
 """Synthetic artifact/byte controls only; no GitHub identity, Docker, native run or qualification credit."""
 import copy
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import hashlib
 import importlib.util
 import json
@@ -65,7 +65,7 @@ class PublicPackageEvidenceTests(unittest.TestCase):
         f.functional.update(profile=public.PROFILE, currentOwner=None, selectorCompatibilityObserved=True)
         platform = dict(commit=public.PLATFORM, compositionCommit=public.PLATFORM, checkoutCommit=public.PLATFORM,
                         catalogCommit=public.BUILDS, releaseTag="v1.9.0")
-        now = datetime.now(timezone.utc)
+        now = datetime.fromisoformat("2026-11-05T10:00:05+00:00")
         f.functional["publicRuntime"] = dict(kind="running-owned-public-parties-image", profile=public.PROFILE,
             ownerRunId=f.owner["runId"], ownerAttemptId=f.owner["attemptId"], environmentId=f.owner["environmentId"],
             revision=self.expected["source"], mappingHash=f.functional["mappingHash"], executionContext=f.context,
@@ -82,11 +82,7 @@ class PublicPackageEvidenceTests(unittest.TestCase):
         for field in ("loaded", "copied"):
             for item in f.loaded[field]: item["scope"] = "loaded-native-test-process" if field == "loaded" else "copied-native-composition-output"
         f.write("loaded-assemblies-" + f.owner["runId"] + ".json", f.loaded)
-        report = ET.Element("TestRun")
-        results = ET.SubElement(report, "Results")
-        for name in XUNIT_403_TRX_CASE_NAMES: ET.SubElement(results, "UnitTestResult", testName=name, outcome="Passed")
-        ET.SubElement(ET.SubElement(report, "ResultSummary"), "Counters", total="28", executed="28", passed="28", failed="0")
-        f.native = ET.tostring(report)
+        f.native = private_fixture.native_report(XUNIT_403_TRX_CASE_NAMES)
         f.seal()
 
     def check(self):
@@ -97,6 +93,60 @@ class PublicPackageEvidenceTests(unittest.TestCase):
         self.assertEqual(result["nativeCases"], 28)
         self.assertEqual(result["profile"], "platform-package")
         self.assertFalse(result["qualificationCredit"])
+
+    def test_counts_and_event_sequences_require_json_integers(self):
+        f = self.fixture
+        for field in ("eventCount", "metadataSequence", "sequenceNumber"):
+            target = f.functional["events"][0] if field == "sequenceNumber" else f.functional
+            for value in (True, False, 1.0, "1", None, 0, -1, 2):
+                with self.subTest(field=field, value=value):
+                    target[field] = value
+                    f.seal()
+                    with self.assertRaisesRegex(ValueError, "persisted sequence|event identity"): self.check()
+            target[field] = 1
+        f.seal()
+        self.assertEqual(self.check()["nativeCases"], 28)
+
+    def test_native_times_and_execution_identities_are_bound_after_resealing(self):
+        private_fixture.check_native_refusals(self, self.fixture, self.check)
+
+    def test_precise_execution_boundaries_deadline_shapes_and_report_processing(self):
+        private_fixture.check_execution_boundaries(self, self.fixture, self.check)
+
+    def test_image_measurement_occurs_inside_persistence_even_for_an_earlier_image_start(self):
+        f = self.fixture
+        runtime = f.functional["publicRuntime"]
+        runtime["image"]["startedAt"] = "2026-11-05T10:00:00Z"
+        runtime["measuredAtUtc"] = "2026-11-05T10:00:01Z"
+        f.seal()
+        with self.assertRaisesRegex(ValueError, "measurement lies outside"): self.check()
+        runtime["measuredAtUtc"] = "2026-11-05T10:00:06.0000001Z"
+        f.seal()
+        with self.assertRaisesRegex(ValueError, "measurement lies outside"): self.check()
+        runtime["measuredAtUtc"] = "2026-11-05T10:00:05.0000000Z"
+        runtime["image"]["startedAt"] = "2026-11-05T10:00:05.000000001Z"
+        f.seal()
+        with self.assertRaisesRegex(ValueError, "started after its measurement"): self.check()
+
+    def test_public_observations_are_inside_the_issued_execution_and_ordered(self):
+        f = self.fixture
+        original = copy.deepcopy(f.functional)
+        for field in ("observedAtUtc", "measuredAtUtc"):
+            for value in (None, "1900-01-01T00:00:00Z", "2999-01-01T00:00:00Z", "2026-11-05T10:00:10Z",
+                          "2026-11-05T10:00:01Z", "2026-11-05T10:00:05", "not-a-time"):
+                with self.subTest(field=field, value=value):
+                    f.functional = copy.deepcopy(original)
+                    target = f.functional if field == "observedAtUtc" else f.functional["publicRuntime"]
+                    target[field] = value
+                    f.seal()
+                    with self.assertRaises(ValueError): self.check()
+        f.functional = copy.deepcopy(original)
+        f.functional["publicRuntime"]["measuredAtUtc"] = "2026-11-05T10:00:06.000001Z"
+        f.seal()
+        with self.assertRaises(ValueError): self.check()
+        f.functional = original
+        f.seal()
+        self.check()
 
     def test_actual_xunit403_escaped_case_refuses_missing_duplicate_and_wrong_parameters(self):
         # Written literally from the current reporter, not generated by the validator.

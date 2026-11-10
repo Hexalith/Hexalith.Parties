@@ -1,5 +1,7 @@
 """Boundary fixtures for the mandatory current-workflow artifact gate."""
 import copy
+from datetime import datetime, timedelta
+import gzip
 import hashlib
 import importlib.util
 import json
@@ -9,10 +11,121 @@ from unittest import mock
 from pathlib import Path
 import tempfile
 import unittest
+import uuid
+import xml.etree.ElementTree as ET
 
 SPEC = importlib.util.spec_from_file_location("current_owner", Path(__file__).with_name("verify-current-owner-integration.py"))
 verify = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(verify)
+
+
+def native_report(names):
+    """Use the real MTP TRX ownership/timing shape with deterministic synthetic IDs."""
+    report = ET.Element("TestRun", id=str(uuid.UUID(int=1000)), name="native")
+    ET.SubElement(report, "Times", creation="2026-11-05T10:00:01Z", queuing="2026-11-05T10:00:01Z",
+                  start="2026-11-05T10:00:01Z", finish="2026-11-05T10:00:08Z")
+    results = ET.SubElement(report, "Results")
+    definitions = ET.SubElement(report, "TestDefinitions")
+    for index, name in enumerate(sorted(names), 1):
+        identity = str(uuid.UUID(int=index))
+        ET.SubElement(results, "UnitTestResult", testName=name, outcome="Passed", testId=identity, executionId=identity,
+                      startTime="2026-11-05T10:00:02Z", endTime="2026-11-05T10:00:07Z")
+        definition = ET.SubElement(definitions, "UnitTest", name=name, id=identity)
+        ET.SubElement(definition, "Execution", id=identity)
+    ET.SubElement(ET.SubElement(report, "ResultSummary"), "Counters", total=str(len(names)),
+                  executed=str(len(names)), passed=str(len(names)), failed="0")
+    return ET.tostring(report)
+
+
+def check_native_refusals(test, fixture, check):
+    """Reseal independently invalid report timing and execution references through each full reader."""
+    original = fixture.native
+    for mutation in ("old-times", "missing-times", "duplicate-times", "missing-run-id", "missing-execution-id",
+                     "foreign-execution-id", "duplicate-execution-id", "foreign-test-id", "foreign-definition-name",
+                     "missing-definition", "outside-case", "reversed-case", "naive-times", "future-times", "outside-persistence"):
+        with test.subTest(mutation=mutation):
+            tree = ET.fromstring(original)
+            times = tree.find("Times")
+            results = tree.find("Results")
+            definitions = tree.find("TestDefinitions")
+            if mutation in ("old-times", "future-times"):
+                for node in tree.iter():
+                    for key, value in list(node.attrib.items()):
+                        if key in ("creation", "queuing", "start", "finish", "startTime", "endTime"):
+                            node.set(key, value.replace("2026", "1900" if mutation == "old-times" else "2999"))
+            if mutation == "missing-times": tree.remove(times)
+            if mutation == "duplicate-times": tree.append(copy.deepcopy(times))
+            if mutation == "missing-run-id": del tree.attrib["id"]
+            if mutation == "missing-execution-id": del results[0].attrib["executionId"]
+            if mutation == "foreign-execution-id": results[0].set("executionId", str(uuid.UUID(int=999)))
+            if mutation == "duplicate-execution-id":
+                results[1].set("executionId", results[0].get("executionId"))
+                definitions[1].find("Execution").set("id", results[0].get("executionId"))
+            if mutation == "foreign-test-id": results[0].set("testId", str(uuid.UUID(int=999)))
+            if mutation == "foreign-definition-name": definitions[0].set("name", "Foreign.Test")
+            if mutation == "missing-definition": definitions.remove(definitions[0])
+            if mutation == "outside-case": results[0].set("startTime", "2026-11-05T09:59:59Z")
+            if mutation == "reversed-case": results[0].set("endTime", "2026-11-05T10:00:01Z")
+            if mutation == "naive-times": times.set("start", "2026-11-05T10:00:01")
+            if mutation == "outside-persistence":
+                next(case for case in results if case.get("testName") == verify.PERSISTENCE_CASE).set("endTime", "2026-11-05T10:00:04Z")
+            fixture.native = ET.tostring(tree)
+            fixture.seal()
+            with test.assertRaises(ValueError): check()
+    fixture.native = original
+    fixture.seal()
+    check()
+
+
+def check_execution_boundaries(test, fixture, check):
+    """Exercise exact clock boundaries and the runner's separate report-processing lifetime."""
+    original_result = copy.deepcopy(fixture.result)
+    original_native = fixture.native
+    original_observation = fixture.functional["observedAtUtc"]
+    for field in ("deadlines", "execution"):
+        for value in (None, [], "invalid", True, 1):
+            with test.subTest(field=field, value=value):
+                fixture.result = copy.deepcopy(original_result)
+                target = fixture.result["bindings"] if field == "deadlines" else fixture.result["bindings"]["deadlines"]
+                target[field] = value
+                fixture.seal()
+                with test.assertRaisesRegex(ValueError, "issued execution timing"): check()
+    for seconds in (None, True, "120", 0, -1, 1, 120.0000001):
+        with test.subTest(effectiveSeconds=seconds):
+            fixture.result = copy.deepcopy(original_result)
+            fixture.result["bindings"]["deadlines"]["execution"]["effectiveSeconds"] = seconds
+            fixture.seal()
+            with test.assertRaisesRegex(ValueError, "deadline is inconsistent"): check()
+    for field, value in (("expiresAt", "2026-11-05T09:59:59Z"), ("effectiveSeconds", 120),
+                         ("configurationContentIdentity", "sha256:" + "0" * 64)):
+        with test.subTest(undeclaredField=field):
+            fixture.result = copy.deepcopy(original_result)
+            fixture.result["bindings"]["deadlines"]["execution"] = dict(state="not-declared", origin="test-execution-started",
+                originAt="2026-11-05T10:00:00Z", **{field: value})
+            fixture.seal()
+            with test.assertRaisesRegex(ValueError, "undeclared execution"): check()
+    fixture.result = copy.deepcopy(original_result)
+    timing = fixture.result["bindings"]["deadlines"]["execution"]
+    timing.update(effectiveSeconds=8, expiresAt="2026-11-05T10:00:08Z")
+    fixture.seal()
+    check()  # Child/report finished by expiry; terminal recording legitimately follows at :09.
+    timing.update(effectiveSeconds=7, expiresAt="2026-11-05T10:00:07Z")
+    fixture.seal()
+    with test.assertRaisesRegex(ValueError, "native execution exceeded"): check()
+    fixture.result = original_result
+    tree = ET.fromstring(original_native)
+    case = next(item for item in tree.iter("UnitTestResult") if item.get("testName") == verify.PERSISTENCE_CASE)
+    case.set("endTime", "2026-11-05T10:00:06.0000001Z")
+    fixture.native = ET.tostring(tree)
+    fixture.functional["observedAtUtc"] = "2026-11-05T10:00:06.0000002Z"
+    fixture.seal()
+    with test.assertRaisesRegex(ValueError, "outside native persistence"): check()
+    fixture.functional["observedAtUtc"] = "2026-11-05T11:00:06.0000001+01:00"
+    fixture.seal()
+    check()
+    fixture.native = original_native
+    fixture.functional["observedAtUtc"] = original_observation
+    fixture.seal()
 
 
 class CurrentOwnerEvidenceTests(unittest.TestCase):
@@ -30,13 +143,16 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
         for name in ("execution.json", "cleanup.json"):
             self.write(name, phase)
         self.result = dict(schema="hexalith.test-result.v1", policyId="hexalith.platform.candidate-and-attachment-policy.v1",
-            bindings=dict(run=self.owner, environment=dict(mode="package", executionContext=self.context), candidate=dict(classification="baseline-only")),
-            terminal=dict(outcome="passed", cause="tests-completed"), termination=dict(state="not-yet-populated"),
+            bindings=dict(run=self.owner, environment=dict(mode="package", executionContext=self.context), candidate=dict(classification="baseline-only"),
+                          deadlines=dict(execution=dict(state="populated", origin="test-execution-started", originAt="2026-11-05T10:00:00Z",
+                                                        effectiveSeconds=120, expiresAt="2026-11-05T10:02:00Z"))),
+            terminal=dict(outcome="passed", cause="tests-completed", recordedAt="2026-11-05T10:00:09Z"), termination=dict(state="not-yet-populated"),
             cleanup=dict(state="populated", disposition="complete", failures=[], leftoverResourceIds=[]), diagnostics=[])
         self.functional = dict(**{key: self.owner[key] for key in ("runId", "attemptId", "environmentId")}, profile=verify.PROFILE,
             revision=self.expected["source"], mappingHash="d" * 64, executionContext=self.context, status="functional-observations-passed", qualificationCredit=False,
             aggregate=dict(tenantId="g4t-fixture", domain="party", aggregateId="party1"), commandId="command1", eventCount=1, metadataSequence=1,
-            projection=dict(id="party1", freshness="Current", createdAt="2026-11-05T10:00:00Z"), tenantsNativeQueryObserved=True, memoriesRegistryObserved=True)
+            projection=dict(id="party1", freshness="Current", createdAt="2026-11-05T10:00:00Z"), tenantsNativeQueryObserved=True, memoriesRegistryObserved=True,
+            selectorCompatibilityObserved=True, observedAtUtc="2026-11-05T10:00:06Z")
         self.functional["events"] = [dict(identity=dict(
             tenantId="g4t-fixture", domain="party", aggregateId="party1", actorId="g4t-fixture:party:party1",
             eventStreamKeyPrefix="g4t-fixture:party:party1:events:", metadataKey="g4t-fixture:party:party1:metadata",
@@ -53,10 +169,10 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
         self.loaded = dict(kind="real-native-sdk-assemblies", profile=verify.PROFILE, ownerRunId=self.owner["runId"], ownerAttemptId=self.owner["attemptId"],
             environmentId=self.owner["environmentId"], revision=self.expected["source"], mappingHash="d" * 64, executionContext=self.context)
         assemblies = [dict(identity=name + f", Version={verify.SDK_VERSION}.0, Culture=neutral, PublicKeyToken=null", sha256=digest) for name, digest in verify.SDK.items()]
-        self.loaded.update(loaded=assemblies, copied=copy.deepcopy(assemblies))
+        self.loaded.update(loaded=[dict(item, scope="loaded-native-test-process") for item in assemblies],
+                           copied=[dict(item, scope="copied-native-composition-output") for item in assemblies])
         self.write("loaded-assemblies-" + self.owner["runId"] + ".json", self.loaded)
-        self.native = ('<TestRun><Results>' + ''.join('<UnitTestResult testName="' + name + '" outcome="Passed"/>' for name in sorted(verify.CASES))
-                       + '</Results><ResultSummary><Counters total="2" executed="2" passed="2" failed="0"/></ResultSummary></TestRun>').encode()
+        self.native = native_report(verify.CASES)
         self.seal()
 
     def write(self, name, value):
@@ -82,6 +198,94 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
     def test_current_same_run_evidence_passes_without_qualification_credit(self):
         self.assertEqual(self.check()["nativeCases"], 2)
         self.assertFalse(self.check()["qualificationCredit"])
+
+    def test_selector_proof_requires_the_boolean_true(self):
+        for value in (None, False, "true", 1):
+            with self.subTest(value=value):
+                self.functional["selectorCompatibilityObserved"] = value
+                self.seal()
+                with self.assertRaisesRegex(ValueError, "selector compatibility"): self.check()
+        del self.functional["selectorCompatibilityObserved"]
+        self.seal()
+        with self.assertRaisesRegex(ValueError, "selector compatibility"): self.check()
+
+    def test_native_times_and_execution_identities_are_bound_after_resealing(self):
+        check_native_refusals(self, self, self.check)
+
+    def test_precise_execution_boundaries_deadline_shapes_and_report_processing(self):
+        check_execution_boundaries(self, self, self.check)
+
+    def test_execution_interval_requires_issued_offset_times_and_completed_order(self):
+        original = copy.deepcopy(self.result)
+        for mutation in ("missing", "wrong-origin", "unpopulated", "missing-origin", "naive-origin", "reversed", "future-terminal"):
+            with self.subTest(mutation=mutation):
+                self.result = copy.deepcopy(original)
+                timing = self.result["bindings"]["deadlines"]["execution"]
+                if mutation == "missing": del self.result["bindings"]["deadlines"]
+                if mutation == "wrong-origin": timing["origin"] = "environment-requested"
+                if mutation == "unpopulated": timing["state"] = "not-yet-populated"
+                if mutation == "missing-origin": timing.pop("originAt")
+                if mutation == "naive-origin": timing["originAt"] = "2026-11-05T10:00:00"
+                if mutation == "reversed": self.result["terminal"]["recordedAt"] = "2026-11-05T09:59:59Z"
+                if mutation == "future-terminal": self.result["terminal"]["recordedAt"] = "2999-11-05T10:00:00Z"
+                self.seal()
+                with self.assertRaises(ValueError): self.check()
+        self.result = original
+        self.seal()
+        self.check()
+
+    def test_retained_real_namespaced_xunit403_report_passes_timing_and_identity_checks(self):
+        path = Path(__file__).resolve().parents[1] / ("_bmad-output/implementation-artifacts/tests/"
+            "published-catalog-sdk-adoption-2026-11-09/completed-sdk420-v3.1.1/ordinary-native.trx.gz")
+        report = ET.fromstring(gzip.decompress(path.read_bytes()))
+        cases = [item for item in report.iter() if item.tag.rsplit("}", 1)[-1] == "UnitTestResult"]
+        times = next(item for item in report if item.tag.rsplit("}", 1)[-1] == "Times")
+        start = datetime.fromisoformat(times.get("start")) - timedelta(seconds=1)
+        terminal = datetime.fromisoformat(times.get("finish")) + timedelta(seconds=1)
+        persistence = next(case for case in cases if case.get("testName") == verify.PERSISTENCE_CASE)
+        observed = persistence.get("startTime")
+        result = dict(bindings=dict(deadlines=dict(execution=dict(state="populated", origin="test-execution-started",
+            originAt=start.isoformat(), effectiveSeconds=300, expiresAt=(start + timedelta(seconds=300)).isoformat()))),
+            terminal=dict(recordedAt=terminal.isoformat()))
+        self.assertEqual(verify.native_execution(report, cases, result, dict(observedAtUtc=observed)),
+                         (verify.observation_timestamp(observed), verify.observation_timestamp(observed)))
+        # This is reporter compatibility only, not a claim of fresh runtime execution.
+
+    def test_equivalent_offset_and_unbounded_declared_execution_are_supported(self):
+        timing = self.result["bindings"]["deadlines"]["execution"]
+        timing.update(state="not-declared", originAt="2026-11-05T11:00:00+01:00")
+        timing.pop("expiresAt")
+        timing.pop("effectiveSeconds")
+        self.functional["observedAtUtc"] = "2026-11-05T11:00:06.0000000+01:00"
+        self.seal()
+        self.check()
+
+    def test_counts_and_event_sequences_require_json_integers(self):
+        for field in ("eventCount", "metadataSequence", "sequenceNumber"):
+            target = self.functional["events"][0] if field == "sequenceNumber" else self.functional
+            for value in (True, False, 1.0, "1", None, 0, -1, 2):
+                with self.subTest(field=field, value=value):
+                    target[field] = value
+                    self.seal()
+                    with self.assertRaisesRegex(ValueError, "persisted sequence|event identity"): self.check()
+            target[field] = 1
+        self.seal()
+        self.assertEqual(self.check()["nativeCases"], 2)
+
+    def test_private_assembly_scopes_and_bounded_inventory_are_required(self):
+        for field in ("loaded", "copied"):
+            original = copy.deepcopy(self.loaded[field])
+            for value in ([], None, {}, original * 17,
+                          [dict(item, scope="copied-static-image") for item in original],
+                          [{key: value for key, value in item.items() if key != "scope"} for item in original],
+                          [None]):
+                with self.subTest(field=field, value=value):
+                    self.loaded[field] = value
+                    self.write("loaded-assemblies-" + self.owner["runId"] + ".json", self.loaded)
+                    with self.assertRaisesRegex(ValueError, "inventory|role differs"): self.check()
+            self.loaded[field] = original
+        self.write("loaded-assemblies-" + self.owner["runId"] + ".json", self.loaded)
+        self.check()
 
     def test_historical_private_package_version_cannot_claim_the_current_sdk_cohort(self):
         archives = self.functional["currentOwner"]["packageArchives"]
