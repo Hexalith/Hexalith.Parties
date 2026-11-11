@@ -7,7 +7,7 @@ on:
         description: Explicit real-service scenario; cancellation is performed by the operator
         required: true
         type: choice
-        options: [matrix, focused-ci, cancel-startup, cancel-execution]
+        options: [matrix, focused-ci, passing, failing, retry-with-peer, partial-startup, collision, startup-timeout, owner-cancellation, attached-failure, hold-expiry, invalid-handoff, cancel-startup, cancel-execution, failure-then-cancellation]
 
 permissions:
   contents: read
@@ -67,8 +67,12 @@ jobs:
           global-json-file: global.json
       - name: Prepare the actual pinned package tool and catalog
         run: python3 -B references/Hexalith.Builds/Github/prepare-module-build/prepare_module_build.py --manifest module/hexalith.module-manifest.v2.json
-      - name: Build the explicit declared lifecycle suite
-        run: dotnet build tests/Hexalith.Parties.Platform.LifecycleTests/Hexalith.Parties.Platform.LifecycleTests.csproj --configuration Release -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true
+      - name: Build the explicit declared lifecycle suites
+        run: |
+          dotnet build tests/Hexalith.Parties.Platform.LifecycleTests/Hexalith.Parties.Platform.LifecycleTests.csproj --configuration Release -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true
+      - name: Build the explicit attached lifecycle suite when selected
+        if: ${{ contains(fromJSON('["matrix","owner-cancellation","attached-failure","hold-expiry","cancel-execution"]'), inputs.scenario) }}
+        run: dotnet build tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleTests.csproj --configuration Release -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true
       - name: Read verified catalog toolchain versions
         run: |
           python3 - <<'PY'
@@ -189,6 +193,17 @@ jobs:
         env:
           DOCKER_CONFIG: ${{ runner.temp }}/hexalith-lifecycle-registry.reader
         run: python3 -B scripts/qualify-disposable-ci.py focused-ci
+      - name: Exercise one explicitly selected lifecycle case
+        if: ${{ inputs.scenario != 'matrix' && inputs.scenario != 'focused-ci' && inputs.scenario != 'cancel-startup' && inputs.scenario != 'cancel-execution' && inputs.scenario != 'failure-then-cancellation' }}
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/hexalith-lifecycle-registry.reader
+          SELECTED_SCENARIO: ${{ inputs.scenario }}
+        run: python3 -B scripts/qualify-disposable-ci.py "$SELECTED_SCENARIO"
+      - name: Record a durable real failure before operator cancellation
+        if: ${{ inputs.scenario == 'failure-then-cancellation' }}
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/hexalith-lifecycle-registry.reader
+        run: python3 -B scripts/qualify-disposable-ci.py start-cancellation --phase failure
       - name: Observe actual startup cancellation readiness
         if: ${{ inputs.scenario == 'cancel-startup' }}
         env:
@@ -200,7 +215,7 @@ jobs:
           DOCKER_CONFIG: ${{ runner.temp }}/hexalith-lifecycle-registry.reader
         run: python3 -B scripts/qualify-disposable-ci.py start-cancellation --phase execution
       - name: Publish the actual ready owner before operator cancellation
-        if: ${{ inputs.scenario == 'cancel-startup' || inputs.scenario == 'cancel-execution' }}
+        if: ${{ inputs.scenario == 'cancel-startup' || inputs.scenario == 'cancel-execution' || inputs.scenario == 'failure-then-cancellation' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: lifecycle-cancellation-ready
@@ -209,7 +224,7 @@ jobs:
           retention-days: 14
       # The runner signals only this step's own process; exec keeps the controller as that process.
       - name: Await parent cancellation of this exact ready run
-        if: ${{ inputs.scenario == 'cancel-startup' || inputs.scenario == 'cancel-execution' }}
+        if: ${{ inputs.scenario == 'cancel-startup' || inputs.scenario == 'cancel-execution' || inputs.scenario == 'failure-then-cancellation' }}
         run: exec python3 -B scripts/qualify-disposable-ci.py wait-cancellation
       - name: Independently finalize every exact same-job owner
         if: always()

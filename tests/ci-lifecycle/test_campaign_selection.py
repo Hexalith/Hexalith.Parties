@@ -20,6 +20,10 @@ class CampaignSelectionTests(unittest.TestCase):
         value.ordinary = Mock()
         value.retry_with_peer = Mock()
         value.partial_startup = Mock()
+        value.collision = Mock()
+        value.startup_timeout = Mock()
+        value.attached_case = Mock()
+        value.invalid_handoff = Mock()
         value.finalize = Mock(return_value=0)
         return value
 
@@ -33,7 +37,7 @@ class CampaignSelectionTests(unittest.TestCase):
         self.assertEqual(campaign['selection'], 'focused-ci')
         self.assertEqual(campaign['completedCases'], campaign['selectedCases'])
         self.assertEqual(campaign['selectedRequiredCount'], 3)
-        self.assertEqual(campaign['fullRequiredCount'], 4)
+        self.assertEqual(campaign['fullRequiredCount'], len(Q.MATRIX_CASES))
         self.assertFalse(campaign['fullMatrixPassed'])
         self.assertEqual(campaign['status'], 'selected-passed')
         self.assertFalse(campaign['candidateAcceptance'])

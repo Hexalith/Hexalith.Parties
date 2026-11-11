@@ -130,8 +130,8 @@ actionlint .github/workflows/ci-lifecycle-qualification.yml
 Build the explicit LifecycleTests project only after supported pinned package
 preparation, using Release/package imports. Both ordinary solution builds keep
 this opt-in qualification project excluded. Record every genuine first outcome,
-including dependency or public API refusals. No schema, production fault hook,
-local retention policy, accepted pin or attached-suite execution is introduced.
+including dependency or public API refusals. No schema, production fault hook, local retention policy or accepted pin is changed.
+The opt-in attached lifecycle suite described below requires compatible published prerequisites.
 
 Native SDK diagnostics use the published G4 handoff, verified source mapping, and exact
 descriptor/plan/owner state. After the real persistence assertions, they separately measure
@@ -192,7 +192,7 @@ The controller records `requiredCases`, `selectedCases`, `completedCases`, their
 counts and the finalization result in the durable campaign journal. A failed or
 missing selected case and an incomplete finalizer keep the campaign incomplete.
 `selected-passed` covers only that selection. `fullMatrixPassed` can become true
-only for all four manual matrix groups; neither field supplies complete local
+only for all ten selected matrix cases; neither field supplies complete local
 lifecycle qualification, Platform tool acceptance or candidate acceptance.
 Startup and execution cancellation remain separate actual workflow runs and keep
 the ready-artifact-before-cancel protocol.
@@ -212,3 +212,77 @@ campaign, select one exact compatible committed input set and run the owning
 checks. These changes preserve the existing Story 2.8 tool-only signal, pinned
 digest-verification and scoped-reader controls after integration with current main. No workflow dispatch or accepted pin change is
 implied by this preparation. Verified setup-cache reuse remains deferred.
+
+## Story 2.11 part 3 — complete lifecycle caller
+
+The preparation extends the real caller without qualifying Story 2.10. It is
+based on Builds `b1681870d0b08a5fe103133214c67fda7a449eb1`, EventStore
+`b882c1005050aaebfa70618b5a72c1c8be452281`, and Parties
+`fc9ea3f3b7b8544f8a8f7b8f7912ceb45489766c`. The accompanying
+source changes need compatible Builds and EventStore Testing releases before the
+unchanged pinned package workflow can execute them. No package, workflow or pin
+has been published or dispatched by this preparation.
+
+Select `matrix`, `focused-ci`, or one exact case through the existing workflow
+input. The complete matrix now requires ten cases:
+
+| Case | Required actual observation |
+| --- | --- |
+| `passing`, `failing` | Existing owner persistence assertions and first outcomes, admission/withdrawal, exact cleanup/retry. |
+| `retry-with-peer` | Existing two real metadata-lock refusals, withdrawal before teardown and unchanged active peer. |
+| `partial-startup` | Existing exact Starting AppHost interruption and recovery. |
+| `collision` | A challenger requests the live owner's EventStore endpoint through `--eventstore-port`; only `HXR031` naming that owner passes, with owner and peer unchanged. |
+| `startup-timeout` | Pause the exact Starting AppHost until its original finite deadline; retain the failed startup cause, clock, actual duration and unchanged override through exact cleanup. |
+| `owner-cancellation` | Cancel the exact owner command with a running attached child; prove withdrawal and terminated work/access while the owner's containers still exist. |
+| `attached-failure` | Release the actual attached child to intentionally fail; preserve the owner's independent successful outcome and CI cleanup. |
+| `hold-expiry` | A running real attached child reaches its original 120-second expiry; require withdrawn/hold-expired, terminated work/access, unchanged peer, and refused expired-lineage reconnect. |
+| `invalid-handoff` | End an actual hold, then refuse that lineage and unknown lineage without adding an admission or starting a qualifying fixture. SDK controls additionally cover expired/foreign/mismatched snapshots before clients. |
+
+The separate `attached-lifecycle-package` suite uses only shared EventStore
+Testing clients. It performs bounded authenticated Tenants and Memories reads,
+publishes an atomic run/owner/environment/profile/lineage/expiry/process marker,
+then waits finitely for `wait`, `pass` or `fail` controls. SDK request cancellation
+is bounded by the original hold expiry. It does not use the owner-only native
+diagnostic binder or duplicate SDK credential validation. Both solutions exclude
+it from ordinary builds; the manual workflow builds it explicitly in
+Release/package mode. The owner's original persistence assertions remain required.
+
+Every attached CLI launch is journaled before creation and release through the
+existing process gate. An attachment has no CI owner receipt of its own. Recovery
+uses the exact original owner's receipt, actual job/source/profile/manifest/entry
+identities, the before-launch inventory and one unique new owner-ledger admission.
+Zero admissions after gate release, ambiguous matches, changed lineage/expiry,
+missing results and failed work/access termination remain explicit failures.
+The finalizer attempts every owner even when another owner or attachment fails,
+then independently recovers each attached invocation. It retains the validated
+classified result and content-verified diagnostics/TRX outside removed workspaces;
+private descriptors, endpoint credentials and raw child stderr remain excluded.
+
+`cancel-execution` now requires both the owner persistence checkpoint and a real
+running attached child. `cancel-startup` and `cancel-execution` retain the existing
+ready-artifact-before-operator-cancel protocol. The separate
+`failure-then-cancellation` dispatch first records a durable real failed result,
+then publishes readiness for the operator. It requires the same first failed
+outcome/time through cancellation and cleanup/retry and supplies failure
+preservation evidence only. The operator must retain the exact API request/response
+and actual request time; a runner signal alone cannot prove API ordering. Each
+dispatch remains bound to its exact repository, revision, run, attempt and job.
+
+Local checks are recorded in Platform's
+`_bmad-output/implementation-artifacts/evidence/2-11/part-3/README.md`, including
+exact commands, schema hashes and the matrix-to-test mapping. Local process and
+metadata controls grant no hosted, package, candidate or lifecycle qualification.
+
+The caller requires the actual context-specific withdrawal cause, including
+`ci-job-cancelled` for CI owner cancellation. It observes the original running
+container and process inventory when attached termination is recorded; a stopped,
+missing or restarted resource, or a missed observation window, fails the ordering
+proof. The owner's original CLI exit and diagnostics remain required before any
+cleanup retry. Intentional attached failure must contain the test's run-bound
+assertion marker in its inspected native report. Retention copies the held,
+content-verified buffers through the shared diagnostic allowlist and rejects
+surviving private-file entries, including dangling links.
+
+Only `matrix`, `owner-cancellation`, `attached-failure`, `hold-expiry` and
+`cancel-execution` build the attached fixture. Other selections retain their
+existing prerequisite set.

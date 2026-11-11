@@ -112,7 +112,7 @@ class SignalOrderingTests(unittest.TestCase):
                 signal.raise_signal(signal.SIGTERM)
 
             def owner(self, label):
-                return {'label': label, 'pid': 1, 'birth': '1'}
+                return {'label': label, 'pid': 1, 'birth': '1', 'cancellationPhase': 'startup'}
 
             def cancellation_snapshot(self, item):
                 item['cancellationSnapshot'] = {'observed': True}
@@ -135,7 +135,7 @@ class SignalOrderingTests(unittest.TestCase):
         previous = {number: signal.getsignal(number) for number in (signal.SIGINT, signal.SIGTERM)}
         Q.CANCELLED.clear()
         try:
-            with patch.object(Q, 'Qualification', Constructed), patch.object(sys, 'argv', ['qualify', 'wait-cancellation']):
+            with patch.object(Q, 'Qualification', Constructed), patch.object(Q, 'birth', return_value='1'), patch.object(sys, 'argv', ['qualify', 'wait-cancellation']):
                 self.assertEqual(Q.main(), 1)
         finally:
             for number, handler in previous.items():
@@ -213,10 +213,21 @@ class WorkflowControlTests(unittest.TestCase):
         reader = '${{ runner.temp }}/hexalith-lifecycle-registry.reader'
         for name in ('Exercise real passing failing partial-startup and exact retry scenarios',
                      'Exercise only the explicitly selected CI contract cases',
-                     'Observe actual startup cancellation readiness', 'Observe actual execution cancellation readiness and active hold'):
+                     'Observe actual startup cancellation readiness', 'Observe actual execution cancellation readiness and active hold',
+                     'Exercise one explicitly selected lifecycle case', 'Record a durable real failure before operator cancellation'):
             self.assertIn('DOCKER_CONFIG: ' + reader, self.step(name))
         self.assertIn('HEXALITH_LIFECYCLE_REGISTRY_CONFIG: ' + reader, self.step('Remove the private reader file'))
-        self.assertEqual(self.workflow.count('DOCKER_CONFIG:'), 4)
+        self.assertEqual(self.workflow.count('DOCKER_CONFIG:'), 6)
+
+    def test_attached_project_build_runs_only_for_selections_that_need_it(self):
+        step = self.step('Build the explicit attached lifecycle suite when selected')
+        condition = re.search(r'contains\(fromJSON\(\'([^\']+)\'\), inputs.scenario\)', step)
+        self.assertIsNotNone(condition)
+        selected = set(json.loads(condition[1]))
+        self.assertEqual(selected, {'matrix', 'owner-cancellation', 'attached-failure', 'hold-expiry', 'cancel-execution'})
+        for existing in ('focused-ci', 'passing', 'failing', 'retry-with-peer', 'partial-startup', 'collision', 'startup-timeout', 'invalid-handoff', 'cancel-startup', 'failure-then-cancellation'):
+            self.assertNotIn(existing, selected)
+        self.assertNotIn('AttachedLifecycleTests', self.step('Build the explicit declared lifecycle suites'))
 
     def test_toolchain_versions_and_digests_refuse_before_any_download(self):
         body = self.step('Read verified catalog toolchain versions').split("python3 - <<'PY'\n", 1)[1].split('\n          PY', 1)[0]

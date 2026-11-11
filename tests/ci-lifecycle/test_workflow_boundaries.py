@@ -92,7 +92,9 @@ class WorkflowBoundaryTests(unittest.TestCase):
 
     def test_focused_selection_keeps_full_matrix_and_cancellation_protocol_distinct(self):
         workflow = (ROOT / '.github/workflows/ci-lifecycle-qualification.yml').read_text()
-        self.assertIn('options: [matrix, focused-ci, cancel-startup, cancel-execution]', workflow)
+        self.assertIn('failure-then-cancellation]', workflow)
+        self.assertIn('owner-cancellation, attached-failure, hold-expiry, invalid-handoff', workflow)
+        self.assertIn('start-cancellation --phase failure', workflow)
         self.assertIn('scripts/qualify-disposable-ci.py focused-ci', workflow)
         self.assertIn('scripts/qualify-disposable-ci.py matrix', workflow)
         self.assertLess(workflow.index('- name: Test the lifecycle controller'),

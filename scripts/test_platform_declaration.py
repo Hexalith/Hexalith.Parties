@@ -35,11 +35,13 @@ class PlatformDeclarationTests(unittest.TestCase):
         suites = module["tests"]
         integration_entry = "tests/Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj"
         lifecycle_entry = "tests/Hexalith.Parties.Platform.LifecycleTests/Hexalith.Parties.Platform.LifecycleTests.csproj"
+        attached_entry = "tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleTests.csproj"
         self.assertEqual([(s["name"], s["mode"], s["entry"]) for s in suites],
                          [("platform-source", "source", integration_entry),
                           ("platform-package", "package", integration_entry),
                           ("platform-current-package", "package", integration_entry),
-                          ("lifecycle-package", "package", lifecycle_entry)])
+                          ("lifecycle-package", "package", lifecycle_entry),
+                          ("attached-lifecycle-package", "package", attached_entry)])
         for suite in suites:
             self.assertEqual(suite["executor"], "mtp")
             self.assertEqual(suite["reportFormat"], "trx")
@@ -50,6 +52,18 @@ class PlatformDeclarationTests(unittest.TestCase):
             self.assertNotIn("NSubstitute", text)
             if suite["name"] in ("platform-source", "platform-package", "platform-current-package"):
                 self.assertIn("Hexalith.EventStore.Testing.Integration", text)
+            elif suite["name"] == "attached-lifecycle-package":
+                self.assertIn('PackageReference Include="Hexalith.EventStore.Testing"', text)
+                self.assertNotIn("Platform.IntegrationTests.csproj", text)
+                attached = project.with_name("AttachedLifecycleQualificationTests.cs").read_text()
+                self.assertIn("TestEnvironmentDescriptorReader.ReadFromEnvironment()", attached)
+                self.assertIn("descriptor.RequestCancellation", attached)
+                self.assertIn("CreateDaprInvocationClient", attached)
+                self.assertNotIn("NativeDiagnosticBinding", attached)
+                self.assertNotIn("Assert.Skip", attached)
+                self.assertNotIn("BindCredentials", attached)
+                for solution in ("Hexalith.Parties.slnx", "Hexalith.Parties.Standalone.slnx"):
+                    self.assertIn(f'<Project Path="{attached_entry}">\n      <Build Project="false" />', (renderer.ROOT / solution).read_text())
             else:
                 self.assertEqual(suite["name"], "lifecycle-package")
                 self.assertIn('<ProjectReference Include="../Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj" />', text)

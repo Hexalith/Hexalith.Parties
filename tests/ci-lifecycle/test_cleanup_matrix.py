@@ -176,6 +176,10 @@ class CleanupMatrixTests(unittest.TestCase):
             value.ordinary = Mock(side_effect=first)
             value.retry_with_peer = Mock()
             value.partial_startup = Mock()
+            value.collision = Mock()
+            value.startup_timeout = Mock()
+            value.attached_case = Mock()
+            value.invalid_handoff = Mock()
             attempted = []
             def finalize(item, status, issued):
                 attempted.append(item['label'])
@@ -218,6 +222,10 @@ class CleanupMatrixTests(unittest.TestCase):
             value.ordinary = Mock(side_effect=first)
             value.retry_with_peer = Mock()
             value.partial_startup = Mock()
+            value.collision = Mock()
+            value.startup_timeout = Mock()
+            value.attached_case = Mock()
+            value.invalid_handoff = Mock()
             value.finalize = Mock(side_effect=OSError('private later payload'))
             with self.assertRaises(TimeoutError) as caught:
                 Q.run_matrix(value)
@@ -231,6 +239,10 @@ class CleanupMatrixTests(unittest.TestCase):
             value.ordinary = Mock()
             value.retry_with_peer = Mock()
             value.partial_startup = Mock()
+            value.collision = Mock()
+            value.startup_timeout = Mock()
+            value.attached_case = Mock()
+            value.invalid_handoff = Mock()
             value.finalize = Mock(return_value=1)
             with self.assertRaises(ValueError):
                 Q.run_matrix(value)
@@ -275,6 +287,10 @@ class CleanupMatrixTests(unittest.TestCase):
             value.ordinary = Mock(side_effect=first)
             value.retry_with_peer = Mock()
             value.partial_startup = Mock()
+            value.collision = Mock()
+            value.startup_timeout = Mock()
+            value.attached_case = Mock()
+            value.invalid_handoff = Mock()
             value.finalize = Mock(return_value=1)
             actual_observe = value.observe
             def observe(kind, **fields):

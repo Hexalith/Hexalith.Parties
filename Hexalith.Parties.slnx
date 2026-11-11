@@ -87,6 +87,9 @@
     <Project Path="tests/Hexalith.Parties.Platform.LifecycleTests/Hexalith.Parties.Platform.LifecycleTests.csproj">
       <Build Project="false" />
     </Project>
+    <Project Path="tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleTests.csproj">
+      <Build Project="false" />
+    </Project>
     <Project Path="tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj" />

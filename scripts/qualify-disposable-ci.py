@@ -19,6 +19,7 @@ import subprocess
 import sys
 import time
 from datetime import datetime, timedelta, timezone
+from xml.etree import ElementTree
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -48,8 +49,17 @@ LABEL = 'hexalith.g4.run'
 MANIFEST = 'module/hexalith.module-manifest.v2.json'
 PROFILE = 'lifecycle-package'
 CANCELLED = []
-MATRIX_CASES = ('passing', 'failing', 'retry-with-peer', 'partial-startup')
-SELECTIONS = {'matrix': MATRIX_CASES, 'focused-ci': ('passing', 'failing', 'partial-startup')}
+ATTACHED_PROFILE = 'attached-lifecycle-package'
+ATTACHED_ENTRY = 'tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleTests.csproj'
+POLICY = 'hexalith.platform.candidate-and-attachment-policy.v1'
+INTENTIONAL_FAILURE = 'HEXALITH_ATTACHED_LIFECYCLE_INTENTIONAL_FAILURE:'
+OWNER_LABELS = ('passing', 'failing', 'peer', 'retry', 'partial', 'cancel', 'collision-owner', 'collision-peer',
+                'collision-challenger', 'timeout', 'attached-owner', 'expiry-owner', 'expiry-peer', 'owner-cancel', 'invalid-owner')
+ATTACHED_LABELS = ('attached-failure-child', 'expiry-child', 'owner-cancel-child', 'cancel-child')
+MATRIX_CASES = ('passing', 'failing', 'retry-with-peer', 'partial-startup', 'collision', 'startup-timeout',
+                'owner-cancellation', 'attached-failure', 'hold-expiry', 'invalid-handoff')
+SELECTIONS = {'matrix': MATRIX_CASES, 'focused-ci': ('passing', 'failing', 'partial-startup'),
+              **{case: (case,) for case in MATRIX_CASES}}
 
 
 class QualificationRefusal(ValueError):
@@ -299,8 +309,13 @@ def write(path, value):
     descriptor, and renamed relative to the held parent. A parent that no longer resolves to the held directory is
     refused before the rename, and a destination entry that is not the written file afterwards is removed and refused.
     """
+    return write_retained_bytes(path, (json.dumps(value, indent=2, sort_keys=True) + '\n').encode())
+
+
+def write_retained_bytes(path, body):
+    """Publish already validated retained bytes using the same held-directory atomic boundary."""
+    require(isinstance(body, bytes) and len(body) <= 8_388_608, 'Retained artifact exceeds its bounded byte contract')
     path = Path(path).absolute()
-    body = (json.dumps(value, indent=2, sort_keys=True) + '\n').encode()
     parent = held_directory(path.parent, create=True)
     temporary = None
     try:
@@ -430,14 +445,28 @@ def launch_owner(label):
     journal = read(temporary / 'journal.json')
     require(journal['executionContext'] == context and journal['source'] == os.environ.get('GITHUB_SHA'),
             'Launch intent belongs to another job or revision')
-    matches = [item for item in journal['owners'] if item['label'] == label]
-    require(label in ('passing', 'failing', 'peer', 'retry', 'partial', 'cancel') and len(matches) == 1,
+    matches = [item for item in journal['owners'] + journal.get('attachedRuns', []) if item['label'] == label]
+    require(label in OWNER_LABELS + ATTACHED_LABELS and len(matches) == 1,
             'Launch child has no unique durable controller role')
     item = matches[0]
     for key, filename in [('receipt', 'receipt.json'), ('launchRecord', 'launch.json'), ('publicResult', 'public-result.json')]:
         require(Path(item[key]) == temporary / label / filename, 'Launch intent escaped its exact controller role')
-    return gated_exec(item, TOOL + ['test', '--manifest=' + MANIFEST, '--mode=package', '--profile=' + PROFILE,
-                                  '--ci-owner-receipt=' + item['receipt'], '--output=json'])
+    if item.get('kind') == 'attached-suite':
+        owners = [value for value in journal['owners'] if value['label'] == item['ownerLabel']]
+        require(label in ATTACHED_LABELS and len(owners) == 1, 'Attached launch lacks its unique original owner')
+        owner = HELPER.receipt_owner(Path(owners[0]['receipt']), context)
+        require(item['ownerRunId'] == owner['runId'] and item['environmentId'] == owner['environmentId']
+                and item['executionContext'] == context and item['source'] == journal['source']
+                and item['profile'] == ATTACHED_PROFILE and item['holdSeconds'] in (120, 180, 240),
+                'Attached launch owner/job/profile/hold differs')
+        return gated_exec(item, TOOL + ['test', '--manifest=' + MANIFEST, '--mode=package', '--profile=' + ATTACHED_PROFILE,
+                                       '--attach-to=' + owner['runId'], '--hold-seconds=' + str(item['holdSeconds']), '--output=json'])
+    command = TOOL + ['test', '--manifest=' + MANIFEST, '--mode=package', '--profile=' + PROFILE,
+                      '--ci-owner-receipt=' + item['receipt'], '--output=json']
+    if item.get('eventStorePort') is not None:
+        require(type(item['eventStorePort']) is int and 1 <= item['eventStorePort'] <= 65535, 'Invalid requested endpoint')
+        command.append('--eventstore-port=' + str(item['eventStorePort']))
+    return gated_exec(item, command)
 
 
 def observed_first_outcome(record):
@@ -492,7 +521,7 @@ def utc(value):
 
 def cancellation_terminal(record, item, prior=None):
     first = first_outcome(record)
-    require(item.get('cancellationPhase') in ('startup', 'execution'), 'Missing actual cancellation phase')
+    require(item.get('cancellationPhase') in ('startup', 'execution', 'failure'), 'Missing actual cancellation phase')
     ready = utc(item.get('cancellationReadyAtUtc'))
     signals = item.get('cancellationSignals', [])
     require(signals and all(value.get('signal') in (signal.SIGINT, signal.SIGTERM) for value in signals),
@@ -512,6 +541,28 @@ def cancellation_terminal(record, item, prior=None):
             'Actual cancellation status/outcome differs from the released contract')
     require(received <= terminal <= datetime.now(timezone.utc), 'Cancellation terminal time is outside actual signal/finalization')
     return 'cancelled'
+
+
+
+def startup_timeout_observation(result, original):
+    """Require the exact original finite clock and declaration override, never a replacement timeout."""
+    deadline = result['bindings']['deadlines']['startup']
+    require(result['terminal']['outcome'] == 'failed' and result['terminal']['cause'] == 'startup-timeout'
+            and deadline['origin'] == 'environment-requested'
+            and utc(deadline['originAt']) == utc(original['createdAt'])
+            and utc(deadline['expiresAt']) == utc(original['startupDeadlineUtc'])
+            and deadline['effectiveSeconds'] == original['effectiveDeadlineSeconds']
+            and deadline.get('actualDurationSeconds', -1) >= deadline['effectiveSeconds'],
+            'Original startup timeout timing was not preserved')
+    override = deadline['override']
+    if original['effectiveDeadlineIsOverride']:
+        require(override.get('state') == 'declared' and override.get('requestedSeconds') == original['effectiveDeadlineSeconds']
+                and override.get('justification') == original['effectiveDeadlineJustification'],
+                'Original startup override was not preserved')
+    else:
+        require(override == {'state': 'not-overridden'}, 'Default startup deadline acquired an override')
+    require(utc(result['terminal']['recordedAt']) >= utc(deadline['expiresAt']), 'Startup failure preceded its original timeout')
+    return deadline
 
 
 def active_attachment(attachment, run_id):
@@ -543,6 +594,14 @@ def owned_native_process(pid, run_id):
 
 
 def cancellation_phase(item, owner, context):
+    if item.get('cancellationPhase') == 'failure':
+        first = item.get('failureBeforeCancellation')
+        require(first is not None and first['runId'] == first['ownerId'] == owner['runId']
+                and first['terminalStatus'] == 'failed' and first['terminalOutcome'].get('exitCode') == 'ProductOrTest'
+                and utc(first['terminalAtUtc']) <= utc(item['cancellationReadyAtUtc'])
+                <= min(utc(value['observedAtUtc']) for value in item['cancellationSignals']),
+                'Failure-before-cancellation lacks its original durable ordering')
+        return
     snapshot = item.get('cancellationSnapshot')
     require(isinstance(snapshot, dict) and 'failureType' not in snapshot, 'Actual signal-time owner snapshot is unavailable')
     require(all(snapshot.get(key) == owner[key] for key in ('runId', 'attemptId', 'environmentId'))
@@ -565,6 +624,10 @@ def cancellation_phase(item, owner, context):
     require(checkpoint.get('runId') == owner['runId'] and checkpoint.get('realPersistenceAssertionsPassed') is True
             and snapshot.get('nativeExecution') == {key: checkpoint[key] for key in ('processId', 'birth')},
             'Original native execution is no longer running in the signal-time snapshot')
+    if item.get('attachedExecutionCheckpoint'):
+        expected = item['attachedExecutionCheckpoint']
+        require(snapshot.get('attachedExecution') == {key: expected[key] for key in ('processId', 'birth')},
+                'The actual attached suite was not running at operator cancellation')
     admitted, active = item['admission'], snapshot['admission']
     same_expiry(admitted, active)
     require(active.get('ownerRunId') == owner['runId'] and active.get('environmentId') == owner['environmentId']
@@ -626,7 +689,7 @@ class Qualification:
 
     def checkpoint(self, scenario, step):
         require((scenario, step) in {
-            ('matrix', 'passing'), ('matrix', 'failing'), ('matrix', 'retry-with-peer'), ('matrix', 'partial-startup'),
+            *(( 'matrix', case) for case in MATRIX_CASES),
             ('retry', 'launch-owners'), ('retry', 'ready-owners'), ('retry', 'withdrawal-refusal'),
             ('retry', 'first-outcome'), ('retry', 'resources-after-refusal'), ('retry', 'provisioning-refusal'),
             ('retry', 'withdrawal-before-stop'), ('retry', 'peer-before-retry'), ('retry', 'cleanup-retry'),
@@ -651,7 +714,7 @@ class Qualification:
         return next(item for item in self.journal['owners'] if item['label'] == label)
 
     def issued(self, item):
-        require(item.get('label') in ('passing', 'failing', 'peer', 'retry', 'partial', 'cancel'), 'Unknown controller owner role')
+        require(item.get('label') in OWNER_LABELS, 'Unknown controller owner role')
         expected = self.temporary / item['label'] / 'receipt.json'
         require(Path(item['receipt']) == expected, 'Receipt escaped its issued controller role')
         read_bytes(expected)
@@ -706,6 +769,41 @@ class Qualification:
         require(all(re.fullmatch(r'[0-9a-f]{12,64}', value) for value in identities), 'Docker discovery returned invalid identities')
         return identities
 
+    def running_owner_inventory(self, item):
+        """Observe exact running composed resources; exited containers and terminated/reused processes refuse."""
+        owner = self.issued(item)
+        state = self.state(item)
+        ids = subprocess.check_output(['docker', 'ps', '-q', '--no-trunc', '--filter', f'label={LABEL}={owner["runId"]}'], text=True, timeout=20).split()
+        require(ids and all(re.fullmatch(r'[0-9a-f]{64}', identity) for identity in ids), 'Original running owner containers are unavailable')
+        containers = {}
+        for identity in ids:
+            template = '{{json .Id}}\t{{json .State.Running}}\t{{json .State.StartedAt}}\t{{json (index .Config.Labels "' + LABEL + '")}}'
+            fields = subprocess.check_output(['docker', 'inspect', '--format', template, identity], text=True, timeout=20).strip().split('\t')
+            require(len(fields) == 4, 'Running owner container observation is malformed')
+            observed, running, started, run_id = map(json.loads, fields)
+            require(observed == identity and running is True and run_id == owner['runId'], 'An original owner container stopped or changed')
+            utc(started)
+            containers[identity] = started
+        processes = {'apphost': state.get('appHostProcessId')}
+        for resource in state.get('readinessResults', []):
+            if resource.get('kind') in ('project', 'executable'):
+                require(resource.get('processId') is not None, 'A composed owner resource has no process identity')
+                processes[resource['name']] = resource['processId']
+        observed_processes = {}
+        for name, pid in processes.items():
+            observed_processes[name] = owned_native_process(pid, owner['runId'])
+        return {'containers': containers, 'processes': observed_processes}
+
+    def verify_original_owner_command(self, item, cancelled=False):
+        expected_exit, expected_outcome = (130, 'Cancelled') if cancelled else (0, 'Success')
+        require(self.capture_result(item) == expected_exit, 'Original owner command failed its expected exit contract')
+        public = read(Path(item['publicResult']))
+        require(public.get('runId') == self.issued(item)['runId'] and public.get('outcome', {}).get('exitCode') == expected_outcome,
+                'Original owner command public outcome differs')
+        require(isinstance(public.get('diagnostics'), list) and all(
+            diagnostic.get('category') == 'None' or (cancelled and diagnostic.get('category') == 'Cancelled' and diagnostic.get('ruleId') == 'HXC130')
+            for diagnostic in public['diagnostics']), 'Original owner command reported a cleanup or evidence failure')
+
     def peer_scope(self, item):
         owner = self.issued(item)
         state = self.state(item)
@@ -758,7 +856,7 @@ class Qualification:
         raise TimeoutError('Required real lifecycle checkpoint was not observed within its finite bound')
 
     def recover_launch(self, item):
-        require(item.get('label') in ('passing', 'failing', 'peer', 'retry', 'partial', 'cancel'), 'Unknown launch recovery role')
+        require(item.get('label') in OWNER_LABELS + ATTACHED_LABELS, 'Unknown launch recovery role')
         for key, filename in [('receipt', 'receipt.json'), ('publicResult', 'public-result.json')]:
             require(Path(item[key]) == self.temporary / item['label'] / filename, 'Launch recovery escaped its exact receipt/output role')
         expected = self.temporary / item['label'] / 'launch.json'
@@ -831,18 +929,22 @@ class Qualification:
         self.observe('not-allocated-before-launch-gate', label=item['label'], actualProcessId=record['pid'], gateStatus=record['gateStatus'])
         return True
 
-    def begin(self, label, cancellation_phase=None):
+    def begin(self, label, cancellation_phase=None, eventstore_port=None, wait_workspace=True):
         require(label not in [item['label'] for item in self.journal['owners']], 'Do not replace an existing owner attempt')
         directory = private_directory(self.temporary / label)
         item = {'label': label, 'receipt': str(directory / 'receipt.json'),
                 'launchRecord': str(directory / 'launch.json'), 'publicResult': str(directory / 'public-result.json')}
         if cancellation_phase is not None:
             item['cancellationPhase'] = cancellation_phase
+        if eventstore_port is not None:
+            require(type(eventstore_port) is int and 1 <= eventstore_port <= 65535, 'Invalid explicit EventStore port')
+            item['eventStorePort'] = eventstore_port
         self.journal['owners'].append(item)
         self.save()
         self.launch(item)
-        self.poll(item, lambda: self.state(item).get('workspace') is not None, 600)
-        self.control(item, 'wait')
+        if wait_workspace:
+            self.poll(item, lambda: self.state(item).get('workspace') is not None, 600)
+            self.control(item, 'wait')
         return item
 
     def start(self, label, startup=False, cancellation_phase=None):
@@ -893,6 +995,9 @@ class Qualification:
             snapshot['nativeExecution'] = None
             if item.get('executionCheckpoint'):
                 snapshot['nativeExecution'] = owned_native_process(item['executionCheckpoint']['processId'], owner['runId'])
+            if item.get('attachedExecutionCheckpoint'):
+                attached = item['attachedExecutionCheckpoint']
+                snapshot['attachedExecution'] = owned_native_process(attached['processId'], item['admission']['attachedRunId'])
             if item['cancellationPhase'] == 'execution':
                 admitted = item['admission']
                 document = read(self.diagnostics(item) / 'attachments.json')
@@ -1066,6 +1171,339 @@ class Qualification:
             os.kill(paused['pid'], signal.SIGCONT)
             self.observe('owned-host-resumed', ownerRunId=self.issued(item)['runId'], pid=paused['pid'])
 
+    def attached_admission(self, entry, required=True):
+        """Recover one accepted execution from the original owner ledger; attachments have no owner receipt."""
+        item = self.owner(entry['ownerLabel'])
+        owner = self.issued(item)
+        require(entry['ownerRunId'] == owner['runId'] and entry['environmentId'] == owner['environmentId'],
+                'Attached intent differs from its original owner')
+        require(entry['executionContext'] == owner['executionContext'] == self.context
+                and entry['source'] == self.journal['source'] and entry['profile'] == ATTACHED_PROFILE,
+                'Attached intent lost its exact job/source/profile')
+        document = optional_read(self.diagnostics(item) / 'attachments.json')
+        if document is None:
+            require(not required, 'Attached owner ledger is unavailable')
+            return None
+        require(document.get('ownerRunId') == owner['runId'] and isinstance(document.get('attachments'), list),
+                'Attached owner ledger differs')
+        matches = []
+        for hold in document['attachments']:
+            require(isinstance(hold, dict), 'Malformed attached ledger entry')
+            if hold.get('attachedRunId') in entry['beforeAttachmentIds']:
+                continue
+            execution = hold.get('execution')
+            if not isinstance(execution, dict) or execution.get('profile') != entry['profile']:
+                continue
+            require(hold.get('ownerRunId') == entry['ownerRunId'] and hold.get('environmentId') == entry['environmentId']
+                    and execution.get('mode') == 'package' and execution.get('manifestHash', '').lower() == entry['manifestHash']
+                    and execution.get('entryHash', '').lower() == entry['entryHash']
+                    and utc(execution['requestedAtUtc']) >= utc(entry['requestedAtUtc'])
+                    and utc(hold['acceptedAtUtc']) >= utc(entry['requestedAtUtc'])
+                    and hold.get('requestedHoldSeconds') == hold.get('effectiveHoldSeconds') == entry['holdSeconds'],
+                    'Attached admission differs from the journaled launch')
+            require(all(isinstance(hold.get(key), str) and RUN_ID.fullmatch(hold[key]) for key in
+                        ('attachedRunId', 'originalAttachmentRequestId', 'ownerRunId', 'environmentId')),
+                    'Attached admission lacks issued identities')
+            require(utc(hold['expiresAtUtc']) - utc(hold['acceptedAtUtc']) == timedelta(seconds=entry['holdSeconds']),
+                    'Attached admission changed its original hold')
+            matches.append(hold)
+        require(len(matches) <= 1, 'Ambiguous attached launch admissions')
+        if not matches:
+            require(not required, 'Released attached launch has no exact admission proof')
+            return None
+        admitted = matches[0]
+        if entry.get('admission'):
+            same_expiry(entry['admission'], admitted)
+        else:
+            entry['admission'] = admitted
+            self.save()
+        return admitted
+
+    def begin_attached(self, item, label, hold_seconds=180):
+        owner = self.issued(item)
+        require(label in ATTACHED_LABELS and not any(value['label'] == label for value in self.journal.get('attachedRuns', [])),
+                'Unknown or duplicate attached launch role')
+        document = optional_read(self.diagnostics(item) / 'attachments.json')
+        before = document['attachments'] if document is not None else []
+        directory = private_directory(self.temporary / label)
+        project = ROOT / ATTACHED_ENTRY
+        entry = {'label': label, 'kind': 'attached-suite', 'ownerLabel': item['label'], 'ownerRunId': owner['runId'],
+                 'environmentId': owner['environmentId'], 'executionContext': self.context, 'source': self.journal['source'],
+                 'profile': ATTACHED_PROFILE, 'ownerWorkspace': self.state(item)['workspace'],
+                 'holdSeconds': hold_seconds, 'requestedAtUtc': now(),
+                 'manifestHash': hashlib.sha256(read_bytes(ROOT / MANIFEST)).hexdigest(),
+                 'entryHash': hashlib.sha256(read_bytes(project)).hexdigest(),
+                 'beforeAttachmentIds': [value['attachedRunId'] for value in before],
+                 'receipt': str(directory / 'receipt.json'), 'launchRecord': str(directory / 'launch.json'),
+                 'publicResult': str(directory / 'public-result.json')}
+        self.journal.setdefault('attachedRuns', []).append(entry)
+        self.save()  # No process may be created or released before the durable attached intent.
+        self.launch(entry)
+        deadline = time.monotonic() + 30
+        admitted = None
+        while time.monotonic() < deadline:
+            admitted = self.attached_admission(entry, required=False)
+            if admitted is not None:
+                break
+            child = self.children[label]
+            require(child.poll() is None, 'Attached command ended before an exact admission')
+            time.sleep(0.1)
+        require(admitted is not None, 'Attached launch was not admitted within its pickup bound')
+        self.attached_control(entry, 'wait')
+        controls = Path(owner['stateDirectory']).parent / 'ci-qualification' / admitted['attachedRunId']
+        deadline = time.monotonic() + min(120, hold_seconds)
+        while time.monotonic() < deadline:
+            marker = optional_read(controls / 'execution-ready.json')
+            if marker is not None:
+                require(all(marker.get(key) == admitted[key] for key in
+                            ('ownerRunId', 'environmentId', 'originalAttachmentRequestId', 'expiresAtUtc'))
+                        and marker.get('runId') == admitted['attachedRunId'] and marker.get('profile') == ATTACHED_PROFILE
+                        and marker.get('realServiceReadsPassed') is True and utc(marker['observedAtUtc']) < utc(admitted['expiresAtUtc']),
+                        'Attached checkpoint lost its real service/hold binding')
+                entry['executionCheckpoint'] = {**marker, **owned_native_process(marker['processId'], admitted['attachedRunId'])}
+                self.observe('attached-execution-ready', launch=label, checkpoint=entry['executionCheckpoint'])
+                return entry
+            require(self.children[label].poll() is None and datetime.now(timezone.utc) < utc(admitted['expiresAtUtc']),
+                    'Attached execution missed the original finite hold')
+            time.sleep(0.1)
+        raise TimeoutError('Attached real-service checkpoint was not observed')
+
+    def attached_control(self, entry, action):
+        require(action in ('wait', 'pass', 'fail'), 'Unknown attached control')
+        hold = self.attached_admission(entry)
+        owner = self.issued(self.owner(entry['ownerLabel']))
+        directory = private_directory(Path(owner['stateDirectory']).parent / 'ci-qualification' / hold['attachedRunId'])
+        write(directory / 'control.json', {key: hold[key] for key in ('ownerRunId', 'environmentId', 'originalAttachmentRequestId')}
+              | {'runId': hold['attachedRunId'], 'action': action})
+        self.observe('attached-fixture-control', attachedRunId=hold['attachedRunId'], action=action)
+
+    def attached_result(self, entry, outcome=None, cause=None, before_teardown=False):
+        hold = self.attached_admission(entry)
+        owner = self.issued(self.owner(entry['ownerLabel']))
+        directory = Path(owner['stateDirectory']) / 'diagnostics' / hold['attachedRunId']
+        result_bytes = read_bytes(directory / 'test-result.json')
+        result = HELPER.read_json(result_bytes.decode('utf-8'))
+        run = result['bindings']['run']
+        require(result.get('schema') == 'hexalith.test-result.v1' and result.get('policyId') == POLICY
+                and run.get('role') == 'attached' and run.get('runId') == run.get('attachedRunId') == hold['attachedRunId']
+                and run.get('ownerRunId') == owner['runId'] and run.get('environmentId') == owner['environmentId']
+                and result['bindings']['environment']['executionContext'] == self.context,
+                'Attached result lost its exact job/owner/environment binding')
+        own_holds = [value for value in result['bindings']['attachments']['holds'] if value['attachedRunId'] == hold['attachedRunId']]
+        require(len(own_holds) == 1 and own_holds[0]['originalAttachmentRequestId'] == hold['originalAttachmentRequestId']
+                and utc(own_holds[0]['expiresAt']) == utc(hold['expiresAtUtc']), 'Attached result changed its original lineage/expiry')
+        terminal = result['terminal']
+        own_hold = own_holds[0]
+        require(terminal['outcome'] == hold.get('outcome') and terminal['cause'] == hold.get('execution', {}).get('cause')
+                and utc(terminal['recordedAt']) == utc(hold.get('endedAtUtc'))
+                and own_hold.get('end', {}).get('state') == 'ended'
+                and own_hold['end'].get('reason') == hold.get('endReason')
+                and utc(own_hold['acceptedAt']) == utc(hold['acceptedAtUtc'])
+                and own_hold['effectiveHoldSeconds'] == hold['effectiveHoldSeconds']
+                and own_hold['requestedHoldSeconds'] == hold['requestedHoldSeconds'],
+                'Attached terminal or hold snapshot differs from its exact original ledger')
+        require((terminal['cause'] == 'hold-expired') == (utc(terminal['recordedAt']) >= utc(hold['expiresAtUtc'])),
+                'Attached first outcome contradicts its exclusive original expiry')
+        if outcome is not None:
+            require(terminal['outcome'] == outcome and terminal['cause'] == cause,
+                    'Attached first outcome or cause differs')
+        require(result['retention']['disposition'] == 'not-retained', 'CI attached failure applied local retention')
+        termination = result['termination']
+        require(not termination['leftoverWorkIds'] and not termination['failures']
+                and termination['ownedWork'] and termination['environmentAccess']
+                and all(value['status'] == 'terminated' for value in termination['ownedWork'] + termination['environmentAccess']),
+                'Attached work/access termination failed or remains unverified')
+        if entry.get('executionCheckpoint'):
+            checkpoint = entry['executionCheckpoint']
+            require(birth(checkpoint['processId']) != checkpoint['birth'], 'Attached native work survives its terminal result')
+        workspace = Path(entry['ownerWorkspace']) / 'attachments' / hold['attachedRunId']
+        require(not os.path.lexists(workspace / 'test-environment.json') and not os.path.lexists(workspace / 'native-endpoint-credentials.json'),
+                'Attached private access survives termination')
+        if before_teardown:
+            require(self.running_owner_inventory(self.owner(entry['ownerLabel'])) == entry['ownerRunningInventory'],
+                    'An original owner resource stopped before attached termination was observed')
+        first = result['terminal']
+        if entry.get('firstTerminal') is not None:
+            require(entry['firstTerminal'] == first, 'Attached retry changed the first outcome/time')
+        else:
+            entry['firstTerminal'] = first
+        if first['outcome'] == 'failed' and first['cause'] == 'test-failure':
+            require(any(value.get('id') == 'native-report' and value.get('reference', '').endswith('.trx')
+                        for value in result.get('diagnostics', [])), 'Attached test failure lacks its inspected native result')
+        retained = [('test-result.json', result_bytes)]
+        identities, filenames = set(), set()
+        diagnostics = result.get('diagnostics', [])
+        require(isinstance(diagnostics, list) and len(diagnostics) <= len(HELPER.DIAGNOSTICS), 'Invalid attached diagnostic inventory')
+        intentional_report = False
+        for diagnostic in diagnostics:
+            reference = diagnostic.get('reference', '')
+            require(reference not in ('native-endpoint-credentials.json', 'test-environment.json'), 'Private access artifacts cannot be retained')
+            identity, reference, maximum, digest = HELPER.declared_diagnostic_reference(diagnostic, identities, filenames)
+            identities.add(identity)
+            filenames.add(reference)
+            data = read_bytes(directory / reference, maximum)
+            require(hashlib.sha256(data).hexdigest() == digest, 'Attached diagnostic content identity differs')
+            if identity == 'executing-tool':
+                manifest = HELPER.read_json(data.decode('utf-8'))
+                binaries, tool = manifest.get('binaries'), result['bindings'].get('tool', {})
+                require(set(manifest) == {'schema', 'algorithm', 'binaries'} and manifest.get('schema') == 'hexalith.executing-tool-manifest.v1'
+                        and manifest.get('algorithm') == 'sha256' and tool.get('state') == 'populated'
+                        and tool.get('name') == 'hexalith-module' and tool.get('contentIdentity') == 'sha256:' + digest
+                        and isinstance(binaries, list) and len(binaries) == 2
+                        and [value.get('name') for value in binaries] == ['Hexalith.Builds.Module.Cli.dll', 'Hexalith.Builds.Tooling.dll']
+                        and all(set(value) == {'name', 'contentIdentity'} and re.fullmatch(r'sha256:[a-f0-9]{64}', value.get('contentIdentity', '')) for value in binaries),
+                        'Attached executing-tool content differs from its tool binding')
+            elif identity != 'native-report':
+                require(HELPER.read_json(data.decode('utf-8')).get('runId') == hold['attachedRunId'], 'Attached diagnostic names another run')
+            elif entry.get('intentionalFailureExpected'):
+                try:
+                    document = ElementTree.fromstring(data)
+                except ElementTree.ParseError:
+                    raise ValueError('Attached intentional native report is malformed') from None
+                marker = INTENTIONAL_FAILURE + hold['attachedRunId']
+                intentional_report = any(node.get('outcome', '').lower() == 'failed'
+                    and node.get('testName', '').endswith('ReadRealServicesThenObserveAttachedControl')
+                    and any(marker in (message.text or '') for message in node.iter() if message.tag.rsplit('}', 1)[-1] == 'Message')
+                    for node in document.iter() if node.tag.rsplit('}', 1)[-1] == 'UnitTestResult')
+            retained.append((reference, data))
+        require(not entry.get('intentionalFailureExpected') or intentional_report, 'Attached failure lacks its intentional assertion in the inspected native report')
+        destination = private_directory(self.evidence / entry['label'])
+        for filename, data in retained:
+            write_retained_bytes(destination / filename, data)
+        self.observe('attached-terminal-result', launch=entry['label'], firstTerminal=first, terminationVerified=True)
+        return result
+
+    def finalize_attached(self, entry):
+        record = self.recover_launch(entry)
+        hold = self.attached_admission(entry, required=False)
+        if hold is None:
+            if birth(record['pid']) == record['birth']:
+                self.process_signal(entry, signal.SIGINT)
+                self.settled_child(entry)
+            require(record['gateStatus'] in ('waiting', 'closed'), 'Released attached launch lacks exact admission proof')
+            return
+        self.settled_child(entry)
+        self.attached_result(entry)
+        public = optional_read(Path(entry['publicResult']))
+        if public is not None:
+            require(public.get('runId') == hold['attachedRunId'], 'Attached public result names another run')
+            write(self.evidence / entry['label'] / 'public-result.json', public)
+
+    def collision(self):
+        item = self.start('collision-owner')
+        peer = self.start('collision-peer')
+        before, other = self.peer_scope(item), self.peer_scope(peer)
+        plan = read(Path(self.state(item)['workspace']) / 'plan.json')
+        challenger = self.begin('collision-challenger', eventstore_port=plan['ports']['eventStoreHttp'], wait_workspace=False)
+        self.children[challenger['label']].wait(timeout=690)
+        require(self.capture_result(challenger) != 0, 'Explicit endpoint collision unexpectedly passed')
+        public = read(Path(challenger['publicResult']))
+        require(public.get('outcome', {}).get('ruleId') == 'HXR031'
+                and any(value.get('ruleId') == 'HXR031' and self.issued(item)['runId'] in value.get('message', '')
+                        for value in public.get('diagnostics', [])), 'Collision did not name the live blocking owner')
+        require(self.peer_scope(item) == before and self.peer_scope(peer) == other, 'Collision changed an existing owner or peer')
+        for existing in (item, peer):
+            self.control(existing, 'pass')
+            self.children[existing['label']].wait(timeout=150)
+            require(self.capture_result(existing) == 0, 'Preserved collision owner did not complete real assertions')
+
+    def startup_timeout(self):
+        item = self.start('timeout', startup=True)
+        original = self.state(item)
+        expiry = utc(original['startupDeadlineUtc'])
+        # Keep only the exact Starting AppHost paused; the original runner clock decides failure.
+        self.children[item['label']].wait(timeout=max(1, (expiry - datetime.now(timezone.utc)).total_seconds()) + 95)
+        require(self.capture_result(item) != 0, 'Startup deadline did not fail')
+        owner = self.issued(item)
+        result = read(Path(owner['stateDirectory']) / 'diagnostics' / owner['runId'] / 'test-result.json')
+        deadline = startup_timeout_observation(result, original)
+        self.observe('actual-startup-timeout', terminal=result['terminal'], startup=deadline)
+        self.resume_host(item)
+        first = result['terminal']
+        self.down(item, 'startup-timeout-exact-cleanup')
+        require(read(Path(owner['stateDirectory']) / 'diagnostics' / owner['runId'] / 'test-result.json')['terminal'] == first,
+                'Startup timeout cleanup changed the first failure')
+
+    def attached_case(self, scenario):
+        labels = {'attached-failure': ('attached-owner', 'attached-failure-child'),
+                  'hold-expiry': ('expiry-owner', 'expiry-child'),
+                  'owner-cancellation': ('owner-cancel', 'owner-cancel-child')}
+        owner_label, attached_label = labels[scenario]
+        item = self.start(owner_label)
+        peer = self.start('expiry-peer') if scenario == 'hold-expiry' else None
+        scope = self.peer_scope(peer) if peer else None
+        entry = self.begin_attached(item, attached_label, 120 if scenario == 'hold-expiry' else 180)
+        cancellation_cause = 'ci-job-cancelled' if self.issued(item)['executionContext']['kind'] == 'ci' else 'owner-cancelled'
+        if scenario == 'attached-failure':
+            entry['intentionalFailureExpected'] = True
+            self.save()
+            self.attached_control(entry, 'fail')
+        elif scenario == 'owner-cancellation':
+            entry['ownerRunningInventory'] = self.running_owner_inventory(item)
+            self.save()
+            self.process_signal(item, signal.SIGINT)
+            deadline = time.monotonic() + 100
+            while time.monotonic() < deadline:
+                require(self.running_owner_inventory(item) == entry['ownerRunningInventory'], 'Missed attached termination before the first owner resource stopped')
+                owner = self.issued(item)
+                path = Path(owner['stateDirectory']) / 'diagnostics' / entry['admission']['attachedRunId'] / 'test-result.json'
+                if optional_read_bytes(path) is not None:
+                    self.attached_result(entry, 'withdrawn', cancellation_cause, before_teardown=True)
+                    break
+                time.sleep(0.01)
+            else:
+                raise TimeoutError('Attached termination was not observed before owner teardown')
+        self.children[entry['label']].wait(timeout=220)
+        expected = ('failed', 'test-failure') if scenario == 'attached-failure' else ('withdrawn', 'hold-expired' if peer else cancellation_cause)
+        self.attached_result(entry, *expected)
+        if scenario != 'owner-cancellation':
+            require(self.state(item).get('testRun') is None, 'Attached outcome replaced the active owner outcome')
+            if peer:
+                require(self.peer_scope(peer) == scope, 'Hold expiry changed its unrelated active peer')
+                self.invalid_lineage(item, entry['admission'])
+            self.control(item, 'pass')
+        self.children[item['label']].wait(timeout=150)
+        self.verify_original_owner_command(item, cancelled=scenario == 'owner-cancellation')
+        owner_first = first_outcome(self.archived(item))
+        require(owner_first['terminalStatus'] == ('cancelled' if scenario == 'owner-cancellation' else 'completed'),
+                'Attached terminal result changed the owner outcome')
+        self.down(item, 'attached-case-exact-cleanup')
+        require(first_outcome(self.archived(item)) == owner_first, 'Attached cleanup retry changed owner first outcome')
+        self.attached_result(entry, *expected)
+        if peer:
+            require(self.peer_scope(peer) == scope, 'Attached exact cleanup changed its unrelated peer')
+            self.control(peer, 'pass')
+            self.children[peer['label']].wait(timeout=150)
+            require(self.capture_result(peer) == 0, 'Expiry peer did not complete real assertions')
+
+    def invalid_lineage(self, item, hold=None):
+        owner = self.issued(item)
+        identities = [hold['originalAttachmentRequestId']] if hold else []
+        # Unknown lineage must never be interpreted as a fresh request.
+        identities.append('f' * 32)
+        for lineage in identities:
+            before = read(self.diagnostics(item) / 'attachments.json')
+            result, public = self.tool(item, ['test', '--manifest=' + MANIFEST, '--mode=package', '--profile=' + ATTACHED_PROFILE,
+                                            '--attach-to=' + owner['runId'], '--attachment-request-id=' + lineage,
+                                            '--output=json'], 'invalid-attached-lineage')
+            require(result.returncode != 0 and public.get('attachment') is None
+                    and any(value.get('ruleId') in ('HXR033', 'HXR036') for value in public.get('diagnostics', []))
+                    and read(self.diagnostics(item) / 'attachments.json') == before,
+                    'Invalid attached lineage created a fixture admission or qualifying result')
+
+    def invalid_handoff(self):
+        item = self.start('invalid-owner')
+        # Retire an actual hold before presenting it as an attached suite lineage.
+        admitted = self.attach(item, 'invalid-handoff-hold')
+        completed, _ = self.tool(item, ['attach', '--owner-run-id=' + self.issued(item)['runId'], '--end',
+                                       '--attached-run-id=' + admitted['attachedRunId'], '--outcome=passed', '--output=json'],
+                                'invalid-handoff-end')
+        require(completed.returncode == 0, 'Could not end the actual finite hold')
+        self.invalid_lineage(item, admitted)
+        self.control(item, 'pass')
+        self.children[item['label']].wait(timeout=150)
+        require(self.capture_result(item) == 0, 'Invalid handoff changed the real owner suite')
+
     def ordinary(self, label, action):
         item = self.start(label)
         self.attach(item, label + '-cross-job', negative=True)
@@ -1177,7 +1615,11 @@ class Qualification:
         self.observe('actual-cancellation-terminal', ownerRunId=item['runId'], phase=item['cancellationPhase'],
                      firstOutcome=first, originalAdmission=admitted, withdrawal=withdrawn, classification=classification,
                      parentApiReceiptRequired=True, candidateAcceptance=False)
-        require(classification == 'cancelled', 'Preserved prior product failure supplies no cancellation qualification')
+        if item['cancellationPhase'] == 'failure':
+            require(classification == 'product-failure-before-observed-signal' and first == item['failureBeforeCancellation'],
+                    'Failure-before-cancellation changed its durable failed result')
+        else:
+            require(classification == 'cancelled', 'Preserved prior product failure supplies no cancellation qualification')
 
     def cleanup_owned(self, item, owner, job_status):
         resume_failure = None
@@ -1267,6 +1709,11 @@ class Qualification:
                 self.finalize_owner(item, job_status, issued)
             except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
                 failures.append({'label': item['label'], **failure_metadata(error)})
+        for entry in self.journal.get('attachedRuns', []):
+            try:
+                self.finalize_attached(entry)
+            except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
+                failures.append({'label': entry['label'], **failure_metadata(error)})
         self.observe('finalizer-result', failures=failures, issuedOwners=len(issued),
                      allocationStatus='allocated' if issued else 'unverified' if failures else 'not-allocated',
                      issuedOwnersCleanupVerified=bool(issued) and not failures, candidateAcceptance=False)
@@ -1291,7 +1738,12 @@ def run_matrix(qualification, selection='matrix'):
         for step, action in [('passing', lambda: qualification.ordinary('passing', 'pass')),
                              ('failing', lambda: qualification.ordinary('failing', 'fail')),
                              ('retry-with-peer', qualification.retry_with_peer),
-                             ('partial-startup', qualification.partial_startup)]:
+                             ('partial-startup', qualification.partial_startup),
+                             ('collision', qualification.collision), ('startup-timeout', qualification.startup_timeout),
+                             ('owner-cancellation', lambda: qualification.attached_case('owner-cancellation')),
+                             ('attached-failure', lambda: qualification.attached_case('attached-failure')),
+                             ('hold-expiry', lambda: qualification.attached_case('hold-expiry')),
+                             ('invalid-handoff', qualification.invalid_handoff)]:
             if step not in selected:
                 continue
             qualification.checkpoint('matrix', step)
@@ -1321,10 +1773,10 @@ def run_matrix(qualification, selection='matrix'):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('matrix', 'focused-ci', 'start-cancellation', 'wait-cancellation', 'finalize', 'remove-reader', 'verify-runtime-cache'))
+    parser.add_argument('command', choices=(*SELECTIONS, 'start-cancellation', 'wait-cancellation', 'finalize', 'remove-reader', 'verify-runtime-cache'))
     parser.add_argument('--packages')
     parser.add_argument('--aspire-version')
-    parser.add_argument('--phase', choices=('startup', 'execution'))
+    parser.add_argument('--phase', choices=('startup', 'execution', 'failure'))
     parser.add_argument('--job-status', choices=('', 'success', 'failure', 'cancelled'), default='')
     args = parser.parse_args()
     if args.command == 'verify-runtime-cache':
@@ -1348,7 +1800,14 @@ def main():
         item = qualification.start('cancel', startup=args.phase == 'startup', cancellation_phase=args.phase)
         item['runId'] = qualification.issued(item)['runId']
         if args.phase == 'execution':
-            item['admission'] = qualification.attach(item, 'cancellation-active-hold')
+            attached = qualification.begin_attached(item, 'cancel-child', 240)
+            item['admission'] = attached['admission']
+            item['attachedExecutionCheckpoint'] = attached['executionCheckpoint']
+        elif args.phase == 'failure':
+            qualification.control(item, 'fail')
+            qualification.children[item['label']].wait(timeout=150)
+            require(qualification.capture_result(item) != 0, 'Failure-before-cancellation did not actually fail')
+            item['failureBeforeCancellation'] = declared_terminal(qualification.archived(item), 'fail')
         item['cancellationReadyAtUtc'] = now()
         qualification.save()
         qualification.observe('actual-cancellation-ready', phase=args.phase, ownerRunId=item['runId'],
@@ -1358,7 +1817,8 @@ def main():
         item = qualification.owner('cancel')
         deadline = time.monotonic() + 120
         while time.monotonic() < deadline and not CANCELLED:
-            require(birth(item['pid']) == item['birth'], 'Owner terminated before actual GitHub cancellation')
+            require(item['cancellationPhase'] == 'failure' or birth(item['pid']) == item['birth'],
+                    'Owner terminated before actual GitHub cancellation')
             time.sleep(0.2)
         require(CANCELLED, 'No real external cancellation arrived; this is not cancellation evidence')
         item['cancellationSignals'] = list(CANCELLED)
@@ -1371,7 +1831,10 @@ def main():
         qualification.observe('external-cancellation-signal', signals=item['cancellationSignals'],
                               terminalBeforeSignalForward=item.get('terminalBeforeSignalForward'))
         qualification.resume_host(item)
-        qualification.process_signal(item, signal.SIGINT)
+        if birth(item['pid']) == item['birth']:
+            qualification.process_signal(item, signal.SIGINT)
+        else:
+            require(item['cancellationPhase'] == 'failure', 'Active owner vanished before forwarding cancellation')
         return 1
     return run_matrix(qualification, selection=args.command)
 

@@ -71,6 +71,20 @@ class CancellationPhaseTests(unittest.TestCase):
             with self.subTest(actual=changes), self.assertRaises(ValueError):
                 Q.cancellation_phase(changed, owner, CONTEXT)
 
+    def test_attached_execution_checkpoint_matches_the_live_signal_time_identity(self):
+        owner, item = facts('execution')
+        item['attachedExecutionCheckpoint'] = {'processId': 789, 'birth': 'original-attached-birth'}
+        item['cancellationSnapshot']['attachedExecution'] = {'processId': 789, 'birth': 'original-attached-birth'}
+        Q.cancellation_phase(item, owner, CONTEXT)
+        for observed in (None, {'processId': 790, 'birth': 'original-attached-birth'}, {'processId': 789, 'birth': 'reused-birth'}):
+            changed = copy.deepcopy(item)
+            changed['cancellationSnapshot']['attachedExecution'] = observed
+            with self.subTest(observed=observed), self.assertRaises(ValueError):
+                Q.cancellation_phase(changed, owner, CONTEXT)
+        del item['cancellationSnapshot']['attachedExecution']
+        with self.assertRaises(ValueError):
+            Q.cancellation_phase(item, owner, CONTEXT)
+
     def test_signal_snapshot_reads_current_state_without_archived_starting_fallback(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

@@ -115,7 +115,9 @@ internal sealed record NativeDiagnosticBinding(string RunId, string AttemptId, s
         foreach (JsonElement owner in recorded.GetProperty("owners").EnumerateArray())
         {
             string label = owner.GetProperty("label").GetString()!;
-            if (label is not ("passing" or "failing" or "peer" or "retry" or "partial" or "cancel"))
+            if (label is not ("passing" or "failing" or "peer" or "retry" or "partial" or "cancel"
+                or "collision-owner" or "collision-peer" or "collision-challenger" or "timeout" or "attached-owner"
+                or "expiry-owner" or "expiry-peer" or "owner-cancel" or "invalid-owner"))
                 throw new InvalidDataException("Native diagnostic lifecycle owner role is unknown.");
             string receiptPath = owner.GetProperty("receipt").GetString()!;
             DirectoryInfo role = new(Path.GetDirectoryName(receiptPath)!);
