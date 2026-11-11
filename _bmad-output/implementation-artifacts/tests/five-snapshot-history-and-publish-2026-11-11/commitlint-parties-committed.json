@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "/tmp/parties-commitlint-node-n_ncl_3x/node-v24.22.1-linux-x64/bin/node",
+    "/home/administrator/projects/hexalith/parties/node_modules/@commitlint/cli/cli.js",
+    "--from",
+    "HEAD^",
+    "--to",
+    "HEAD",
+    "--verbose"
+  ],
+  "exitCode": 0,
+  "output": "\u29d7   --- input ---\nfix: guard deferred runtime qualification\n\u2714   found 0 problems, 0 warnings\n"
+}

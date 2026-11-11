@@ -1,5 +1,5 @@
 {
-  "status": "safe reviewed implementation verified; final source adoption and authorized main publication pending",
+  "status": "reviewed implementation and committed source adoption verified; owner revisions published; authorized parent main push follows this evidence record",
   "date": "2026-11-11",
   "tests": {
     "platform": {
@@ -104,7 +104,8 @@
     "references/Hexalith.Platform/src/Hexalith.Platform.Composition/PlatformCurrentOwnerSourceState.cs": "e2757d9a530ef286c29d6c3a1b7556f81b06950b44056df073db054372f4fa6f",
     "references/Hexalith.Platform/tests/Hexalith.Platform.Composition.Tests/PlatformCurrentOwnerSourceDeadlineTests.cs": "1bb27bf69c38a9fd69072396c265571762a81b57df03bc8b088dd868186687a5",
     "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/SourceInventoryStore.cs": "27bdd67f72a7db3500035c2f481ca51802d9f605e30786b9db78291e387af526",
-    "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Ingestion/SourceInventoryProducerIntegrationTests.cs": "434240e9383b6651f924e78d02f427475eb95ebbc7c8bcbf1572df8eca764746"
+    "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Ingestion/SourceInventoryProducerIntegrationTests.cs": "434240e9383b6651f924e78d02f427475eb95ebbc7c8bcbf1572df8eca764746",
+    "tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs": "9494f677d42889c7fce990187e3c0f73b766e5715bdd35b802e19d435308995b"
   },
   "scope": {
     "snapshotHashing": "bounded caller, independently retained/reaped worker; capture and final hash worker exercised",
@@ -174,5 +175,104 @@
   },
   "incomingPlatformSourceSha256": {
     "src/Hexalith.Platform.Composition/PlatformWorkloadEnrollment.cs": "68f4bfca1a2c5f812badc3df9aa0799acce9b583a78ee9180b2952cf3acf6d53"
-  }
+  },
+  "rootCodeRevision": "e522f6fe35f5d061fcf57b3c27523e7e64387353",
+  "postcommitVerification": {
+    "sourceSelectionAndClosure": {
+      "total": "196",
+      "passed": "196",
+      "failed": "0",
+      "skipped": "0",
+      "time": "120.183",
+      "failures": [],
+      "artifact": "postcommit-committed-source-serial.xml.gz",
+      "rawSha256": "2392b614f9132ae2fd87ed136cb9fb32e37247d04e3a24ddb84a63f68b3a993b",
+      "normalizedSha256": "b7eb7f60c3e407f686013b381bac5e4c141bc967733dc283f388b3a660ec6876"
+    },
+    "currentOwnerReader": {
+      "total": 31,
+      "passed": 31,
+      "artifact": "postcommit-current-owner-reader.log.gz",
+      "rawSha256": "b4b033d8772f26d95c7991f5af863f65d0fc13a3e6d4985388f832a449a33bfe",
+      "normalizedSha256": "b4b033d8772f26d95c7991f5af863f65d0fc13a3e6d4985388f832a449a33bfe"
+    },
+    "gitlinkPushRange": {
+      "exitCode": 0,
+      "artifact": "postcommit-gitlink-push-range.log.gz",
+      "rawSha256": "e6d2a308dbafba1a725ebba385a970e8c101890c011f7e8625d48fc98a5abe41",
+      "normalizedSha256": "e6d2a308dbafba1a725ebba385a970e8c101890c011f7e8625d48fc98a5abe41"
+    },
+    "firstAttempt": {
+      "total": "196",
+      "passed": "195",
+      "failed": "1",
+      "skipped": "0",
+      "time": "80.258",
+      "failures": [
+        "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.ClosedIdentityUsesTheClosureCommitThroughLaterChangesAndReopening"
+      ],
+      "artifact": "postcommit-committed-source.xml.gz",
+      "rawSha256": "9723838badc91d9996111e445b150480043aa852b8169017173e251e36ddd059",
+      "normalizedSha256": "e9dafbf9a4714f256c00ed2845544795c792af38a7196f42e8fee4488f08d284",
+      "disposition": "unchanged closure fixture MSBuild package-version query exited 1 with blank details; no cause established; retained, no assertion weakened"
+    },
+    "focusedUnchangedRetry": {
+      "total": "1",
+      "passed": "1",
+      "failed": "0",
+      "skipped": "0",
+      "time": "30.996",
+      "failures": [],
+      "artifact": "postcommit-closed-identity-focused.xml.gz",
+      "rawSha256": "335524b465d8352179f4bd7c4ca0fc5190cf3be75fd4cc09f8a83e78de3790d3",
+      "normalizedSha256": "9f53d39aec826752781c4dc1be522e1ef4032a0cfce643b8d4b3e1b8c107f97f"
+    },
+    "artifacts": {
+      "committed-source.xml": {
+        "artifact": "postcommit-committed-source.xml.gz",
+        "rawSha256": "9723838badc91d9996111e445b150480043aa852b8169017173e251e36ddd059",
+        "normalizedSha256": "e9dafbf9a4714f256c00ed2845544795c792af38a7196f42e8fee4488f08d284"
+      },
+      "committed-source-checks.log": {
+        "artifact": "postcommit-committed-source-checks.log.gz",
+        "rawSha256": "45b8ef7b05a08cb0978c8a0d53a27b78ce48909b85ad58b195049ef4754c7703",
+        "normalizedSha256": "45b8ef7b05a08cb0978c8a0d53a27b78ce48909b85ad58b195049ef4754c7703"
+      },
+      "committed-source-serial.xml": {
+        "artifact": "postcommit-committed-source-serial.xml.gz",
+        "rawSha256": "2392b614f9132ae2fd87ed136cb9fb32e37247d04e3a24ddb84a63f68b3a993b",
+        "normalizedSha256": "b7eb7f60c3e407f686013b381bac5e4c141bc967733dc283f388b3a660ec6876"
+      },
+      "committed-source-serial.log": {
+        "artifact": "postcommit-committed-source-serial.log.gz",
+        "rawSha256": "350adb9c6797f37e7c036617c490cc60a0c5054c6ef1f26c918a350c33ce19bf",
+        "normalizedSha256": "350adb9c6797f37e7c036617c490cc60a0c5054c6ef1f26c918a350c33ce19bf"
+      },
+      "closed-identity-focused.xml": {
+        "artifact": "postcommit-closed-identity-focused.xml.gz",
+        "rawSha256": "335524b465d8352179f4bd7c4ca0fc5190cf3be75fd4cc09f8a83e78de3790d3",
+        "normalizedSha256": "9f53d39aec826752781c4dc1be522e1ef4032a0cfce643b8d4b3e1b8c107f97f"
+      },
+      "closed-identity-focused.log": {
+        "artifact": "postcommit-closed-identity-focused.log.gz",
+        "rawSha256": "cf2d1dee3f63d6771be099220ed1df5a3e96788aa663abcd9c41c7cf71ed5756",
+        "normalizedSha256": "cf2d1dee3f63d6771be099220ed1df5a3e96788aa663abcd9c41c7cf71ed5756"
+      },
+      "current-owner-reader.log": {
+        "artifact": "postcommit-current-owner-reader.log.gz",
+        "rawSha256": "b4b033d8772f26d95c7991f5af863f65d0fc13a3e6d4985388f832a449a33bfe",
+        "normalizedSha256": "b4b033d8772f26d95c7991f5af863f65d0fc13a3e6d4985388f832a449a33bfe"
+      },
+      "gitlink-push-range.log": {
+        "artifact": "postcommit-gitlink-push-range.log.gz",
+        "rawSha256": "e6d2a308dbafba1a725ebba385a970e8c101890c011f7e8625d48fc98a5abe41",
+        "normalizedSha256": "e6d2a308dbafba1a725ebba385a970e8c101890c011f7e8625d48fc98a5abe41"
+      }
+    },
+    "expectedCases": "postcommit-expected-cases.json",
+    "commands": "postcommit-commands.json"
+  },
+  "selectedGreenChecksIncludingSourceAdoption": 431,
+  "counting": "204 implementation checks plus 196 distinct source-adoption/closure checks and 31 reader tests; failed and repeated attempts are retained but not added",
+  "postcommitBinarySha256": "32f04de36beebddae9c23a8250e0730d405cac269915602d432fe05ef95626aa"
 }

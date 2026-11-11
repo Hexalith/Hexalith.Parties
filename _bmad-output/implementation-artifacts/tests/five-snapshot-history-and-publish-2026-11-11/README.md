@@ -40,3 +40,14 @@ receipt checks only; its obsolete proposal collector is archived. Source Debug,
 package Release, unsupported publisher output and external deployment gates remain
 separate. All selected owner commits are available on origin/main; protected-main
 pushes reported PR/status-rule bypasses under the user's explicit main-push request.
+
+Committed-source adoption at `e522f6fe35f5d061fcf57b3c27523e7e64387353`
+passes 196 source-selection/closure checks, 31 reader tests and the two-owner
+push-range gitlink gate. Combined with the 204 implementation controls, 431
+distinct selected checks pass. The initial 196-case run had one unchanged fixture
+MSBuild query failure (exit 1, blank details); that method passed alone and the
+same complete selection passed serialized without changing assertions. No cause
+is established. All attempts and exact case identities are retained as
+`postcommit-*` evidence; repeated attempts do not inflate the total.
+The final evidence commit records this verified code revision before the
+user-authorized parent `main` push.

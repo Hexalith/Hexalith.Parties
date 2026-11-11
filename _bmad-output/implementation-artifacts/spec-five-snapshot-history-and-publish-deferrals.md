@@ -130,7 +130,7 @@ fixture keeps source coverage unknown and explicitly reconciles only its exact
 owned output keys. Separate unknown-source purge/concurrent controls require
 cleanup refusal. Independent review remains parent-owned.
 
-## Verification
+## Historical proposal verification (superseded)
 
 Dated commands, per-test XML, source/binary hashes, isolated reversals, cleanup and
 five-row coverage are retained in
@@ -165,3 +165,15 @@ P1–P3 and P5–P6 are verified by the strengthened14-control Platform lane,12P
 ### Final implementation and owner publication
 
 The workflow completes within the approved external-gate allowance. Pushed owner commits are Platform `3ad2f29ae50858ba665499568623b557725b9d93` and Memories `13fdb88a3267626b14f75e16cc2de58dcfbbb2bb`. The final tree bounds source measurement and its worker lifetime, rejects an existing legacy-NL candidate without durable mutation, preserves normal fresh cleanup, verifies backfill through ten workload processes, and refuses unsupported sidecar publication qualification. All204selected checks pass, with exact source/binary/test identities retained in `tests/five-snapshot-history-and-publish-2026-11-11/final-verification.json`. Historical identity safety, older-writer exclusion, positive publisher delivery and deployed backfill acceptance stay open. Parent current-selection validation and main publication follow this local completion record.
+
+### Committed-source validation and publication handoff
+
+At code revision `e522f6fe35f5d061fcf57b3c27523e7e64387353`, all 196 current
+source-selection/closure checks and 31 reader tests pass, and the push-range
+signoff gate accepts both exact owner gitlinks. Together with 204 implementation
+controls, 431 distinct selected checks pass. An initial unchanged closure fixture
+MSBuild query failure is retained alongside its focused pass and the full
+serialized pass; no cause is established and no assertion was changed or skipped.
+The committed code message and final evidence message pass pinned commitlint.
+The completion evidence commit and authorized parent main push complete the
+publication follow-through; all named external gates remain open.

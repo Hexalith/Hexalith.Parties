@@ -1,0 +1,73 @@
+[
+  {
+    "name": "committed-source-checks",
+    "argv": [
+      "dotnet",
+      "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests",
+      "-class",
+      "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_ROOT}/parent-review/committed-source.xml"
+    ],
+    "cwd": "${PARTIES_ROOT}",
+    "exitCode": 1,
+    "elapsedSeconds": 80.49
+  },
+  {
+    "name": "unchanged-failing-method-focused",
+    "argv": [
+      "dotnet",
+      "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+      "-method",
+      "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.ClosedIdentityUsesTheClosureCommitThroughLaterChangesAndReopening",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_ROOT}/parent-review/closed-identity-focused.xml"
+    ],
+    "exitCode": 0
+  },
+  {
+    "name": "committed-source-serialized",
+    "argv": [
+      "dotnet",
+      "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests",
+      "-class",
+      "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests",
+      "-parallel",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_ROOT}/parent-review/committed-source-serial.xml"
+    ],
+    "exitCode": 0
+  },
+  {
+    "name": "current-owner-reader",
+    "argv": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "scripts",
+      "-p",
+      "test_current_owner_integration.py"
+    ],
+    "exitCode": 0
+  },
+  {
+    "name": "gitlink-push-range",
+    "argv": [
+      "bash",
+      "scripts/gitlink-rc-gate.sh",
+      "--push-range",
+      "6bba88dd85362555edf9e4672deb68811e73895f"
+    ],
+    "exitCode": 0
+  }
+]

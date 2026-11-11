@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "/tmp/parties-commitlint-node-n_ncl_3x/node-v24.22.1-linux-x64/bin/node",
+    "/home/administrator/projects/hexalith/parties/node_modules/@commitlint/cli/cli.js",
+    "--edit",
+    "/tmp/parties-snapshot-history-20261111/parent-review/completion-commit.txt",
+    "--verbose"
+  ],
+  "exitCode": 0,
+  "output": "\u29d7   --- input ---\ndocs: record deferred runtime verification\n\u2714   found 0 problems, 0 warnings\n",
+  "candidate": "docs: record deferred runtime verification\n",
+  "candidateSha256": "c2934acd8b582a2cdd6889ca00ab9834c2801b61f81c134fa5da58f06cdf1500",
+  "nodeVersion": "24.22.1",
+  "cliVersion": "21.2.4"
+}
