@@ -1,0 +1,258 @@
+[
+  {
+    "lane": "eventstore",
+    "phase": "build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.EventStore.SignalR.Tests",
+      "-c",
+      "Debug",
+      "-m:1",
+      "-p:UseHexalithProjectReferences=true"
+    ],
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.EventStore",
+    "exitCode": 0,
+    "seconds": 2.373
+  },
+  {
+    "lane": "eventstore",
+    "phase": "test",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.EventStore.SignalR.Tests/bin/Debug/net10.0/Hexalith.EventStore.SignalR.Tests.dll",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_TEMP}"
+    ],
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.EventStore",
+    "exitCode": 0,
+    "seconds": 0.967
+  },
+  {
+    "lane": "memories",
+    "phase": "build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Memories.IntegrationTests",
+      "-c",
+      "Debug",
+      "-m:1",
+      "-p:UseHexalithProjectReferences=true"
+    ],
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+    "exitCode": 0,
+    "seconds": 11.297
+  },
+  {
+    "lane": "memories",
+    "phase": "test",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests",
+      "-class",
+      "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_TEMP}"
+    ],
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+    "exitCode": 0,
+    "seconds": 40.017
+  },
+  {
+    "lane": "memory-architecture",
+    "phase": "build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Memories.Server.Tests",
+      "-c",
+      "Debug",
+      "-m:1",
+      "-p:UseHexalithProjectReferences=true"
+    ],
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+    "exitCode": 0,
+    "seconds": 5.167
+  },
+  {
+    "lane": "memory-architecture",
+    "phase": "test",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.Tests.dll",
+      "-class",
+      "Hexalith.Memories.Server.Tests.Architecture.IngestionWorkflowDeterminismGuardTests",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_TEMP}"
+    ],
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+    "exitCode": 0,
+    "seconds": 0.516
+  },
+  {
+    "lane": "eventstore",
+    "phase": "build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.EventStore.SignalR.Tests",
+      "-c",
+      "Debug",
+      "-m:1",
+      "-p:UseHexalithProjectReferences=true"
+    ],
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.EventStore",
+    "exitCode": 0,
+    "seconds": 1.568
+  },
+  {
+    "lane": "eventstore",
+    "phase": "test",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.EventStore.SignalR.Tests/bin/Debug/net10.0/Hexalith.EventStore.SignalR.Tests.dll",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_TEMP}"
+    ],
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.EventStore",
+    "exitCode": 0,
+    "seconds": 1.066
+  },
+  {
+    "lane": "memories",
+    "phase": "build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Memories.IntegrationTests",
+      "-c",
+      "Debug",
+      "-m:1",
+      "-p:UseHexalithProjectReferences=true"
+    ],
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+    "exitCode": 0,
+    "seconds": 3.873
+  },
+  {
+    "lane": "memories",
+    "phase": "test",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests",
+      "-class",
+      "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_TEMP}"
+    ],
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+    "exitCode": 0,
+    "seconds": 42.47
+  },
+  {
+    "lane": "memory-architecture",
+    "phase": "build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Memories.Server.Tests",
+      "-c",
+      "Debug",
+      "-m:1",
+      "-p:UseHexalithProjectReferences=true"
+    ],
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+    "exitCode": 0,
+    "seconds": 3.123
+  },
+  {
+    "lane": "memory-architecture",
+    "phase": "test",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.Tests.dll",
+      "-class",
+      "Hexalith.Memories.Server.Tests.Architecture.IngestionWorkflowDeterminismGuardTests",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_TEMP}"
+    ],
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+    "exitCode": 0,
+    "seconds": 0.515
+  },
+  {
+    "lane": "process",
+    "phase": "build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests",
+      "-c",
+      "Release",
+      "-m:1"
+    ],
+    "cwd": "${PARTIES_ROOT}",
+    "exitCode": 0,
+    "seconds": 3.673
+  },
+  {
+    "lane": "process",
+    "phase": "test",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessCaptureTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessLifetimeTests",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_TEMP}"
+    ],
+    "cwd": "${PARTIES_ROOT}",
+    "exitCode": 0,
+    "seconds": 4.125
+  },
+  {
+    "lane": "ci",
+    "phase": "build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Ci.Tests",
+      "-c",
+      "Release",
+      "-m:1"
+    ],
+    "cwd": "${PARTIES_ROOT}",
+    "exitCode": 0,
+    "seconds": 0.916
+  },
+  {
+    "lane": "ci",
+    "phase": "test",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_TEMP}"
+    ],
+    "cwd": "${PARTIES_ROOT}",
+    "exitCode": 0,
+    "seconds": 3.022
+  }
+]

@@ -2,7 +2,7 @@
 title: 'Resolve five membership and admission deferrals'
 type: 'bugfix'
 created: '2026-11-11'
-status: 'in-review'
+status: 'done'
 route: 'dispatch'
 review_loop_iteration: 0
 baseline_commit: '96055d5cb2b75a6d12e12e87b349b7fa473a7b66'
@@ -62,7 +62,7 @@ context: ['AGENTS.md', 'tests/README.md']
 - [x] EventStore client/tests: reproduce delayed canceled ordinary/scoped joins; use existing physical recovery for indeterminate legacy operations and verify survivor delivery, replacement identity and callback revocation.
 - [x] Builds helper/tests and Parties consumer tests: bind receipt/metadata validation to admitted bytes, cover swaps and unsafe entry types, then adopt the pushed owner fix. Reconcile current-source schema observations without altering public publication requirements.
 - [x] Memories workflow/producer tests: exercise real scheduling and persisted historical artifacts. Fix only reproduced fresh-coverage errors; retain unknown-legacy/retry refusal and fresh failed-extraction cleanup. Record an unresolved result honestly if real reuse cannot be established.
-- [ ] This spec, `deferred-work.md`, `.gitlink-signoff.tsv` and dated evidence: activate exactly these entries, record commands/revisions/results, independently review, close only proved work, and push owners before parent pointers.
+- [x] This spec, `deferred-work.md`, `.gitlink-signoff.tsv` and dated evidence: activate exactly these entries, record commands/revisions/results, independently review, close only proved work, and push owners before parent pointers.
 
 **Acceptance Criteria:**
 
@@ -127,3 +127,7 @@ Review correction supplement: `tests/five-membership-and-admission-review-2026-1
 ### Parent integration verification
 
 Owner commits were rebased onto concurrent main advances and pushed before parent gitlinks. The final owner suites pass SignalR 64/64, Memories 65/65 and determinism guards 25/25. Parties process 38/38 and CI 71/71 pass; the rebased Builds helper passes 75/75 and integrated lifecycle controller passes 168/168. All have zero skips. The additional Memories rollback build is repaired in the review supplement: six baseline controls pass and both required regressions fail as expected. Current-source observations are re-derived from exact Git revisions; published package pins and all Unvalidated I16 dispositions remain unchanged. The incoming attached-lifecycle project is inventoried with the other owner-run platform suites. Exact committed-selection checks and final publication records follow the parent code commit.
+
+### Completion — 2026-11-11
+
+All three independent review layers are triaged; twelve patch findings are resolved. Final verification passes 665 selected checks with zero failures/skips, including 128 committed-selection/documentation controls and 31 current-schema controls at parent code revision `22592d671259699f073666ed59d18480bdc9df13`. See `tests/five-membership-and-admission-final-2026-11-11/`. All ten dependency commits are remotely available and the five-pointer push-range gate passes. Four selected entries are closed; demonstrated retained-history Memories reuse is corrected while purged/unavailable history and the independently deferred B2/E1 interleaving stay open. EventStore and Memories main pushes reported PR/status-check rule bypasses. The completion commit records final receipts and proceeds to the already-authorized main push.

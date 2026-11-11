@@ -1,0 +1,9 @@
+# Final membership and admission verification — 2026-11-11
+
+The reviewed code is committed in Parties `22592d671259699f073666ed59d18480bdc9df13`. All 665 selected checks pass with zero failures/skips: SignalR 64, Memories runtime 65, workflow architecture 25, process 38, CI fitness 71, source-selection/documentation 128, Builds helper 75, integrated lifecycle 168, and schema reader 31. Concurrent upstream main advances were preserved by rebase; affected owner/controller checks were rerun. All ten recorded dependency commits were verified available on their remotes.
+
+The original and review packets are dated implementation stages. The review supplement supersedes the copied-layout rollback blocker: both isolated Memories projects build, six original controls pass, and two reversed-code regressions fail as expected. Corrected malformed-parent controls fail at attribution assertions. This final packet binds executed native results, working source hashes, package properties, owner revisions, and owned-container absence checks.
+
+Four scoped entries are closed. The demonstrated retained-history Memories reuse is corrected, including actual parent/retained-activity dispatch and one-schedule lost-ack recovery. Purged/unavailable histories remain open; the independent concurrent-creation concern remains high/unverified. Package/deployment qualification and the six canonical I16 receipts remain unvalidated.
+
+Native gzip receipts preserve results and names while normalizing local paths. Original native bytes and logs remain under `${PRIVATE_RESULTS}`; original, normalized and compressed hashes are explicit. `owner-pushes.json` retains successful source pushes, including GitHub's PR/status-rule bypass messages for EventStore and Memories. Parent publication targets main in the final completion commit; no production or publication parity is inferred.
