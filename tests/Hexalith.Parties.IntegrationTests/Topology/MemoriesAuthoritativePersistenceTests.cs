@@ -5,6 +5,7 @@ using Hexalith.EventStore.Contracts.Authorization;
 using Hexalith.EventStore.Contracts.Routing;
 using Hexalith.EventStore.Contracts.Streams;
 using Hexalith.EventStore.Server.Events;
+using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.EventStore.ServiceDefaults.Routing;
 using NSubstitute;
 using System.Text.Json;
@@ -96,9 +97,9 @@ public sealed class MemoriesAuthoritativePersistenceTests
         var reader = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
         var unscoped = reader.ReadJwtToken(HealthChecks.PartiesAspireTopologyFixture.CreateAdministratorToken());
         var scoped = reader.ReadJwtToken(HealthChecks.PartiesAspireTopologyFixture.CreateAdministratorToken("owned-replay-tenant"));
-        unscoped.Claims.ShouldNotContain(claim => claim.Type == "eventstore:tenant");
-        scoped.Claims.Single(claim => claim.Type == "eventstore:tenant").Value.ShouldBe("owned-replay-tenant");
-        scoped.Claims.Where(claim => claim.Type is not ("eventstore:tenant" or "exp" or "nbf" or "iat"))
+        unscoped.Claims.ShouldNotContain(claim => claim.Type == PartiesClaimTypes.EventStoreTenant);
+        scoped.Claims.Single(claim => claim.Type == PartiesClaimTypes.EventStoreTenant).Value.ShouldBe("owned-replay-tenant");
+        scoped.Claims.Where(claim => claim.Type is not (PartiesClaimTypes.EventStoreTenant or "exp" or "nbf" or "iat"))
             .Select(claim => claim.Type + "=" + claim.Value).Order(StringComparer.Ordinal).ShouldBe(
                 unscoped.Claims.Where(claim => claim.Type is not ("exp" or "nbf" or "iat"))
                     .Select(claim => claim.Type + "=" + claim.Value).Order(StringComparer.Ordinal));

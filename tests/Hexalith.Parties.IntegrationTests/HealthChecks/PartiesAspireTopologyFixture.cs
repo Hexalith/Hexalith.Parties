@@ -19,6 +19,7 @@ using CommunityToolkit.Aspire.Hosting.Dapr;
 using Hexalith.EventStore.Aspire;
 using Hexalith.EventStore.Contracts.Identity;
 using Hexalith.EventStore.Server.Events;
+using Hexalith.Parties.Contracts.Authorization;
 
 using StackExchange.Redis;
 
@@ -1079,7 +1080,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         var descriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity([new(ClaimTypes.Role, "GlobalAdministrator"), new("eventstore:surface", "ui"),
-                .. tenant is null ? Array.Empty<Claim>() : [new Claim("eventstore:tenant", tenant)]]),
+                .. tenant is null ? Array.Empty<Claim>() : [new Claim(PartiesClaimTypes.EventStoreTenant, tenant)]]),
             NotBefore = DateTime.UtcNow.AddMinutes(-1),
             Expires = DateTime.UtcNow.AddMinutes(30),
             IssuedAt = DateTime.UtcNow,
