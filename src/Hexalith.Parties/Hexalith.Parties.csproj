@@ -34,12 +34,12 @@
   <ItemGroup>
     <PackageReference Include="Dapr.AspNetCore" />
     <PackageReference Include="Dapr.Actors.AspNetCore" />
-    <!-- Microsoft.Extensions.Logging.Abstractions is framework-provided in this Web project
-         (via Microsoft.AspNetCore.App). A .NET 10 SDK interaction between package pruning and
+    <!-- Keep the selected package's compile assets when it is newer than the shared framework.
+         A .NET 10 SDK interaction between package pruning and
          analyzer conflict resolution drops the [LoggerMessage] source generator entirely (the
          package and framework copies are both removed), causing CS8795 on every [LoggerMessage]
          method. We restore the path to the package's analyzers and re-add the generator below. -->
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" GeneratePathProperty="true" ExcludeAssets="all" NoWarn="NU1510" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" GeneratePathProperty="true" NoWarn="NU1510" />
     <PackageReference Include="FluentValidation" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
     <PackageReference Include="MediatR" />
