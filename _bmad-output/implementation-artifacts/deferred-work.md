@@ -427,6 +427,11 @@ qualification_2026_11_03: Eight opt-in controls executed actual EventStore 4.0.4
 remaining_gate_2026_11_03: DW-58 stays open. This synthetic disposable-provider run does not qualify process restart, aggregate staged resume, a deployed provider/workload, writer drain, production history/key completeness, cutover or rollback acceptance. Preserve all earlier deployment gates.
 verification_2026_11_03: `tests/five-preflight-and-migration-qualification-2026-11-03/` (26/26 focused tests, including 8/8 provider controls; zero skips).
 
+activated_by_snapshot_spec_2026_11_11: `_bmad-output/implementation-artifacts/spec-five-snapshot-history-and-publish-deferrals.md`
+qualification_2026_11_11: The owned Release/package provider lane passes9/9 with no skips. Five separate workload processes per absent/existing variant retain immutable synthetic history, tenant and operation identity through seed/rebuild/stage/commit/verify; durable detail/processing/index, erasure and all nine survivor bytes match. Redis/Dapr remain running.
+remaining_gate_2026_11_11: Workload process restart is now qualified only for the supported aggregate one-shot/shared staged protocols in the disposable provider. DW-58 stays open for deployed provider/workload qualification, aggregate guarded staged resume, production history/key completeness, writer drain, authorization, cutover and rollback acceptance.
+verification_2026_11_11: `tests/five-snapshot-history-and-publish-2026-11-11/`
+
 ### DW-59: Preserve mappings when unit ID and source URI match different rows
 
 status: done 2026-10-18
@@ -1869,6 +1874,9 @@ archived: 2026-10-21
   status: open
   evidence: Actual SDK CLI manifests for docker/k8s/aca contain both Memories app secret references but no env/token bindings on memories-dapr. Selected Toolkit 13.6.1-beta.935 custom dapr.v0 callback and SDK 13.6.3 outer writer do not serialize these annotations. The omission predates the caller configuration and also affects existing generic helpers. App-only startup with an operator-configured sidecar is separate evidence; require owner-supported publisher delivery and full positive app/sidecar manifest proof.
   evidence_2026_11_10: Fresh actual manifest publishes on the current pins (Aspire.Hosting and AppHost SDK 13.6.4, CommunityToolkit.Aspire.Hosting.Dapr 13.6.2-beta.959) for docker, k8s and aca still emit memories with both secret references and memories-dapr as dapr.v0 with no env, APP_API_TOKEN or DAPR_API_TOKEN binding; the aca memories container-app module has no Dapr block. The 13.6.2-beta.959 dapr.v0 callback writes no environment. The entry stays open and no emission assertion was added. Evidence: `tests/five-admission-interactivity-and-process-containment-2026-11-10/sdk-sidecar-emission.json`.
+  activated_by_snapshot_spec_2026_11_11: `_bmad-output/implementation-artifacts/spec-five-snapshot-history-and-publish-deferrals.md`
+  implementation_snapshot_2026_11_11: Three fresh selected SDK manifest publications execute and pass conformance/refusal controls: app secret references exist, but memories-dapr remains dapr.v0 with only dapr/type and no environment. Aspire.Hosting13.6.4, Toolkit13.6.2-beta.959 and EventStore.Aspire4.2.0 remain selected. Supported paired target emission is still an upstream publisher gate; no generic publisher, dependency or deployment change is claimed.
+  verification_snapshot_2026_11_11: `tests/five-snapshot-history-and-publish-2026-11-11/`
 
 - source_spec: `spec-five-owner-config-and-recovery-deferred-items.md`
   summary: Make Memories MCP explicit JWT algorithm lists replace initialized defaults through registered configuration.
@@ -2254,9 +2262,14 @@ rollback: None required (test-only).
 - source_spec: `/tmp/parties-release-20261105/parties-runtime-r5/_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-05.md`
   summary: Unverified medium risk that a pathological blocked regular filesystem can outlast synchronous snapshot I/O deadline checks.
   evidence: L2-B6 identifies synchronous regular-file open/read/write operations; actual8191-file source capture/export passes in11.258seconds. A controlled slow-filesystem reproducer is required to establish a practical overrun. No source/runtime qualification is granted by this deferral.
-  status: open
+  status: done 2026-11-11
   owner: Hexalith.Platform (reassigned 2026-11-10 by owner decision; ledger-only, no Parties code-fix credit)
   trace_2026_11_10: Parties has no snapshot capture or export code, and the source spec under /tmp no longer exists. The nearest match is Platform 081178aa src/Hexalith.Platform.Composition/PlatformCurrentOwnerSourceState.cs:26-67: Capture and RequireUnchanged check the optional deadline only inside PlatformCurrentOwnerSourceInventory.Read (PlatformCurrentOwnerSourceInventory.cs:14-17,79, before and between git ls-tree calls), then Hash() runs a synchronous File.ReadAllBytes for every eligible input with no further deadline check. spec-sync-upgrade-and-release-2026-11-05.md IB-05 cites the actual 1138-directory/8202-entry owner. A slow-filesystem reproducer and any fix belong in Platform.
+  activated_by_snapshot_spec_2026_11_11: `_bmad-output/implementation-artifacts/spec-five-snapshot-history-and-publish-deferrals.md`
+  implementation_snapshot_2026_11_11: Owned regular-file leases reproduce approximately three-second caller overruns against a 750ms deadline. Internal owned .NET source measurement now preserves SHA-256 and the cumulative deadline, bounds caller return and reaps the worker. Source Debug controls pass 11/11; isolated reversed SourceState passes 9/11 with exactly two expected lease failures. Independent review and owner publication remain parent-owned.
+  verification_snapshot_2026_11_11: `tests/five-snapshot-history-and-publish-2026-11-11/`
+
+  resolution_snapshot_2026_11_11: The owned regular-file lease overrun is reproduced and corrected in pushed Platform 3ad2f29ae50858ba665499568623b557725b9d93. The caller keeps its original deadline while every worker is retained until exit; capture and final hash-worker controls, forced termination failure and copied-child cleanup pass. Final14/14 controls and exact reversed failures are retained. This closes the demonstrated source-measurement boundary, not all possible production filesystem behavior.
 
 - source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-06.md`
   summary: Evaluate fixed digest verification for the manual Dapr diagnostic toolchain archives (unverified medium).
@@ -2640,6 +2653,13 @@ rollback: None required (test-only).
   remaining_gate_2026_11_11: Retained-history reuse and one-schedule lost-ack recovery are corrected and independently reviewed; purged/unavailable history and unproved concurrent historical creation remain open. No completeness or writer-drain attestation is supplied.
   evidence: Review BH1/EC1; medium unverified. Current normal callers generate fresh GUID/ULID identities and failed retry admission is excluded. Reproduce a real scheduler/workflow identity reuse with no checked base hashes, then test whether modern provenance leaves historical vectors after cleanup. Do not add scans or grant legacy completeness from a synthetic collision alone.
 
+  activated_by_snapshot_spec_2026_11_11: `_bmad-output/implementation-artifacts/spec-five-snapshot-history-and-publish-deferrals.md`
+  implementation_snapshot_2026_11_11: Actual Dapr workflow purge leaves real historical chunks and NL artifacts. Negative workflow metadata no longer creates modern per-unit completeness: existing independently reconciled source coverage is required, and the legacy NL base key joins the atomic collision check. Unknown-source deletion refuses and preserves historical/foreign bytes. Fresh reconciled sources and tracked lost acknowledgements remain covered; source correction awaits independent review/publication.
+  verification_snapshot_2026_11_11: `tests/five-snapshot-history-and-publish-2026-11-11/`
+  review_resolution_snapshot_2026_11_11: The proposed source-wide prerequisite was rejected and removed: it blocks ordinary production cleanup and source-B reconciliation still grants false completeness to source-A historical chunks. Production fresh behavior is preserved. Only the legacy-NL base-key collision is corrected here; purged/concurrent/cross-source identity safety stays open pending per-unit authority or old-writer exclusion.
+  final_verification_snapshot_2026_11_11: `tests/five-snapshot-history-and-publish-2026-11-11/final-verification.json`; independent false-success proof in `review-cross-source/`.
+
+
 - source_spec: `spec-five-memories-proof-and-process-observation-deferred-items.md`
   summary: Qualify child-parent membership when a listed PID is reused before the first child birth-identity read.
   activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-membership-and-admission-deferrals.md`
@@ -2661,3 +2681,14 @@ rollback: None required (test-only).
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-membership-and-admission-deferrals.md`
   summary: Qualify concurrent historical workflow creation between an absent history read and fresh admission.
   evidence: Review B2/E1; high unverified and pre-existing exclusion gap. Existing/running history is refused, but an older untracked producer could theoretically create and complete the same identity after an absent read. Demonstrate a real owned two-producer interleaving and retained-artifact cleanup outcome before adding an exclusion protocol. Current retained-history proof does not establish writer drain, purged history or production completeness.
+  activated_by_snapshot_spec_2026_11_11: `_bmad-output/implementation-artifacts/spec-five-snapshot-history-and-publish-deferrals.md`
+  implementation_snapshot_2026_11_11: Two actual Dapr producers complete older history after the captured absent lookup and before modern admission. Unknown-source candidate provenance remains incomplete and actual cleanup refuses while chunk/NL and survivor bytes remain. This corrects the reproduced false-completeness outcome; it introduces no exclusion contract and proves no older-writer drain after an independent attestation.
+  verification_snapshot_2026_11_11: `tests/five-snapshot-history-and-publish-2026-11-11/`
+  review_resolution_snapshot_2026_11_11: The proposed source-wide prerequisite was rejected and removed: it blocks ordinary production cleanup and source-B reconciliation still grants false completeness to source-A historical chunks. Production fresh behavior is preserved. Only the legacy-NL base-key collision is corrected here; purged/concurrent/cross-source identity safety stays open pending per-unit authority or old-writer exclusion.
+  final_verification_snapshot_2026_11_11: `tests/five-snapshot-history-and-publish-2026-11-11/final-verification.json`; independent false-success proof in `review-cross-source/`.
+
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-snapshot-history-and-publish-deferrals.md`
+  summary: Establish per-unit historical identity authority across source changes without blocking ordinary fresh production cleanup.
+  evidence: Review E1/D1, high verified and pre-existing. Actual historical source-A workflow purge, independently reconciled empty source B, and reused tenant/unit identity grant modern provenance; real deletion returns true while chunk7 survives with the same complete persisted hash. Source coverage is not unit authority. The rejected blanket prerequisite also breaks ordinary cleanup because qualification endpoints are non-Production. A new owner-approved per-unit freshness or old-writer exclusion protocol is required; no negative scan or synthetic source attestation supplies it. Evidence: `tests/five-snapshot-history-and-publish-2026-11-11/review-cross-source/`.
+  status: open

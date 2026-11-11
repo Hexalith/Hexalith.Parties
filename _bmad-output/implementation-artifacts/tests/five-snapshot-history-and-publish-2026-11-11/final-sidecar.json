@@ -1,0 +1,79 @@
+{
+  "executed": 3,
+  "passed": true,
+  "apphostSha256": "4973b9a4d4b9a8d015570cc7d935b0f4946eb51a5fe2ad74539768ae40e3c763",
+  "effectivePackages": [
+    "Aspire.Hosting/13.6.4",
+    "CommunityToolkit.Aspire.Hosting.Dapr/13.6.2-beta.959",
+    "Hexalith.EventStore.Aspire/4.2.0"
+  ],
+  "scope": "Actual selected SDK manifest emission; mutated copies qualify checker only; no deployment or delivery claim",
+  "records": [
+    {
+      "target": "aca",
+      "publisherExitCode": 0,
+      "actualManifestSha256": "b8dd390d73f78e7bfb80a7649cd763722a50536dfd96120df500685f2244033b",
+      "appSecretReferences": {
+        "APP_API_TOKEN": "{memories-app-api-token.value}",
+        "DAPR_API_TOKEN": "{memories-dapr-api-token.value}"
+      },
+      "sidecarSecretReferences": {
+        "APP_API_TOKEN": null,
+        "DAPR_API_TOKEN": null
+      },
+      "sidecarType": "dapr.v0",
+      "sidecarKeys": [
+        "dapr",
+        "type"
+      ],
+      "pairedSecretEmissionQualified": false,
+      "blocker": "sidecar-environment-not-emitted",
+      "conformance": "passed",
+      "privateRawArtifactsRemoved": true
+    },
+    {
+      "target": "docker",
+      "publisherExitCode": 0,
+      "actualManifestSha256": "829f071ffc43e83ac6fee462809419617a2b784c6eedff8d79b4bc15322f5297",
+      "appSecretReferences": {
+        "APP_API_TOKEN": "{memories-app-api-token.value}",
+        "DAPR_API_TOKEN": "{memories-dapr-api-token.value}"
+      },
+      "sidecarSecretReferences": {
+        "APP_API_TOKEN": null,
+        "DAPR_API_TOKEN": null
+      },
+      "sidecarType": "dapr.v0",
+      "sidecarKeys": [
+        "dapr",
+        "type"
+      ],
+      "pairedSecretEmissionQualified": false,
+      "blocker": "sidecar-environment-not-emitted",
+      "conformance": "passed",
+      "privateRawArtifactsRemoved": true
+    },
+    {
+      "target": "k8s",
+      "publisherExitCode": 0,
+      "actualManifestSha256": "b7b7708d36fccac80ca967301388670de347eb7d64f609e838afc3af832aac6f",
+      "appSecretReferences": {
+        "APP_API_TOKEN": "{memories-app-api-token.value}",
+        "DAPR_API_TOKEN": "{memories-dapr-api-token.value}"
+      },
+      "sidecarSecretReferences": {
+        "APP_API_TOKEN": null,
+        "DAPR_API_TOKEN": null
+      },
+      "sidecarType": "dapr.v0",
+      "sidecarKeys": [
+        "dapr",
+        "type"
+      ],
+      "pairedSecretEmissionQualified": false,
+      "blocker": "sidecar-environment-not-emitted",
+      "conformance": "passed",
+      "privateRawArtifactsRemoved": true
+    }
+  ]
+}

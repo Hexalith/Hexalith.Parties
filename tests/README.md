@@ -899,3 +899,30 @@ fails. Qualification requires `PARTIES_PROCESS_NAMESPACE_REQUIRED=true` and
 directly. The foreign-parent control additionally requires `python3`; it resets
 PID allocation only inside the verified owned namespace after pipe setup, and
 retains a true independent sibling through refusal and bounded owned cleanup.
+
+## Snapshot, historical provenance and workload restart qualification (2026-11-11)
+
+The [bounded receipt](../_bmad-output/implementation-artifacts/tests/five-snapshot-history-and-publish-2026-11-11/README.md)
+separates owner source Debug from Parties package Release. Platform's source
+inventory/seal/deadline controls use real regular-file leases and verify bounded
+caller return, owned worker exit, copied private output and unavailable runtime.
+Memories' actual Dapr controls preserve historical chunks/NL hashes through real
+workflow purge and a two-producer absent-lookup/admission interleaving. A negative
+workflow lookup supplies no completeness authority. Review rejected the proposed
+source-wide prerequisite because it breaks ordinary cleanup and still fails
+cross-source identity reuse. Ordinary fresh cleanup remains unchanged; only an
+existing legacy-NL base-key collision now refuses admission. Historical identity
+safety and older-writer drain remain unqualified.
+
+Run both backfill runtime classes documented in `docs/read-model-migration.md`
+against an owned provider, with `-failSkips`. The new process class resumes the
+supported aggregate one-shot/shared staged protocols through five separate
+workloads per canonical-state variant and checks durable canonical values,
+erasure and nine survivors. Deployed migration acceptance remains open.
+
+The receipt's `verify-sidecar-publication.py` executes actual SDK manifests for
+all three selected target graphs and tests the paired-reference checker. Current
+unsupported output is explicitly refused: the app has both secret references,
+while `memories-dapr` has no environment. Passing refusal controls qualify the
+checker and observed publisher limitation; positive sidecar delivery remains an
+upstream gate. Raw manifests and synthetic credentials stay private and are removed.

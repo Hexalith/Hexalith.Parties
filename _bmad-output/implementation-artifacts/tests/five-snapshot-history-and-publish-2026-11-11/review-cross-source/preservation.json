@@ -1,0 +1,59 @@
+{
+  "scope": "Independent counterexample against rejected source-wide completeness proposal; no publication qualification",
+  "files": {
+    "README.txt": {
+      "rawSha256": "ef4ad608abe384e43238df0e85e6fca847af214c3d76cb8f86e56ae5cb683879",
+      "retainedSha256": "ef4ad608abe384e43238df0e85e6fca847af214c3d76cb8f86e56ae5cb683879"
+    },
+    "result.json": {
+      "rawSha256": "8575f724a6889f0a35595058712c5cc857e31eb86c3f0e5e4154f7aca0e71507",
+      "retainedSha256": "8575f724a6889f0a35595058712c5cc857e31eb86c3f0e5e4154f7aca0e71507"
+    },
+    "cleanup.json": {
+      "rawSha256": "b5a135b7aca28eb9026dbf1ca80dc4862798a3862a70b61091df55ba3a87f87b",
+      "retainedSha256": "b5a135b7aca28eb9026dbf1ca80dc4862798a3862a70b61091df55ba3a87f87b"
+    },
+    "identities.json": {
+      "rawSha256": "12e8ed6a3110b25fefd17a01ea555bfd87aefc5ed0de6a96e0db3b1675c92d1c",
+      "retainedSha256": "f2a7d961dc4e301d5728c79c13113266d829c4871a789e8cdd72726031987c38"
+    },
+    "run-command.json": {
+      "rawSha256": "7f872e68f8bd9cdb2cd31c1e52bda44c7df6d0008c8d3f4aec927085c0890453",
+      "retainedSha256": "82ab06e95b96adb168c0d3886740480ff6c3d987482ab50c4ef829cb8e46a71b"
+    },
+    "compile-command.json": {
+      "rawSha256": "45e4e189c40199fe0b5823df3963b6b6dc6ea20824b2687bc3baa02a28a2dac2",
+      "retainedSha256": "1b68bb8ea745c966f2bcf1f3ef3b69689cd857fc83b0c6e969850ad3963f26ac"
+    },
+    "compile-exit.json": {
+      "rawSha256": "bd008d74b17a7ac3cff7c13f2f22e0642d910b4ae90183715eeab09c3aea40d6",
+      "retainedSha256": "bd008d74b17a7ac3cff7c13f2f22e0642d910b4ae90183715eeab09c3aea40d6"
+    },
+    "run-exit.json": {
+      "rawSha256": "47b8b6b49d4695fe6e036bd916538aff4f46773e212ca0d429db80f3963e2cfe",
+      "retainedSha256": "47b8b6b49d4695fe6e036bd916538aff4f46773e212ca0d429db80f3963e2cfe"
+    },
+    "probe-process.json": {
+      "rawSha256": "d08acb0f7e933b1f50b9347f63cd8a4e825d366ce1c08b3598f684d172541cd1",
+      "retainedSha256": "d08acb0f7e933b1f50b9347f63cd8a4e825d366ce1c08b3598f684d172541cd1"
+    },
+    "RedisStackFixture.cs.gz": {
+      "sourceSha256": "219164d6cae02b1ae2e21d27803343732f02a7fdaf78a9d4d4b4810166f96be6"
+    },
+    "HistoricalCandidateArtifactWorkflow.cs.gz": {
+      "sourceSha256": "f3bfd4437c35c037347b2a43378bbe2ca54228c0ec86f7ea7fe6598f19240537"
+    },
+    "GlobalUsings.cs.gz": {
+      "sourceSha256": "e2ea7654defbd4c389c35e931194ab8f0e22ab0f546ba14b8a5ab8bb511c116d"
+    },
+    "Program.cs.gz": {
+      "sourceSha256": "93cd295cf7395877a40a0882add810698f2f5c6ee8a0816aacc4aa1203b425f3"
+    },
+    "DaprStateSidecarFixture.cs.gz": {
+      "sourceSha256": "ce06e2a09819debe26c66e1aed9a4e8196481ee5afa32dcb737e965c67262b46"
+    },
+    "FalkorDbFixture.cs.gz": {
+      "sourceSha256": "8436cb68ca028f5a124b402b288e198075597580ccd5392a9b95f9cf2973908b"
+    }
+  }
+}

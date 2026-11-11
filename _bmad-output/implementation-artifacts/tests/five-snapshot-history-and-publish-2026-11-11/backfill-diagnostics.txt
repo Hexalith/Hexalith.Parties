@@ -1,0 +1,3 @@
+    [D::Hexalith.Parties.Tests] separate workloads=5; existing=False; immutable input=0907bc472e0f65d92d20b063e51ae06af44e3967a46082f0f5860ee5703570fc; aggregate one-shot and shared stage/commit/verify passed; survivors=9
+    [D::Hexalith.Parties.Tests] separate workloads=5; existing=True; immutable input=d9de26eba4e6216d7d0651104ebbf02973cf32cdd694658902232d9b2e9c1b78; aggregate one-shot and shared stage/commit/verify passed; survivors=9
+   Hexalith.Parties.Tests  Total: 9, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 10.573s

@@ -7,3 +7,9 @@ _bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoptio
 
 # Markdown follows the repository EditorConfig CRLF policy.
 *.md whitespace=cr-at-eol
+
+# Preserve the owned backfill workload C# CRLF bytes while checking actual whitespace.
+tests/Hexalith.Parties.Tests/Projections/PartyLegacyBackfillRuntimeFixture.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Tests/Projections/PartyLegacyBackfillProcessRuntimeTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Tests/Projections/PartyLegacyBackfillWorkloadManifest.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

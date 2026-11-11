@@ -1,0 +1,334 @@
+{
+  "placeholders": {
+    "PARTIES_ROOT": "actual enclosing Parties checkout",
+    "PRIVATE_ROOT": "implementation-owned scratch directory retained for parent review",
+    "OWNED_TEMP": "per-publication private TemporaryDirectory, removed"
+  },
+  "commands": [
+    {
+      "name": "platform-owner-root-prerequisite",
+      "cwd": "${PARTIES_ROOT}/references/Hexalith.Platform",
+      "argv": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Platform.Composition.Tests/Hexalith.Platform.Composition.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1"
+      ],
+      "exitCode": 1,
+      "note": "MSB4025: missing uninitialized nested Parties paths; no nested submodule initialized"
+    },
+    {
+      "name": "platform-enclosing-analyzer-blocker",
+      "cwd": "${PARTIES_ROOT}/references/Hexalith.Platform",
+      "argv": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Platform.Composition.Tests/Hexalith.Platform.Composition.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "-p:HexalithPartiesRoot=${PARTIES_ROOT}"
+      ],
+      "exitCode": 1,
+      "note": "59 existing/new CA2007/CA1062 diagnostics from enclosing Parties analyzer policy; new tests corrected; owner isolation preserves effective independent owner rules"
+    },
+    {
+      "name": "platform-source-debug-build",
+      "cwd": "${PRIVATE_ROOT}/platform",
+      "argv": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Platform.Composition.Tests/Hexalith.Platform.Composition.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "-p:HexalithPartiesRoot=${PARTIES_ROOT}",
+        "-p:HexalithBuildsRoot=${PARTIES_ROOT}/references/Hexalith.Builds",
+        "-p:HexalithEventStoreRoot=${PARTIES_ROOT}/references/Hexalith.EventStore",
+        "-p:HexalithMemoriesRoot=${PARTIES_ROOT}/references/Hexalith.Memories",
+        "-p:HexalithTenantsRoot=${PARTIES_ROOT}/references/Hexalith.Tenants",
+        "-p:HexalithCommonsRoot=${PARTIES_ROOT}/references/Hexalith.Commons",
+        "-p:HexalithMcpCliRoot=${PARTIES_ROOT}/references/Hexalith.McpCli",
+        "-p:HexalithPolymorphicSerializationsRoot=${PARTIES_ROOT}/references/Hexalith.PolymorphicSerializations"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "platform-source-debug-tests",
+      "cwd": "${PRIVATE_ROOT}/platform",
+      "argv": [
+        "dotnet",
+        "tests/Hexalith.Platform.Composition.Tests/bin/Debug/net10.0/Hexalith.Platform.Composition.Tests.dll",
+        "-class",
+        "Hexalith.Platform.Composition.Tests.PlatformCurrentOwnerSourceDeadlineTests",
+        "-class",
+        "Hexalith.Platform.Composition.Tests.PlatformCurrentOwnerSourceInventoryTests",
+        "-class",
+        "Hexalith.Platform.Composition.Tests.PlatformCurrentOwnerSourceSealTests",
+        "-failSkips",
+        "-diagnostics",
+        "-result-xml",
+        "${PRIVATE_ROOT}/platform-final.xml"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "platform-reversed-tests",
+      "cwd": "${PRIVATE_ROOT}/platform",
+      "argv": [
+        "dotnet",
+        "tests/Hexalith.Platform.Composition.Tests/bin/Debug/net10.0/Hexalith.Platform.Composition.Tests.dll",
+        "-class",
+        "Hexalith.Platform.Composition.Tests.PlatformCurrentOwnerSourceDeadlineTests",
+        "-class",
+        "Hexalith.Platform.Composition.Tests.PlatformCurrentOwnerSourceInventoryTests",
+        "-class",
+        "Hexalith.Platform.Composition.Tests.PlatformCurrentOwnerSourceSealTests",
+        "-failSkips",
+        "-result-xml",
+        "${PRIVATE_ROOT}/platform-reversed.xml"
+      ],
+      "exitCode": 1,
+      "note": "Isolated original SourceState with final selected dependencies; exactly two expected deadline failures, nine baseline controls pass"
+    },
+    {
+      "name": "memories-owner-debug-build",
+      "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+      "argv": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Memories.IntegrationTests/Hexalith.Memories.IntegrationTests.csproj",
+        "-c",
+        "Debug",
+        "-m:1"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "memories-final-serialized-tests",
+      "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+      "argv": [
+        "dotnet",
+        "tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryIntegrationTests",
+        "-class",
+        "Hexalith.Memories.IntegrationTests.Ingestion.RefreshPublicationIntegrationTests",
+        "-class",
+        "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests",
+        "-class",
+        "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests",
+        "-class",
+        "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests",
+        "-failSkips",
+        "-diagnostics",
+        "-result-xml",
+        "${PRIVATE_ROOT}/memories-qualified-final.xml"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "memories-reversed-debug-build",
+      "cwd": "${PRIVATE_ROOT}/memories",
+      "argv": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Memories.IntegrationTests/Hexalith.Memories.IntegrationTests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "-p:Hexalith1BuildPackageProps=${PARTIES_ROOT}/references/Hexalith.Builds/Props/Directory.Packages.props",
+        "-p:HexalithBuildsRoot=${PARTIES_ROOT}/references/Hexalith.Builds",
+        "-p:HexalithEventStoreRoot=${PARTIES_ROOT}/references/Hexalith.EventStore",
+        "-p:HexalithFrontComposerRoot=${PARTIES_ROOT}/references/Hexalith.FrontComposer",
+        "-p:HexalithTenantsRoot=${PARTIES_ROOT}/references/Hexalith.Tenants",
+        "-p:HexalithCommonsRoot=${PARTIES_ROOT}/references/Hexalith.Commons",
+        "-p:HexalithMcpCliRoot=${PARTIES_ROOT}/references/Hexalith.McpCli",
+        "-p:HexalithPlatformRoot=${PARTIES_ROOT}/references/Hexalith.Platform",
+        "-p:HexalithPolymorphicSerializationsRoot=${PARTIES_ROOT}/references/Hexalith.PolymorphicSerializations"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "memories-reversed-tests",
+      "cwd": "${PRIVATE_ROOT}/memories",
+      "argv": [
+        "dotnet",
+        "tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryIntegrationTests",
+        "-class",
+        "Hexalith.Memories.IntegrationTests.Ingestion.RefreshPublicationIntegrationTests",
+        "-class",
+        "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests",
+        "-class",
+        "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests",
+        "-class",
+        "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests",
+        "-failSkips",
+        "-result-xml",
+        "${PRIVATE_ROOT}/memories-rollback.xml"
+      ],
+      "exitCode": 1,
+      "note": "Isolated unchanged SourceInventoryStore; final fixture prerequisites; exactly four expected historical provenance failures and98passing controls"
+    },
+    {
+      "name": "memories-server-debug-build",
+      "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+      "argv": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Memories.Server.Tests/Hexalith.Memories.Server.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "memories-determinism",
+      "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+      "argv": [
+        "dotnet",
+        "tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.Tests.dll",
+        "-class",
+        "Hexalith.Memories.Server.Tests.Architecture.IngestionWorkflowDeterminismGuardTests",
+        "-failSkips",
+        "-result-xml",
+        "${PRIVATE_ROOT}/memories-determinism.xml"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "parties-debug-build",
+      "cwd": "${PARTIES_ROOT}",
+      "argv": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "parties-release-build",
+      "cwd": "${PARTIES_ROOT}",
+      "argv": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "owned-provider-release",
+      "cwd": "${PARTIES_ROOT}",
+      "argv": [
+        "python3",
+        "_bmad-output/implementation-artifacts/tests/five-snapshot-history-and-publish-2026-11-11/run-owned-backfill.py",
+        "--assembly",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "--output",
+        "${PRIVATE_ROOT}/backfill-final"
+      ],
+      "exitCode": 0,
+      "note": "Driver provisions and removes only owned RedisStack/Dapr; child ConfigurationAsync validates both transports and backing Redis before writing"
+    },
+    {
+      "name": "publish-release-build",
+      "cwd": "${PARTIES_ROOT}",
+      "argv": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "-c",
+        "Release",
+        "-m:1"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "publish-model-controls",
+      "cwd": "${PARTIES_ROOT}",
+      "argv": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-method",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishOidcTests.*",
+        "-method",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.PublishModel_*",
+        "-method",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.MemoriesPublishModel_*",
+        "-method",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.RunModel_*",
+        "-failSkips",
+        "-result-xml",
+        "${PRIVATE_ROOT}/publish-models.xml"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "actual-sdk-sidecar-conformance",
+      "cwd": "${PARTIES_ROOT}",
+      "argv": [
+        "python3",
+        "_bmad-output/implementation-artifacts/tests/five-snapshot-history-and-publish-2026-11-11/verify-sidecar-publication.py",
+        "--apphost",
+        "src/Hexalith.Parties.AppHost/bin/Release/net10.0/Hexalith.Parties.AppHost.dll",
+        "--receipt",
+        "${PRIVATE_ROOT}/sdk-sidecar-emission.json"
+      ],
+      "exitCode": 0,
+      "note": "Three actual emitted target graphs; paired emission remains unsupported; mutated copies qualify checker only"
+    },
+    {
+      "name": "actual-docker-manifest",
+      "cwd": "${PARTIES_ROOT}",
+      "argv": [
+        "dotnet",
+        "${PARTIES_ROOT}/src/Hexalith.Parties.AppHost/bin/Release/net10.0/Hexalith.Parties.AppHost.dll",
+        "--operation=publish",
+        "--publisher=manifest",
+        "--output-path=${OWNED_TEMP}/manifest.json",
+        "--PUBLISH_TARGET=docker"
+      ],
+      "exitCode": 0,
+      "note": "PartiesUi__OidcClientSecret supplied as a fresh private synthetic environment value; raw artifacts removed; hashes retained"
+    },
+    {
+      "name": "actual-k8s-manifest",
+      "cwd": "${PARTIES_ROOT}",
+      "argv": [
+        "dotnet",
+        "${PARTIES_ROOT}/src/Hexalith.Parties.AppHost/bin/Release/net10.0/Hexalith.Parties.AppHost.dll",
+        "--operation=publish",
+        "--publisher=manifest",
+        "--output-path=${OWNED_TEMP}/manifest.json",
+        "--PUBLISH_TARGET=k8s"
+      ],
+      "exitCode": 0,
+      "note": "PartiesUi__OidcClientSecret supplied as a fresh private synthetic environment value; raw artifacts removed; hashes retained"
+    },
+    {
+      "name": "actual-aca-manifest",
+      "cwd": "${PARTIES_ROOT}",
+      "argv": [
+        "dotnet",
+        "${PARTIES_ROOT}/src/Hexalith.Parties.AppHost/bin/Release/net10.0/Hexalith.Parties.AppHost.dll",
+        "--operation=publish",
+        "--publisher=manifest",
+        "--output-path=${OWNED_TEMP}/manifest.json",
+        "--PUBLISH_TARGET=aca"
+      ],
+      "exitCode": 0,
+      "note": "PartiesUi__OidcClientSecret supplied as a fresh private synthetic environment value; raw artifacts removed; hashes retained"
+    }
+  ]
+}

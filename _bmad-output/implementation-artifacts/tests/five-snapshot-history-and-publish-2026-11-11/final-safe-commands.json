@@ -1,0 +1,142 @@
+[
+  {
+    "name": "platform-final-tests",
+    "cwd": "${PRIVATE_ROOT}/platform",
+    "argv": [
+      "dotnet",
+      "${PRIVATE_ROOT}/platform/tests/Hexalith.Platform.Composition.Tests/bin/Debug/net10.0/Hexalith.Platform.Composition.Tests.dll",
+      "-class",
+      "Hexalith.Platform.Composition.Tests.PlatformCurrentOwnerSourceDeadlineTests",
+      "-class",
+      "Hexalith.Platform.Composition.Tests.PlatformCurrentOwnerSourceInventoryTests",
+      "-class",
+      "Hexalith.Platform.Composition.Tests.PlatformCurrentOwnerSourceSealTests",
+      "-failSkips",
+      "-diagnostics",
+      "-result-xml",
+      "${PRIVATE_ROOT}/parent-review/platform.xml"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 8.399,
+    "log": "${PRIVATE_ROOT}/parent-review/platform-final-tests.log"
+  },
+  {
+    "name": "memories-ordinary-build",
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+    "argv": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Memories.IntegrationTests/Hexalith.Memories.IntegrationTests.csproj",
+      "-c",
+      "Debug",
+      "-m:1"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 5.647,
+    "log": "${PRIVATE_ROOT}/parent-review/memories-ordinary-build.log"
+  },
+  {
+    "name": "memories-safe-baseline-tests",
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+    "argv": [
+      "dotnet",
+      "${PARTIES_ROOT}/references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryIntegrationTests",
+      "-class",
+      "Hexalith.Memories.IntegrationTests.Ingestion.RefreshPublicationIntegrationTests",
+      "-class",
+      "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests",
+      "-class",
+      "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests",
+      "-class",
+      "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests",
+      "-failSkips",
+      "-diagnostics",
+      "-result-xml",
+      "${PRIVATE_ROOT}/parent-review/memories.xml"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 45.826,
+    "log": "${PRIVATE_ROOT}/parent-review/memories-safe-baseline-tests.log"
+  },
+  {
+    "name": "determinism-tests",
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+    "argv": [
+      "dotnet",
+      "${PARTIES_ROOT}/references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.Tests.dll",
+      "-class",
+      "Hexalith.Memories.Server.Tests.Architecture.IngestionWorkflowDeterminismGuardTests",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_ROOT}/parent-review/determinism.xml"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 0.472,
+    "log": "${PRIVATE_ROOT}/parent-review/determinism-tests.log"
+  },
+  {
+    "name": "python-guards",
+    "cwd": "${PARTIES_ROOT}",
+    "argv": [
+      "python3",
+      "${PARTIES_ROOT}/_bmad-output/implementation-artifacts/tests/five-snapshot-history-and-publish-2026-11-11/test-evidence-guards.py"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 0.08,
+    "log": "${PRIVATE_ROOT}/parent-review/python-guards.log"
+  },
+  {
+    "name": "backfill-provider",
+    "cwd": "${PARTIES_ROOT}",
+    "argv": [
+      "python3",
+      "${PARTIES_ROOT}/_bmad-output/implementation-artifacts/tests/five-snapshot-history-and-publish-2026-11-11/run-owned-backfill.py",
+      "--assembly",
+      "${PARTIES_ROOT}/tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+      "--output",
+      "${PRIVATE_ROOT}/parent-review/backfill"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 10.085,
+    "log": "${PRIVATE_ROOT}/parent-review/backfill-provider.log"
+  },
+  {
+    "name": "publish-models",
+    "cwd": "${PARTIES_ROOT}",
+    "argv": [
+      "dotnet",
+      "${PARTIES_ROOT}/tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+      "-method",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishOidcTests.*",
+      "-method",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.PublishModel_*",
+      "-method",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.MemoriesPublishModel_*",
+      "-method",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.RunModel_*",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_ROOT}/parent-review/publish.xml"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 0.756,
+    "log": "${PRIVATE_ROOT}/parent-review/publish-models.log"
+  },
+  {
+    "name": "sidecar-conformance",
+    "cwd": "${PARTIES_ROOT}",
+    "argv": [
+      "python3",
+      "${PARTIES_ROOT}/_bmad-output/implementation-artifacts/tests/five-snapshot-history-and-publish-2026-11-11/verify-sidecar-publication.py",
+      "--apphost",
+      "${PARTIES_ROOT}/src/Hexalith.Parties.AppHost/bin/Release/net10.0/Hexalith.Parties.AppHost.dll",
+      "--receipt",
+      "${PRIVATE_ROOT}/parent-review/sidecar.json"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 2.939,
+    "log": "${PRIVATE_ROOT}/parent-review/sidecar-conformance.log"
+  }
+]

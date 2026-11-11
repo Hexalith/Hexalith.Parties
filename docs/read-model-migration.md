@@ -23,6 +23,17 @@ or cutover approval. Guarded aggregate stage/resume needs its separate owner
 catalog/source protocol qualification; unguarded raw handlers do not retain that
 admitted plan across re-preparation.
 
+`PartyLegacyBackfillProcessRuntimeTests` separately transports one immutable synthetic
+history/tenant/operation manifest through five exiting seed, aggregate rebuild,
+shared stage, shared commit and final verification workloads. Both initially absent
+and existing canonical models are covered. Each child uses the real SDK store and
+checks the nine retained actor/foreign-tenant byte values; the final child inspects
+detail, processing and index checkpoints, contents and erasure suppression. Redis
+and Dapr remain running across those workload processes. This qualifies workload
+restart for the supported aggregate one-shot/shared staged protocols on the owned
+provider; it supplies no aggregate staged-resume, production history completeness,
+deployed writer drain, authorization or cutover acceptance.
+
 Supply a private JSON file through `PARTIES_BACKFILL_STATE_RUNTIME_CONFIG` with
 `daprAppId`, `daprHttpEndpoint`, `daprGrpcEndpoint`, `daprApiToken`,
 `redisEndpoint`, `stateStoreName` and `ownedDisposableStore: true`. Dapr endpoints must use loopback
@@ -43,7 +54,8 @@ never a shared store or a forwarded deployed endpoint. Each test uses a fresh
 synthetic tenant. Keep credentials/configuration outside the repository.
 
 After building `Hexalith.Parties.Tests`, invoke its test assembly with
-`-class Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests`.
+`-class Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests`
+and `-class Hexalith.Parties.Tests.Projections.PartyLegacyBackfillProcessRuntimeTests`.
 An absent configuration skips this explicitly opt-in lane; skipped execution is
 not qualification. Preserve the command, selected package/provider identities,
 test XML and the owned-resource cleanup result. Destroy the exclusively owned

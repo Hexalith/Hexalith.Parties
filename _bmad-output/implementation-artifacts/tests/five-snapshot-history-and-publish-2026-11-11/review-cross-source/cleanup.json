@@ -1,0 +1,35 @@
+{
+  "ownedRedisContainerId": {
+    "id": "86440eb606dfe9be962c36bc3d04bec69a11d09a822a81673c97c6259a024fa4",
+    "argv": [
+      "docker",
+      "inspect",
+      "86440eb606dfe9be962c36bc3d04bec69a11d09a822a81673c97c6259a024fa4"
+    ],
+    "exitCode": 1,
+    "stderr": "error: no such object: 86440eb606dfe9be962c36bc3d04bec69a11d09a822a81673c97c6259a024fa4",
+    "absent": true
+  },
+  "ownedGraphContainerId": {
+    "id": "e475bf8a45db5e8a45fdc4f7ee8b1d8be41bbd5d2a93c503d9e561462d4d3dc5",
+    "argv": [
+      "docker",
+      "inspect",
+      "e475bf8a45db5e8a45fdc4f7ee8b1d8be41bbd5d2a93c503d9e561462d4d3dc5"
+    ],
+    "exitCode": 1,
+    "stderr": "error: no such object: e475bf8a45db5e8a45fdc4f7ee8b1d8be41bbd5d2a93c503d9e561462d4d3dc5",
+    "absent": true
+  },
+  "ownedDaprd": {
+    "pid": 1314616,
+    "procPathExists": false,
+    "exited": true
+  },
+  "sharedSourcesUnchanged": {
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/SourceInventoryStore.cs": true,
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/SemanticKeyDiscovery.cs": true
+  },
+  "sharedServerUnchanged": true,
+  "privateProgramSha256": "93cd295cf7395877a40a0882add810698f2f5c6ee8a0816aacc4aa1203b425f3"
+}

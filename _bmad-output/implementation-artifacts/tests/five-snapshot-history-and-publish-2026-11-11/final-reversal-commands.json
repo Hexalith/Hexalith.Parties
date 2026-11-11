@@ -1,0 +1,119 @@
+[
+  {
+    "name": "platform-reversal-build",
+    "cwd": "${PRIVATE_ROOT}/platform",
+    "argv": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Platform.Composition.Tests/Hexalith.Platform.Composition.Tests.csproj",
+      "-c",
+      "Debug",
+      "-m:1",
+      "-p:HexalithPartiesRoot=${PARTIES_ROOT}",
+      "-p:HexalithBuildsRoot=${PARTIES_ROOT}/references/Hexalith.Builds",
+      "-p:HexalithEventStoreRoot=${PARTIES_ROOT}/references/Hexalith.EventStore",
+      "-p:HexalithMemoriesRoot=${PARTIES_ROOT}/references/Hexalith.Memories",
+      "-p:HexalithTenantsRoot=${PARTIES_ROOT}/references/Hexalith.Tenants",
+      "-p:HexalithCommonsRoot=${PARTIES_ROOT}/references/Hexalith.Commons",
+      "-p:HexalithMcpCliRoot=${PARTIES_ROOT}/references/Hexalith.McpCli",
+      "-p:HexalithPolymorphicSerializationsRoot=${PARTIES_ROOT}/references/Hexalith.PolymorphicSerializations",
+      "-p:NuGetAudit=false"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 42.707,
+    "log": "${PRIVATE_ROOT}/parent-review/platform-reversal-build.log"
+  },
+  {
+    "name": "platform-reversal-tests",
+    "cwd": "${PRIVATE_ROOT}/platform",
+    "argv": [
+      "dotnet",
+      "${PRIVATE_ROOT}/platform/tests/Hexalith.Platform.Composition.Tests/bin/Debug/net10.0/Hexalith.Platform.Composition.Tests.dll",
+      "-class",
+      "Hexalith.Platform.Composition.Tests.PlatformCurrentOwnerSourceDeadlineTests",
+      "-class",
+      "Hexalith.Platform.Composition.Tests.PlatformCurrentOwnerSourceInventoryTests",
+      "-class",
+      "Hexalith.Platform.Composition.Tests.PlatformCurrentOwnerSourceSealTests",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_ROOT}/parent-review/platform-reversed.xml"
+    ],
+    "exitCode": 1,
+    "elapsedSeconds": 2.046,
+    "log": "${PRIVATE_ROOT}/parent-review/platform-reversal-tests.log"
+  },
+  {
+    "name": "platform-restored-build",
+    "cwd": "${PRIVATE_ROOT}/platform",
+    "argv": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Platform.Composition.Tests/Hexalith.Platform.Composition.Tests.csproj",
+      "-c",
+      "Debug",
+      "-m:1",
+      "-p:HexalithPartiesRoot=${PARTIES_ROOT}",
+      "-p:HexalithBuildsRoot=${PARTIES_ROOT}/references/Hexalith.Builds",
+      "-p:HexalithEventStoreRoot=${PARTIES_ROOT}/references/Hexalith.EventStore",
+      "-p:HexalithMemoriesRoot=${PARTIES_ROOT}/references/Hexalith.Memories",
+      "-p:HexalithTenantsRoot=${PARTIES_ROOT}/references/Hexalith.Tenants",
+      "-p:HexalithCommonsRoot=${PARTIES_ROOT}/references/Hexalith.Commons",
+      "-p:HexalithMcpCliRoot=${PARTIES_ROOT}/references/Hexalith.McpCli",
+      "-p:HexalithPolymorphicSerializationsRoot=${PARTIES_ROOT}/references/Hexalith.PolymorphicSerializations",
+      "-p:NuGetAudit=false"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 42.543,
+    "log": "${PRIVATE_ROOT}/parent-review/platform-restored-build.log"
+  },
+  {
+    "name": "memories-safe-reversal-build",
+    "cwd": "${PRIVATE_ROOT}/memories",
+    "argv": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Memories.IntegrationTests/Hexalith.Memories.IntegrationTests.csproj",
+      "-c",
+      "Debug",
+      "-m:1",
+      "-p:Hexalith1BuildPackageProps=${PARTIES_ROOT}/references/Hexalith.Builds/Props/Directory.Packages.props",
+      "-p:HexalithBuildsRoot=${PARTIES_ROOT}/references/Hexalith.Builds",
+      "-p:HexalithEventStoreRoot=${PARTIES_ROOT}/references/Hexalith.EventStore",
+      "-p:HexalithFrontComposerRoot=${PARTIES_ROOT}/references/Hexalith.FrontComposer",
+      "-p:HexalithTenantsRoot=${PARTIES_ROOT}/references/Hexalith.Tenants",
+      "-p:HexalithCommonsRoot=${PARTIES_ROOT}/references/Hexalith.Commons",
+      "-p:HexalithMcpCliRoot=${PARTIES_ROOT}/references/Hexalith.McpCli",
+      "-p:HexalithPlatformRoot=${PARTIES_ROOT}/references/Hexalith.Platform",
+      "-p:HexalithPolymorphicSerializationsRoot=${PARTIES_ROOT}/references/Hexalith.PolymorphicSerializations",
+      "-p:NuGetAudit=false"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 5.447,
+    "log": "${PRIVATE_ROOT}/parent-review/memories-safe-reversal-build.log"
+  },
+  {
+    "name": "memories-safe-reversal-tests",
+    "cwd": "${PRIVATE_ROOT}/memories",
+    "argv": [
+      "dotnet",
+      "${PRIVATE_ROOT}/memories/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryIntegrationTests",
+      "-class",
+      "Hexalith.Memories.IntegrationTests.Ingestion.RefreshPublicationIntegrationTests",
+      "-class",
+      "Hexalith.Memories.IntegrationTests.Ingestion.TenantIngestionLifecycleIntegrationTests",
+      "-class",
+      "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests",
+      "-class",
+      "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_ROOT}/parent-review/memories-reversed.xml"
+    ],
+    "exitCode": 1,
+    "elapsedSeconds": 48.565,
+    "log": "${PRIVATE_ROOT}/parent-review/memories-safe-reversal-tests.log"
+  }
+]

@@ -28,11 +28,15 @@ internal sealed class PartyLegacyBackfillRuntimeFixture
 
     /// <summary>Creates a unique synthetic tenant within the explicitly disposable provider.</summary>
     /// <param name="configuration">The private owned provider configuration.</param>
-    public PartyLegacyBackfillRuntimeFixture(PartyLegacyBackfillRuntimeConfiguration configuration)
+    /// <param name="tenant">An immutable synthetic tenant retained across owned workload processes.</param>
+    /// <param name="histories">The original immutable captured histories, when resuming another process.</param>
+    public PartyLegacyBackfillRuntimeFixture(PartyLegacyBackfillRuntimeConfiguration configuration, string? tenant = null, ProjectionRequest[]? histories = null)
     {
         _configuration = configuration;
+        Tenant = tenant ?? "synthetic-backfill-" + Guid.NewGuid().ToString("N");
+        Tenant.ShouldStartWith("synthetic-backfill-");
         _identity = new() { AppId = configuration.DaprAppId, ServiceVersion = "v1" };
-        Histories = _seed.Histories.Select(history => history with
+        Histories = histories ?? _seed.Histories.Select(history => history with
         {
             TenantId = Tenant,
             Events = history.Events.Select(item => item.EventTypeName == nameof(PartyErased)
@@ -40,10 +44,11 @@ internal sealed class PartyLegacyBackfillRuntimeFixture
                     JsonSerializer.Deserialize<PartyErased>(item.Payload, PartiesJsonOptions.Default)! with { TenantId = Tenant }, PartiesJsonOptions.Default) }
                 : item).ToArray(),
         }).ToArray();
+        Histories.ShouldAllBe(history => history.TenantId == Tenant);
     }
 
     /// <summary>Gets the unique synthetic migration tenant.</summary>
-    public string Tenant { get; } = "synthetic-backfill-" + Guid.NewGuid().ToString("N");
+    public string Tenant { get; }
 
     /// <summary>Gets complete synthetic histories with a live and an erased owner.</summary>
     public ProjectionRequest[] Histories { get; }

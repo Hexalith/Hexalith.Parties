@@ -1,0 +1,5 @@
+    [D::Hexalith.Memories.IntegrationTests] historical boundary concurrent=False; purged=True; legacyNl=False; cleanup refused; chunk and survivor retained
+    [D::Hexalith.Memories.IntegrationTests] historical boundary concurrent=False; purged=True; legacyNl=True; cleanup refused; chunk and survivor retained
+    [D::Hexalith.Memories.IntegrationTests] historical boundary concurrent=True; purged=False; legacyNl=False; cleanup refused; chunk and survivor retained
+    [D::Hexalith.Memories.IntegrationTests] historical boundary concurrent=True; purged=False; legacyNl=True; cleanup refused; chunk and survivor retained
+   Hexalith.Memories.IntegrationTests  Total: 102, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 48.166s

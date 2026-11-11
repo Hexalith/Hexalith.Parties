@@ -1,0 +1,12 @@
+{
+  "cwd": "${PARTIES_ROOT}",
+  "argv": [
+    "dotnet",
+    "build",
+    "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+    "-c",
+    "Release",
+    "-m:1"
+  ],
+  "exitCode": 0
+}

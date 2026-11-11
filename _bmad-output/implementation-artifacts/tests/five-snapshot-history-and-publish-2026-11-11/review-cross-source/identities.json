@@ -1,0 +1,8 @@
+{
+  "sourceSha256": {
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/SourceInventoryStore.cs": "40c6c3110e48e0492ed6143e6096b7d0879ffb501131e65be33e77ec8fc2081b",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/SemanticKeyDiscovery.cs": "877a7b778995661d7a2ff9550f602a629c2d9f27607ffcfc588690276c74cda8"
+  },
+  "serverSha256": "fd062fa9715f1b34295cf6de48005632b9e720ced738dff2455440d7b2ebb620",
+  "baselineIntegrationAssembly": "${PARTIES_ROOT}/references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll"
+}

@@ -72,8 +72,8 @@ public sealed class PlatformApiPrerequisitesTests
         ["references/Hexalith.EventStore"] = "d35a4febffbfcead9c0ff096d052b4698d1242db",
         ["references/Hexalith.FrontComposer"] = "7ace06c5c50406b9021fc95d8d87cf962b5180dd",
         ["references/Hexalith.McpCli"] = "ec458664b0218d07357091b5a5ea12897154db2a",
-        ["references/Hexalith.Memories"] = "c4addf98c6a4017d54e0c3aaeb3b57a52f82bffa",
-        ["references/Hexalith.Platform"] = "5adb00b2f30d2985ee0b1fb1abd713b10660dc48",
+        ["references/Hexalith.Memories"] = "13fdb88a3267626b14f75e16cc2de58dcfbbb2bb",
+        ["references/Hexalith.Platform"] = "3ad2f29ae50858ba665499568623b557725b9d93",
         ["references/Hexalith.PolymorphicSerializations"] = "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
         ["references/Hexalith.Tenants"] = "cca5537c3a9d6dde162787053b34e17c8351b21d",
     };
@@ -101,8 +101,8 @@ public sealed class PlatformApiPrerequisitesTests
         ["references/Hexalith.EventStore"] = "v4.2.0-17-gd35a4feb",
         ["references/Hexalith.FrontComposer"] = "v4.7.6-27-g7ace06c5",
         ["references/Hexalith.McpCli"] = "v2.0.1-70-gec458664",
-        ["references/Hexalith.Memories"] = "v3.0.25-8-gc4addf98",
-        ["references/Hexalith.Platform"] = "v1.9.0-59-g5adb00b2",
+        ["references/Hexalith.Memories"] = "v3.0.26-5-g13fdb88a",
+        ["references/Hexalith.Platform"] = "v1.10.0-31-g3ad2f29a",
         ["references/Hexalith.PolymorphicSerializations"] = "v1.19.8-1-gbce4eb9f",
         ["references/Hexalith.Tenants"] = "v7.0.6-5-gcca5537c",
     };

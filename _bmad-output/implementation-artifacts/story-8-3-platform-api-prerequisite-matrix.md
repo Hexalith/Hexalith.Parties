@@ -128,7 +128,28 @@ all six canonical parity receipts remain Unvalidated until actually rerun.
 | PolymorphicSerializations | `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`) | `git ls-tree HEAD references/Hexalith.PolymorphicSerializations` -> `160000 commit bce4eb9f45c6b131b960ab4fa39e50ff01e51960 references/Hexalith.PolymorphicSerializations`; synchronized source selection; qualification still requires its own executed proof. |
 | Tenants | `8e20524574901d71ad5f4876804c64c3c6c87b88` (`v7.0.3-2-g8e205245`) | `git ls-tree HEAD references/Hexalith.Tenants` -> `160000 commit 8e20524574901d71ad5f4876804c64c3c6c87b88 references/Hexalith.Tenants`; synchronized source selection; qualification still requires its own executed proof. |
 
-### Current source observation — 2026-11-11 (membership and admission source adoption)
+### Current source observation — 2026-11-11 (snapshot and historical-boundary qualification)
+
+The approved batch adopts the reviewed Platform source-measurement worker and the narrow Memories legacy-NL collision correction after both owner commits were pushed. Incoming owner metadata and additive workload-enrollment changes were preserved by rebase; the merged Platform builds diagnostically and its14focused controls pass. The source-wide Memories prerequisite was rejected and removed, preserving ordinary production cleanup. Historical identity safety, positive sidecar publication and deployed backfill acceptance remain unqualified external gates.
+
+The graph selects EventStore `4.2.0`, Commons `2.30.10`, PolymorphicSerializations `1.19.8`, FrontComposer `4.7.6`, Memories `3.0.25`, Tenants `7.0.5`, and McpCli `2.0.1`.
+
+Selection does not revalidate historical parity receipts. All six canonical parity receipts remain Unvalidated; package publication/adoption, deployment, custody, historical completeness and rollback deletion remain separate. The published public Builds/Platform cohort is unchanged. Prior observations and approvals remain dated history below.
+
+| Root dependency | Current source identity | Release use |
+| --- | --- | --- |
+| AI.Tools | `8a3885dd22aea88edd57771cfe592c382df2c583` (`8a3885dd`) | Source selection only; qualification requires its own executed proof. |
+| Builds | `539b10ab0f884888ae4aeba0edb829dd59f707d6` (`v4.47.0-66-g539b10ab`) | Source selection only; qualification requires its own executed proof. |
+| Commons | `11555ace9efcae2928a00122dcba91243e5a8a1a` (`v2.30.10`) | Source selection only; qualification requires its own executed proof. |
+| EventStore | `d35a4febffbfcead9c0ff096d052b4698d1242db` (`v4.2.0-17-gd35a4feb`) | Source selection only; qualification requires its own executed proof. |
+| FrontComposer | `7ace06c5c50406b9021fc95d8d87cf962b5180dd` (`v4.7.6-27-g7ace06c5`) | Source selection only; qualification requires its own executed proof. |
+| McpCli | `ec458664b0218d07357091b5a5ea12897154db2a` (`v2.0.1-70-gec458664`) | Source selection only; qualification requires its own executed proof. |
+| Memories | `13fdb88a3267626b14f75e16cc2de58dcfbbb2bb` (`v3.0.26-5-g13fdb88a`) | Source selection only; qualification requires its own executed proof. |
+| Platform | `3ad2f29ae50858ba665499568623b557725b9d93` (`v1.10.0-31-g3ad2f29a`) | Source selection only; qualification requires its own executed proof. |
+| PolymorphicSerializations | `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`) | Source selection only; qualification requires its own executed proof. |
+| Tenants | `cca5537c3a9d6dde162787053b34e17c8351b21d` (`v7.0.6-5-gcca5537c`) | Source selection only; qualification requires its own executed proof. |
+
+### Historical source observation — 2026-11-11 (membership and admission source adoption)
 
 The user-approved five-item batch adopts reviewed EventStore, Builds and Memories corrections and includes the already-published McpCli/Tenants advances explicitly accepted by the user. The owner revisions below are committed and pushed; source tests qualify only the named changes. Concurrent upstream lifecycle/publication changes were preserved by rebase and their affected checks rerun.
 

@@ -1,0 +1,23 @@
+{
+  "cwd": "${PRIVATE_ROOT}/platform",
+  "argv": [
+    "dotnet",
+    "build",
+    "tests/Hexalith.Platform.Composition.Tests/Hexalith.Platform.Composition.Tests.csproj",
+    "-c",
+    "Debug",
+    "-m:1",
+    "-p:HexalithPartiesRoot=${PARTIES_ROOT}",
+    "-p:HexalithBuildsRoot=${PARTIES_ROOT}/references/Hexalith.Builds",
+    "-p:HexalithEventStoreRoot=${PARTIES_ROOT}/references/Hexalith.EventStore",
+    "-p:HexalithMemoriesRoot=${PARTIES_ROOT}/references/Hexalith.Memories",
+    "-p:HexalithTenantsRoot=${PARTIES_ROOT}/references/Hexalith.Tenants",
+    "-p:HexalithCommonsRoot=${PARTIES_ROOT}/references/Hexalith.Commons",
+    "-p:HexalithMcpCliRoot=${PARTIES_ROOT}/references/Hexalith.McpCli",
+    "-p:HexalithPolymorphicSerializationsRoot=${PARTIES_ROOT}/references/Hexalith.PolymorphicSerializations",
+    "-p:NuGetAudit=false"
+  ],
+  "exitCode": 0,
+  "ownerRevision": "3ad2f29ae50858ba665499568623b557725b9d93",
+  "incomingParentRevision": "09946e760b56a7a6ab9675503f2b018d33d45f2c"
+}

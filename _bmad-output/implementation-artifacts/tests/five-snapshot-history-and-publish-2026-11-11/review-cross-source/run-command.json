@@ -1,0 +1,8 @@
+{
+  "argv": [
+    "dotnet",
+    "${CROSS_SOURCE_ROOT}/output/Hexalith.Memories.IntegrationTests.dll",
+    "${CROSS_SOURCE_ROOT}"
+  ],
+  "cwd": "${CROSS_SOURCE_ROOT}"
+}

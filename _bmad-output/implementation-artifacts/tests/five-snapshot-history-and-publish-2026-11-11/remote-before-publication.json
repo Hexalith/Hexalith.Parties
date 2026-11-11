@@ -1,0 +1,68 @@
+[
+  {
+    "repository": ".",
+    "head": "6bba88dd85362555edf9e4672deb68811e73895f",
+    "originMain": "6bba88dd85362555edf9e4672deb68811e73895f",
+    "remoteAheadLocalAhead": "0\t0"
+  },
+  {
+    "repository": "references/Hexalith.EventStore",
+    "head": "d35a4febffbfcead9c0ff096d052b4698d1242db",
+    "originMain": "cffa12368677cfa83919a1f0bdc4cebc5a1bac01",
+    "remoteAheadLocalAhead": "3\t0"
+  },
+  {
+    "repository": "references/Hexalith.Memories",
+    "head": "c4addf98c6a4017d54e0c3aaeb3b57a52f82bffa",
+    "originMain": "fe27727d0ee43892c55818acb1cfb435370b4005",
+    "remoteAheadLocalAhead": "3\t0"
+  },
+  {
+    "repository": "references/Hexalith.FrontComposer",
+    "head": "7ace06c5c50406b9021fc95d8d87cf962b5180dd",
+    "originMain": "2783c0bde4145cc34699bf421aea0b97e57b045a",
+    "remoteAheadLocalAhead": "2\t0"
+  },
+  {
+    "repository": "references/Hexalith.Tenants",
+    "head": "cca5537c3a9d6dde162787053b34e17c8351b21d",
+    "originMain": "f07be33889202d96bc877e1b7d10ae0d73e073c8",
+    "remoteAheadLocalAhead": "3\t0"
+  },
+  {
+    "repository": "references/Hexalith.AI.Tools",
+    "head": "8a3885dd22aea88edd57771cfe592c382df2c583",
+    "originMain": "8a3885dd22aea88edd57771cfe592c382df2c583",
+    "remoteAheadLocalAhead": "0\t0"
+  },
+  {
+    "repository": "references/Hexalith.Commons",
+    "head": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+    "originMain": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+    "remoteAheadLocalAhead": "0\t0"
+  },
+  {
+    "repository": "references/Hexalith.Builds",
+    "head": "539b10ab0f884888ae4aeba0edb829dd59f707d6",
+    "originMain": "dd68a5efbfaec13ef22ec06ad151b212eb16ea4f",
+    "remoteAheadLocalAhead": "16\t0"
+  },
+  {
+    "repository": "references/Hexalith.PolymorphicSerializations",
+    "head": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+    "originMain": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+    "remoteAheadLocalAhead": "0\t0"
+  },
+  {
+    "repository": "references/Hexalith.McpCli",
+    "head": "ec458664b0218d07357091b5a5ea12897154db2a",
+    "originMain": "ff957b59181a6e241f8a7cc686cd1be86d96f35e",
+    "remoteAheadLocalAhead": "2\t0"
+  },
+  {
+    "repository": "references/Hexalith.Platform",
+    "head": "5adb00b2f30d2985ee0b1fb1abd713b10660dc48",
+    "originMain": "b4b4eda9120e89a52afe6576f46bb7706860f3d1",
+    "remoteAheadLocalAhead": "2\t0"
+  }
+]
