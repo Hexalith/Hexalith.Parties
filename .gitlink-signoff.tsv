@@ -731,3 +731,13 @@ references/Hexalith.Tenants|cca5537c3a9d6dde162787053b34e17c8351b21d|validated-a
 # 2026-11-11 approved snapshot/history batch; source selection only, no package/deployed parity.
 references/Hexalith.Platform|3ad2f29ae50858ba665499568623b557725b9d93|validated-advance|origin/main@3ad2f29ae50858ba665499568623b557725b9d93|codex-agent|2026-11-11
 references/Hexalith.Memories|13fdb88a3267626b14f75e16cc2de58dcfbbb2bb|validated-advance|origin/main@13fdb88a3267626b14f75e16cc2de58dcfbbb2bb|codex-agent|2026-11-11
+
+# 2026-11-11 user-authorized repository synchronization.
+# Agent verifies remote reachability and package build; source selections only.
+# These entries grant no installed runtime, public cohort or deployment parity.
+references/Hexalith.EventStore|06ab5c16d1dc38e5e3f29ff06824b2c6724e6ea3|validated-advance|origin/main@06ab5c16d1dc38e5e3f29ff06824b2c6724e6ea3|codex-agent|2026-11-11
+references/Hexalith.FrontComposer|57aa756c02edbae4294412885823533308b7db0d|validated-advance|origin/main@57aa756c02edbae4294412885823533308b7db0d|codex-agent|2026-11-11
+references/Hexalith.Tenants|6188ea48cab9fdf4207072135c66aab5a7b7fe32|validated-advance|origin/main@6188ea48cab9fdf4207072135c66aab5a7b7fe32|codex-agent|2026-11-11
+references/Hexalith.Builds|a9f443f0bd482359731dcd54711e44fbd23d58fe|validated-advance|origin/main@a9f443f0bd482359731dcd54711e44fbd23d58fe|codex-agent|2026-11-11
+references/Hexalith.McpCli|94f5ee691c70dcb30e893c50629d95afb63d216f|validated-advance|origin/main@94f5ee691c70dcb30e893c50629d95afb63d216f|codex-agent|2026-11-11
+references/Hexalith.Platform|488723fd7efbccbab3bccdae3be4ad79b05a4994|validated-advance|origin/main@488723fd7efbccbab3bccdae3be4ad79b05a4994|codex-agent|2026-11-11

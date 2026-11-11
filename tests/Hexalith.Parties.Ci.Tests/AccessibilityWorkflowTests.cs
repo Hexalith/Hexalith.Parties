@@ -36,7 +36,7 @@ public sealed class AccessibilityWorkflowTests
         JsonElement scripts = package.RootElement.GetProperty("scripts");
         scripts.GetProperty("test:a11y").GetString()
             .ShouldBe("playwright test specs/parties-accessibility.spec.ts --project=chromium");
-        const string portalSpecs = "specs/admin-parties-list.spec.ts specs/consumer-portal-routes.spec.ts specs/party-picker.spec.ts";
+        const string portalSpecs = "specs/admin-parties-list.spec.ts specs/consumer-portal-routes.spec.ts specs/party-picker.spec.ts specs/shared-portal-display-formatters.spec.ts";
         scripts.GetProperty("test:portals").GetString()
             .ShouldBe($"playwright test {portalSpecs} --project=chromium");
         scripts.GetProperty("test:ui").GetString()
@@ -48,6 +48,7 @@ public sealed class AccessibilityWorkflowTests
     [InlineData("admin-parties-list.spec.ts")]
     [InlineData("consumer-portal-routes.spec.ts")]
     [InlineData("party-picker.spec.ts")]
+    [InlineData("shared-portal-display-formatters.spec.ts")]
     public void PortalBrowserRegressionsRemainRequired(string spec)
     {
         string source = CiTestPaths.ReadRepoFile($"tests/e2e/specs/{spec}");

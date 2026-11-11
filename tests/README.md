@@ -147,7 +147,7 @@ Package success supplies no source qualification. The separate
 `npm run test:source-feedback` lane retains its source-only instrumented transfer
 control; it does not run in the package gate. The retained qualification observed
 HXR015 with module tool 4.34.0 (Aspire CLI 13.6.4 versus its SDK 13.6.1 catalog).
-The current module tool 4.41.0 selects SDK 13.6.4; fresh source runs must still
+The current module tool 4.48.0 selects SDK 13.6.5; fresh source runs must still
 pass all runtime prerequisites and do not inherit historical qualification.
 
 Source preparation on 2026-10-31 succeeds with module tool 4.39.0 after

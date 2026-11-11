@@ -15,12 +15,12 @@ authentication setup; those hosts are outside the reference environment.
 
 | Tool | Version | Download |
 |------|---------|----------|
-| .NET SDK | 10.0.403 (pinned in `global.json`) | [dot.net](https://dot.net) |
+| .NET SDK | 11.0.100 (pinned in `global.json`) | [dot.net](https://dot.net) |
 | Docker Desktop | Latest | [docker.com](https://www.docker.com/) |
 | Git | Any recent version | [git-scm.com](https://git-scm.com) |
 | `jq` | Latest, optional for Bash examples | [jqlang.org](https://jqlang.org) |
 
-Install Aspire CLI **13.6.4** to match the catalog embedded in module tool **4.47.0**. The local tool manifest pins that module version; `dotnet tool restore` restores that exact version. The tool owns run-scoped infrastructure, readiness and diagnostics; its catalog requires Dapr CLI 1.19.1 and runtime 1.19.1. Verify the downloaded archives against the [pinned toolchain checksums](https://github.com/Hexalith/Hexalith.Builds/blob/5ec1779040606be89306129a7d2b245258c9acd2/Props/dapr-toolchain-sha256.json). Set `HEXALITH_DAPR_HOME` to a prepared absolute isolated Dapr home with the CLI at `tools/dapr` and runtime binaries at `.dapr/bin/{daprd,placement,scheduler}`; an unset or unprepared home is refused.
+Install Aspire CLI **13.6.5** to match the catalog embedded in module tool **4.48.0**. The local tool manifest pins that module version; `dotnet tool restore` restores that exact version. The tool owns run-scoped infrastructure, readiness and diagnostics; its catalog requires Dapr CLI 1.19.1 and runtime 1.19.1. Verify the downloaded archives against the [pinned toolchain checksums](https://github.com/Hexalith/Hexalith.Builds/blob/5ec1779040606be89306129a7d2b245258c9acd2/Props/dapr-toolchain-sha256.json). Set `HEXALITH_DAPR_HOME` to a prepared absolute isolated Dapr home with the CLI at `tools/dapr` and runtime binaries at `.dapr/bin/{daprd,placement,scheduler}`; an unset or unprepared home is refused.
 
 Verify your setup:
 

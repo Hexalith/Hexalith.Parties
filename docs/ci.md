@@ -31,9 +31,12 @@ dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.T
 
 CI runs on pushes and pull requests to `main`, scheduled nightly runs, and Pact Broker `repository_dispatch` events with type `contract_requiring_verification_published`.
 
-The final adoption tool manifest selects published module CLI **4.47.0**,
-matching the new Platform source's `[4.47.0, 5.0.0-0)` prerequisite. The
-immutable reusable workflow restores that exact manifest. Builds v4.47.0 at
+The current tool manifest selects published module CLI **4.48.0**,
+within the Platform source's `[4.47.0, 5.0.0-0)` prerequisite. The
+immutable reusable workflow restores that exact manifest. The repository pins
+.NET SDK **11.0.100** while all Parties targets remain `net10.0`; the active
+AppHost SDK, package preparation and Aspire CLI expectations use **13.6.5**.
+The earlier Builds v4.47.0 at
 `5ec1779040606be89306129a7d2b245258c9acd2` passes source CI `42661065183`
 and release `42664680297`; both official tool archives, their source metadata,
 signatures and published inventory have been independently verified. The
@@ -47,7 +50,7 @@ Docker-free private catalog configuration/cleanup tests. These checks execute
 the retained compatibility helpers without provisioning domain services;
 the declared Platform integration profile retains its independent runtime gate.
 
-The selected source tuple is published [Platform v1.9.0](https://github.com/Hexalith/Hexalith.Platform/releases/tag/v1.9.0)
+The fixed public qualification tuple is published [Platform v1.9.0](https://github.com/Hexalith/Hexalith.Platform/releases/tag/v1.9.0)
 at `081178aa5cc01f5dc736ba0d1980aa80fedc6fe1` and Builds **v4.47.0** at
 `5ec1779040606be89306129a7d2b245258c9acd2`. Platform
 [tuple CI](https://github.com/Hexalith/Hexalith.Platform/actions/runs/42671091679)
@@ -463,7 +466,7 @@ The owned central catalog pins `Microsoft.AspNetCore.SignalR.Common` to `10.0.13
 for GHSA-334f-vvp4-7g6p, with its required Options and
 DependencyInjection.Abstractions floors aligned to `10.0.13`. NuGet audit stays
 active. The Web SDK prunes this package from the UI in favor of the shared ASP.NET
-runtime, so the UI alone requires runtime `10.0.14` through
+runtime, so the UI alone requires runtime `10.0.15` through
 `RuntimeFrameworkVersion`. Local UI starts require that runtime to be installed.
 The UI ships as a container outside the ten-package NuGet manifest;
 the existing container liveness gate remains required. The separately built
@@ -521,7 +524,7 @@ change also requires an approved parser-invariant and test update. Edit
 `TEMPLATE` for non-ACL changes, then regenerate. Missing, duplicate, unsafe or
 stale input fails without rewriting in `--check` mode.
 
-The local module tool is pinned to 4.41.1 with Aspire CLI 13.6.4 alongside
+The local module tool is pinned to 4.48.0 with Aspire CLI 13.6.5 alongside
 aspirate; package CI continues to restore packages and build Release. Source mode is selected only
 by the tool's persisted mapping, with no file-existence fallback. Legacy hosting
 projects and package publication gates remain in their existing scope.

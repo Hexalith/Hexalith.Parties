@@ -128,7 +128,28 @@ all six canonical parity receipts remain Unvalidated until actually rerun.
 | PolymorphicSerializations | `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`) | `git ls-tree HEAD references/Hexalith.PolymorphicSerializations` -> `160000 commit bce4eb9f45c6b131b960ab4fa39e50ff01e51960 references/Hexalith.PolymorphicSerializations`; synchronized source selection; qualification still requires its own executed proof. |
 | Tenants | `8e20524574901d71ad5f4876804c64c3c6c87b88` (`v7.0.3-2-g8e205245`) | `git ls-tree HEAD references/Hexalith.Tenants` -> `160000 commit 8e20524574901d71ad5f4876804c64c3c6c87b88 references/Hexalith.Tenants`; synchronized source selection; qualification still requires its own executed proof. |
 
-### Current source observation — 2026-11-11 (snapshot and historical-boundary qualification)
+### Current source observation — 2026-11-11 (toolchain release synchronization)
+
+The authorized maintenance selects SDK `11.0.100` while retaining all `net10.0` targets, module CLI `4.48.0`, Aspire `13.6.5`, and UI runtime floor `10.0.15`. The compatible package catalog and standalone fallbacks are aligned. Local package build/test evidence does not establish upstream source publication or public topology qualification.
+
+The graph selects EventStore `4.2.0`, Commons `2.30.10`, PolymorphicSerializations `1.19.8`, FrontComposer `4.7.6`, Memories `3.0.26`, Tenants `7.0.7`, and McpCli `2.0.1`.
+
+Selection does not revalidate historical parity receipts. All six canonical parity receipts remain Unvalidated; package publication/adoption, deployment, custody, historical completeness and rollback deletion remain separate. The fixed published public Builds/Platform cohort is unchanged; the latest source selection still requires its own upstream admission. Prior observations and approvals remain dated history below.
+
+| Root dependency | Current source identity | Release use |
+| --- | --- | --- |
+| AI.Tools | `8a3885dd22aea88edd57771cfe592c382df2c583` (`8a3885dd`) | Source selection only; qualification requires its own executed proof. |
+| Builds | `a9f443f0bd482359731dcd54711e44fbd23d58fe` (`v4.48.0-6-ga9f443f0`) | Source selection only; qualification requires its own executed proof. |
+| Commons | `11555ace9efcae2928a00122dcba91243e5a8a1a` (`v2.30.10`) | Source selection only; qualification requires its own executed proof. |
+| EventStore | `06ab5c16d1dc38e5e3f29ff06824b2c6724e6ea3` (`v4.2.0-25-g06ab5c16`) | Source selection only; qualification requires its own executed proof. |
+| FrontComposer | `57aa756c02edbae4294412885823533308b7db0d` (`v4.7.6-33-g57aa756c`) | Source selection only; qualification requires its own executed proof. |
+| McpCli | `94f5ee691c70dcb30e893c50629d95afb63d216f` (`v2.0.1-74-g94f5ee69`) | Source selection only; qualification requires its own executed proof. |
+| Memories | `13fdb88a3267626b14f75e16cc2de58dcfbbb2bb` (`v3.0.26-5-g13fdb88a`) | Source selection only; qualification requires its own executed proof. |
+| Platform | `488723fd7efbccbab3bccdae3be4ad79b05a4994` (`v1.10.0-38-g488723fd`) | Source selection only; qualification requires its own executed proof. |
+| PolymorphicSerializations | `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`) | Source selection only; qualification requires its own executed proof. |
+| Tenants | `6188ea48cab9fdf4207072135c66aab5a7b7fe32` (`v7.0.7-5-g6188ea48`) | Source selection only; qualification requires its own executed proof. |
+
+### Historical source observation — 2026-11-11 (snapshot and historical-boundary qualification)
 
 The approved batch adopts the reviewed Platform source-measurement worker and the narrow Memories legacy-NL collision correction after both owner commits were pushed. Incoming owner metadata and additive workload-enrollment changes were preserved by rebase; the merged Platform builds diagnostically and its14focused controls pass. The source-wide Memories prerequisite was rejected and removed, preserving ordinary production cleanup. Historical identity safety, positive sidecar publication and deployed backfill acceptance remain unqualified external gates.
 

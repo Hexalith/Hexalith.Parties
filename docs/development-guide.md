@@ -6,12 +6,15 @@
 
 | Tool | Version |
 |------|---------|
-| .NET SDK | **10.0.403** (pinned in `global.json`, rollForward latestPatch) |
+| .NET SDK | **11.0.100** (pinned in `global.json`, rollForward latestPatch) |
 | Docker Desktop | latest (must be running before Aspire) |
 | Node.js | **24.22.1**, with bundled **npm 11.19.1**, for root release tools and `tests/e2e` |
 | Git | recent |
 | `jq` | optional (Bash examples) |
 | PowerShell `pwsh` 7+ | local scripts and CI parity commands |
+
+The .NET 11 SDK builds the existing `net10.0` targets. Install the serviced
+ASP.NET Core runtime `10.0.15` for the UI; SDK selection does not retarget packages.
 
 ## 1. Clone & submodules
 
@@ -267,7 +270,7 @@ commit's Builds gitlink. Stage selected source checkouts consistently and commit
 the Platform selection before retrying a stale-catalog diagnostic. Runtime
 topology qualification remains separate from successful build preparation.
 
-Use pinned module tool 4.45.0 with Aspire CLI 13.6.4 from an independent Parties
+Use pinned module tool 4.48.0 with Aspire CLI 13.6.5 from an independent Parties
 checkout. Initialize only its direct references, including Platform, Memories and McpCli. The tool selects the
 seven-server dependency closure and emits a run ID, mapping and diagnostics.
 Break in `MvpComplianceWarningMiddleware.InvokeAsync` on `/ready`; a disposable

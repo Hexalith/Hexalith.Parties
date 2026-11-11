@@ -44,8 +44,8 @@ dotnet tool restore
 dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json
 ```
 
-The repository pins module tool **4.47.0** alongside aspirate and uses Aspire CLI
-**13.6.4**. From this independent checkout, `debug` resolves direct references
+The repository pins module tool **4.48.0** alongside aspirate and uses Aspire CLI
+**13.6.5**. From this independent checkout, `debug` resolves direct references
 once, builds the selected
 source projects in Debug, and waits for exactly `parties`, `eventstore`, `tenants`,
 `tenants-api`, `memories`, `memories-access-telemetry-clock`, and `memories-access-telemetry`.
@@ -169,7 +169,7 @@ Hexalith.Parties manages **party records** -- people and organizations with cont
 
 ## Prerequisites
 
-- [.NET 10 SDK](https://dot.net) (10.0.403)
+- [.NET 11 SDK](https://dot.net) (11.0.100; packages target net10.0)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - Git
 
