@@ -2,7 +2,7 @@
 title: 'Synchronize the published toolchain for release'
 type: 'bugfix'
 created: '2026-11-11'
-status: 'in-progress'
+status: 'in-review'
 review_loop_iteration: 0
 baseline_commit: 'e16c882e4cd9ba5969488ec8d3430e5a79f29d0f'
 context:

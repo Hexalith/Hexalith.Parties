@@ -14,9 +14,12 @@ tests/Hexalith.Parties.Tests/Projections/PartyLegacyBackfillProcessRuntimeTests.
 tests/Hexalith.Parties.Tests/Projections/PartyLegacyBackfillWorkloadManifest.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 
-# Preserve authored CRLF in toolchain policy files while checking actual whitespace.
+# Accept authored CRLF in toolchain policy whitespace checks.
 Directory.Build.targets whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 Directory.Packages.props whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.Ci.Tests/AccessibilityWorkflowTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.Ci.Tests/MemoriesRefreshCompilationTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.Ci.Tests/PartiesContainerPublishWorkflowTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Ci.Tests/SignalRSecurityFloorTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+.github/workflows/release.yml whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Ci.Tests/ReleaseArtifactVerificationTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

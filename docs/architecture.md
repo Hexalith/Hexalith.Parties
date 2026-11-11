@@ -51,19 +51,19 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 |----------|-----------|---------|
 | Runtime | .NET | `net10.0` (SDK `11.0.100`, rollForward latestPatch) |
 | Orchestration | .NET Aspire (`Aspire.Hosting` + hosting integrations) | `13.6.5` |
-| Actors & pub/sub | DAPR client/actors/AspNetCore | `1.19.0` |
+| Actors & pub/sub | DAPR client/actors/AspNetCore | `1.19.1` |
 | | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.6.2-beta.959` |
 | Gateway/eventing | Hexalith.EventStore | package selected by `HexalithEventStoreVersion` in the effective MSBuild graph; source and installed acceptance remain separately verified |
 | Tenancy | Hexalith.Tenants | package selected by `HexalithTenantsVersion` in the effective MSBuild graph; historical committed source gitlink `c9feedb6656d70c7271e851c844ee29bdfb28c3e` (`v5.8.0-131-gc9feedb6`), observed at Parties `7e73709992512d944f4950e6efb28c6132f9473c` on 2026-10-18; historical owner approvals and parity remain bound to their original identities |
 | Validation | FluentValidation (+ DI ext.) | `12.2.0` |
 | Mediation | MediatR | `14.2.0` |
 | AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `10.0.15` |
-| API docs | Microsoft.AspNetCore.OpenApi / Swashbuckle.SwaggerUI | `10.0.15` / `10.3.1` |
-| MCP | ModelContextProtocol / .AspNetCore | `2.3.0` / `2.3.0` |
+| API docs | Microsoft.AspNetCore.OpenApi / Swashbuckle.SwaggerUI | `10.0.15` / `11.0.0` |
+| MCP | ModelContextProtocol / .AspNetCore | `2.4.0` / `2.4.0` |
 | UI | Microsoft.FluentUI.AspNetCore.Components | `5.0.1` |
 | | Microsoft.AspNetCore.Components.CustomElements | `10.0.15` |
 | Rich search (opt) | Hexalith.Memories.Client.Rest | package `3.0.26` by default |
-| Observability | OpenTelemetry (exporter/hosting/instrumentation) | `1.20.1` core/hosting/exporter and ASP.NET Core/HTTP/runtime instrumentation |
+| Observability | OpenTelemetry (exporter/hosting/instrumentation) | `1.21.0` core/hosting/exporter and ASP.NET Core/HTTP/runtime instrumentation |
 | Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `10.11.0` |
 | Versioning | MinVer (git-tag SemVer, prefix `v`) | `8.0.0` |
 | Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `4.0.3` / `4.3.0` / `6.2.0` / `2.15.2` / `4.16.0`† / `18.1.0` |
@@ -78,7 +78,7 @@ Current selection does not recertify that identity's owner approvals or parity.
 Solution-wide build settings (`Directory.Build.props`): `Nullable=enable`, `ImplicitUsings=enable`, **`TreatWarningsAsErrors=true`** (enforced by a build gate — see §11). Central package management via `Directory.Packages.props`.
 
 The AppHost SDK and Aspire packages are aligned at `13.6.5`; DAPR client,
-actors, and ASP.NET Core packages are aligned at `1.19.0`. This is the .NET SDK
+actors, and ASP.NET Core packages are aligned at `1.19.1`. This is the .NET SDK
 package version; the selected Dapr runtime catalog remains `1.19.1`.
 
 Historical root source identities follow the Story 8.10 final set approved by

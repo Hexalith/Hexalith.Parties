@@ -139,7 +139,7 @@ Selection does not revalidate historical parity receipts. All six canonical pari
 | Root dependency | Current source identity | Release use |
 | --- | --- | --- |
 | AI.Tools | `8a3885dd22aea88edd57771cfe592c382df2c583` (`8a3885dd`) | Source selection only; qualification requires its own executed proof. |
-| Builds | `a9f443f0bd482359731dcd54711e44fbd23d58fe` (`v4.48.0-6-ga9f443f0`) | Source selection only; qualification requires its own executed proof. |
+| Builds | `9f85c64beae32befe050240526af398063e81eba` (`v4.48.0-7-g9f85c64b`) | Source selection only; qualification requires its own executed proof. |
 | Commons | `11555ace9efcae2928a00122dcba91243e5a8a1a` (`v2.30.10`) | Source selection only; qualification requires its own executed proof. |
 | EventStore | `06ab5c16d1dc38e5e3f29ff06824b2c6724e6ea3` (`v4.2.0-25-g06ab5c16`) | Source selection only; qualification requires its own executed proof. |
 | FrontComposer | `57aa756c02edbae4294412885823533308b7db0d` (`v4.7.6-33-g57aa756c`) | Source selection only; qualification requires its own executed proof. |

@@ -741,3 +741,6 @@ references/Hexalith.Tenants|6188ea48cab9fdf4207072135c66aab5a7b7fe32|validated-a
 references/Hexalith.Builds|a9f443f0bd482359731dcd54711e44fbd23d58fe|validated-advance|origin/main@a9f443f0bd482359731dcd54711e44fbd23d58fe|codex-agent|2026-11-11
 references/Hexalith.McpCli|94f5ee691c70dcb30e893c50629d95afb63d216f|validated-advance|origin/main@94f5ee691c70dcb30e893c50629d95afb63d216f|codex-agent|2026-11-11
 references/Hexalith.Platform|488723fd7efbccbab3bccdae3be4ad79b05a4994|validated-advance|origin/main@488723fd7efbccbab3bccdae3be4ad79b05a4994|codex-agent|2026-11-11
+
+# Runtime provisioning fix verified by shared preparation and release workflow controls.
+references/Hexalith.Builds|9f85c64beae32befe050240526af398063e81eba|validated-advance|origin/main@9f85c64beae32befe050240526af398063e81eba|codex-agent|2026-11-11

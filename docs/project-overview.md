@@ -40,14 +40,14 @@ Public command and query traffic goes through **Hexalith.EventStore**; the `part
 |----------|-----------|---------|
 | Runtime | .NET | net10.0 (SDK 11.0.100) |
 | Orchestration | .NET Aspire | 13.6.5 |
-| Actors / pub-sub | DAPR | 1.19.0 |
+| Actors / pub-sub | DAPR | 1.19.1 |
 | Validation | FluentValidation | 12.2.0 |
 | Mediation | MediatR | 14.2.0 |
 | AuthN | JWT Bearer | 10.0.15 |
-| MCP | ModelContextProtocol | 2.3.0 |
+| MCP | ModelContextProtocol | 2.4.0 |
 | UI | FluentUI Blazor + CustomElements | 5.0.1 / 10.0.15 |
 | Rich search (opt) | Hexalith.Memories.Client.Rest | 3.0.26 |
-| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers | 4.0.3 / 4.3.0 / 6.2.0 / 2.14.0 / 4.16.0 |
+| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers | 4.0.3 / 4.3.0 / 6.2.0 / 2.15.2 / 4.16.0 |
 
 The DAPR row describes the .NET client/actor SDK packages. The selected runtime
 catalog remains `1.19.1`.

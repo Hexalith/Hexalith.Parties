@@ -19,9 +19,10 @@ concurrency:
 
 jobs:
   baseline:
-    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@5ec1779040606be89306129a7d2b245258c9acd2
+    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@9f85c64beae32befe050240526af398063e81eba
     with:
       solution: Hexalith.Parties.Standalone.slnx
+      additional-sdk-version: '10.0.404'
       module-manifest: module/hexalith.module-manifest.v2.json
       integration-test-profiles: platform-package
       package-prepare-script: scripts/prepare-ci-package-dependencies.sh
@@ -65,6 +66,7 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
+          dotnet-version: '10.0.404'
       - name: Prepare the actual pinned package tool and catalog
         run: python3 -B references/Hexalith.Builds/Github/prepare-module-build/prepare_module_build.py --manifest module/hexalith.module-manifest.v2.json
       - name: Build the explicit declared lifecycle suites

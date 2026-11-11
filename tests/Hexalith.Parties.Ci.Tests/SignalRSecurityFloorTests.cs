@@ -7,6 +7,7 @@ namespace Hexalith.Parties.Ci.Tests;
 public sealed class SignalRSecurityFloorTests
 {
     private static readonly Version MinimumFixedVersion = new(10, 0, 13);
+    private static readonly Version MinimumRuntimeVersion = new(10, 0, 15);
 
     [Theory]
     [InlineData("Hexalith.Parties.Contracts.Tests")]
@@ -120,7 +121,7 @@ public sealed class SignalRSecurityFloorTests
             JsonElement framework = frameworks.EnumerateArray()
                 .Single(framework => framework.GetProperty("name").GetString() == name);
             Version.Parse(framework.GetProperty("version").GetString()!)
-                .ShouldBeGreaterThanOrEqualTo(MinimumFixedVersion, $"{runtimeConfig}: {name}");
+                .ShouldBeGreaterThanOrEqualTo(MinimumRuntimeVersion, $"{runtimeConfig}: {name}");
         }
     }
 }

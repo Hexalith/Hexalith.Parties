@@ -123,7 +123,7 @@ public sealed class ReleaseArtifactVerificationTests
         string verification = workflow.Split("  verify-publication:", StringSplitOptions.None)[1];
         verification.ShouldContain("matching-tag: ${{ steps.published.outputs.matching-tag }}");
         verification.ShouldContain("ref: ${{ github.sha }}");
-        verification.ShouldContain("ref: 11a3a79cfac4bba9548c6364a17a01ee9b561370");
+        verification.ShouldContain("ref: 9f85c64beae32befe050240526af398063e81eba");
         verification.ShouldContain("submodules: false");
         verification.ShouldContain("contents: read");
         verification.ShouldContain("run: git -c submodule.recurse=false submodule update --init references/Hexalith.Builds");
