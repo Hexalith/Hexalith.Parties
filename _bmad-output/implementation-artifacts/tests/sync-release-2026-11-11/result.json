@@ -1,0 +1,16 @@
+{
+  "command": [
+    "/tmp/parties-sync-release-20261111/runtime-smoke-final/dotnet",
+    "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll",
+    "-assemblyInfo"
+  ],
+  "before": {
+    "exitCode": 150,
+    "stderr": "You must install or update .NET to run this application.\n\nApp: /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll\nArchitecture: x64\nFramework: 'Microsoft.NETCore.App', version '10.0.0' (x64)\n.NET location: /tmp/parties-sync-release-20261111/runtime-smoke-final/\n\nThe following frameworks were found:\n  11.0.0 at [/tmp/parties-sync-release-20261111/runtime-smoke-final/shared/Microsoft.NETCore.App]\n\nLearn more:\nhttps://aka.ms/dotnet/app-launch-failed\n\nTo install missing framework, download:\nhttps://aka.ms/dotnet-core-applaunch?framework=Microsoft.NETCore.App&framework_version=10.0.0&arch=x64&rid=linux-x64&os=linux\n"
+  },
+  "after": {
+    "exitCode": 0,
+    "stdout": "{\"arch-os\":\"X64\",\"arch-process\":\"X64\",\"core-framework\":\"4.0.3\",\"core-framework-informational\":\"4.0.3+384aa7f0b4\",\"pointer-size\":64,\"runtime-framework\":\".NET 10.0.15\",\"target-framework\":\".NETCoreApp,Version=v10.0\",\"test-framework\":\"xUnit.net v3 4.0.3+384aa7f0b4\"}\n"
+  },
+  "runtimeVersion": "10.0.15"
+}

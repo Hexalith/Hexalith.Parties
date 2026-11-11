@@ -46,11 +46,11 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `global.json`, `.config/dotnet-tools.json`, AppHost project and preparation script -- align published toolchain versions and dependent active expectations.
-- [ ] `references/Hexalith.Builds/Props/Directory.Packages.props`, `Directory.Packages.props`, `Directory.Build.props` -- upgrade compatible package families and runtime servicing; validate central versions.
-- [ ] `README.md`, active `docs/` toolchain guidance -- describe the effective SDK and tools without rewriting historical receipts.
+- [x] `global.json`, `.config/dotnet-tools.json`, AppHost project and preparation script -- align published toolchain versions and dependent active expectations.
+- [x] `references/Hexalith.Builds/Props/Directory.Packages.props`, `Directory.Packages.props`, `Directory.Build.props` -- upgrade compatible package families and runtime servicing; validate central versions.
+- [x] `README.md`, active `docs/` toolchain guidance -- describe the effective SDK and tools without rewriting historical receipts.
 - [ ] Actual affected source/tests/workflows -- fix proven build or CI failures while retaining behavioral contracts.
-- [ ] Existing build and tests -- validate affected package configuration and summarize exact pass/fail evidence; leave logs under the private temporary receipt directory.
+- [x] Existing build and tests -- validate affected package configuration and summarize exact pass/fail evidence; leave logs under the private temporary receipt directory.
 
 **Acceptance Criteria:**
 - Given an independent checkout, when SDK resolution runs, then it selects stable11.0.100 while Parties packages remain compatible withnet10.0.
@@ -72,3 +72,29 @@ SDK updates do not imply a target-framework migration. Preserve intentional13.6.
 - `dotnet build Hexalith.Parties.Standalone.slnx --configuration Release -m:1` --zero errors/warnings in package mode, or exact first-failure evidence.
 - `dotnet test --project tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj --configuration Release` --existing CI contracts pass; run other individually affected projects as needed.
 - `git diff --check` --no introduced whitespace defects; owning repositories checked separately.
+
+## Execution Record
+
+Toolchain and compatible dependency updates are implemented, reviewed and pushed.
+All locally observed test failures have fixes and passing focused reruns.
+The remaining unchecked CI task requires a released, matching Platform/Builds
+identity and independently qualified current public package bodies. Package
+preparation refuses HXW011 and HXW009; immutable runtime gates remain intact.
+Release admission refuses publication without exact-source green push CI.
+No new release or NuGet upload has occurred. Existing 3.1.1 package downloads
+and source metadata were independently verified for all eleven packages.
+The machine-readable verification receipt is colocated under
+`tests/sync-release-2026-11-11/receipt.json`.
+
+## Suggested Review Order
+
+- Check SDK 11 selection while preserving net10.0 targets.
+  [global.json:3](../../global.json#L3)
+- Inspect explicit .NET 10 runtime provisioning and immutable shared workflow selection.
+  [ci.yml:22](../../.github/workflows/ci.yml#L22)
+- Review exact Memories capability qualification and the future-version refusal controls.
+  [Directory.Build.targets:49](../../Directory.Build.targets#L49)
+- Confirm publication still requires the measured public runtime cohort.
+  [verify-public-package-integration.py:96](../../scripts/verify-public-package-integration.py#L96)
+- Review independent runtime and NuGet minimum checks.
+  [SignalRSecurityFloorTests.cs:9](../../tests/Hexalith.Parties.Ci.Tests/SignalRSecurityFloorTests.cs#L9)

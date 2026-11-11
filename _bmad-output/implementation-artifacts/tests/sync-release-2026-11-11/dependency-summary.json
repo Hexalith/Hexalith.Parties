@@ -1,0 +1,37 @@
+{
+  "targetFramework": "net10.0",
+  "sdk": "11.0.100",
+  "nugetUpgrades": [
+    {
+      "id": "Aspire.AppHost.Sdk",
+      "from": "13.6.4",
+      "to": "13.6.5"
+    },
+    {
+      "id": "Hexalith.Builds.Module.Cli",
+      "from": "4.47.0",
+      "to": "4.48.0"
+    },
+    {
+      "id": "Hexalith.Tenants.Client",
+      "from": "7.0.6",
+      "to": "7.0.7"
+    },
+    {
+      "id": "Hexalith.Tenants.Contracts",
+      "from": "7.0.6",
+      "to": "7.0.7"
+    },
+    {
+      "id": "Hexalith.Tenants.Testing",
+      "from": "7.0.6",
+      "to": "7.0.7"
+    },
+    {
+      "id": "Microsoft.NET.Test.Sdk",
+      "from": "18.11.1",
+      "to": "18.12.0"
+    }
+  ],
+  "npmTypesNode24": "24.19.2"
+}

@@ -1,0 +1,273 @@
+{
+  "observedAtUtc": "2026-11-11T21:03:33.113816+00:00",
+  "source": "9f9f3328fb07a096fa5fb5ebf8a5d1ea4e7b02d4",
+  "status": "release-blocked",
+  "sdk": "11.0.100",
+  "targetFramework": "net10.0",
+  "net10SupportSdk": "10.0.404",
+  "runtime": "10.0.15",
+  "moduleTool": "4.48.0",
+  "aspireSdk": "13.6.5",
+  "buildsSource": "9f85c64beae32befe050240526af398063e81eba",
+  "local": {
+    "standaloneBuild": "passed with zero warnings and errors",
+    "catalogValidation": {
+      "entries": 318,
+      "status": "passed"
+    },
+    "unitProjects": [
+      {
+        "project": "AdminPortal",
+        "total": 354,
+        "failed": 0,
+        "succeeded": 354,
+        "skipped": 0
+      },
+      {
+        "project": "Aspire",
+        "total": 9,
+        "failed": 0,
+        "succeeded": 9,
+        "skipped": 0
+      },
+      {
+        "project": "Authentication",
+        "total": 12,
+        "failed": 0,
+        "succeeded": 12,
+        "skipped": 0
+      },
+      {
+        "project": "Catalog",
+        "total": 20,
+        "failed": 0,
+        "succeeded": 20,
+        "skipped": 0
+      },
+      {
+        "project": "Client",
+        "total": 347,
+        "failed": 0,
+        "succeeded": 347,
+        "skipped": 0
+      },
+      {
+        "project": "ConsumerPortal",
+        "total": 99,
+        "failed": 0,
+        "succeeded": 99,
+        "skipped": 0
+      },
+      {
+        "project": "Contracts",
+        "total": 250,
+        "failed": 1,
+        "succeeded": 249,
+        "skipped": 0
+      },
+      {
+        "project": "Mcp",
+        "total": 94,
+        "failed": 0,
+        "succeeded": 94,
+        "skipped": 0
+      },
+      {
+        "project": "Picker",
+        "total": 171,
+        "failed": 0,
+        "succeeded": 171,
+        "skipped": 0
+      },
+      {
+        "project": "Projections",
+        "total": 467,
+        "failed": 0,
+        "succeeded": 466,
+        "skipped": 1
+      },
+      {
+        "project": "Security",
+        "total": 334,
+        "failed": 0,
+        "succeeded": 334,
+        "skipped": 0
+      },
+      {
+        "project": "Server",
+        "total": 315,
+        "failed": 0,
+        "succeeded": 315,
+        "skipped": 0
+      },
+      {
+        "project": "UI",
+        "total": 463,
+        "failed": 0,
+        "succeeded": 463,
+        "skipped": 0
+      }
+    ],
+    "unitInitialFailure": {
+      "test": "PartiesClaimLiteralConsolidationTests.RawClaimLiterals_AreOnlyDeclaredInSharedAnchorOrIntentionalTests",
+      "repair": "use PartiesClaimTypes.EventStoreTenant in both integration fixtures",
+      "focusedRerun": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    "service": {
+      "initialPassed": 2950,
+      "initialFailed": 1,
+      "skipped": 14,
+      "repair": "align active dependency documentation with effective catalog",
+      "documentationRerunPassed": 10
+    },
+    "ciInitialPassed": 643,
+    "ciReviewRerun": {
+      "passed": 642,
+      "failed": 1,
+      "skipped": 0,
+      "failure": "active CI docs still named previous immutable workflow pins",
+      "focusedRepairRerunPassed": 1
+    },
+    "lifecyclePythonPassed": 168,
+    "integrationEvidencePythonPassed": 74,
+    "bmadConfigPassed": 20,
+    "sharedReleaseWorkflowPassed": 34,
+    "sharedPrepareModulePassed": 12,
+    "browserConfigPassed": 8,
+    "browserTypecheck": "passed",
+    "tenantFixtureIntegrationPassed": 19,
+    "samplePassed": 66,
+    "localPackages": {
+      "count": 11,
+      "version": "3.1.2",
+      "status": "packed and package-only consumers validated; never uploaded"
+    },
+    "runtimeIsolation": {
+      "withoutNet10ExitCode": 150,
+      "withNet10ExitCode": 0
+    },
+    "actionlint": "passed",
+    "gitlinkWorktreeAndRangeGates": "passed",
+    "warningOverrideGuard": "passed",
+    "browserUi": {
+      "passed": 81,
+      "failed": 0,
+      "skipped": 0,
+      "retries": 0
+    },
+    "remainingObservedTestFailures": [],
+    "completionScope": "All observed ordinary test failures repaired with passing focused reruns; native publication cohort remains unqualified."
+  },
+  "blockers": [
+    {
+      "code": "HXW011",
+      "details": "Selected Platform488723fd7efbccbab3bccdae3be4ad79b05a4994 has no release tag."
+    },
+    {
+      "code": "HXW009",
+      "details": "Selected Platform pins Buildsff6b295abcca5159896602bd8a5e87e913950b83; selected Builds is9f85c64beae32befe050240526af398063e81eba."
+    },
+    {
+      "code": "public-cohort-not-qualified",
+      "details": "Public runtime verifier still requires independently measured Platform081178aa5cc01f5dc736ba0d1980aa80fedc6fe1 / Builds5ec1779040606be89306129a7d2b245258c9acd2 and older package bodies; preserved without substitutions."
+    },
+    {
+      "code": "exact-source-ci-not-green",
+      "details": "No successful push ci.yml run exists for the exact current main SHA."
+    }
+  ],
+  "newReleaseCreated": false,
+  "newPackagesPublished": false,
+  "existingReleaseVerification": {
+    "version": "3.1.1",
+    "packages": 11,
+    "downloadAndRepositoryCommitChecks": "passed",
+    "source": "84e3df796ac977041a21ec7bd8e5789bdc44241a"
+  },
+  "review": {
+    "layers": [
+      "blind-hunter",
+      "edge-case-hunter",
+      "verification-gap"
+    ],
+    "fixed": [
+      "explicit net10 runtime setup with SDK11",
+      "paired shared CI and lifecycle baseline pins",
+      "separate runtime10.0.15 and NuGet10.0.13 floors",
+      "active dependency documentation",
+      "claim constants in integration fixtures"
+    ],
+    "preservedBlockers": [
+      "HXW009",
+      "HXW011",
+      "unqualified current public package cohort"
+    ]
+  },
+  "sourceSelections": {
+    "references/Hexalith.EventStore": "06ab5c16d1dc38e5e3f29ff06824b2c6724e6ea3",
+    "references/Hexalith.Memories": "13fdb88a3267626b14f75e16cc2de58dcfbbb2bb",
+    "references/Hexalith.FrontComposer": "57aa756c02edbae4294412885823533308b7db0d",
+    "references/Hexalith.Tenants": "6188ea48cab9fdf4207072135c66aab5a7b7fe32",
+    "references/Hexalith.AI.Tools": "8a3885dd22aea88edd57771cfe592c382df2c583",
+    "references/Hexalith.Commons": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+    "references/Hexalith.Builds": "9f85c64beae32befe050240526af398063e81eba",
+    "references/Hexalith.PolymorphicSerializations": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+    "references/Hexalith.McpCli": "94f5ee691c70dcb30e893c50629d95afb63d216f",
+    "references/Hexalith.Platform": "488723fd7efbccbab3bccdae3be4ad79b05a4994"
+  },
+  "hostedCi": {
+    "source": "9f9f3328fb07a096fa5fb5ebf8a5d1ea4e7b02d4",
+    "status": "queued",
+    "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/43099488478"
+  },
+  "retainedEvidence": {
+    "root-commitlint.log.gz": {
+      "uncompressedSha256": "fb99a4896864ad5f9d82bc00c28dc54323afe2a31c1bc9ccc89e4d9fc1440f9c",
+      "uncompressedBytes": 369
+    },
+    "runtime-fix-commitlint.log.gz": {
+      "uncompressedSha256": "d88ed68d9e6ee37036237039ade8ee0ef064a54ae314d0f0a58481f23c1ad3c6",
+      "uncompressedBytes": 371
+    },
+    "test-drift-commitlint.log.gz": {
+      "uncompressedSha256": "3ddbb03b95ae3f3fc6995ed13b21a5662cf2111e4055c255f00adea707f77e6f",
+      "uncompressedBytes": 233
+    },
+    "builds-runtime-commitlint.log.gz": {
+      "uncompressedSha256": "6bb40a4c675f964e47f9bac19e7b8c5fb01050fec58a0e2e69420a678e69e5ff",
+      "uncompressedBytes": 234
+    },
+    "review-fixed-build.log.gz": {
+      "uncompressedSha256": "877e002fcf6cdba358b3229f79130094f0eb44bde452a49e01aac50ca338b8de",
+      "uncompressedBytes": 6781
+    },
+    "local-pack.log.gz": {
+      "uncompressedSha256": "a694deb5bae009b85a1dfab4e2cbed2296ed65f29903ff95f2fcc3eae91f48dc",
+      "uncompressedBytes": 2503
+    },
+    "claim-anchor-tests.log.gz": {
+      "uncompressedSha256": "b2e5c619bd7d9d8df604ffe83b47ca1fcd6d660fcb1400cb74738dc286a20799",
+      "uncompressedBytes": 480
+    },
+    "review-fixed-ci-docs.log.gz": {
+      "uncompressedSha256": "8a5ae08059c103656629da1b41db2874876bae980155a177496d62cfb07901a8",
+      "uncompressedBytes": 439
+    },
+    "review-fixed-ci-tests.log.gz": {
+      "uncompressedSha256": "f81a28f3a065cfc554f86a2eab618d52aa80b575f78748fb2f228bd58a9a8dd9",
+      "uncompressedBytes": 2120
+    },
+    "browser-ui-tests.log.gz": {
+      "uncompressedSha256": "ddeeac1241eeb10b6c16a2c5a963a61c913f9471512ca2ca2f2395250ea0e27c",
+      "uncompressedBytes": 15537
+    },
+    "exact-source-release-admission.log.gz": {
+      "uncompressedSha256": "7982c896ac61add3b2407369357b7854235b2ba26b01180e317b4b2b52a207e0",
+      "uncompressedBytes": 69
+    }
+  }
+}
