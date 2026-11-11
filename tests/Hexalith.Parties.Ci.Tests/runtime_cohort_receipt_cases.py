@@ -22,6 +22,51 @@ spec.loader.exec_module(cohort)
 
 
 class RuntimeReceiptCases(unittest.TestCase):
+    def test_native_ui_wrapper_exception_requires_exact_project_type_and_bound_owner(self):
+        reference = {"Hexalith.EventStore.Admin.UI/4.2.0.0": {"type": "reference"}}
+        for project, bound, kind in [(cohort.MEMORY_QUALIFICATION_PROJECT, False, "reference"),
+                                     (Path("unrelated.csproj"), True, "reference"),
+                                     (cohort.MEMORY_QUALIFICATION_PROJECT, True, "package")]:
+            with self.subTest(project=project, bound=bound, kind=kind):
+                value = {"Hexalith.EventStore.Admin.UI/4.2.0.0": {"type": kind}}
+                with self.assertRaisesRegex(ValueError, "Unqualified runtime SDK family"):
+                    cohort.select_sdk(value, project, native_ui_bound=bound)
+        self.assertEqual({}, cohort.select_sdk(reference, cohort.MEMORY_QUALIFICATION_PROJECT, native_ui_bound=True))
+
+    def test_native_ui_wrapper_requires_a_completed_owner_receipt(self):
+        self.deps["libraries"]["Hexalith.EventStore.Admin.UI/4.2.0.0"] = {"type": "reference"}
+        self.target.with_suffix(".deps.json").write_text(json.dumps(self.deps))
+        with self.assertRaisesRegex(ValueError, "requires the completed private Admin UI"):
+            cohort.bind_native_ui(self.target, cohort.MEMORY_QUALIFICATION_PROJECT, "Release", "3.129.1", self.families, None)
+
+    def test_native_ui_wrapper_binds_exact_owner_bytes_and_source_until_readback(self):
+        self.deps["libraries"]["Hexalith.EventStore.Admin.UI/4.2.0.0"] = {"type": "reference"}
+        self.target.with_suffix(".deps.json").write_text(json.dumps(self.deps))
+        artifact = self.output / "Hexalith.EventStore.Admin.UI.dll"
+        artifact.write_bytes(b"native UI artifact")
+        source = self.root / "native-source.cs"
+        source.write_text("qualified native source")
+        (self.output / "native-admin-ui-artifact.tsv").write_text(str(source) + "|" + cohort.digest(source) + "\n")
+        wrapper = self.root / "Qualification.csproj"
+        wrapper.write_text("<Project />")
+        with patch.object(cohort, "PRIVATE_ADMIN_UI_PROJECT", self.project), patch.object(cohort, "MEMORY_QUALIFICATION_PROJECT", wrapper):
+            self.prepare()
+            wrapper_output = self.root / "wrapper"
+            shutil.copytree(self.output, wrapper_output)
+            target = wrapper_output / self.target.name
+            metadata = {"Properties": {**self.metadata["Properties"], "TargetPath": str(target)}}
+            receipt = cohort.record(metadata, wrapper, "Release", "3.129.1", 0, "runtime", self.families, self.receipt_path)
+            cohort.verify_receipt(receipt, wrapper, "Release", "3.129.1", self.families)
+            for changed in (wrapper_output / artifact.name, source):
+                with self.subTest(changed=changed):
+                    original = changed.read_bytes()
+                    try:
+                        changed.write_bytes(b"unqualified replacement")
+                        with self.assertRaisesRegex(ValueError, "differs|drifted"):
+                            cohort.verify_receipt(receipt, wrapper, "Release", "3.129.1", self.families)
+                    finally:
+                        changed.write_bytes(original)
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
@@ -375,6 +420,27 @@ class RuntimeReceiptCases(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Native UI artifact provenance"):
             self.prepare()
         self.assertFalse(self.manifest.exists())
+
+    def test_native_ui_provenance_requires_source_rows_at_record_and_readback(self):
+        headers = ("sourceProject|/selected/UI.csproj\nsourceCommit|" + "a" * 40
+                   + "\nsdkVersion|3.129.1\nproperties|Configuration=Release\n")
+        source = self.root / "NativeUI.cs"
+        source.write_text("actual selected source")
+        proof = self.output / "native-admin-ui-artifact.tsv"
+        for contents in ("", headers):
+            with self.subTest(contents=bool(contents), phase="record"):
+                proof.write_text(contents)
+                with self.assertRaisesRegex(ValueError, "requires at least one absolute source/hash row"):
+                    cohort.record(self.metadata, self.project, "Release", "3.129.1", 0, "runtime", self.families)
+            with self.subTest(contents=bool(contents), phase="readback"):
+                proof.write_text(headers + str(source) + "|" + cohort.digest(source) + "\n")
+                receipt = cohort.record(self.metadata, self.project, "Release", "3.129.1", 0, "runtime", self.families)
+                cohort.verify_receipt(receipt, self.project, "Release", "3.129.1", self.families)
+                proof.write_text(contents)
+                # Even a newly supplied matching file hash cannot bless source-free provenance.
+                receipt["files"][str(proof)] = cohort.digest(proof)
+                with self.assertRaisesRegex(ValueError, "requires at least one absolute source/hash row"):
+                    cohort.verify_receipt(receipt, self.project, "Release", "3.129.1", self.families)
 
     def test_record_rejects_old_entry_output_and_missing_dependencies(self):
         self.target.unlink()

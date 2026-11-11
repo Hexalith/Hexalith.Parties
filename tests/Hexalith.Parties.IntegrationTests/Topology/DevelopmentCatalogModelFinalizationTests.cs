@@ -253,6 +253,36 @@ public sealed class DevelopmentCatalogModelFinalizationTests
         http.IsProxied.ShouldBeTrue();
     }
 
+    /// <summary>The owned Memories wrapper preserves generated custody until the package catalog hands off its selected token.</summary>
+    [Theory]
+    [InlineData("eventstore")]
+    [InlineData("memories")]
+    [InlineData("memories-domain-service")]
+    [InlineData("parties")]
+    [InlineData("tenants")]
+    [InlineData("sample")]
+    public async Task OwnedMemoriesChannelOverrideDefersUntilGeneratedCustodyHasBeenReused(string host)
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(new DistributedApplicationOptions { DisableDashboard = true });
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["Parties:Testing:UsePackagedGateway"] = "true" });
+        IResourceBuilder<ProjectResource> project = builder.AddResource(new ProjectResource(host))
+            .WithDaprSidecar(sidecar => sidecar.WithOptions(new DaprSidecarOptions { AppId = host }));
+        _ = project.WithGeneratedEventStoreAppChannelToken();
+        ParameterResource original = builder.Resources.OfType<ParameterResource>().Single(parameter => parameter.Name == host + "-app-api-token");
+        _ = PartyMemoryOwnedRuntimeTests.ConfigureOwnedAppChannel(project, "owned-synthetic-token");
+        _ = project.WithGeneratedEventStoreAppChannelToken();
+        builder.Resources.OfType<ParameterResource>().Single(parameter => parameter.Name == host + "-app-api-token").ShouldBeSameAs(original);
+        ParameterResource selected = builder.Resources.OfType<ParameterResource>().Single(parameter => parameter.Name == "fixture-" + host + "-channel-token");
+        _ = project.WithEventStoreAppChannelToken(builder.CreateResourceBuilder(selected));
+        foreach (IResource resource in new IResource[] { project.Resource, project.Resource.Annotations.OfType<DaprSidecarAnnotation>().Single().Sidecar })
+        {
+            var environment = new EnvironmentCallbackContext(builder.ExecutionContext, resource, new Dictionary<string, object>(), TestContext.Current.CancellationToken);
+            foreach (EnvironmentCallbackAnnotation annotation in resource.Annotations.OfType<EnvironmentCallbackAnnotation>())
+                await annotation.Callback(environment).ConfigureAwait(true);
+            environment.EnvironmentVariables["APP_API_TOKEN"].ShouldBeSameAs(selected);
+        }
+    }
+
     /// <summary>The actual SDK full-composition callee reuses the native gateway token, then preserves the chosen private channel.</summary>
     /// <param name="host">The original gateway or a fixture-overridden domain host.</param>
     /// <param name="fixtureOverride">Whether the fixture already selected its stronger explicit token.</param>

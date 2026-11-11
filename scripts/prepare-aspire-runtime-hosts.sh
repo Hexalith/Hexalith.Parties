@@ -121,8 +121,22 @@ for project in "${runtime_hosts[@]}" "${catalog_artifacts[@]}"; do
         receipt="$receipt_directory/$(printf '%s' "$project" | sha256sum | cut -d ' ' -f 1).json"
         role=runtime
         for artifact in "${catalog_artifacts[@]}"; do [[ "$project" != "$artifact" ]] || role=catalog; done
+        native_ui_arguments=()
+        if [[ "$project" == tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj ]]; then
+            native_ui_project=tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj
+            native_ui_arguments=(--private-admin-ui-receipt "$receipt_directory/$(printf '%s' "$native_ui_project" | sha256sum | cut -d ' ' -f 1).json")
+            # The wrapper legitimately rebuilds the private host's static asset manifests.
+            # Rebind that completed owner before checking the wrapper's exact artifact copy.
+            for owner_index in "${!receipt_projects[@]}"; do
+                if [[ "${receipt_projects[$owner_index]}" == "$native_ui_project" ]]; then
+                    python3 "$script_directory/validate-aspire-runtime-cohort.py" --record "${receipt_paths[$owner_index]}" --project "$native_ui_project" \
+                        --metadata-json "${receipt_metadata[$owner_index]}" --configuration "$configuration" --version "$sdk_version" \
+                        --build-started-ns "${receipt_started[$owner_index]}" --role "${receipt_roles[$owner_index]}" --families-json "$families_json"
+                fi
+            done
+        fi
         python3 "$script_directory/validate-aspire-runtime-cohort.py" --record "$receipt" --project "$project" \
-            --metadata-json "$metadata" --configuration "$configuration" --version "$sdk_version" --build-started-ns "$started_ns" --role "$role" --families-json "$families_json"
+            --metadata-json "$metadata" --configuration "$configuration" --version "$sdk_version" --build-started-ns "$started_ns" --role "$role" --families-json "$families_json" "${native_ui_arguments[@]}"
         receipt_projects+=("$project")
         receipt_metadata+=("$metadata")
         receipt_started+=("$started_ns")
@@ -138,9 +152,14 @@ if [[ "$gateway_profile" == packaged ]]; then
     # Referencing qualification projects can rebuild earlier host dependencies. Bind final
     # bytes only after every compiler has succeeded, retaining each original rebuild start.
     for index in "${!receipt_projects[@]}"; do
+        native_ui_arguments=()
+        if [[ "${receipt_projects[$index]}" == tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj ]]; then
+            native_ui_project=tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj
+            native_ui_arguments=(--private-admin-ui-receipt "$receipt_directory/$(printf '%s' "$native_ui_project" | sha256sum | cut -d ' ' -f 1).json")
+        fi
         python3 "$script_directory/validate-aspire-runtime-cohort.py" --record "${receipt_paths[$index]}" --project "${receipt_projects[$index]}" \
             --metadata-json "${receipt_metadata[$index]}" --configuration "$configuration" --version "$sdk_version" \
-            --build-started-ns "${receipt_started[$index]}" --role "${receipt_roles[$index]}" --families-json "$families_json"
+            --build-started-ns "${receipt_started[$index]}" --role "${receipt_roles[$index]}" --families-json "$families_json" "${native_ui_arguments[@]}"
     done
     python3 "$script_directory/validate-aspire-runtime-cohort.py" --complete-manifest "$receipt_directory/prepared.json" \
         --configuration "$configuration" --version "$sdk_version" --families-json "$families_json" "${receipts[@]}" --archive-cache "$receipt_directory/public-archives" \

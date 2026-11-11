@@ -1,0 +1,5 @@
+fix: close five runtime qualification deferrals
+
+Bind native reads to the owned catalog generation and replay tenant.
+Require complete lifetime observations and qualify all canonical outputs.
+Record the source cleanup fix and its bounded runtime evidence.

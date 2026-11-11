@@ -1,4 +1,13 @@
 using Hexalith.EventStore.Client.Gateway;
+using Hexalith.EventStore.Client.Streams;
+using Hexalith.EventStore.Contracts.Identity;
+using Hexalith.EventStore.Contracts.Authorization;
+using Hexalith.EventStore.Contracts.Routing;
+using Hexalith.EventStore.Contracts.Streams;
+using Hexalith.EventStore.Server.Events;
+using Hexalith.EventStore.ServiceDefaults.Routing;
+using NSubstitute;
+using System.Text.Json;
 
 using Shouldly;
 
@@ -7,6 +16,128 @@ namespace Hexalith.Parties.IntegrationTests.Topology;
 /// <summary>Exercises diagnostic lifetime and actual persistence failures independently of an unavailable native-proof gateway.</summary>
 public sealed class MemoriesAuthoritativePersistenceTests
 {
+    [Theory]
+    [InlineData("none")]
+    [InlineData("native-proof")]
+    [InlineData("event-digest")]
+    [InlineData("substituted-incarnation")]
+    public async Task NativeReaderVerifiesDigestsAndIndependentStoredProof(string mutation)
+    {
+        AggregateIdentity identity = new("owned-tenant", "memories-cases", "owned-case");
+        var item = new StreamReadEvent(1, "CaseCreatedEvent", [1, 2], "json", 1, "message-1", null, null, DateTimeOffset.UnixEpoch, null)
+            { NativeEventDigest = new string('a', 64) };
+        NativeSourceProof proof = NativeSourceProofCodec.ExtendDigest(NativeSourceProofCodec.CreateSeed(identity, "01ARZ3NDEKTSV4RRFFQ69G5FAV"),
+            identity, 1, item.MessageId, item.NativeEventDigest);
+        var stored = new SourceProof(proof.CodecVersion, proof.TenantId, proof.Domain, proof.AggregateId, proof.SourceIncarnation,
+            proof.HeadSequence, proof.HeadMessageId, proof.CumulativeDigest, proof.RetainedFloor, proof.Erased);
+        if (mutation == "native-proof") { proof = proof with { CumulativeDigest = new string('b', 64) }; }
+        if (mutation == "event-digest") { item = item with { NativeEventDigest = new string('b', 64) }; }
+        if (mutation == "substituted-incarnation")
+        {
+            proof = NativeSourceProofCodec.ExtendDigest(NativeSourceProofCodec.CreateSeed(identity, "01ARZ3NDEKTSV4RRFFQ69G5FAW"),
+                identity, 1, item.MessageId, item.NativeEventDigest);
+        }
+        var gateway = Substitute.For<IEventStoreGatewayClient>();
+        gateway.ReadStreamAsync(Arg.Any<StreamReadRequest>(), Arg.Any<CancellationToken>()).Returns(call =>
+        {
+            StreamReadRequest request = call.Arg<StreamReadRequest>();
+            request.RequireNativeProof.ShouldBeTrue();
+            StreamReadEvent[] events = request.ToSequence == 0 ? [] : [item];
+            return new StreamReadPage(identity.TenantId, identity.Domain, identity.AggregateId, events,
+                new StreamReadMetadata(request.FromSequence, request.ToSequence, events.Length == 0 ? null : 1, 1, events.Length, false, null) { NativeProof = proof });
+        });
+        if (mutation == "none")
+        {
+            AuthoritativeEventStream verified = await MemoriesAuthoritativePersistence.ReadVerifiedNativeStreamAsync(gateway, identity, stored, TestContext.Current.CancellationToken);
+            verified.NativeProof.ShouldBe(proof); verified.Events.Single().NativeEventDigest.ShouldBe(item.NativeEventDigest);
+        }
+        else
+        {
+            InvalidDataException failure = await Should.ThrowAsync<InvalidDataException>(() => MemoriesAuthoritativePersistence.ReadVerifiedNativeStreamAsync(
+                gateway, identity, stored, TestContext.Current.CancellationToken));
+            if (mutation == "substituted-incarnation") { failure.Message.ShouldContain("independent stored actor metadata"); }
+        }
+    }
+
+    [Theory]
+    [InlineData("missing")]
+    [InlineData("stale")]
+    [InlineData("current")]
+    public async Task CatalogGenerationEvidenceRecordsTheActualSentOlderOrCurrentEpoch(string mode)
+    {
+        var declaration = new RouteContractDeclaration("computed", "query", "tenants", "Namespace.Resolve.v1", null, "v1", null, "workload",
+            EventStoreOperationIdentifiers.DomainServiceQuery, null, [], new("Namespace.Resolve", "exact", ["Namespace.Resolve.v1"], "domain-service", "computed", []));
+        RouteCatalogEnvelope catalog = RouteCatalogCodec.Seal(new(2, 1, "Development", false, [declaration],
+            [new("computed", 1, RouteCatalogCodec.ComputeDeclarationDigest(declaration), "owned", "query", "v1", "workload", declaration.Operation, false, "*")], [], "", ""));
+        var host = new RouteCatalogHostIdentity("owned", "owned", new string('b', 64), new string('c', 64), "owned-authentication");
+        var activation = new RouteCatalogActivation("owned-attempt", RouteCatalogCodec.Encode(catalog), RouteCatalogCodec.ComputeRootDigest(catalog), null, [host], "Development", "owned-proof");
+        var state = new RouteCatalogActivationState(7, activation, null, null, [], 0, []);
+        long? observed = null, sent = null;
+        using var handler = new OwnedRouteCatalogBindingHandler(_ => Task.FromResult(state), (_, actual, transmitted, _, _) => { observed = actual; sent = transmitted; })
+            { Mode = mode, InnerHandler = new GenerationReceiver(mode) };
+        using var client = new HttpClient(handler);
+        using HttpResponseMessage response = await client.GetAsync("http://owned/", TestContext.Current.CancellationToken);
+        observed.ShouldBe(7); sent.ShouldBe(mode == "missing" ? null : mode == "stale" ? 6L : 7L);
+    }
+
+    private sealed class GenerationReceiver(string mode) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            if (mode == "missing") { request.Headers.Contains(RouteCatalogInvocationHandler.EpochHeader).ShouldBeFalse(); }
+            else { request.Headers.GetValues(RouteCatalogInvocationHandler.EpochHeader).Single().ShouldBe(mode == "stale" ? "6" : "7"); }
+            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK));
+        }
+    }
+
+    [Fact]
+    public void ScopedReplayGrantPreservesTheExistingUnscopedOperatorClaims()
+    {
+        var reader = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+        var unscoped = reader.ReadJwtToken(HealthChecks.PartiesAspireTopologyFixture.CreateAdministratorToken());
+        var scoped = reader.ReadJwtToken(HealthChecks.PartiesAspireTopologyFixture.CreateAdministratorToken("owned-replay-tenant"));
+        unscoped.Claims.ShouldNotContain(claim => claim.Type == "eventstore:tenant");
+        scoped.Claims.Single(claim => claim.Type == "eventstore:tenant").Value.ShouldBe("owned-replay-tenant");
+        scoped.Claims.Where(claim => claim.Type is not ("eventstore:tenant" or "exp" or "nbf" or "iat"))
+            .Select(claim => claim.Type + "=" + claim.Value).Order(StringComparer.Ordinal).ShouldBe(
+                unscoped.Claims.Where(claim => claim.Type is not ("exp" or "nbf" or "iat"))
+                    .Select(claim => claim.Type + "=" + claim.Value).Order(StringComparer.Ordinal));
+    }
+
+    [Theory]
+    [InlineData("first")]
+    [InlineData("second")]
+    [InlineData("duplicate")]
+    [InlineData("missing-output")]
+    [InlineData("wrong-revision")]
+    public void CanonicalAuthorityRefusesEitherOmittedOutputOrInvalidRevision(string fault)
+    {
+        string[] units = fault switch { "first" => ["second"], "second" => ["first"], "duplicate" => ["first", "first"], _ => ["first", "second"] };
+        object[] outputs = fault == "missing-output" ? [new { Revision = 1, MemoryUnitId = "first" }]
+            : [new { Revision = 1, MemoryUnitId = "first" }, new { Revision = fault == "wrong-revision" ? 1 : 2, MemoryUnitId = "second" }];
+        using JsonDocument authority = JsonDocument.Parse(JsonSerializer.Serialize(new { UnitIds = units, CanonicalOutputs = outputs }));
+        Should.Throw<InvalidDataException>(() => MemoriesAuthoritativePersistence.CanonicalUnits(authority.RootElement));
+    }
+
+    [Fact]
+    public void BothCanonicalOutputsRetainIndependentRevisionAuthority()
+    {
+        using JsonDocument authority = JsonDocument.Parse("""{"UnitIds":["first","second"],"CanonicalOutputs":[{"Revision":1,"MemoryUnitId":"first"},{"Revision":2,"MemoryUnitId":"second"}]}""");
+        MemoriesAuthoritativePersistence.CanonicalUnits(authority.RootElement).ShouldBe(["first", "second"]);
+        MemoriesAuthoritativePersistence.DeletionRequestedAt(["MemoryUnitDeletionRequestedEvent"], 1).ShouldBeTrue();
+        MemoriesAuthoritativePersistence.DeletionRequestedAt(["CaseCreatedEvent", "CaseDeletionRequestedEvent"], 1).ShouldBeFalse();
+        MemoriesAuthoritativePersistence.DeletionRequestedAt(["CaseCreatedEvent", "CaseDeletionRequestedEvent"], 2).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task ActorDiagnosticsRetainABoundedPrefix()
+    {
+        using var body = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(new string('a', 100000)));
+        string retained = await MemoriesAuthoritativePersistence.ReadDiagnosticBodyAsync(body, TestContext.Current.CancellationToken);
+        retained.ShouldBe(new string('a', 32768) + " [truncated]");
+        body.Position.ShouldBe(32769);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

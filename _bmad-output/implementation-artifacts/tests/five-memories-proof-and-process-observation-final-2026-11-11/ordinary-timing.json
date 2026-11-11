@@ -1,0 +1,139 @@
+{
+  "schema": "parties.ordinary-launcher-stop-timing.v1",
+  "captureFailures": [],
+  "observedAtUtc": "2026-11-11T01:33:01.9928346+00:00",
+  "startup": {
+    "available": true,
+    "phase": "eventstore-health-endpoint",
+    "reason": null,
+    "failure": null,
+    "observerFailure": null
+  },
+  "runFailure": null,
+  "daprPathIsLauncher": true,
+  "launcherGraceSeconds": 10,
+  "quiescenceBudgetSeconds": 30,
+  "exitSamplingResolutionMs": 10,
+  "totalStopMs": 13615.5,
+  "quiescedMs": 10006.7,
+  "lastWorkerExitMs": 9479.9,
+  "skippedLaunchers": [],
+  "survivors": [],
+  "resources": [
+    {
+      "resource": "eventstore-admin-dapr-cli",
+      "launcherPid": 494013,
+      "stopIssuedMs": 9372.3,
+      "launcherExitMs": 9459.8,
+      "launcherExitAfterStopIssuedMs": 87.5,
+      "dcpState": "Finished",
+      "launcherExitCode": 143,
+      "launcherExit": "143 (SIGTERM forwarded, every child reaped)",
+      "descendants": [
+        {
+          "role": "cli",
+          "pid": 494026,
+          "exitMs": 9451.1
+        },
+        {
+          "role": "daprd",
+          "pid": 494177,
+          "exitMs": 9451
+        }
+      ],
+      "daprdOutlivedLauncher": false
+    },
+    {
+      "resource": "eventstore-admin-ui-dapr-cli",
+      "launcherPid": 494123,
+      "stopIssuedMs": 9373.1,
+      "launcherExitMs": 9459.9,
+      "launcherExitAfterStopIssuedMs": 86.8,
+      "dcpState": "Finished",
+      "launcherExitCode": 143,
+      "launcherExit": "143 (SIGTERM forwarded, every child reaped)",
+      "descendants": [
+        {
+          "role": "cli",
+          "pid": 494165,
+          "exitMs": 9440.4
+        },
+        {
+          "role": "daprd",
+          "pid": 494278,
+          "exitMs": 9440.4
+        }
+      ],
+      "daprdOutlivedLauncher": false
+    },
+    {
+      "resource": "eventstore-dapr-cli",
+      "launcherPid": 494012,
+      "stopIssuedMs": 9373.1,
+      "launcherExitMs": 9459.8,
+      "launcherExitAfterStopIssuedMs": 86.7,
+      "dcpState": "Finished",
+      "launcherExitCode": 143,
+      "launcherExit": "143 (SIGTERM forwarded, every child reaped)",
+      "descendants": [
+        {
+          "role": "cli",
+          "pid": 494027,
+          "exitMs": 9451.7
+        },
+        {
+          "role": "daprd",
+          "pid": 494178,
+          "exitMs": 9451
+        }
+      ],
+      "daprdOutlivedLauncher": false
+    },
+    {
+      "resource": "parties-dapr-cli",
+      "launcherPid": 494382,
+      "stopIssuedMs": 9373.1,
+      "launcherExitMs": 9479.9,
+      "launcherExitAfterStopIssuedMs": 106.8,
+      "dcpState": "Finished",
+      "launcherExitCode": 143,
+      "launcherExit": "143 (SIGTERM forwarded, every child reaped)",
+      "descendants": [
+        {
+          "role": "cli",
+          "pid": 494396,
+          "exitMs": 9451
+        },
+        {
+          "role": "daprd",
+          "pid": 494479,
+          "exitMs": 9451.7
+        }
+      ],
+      "daprdOutlivedLauncher": false
+    },
+    {
+      "resource": "tenants-dapr-cli",
+      "launcherPid": 494217,
+      "stopIssuedMs": 9373.1,
+      "launcherExitMs": 9459.8,
+      "launcherExitAfterStopIssuedMs": 86.7,
+      "dcpState": "Finished",
+      "launcherExitCode": 143,
+      "launcherExit": "143 (SIGTERM forwarded, every child reaped)",
+      "descendants": [
+        {
+          "role": "cli",
+          "pid": 494238,
+          "exitMs": 9439.5
+        },
+        {
+          "role": "daprd",
+          "pid": 494301,
+          "exitMs": 9440.4
+        }
+      ],
+      "daprdOutlivedLauncher": false
+    }
+  ]
+}

@@ -1,0 +1,451 @@
+{
+  "stage": "final reviewed local acceptance and committed source-selection gates complete; authorized root main push follows this evidence snapshot",
+  "baseline": "fc9ea3f3b7b8544f8a8f7b8f7912ceb45489766c",
+  "memoriesOwner": {
+    "commit": "43d2d72f7170a29a58b6046f69e05c9ad9734701",
+    "remoteMainReadback": "43d2d72f7170a29a58b6046f69e05c9ad9734701",
+    "clean": true,
+    "push": "git push origin main",
+    "ruleBypass": [
+      "Bypassed rule violations for refs/heads/main",
+      "Changes must be made through a pull request.",
+      "3 of 3 required status checks are expected."
+    ]
+  },
+  "sourceLanes": [
+    {
+      "name": "memories-owner",
+      "command": [
+        "dotnet",
+        "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+        "-class",
+        "*SourceInventoryProducerIntegrationTests",
+        "-class",
+        "*SourceInventoryIntegrationTests",
+        "-class",
+        "*RefreshPublicationIntegrationTests",
+        "-class",
+        "*IndexSemanticIntegrationTests",
+        "-class",
+        "*BackupRestoreFidelityIntegrationTests",
+        "-result-xml",
+        "/tmp/parties-five-proof-20261111/post-review/memories-owner.xml"
+      ],
+      "exitCode": 0,
+      "counts": {
+        "total": "71",
+        "passed": "71",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0",
+        "time": "23.761"
+      }
+    },
+    {
+      "name": "memories-adapters",
+      "command": [
+        "dotnet",
+        "references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.Tests.dll",
+        "-class",
+        "*RestoreReindexUnitActivityTests",
+        "-class",
+        "*IndexNaturalLanguageSemanticActivityTests",
+        "-class",
+        "*IndexSemanticChunksActivityTests",
+        "-class",
+        "*IndexSyntacticActivityTests",
+        "-class",
+        "*IndexSemanticActivityTests",
+        "-class",
+        "*RestoreDataPlaneActivityTests",
+        "-class",
+        "*DeleteMemoryUnitProjectionActivityTests",
+        "-result-xml",
+        "/tmp/parties-five-proof-20261111/post-review/memories-adapters.xml"
+      ],
+      "exitCode": 0,
+      "counts": {
+        "total": "50",
+        "passed": "50",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0",
+        "time": "0.467"
+      }
+    },
+    {
+      "name": "eventstore-safeguards",
+      "command": [
+        "dotnet",
+        "references/Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/bin/Debug/net10.0/Hexalith.EventStore.Server.Tests.dll",
+        "-class",
+        "*AggregateActorCommandSourceTests",
+        "-class",
+        "*StreamsControllerTests",
+        "-class",
+        "*NativeSourcePrefixTests",
+        "-result-xml",
+        "/tmp/parties-five-proof-20261111/post-review/eventstore-safeguards.xml"
+      ],
+      "exitCode": 0,
+      "counts": {
+        "total": "149",
+        "passed": "149",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0",
+        "time": "1.623"
+      }
+    }
+  ],
+  "runtimeLanes": [
+    {
+      "name": "models",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "*MemoriesAuthoritativePersistenceTests",
+        "-class",
+        "*MemoryRuntimeIdentityTests",
+        "-class",
+        "*OrdinaryLauncherProcessCaptureTests",
+        "-class",
+        "*OrdinaryLauncherProcessLifetimeTests",
+        "-result-xml",
+        "/tmp/parties-five-proof-20261111/post-review/models.xml"
+      ],
+      "environment": {},
+      "exitCode": 0,
+      "counts": {
+        "total": "53",
+        "passed": "53",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0",
+        "time": "0.937"
+      },
+      "privateRunDirectories": []
+    },
+    {
+      "name": "custody",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "*DevelopmentCatalogModelFinalizationTests",
+        "-result-xml",
+        "/tmp/parties-five-proof-20261111/post-review/custody.xml"
+      ],
+      "environment": {},
+      "exitCode": 0,
+      "counts": {
+        "total": "40",
+        "passed": "40",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0",
+        "time": "1.357"
+      },
+      "privateRunDirectories": []
+    },
+    {
+      "name": "focused",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-method",
+        "*ActualSelectedMemoriesRefreshErasureAndReplayControl",
+        "-result-xml",
+        "/tmp/parties-five-proof-20261111/post-review/focused.xml"
+      ],
+      "environment": {
+        "PARTIES_MEMORIES_OWNED_RUNTIME": "1"
+      },
+      "exitCode": 0,
+      "counts": {
+        "total": "1",
+        "passed": "1",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0",
+        "time": "98.481"
+      },
+      "privateRunDirectories": [
+        "/tmp/parties-five-memory-runtime-7b339526ca3e"
+      ]
+    },
+    {
+      "name": "full",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-method",
+        "*ActualSelectedMemoriesRunsTheRecoveryAndPhysicalErasureControl",
+        "-result-xml",
+        "/tmp/parties-five-proof-20261111/post-review/full.xml"
+      ],
+      "environment": {
+        "PARTIES_MEMORIES_OWNED_RUNTIME": "1"
+      },
+      "exitCode": 0,
+      "counts": {
+        "total": "1",
+        "passed": "1",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0",
+        "time": "152.611"
+      },
+      "privateRunDirectories": [
+        "/tmp/parties-five-memory-runtime-80095825d5c8"
+      ]
+    },
+    {
+      "name": "ordinary",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "*PartiesOrdinaryLauncherStopTimingTests",
+        "-result-xml",
+        "/tmp/parties-five-proof-20261111/post-review/ordinary.xml"
+      ],
+      "environment": {
+        "PARTIES_ORDINARY_TOPOLOGY_TESTS": "true",
+        "PARTIES_ORDINARY_TOPOLOGY_TIMING_PATH": "/tmp/parties-five-proof-20261111/post-review/ordinary-timing.json"
+      },
+      "exitCode": 0,
+      "counts": {
+        "total": "2",
+        "passed": "2",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0",
+        "time": "57.821"
+      },
+      "privateRunDirectories": []
+    }
+  ],
+  "validator": {
+    "command": "python3 -m unittest discover -s tests/Hexalith.Parties.Ci.Tests -p runtime_cohort_receipt_cases.py",
+    "passed": 30,
+    "failed": 0,
+    "skipped": 0,
+    "log": "validator.log.gz"
+  },
+  "sourceHashes": {
+    "scripts/prepare-aspire-runtime-hosts.sh": "63bff9cf1a2afbbcf42c391fc7bec42f55933f1d0e73b9e37a52bcdb2527b077",
+    "scripts/validate-aspire-runtime-cohort.py": "7eced4e8b9c806bb7ddcc6d06db42e27dc2ec2a89cdc4d53d851e98c13d3f09c",
+    "tests/Hexalith.Parties.Ci.Tests/runtime_cohort_receipt_cases.py": "55bb9eb7d1ce3f38420796afdd16336ac7fac8467aefcf806e4815cf83ff02d0",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/DevelopmentCatalogModelFinalizationTests.cs": "a5c1e880ab8cf0f719889803ac7652b83abc5ec813947bc39ce672d791dd811e",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/MemoriesAuthoritativePersistence.cs": "801463aaa52c7fac06a277e66bc2bbaf2183716acfdecf12209017de1c16e9c3",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/MemoriesAuthoritativePersistenceTests.cs": "4cc4e6fe44c59364bed06a4e41724bc64af18ec1707248e58c360df09f2e9218",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessCapture.cs": "5e5163c46732840a2a891829227e1a33da4b600db727a3f478defdbd1cc85131",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessCaptureTests.cs": "5bddee47a25558e06830d6968ea0a7bb105333afffdfe56c711100de7f8162e4",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessLifetimeTests.cs": "ca49382a3b7595aa6a24ca3c41f91149cba4ef24b07e497f608a76caa813ecb6",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/OwnedRouteCatalogBindingHandler.cs": "cb21f8c45050823f0caf5449c574bf4864736b6f2969b7658f17dd4d62be5679",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs": "06f97f23bae5b0d416d20fdce973dc4e421f83f4cbefe9b36523ee011e476ae4",
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeTests.cs": "44e70f116f50ef665f87a0fb6daf5befb51725521adb13b3f2d740d74a1f3d1b",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/SourceInventoryStore.cs": "284ea6699cac833bd1d524432078b0f320963f6895a0113198bb26f6c6754e03",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/SourceInventorySnapshot.cs": "b6cc1f0bf74949fe9e1d161a2490a5099d32a0732ee0afb77ffb626c8b50ddeb",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/SourcePublicationVisibility.cs": "b874db3eeea1a142cc8b76e62e33d5362d7b59ef5471ee8d79346a8211859ca7",
+    "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Ingestion/RefreshPublicationIntegrationTests.cs": "c4ef35cdc029eba3f57bdaaba3df83905a9ac50235f48468ca99474b7c7ce52c",
+    "tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs": "3f3ca2a85b47f9e7bd5f7b41617c86faf969a20c54867e004a07130cc295d6a2",
+    "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Ingestion/SourceInventoryProducerIntegrationTests.cs": "d8a8cc08c07074f98d761f7b547e19f9f7c6407ae17628e7f0f0d09cdf1a9a38"
+  },
+  "preparation": {
+    "command": "bash scripts/prepare-aspire-runtime-hosts.sh --configuration Debug --include-memory-qualification true",
+    "exitCode": 0,
+    "projects": 13,
+    "sdkVersion": "4.2.0",
+    "configuration": "Debug",
+    "warnings": 0,
+    "errors": 0,
+    "log": "canonical-preparation.log.gz",
+    "receipts": "runtime-profile/"
+  },
+  "liveRuns": {
+    "focused": {
+      "session": "parties-five-memory-runtime-7b339526ca3e",
+      "ownedTopologyDisposed": true,
+      "sessionDirectoryExists": false,
+      "primaryFailure": null,
+      "cleanupFailure": null,
+      "canonicalOutputs": [
+        {
+          "Revision": 1,
+          "MemoryUnitId": "d83cb2cd-ec6f-481c-8af4-80e1ea249072"
+        },
+        {
+          "Revision": 2,
+          "MemoryUnitId": "4a4818af-4472-4474-bed1-1db452eeae62"
+        }
+      ],
+      "nativeReplayObservations": 6,
+      "generationControls": [
+        {
+          "Mode": "missing",
+          "ObservedEpoch": 1,
+          "SentEpoch": null,
+          "Root": "125ad51bdaced59a519df5f3781a49df716d4675431f303018fbb30dc3fc9737",
+          "Binding": "3f5aafb119296d5c1134d27a58ba3a4f05d16a7a702bea54255384209bfe06ed",
+          "StateStore": "routing-parties-7b339526ca3e-catalog",
+          "StateKey": "parties-7b339526ca3e-catalog-authority"
+        },
+        {
+          "Mode": "stale",
+          "ObservedEpoch": 1,
+          "SentEpoch": 0,
+          "Root": "125ad51bdaced59a519df5f3781a49df716d4675431f303018fbb30dc3fc9737",
+          "Binding": "3f5aafb119296d5c1134d27a58ba3a4f05d16a7a702bea54255384209bfe06ed",
+          "StateStore": "routing-parties-7b339526ca3e-catalog",
+          "StateKey": "parties-7b339526ca3e-catalog-authority"
+        },
+        {
+          "Mode": "current",
+          "ObservedEpoch": 1,
+          "SentEpoch": 1,
+          "Root": "125ad51bdaced59a519df5f3781a49df716d4675431f303018fbb30dc3fc9737",
+          "Binding": "3f5aafb119296d5c1134d27a58ba3a4f05d16a7a702bea54255384209bfe06ed",
+          "StateStore": "routing-parties-7b339526ca3e-catalog",
+          "StateKey": "parties-7b339526ca3e-catalog-authority"
+        }
+      ]
+    },
+    "full": {
+      "session": "parties-five-memory-runtime-80095825d5c8",
+      "ownedTopologyDisposed": true,
+      "sessionDirectoryExists": false,
+      "primaryFailure": null,
+      "cleanupFailure": null,
+      "canonicalOutputs": [
+        {
+          "Revision": 1,
+          "MemoryUnitId": "af0d55b1-a22a-481f-a8dc-940e0c586770"
+        },
+        {
+          "Revision": 2,
+          "MemoryUnitId": "db95e6a9-7fdb-481b-a8c5-fd33204d2f0e"
+        }
+      ],
+      "nativeReplayObservations": 6,
+      "generationControls": [
+        {
+          "Mode": "missing",
+          "ObservedEpoch": 1,
+          "SentEpoch": null,
+          "Root": "b34be984bbbfb3efacbd7b480a83e3577fa92ef394a44833c5f383e0a224a832",
+          "Binding": "1fe0b8e8d87badb563fcc2ad0c5ade0383d4c7a1d018f432af8432381075f2d8",
+          "StateStore": "routing-parties-80095825d5c8-catalog",
+          "StateKey": "parties-80095825d5c8-catalog-authority"
+        },
+        {
+          "Mode": "stale",
+          "ObservedEpoch": 1,
+          "SentEpoch": 0,
+          "Root": "b34be984bbbfb3efacbd7b480a83e3577fa92ef394a44833c5f383e0a224a832",
+          "Binding": "1fe0b8e8d87badb563fcc2ad0c5ade0383d4c7a1d018f432af8432381075f2d8",
+          "StateStore": "routing-parties-80095825d5c8-catalog",
+          "StateKey": "parties-80095825d5c8-catalog-authority"
+        },
+        {
+          "Mode": "current",
+          "ObservedEpoch": 1,
+          "SentEpoch": 1,
+          "Root": "b34be984bbbfb3efacbd7b480a83e3577fa92ef394a44833c5f383e0a224a832",
+          "Binding": "1fe0b8e8d87badb563fcc2ad0c5ade0383d4c7a1d018f432af8432381075f2d8",
+          "StateStore": "routing-parties-80095825d5c8-catalog",
+          "StateKey": "parties-80095825d5c8-catalog-authority"
+        }
+      ]
+    }
+  },
+  "ordinary": {
+    "ordinary-timing.json": {
+      "captureFailures": 0,
+      "quiescedMs": 10006.7,
+      "budgetSeconds": 30,
+      "survivors": [],
+      "launcherExitCodes": [
+        143,
+        143,
+        143,
+        143,
+        143
+      ]
+    },
+    "ordinary-timing.json.incomplete.json": {
+      "captureFailures": 15,
+      "quiescedMs": 9535.3,
+      "budgetSeconds": 30,
+      "survivors": [],
+      "launcherExitCodes": [
+        143,
+        143,
+        143,
+        143,
+        143
+      ]
+    }
+  },
+  "review": {
+    "patchedGroups": 8,
+    "individualFindings": 16,
+    "unverifiedDeferredGroups": 3,
+    "triage": "../five-memories-proof-and-process-observation-2026-11-11/review-triage-pass1.json",
+    "postReviewFocused": "../five-memories-proof-and-process-observation-review-2026-11-11/verification.json"
+  },
+  "qualificationLimit": "Owner source Debug and public package-host Debug evidence remain distinct from public package Release, deployment, historical parity, publication and production migration acceptance. No manual package publication or dependency version update was performed.",
+  "overlap": "Repeated lanes overlap prior packets; counts are not added together.",
+  "selectionBuild": {
+    "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Debug --no-restore -m:1 -p:BuildProjectReferences=false",
+    "exitCode": 0,
+    "warnings": 0,
+    "errors": 0,
+    "evidence": "selection-build.log.gz"
+  },
+  "credentialScan": "credential-scan.json",
+  "committedSelection": {
+    "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -method '*CommittedSelectionObservations_PreservePackageGraphAndImmutableConsumptionRefusals' -method '*CommittedSourceSelections_RecordOverridesAndRefuseInvalidImmutableConsumption' -result-xml /tmp/parties-five-proof-20261111/post-review/committed-selection.xml",
+    "exitCode": 0,
+    "counts": {
+      "total": "3",
+      "passed": "3",
+      "failed": "0",
+      "skipped": "0",
+      "errors": "0",
+      "time": "33.440"
+    },
+    "memoriesGitlink": "43d2d72f7170a29a58b6046f69e05c9ad9734701",
+    "evidence": "committed-selection.xml.gz",
+    "amendmentLimit": "The final local amendment retains evidence and review notes only; the tested code and selected gitlink remain identical."
+  },
+  "gitGates": {
+    "pinnedCommitlintCli": "21.2.4",
+    "candidateMessages": [
+      "memories-commit-message.txt",
+      "parties-commit-message.txt"
+    ],
+    "candidateValidationExitCodes": [
+      0,
+      0
+    ],
+    "committedValidationExitCodes": [
+      0,
+      0
+    ],
+    "rootGitlinkWorktree": 0,
+    "rootGitlinkDiff": 0,
+    "rootGitlinkPushRange": 0,
+    "warningAndNestedSubmodulePolicy": 0,
+    "stagedWhitespace": 0,
+    "evidence": [
+      "gitlink-diff.log.gz",
+      "gitlink-push-range.log.gz",
+      "policy-gate.log.gz",
+      "parties-committed-commitlint.log.gz",
+      "memories-committed-commitlint.log.gz"
+    ]
+  }
+}

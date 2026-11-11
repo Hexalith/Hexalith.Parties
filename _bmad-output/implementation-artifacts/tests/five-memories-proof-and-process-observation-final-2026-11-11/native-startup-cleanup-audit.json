@@ -1,0 +1,10 @@
+{
+  "diagnosticSession": "c45d36d4587f",
+  "ownedSessionDirectoryExists": true,
+  "sessionNamedContainers": [],
+  "sessionNamedVolumes": [],
+  "sessionNamedNetworks": [],
+  "sessionReferencedProcesses": [],
+  "scope": "Read-only exact session-name scan; shared pre-existing Dapr/MCP resources were preserved. No final runtime authority is claimed for this canceled diagnostic.",
+  "retainedDirectoryPurpose": "Private diagnostic files retained outside the repository for evidence and credential scanning; no owned live resources found by the exact-session scan."
+}

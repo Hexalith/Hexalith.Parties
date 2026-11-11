@@ -1,0 +1,84 @@
+{
+  "stage": "post-review focused fixes; full serial verification and live acceptance remain parent gates",
+  "originalEvidence": "../five-memories-proof-and-process-observation-2026-11-11/",
+  "changedFiles": [
+    "tests/Hexalith.Parties.IntegrationTests/Topology/MemoriesAuthoritativePersistence.cs",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/MemoriesAuthoritativePersistenceTests.cs",
+    "scripts/validate-aspire-runtime-cohort.py",
+    "tests/Hexalith.Parties.Ci.Tests/runtime_cohort_receipt_cases.py",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessCaptureTests.cs",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessLifetimeTests.cs",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/OwnedRouteCatalogBindingHandler.cs"
+  ],
+  "sourceHashes": {
+    "tests/Hexalith.Parties.IntegrationTests/Topology/MemoriesAuthoritativePersistence.cs": "801463aaa52c7fac06a277e66bc2bbaf2183716acfdecf12209017de1c16e9c3",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/MemoriesAuthoritativePersistenceTests.cs": "4cc4e6fe44c59364bed06a4e41724bc64af18ec1707248e58c360df09f2e9218",
+    "scripts/validate-aspire-runtime-cohort.py": "7eced4e8b9c806bb7ddcc6d06db42e27dc2ec2a89cdc4d53d851e98c13d3f09c",
+    "tests/Hexalith.Parties.Ci.Tests/runtime_cohort_receipt_cases.py": "55bb9eb7d1ce3f38420796afdd16336ac7fac8467aefcf806e4815cf83ff02d0",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessCaptureTests.cs": "5bddee47a25558e06830d6968ea0a7bb105333afffdfe56c711100de7f8162e4",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessLifetimeTests.cs": "ca49382a3b7595aa6a24ca3c41f91149cba4ef24b07e497f608a76caa813ecb6",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/OwnedRouteCatalogBindingHandler.cs": "cb21f8c45050823f0caf5449c574bf4864736b6f2969b7658f17dd4d62be5679"
+  },
+  "commands": {
+    "build": "dotnet build tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj --configuration Debug --no-restore -m:1 -p:BuildProjectReferences=false",
+    "consumerProcess": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll -class '*MemoriesAuthoritativePersistenceTests' -class '*OrdinaryLauncherProcessCaptureTests' -class '*OrdinaryLauncherProcessLifetimeTests' -result-xml /tmp/parties-five-review-fixes-20261111/consumer-process.xml",
+    "validator": "python3 -m unittest discover -s tests/Hexalith.Parties.Ci.Tests -p runtime_cohort_receipt_cases.py",
+    "whitespace": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check -- tests/Hexalith.Parties.IntegrationTests/Topology/MemoriesAuthoritativePersistence.cs tests/Hexalith.Parties.IntegrationTests/Topology/MemoriesAuthoritativePersistenceTests.cs scripts/validate-aspire-runtime-cohort.py tests/Hexalith.Parties.Ci.Tests/runtime_cohort_receipt_cases.py tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessCaptureTests.cs tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessLifetimeTests.cs tests/Hexalith.Parties.IntegrationTests/Topology/OwnedRouteCatalogBindingHandler.cs"
+  },
+  "build": {
+    "exitCode": 0,
+    "warnings": 0,
+    "errors": 0,
+    "sdkVersion": "4.2.0",
+    "configuration": "Debug",
+    "rebuiltReferences": false,
+    "evidence": "build.log.gz"
+  },
+  "consumerProcess": {
+    "exitCode": 0,
+    "counts": {
+      "total": "43",
+      "passed": "43",
+      "failed": "0",
+      "skipped": "0",
+      "errors": "0",
+      "time": "0.952"
+    },
+    "classes": {
+      "Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessLifetimeTests": 3,
+      "Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessCaptureTests": 21,
+      "Hexalith.Parties.IntegrationTests.Topology.MemoriesAuthoritativePersistenceTests": 19
+    },
+    "evidence": "consumer-process.xml.gz"
+  },
+  "validator": {
+    "exitCode": 0,
+    "passed": 30,
+    "failed": 0,
+    "timeSeconds": 3.72,
+    "origin": "Retained tool output: Ran 30 tests in 3.720s; OK. No validator code changed after that passing command."
+  },
+  "whitespace": {
+    "exitCode": 0,
+    "scope": "Seven post-review implementation files",
+    "wholeRootCheck": {
+      "exitCode": 2,
+      "finding": "_bmad-output/implementation-artifacts/deferred-work.md:2620: new blank line at EOF.",
+      "note": "Outside this post-review patch; parent owns the current spec/ledger edits."
+    }
+  },
+  "historicalFirstAttempt": {
+    "evidence": "consumer-process-first.xml.gz",
+    "passed": 42,
+    "failed": 1,
+    "reason": "The malformed-acquisition immediate child-exit assertion raced process-tree shutdown. Final correction uses a fresh bounded exit assertion and separately preserves failure through fallback cleanup."
+  },
+  "fixes": [
+    "SDK AuthoritativeEventStreamReader requireNativeProof=true through the same workload client; independent actor metadata NativeSourceProof comparison; proof/event-digest and self-consistent substituted-incarnation controls.",
+    "Native UI provenance requires at least one validated absolute source/hash row at record and readback, preserving metadata headers.",
+    "Shell ownership begins immediately; acquisition and parent waits are bounded; every owned process receives fresh bounded cleanup and primary failure preservation; early cancellation/malformed output controls wait for actual child exit.",
+    "PID mutation requires actual new PID/user namespaces, PID one and exact single-root UID mapping; direct/inherited marker controls refuse; synchronous and async waits/cleanup are bounded.",
+    "Stale retained launcher birth identity regression supplies a complete stable replacement tree.",
+    "Stale generation sends an older epoch; receipts retain observed and actual sent epoch."
+  ]
+}

@@ -32,13 +32,15 @@ NATIVE_SAMPLE_CONTRACTS_PROJECT = (Path(__file__).resolve().parents[1] / "refere
                                    "Hexalith.EventStore.Sample.Contracts/Hexalith.EventStore.Sample.Contracts.csproj")
 PRIVATE_ADMIN_UI_PROJECT = (Path(__file__).resolve().parents[1] / "tests/"
                             "Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj")
+MEMORY_QUALIFICATION_PROJECT = (Path(__file__).resolve().parents[1] / "tests/"
+                                "Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj")
 PARTIES_UI_PROJECT = (Path(__file__).resolve().parents[1] / "src/"
                       "Hexalith.Parties.UI/Hexalith.Parties.UI.csproj")
 PARTIES_UI_IDS = {"Hexalith.EventStore.Client", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.SignalR"}
 
 
 def select_sdk(libraries: dict, project: Path | None = None, restored: set[str] | None = None,
-               entry: str | None = None) -> dict:
+               entry: str | None = None, native_ui_bound: bool = False) -> dict:
     selected = {}
     for identity, metadata in libraries.items():
         package_id = identity.rsplit("/", 1)[0]
@@ -50,7 +52,8 @@ def select_sdk(libraries: dict, project: Path | None = None, restored: set[str] 
         if package_id == entry and metadata.get("type") == "project":
             continue
         if (package_id == "Hexalith.EventStore.Admin.UI" and metadata.get("type") == "reference"
-                and project is not None and project.resolve() == PRIVATE_ADMIN_UI_PROJECT):
+                and project is not None and (project.resolve() == PRIVATE_ADMIN_UI_PROJECT
+                    or project.resolve() == MEMORY_QUALIFICATION_PROJECT and native_ui_bound)):
             continue
         if (package_id == "Hexalith.EventStore.Sample.Contracts.Reference" and metadata.get("type") == "reference"
                 and restored is not None and any(name.rsplit("/", 1)[0] == "Hexalith.EventStore.Sample.Contracts" for name in restored)):
@@ -188,9 +191,10 @@ def sdk_proof(assets: dict, target: Path, version: str, families: dict) -> tuple
     return archives, binaries
 
 
-def validate_deps(path: Path, version: str, sdk_libraries: set[str], families: dict, project: Path | None = None) -> None:
+def validate_deps(path: Path, version: str, sdk_libraries: set[str], families: dict, project: Path | None = None,
+                  native_ui_bound: bool = False) -> None:
     deps = load(path)
-    selected = set(select_sdk(deps["libraries"], project, sdk_libraries, path.name.removesuffix(".deps.json")))
+    selected = set(select_sdk(deps["libraries"], project, sdk_libraries, path.name.removesuffix(".deps.json"), native_ui_bound))
     if not required_sdk_ids(project).issubset({identity.rsplit("/", 1)[0] for identity in selected}) or not selected.issubset(sdk_libraries):
         raise ValueError("Deployed dependency manifest differs from the restored SDK graph")
     if any(identity.rsplit("/", 1)[1] != version or deps["libraries"][identity].get("type") != "package" for identity in selected):
@@ -236,7 +240,55 @@ def runtime_inputs(target: Path) -> set[Path]:
     return paths
 
 
-def record(metadata: dict, project: Path, configuration: str, version: str, started_ns: int, role: str, families: dict) -> dict:
+def bind_native_ui(target: Path, project: Path, configuration: str, version: str, families: dict,
+                   owner_receipt: Path | None) -> dict | None:
+    """Bind the wrapper's transitive UI reference to the exact separately qualified host artifact."""
+    if project.resolve() != MEMORY_QUALIFICATION_PROJECT:
+        if owner_receipt is not None:
+            raise ValueError("Native UI receipt is only supported for the explicit memory qualification wrapper")
+        return None
+    references = {name: value for name, value in load(target.with_suffix(".deps.json"))["libraries"].items()
+                  if name.rsplit("/", 1)[0] == "Hexalith.EventStore.Admin.UI"}
+    if not references:
+        return None
+    if owner_receipt is None:
+        raise ValueError("Qualification wrapper requires the completed private Admin UI artifact receipt")
+    owner = verify_receipt(load(owner_receipt), PRIVATE_ADMIN_UI_PROJECT, configuration, version, families)
+    owner_target = Path(owner["targetPath"])
+    source_proof = owner_target.parent / "native-admin-ui-artifact.tsv"
+    if str(source_proof) not in owner["files"]:
+        raise ValueError("Private Admin UI artifact source provenance is missing")
+    owner_references = {name: value for name, value in load(owner_target.with_suffix(".deps.json"))["libraries"].items()
+                        if name.rsplit("/", 1)[0] == "Hexalith.EventStore.Admin.UI"}
+    if references != owner_references or any(value.get("type") != "reference" for value in references.values()):
+        raise ValueError("Qualification wrapper native UI reference differs from its qualified owner")
+    artifact = "Hexalith.EventStore.Admin.UI.dll"
+    if digest(target.parent / artifact) != digest(owner_target.parent / artifact):
+        raise ValueError("Qualification wrapper native UI bytes differ from its qualified owner")
+    return {"path": str(owner_receipt.resolve()), "sha256": digest(owner_receipt)}
+
+
+def native_ui_sources(target: Path) -> set[Path]:
+    """Require actual absolute-source/hash evidence while preserving the artifact metadata headers."""
+    paths = set()
+    for proof in target.parent.glob("native-admin-ui-artifact.tsv"):
+        sources = set()
+        for row in proof.read_text(encoding="utf-8").splitlines():
+            filename, separator, expected = row.partition("|")
+            if separator and Path(filename).is_absolute():
+                source = Path(filename).resolve()
+                if not re.fullmatch(r"[0-9a-fA-F]{64}", expected) or digest(source) != expected.lower():
+                    raise ValueError("Native UI artifact provenance differs from its actual file: " + filename)
+                sources.add(source)
+        if not sources:
+            raise ValueError("Native UI artifact provenance requires at least one absolute source/hash row")
+        paths.update(sources)
+        paths.add(proof.resolve())
+    return paths
+
+
+def record(metadata: dict, project: Path, configuration: str, version: str, started_ns: int, role: str, families: dict,
+           private_admin_ui_receipt: Path | None = None) -> dict:
     properties = metadata.get("Properties", metadata)
     if properties["Configuration"] != configuration or properties["HexalithEventStoreVersion"] != version:
         raise ValueError("Evaluated build configuration/cohort differs from the completed build")
@@ -249,24 +301,17 @@ def record(metadata: dict, project: Path, configuration: str, version: str, star
         raise ValueError("The prepared runtime dependency/configuration output is missing")
     assets = validate(assets_path, version, project)
     validate_families(assets, families)
-    validate_deps(deps, version, set(assets["libraries"]), families, project)
+    native_ui = bind_native_ui(target, project, configuration, version, families, private_admin_ui_receipt)
+    validate_deps(deps, version, set(assets["libraries"]), families, project, native_ui is not None)
     archives, binaries = sdk_proof(assets, target, version, families)
     paths = runtime_inputs(target) | {assets_path, project.resolve()}
-    for proof in target.parent.glob("native-admin-ui-artifact.tsv"):
-        paths.add(proof.resolve())
-        for row in proof.read_text(encoding="utf-8").splitlines():
-            filename, separator, expected = row.partition("|")
-            if separator and Path(filename).is_absolute():
-                source = Path(filename).resolve()
-                if not re.fullmatch(r"[0-9a-fA-F]{64}", expected) or digest(source) != expected.lower():
-                    raise ValueError("Native UI artifact provenance differs from its actual file: " + filename)
-                paths.add(source)
+    paths.update(native_ui_sources(target))
     return {"schemaVersion": 1, "completed": True, "project": str(project.resolve()), "configuration": configuration,
             "sdkVersion": version, "familyVersions": families, "role": role, "targetPath": str(target), "assetsPath": str(assets_path),
             "buildStartedNs": started_ns, "completedNs": time.time_ns(),
             "runtimeInputs": [str(path) for path in sorted(runtime_inputs(target))],
             "files": {str(path): digest(path) for path in sorted(paths)},
-            "sdkArchives": archives, "sdkBinaries": binaries}
+            "sdkArchives": archives, "sdkBinaries": binaries, "nativeAdminUi": native_ui}
 
 
 def verify_receipt(receipt: dict, project: Path, configuration: str, version: str, families: dict | None = None) -> dict:
@@ -287,9 +332,16 @@ def verify_receipt(receipt: dict, project: Path, configuration: str, version: st
         raise ValueError("Prepared runtime inventory contains unbound inputs")
     if runtime_inputs(target) != recorded_inputs:
         raise ValueError("Prepared runtime file inventory drifted after completed build")
+    if not native_ui_sources(target).issubset({Path(filename) for filename in receipt["files"]}):
+        raise ValueError("Native UI artifact provenance contains unbound source files")
     assets = validate(assets_path, version, project)
     validate_families(assets, receipt["familyVersions"])
-    validate_deps(target.with_suffix(".deps.json"), version, set(assets["libraries"]), receipt["familyVersions"], project)
+    bound_ui = receipt.get("nativeAdminUi")
+    if bound_ui is not None and digest(Path(bound_ui["path"])) != bound_ui["sha256"]:
+        raise ValueError("Qualification wrapper private Admin UI receipt drifted")
+    native_ui = bind_native_ui(target, project, configuration, version, receipt["familyVersions"],
+                              Path(bound_ui["path"]) if bound_ui is not None else None)
+    validate_deps(target.with_suffix(".deps.json"), version, set(assets["libraries"]), receipt["familyVersions"], project, native_ui is not None)
     archives, binaries = sdk_proof(assets, target, version, receipt["familyVersions"])
     if archives != receipt["sdkArchives"] or binaries != receipt["sdkBinaries"]:
         raise ValueError("Prepared runtime SDK archive/binary proof drifted")
@@ -381,6 +433,7 @@ def main() -> None:
     parser.add_argument("--project", type=Path)
     parser.add_argument("--record", type=Path)
     parser.add_argument("--metadata-json")
+    parser.add_argument("--private-admin-ui-receipt", type=Path)
     parser.add_argument("--build-started-ns", type=int)
     parser.add_argument("--role", choices=("runtime", "catalog"), default="runtime")
     parser.add_argument("--complete-manifest", type=Path)
@@ -393,7 +446,8 @@ def main() -> None:
     try:
         families = json.loads(args.families_json)
         if args.record:
-            value = record(json.loads(args.metadata_json), args.project, args.configuration, args.version, args.build_started_ns, args.role, families)
+            value = record(json.loads(args.metadata_json), args.project, args.configuration, args.version, args.build_started_ns, args.role, families,
+                           args.private_admin_ui_receipt)
             write(args.record, value)
         elif args.complete_manifest:
             value = complete(args.receipt, args.configuration, args.version, args.public_package, args.archive_cache, families)

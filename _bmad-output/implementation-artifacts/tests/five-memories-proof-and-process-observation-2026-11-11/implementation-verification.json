@@ -1,0 +1,277 @@
+{
+  "captureStage": "implementation validation, before independent review and Git operations",
+  "baselines": {
+    ".": "fc9ea3f3b7b8544f8a8f7b8f7912ceb45489766c",
+    "references/Hexalith.Memories": "1143ba17a2336f0d718fcff71e049c06350a45a2",
+    "references/Hexalith.EventStore": "3de922e1140e26fe2e0151682ee656fcf675b26b",
+    "references/Hexalith.Builds": "5ec1779040606be89306129a7d2b245258c9acd2"
+  },
+  "sourceHashes": {
+    "scripts/prepare-aspire-runtime-hosts.sh": "63bff9cf1a2afbbcf42c391fc7bec42f55933f1d0e73b9e37a52bcdb2527b077",
+    "scripts/validate-aspire-runtime-cohort.py": "d5e1f901e9498d5beb7d39b510cd7c985bc9d89c067dd8cdb9d1e8de195c4348",
+    "tests/Hexalith.Parties.Ci.Tests/runtime_cohort_receipt_cases.py": "d1d6b52eaaedaa7836c1032c1e6740f78258b58bdec02f1589b53e875c42d28c",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/DevelopmentCatalogModelFinalizationTests.cs": "a5c1e880ab8cf0f719889803ac7652b83abc5ec813947bc39ce672d791dd811e",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/MemoriesAuthoritativePersistence.cs": "adca07c19fa26b72d1f8d69bbfb6343306833d828ddc7e23d73b53c10126e15c",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/MemoriesAuthoritativePersistenceTests.cs": "0ffecbc2b458a986ca601177cdfb20947d467551e71fe317f0258b4de167b74a",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessCapture.cs": "5e5163c46732840a2a891829227e1a33da4b600db727a3f478defdbd1cc85131",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessCaptureTests.cs": "30e2b8745f8bb10b0db8b0fdee98badf9e9301846ad1d06496c66b33860cfafb",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessLifetimeTests.cs": "83ddf17f9a4f4435b120512b62fd6cca5923face271fa468a26235e8fec6a581",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/OwnedRouteCatalogBindingHandler.cs": "9a0365e682ce6f76e2238cba1b74d29a6bd6024e55ee7628fea2f8c0fa8cf573",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs": "06f97f23bae5b0d416d20fdce973dc4e421f83f4cbefe9b36523ee011e476ae4",
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeTests.cs": "44e70f116f50ef665f87a0fb6daf5befb51725521adb13b3f2d740d74a1f3d1b",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/SourceInventoryStore.cs": "284ea6699cac833bd1d524432078b0f320963f6895a0113198bb26f6c6754e03",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/SourceInventorySnapshot.cs": "b6cc1f0bf74949fe9e1d161a2490a5099d32a0732ee0afb77ffb626c8b50ddeb",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/SourcePublicationVisibility.cs": "b874db3eeea1a142cc8b76e62e33d5362d7b59ef5471ee8d79346a8211859ca7",
+    "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Ingestion/RefreshPublicationIntegrationTests.cs": "c4ef35cdc029eba3f57bdaaba3df83905a9ac50235f48468ca99474b7c7ce52c",
+    "tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs": "3f3ca2a85b47f9e7bd5f7b41617c86faf969a20c54867e004a07130cc295d6a2",
+    "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Ingestion/SourceInventoryProducerIntegrationTests.cs": "d8a8cc08c07074f98d761f7b547e19f9f7c6407ae17628e7f0f0d09cdf1a9a38"
+  },
+  "sourceMapping": {
+    "status": "prepared",
+    "outcome": {
+      "exitCode": "Success",
+      "phase": "None",
+      "category": "None",
+      "ruleId": null
+    },
+    "diagnostics": [],
+    "buildPreparation": {
+      "workspace": "/tmp/parties-five-proof-20261111/source",
+      "mode": "source",
+      "mappingHash": "a969d0173bbc6bf0f254f32d86370b4d95d78d1eada5f44d9a2704fd723d1839",
+      "environment": {
+        "CustomBeforeDirectoryBuildProps": "/tmp/parties-five-proof-20261111/source/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "/tmp/parties-five-proof-20261111/source/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "/tmp/parties-five-proof-20261111/source/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "/tmp/parties-five-proof-20261111/source/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "/tmp/parties-five-proof-20261111/source/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "a969d0173bbc6bf0f254f32d86370b4d95d78d1eada5f44d9a2704fd723d1839",
+        "Configuration": "Debug"
+      }
+    }
+  },
+  "nativeSourceRuntimeDiagnostic": {
+    "qualification": false,
+    "reason": "Source profile does not enroll private catalog bootstrap; startup stayed unhealthy before gateway reads. Cooperatively canceled exact owned xUnit runner with SIGINT. Named session processes no longer present. No wrapper ownership receipt was produced after runner cancellation.",
+    "privateDirectory": "/tmp/parties-five-memory-runtime-c45d36d4587f",
+    "overlapLimit": "The first native diagnostic topology overlapped an owner test build. It supplies no runtime qualification."
+  },
+  "independentReview": "pending parent workflow",
+  "gitOperations": "pending parent workflow",
+  "countsNote": "Process-only19 and aggregate40 overlap; they are separate reruns and are not added together.",
+  "native503Cause": {
+    "proof": "Full recovery child passes 1/1; typed native batch/range and initial/later inspections match stable head3.",
+    "cause": "Qualification caller omitted catalog generation stamps required before controller dispatch. Corrected caller reads actual SDK authority state and derives current stamps through SDK codec; owner refusals remain unchanged.",
+    "controllerOrActorChange": false
+  },
+  "tests": {
+    "final-full-runtime.xml": {
+      "total": "1",
+      "passed": "1",
+      "failed": "0",
+      "skipped": "0",
+      "errors": "0",
+      "time": "152.659"
+    },
+    "final-model-controls.xml": {
+      "total": "0",
+      "passed": "0",
+      "failed": "0",
+      "skipped": "0",
+      "errors": "0",
+      "time": "0.014"
+    },
+    "wrapper-custody-controls.xml": {
+      "total": "6",
+      "passed": "6",
+      "failed": "0",
+      "skipped": "0",
+      "errors": "0",
+      "time": "0.276"
+    },
+    "legacy-writer-red.xml": {
+      "total": "2",
+      "passed": "0",
+      "failed": "2",
+      "skipped": "0",
+      "errors": "0",
+      "time": "6.424"
+    },
+    "focused-bound-runtime.xml": {
+      "total": "1",
+      "passed": "0",
+      "failed": "1",
+      "skipped": "0",
+      "errors": "0",
+      "time": "98.671"
+    },
+    "final-custody-current.xml": {
+      "total": "6",
+      "passed": "6",
+      "failed": "0",
+      "skipped": "0",
+      "errors": "0",
+      "time": "0.162"
+    },
+    "final-model-current.xml": {
+      "total": "41",
+      "passed": "41",
+      "failed": "0",
+      "skipped": "0",
+      "errors": "0",
+      "time": "0.482"
+    },
+    "bound-custody-controls.xml": {
+      "total": "6",
+      "passed": "6",
+      "failed": "0",
+      "skipped": "0",
+      "errors": "0",
+      "time": "0.166"
+    },
+    "memories-red.xml": {
+      "total": "3",
+      "passed": "1",
+      "failed": "2",
+      "skipped": "0",
+      "errors": "0",
+      "time": "15.734"
+    },
+    "focused-runtime-current.xml": {
+      "total": "1",
+      "passed": "0",
+      "failed": "1",
+      "skipped": "0",
+      "errors": "0",
+      "time": "109.647"
+    },
+    "parties-source-restored-controls.xml": {
+      "total": "40",
+      "passed": "40",
+      "failed": "0",
+      "skipped": "0",
+      "errors": "0",
+      "time": "0.476"
+    },
+    "final-ordinary-runtime.xml": {
+      "total": "2",
+      "passed": "2",
+      "failed": "0",
+      "skipped": "0",
+      "errors": "0",
+      "time": "58.759"
+    },
+    "parties-source-controls.xml": {
+      "total": "40",
+      "passed": "40",
+      "failed": "0",
+      "skipped": "0",
+      "errors": "0",
+      "time": "0.463"
+    },
+    "final-focused-runtime.xml": {
+      "total": "1",
+      "passed": "1",
+      "failed": "0",
+      "skipped": "0",
+      "errors": "0",
+      "time": "99.268"
+    },
+    "baseline-focused-runtime.xml": {
+      "total": "1",
+      "passed": "0",
+      "failed": "1",
+      "skipped": "0",
+      "errors": "0",
+      "time": "329.251"
+    },
+    "full-runtime-typed.xml": {
+      "total": "1",
+      "passed": "0",
+      "failed": "1",
+      "skipped": "0",
+      "errors": "0",
+      "time": "150.447"
+    },
+    "observer-red.xml": {
+      "total": "19",
+      "passed": "12",
+      "failed": "7",
+      "skipped": "0",
+      "errors": "0",
+      "time": "0.497"
+    },
+    "memories-owner-expanded.xml": {
+      "total": "71",
+      "passed": "71",
+      "failed": "0",
+      "skipped": "0",
+      "errors": "0",
+      "time": "29.456"
+    },
+    "focused-runtime.xml": {
+      "total": "1",
+      "passed": "0",
+      "failed": "1",
+      "skipped": "0",
+      "errors": "0",
+      "time": "6.160"
+    },
+    "memories-green.xml": {
+      "total": "42",
+      "passed": "42",
+      "failed": "0",
+      "skipped": "0",
+      "errors": "0",
+      "time": "6.346"
+    },
+    "parties-final-controls.xml": {
+      "total": "40",
+      "passed": "40",
+      "failed": "0",
+      "skipped": "0",
+      "errors": "0",
+      "time": "0.468"
+    },
+    "memories-adapter-unit.xml": {
+      "total": "50",
+      "passed": "50",
+      "failed": "0",
+      "skipped": "0",
+      "errors": "0",
+      "time": "0.493"
+    },
+    "wrapper-custody-controls-final.xml": {
+      "total": "6",
+      "passed": "6",
+      "failed": "0",
+      "skipped": "0",
+      "errors": "0",
+      "time": "0.152"
+    },
+    "bound-model-controls.xml": {
+      "total": "40",
+      "passed": "40",
+      "failed": "0",
+      "skipped": "0",
+      "errors": "0",
+      "time": "0.450"
+    },
+    "parties-bounded-process-controls.xml": {
+      "total": "19",
+      "passed": "19",
+      "failed": "0",
+      "skipped": "0",
+      "errors": "0",
+      "time": "0.446"
+    },
+    "eventstore-source-controls.xml": {
+      "total": "149",
+      "passed": "149",
+      "failed": "0",
+      "skipped": "0",
+      "errors": "0",
+      "time": "1.644"
+    }
+  }
+}

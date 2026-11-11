@@ -128,7 +128,28 @@ all six canonical parity receipts remain Unvalidated until actually rerun.
 | PolymorphicSerializations | `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`) | `git ls-tree HEAD references/Hexalith.PolymorphicSerializations` -> `160000 commit bce4eb9f45c6b131b960ab4fa39e50ff01e51960 references/Hexalith.PolymorphicSerializations`; synchronized source selection; qualification still requires its own executed proof. |
 | Tenants | `8e20524574901d71ad5f4876804c64c3c6c87b88` (`v7.0.3-2-g8e205245`) | `git ls-tree HEAD references/Hexalith.Tenants` -> `160000 commit 8e20524574901d71ad5f4876804c64c3c6c87b88 references/Hexalith.Tenants`; synchronized source selection; qualification still requires its own executed proof. |
 
-### Current source observation — 2026-11-10 (lifecycle source adoption)
+### Current source observation — 2026-11-11 (Memories cleanup source adoption)
+
+The approved five-deferral batch advances Memories to `43d2d72f7170a29a58b6046f69e05c9ad9734701` (`v3.0.25-3-g43d2d72f`), after its owner commit was pushed to main and read back from the remote. Source Debug integration passes71 controls and the adapter lane passes50; both owned Debug runtime wrappers qualify cleanup, both canonical outputs, native proof chains and replay. The dated final packet records exact commands, identities and disposal receipts. This source selection is recorded by codex-agent under explicit user delegation in `.gitlink-signoff.tsv`. Published Memories3.0.25 and the package catalog are unchanged.
+
+The graph selects EventStore `4.2.0`, Commons `2.30.10`, PolymorphicSerializations `1.19.8`, FrontComposer `4.7.6`, Memories `3.0.25`, Tenants `7.0.5`, and McpCli `2.0.1`.
+
+Selection does not revalidate historical parity receipts. All six canonical parity receipts remain Unvalidated; no new I16/I20, public package Release, deployment, custody or rollback acceptance is claimed. Other root selections and the published SDK4.2 graph are unchanged. The previous lifecycle source observation and every dated approval remain preserved below. Describe strings remain bound to their release anchors, including `--match v2.0.1` for McpCli.
+
+| Root dependency | Current source identity | Release use |
+| --- | --- | --- |
+| AI.Tools | `8a3885dd22aea88edd57771cfe592c382df2c583` (`8a3885dd`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| Builds | `5ec1779040606be89306129a7d2b245258c9acd2` (`v4.47.0`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| Commons | `11555ace9efcae2928a00122dcba91243e5a8a1a` (`v2.30.10`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| EventStore | `3de922e1140e26fe2e0151682ee656fcf675b26b` (`v4.2.0-4-g3de922e1`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| FrontComposer | `7ace06c5c50406b9021fc95d8d87cf962b5180dd` (`v4.7.6-27-g7ace06c5`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| McpCli | `7f61892fc7807f2fe8ab90d9ef33f16bca1470f6` (`v2.0.1-57-g7f61892f`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| Memories | `43d2d72f7170a29a58b6046f69e05c9ad9734701` (`v3.0.25-3-g43d2d72f`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| Platform | `081178aa5cc01f5dc736ba0d1980aa80fedc6fe1` (`v1.9.0`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| PolymorphicSerializations | `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+| Tenants | `019aa0a82d021e08475a68fc50eff3b6a0e6c111` (`v7.0.6-4-g019aa0a8`) | Selected source; consumption requires its matching committed root gitlink and clean checkout. Qualification requires its own executed proof. |
+
+### Historical source observation — 2026-11-10 (lifecycle source adoption)
 
 The approved five-deferral batch advances FrontComposer only, to `7ace06c5c50406b9021fc95d8d87cf962b5180dd` (`v4.7.6-27-g7ace06c5`), after its owner commit was pushed to main and read back from the remote. The owner source passes 531 MCP tests; Parties source Debug compilation and focused controls pass. This source selection is recorded by codex-agent under explicit user delegation in `.gitlink-signoff.tsv`. It does not change published FrontComposer 4.7.6 or the package catalog.
 

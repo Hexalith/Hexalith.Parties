@@ -2208,12 +2208,22 @@ rollback: None required (test-only).
 - source_spec: `spec-five-subscription-and-package-adoption-deferred-items.md`
   summary: Reconcile failed-ingestion source inventory after payload cleanup before certifying complete Memories erasure.
   evidence: Two actual owned runs retain one failed-unit record after sourcePayloads and retainedPayloadReferences reach zero; producer inventory returns HTTP 409 INVENTORY_INCOMPLETE. The endpoint hides the underlying InvalidOperationException. Preserve cleanup refusal and determine the exact producer guard with fault-level diagnostics; no attestation or policy override is authorized.
-  status: open
+  status: done 2026-11-11
+  implementation_2026_11_11: Fresh admission now records one-use candidate coverage before extraction; tracked writes retain keys without certifying legacy history. Red producer rows fail2/3 before correction, and legacy tracked-write rows fail2/2 before their correction. Expanded source integration71/71 and indexing/restore/deletion unit50/50 pass. Final full owned recovery wrapper passes1/1 with real payload/failed-record cleanup and survivors, without per-unit attestation. Independent review and owner adoption remain pending.
+  verification_2026_11_11: `spec-five-memories-proof-and-process-observation-deferred-items.md`; `tests/five-memories-proof-and-process-observation-2026-11-11/`.
+  resolution_2026_11_11: Fresh one-use admission retains exact cleanup coverage before extraction without certifying legacy retries. Reviewed owner commit43d2d72f is pushed to Memories main; source integration71/71, adapters50/50 and the full owned recovery wrapper pass without per-unit attestation.
+  final_verification: `tests/five-memories-proof-and-process-observation-final-2026-11-11/verification.json`.
+
 
 - source_spec: `spec-five-subscription-and-package-adoption-deferred-items.md`
   summary: Resolve native gateway stream-read refusal when direct actor inspection reports an available matching source proof.
   evidence: Two focused owned wrappers fail RequireNativeProof stream reads with bare HTTP 503. The diagnostic run independently reads matching persisted proof at head 3, erased false, and authenticated InspectSourceProofAsync returns Available for the same identity. Native batch/remoting/gateway cause remains unproved. Keep native proof and authoritative replay assertions enabled.
-  status: open
+  status: done 2026-11-11
+  implementation_2026_11_11: Localized the bare503 before controller dispatch: the qualification caller omitted current catalog generation stamps. Typed source proof, native batch/range and later inspection match at stable head3. The caller now derives stamps from actual SDK authority state and uses the exact owned replay tenant grant. Missing/stale generation503 and other-tenant403 remain live controls; both final wrappers pass with native proof and replay. Owner controller/actor guards remain unchanged;149 source safeguards pass. Independent review and owner adoption remain pending.
+  verification_2026_11_11: `spec-five-memories-proof-and-process-observation-deferred-items.md`; `tests/five-memories-proof-and-process-observation-2026-11-11/`.
+  resolution_2026_11_11: The caller supplies actual SDK catalog-generation stamps and the exact replay tenant grant. SDK native-chain verification is anchored to independent stored actor proof; proof/digest/incarnation mutations refuse. Both owned wrappers pass, missing/older-generation reads retain503, other-tenant replay retains403 and149 owner safeguards pass.
+  final_verification: `tests/five-memories-proof-and-process-observation-final-2026-11-11/verification.json`.
+
 
 - source_spec: `spec-five-subscription-and-package-adoption-deferred-items.md`
   summary: Qualify physical termination or stronger repair for canceled joins against legacy membership peers.
@@ -2229,6 +2239,12 @@ rollback: None required (test-only).
 - source_spec: `spec-five-subscription-and-package-adoption-deferred-items.md`
   summary: Extend authoritative native stream and replay qualification to every recorded canonical Memories output.
   evidence: Review pass 2 BH2-08; the baseline helper selects UnitIds.Last although refresh records multiple canonical outputs. Both-output qualified REST absence is now tested; native gateway proof/replay remains unqualified due HTTP 503 and needs complete per-output expectations after that refusal is resolved.
+  implementation_2026_11_11: Independent revision1/2 CanonicalOutputs authority must match both unit IDs; omission, duplication and wrong revision refuse. Both final wrappers pass native proof, independent actor bytes, actual-prefix first/final replay and stable rereads for both canonical units plus tenant/case streams. Final aggregate model lane41/41 passes; overlapping process reruns are not summed. Independent review and owner adoption remain pending.
+  verification_2026_11_11: `spec-five-memories-proof-and-process-observation-deferred-items.md`; `tests/five-memories-proof-and-process-observation-2026-11-11/`.
+  status: done 2026-11-11
+  resolution_2026_11_11: Both revision1/2 canonical outputs independently pass native chain verification, stored event-byte comparison, actual-prefix first/final replay and stable rereads in both final owned wrappers. Omission and invalid authority refuse; the final native/process model lane passes53/53.
+  final_verification: `tests/five-memories-proof-and-process-observation-final-2026-11-11/verification.json`.
+
 
 - source_spec: `/tmp/parties-release-20261105/parties-runtime-r5/_bmad-output/implementation-artifacts/spec-sync-upgrade-and-release-2026-11-05.md`
   summary: Unverified medium risk that a pathological blocked regular filesystem can outlast synchronous snapshot I/O deadline checks.
@@ -2588,7 +2604,31 @@ rollback: None required (test-only).
 - source_spec: `spec-five-lifecycle-and-qualification-deferred-items.md`
   summary: Determine whether a real ordinary-launcher procfs task enumeration can return an empty set while omitted descendants remain relevant.
   evidence: Review BH1, medium unverified and pre-existing: both the original traversal and extracted helper accept an empty task-directory array without a refusal. Other branches can supply the required roles. No real procfs empty-task observation was demonstrated; settle with an owned Linux process/task-exit reproducer before changing the guard.
+  implementation_2026_11_11: Confirmed on real Linux procfs: an iterator opened before owned parent exit returns an empty task set while the owned child survives. Capture refuses empty enumeration, and the reproducer awaits owned child cleanup. The original observer fails the new empty-task controls; the final41-control aggregate and2/2 ordinary live controls pass. Independent review remains pending.
+  verification_2026_11_11: `spec-five-memories-proof-and-process-observation-deferred-items.md`; `tests/five-memories-proof-and-process-observation-2026-11-11/`.
+  status: done 2026-11-11
+  resolution_2026_11_11: Real procfs parent exit produces empty enumeration while the owned child survives. Capture refuses; early cancellation/malformed acquisition controls retain bounded cleanup. Final model53/53 and ordinary live2/2 pass, with no surviving owned workers.
+  final_verification: `tests/five-memories-proof-and-process-observation-final-2026-11-11/verification.json`.
+
 
 - source_spec: `spec-five-lifecycle-and-qualification-deferred-items.md`
   summary: Revalidate process lifetimes across ordinary-launcher identity, role and descendant observations.
   evidence: Review BH2/E1, pre-existing medium: a controlled reflection harness changes simulated start identities during comm reads, and the unchanged traversal records stale identities for CLI/daprd without capture refusal; exit checks then regard replacements as gone. This ordering predates extraction. Qualify an actual process-lifetime-change boundary and retain fail-closed reread coverage without weakening cleanup ownership. Current complete live evidence observed no such churn.
+  implementation_2026_11_11: An owned Linux user/PID namespace reproduces reuse of one numeric PID with different kernel start identities during a role read. Parent/child lifetime rereads refuse mixed observations while preserving independent siblings and owned cleanup. The final41-control aggregate and2/2 ordinary live controls pass, including complete-tree eligibility and post-cleanup refusal. Independent review remains pending.
+  verification_2026_11_11: `spec-five-memories-proof-and-process-observation-deferred-items.md`; `tests/five-memories-proof-and-process-observation-2026-11-11/`.
+  status: done 2026-11-11
+  resolution_2026_11_11: Real PID reuse in a verified owned user/PID namespace refuses mixed lifetimes; direct/inherited markers refuse before mutation. Retained-root identity mismatch and independent-sibling controls pass. Final model53/53 and ordinary live2/2 retain cleanup and complete-tree eligibility.
+  final_verification: `tests/five-memories-proof-and-process-observation-final-2026-11-11/verification.json`.
+
+
+- source_spec: `spec-five-memories-proof-and-process-observation-deferred-items.md`
+  summary: Establish whether fresh producer admission can reuse an identity having only unregistered historical chunk/NL artifacts.
+  evidence: Review BH1/EC1; medium unverified. Current normal callers generate fresh GUID/ULID identities and failed retry admission is excluded. Reproduce a real scheduler/workflow identity reuse with no checked base hashes, then test whether modern provenance leaves historical vectors after cleanup. Do not add scans or grant legacy completeness from a synthetic collision alone.
+
+- source_spec: `spec-five-memories-proof-and-process-observation-deferred-items.md`
+  summary: Qualify child-parent membership when a listed PID is reused before the first child birth-identity read.
+  evidence: Review BH5; medium unverified and pre-existing ordering. Current rereads bind observations after the first identity sample; they do not bind the original children-list membership to that sampled lifetime. Retain an owned Linux foreign-parent PID-reuse boundary and cleanup outcome before introducing a new relationship check.
+
+- source_spec: `spec-five-memories-proof-and-process-observation-deferred-items.md`
+  summary: Audit namespace prerequisites for the maintained CI/default lane that collects the Linux PID-reuse reproducer.
+  evidence: Review BH9; medium unverified. The qualified local host supports user/PID namespaces and passes, and tests/README.md declares those prerequisites. Determine whether the actual maintained lane runs this fact on an unsupported host; retain a concrete namespace-start refusal before changing selection or capability handling.
