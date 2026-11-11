@@ -1,0 +1,310 @@
+[
+  {
+    "path": ".",
+    "status": {
+      "code": 0,
+      "stdout": "## main...origin/main\nMM _bmad-output/implementation-artifacts/deferred-work.md\nAM _bmad-output/implementation-artifacts/spec-five-memories-proof-and-process-observation-deferred-items.md\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/README.md\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/aspire-baseline-start.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/aspire-baseline-stop.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/baseline-focused-runtime.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/baseline-focused-runtime.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/baseline-native-preparation.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/bound-custody-controls.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/bound-custody-controls.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/bound-generation-build.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/bound-model-controls.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/bound-model-controls.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/canonical-bound-prepared.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/canonical-bound-runtime-preparation-final.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/canonical-bound-runtime-preparation.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/canonical-final-runtime-preparation.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/canonical-scoped-runtime-preparation.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/canonical-typed-prepared.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/canonical-typed-runtime-preparation.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/changed-files.json\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/credential-scan.json\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/eventstore-source-build.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/eventstore-source-controls.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/eventstore-source-controls.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-custody-current.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-custody-current.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-focused-runtime.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-focused-runtime.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-full-runtime.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-full-runtime.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-model-controls.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-model-controls.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-model-current.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-model-current.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-ordinary-runtime.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-ordinary-runtime.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-ordinary-timing.json\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-ordinary-timing.json.incomplete.json\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-runtime-profile/143d0bb7baa507de1776e9e7a729840aa9cd27720828ae1f70ed8ec1b6b4d86e.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-runtime-profile/406b9c9e7bf9c8f7b8e9a0936337c700fd81fb583c2a5df56fa8583cc9d48d74.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-runtime-profile/4b87a578f16b91637231ba4c74619e3efba021b75fab894c043815bd60cdce38.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-runtime-profile/757f44c407f739691bb4519c9f37283216b0ba4a661524fc489dddcfa8feeb76.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-runtime-profile/a0be3bb39998b81d3d8cba5be4241be3804436148e23f48f2cf89cd13cedf7b6.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-runtime-profile/a7ce49c66998300ff5f059bd4a65d14f3ef0666f1ccec6f5f2e6113fa3773475.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-runtime-profile/bb8fd8f78f62a23053137dbc2319530918b59b62025d0cfe4cd4e9df10fe9bcc.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-runtime-profile/c4cd929b00f7f23d0930f918c845c9f0e1367883598a269604d63aa1ed0055b6.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-runtime-profile/cc0bc1b6d4eea473d5f20d5f375f7e745cfa916dc67cfab0d87287228405afb4.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-runtime-profile/d3d0fa3ad256b3f9843c8e1be114d2549b66a245fc562ec16b16e303bb4d55bc.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-runtime-profile/e9a8fac1f7691556f15d4247ffbc7ae6691fd7a8d01cb1d14b45c28af3202fef.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-runtime-profile/eb1b8c4fdb3cc8f47454f15c88a21c9af3a73e7fd180eabcdb2e3a754d93adfc.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-runtime-profile/f41f30223f0fd0526d1d01a004f84bb9e6a658924f68e39de7ea4dca17db88a7.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/final-runtime-profile/prepared.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/focused-bound-runtime.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/focused-bound-runtime.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/focused-runtime-current.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/focused-runtime-current.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/focused-runtime.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/focused-runtime.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/full-runtime-typed.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/full-runtime-typed.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/handoff-verification.json\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/implementation-verification.json\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/legacy-writer-red-build.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/legacy-writer-red.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/legacy-writer-red.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/memories-adapter-unit-build.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/memories-adapter-unit.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/memories-adapter-unit.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/memories-final-build.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/memories-green-build.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/memories-green.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/memories-green.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/memories-owner-expanded-build.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/memories-owner-expanded.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/memories-owner-expanded.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/memories-red-build.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/memories-red.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/memories-red.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/observer-red-build.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/observer-red.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/observer-red.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/package-debug-runtime-preparation-current.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/package-debug-runtime-preparation-final.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/package-debug-runtime-preparation.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/parent-matrix-audit.json\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/parties-bounded-process-build.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/parties-bounded-process-controls.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/parties-bounded-process-controls.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/parties-final-controls.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/parties-final-controls.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/parties-package-cleanup-build.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/parties-source-build-final.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/parties-source-build.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/parties-source-controls.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/parties-source-controls.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/parties-source-restored-build.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/parties-source-restored-controls.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/parties-source-restored-controls.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/rebind-wrapper-current.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/rebind-wrapper-final.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/rebind-wrapper.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/rebind-wrapper.py.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/custody-startup-refusal/ownership.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/custody-startup-refusal/phase.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/custody-startup-refusal/startup-failure.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-focused/authentication-negative-controls.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-focused/authoritative-persistence.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-focused/catalog-generation-controls.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-focused/domain-service-acl-negative-controls.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-focused/endpoint-binding.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-focused/executed-identities.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-focused/ownership.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-focused/phase.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-focused/runtime.authority.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-focused/runtime.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-focused/runtime.provisioning.survivor.teardown.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-focused/runtime.provisioning.teardown.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-focused/runtime.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-full/authentication-negative-controls.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-full/authoritative-persistence.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-full/catalog-generation-controls.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-full/domain-service-acl-negative-controls.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-full/endpoint-binding.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-full/executed-identities.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-full/ownership.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-full/phase.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-full/runtime.authority.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-full/runtime.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-full/runtime.provisioning.survivor.teardown.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-full/runtime.provisioning.teardown.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/final-full/runtime.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native-startup-diagnostic/ownership.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native-startup-diagnostic/phase.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native-startup-diagnostic/startup-failure.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-raw-diagnostic/authentication-negative-controls.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-raw-diagnostic/domain-service-acl-negative-controls.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-raw-diagnostic/endpoint-binding.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-raw-diagnostic/executed-identities.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-raw-diagnostic/native-proof-refusal.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-raw-diagnostic/ownership.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-raw-diagnostic/phase.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-raw-diagnostic/runtime.authority.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-raw-diagnostic/runtime.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-raw-diagnostic/runtime.provisioning.survivor.teardown.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-raw-diagnostic/runtime.provisioning.teardown.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-raw-diagnostic/runtime.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-typed-full-diagnostic/authentication-negative-controls.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-typed-full-diagnostic/domain-service-acl-negative-controls.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-typed-full-diagnostic/endpoint-binding.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-typed-full-diagnostic/executed-identities.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-typed-full-diagnostic/native-proof-refusal.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-typed-full-diagnostic/ownership.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-typed-full-diagnostic/phase.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-typed-full-diagnostic/runtime.authority.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-typed-full-diagnostic/runtime.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-typed-full-diagnostic/runtime.provisioning.survivor.teardown.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-typed-full-diagnostic/runtime.provisioning.teardown.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/native503-typed-full-diagnostic/runtime.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/unscoped-replay-refusal/authentication-negative-controls.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/unscoped-replay-refusal/domain-service-acl-negative-controls.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/unscoped-replay-refusal/endpoint-binding.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/unscoped-replay-refusal/executed-identities.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/unscoped-replay-refusal/ownership.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/unscoped-replay-refusal/phase.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/unscoped-replay-refusal/runtime.authority.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/unscoped-replay-refusal/runtime.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/unscoped-replay-refusal/runtime.provisioning.survivor.teardown.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/unscoped-replay-refusal/runtime.provisioning.teardown.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runs/unscoped-replay-refusal/runtime.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runtime-cohort-controls-current.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runtime-cohort-controls-final.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/runtime-cohort-controls.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/scoped-replay-build.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/source-preparation.json.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/typed-diagnostic-build.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/wrapper-cohort-build.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/wrapper-custody-build-final.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/wrapper-custody-build.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/wrapper-custody-controls-final.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/wrapper-custody-controls-final.xml.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/wrapper-custody-controls.log.gz\nA  _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/wrapper-custody-controls.xml.gz\n m references/Hexalith.Memories\nM  scripts/prepare-aspire-runtime-hosts.sh\nM  scripts/validate-aspire-runtime-cohort.py\nM  tests/Hexalith.Parties.Ci.Tests/runtime_cohort_receipt_cases.py\nM  tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs\nM  tests/Hexalith.Parties.IntegrationTests/Topology/DevelopmentCatalogModelFinalizationTests.cs\nM  tests/Hexalith.Parties.IntegrationTests/Topology/MemoriesAuthoritativePersistence.cs\nM  tests/Hexalith.Parties.IntegrationTests/Topology/MemoriesAuthoritativePersistenceTests.cs\nM  tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessCapture.cs\nM  tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessCaptureTests.cs\nA  tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessLifetimeTests.cs\nA  tests/Hexalith.Parties.IntegrationTests/Topology/OwnedRouteCatalogBindingHandler.cs\nM  tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs\nM  tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeTests.cs\nM  tests/README.md\n?? _bmad-output/implementation-artifacts/tests/five-memories-proof-and-process-observation-2026-11-11/review-triage-pass1.json\n",
+      "stderr": ""
+    },
+    "remotes": {
+      "code": 0,
+      "stdout": "origin\thttps://github.com/Hexalith/Hexalith.Parties.git (fetch)\norigin\thttps://github.com/Hexalith/Hexalith.Parties.git (push)\n",
+      "stderr": ""
+    },
+    "history": {
+      "code": 0,
+      "stdout": "fc9ea3f3 (HEAD -> main, origin/main, origin/HEAD) fix: close five lifecycle and qualification deferrals\n7987bf1e fix: close five topology and admin deferrals\nef298d60 fix(ci): restore the published platform and builds pins\nd4ce2f79 fix: close five interactivity and admission deferrals\n5e006a14 build: sync local changes via /pushall\n020ed244 fix: close five admission and containment deferrals\n7181fa29 test: harden five-deferral review controls\n3eccce24 fix: close five paging and evidence-reader deferrals\n",
+      "stderr": ""
+    },
+    "unpushed": {
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "branch": {
+      "code": 0,
+      "stdout": "main\n",
+      "stderr": ""
+    }
+  },
+  {
+    "path": "references/Hexalith.EventStore",
+    "status": {
+      "code": 0,
+      "stdout": "## HEAD (no branch)\n",
+      "stderr": ""
+    },
+    "remotes": {
+      "code": 0,
+      "stdout": "origin\thttps://github.com/Hexalith/Hexalith.EventStore.git (fetch)\norigin\thttps://github.com/Hexalith/Hexalith.EventStore.git (push)\n",
+      "stderr": ""
+    },
+    "history": {
+      "code": 0,
+      "stdout": "3de922e11 (HEAD) docs: label legacy compatibility surfaces\n39ebd8b4f fix(payload): scope transport-free reconcile handling to the Dapr crypto backend\na940fb616 build(references): advance the AI.Tools pointer\nadc2c2032 feat(payload): add Dapr Kubernetes cryptography key-wrap backend\naa16227bd (tag: v4.2.0) fix(security): drop usable credentials from qualification fixtures\ne3732d472 fix(ci): restore the qualified Builds catalog and module tool\n6e4ff074e build(references): advance the McpCli pointer\nf5f2254ca fix: stories 4.16 5.14\n",
+      "stderr": ""
+    },
+    "unpushed": {
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "branch": {
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  {
+    "path": "references/Hexalith.Memories",
+    "status": {
+      "code": 0,
+      "stdout": "## main...origin/main\nM  src/Hexalith.Memories.Server/Ingestion/SourceInventorySnapshot.cs\nM  src/Hexalith.Memories.Server/Ingestion/SourceInventoryStore.cs\nM  src/Hexalith.Memories.Server/Ingestion/SourcePublicationVisibility.cs\nM  tests/Hexalith.Memories.IntegrationTests/Ingestion/RefreshPublicationIntegrationTests.cs\nM  tests/Hexalith.Memories.IntegrationTests/Ingestion/SourceInventoryProducerIntegrationTests.cs\n",
+      "stderr": ""
+    },
+    "remotes": {
+      "code": 0,
+      "stdout": "origin\thttps://github.com/Hexalith/Hexalith.Memories.git (fetch)\norigin\thttps://github.com/Hexalith/Hexalith.Memories.git (push)\n",
+      "stderr": ""
+    },
+    "history": {
+      "code": 0,
+      "stdout": "1143ba17 (HEAD -> main, origin/main, origin/HEAD) docs: label legacy compatibility surfaces\n4ff3e686 build(deps): update Playwright to 1.65.0\n246157a7 (tag: v3.0.25) fix(runtime): include the production Memories intent adapter\n859680b3 (tag: v3.0.24) test: align release tool dependency snapshots\na2f1d6a8 test: align publication fixture with Builds source\n3a62bfe1 fix(ingestion): recover failed workflow attempts\n0eb7185f build: sync local changes via /pushall\n38572369 build: sync local changes via /pushall\n",
+      "stderr": ""
+    },
+    "unpushed": {
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "branch": {
+      "code": 0,
+      "stdout": "main\n",
+      "stderr": ""
+    }
+  },
+  {
+    "path": "references/Hexalith.FrontComposer",
+    "status": {
+      "code": 0,
+      "stdout": "## main...origin/main\n",
+      "stderr": ""
+    },
+    "remotes": {
+      "code": 0,
+      "stdout": "origin\thttps://github.com/Hexalith/Hexalith.FrontComposer.git (fetch)\norigin\thttps://github.com/Hexalith/Hexalith.FrontComposer.git (push)\n",
+      "stderr": ""
+    },
+    "history": {
+      "code": 0,
+      "stdout": "7ace06c5 (HEAD -> main, origin/main, origin/HEAD) fix: preserve lifecycle handles and reader context\n01fc48e3 docs: label legacy compatibility surfaces\ne972d0f0 fix: gov 1\nd042e1c9 build: merge refs/remotes/origin/main into main\nca9c03d4 docs(epic-14): record the Epic 14 retrospective and its action items\n26be733b test(mcp): harden the SM-4 MCP leak and oracle audit (E14R-AI-4)\n67b94209 fix(mcp)!: make MCP authentication non-substitutable and ship an API-key scheme (E14R-AI-2, E14R-AI-3)\n58e997a4 fix(ci): pin the compatible browser toolchain\n",
+      "stderr": ""
+    },
+    "unpushed": {
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "branch": {
+      "code": 0,
+      "stdout": "main\n",
+      "stderr": ""
+    }
+  },
+  {
+    "path": "references/Hexalith.Tenants",
+    "status": {
+      "code": 0,
+      "stdout": "## main...origin/main\n",
+      "stderr": ""
+    },
+    "remotes": {
+      "code": 0,
+      "stdout": "origin\thttps://github.com/Hexalith/Hexalith.Tenants.git (fetch)\norigin\thttps://github.com/Hexalith/Hexalith.Tenants.git (push)\n",
+      "stderr": ""
+    },
+    "history": {
+      "code": 0,
+      "stdout": "019aa0a8 (HEAD -> main, origin/main, origin/HEAD) build: merge origin/main into main\nb0ef0a26 test: cover automatic eventstore package floors\n173388e9 build: merge refs/remotes/origin/build/qualify-eventstore-4.2 into main via /pushall\n5293ab9d build(deps): qualify eventstore 4.2 source hosts\ndfe7031b (tag: v7.0.6) fix(test): bind the direct client token to a sign-in session\n8abe739a fix(deps): select published Memories 3.0.25\n9695cd10 build(references): synchronize root submodules and package catalog\nd88aef6b (tag: v7.0.5) fix(bootstrap): isolate the self health probe\n",
+      "stderr": ""
+    },
+    "unpushed": {
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "branch": {
+      "code": 0,
+      "stdout": "main\n",
+      "stderr": ""
+    }
+  },
+  {
+    "path": "references/Hexalith.AI.Tools",
+    "status": {
+      "code": 0,
+      "stdout": "## main...origin/main\n",
+      "stderr": ""
+    },
+    "remotes": {
+      "code": 0,
+      "stdout": "origin\thttps://github.com/Hexalith/Hexalith.AI.Tools.git (fetch)\norigin\thttps://github.com/Hexalith/Hexalith.AI.Tools.git (push)\n",
+      "stderr": ""
+    },
+    "history": {
+      "code": 0,
+      "stdout": "8a3885d (HEAD -> main, origin/main, origin/HEAD) docs: add push authentication rules for scoped gh profiles\nca4ec17 docs: require pushing submodules before superproject commits\n1745b66 build(deps): refresh commit validation dependencies\n9b78aa0 build(deps): update commitlint to the latest version\n875758e fix(skills): skip origin HEAD in pushall merges\n70dbf73 docs: clarify the MCP and CLI migration plan scope\n5be77fc docs: state the commit validation Node prerequisite\n68e6037 docs: publish the MCP and CLI migration plan\n",
+      "stderr": ""
+    },
+    "unpushed": {
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "branch": {
+      "code": 0,
+      "stdout": "main\n",
+      "stderr": ""
+    }
+  },
+  {
+    "path": "references/Hexalith.Commons",
+    "status": {
+      "code": 0,
+      "stdout": "## main...origin/main\n",
+      "stderr": ""
+    },
+    "remotes": {
+      "code": 0,
+      "stdout": "origin\thttps://github.com/Hexalith/Hexalith.Commons.git (fetch)\norigin\thttps://github.com/Hexalith/Hexalith.Commons.git (push)\n",
+      "stderr": ""
+    },
+    "history": {
+      "code": 0,
+      "stdout": "11555ac (HEAD -> main, tag: v2.30.10, origin/main, origin/HEAD) chore(release): 2.30.10 [skip ci]\ndca0ad4 fix(build): synchronize the latest shared runtime update\n7424ae3 (tag: v2.30.9) chore(release): 2.30.9 [skip ci]\nd4d1c34 build(deps): refresh release tooling and instruction submodules\n55fa473 fix(deps): synchronize shared builds and serialization updates\nbbbce51 (tag: v2.30.8) chore(release): 2.30.8 [skip ci]\n81ed542 fix(build): preserve package provenance with shared build update\n0825abc build: merge refs/remotes/origin/fix/story-2-8-legacy-ci into main via /pushall\n",
+      "stderr": ""
+    },
+    "unpushed": {
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "branch": {
+      "code": 0,
+      "stdout": "main\n",
+      "stderr": ""
+    }
+  },
+  {
+    "path": "references/Hexalith.Builds",
+    "status": {
+      "code": 0,
+      "stdout": "## HEAD (no branch)\n",
+      "stderr": ""
+    },
+    "remotes": {
+      "code": 0,
+      "stdout": "origin\thttps://github.com/Hexalith/Hexalith.Builds.git (fetch)\norigin\thttps://github.com/Hexalith/Hexalith.Builds.git (push)\n",
+      "stderr": ""
+    },
+    "history": {
+      "code": 0,
+      "stdout": "5ec17790 (HEAD, tag: v4.47.0) test(ci): remove verified stage four runtime probe\n78682df1 feat(ci): run environment hooks and integration tests\n32d2a068 fix(release): support sanitized Git child processes\n9b9e03f6 fix(ci): isolate manual runs and harden submodule discovery\n829e55a1 fix(catalog): record the Platform EventStore host consumer view (#180)\n8039932c fix(release): retry transient GitHub notes pushes\n36001049 build(catalog): bind the audit to the actual host consumer\ne6a59fa2 fix(catalog): preserve canonical SDK authority in qualification controls\n",
+      "stderr": ""
+    },
+    "unpushed": {
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "branch": {
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  {
+    "path": "references/Hexalith.PolymorphicSerializations",
+    "status": {
+      "code": 0,
+      "stdout": "## main...origin/main\n",
+      "stderr": ""
+    },
+    "remotes": {
+      "code": 0,
+      "stdout": "origin\thttps://github.com/Hexalith/Hexalith.PolymorphicSerializations.git (fetch)\norigin\thttps://github.com/Hexalith/Hexalith.PolymorphicSerializations.git (push)\n",
+      "stderr": ""
+    },
+    "history": {
+      "code": 0,
+      "stdout": "bce4eb9 (HEAD -> main, origin/main, origin/HEAD) build(deps): refresh release tooling dependencies\n2a66be8 (tag: v1.19.8) chore(release): 1.19.8 [skip ci]\n821b784 fix(build): synchronize shared tooling for release\n7e53c59 (tag: v1.19.7) chore(release): 1.19.7 [skip ci]\n0c626eb fix(build): preserve package provenance with shared build update\n92ede24 build(deps): synchronize the latest shared build fixes\nd5ed267 ci(release): retry verification after NuGet processing delays\n2e68a02 (tag: v1.19.6) chore(release): 1.19.6 [skip ci]\n",
+      "stderr": ""
+    },
+    "unpushed": {
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "branch": {
+      "code": 0,
+      "stdout": "main\n",
+      "stderr": ""
+    }
+  },
+  {
+    "path": "references/Hexalith.McpCli",
+    "status": {
+      "code": 0,
+      "stdout": "## HEAD (no branch)\n",
+      "stderr": ""
+    },
+    "remotes": {
+      "code": 0,
+      "stdout": "origin\thttps://github.com/Hexalith/Hexalith.McpCli.git (fetch)\norigin\thttps://github.com/Hexalith/Hexalith.McpCli.git (push)\n",
+      "stderr": ""
+    },
+    "history": {
+      "code": 0,
+      "stdout": "7f61892f (HEAD) docs(evidence): record the completed Story 5.5 label delivery\nefcda9eb build: sync local changes via /pushall\nd6f7ffbc docs(evidence): narrow the FrontComposer label to README and rescan Story 5.5\n76f2e748 docs(planning): plan Folders enrollment and retirement through McpCli\nf2fc7c50 docs(evidence): correct the Story 5.5 Folders CI attribution\n24ae42e6 build: merge origin/main into main\nf20a3772 docs(evidence): record the Story 5.5 label delivery outcome\n17c3681f docs(evidence): label retained legacy surfaces and record the Parties retirement block\n",
+      "stderr": ""
+    },
+    "unpushed": {
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "branch": {
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  {
+    "path": "references/Hexalith.Platform",
+    "status": {
+      "code": 0,
+      "stdout": "## HEAD (no branch)\n",
+      "stderr": ""
+    },
+    "remotes": {
+      "code": 0,
+      "stdout": "origin\thttps://github.com/Hexalith/Hexalith.Platform.git (fetch)\norigin\thttps://github.com/Hexalith/Hexalith.Platform.git (push)\n",
+      "stderr": ""
+    },
+    "history": {
+      "code": 0,
+      "stdout": "081178aa (HEAD, tag: v1.9.0) build(deps): bind sdk 4.2 legacy qualification\n55a96e84 feat: qualify the published eventstore 4.2 sdk\n93afbdfc build(deps): record parties qualification changes\nb53d9fbf fix(ci): prepare runner lifecycle qualification\n2cff2e55 docs(es416): record proposed qualification contracts\n13b4f99c fix(catalog): verify the selected gateway binding\n337f5b9a docs(es416): complete offline qualification contract preparation\n4387d4f0 fix: qualification\n",
+      "stderr": ""
+    },
+    "unpushed": {
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "branch": {
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  }
+]

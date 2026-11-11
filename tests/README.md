@@ -838,6 +838,24 @@ The focused runtime child is `SelectedMemoriesRefreshAndCleanupPersistAcrossClie
 It recreates clients and adapters while the selected services remain running. The original
 full/default `SelectedMemoriesIngestionAndCleanupPersistAcrossRestart` fact is unchanged.
 
+The authority receipt records revisions 1 and 2 independently in `CanonicalOutputs`.
+`MemoriesAuthoritativePersistence` requires both exact IDs, compares each native gateway
+stream with independent actor-state bytes, replays its first and final event prefixes, and
+checks stable rereads. Deletion state follows the actual prefix: a unit's first event may
+already request deletion. Native refusals retain the original gateway failure plus bounded
+actor inspection, typed batch/range and later proof observations in the private evidence directory.
+The caller derives current root/epoch/binding stamps from the actual SDK authority cell; missing
+and stale generation controls retain503. Replay grants only the exact owned tenant and requires
+a live other-tenant403 with the same otherwise-authorized operator token.
+
+Fresh producer cleanup is qualified without per-unit semantic inventory attestation.
+Memories persists fresh candidate eligibility with new admission, then seals exact-key
+coverage atomically with first candidate retention, before extraction. Pre-upgrade
+admissions, candidate redelivery and failed retries cannot certify unknown legacy coverage. Tracked index writes retain exact keys
+without creating completeness authority; false/untracked restore writes keep their existing behavior.
+The existing authenticated virgin synthetic source setup remains a separate source scope
+prerequisite. Source Debug and package-host runtime receipts retain their distinct identities.
+
 ## Ordinary launcher capture qualification (2026-11-10)
 
 `OrdinaryLauncherProcessCaptureTests` inject task enumeration, children, identity,
@@ -846,6 +864,14 @@ while remaining siblings are captured and the owner can complete cleanup. Every 
 must have both a CLI and daprd descendant with a start identity; a role observed under
 another launcher cannot fill that gap. A complete-tree positive control remains eligible
 for the live timing checks.
+
+The observer rejects an empty task set and rereads process lifetimes around role and
+descendant reads. `ParentExitCanYieldEmptyTaskEnumerationWhileChildSurvivesAsync` opens
+real procfs enumeration before owned parent exit and proves the empty result can omit a
+surviving child. `OrdinaryLauncherProcessLifetimeTests` uses an owned user/PID namespace
+to reuse one numeric PID during a role read; the XML retains both kernel start identities.
+These controls require Linux procfs and user/PID namespace support. The observer only reads
+processes; each reproducer owns and completes its process cleanup.
 
 The opt-in `PartiesOrdinaryLauncherStopTimingTests` uses the same capture helper and
 records `captureFailures` in its JSON before refusing incomplete evidence after cleanup.

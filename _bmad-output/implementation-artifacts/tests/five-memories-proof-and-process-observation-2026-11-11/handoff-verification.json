@@ -1,0 +1,346 @@
+{
+  "stage": "implementation handoff; independent review, owner adoption and Git completion remain parent gates",
+  "sourceAndPackageLimit": "Owner source Debug and package-host Debug runtime evidence are distinct; no public package Release/deployment qualification or publication is claimed.",
+  "lanes": {
+    "memories-owner-expanded.xml": {
+      "kind": "source Debug integration",
+      "counts": {
+        "total": "71",
+        "passed": "71",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0",
+        "time": "29.456"
+      },
+      "classes": {
+        "Hexalith.Memories.IntegrationTests.Restore.BackupRestoreFidelityIntegrationTests": 1,
+        "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests": 43,
+        "Hexalith.Memories.IntegrationTests.Indexing.IndexSemanticIntegrationTests": 7,
+        "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryIntegrationTests": 12,
+        "Hexalith.Memories.IntegrationTests.Ingestion.RefreshPublicationIntegrationTests": 8
+      }
+    },
+    "memories-adapter-unit.xml": {
+      "kind": "source Debug unit",
+      "counts": {
+        "total": "50",
+        "passed": "50",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0",
+        "time": "0.493"
+      },
+      "classes": {
+        "Hexalith.Memories.Server.Tests.Activities.Restore.RestoreReindexUnitActivityTests": 10,
+        "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexNaturalLanguageSemanticActivityTests": 9,
+        "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSemanticChunksActivityTests": 2,
+        "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSyntacticActivityTests": 9,
+        "Hexalith.Memories.Server.Tests.Activities.Indexing.IndexSemanticActivityTests": 10,
+        "Hexalith.Memories.Server.Tests.Activities.Restore.RestoreDataPlaneActivityTests": 7,
+        "Hexalith.Memories.Server.Tests.Activities.Cases.DeleteMemoryUnitProjectionActivityTests": 3
+      }
+    },
+    "eventstore-source-controls.xml": {
+      "kind": "source Debug owner safeguards",
+      "counts": {
+        "total": "149",
+        "passed": "149",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0",
+        "time": "1.644"
+      },
+      "classes": {
+        "Hexalith.EventStore.Server.Tests.Actors.AggregateActorCommandSourceTests": 12,
+        "Hexalith.EventStore.Server.Tests.Controllers.StreamsControllerTests": 128,
+        "Hexalith.EventStore.Server.Tests.Streams.NativeSourcePrefixTests": 9
+      }
+    },
+    "final-model-current.xml": {
+      "kind": "package-host Debug model",
+      "counts": {
+        "total": "41",
+        "passed": "41",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0",
+        "time": "0.482"
+      },
+      "classes": {
+        "Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessLifetimeTests": 1,
+        "Hexalith.Parties.IntegrationTests.Topology.MemoriesAuthoritativePersistenceTests": 12,
+        "Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessCaptureTests": 18,
+        "Hexalith.Parties.IntegrationTests.Topology.MemoryRuntimeIdentityTests": 10
+      }
+    },
+    "final-custody-current.xml": {
+      "kind": "package-host Debug model",
+      "counts": {
+        "total": "6",
+        "passed": "6",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0",
+        "time": "0.162"
+      },
+      "classes": {
+        "Hexalith.Parties.IntegrationTests.Topology.DevelopmentCatalogModelFinalizationTests": 6
+      }
+    },
+    "final-focused-runtime.xml": {
+      "kind": "final canonical package-host Debug live",
+      "counts": {
+        "total": "1",
+        "passed": "1",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0",
+        "time": "99.268"
+      },
+      "classes": {
+        "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedRuntimeTests": 1
+      }
+    },
+    "final-full-runtime.xml": {
+      "kind": "final canonical package-host Debug live",
+      "counts": {
+        "total": "1",
+        "passed": "1",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0",
+        "time": "152.659"
+      },
+      "classes": {
+        "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedRuntimeTests": 1
+      }
+    },
+    "final-ordinary-runtime.xml": {
+      "kind": "final canonical package-host Debug live",
+      "counts": {
+        "total": "2",
+        "passed": "2",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0",
+        "time": "58.759"
+      },
+      "classes": {
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesOrdinaryLauncherStopTimingTests": 2
+      }
+    }
+  },
+  "validatorControls": {
+    "command": "python3 -m unittest discover -s tests/Hexalith.Parties.Ci.Tests -p runtime_cohort_receipt_cases.py",
+    "passed": 29,
+    "failed": 0,
+    "log": "runtime-cohort-controls-current.log.gz"
+  },
+  "overlap": "The earlier42 producer/40 aggregate/19 process reruns overlap final lanes and are not added. Final integration71 contains43 producer,12 inventory,8 refresh,7 semantic and1 backup/restore cases. Final model41 contains19 observer cases.",
+  "liveRuns": {
+    "final-focused": {
+      "session": "73f5789d6574",
+      "ownedTopologyDisposed": true,
+      "sessionDirectoryExists": false,
+      "primaryFailure": null,
+      "cleanupFailure": null,
+      "canonicalOutputs": [
+        {
+          "Revision": 1,
+          "MemoryUnitId": "14850622-2490-4771-9d3f-f871e057c925"
+        },
+        {
+          "Revision": 2,
+          "MemoryUnitId": "44991316-3be4-45a2-8120-8f447e77b592"
+        }
+      ],
+      "replayObservations": 6,
+      "canonicalUnitStreams": [
+        "14850622-2490-4771-9d3f-f871e057c925",
+        "44991316-3be4-45a2-8120-8f447e77b592"
+      ],
+      "generationModes": [
+        "missing",
+        "stale",
+        "current",
+        "current",
+        "current",
+        "current",
+        "current",
+        "current",
+        "current",
+        "current"
+      ],
+      "missingAndStaleGenerationStatus": 503,
+      "otherTenantReplayStatus": 403,
+      "evidence": "runs/final-focused/"
+    },
+    "final-full": {
+      "session": "08ebd65f5c87",
+      "ownedTopologyDisposed": true,
+      "sessionDirectoryExists": false,
+      "primaryFailure": null,
+      "cleanupFailure": null,
+      "canonicalOutputs": [
+        {
+          "Revision": 1,
+          "MemoryUnitId": "0c1cf0df-7c16-442b-b7f8-648f6e4f1743"
+        },
+        {
+          "Revision": 2,
+          "MemoryUnitId": "f39a66ba-6e73-4f05-bf41-0824cb011a8c"
+        }
+      ],
+      "replayObservations": 6,
+      "canonicalUnitStreams": [
+        "0c1cf0df-7c16-442b-b7f8-648f6e4f1743",
+        "f39a66ba-6e73-4f05-bf41-0824cb011a8c"
+      ],
+      "generationModes": [
+        "missing",
+        "stale",
+        "current",
+        "current",
+        "current",
+        "current",
+        "current",
+        "current",
+        "current",
+        "current"
+      ],
+      "missingAndStaleGenerationStatus": 503,
+      "otherTenantReplayStatus": 403,
+      "evidence": "runs/final-full/"
+    }
+  },
+  "ordinary": {
+    "final-ordinary-timing.json": {
+      "available": true,
+      "captureFailures": 0,
+      "quiescedMs": 9574.6,
+      "budgetSeconds": 30,
+      "survivors": [],
+      "launcherExitCodes": [
+        143,
+        143,
+        143,
+        143,
+        143
+      ],
+      "daprdOutlivedLauncher": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    "final-ordinary-timing.json.incomplete.json": {
+      "available": true,
+      "captureFailures": 15,
+      "quiescedMs": 9967.5,
+      "budgetSeconds": 30,
+      "survivors": [],
+      "launcherExitCodes": [
+        143,
+        143,
+        143,
+        143,
+        143
+      ],
+      "daprdOutlivedLauncher": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  },
+  "whitespace": {
+    "commands": [
+      "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
+      "git -C references/Hexalith.Memories -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check"
+    ],
+    "exitCodes": [
+      0,
+      0
+    ],
+    "note": "Raw git diff --check reports required CRLF as trailing whitespace in this root; cr-at-eol honors the tracked EditorConfig policy while retaining actual blank-at-eol/eof and tab checks."
+  },
+  "matrix": {
+    "fresh failed ingestion": {
+      "passing": [
+        "SourceInventoryProducerIntegrationTests.FailedProducerArtifactsAreReconciledButTerminatedWorkRetainsItsFence",
+        "SourceInventoryProducerIntegrationTests.CandidateRedeliveryAndFailedRetryCannotCertifyUnknownLegacyCoverage",
+        "SourceInventoryProducerIntegrationTests.AnnotationChildAdmissionEstablishesFreshCoverageBeforeItsFirstContentWrite",
+        "PartyMemoryOwnedRuntimeTests.ActualSelectedMemoriesRunsTheRecoveryAndPhysicalErasureControl"
+      ],
+      "evidence": [
+        "memories-owner-expanded.xml.gz",
+        "runs/final-full/runtime.xml.gz",
+        "runs/final-full/ownership.json.gz"
+      ]
+    },
+    "native read": {
+      "passing": [
+        "PartyMemoryOwnedRuntimeTests.ActualSelectedMemoriesRefreshErasureAndReplayControl",
+        "PartyMemoryOwnedRuntimeTests.ActualSelectedMemoriesRunsTheRecoveryAndPhysicalErasureControl"
+      ],
+      "evidence": [
+        "runs/final-focused/catalog-generation-controls.json.gz",
+        "runs/final-focused/authoritative-persistence.json.gz",
+        "eventstore-source-controls.xml.gz"
+      ],
+      "preserved": "Missing/stale generation503, other-tenant replay403; native proof/range/drift and legacy refusal safeguards remain unchanged."
+    },
+    "refresh outputs": {
+      "passing": [
+        "MemoriesAuthoritativePersistenceTests.CanonicalAuthorityRefusesEitherOmittedOutputOrInvalidRevision",
+        "MemoriesAuthoritativePersistenceTests.BothCanonicalOutputsRetainIndependentRevisionAuthority",
+        "PartyMemoryOwnedRuntimeTests.ActualSelectedMemoriesRefreshErasureAndReplayControl"
+      ],
+      "evidence": [
+        "final-model-current.xml.gz",
+        "runs/final-focused/runtime.authority.json.gz",
+        "runs/final-focused/authoritative-persistence.json.gz"
+      ]
+    },
+    "empty task enumeration": {
+      "passing": [
+        "OrdinaryLauncherProcessCaptureTests.ParentExitCanYieldEmptyTaskEnumerationWhileChildSurvivesAsync",
+        "OrdinaryLauncherProcessCaptureTests.FailedProcessReadRetainsDiagnosticsContinuesSiblingsAndRefusesQualification",
+        "PartiesOrdinaryLauncherStopTimingTests.OrdinaryLauncher_LiveDcpStop_IncompleteCaptureRefusesAfterOwnedCleanupAsync"
+      ],
+      "evidence": [
+        "final-model-current.xml.gz",
+        "final-ordinary-runtime.xml.gz",
+        "final-ordinary-timing.json.incomplete.json"
+      ]
+    },
+    "lifetime changes": {
+      "passing": [
+        "OrdinaryLauncherProcessLifetimeTests.IsolatedPidReuseDuringRoleReadRefusesQualificationAsync",
+        "OrdinaryLauncherProcessCaptureTests.LifetimeChangesRefuseAndContinueIndependentSiblings",
+        "PartiesOrdinaryLauncherStopTimingTests.OrdinaryLauncher_LiveDcpStop_RecordsWorkerExitTimingWithinQuiescenceBudgetAsync"
+      ],
+      "evidence": [
+        "final-model-current.xml.gz",
+        "final-ordinary-runtime.xml.gz",
+        "final-ordinary-timing.json"
+      ]
+    }
+  },
+  "credentialScan": {
+    "stage": "implementation handoff before independent review",
+    "filesScanned": 201,
+    "decompressedArchives": 173,
+    "availableGeneratedCredentialCount": 10,
+    "retainedPrivateConfigSources": 5,
+    "credentialMatches": 0,
+    "privateKeyPatternMatches": 0,
+    "findings": [],
+    "scope": "Exact matches against generated API/app-channel credentials retained in private runtime configs; configs/needle set remain outside the repository. Ephemeral proof keys no longer retained by completed processes cannot be exact-matched; retained text/decoded JSON is additionally screened for private PEM and long private-DER material. No secret values are reported.",
+    "evidence": "credential-scan.json"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "stage": "parent staged-diff and matrix audit before independent review",
+  "baseline": "fc9ea3f3b7b8544f8a8f7b8f7912ceb45489766c",
+  "matrix": {
+    "fresh failed ingestion": {
+      "SourceInventoryProducerIntegrationTests.FailedProducerArtifactsAreReconciledButTerminatedWorkRetainsItsFence": 3,
+      "SourceInventoryProducerIntegrationTests.CandidateRedeliveryAndFailedRetryCannotCertifyUnknownLegacyCoverage": 2,
+      "SourceInventoryProducerIntegrationTests.AnnotationChildAdmissionEstablishesFreshCoverageBeforeItsFirstContentWrite": 1,
+      "PartyMemoryOwnedRuntimeTests.ActualSelectedMemoriesRunsTheRecoveryAndPhysicalErasureControl": 1
+    },
+    "native read": {
+      "PartyMemoryOwnedRuntimeTests.ActualSelectedMemoriesRefreshErasureAndReplayControl": 1,
+      "PartyMemoryOwnedRuntimeTests.ActualSelectedMemoriesRunsTheRecoveryAndPhysicalErasureControl": 1
+    },
+    "refresh outputs": {
+      "MemoriesAuthoritativePersistenceTests.CanonicalAuthorityRefusesEitherOmittedOutputOrInvalidRevision": 5,
+      "MemoriesAuthoritativePersistenceTests.BothCanonicalOutputsRetainIndependentRevisionAuthority": 1,
+      "PartyMemoryOwnedRuntimeTests.ActualSelectedMemoriesRefreshErasureAndReplayControl": 1
+    },
+    "empty task enumeration": {
+      "OrdinaryLauncherProcessCaptureTests.ParentExitCanYieldEmptyTaskEnumerationWhileChildSurvivesAsync": 1,
+      "OrdinaryLauncherProcessCaptureTests.FailedProcessReadRetainsDiagnosticsContinuesSiblingsAndRefusesQualification": 9,
+      "PartiesOrdinaryLauncherStopTimingTests.OrdinaryLauncher_LiveDcpStop_IncompleteCaptureRefusesAfterOwnedCleanupAsync": 1
+    },
+    "lifetime changes": {
+      "OrdinaryLauncherProcessLifetimeTests.IsolatedPidReuseDuringRoleReadRefusesQualificationAsync": 1,
+      "OrdinaryLauncherProcessCaptureTests.LifetimeChangesRefuseAndContinueIndependentSiblings": 4,
+      "PartiesOrdinaryLauncherStopTimingTests.OrdinaryLauncher_LiveDcpStop_RecordsWorkerExitTimingWithinQuiescenceBudgetAsync": 1
+    }
+  },
+  "sourceHashesMatched": 18,
+  "live": {
+    "final-focused": {
+      "nativeReplayObservations": 6,
+      "canonicalOutputs": 2,
+      "ownedCleanupComplete": true
+    },
+    "final-full": {
+      "nativeReplayObservations": 6,
+      "canonicalOutputs": 2,
+      "ownedCleanupComplete": true
+    }
+  },
+  "ordinaryControlsVerified": 2,
+  "note": "The control labelled stale sends a noncurrent future epoch (current+1); it verifies generation mismatch refusal. It does not exercise a retained preceding committed generation."
+}

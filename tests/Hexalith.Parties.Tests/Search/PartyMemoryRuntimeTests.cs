@@ -77,6 +77,7 @@ public sealed class PartyMemoryRuntimeTests
         if (!string.IsNullOrWhiteSpace(config.AppApiToken)) { otherHttp.DefaultRequestHeaders.Add("dapr-api-token", config.AppApiToken); }
         var otherMemories = new MemoriesClient(otherHttp, Options.Create(new MemoriesClientOptions()), NullLogger<MemoriesClient>.Instance);
         List<string> authorityUnitIds = [];
+        var canonicalOutputs = new List<object>();
         string mappingKey = PartyMemoryUnitMappingStore.BuildKey(tenant, party);
         string intentKey = mappingKey.Replace("memory-mapping", "memory-ingestion", StringComparison.Ordinal);
         bool terminalUnitAbsenceObserved = false;
@@ -191,6 +192,7 @@ public sealed class PartyMemoryRuntimeTests
         IngestionWorkflowStatus terminal = await memories.GetIngestionWorkflowStatusAsync(indexed.WorkflowInstanceId!, token);
         string? canonical = PartyMemoryIngestionEvidence.Resolve(terminal, indexed.WorkflowInstanceId!, tenant, caseId);
         authorityUnitIds.Add(canonical!);
+        canonicalOutputs.Add(new { Revision = 1, MemoryUnitId = canonical });
         ingestionRequests.Observations.ShouldContain(observation => observation.RefreshExistingSource && observation.SourceRevisionNumber == 1);
         canonical.ShouldNotBeNullOrWhiteSpace();
         (await memories.GetMemoryUnitAsync(tenant, caseId, canonical!, token)).Id.ShouldBe(canonical);
@@ -218,6 +220,7 @@ public sealed class PartyMemoryRuntimeTests
         terminal = await memories.GetIngestionWorkflowStatusAsync(indexed.WorkflowInstanceId!, token);
         canonical = PartyMemoryIngestionEvidence.Resolve(terminal, indexed.WorkflowInstanceId!, tenant, caseId);
         authorityUnitIds.Add(canonical!);
+        canonicalOutputs.Add(new { Revision = 2, MemoryUnitId = canonical });
         ingestionRequests.Observations.ShouldContain(observation => observation.RefreshExistingSource && observation.SourceRevisionNumber == 2);
         canonical.ShouldNotBeNullOrWhiteSpace();
         canonical.ShouldNotBe(firstCanonical);
@@ -308,7 +311,7 @@ public sealed class PartyMemoryRuntimeTests
             await PersistAuthorityThenTeardownAsync(
                 Path.ChangeExtension(path!, ".authority.json"),
                 () => JsonSerializer.Serialize(new
-                { TenantId = tenant, CaseId = caseId, UnitIds = authorityUnitIds.Distinct().ToArray(), SurvivorCaseId = survivorCaseId, OtherTenantId = otherTenant, OtherCaseId = otherCaseId, SurvivorsVerified = survivorsVerified, Requests = ingestionRequests.Observations }),
+                { TenantId = tenant, CaseId = caseId, UnitIds = authorityUnitIds.Distinct().ToArray(), CanonicalOutputs = canonicalOutputs, SurvivorCaseId = survivorCaseId, OtherTenantId = otherTenant, OtherCaseId = otherCaseId, SurvivorsVerified = survivorsVerified, Requests = ingestionRequests.Observations }),
                 qualificationCompleted,
                 () => TeardownAsync(config, http, tenant, party, caseId, mappingKey, intentKey,
                     terminalUnitAbsenceObserved, diagnosticPath),

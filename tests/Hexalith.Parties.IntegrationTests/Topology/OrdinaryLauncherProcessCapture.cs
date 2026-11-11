@@ -28,7 +28,7 @@ internal sealed class OrdinaryLauncherProcessCapture(
     /// <param name="workers">Observed workers and their start identities.</param>
     internal void CaptureDescendants(int parent, string resource,
         ConcurrentDictionary<int, (long Started, string Role, string Resource)> workers)
-        => CaptureDescendants(parent, resource, workers, []);
+        => CaptureDescendants(parent, resource, workers, [], workers.TryGetValue(parent, out var launcher) ? launcher.Started : null);
 
     /// <summary>Returns every reason that the current capture cannot qualify stop timing.</summary>
     /// <param name="launchers">Observed launcher processes.</param>
@@ -53,11 +53,22 @@ internal sealed class OrdinaryLauncherProcessCapture(
     }
 
     private void CaptureDescendants(int parent, string resource,
-        ConcurrentDictionary<int, (long Started, string Role, string Resource)> workers, HashSet<int> visited)
+        ConcurrentDictionary<int, (long Started, string Role, string Resource)> workers, HashSet<(int Id, long Started)> visited, long? expected)
     {
-        if (!visited.Add(parent)) { return; }
         string[] tasks;
-        try { tasks = _enumerateTasks(parent); }
+        long started;
+        try
+        {
+            if (_readIdentity(parent) is not long identity || expected is { } prior && prior != identity)
+            {
+                _failures.Enqueue($"{resource}: pid {parent} lifetime changed before descendant enumeration");
+                return;
+            }
+            started = identity;
+            if (!visited.Add((parent, started))) { return; }
+            tasks = _enumerateTasks(parent);
+            if (tasks.Length == 0) { _failures.Enqueue($"{resource}: empty task enumeration for pid {parent}"); }
+        }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             _failures.Enqueue($"{resource}: task enumeration for pid {parent}: {exception}");
@@ -73,6 +84,7 @@ internal sealed class OrdinaryLauncherProcessCapture(
                 _failures.Enqueue($"{resource}: children read for {task}: {exception}");
                 continue;
             }
+            if (!SameLifetime(parent, started, resource)) { return; }
 
             foreach (string child in children)
             {
@@ -83,11 +95,12 @@ internal sealed class OrdinaryLauncherProcessCapture(
                 }
                 try
                 {
-                    if (_readIdentity(id) is not long started)
+                    if (_readIdentity(id) is not long childStarted)
                     {
                         _failures.Enqueue($"{resource}: pid {id} has no live start identity");
                         continue;
                     }
+                    if (!SameLifetime(parent, started, resource)) { return; }
 
                     string name = _readText($"/proc/{id}/comm").Trim();
                     if (name.Length == 0)
@@ -95,16 +108,29 @@ internal sealed class OrdinaryLauncherProcessCapture(
                         _failures.Enqueue($"{resource}: pid {id} has no process role");
                         continue;
                     }
-                    workers[id] = (started, name switch { "daprd" => "daprd", "dapr" => "cli", _ => name }, resource);
+                    if (!SameLifetime(id, childStarted, resource)) { continue; }
+                    workers[id] = (childStarted, name switch { "daprd" => "daprd", "dapr" => "cli", _ => name }, resource);
+                    CaptureDescendants(id, resource, workers, visited, childStarted);
                 }
                 catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
                 {
                     _failures.Enqueue($"{resource}: identity/role read for pid {id}: {exception}");
                     continue;
                 }
-
-                CaptureDescendants(id, resource, workers, visited);
             }
         }
+        _ = SameLifetime(parent, started, resource);
+    }
+
+    private bool SameLifetime(int id, long started, string resource)
+    {
+        try
+        {
+            if (_readIdentity(id) == started) { return true; }
+            _failures.Enqueue($"{resource}: pid {id} lifetime changed during capture");
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        { _failures.Enqueue($"{resource}: lifetime recheck for pid {id}: {exception}"); }
+        return false;
     }
 }

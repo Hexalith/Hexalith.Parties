@@ -1,0 +1,139 @@
+{
+  "pass": 1,
+  "rows": [
+    {
+      "id": "BH1",
+      "verdict": "maybe-false",
+      "route": "defer",
+      "claim": "Fresh coverage omits legacy chunk/NL addresses",
+      "evidence": "New admission and one-use eligibility precede candidate writes; ordinary file/URL callers generate new GUIDs and directory callers new ULIDs, while failed retries are excluded. No real producer path reusing a historical orphan identity was demonstrated. Settle with an owned scheduler/workflow reuse reproducer and surviving-key end-state."
+    },
+    {
+      "id": "BH2",
+      "verdict": "false",
+      "route": "reject",
+      "claim": "Existing provenance bypasses candidate tombstone check",
+      "evidence": "Candidate retention adds no coverage when provenance already exists. SourcePublicationVisibility.Stage checks the permanent unit tombstone before every content write and returns refusal; retaining an obligation does not revive data or waive that fence."
+    },
+    {
+      "id": "BH3",
+      "verdict": "false",
+      "route": "reject",
+      "claim": "Malformed fresh workflow markers grant authority",
+      "evidence": "Initialization additionally requires a matching valid inventory workflow with no retained candidate or FailedRetryMemoryUnitId. IngestionIdentityGuard bounds entry IDs; blank/oversized/orphaned/consumed markers cannot satisfy that eligibility predicate. The snapshot size and marker count are bounded."
+    },
+    {
+      "id": "BH4",
+      "verdict": "medium",
+      "route": "patch",
+      "claim": "Native proof and digest checks establish presence only",
+      "evidence": "ReadWorkloadStreamAsync deserializes; the helper compares event bytes but does not reconstruct the native proof chain. The existing SDK AuthoritativeEventStreamReader(requireNativeProof:true) supplies that validation without a new platform contract. Stable invalid proof/digest mutations need consumer controls."
+    },
+    {
+      "id": "BH5",
+      "verdict": "maybe-false",
+      "route": "defer",
+      "claim": "PID replacement before first child identity read",
+      "evidence": "The children list has no birth identity and the first identity read does not check parent membership. This ordering predates the change; the real namespace control changes identity during comm instead. Settle an owned foreign-parent replacement between children enumeration and the first birth read before adding a relationship protocol."
+    },
+    {
+      "id": "BH6",
+      "verdict": "medium",
+      "route": "patch",
+      "claim": "Parent/child startup precedes cleanup ownership",
+      "evidence": "The new shell is started and child output is read/opened before the cleanup try block. A canceled or malformed read can bypass explicit owned cleanup. Own the shell immediately and retain early-failure controls."
+    },
+    {
+      "id": "BH7",
+      "verdict": "medium",
+      "route": "patch",
+      "claim": "Canceled cleanup can skip remaining owned processes",
+      "evidence": "The procfs reproducer reuses the test token and awaits child exit before attempting parent cleanup. A canceled token or first cleanup failure can skip parent cleanup. Use a fresh bounded cleanup lifetime and attempt every owned process while preserving failures."
+    },
+    {
+      "id": "BH8",
+      "verdict": "medium",
+      "route": "patch",
+      "claim": "Synchronous process waits can hang reproducers",
+      "evidence": "Both reproducers use synchronous WaitForExit without a timeout; the empty-task fact has no outer timeout. Replace these waits with bounded owned waits/forced cleanup and retain the real passing controls."
+    },
+    {
+      "id": "BH9",
+      "verdict": "maybe-false",
+      "route": "defer",
+      "claim": "Linux namespace prerequisites may be unavailable",
+      "evidence": "README explicitly declares Linux procfs/user-PID namespace support and the actual host passed. Whether the maintained CI/default supported developer lane schedules this test on a host lacking those prerequisites is unproved. Settle with that lane capability audit and an actual refusal before changing qualification selection."
+    },
+    {
+      "id": "BH10",
+      "verdict": "low",
+      "route": "reject",
+      "claim": "Typed diagnostics can exceed cooperative capture cancellation",
+      "evidence": "A call already in flight can finish up to its fixed four-second RPC timeout after capture cancellation. CaptureNativeRefusalAsync deliberately awaits actual cleanup; this is a bounded diagnostic-only delay on a rare failed-read path, not accepted authority or detached work. A linked transport/deadline mechanism exceeds a direct correction for negligible harm."
+    },
+    {
+      "id": "EC1",
+      "verdict": "maybe-false",
+      "route": "defer",
+      "claim": "Fresh provenance and orphan historical chunks",
+      "evidence": "Same unproved producer-identity reuse boundary as BH1; current admission proof is not inferred solely from base-key absence. A real legacy orphan collision through the scheduler/workflow and surviving deletion end-state would settle it."
+    },
+    {
+      "id": "EC2",
+      "verdict": "medium",
+      "route": "patch",
+      "claim": "Empty native UI provenance is accepted",
+      "evidence": "record iterates provenance rows without requiring a valid absolute-path/hash row; bind_native_ui only requires the manifest to be inventoried. Empty or metadata-only manifests can therefore satisfy the new wrapper binding. Require source rows during recording and readback, retaining metadata headers."
+    },
+    {
+      "id": "EC3",
+      "verdict": "medium",
+      "route": "patch",
+      "claim": "Early cancellation/malformed output leaves owned child",
+      "evidence": "Same early ownership boundary as BH6: child output acquisition occurs before the cleanup try block. Own the shell immediately and cover cancellation/malformed-output cleanup."
+    },
+    {
+      "id": "EC4",
+      "verdict": "low",
+      "route": "patch",
+      "claim": "Stale control actually sends a future epoch",
+      "evidence": "OwnedRouteCatalogBindingHandler sends state.Epoch+1. This proves noncurrent generation refusal, not the claimed preceding epoch. Send an older epoch in stale mode and retain actual sent versus observed epoch evidence."
+    },
+    {
+      "id": "VG1",
+      "verdict": "medium",
+      "route": "patch",
+      "claim": "Retained launcher mismatch lacks regression coverage",
+      "evidence": "Pre-verified gap: existing complete-root tests match retained/current starts, and existing churn tests change children later. Add the complete replacement-root case so removing the expected launcher start argument fails the regression."
+    },
+    {
+      "id": "P1",
+      "verdict": "medium",
+      "route": "patch",
+      "claim": "Child marker alone selects PID allocator mutation",
+      "evidence": "The namespace reproducer trusts PARTIES_PROCESS_PID_REUSE_CHILD=1 before writing ns_last_pid. A direct/inherited-marker rerun outside the owned namespace reaches that mutation. Verify owned new PID/user namespace identity before starting the mutation branch and test refusal without mutating the host counter."
+    }
+  ],
+  "groups": {
+    "patch": [
+      "BH4",
+      "BH6+EC3",
+      "BH7",
+      "BH8",
+      "EC2",
+      "EC4",
+      "VG1",
+      "P1"
+    ],
+    "defer": [
+      "BH1+EC1",
+      "BH5",
+      "BH9"
+    ],
+    "rejected": [
+      "BH2",
+      "BH3",
+      "BH10"
+    ]
+  }
+}

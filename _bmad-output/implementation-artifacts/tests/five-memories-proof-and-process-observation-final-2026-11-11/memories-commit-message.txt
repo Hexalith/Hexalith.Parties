@@ -1,0 +1,4 @@
+fix: retain fresh ingestion cleanup provenance
+
+Retain exact key coverage atomically with fresh candidate admission.
+Keep legacy retries incomplete until their existing coverage is proven.

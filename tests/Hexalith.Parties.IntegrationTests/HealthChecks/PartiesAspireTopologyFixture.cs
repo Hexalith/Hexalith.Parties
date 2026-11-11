@@ -1072,11 +1072,14 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         catch (DirectoryNotFoundException) { return true; }
     }
 
-    internal static string CreateAdministratorToken()
+    /// <summary>Issues the fixture operator identity, optionally granting one exact owned tenant.</summary>
+    /// <param name="tenant">An optional exact tenant grant; omitted for the existing unscoped operator controls.</param>
+    internal static string CreateAdministratorToken(string? tenant = null)
     {
         var descriptor = new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity([new(ClaimTypes.Role, "GlobalAdministrator"), new("eventstore:surface", "ui")]),
+            Subject = new ClaimsIdentity([new(ClaimTypes.Role, "GlobalAdministrator"), new("eventstore:surface", "ui"),
+                .. tenant is null ? Array.Empty<Claim>() : [new Claim("eventstore:tenant", tenant)]]),
             NotBefore = DateTime.UtcNow.AddMinutes(-1),
             Expires = DateTime.UtcNow.AddMinutes(30),
             IssuedAt = DateTime.UtcNow,

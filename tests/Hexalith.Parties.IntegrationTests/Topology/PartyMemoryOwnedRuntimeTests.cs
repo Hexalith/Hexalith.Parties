@@ -11,6 +11,7 @@ using Aspire.Hosting.Testing;
 using CommunityToolkit.Aspire.Hosting.Dapr;
 using Hexalith.EventStore.Aspire;
 using Hexalith.Parties.IntegrationTests.HealthChecks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
@@ -62,8 +63,8 @@ public sealed class PartyMemoryOwnedRuntimeTests
                 .WithEnvironment("Memories__Testing__SourceInventoryOutputDelayMilliseconds", "5000")
                 .WithEnvironment("Memories__Testing__SourceInventoryDeletionDelayMilliseconds", "5000")
                 .WithEnvironment("EventStore__CommandGateway__BoundCommand__PrivateKeyPkcs8Base64", builder.AddParameter("owned-command-proof-key", proofPrivateKey, secret: true))
-                .WithEnvironment("DAPR_API_TOKEN", apiToken)
-                .WithEventStoreAppChannelToken(builder.AddParameter("owned-memories-app-token", appToken, secret: true));
+                .WithEnvironment("DAPR_API_TOKEN", apiToken);
+            _ = ConfigureOwnedAppChannel(memories, appToken);
             DaprSidecarAnnotation sidecar = memories.Resource.Annotations.OfType<DaprSidecarAnnotation>().Single();
             memories.Resource.Annotations.Add(new EnvironmentCallbackAnnotation(async context =>
             {
@@ -77,8 +78,7 @@ public sealed class PartyMemoryOwnedRuntimeTests
             foreach (string targetName in new[] { "parties", "tenants", "sample" })
             {
                 IResourceBuilder<ProjectResource> target = builder.CreateResourceBuilder<ProjectResource>(targetName);
-                _ = target.WithEventStoreAppChannelToken(builder.AddParameter("owned-" + targetName + "-app-token",
-                    Convert.ToHexString(RandomNumberGenerator.GetBytes(32)), secret: true));
+                _ = ConfigureOwnedAppChannel(target, Convert.ToHexString(RandomNumberGenerator.GetBytes(32)));
                 if (targetName == "sample")
                 {
                     _ = target.WithEnvironment("Authentication__JwtBearer__Authority", string.Empty)
@@ -91,8 +91,7 @@ public sealed class PartyMemoryOwnedRuntimeTests
                 }
             }
             IResourceBuilder<ProjectResource> gateway = builder.CreateResourceBuilder<ProjectResource>("eventstore");
-            _ = gateway.WithEventStoreAppChannelToken(builder.AddParameter("owned-gateway-app-token",
-                    Convert.ToHexString(RandomNumberGenerator.GetBytes(32)), secret: true))
+            _ = ConfigureOwnedAppChannel(gateway, Convert.ToHexString(RandomNumberGenerator.GetBytes(32)))
                 .WithEnvironment("Authentication__DaprInternal__AllowedCallers__10", owned.AppId("memories"))
                 .WithEnvironment("Authentication__DaprInternal__Audience", owned.AppId("eventstore"))
                 .WithEnvironment("Authentication__BoundStreamRead__PublicKeys__" + owned.AppId("memories"), proofPublicKey)
@@ -106,8 +105,7 @@ public sealed class PartyMemoryOwnedRuntimeTests
                 .WithEnvironment("EventStore__DomainServices__Registrations__system|global-administrators|v1__AppId", string.Empty);
             _ = gateway.WithEnvironment("Authentication__WorkloadIssuer__Workload", owned.AppId("eventstore"));
             IResourceBuilder<ProjectResource> domainService = builder.CreateResourceBuilder<ProjectResource>("memories-domain-service");
-            _ = domainService.WithEventStoreAppChannelToken(builder.AddParameter("owned-domain-service-app-token",
-                    Convert.ToHexString(RandomNumberGenerator.GetBytes(32)), secret: true))
+            _ = ConfigureOwnedAppChannel(domainService, Convert.ToHexString(RandomNumberGenerator.GetBytes(32)))
                 .WithEnvironment("DAPR_API_TOKEN", apiToken);
             domainService.Resource.Annotations.OfType<DaprSidecarAnnotation>().Single().Sidecar.Annotations
                 .Add(new EnvironmentCallbackAnnotation(context => context.EnvironmentVariables["DAPR_API_TOKEN"] = apiToken));
@@ -204,6 +202,17 @@ public sealed class PartyMemoryOwnedRuntimeTests
                     fixture.IsAvailable, fixture.UnavailableReason, Phase = phase, PrimaryFailure = primaryFailure?.ToString(), CleanupFailure = cleanupFailure?.ToString() }), CancellationToken.None),
                 primaryFailure).ConfigureAwait(true);
         }
+    }
+
+    /// <summary>Defers private package-profile custody until full composition has reused the generated SDK binding.</summary>
+    internal static IResourceBuilder<ProjectResource> ConfigureOwnedAppChannel(IResourceBuilder<ProjectResource> resource, string token)
+    {
+        IResourceBuilder<ParameterResource> parameter = resource.ApplicationBuilder.AddParameter("fixture-" + resource.Resource.Name + "-channel-token", token, secret: true);
+        if (!resource.ApplicationBuilder.Configuration.GetValue<bool>("Parties:Testing:UsePackagedGateway"))
+        {
+            _ = resource.WithEventStoreAppChannelToken(parameter);
+        }
+        return resource;
     }
 
     /// <summary>Always disposes owned resources, retaining primary, capture, disposal and receipt failures.</summary>

@@ -1,0 +1,72 @@
+[
+  {
+    "path": "references/Hexalith.EventStore",
+    "selected": "3de922e1140e26fe2e0151682ee656fcf675b26b",
+    "remoteMain": "b882c1005050aaebfa70618b5a72c1c8be452281",
+    "selectedReachableFromRemoteMain": true,
+    "divergence": "0\t7"
+  },
+  {
+    "path": "references/Hexalith.Memories",
+    "selected": "1143ba17a2336f0d718fcff71e049c06350a45a2",
+    "remoteMain": "1143ba17a2336f0d718fcff71e049c06350a45a2",
+    "selectedReachableFromRemoteMain": true,
+    "divergence": "0\t0"
+  },
+  {
+    "path": "references/Hexalith.FrontComposer",
+    "selected": "7ace06c5c50406b9021fc95d8d87cf962b5180dd",
+    "remoteMain": "7ace06c5c50406b9021fc95d8d87cf962b5180dd",
+    "selectedReachableFromRemoteMain": true,
+    "divergence": "0\t0"
+  },
+  {
+    "path": "references/Hexalith.Tenants",
+    "selected": "019aa0a82d021e08475a68fc50eff3b6a0e6c111",
+    "remoteMain": "019aa0a82d021e08475a68fc50eff3b6a0e6c111",
+    "selectedReachableFromRemoteMain": true,
+    "divergence": "0\t0"
+  },
+  {
+    "path": "references/Hexalith.AI.Tools",
+    "selected": "8a3885dd22aea88edd57771cfe592c382df2c583",
+    "remoteMain": "8a3885dd22aea88edd57771cfe592c382df2c583",
+    "selectedReachableFromRemoteMain": true,
+    "divergence": "0\t0"
+  },
+  {
+    "path": "references/Hexalith.Commons",
+    "selected": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+    "remoteMain": "11555ace9efcae2928a00122dcba91243e5a8a1a",
+    "selectedReachableFromRemoteMain": true,
+    "divergence": "0\t0"
+  },
+  {
+    "path": "references/Hexalith.Builds",
+    "selected": "5ec1779040606be89306129a7d2b245258c9acd2",
+    "remoteMain": "891886ddc60a9924d053bb74bf6bcc73e101b2ce",
+    "selectedReachableFromRemoteMain": true,
+    "divergence": "0\t46"
+  },
+  {
+    "path": "references/Hexalith.PolymorphicSerializations",
+    "selected": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+    "remoteMain": "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
+    "selectedReachableFromRemoteMain": true,
+    "divergence": "0\t0"
+  },
+  {
+    "path": "references/Hexalith.McpCli",
+    "selected": "7f61892fc7807f2fe8ab90d9ef33f16bca1470f6",
+    "remoteMain": "051fadedf68335ba5c525cf26c42f86aa69697f9",
+    "selectedReachableFromRemoteMain": true,
+    "divergence": "0\t12"
+  },
+  {
+    "path": "references/Hexalith.Platform",
+    "selected": "081178aa5cc01f5dc736ba0d1980aa80fedc6fe1",
+    "remoteMain": "2251a6078361e42dc62158f8443bd760bb021b3e",
+    "selectedReachableFromRemoteMain": true,
+    "divergence": "0\t57"
+  }
+]
