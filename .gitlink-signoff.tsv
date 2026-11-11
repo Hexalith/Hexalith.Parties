@@ -720,3 +720,10 @@ references/Hexalith.Tenants|019aa0a82d021e08475a68fc50eff3b6a0e6c111|validated-a
 # This records the pushed exact source commit, not package/deployment parity.
 references/Hexalith.FrontComposer|7ace06c5c50406b9021fc95d8d87cf962b5180dd|validated-advance|v4.7.6-27-g7ace06c5|codex-agent|2026-11-10
 references/Hexalith.Memories|43d2d72f7170a29a58b6046f69e05c9ad9734701|validated-advance|origin/main@43d2d72f7170|codex-agent|2026-11-11
+
+# 2026-11-11 approved membership/admission source adoption; no package or deployment parity.
+references/Hexalith.Builds|539b10ab0f884888ae4aeba0edb829dd59f707d6|validated-advance|origin/main@539b10ab0f884888ae4aeba0edb829dd59f707d6|codex-agent|2026-11-11
+references/Hexalith.EventStore|d35a4febffbfcead9c0ff096d052b4698d1242db|validated-advance|origin/main@d35a4febffbfcead9c0ff096d052b4698d1242db|codex-agent|2026-11-11
+references/Hexalith.Memories|c4addf98c6a4017d54e0c3aaeb3b57a52f82bffa|validated-advance|origin/main@c4addf98c6a4017d54e0c3aaeb3b57a52f82bffa|codex-agent|2026-11-11
+references/Hexalith.McpCli|ec458664b0218d07357091b5a5ea12897154db2a|validated-advance|origin/main@ec458664b0218d07357091b5a5ea12897154db2a|codex-agent|2026-11-11
+references/Hexalith.Tenants|cca5537c3a9d6dde162787053b34e17c8351b21d|validated-advance|origin/main@cca5537c3a9d6dde162787053b34e17c8351b21d|codex-agent|2026-11-11

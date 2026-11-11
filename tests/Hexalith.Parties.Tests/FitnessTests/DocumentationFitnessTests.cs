@@ -100,7 +100,7 @@ public sealed class DocumentationFitnessTests
 
         // Assert the exact set, not the count. A bare Length check lets a rename, or an add paired
         // with a removal, pass while the documented inventory silently drifts.
-        string[] expectedTestProjects = [.. ExpectedRunnableProjects, "Hexalith.Parties.Platform.IntegrationTests", "Hexalith.Parties.Platform.LifecycleTests", "Hexalith.Parties.EventStoreGateway.TestHost", "Hexalith.Parties.EventStoreAdminUI.TestHost", "Hexalith.Parties.EventStoreSample.Contracts.TestArtifact", "Hexalith.Parties.EventStoreSample.TestHost"];
+        string[] expectedTestProjects = [.. ExpectedRunnableProjects, "Hexalith.Parties.Platform.AttachedLifecycleTests", "Hexalith.Parties.Platform.IntegrationTests", "Hexalith.Parties.Platform.LifecycleTests", "Hexalith.Parties.EventStoreGateway.TestHost", "Hexalith.Parties.EventStoreAdminUI.TestHost", "Hexalith.Parties.EventStoreSample.Contracts.TestArtifact", "Hexalith.Parties.EventStoreSample.TestHost"];
         testProjects.ShouldBe([.. expectedTestProjects.Order(StringComparer.Ordinal)]);
 
         string testScript = Read(root, "scripts/test.ps1");
@@ -112,7 +112,7 @@ public sealed class DocumentationFitnessTests
             .Distinct(StringComparer.Ordinal)
             .Order(StringComparer.Ordinal)
             .ToArray();
-        runnableProjects.ShouldBe([.. ExpectedRunnableProjects.Append("Hexalith.Parties.Platform.IntegrationTests").Append("Hexalith.Parties.Platform.LifecycleTests").Order(StringComparer.Ordinal)]);
+        runnableProjects.ShouldBe([.. ExpectedRunnableProjects.Append("Hexalith.Parties.Platform.AttachedLifecycleTests").Append("Hexalith.Parties.Platform.IntegrationTests").Append("Hexalith.Parties.Platform.LifecycleTests").Order(StringComparer.Ordinal)]);
         testScript.ShouldContain("$platformProjects");
         testScript.ShouldContain("$testSupportProjects");
         testScript.ShouldContain("Hexalith.Parties.EventStoreGateway.TestHost.csproj");

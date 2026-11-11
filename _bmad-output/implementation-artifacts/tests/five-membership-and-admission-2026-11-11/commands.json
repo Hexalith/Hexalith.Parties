@@ -1,0 +1,98 @@
+[
+  {
+    "command": "dotnet build tests/Hexalith.Parties.IntegrationTests -c Release -m:1",
+    "cwd": "${PARTIES_ROOT}",
+    "exitCode": 0
+  },
+  {
+    "command": "PARTIES_PROCESS_NAMESPACE_REQUIRED=true dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -class Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessCaptureTests -class Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessLifetimeTests -failSkips -result-xml <receipt>",
+    "cwd": "${PARTIES_ROOT}",
+    "exitCode": 0,
+    "receipt": "process-strict.xml.gz"
+  },
+  {
+    "command": "dotnet build tests/Hexalith.EventStore.SignalR.Tests -c Debug -m:1 -p:UseHexalithProjectReferences=true",
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.EventStore",
+    "exitCode": 0
+  },
+  {
+    "command": "dotnet tests/Hexalith.EventStore.SignalR.Tests/bin/Debug/net10.0/Hexalith.EventStore.SignalR.Tests.dll -xml <receipt>",
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.EventStore",
+    "receipt": "eventstore-signalr.xml.gz",
+    "result": "63 passed; zero failed/skipped"
+  },
+  {
+    "command": "dotnet build tests/Hexalith.Memories.IntegrationTests -c Debug -m:1 -p:UseHexalithProjectReferences=true",
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+    "exitCode": 0
+  },
+  {
+    "command": "dotnet tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll -class Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests -class Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests -failSkips -result-xml <receipt>",
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+    "exitCode": 0,
+    "receipt": "memories-producer-green.xml.gz"
+  },
+  {
+    "command": "python3 -m unittest discover -s Github/run-module-integration/tests -p test_run_module_integration.py",
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.Builds",
+    "exitCode": 0,
+    "tests": 73
+  },
+  {
+    "command": "python3 -m unittest discover -s tests/ci-lifecycle",
+    "cwd": "${PARTIES_ROOT}",
+    "result": "140 passed"
+  },
+  {
+    "command": "python3 -m unittest discover -s scripts -p 'test_*owner_integration.py'",
+    "cwd": "${PARTIES_ROOT}",
+    "exitCode": 0,
+    "tests": 31
+  },
+  {
+    "command": "dotnet build tests/Hexalith.Parties.Ci.Tests -c Release -m:1",
+    "cwd": "${PARTIES_ROOT}",
+    "exitCode": 0
+  },
+  {
+    "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests -failSkips -result-xml <receipt>",
+    "cwd": "${PARTIES_ROOT}",
+    "exitCode": 0,
+    "receipt": "ci-selection.xml.gz"
+  },
+  {
+    "command": "dotnet build tests/Hexalith.Parties.IntegrationTests -c Release -m:1 --no-restore -p:BuildProjectReferences=false -p:MinVerVersionOverride=1.0.0 -p:GeneratePackageOnBuild=false",
+    "cwd": "${ROLLBACK_ROOT}/parties",
+    "dependencyScope": "Copied final Release project artifacts, unchanged selected package versions; only capture source reversed",
+    "exitCode": 0
+  },
+  {
+    "command": "PARTIES_PROCESS_NAMESPACE_REQUIRED=true dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -class Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessCaptureTests -class Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessLifetimeTests -result-xml <receipt>",
+    "cwd": "${ROLLBACK_ROOT}/parties",
+    "exitCode": 1,
+    "receipt": "process-rollback.xml.gz"
+  },
+  {
+    "command": "dotnet build tests/Hexalith.EventStore.SignalR.Tests -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:HexalithCommonsRoot=${PARTIES_ROOT}/references/Hexalith.Commons -p:MinVerVersionOverride=1.0.0 -p:GeneratePackageOnBuild=false",
+    "cwd": "${ROLLBACK_ROOT}/eventstore",
+    "exitCode": 0
+  },
+  {
+    "command": "dotnet tests/Hexalith.EventStore.SignalR.Tests/bin/Debug/net10.0/Hexalith.EventStore.SignalR.Tests.dll -result-xml <receipt>",
+    "cwd": "${ROLLBACK_ROOT}/eventstore",
+    "receipt": "eventstore-rollback.xml.gz",
+    "result": "57 passed; six expected regression failures"
+  },
+  {
+    "command": "python3 -m unittest discover -s ${ROLLBACK_ROOT}/builds/Github/run-module-integration/tests -p test_run_module_integration.py",
+    "cwd": "${ROLLBACK_ROOT}/builds",
+    "result": "72 passing methods; the unsafe-admission regression retains six failing subcases and three bounded FIFO timeout subcases",
+    "tests": 73
+  },
+  {
+    "command": "dotnet build src/Hexalith.Memories.Server -c Debug -m:1 --no-restore -p:BuildProjectReferences=false -p:UseHexalithProjectReferences=true -p:HexalithEventStoreRoot=${PARTIES_ROOT}/references/Hexalith.EventStore -p:HexalithFrontComposerRoot=${PARTIES_ROOT}/references/Hexalith.FrontComposer",
+    "cwd": "${ROLLBACK_ROOT}/memories",
+    "exitCode": 1,
+    "result": "MSB4019: sibling EventStore project evaluation resolves the isolated layout to a missing Builds Props/Directory.Packages.props; no runtime rollback test ran"
+  }
+]

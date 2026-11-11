@@ -1,0 +1,121 @@
+[
+  {
+    "decompressedSha256": "78fb17f02f4679c9a1af40419b410be26a4809d9f52879854ffecd3c48aac396",
+    "errors": 0,
+    "failed": 0,
+    "gzipSha256": "ca5ca8781fe055edf64ea11f875f56abbaa7c59bfe613b172913a46228fce1ba",
+    "nativeOriginalSha256": "a298e914b629defa6f3bbf269659aa0655539d1402abae514895a3ab58547b69",
+    "normalization": [
+      "${PARTIES_ROOT}",
+      "${ROLLBACK_ROOT}"
+    ],
+    "passed": 71,
+    "path": "ci-selection.xml.gz",
+    "privateNativeGzipSha256": "b812e46f3fbd653addd526f23e68ac209d5bda34a2cf095df43583bd5945b42a",
+    "privateNativePath": "${PRIVATE_NATIVE_RECEIPTS}/ci-selection.xml.gz",
+    "skipped": 0,
+    "total": 71
+  },
+  {
+    "decompressedSha256": "40d5763956b187750d9795a3f33145fad7c2b78f51bd5e540d6e1aa839bfea1d",
+    "errors": 0,
+    "failed": 6,
+    "gzipSha256": "a916a346ae5b3e324f10c2c43cfc544fc57bc68026716a83bc2e25391aa756bf",
+    "nativeOriginalSha256": "afa5c1d91df473613748e4204714cd77ac7598abf7a0e330f340e50c8351acdc",
+    "normalization": [
+      "${PARTIES_ROOT}",
+      "${ROLLBACK_ROOT}"
+    ],
+    "passed": 57,
+    "path": "eventstore-rollback.xml.gz",
+    "privateNativeGzipSha256": "3d79d89b3e6bc2cf6f2ec927812f8919f4b4107ab4b53584632900b7716ee05f",
+    "privateNativePath": "${PRIVATE_NATIVE_RECEIPTS}/eventstore-rollback.xml.gz",
+    "skipped": 0,
+    "total": 63
+  },
+  {
+    "decompressedSha256": "4efa3aa052642f6a4148d0630aaec6250c8e5009365ac5bf44d041509c453f9a",
+    "errors": 0,
+    "failed": 0,
+    "gzipSha256": "a403f7771092c6bfad7d3a540f05cbe29e22f661a71a5d47fd2b4d703ce3c95b",
+    "nativeOriginalSha256": "1834f9832d0f239fbab70c2acfcadde1844b790d27391e78bd9b48d727a9bbc1",
+    "normalization": [
+      "${PARTIES_ROOT}",
+      "${ROLLBACK_ROOT}"
+    ],
+    "passed": 63,
+    "path": "eventstore-signalr.xml.gz",
+    "privateNativeGzipSha256": "79ebc9d0f36456dadca72d04f911d96c86cdbadedae9cf7d677c684ddaaf793f",
+    "privateNativePath": "${PRIVATE_NATIVE_RECEIPTS}/eventstore-signalr.xml.gz",
+    "skipped": 0,
+    "total": 63
+  },
+  {
+    "decompressedSha256": "f5fd2d289cebef3651d407654021365dd5385f01e54542f205cd1db35bf0a08c",
+    "errors": 0,
+    "failed": 0,
+    "gzipSha256": "993e1fb1f49c8179ba3adcc79b83f0af95fafb1c00ab489e3bd50bd4829f562d",
+    "nativeOriginalSha256": "61fb2f8aef4e5b93e8bdcefa678c93a7561508b3ca65ac6b95fd7b24964cff0f",
+    "normalization": [
+      "${PARTIES_ROOT}",
+      "${ROLLBACK_ROOT}"
+    ],
+    "passed": 64,
+    "path": "memories-producer-green.xml.gz",
+    "privateNativeGzipSha256": "ab7ea38ad64e990ea97fe4409e2c4df6f7ec79d3a1b11af3c0337ad5da8d0dbc",
+    "privateNativePath": "${PRIVATE_NATIVE_RECEIPTS}/memories-producer-green.xml.gz",
+    "skipped": 0,
+    "total": 64
+  },
+  {
+    "decompressedSha256": "514c53cb921518ab906bd92518fd831c63dc541e0643b10451f2df8c8d73307a",
+    "errors": 0,
+    "failed": 1,
+    "gzipSha256": "6de92bca1baa3f2712dff8d6798a7e4d0a51c5752c4c6f838b92c69bc0e0145e",
+    "nativeOriginalSha256": "ecd7b767600fab887d14e454fd77f3ab4a409e10a22409240ab95d44d68658cc",
+    "normalization": [
+      "${PARTIES_ROOT}",
+      "${ROLLBACK_ROOT}"
+    ],
+    "passed": 0,
+    "path": "memories-reuse-red.xml.gz",
+    "privateNativeGzipSha256": "ae84754b2208e5a1dfd7b575ef98b3a5824e585496c0d9b1f76559582b8ab6ff",
+    "privateNativePath": "${PRIVATE_NATIVE_RECEIPTS}/memories-reuse-red.xml.gz",
+    "skipped": 0,
+    "total": 1
+  },
+  {
+    "decompressedSha256": "73378316f337e05096791e8cc40e192f047cfe69d5f37cad1e208911511e0b3f",
+    "errors": 0,
+    "failed": 7,
+    "gzipSha256": "bbd40281ddea7e94c85e09ad2ec4fe8c8539595ab0799b5ae2564801fa963ccc",
+    "nativeOriginalSha256": "05428bd006ca27b3764663c06ea91f93861a091b149fee6ceb1ef586a95e2f19",
+    "normalization": [
+      "${PARTIES_ROOT}",
+      "${ROLLBACK_ROOT}"
+    ],
+    "passed": 30,
+    "path": "process-rollback.xml.gz",
+    "privateNativeGzipSha256": "8f5a7b3134ea309de763ce794ba3356885b2e93e020502e35b9345fbfdb2ab8e",
+    "privateNativePath": "${PRIVATE_NATIVE_RECEIPTS}/process-rollback.xml.gz",
+    "skipped": 0,
+    "total": 37
+  },
+  {
+    "decompressedSha256": "a68949e01f1faabec9808773daab832e0080dbd97122c32f617611b07655096f",
+    "errors": 0,
+    "failed": 0,
+    "gzipSha256": "558fc557cec0ef34bc2fd8780331080ebfa53e088f5622eef16042d74462ac29",
+    "nativeOriginalSha256": "7d0a5c4ea8b4f9d05749c915020bc290bab1980b4b944320d3cc5776246e4416",
+    "normalization": [
+      "${PARTIES_ROOT}",
+      "${ROLLBACK_ROOT}"
+    ],
+    "passed": 37,
+    "path": "process-strict.xml.gz",
+    "privateNativeGzipSha256": "f3569a35bca94276051dec581136408b86c2892b9f6f0d54cf17a694a1eb5df8",
+    "privateNativePath": "${PRIVATE_NATIVE_RECEIPTS}/process-strict.xml.gz",
+    "skipped": 0,
+    "total": 37
+  }
+]

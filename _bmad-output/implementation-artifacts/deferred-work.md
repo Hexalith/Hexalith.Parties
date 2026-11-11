@@ -2227,6 +2227,10 @@ rollback: None required (test-only).
 
 - source_spec: `spec-five-subscription-and-package-adoption-deferred-items.md`
   summary: Qualify physical termination or stronger repair for canceled joins against legacy membership peers.
+  activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-membership-and-admission-deferrals.md`
+  status: in-review 2026-11-11
+  implementation_2026_11_11: Legacy indeterminate RPCs retire their physical transport before convergence. Real ordinary/scoped controls retain replacement identities, delayed completion, callback revocation and survivor delivery. Source Debug passes 63/63; isolated reversed client passes 57/63 with six expected regressions. Matching packages and deployment remain separate.
+  verification_2026_11_11: `tests/five-membership-and-admission-2026-11-11/`; `spec-five-membership-and-admission-deferrals.md`. Independent review and owner-before-parent publication are pending.
   evidence: Review pass 2 BH2-01; the legacy wire has no generation fence, so an older join can apply after a repair leave. This predates the task and remains explicitly unqualified; retained bookkeeping must not be interpreted as remote absence. Matching protocol-1 producer/client evidence is separate.
 
 - source_spec: `spec-five-subscription-and-package-adoption-deferred-items.md`
@@ -2506,6 +2510,10 @@ rollback: None required (test-only).
 
 - source_spec: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`
   summary: Bind the CI owner receipt read to the checked path in the Builds integration helper.
+  activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-membership-and-admission-deferrals.md`
+  status: in-review 2026-11-11
+  implementation_2026_11_11: Builds admits private bounded receipt and metadata bytes once through held directories, rejecting links, FIFOs, directories, permissive modes and conflicting owners. Parties delegates directly to that admission. Owner and consumer controls retain path swaps; public-package publication constants stay fixed. Source adoption and exact final revision signoff remain parent work.
+  verification_2026_11_11: `tests/five-membership-and-admission-2026-11-11/`; `spec-five-membership-and-admission-deferrals.md`. Independent review and owner-before-parent publication are pending.
   evidence: low; review finding (pre-existing, Builds-owned). Qualification.issued() checks the receipt with is_symlink() by name, and the pinned Builds receipt_owner() then reads real_path(receipt).read_text(), which reopens it and resolves links. Fix in Hexalith.Builds, then adopt it; Parties must not edit the submodule.
 
 - source_spec: `spec-five-paging-readiness-and-evidence-reader-deferred-items.md`
@@ -2623,12 +2631,28 @@ rollback: None required (test-only).
 
 - source_spec: `spec-five-memories-proof-and-process-observation-deferred-items.md`
   summary: Establish whether fresh producer admission can reuse an identity having only unregistered historical chunk/NL artifacts.
+  activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-membership-and-admission-deferrals.md`
+  status: open
+  implementation_2026_11_11: Real authenticated Dapr scheduling reuses a completed workflow whose real chunk activity left an unregistered historical vector. Scheduler and annotation admission now refuse unregistered existing histories while matching tracked lost-ack admissions remain recoverable. The two owner classes pass 64/64; unknown purged/unavailable histories remain unqualified because bounded current metadata cannot distinguish a never-used identity from a purged historical one.
+  verification_2026_11_11: `tests/five-membership-and-admission-2026-11-11/`; `spec-five-membership-and-admission-deferrals.md`. Independent review and owner-before-parent publication are pending.
   evidence: Review BH1/EC1; medium unverified. Current normal callers generate fresh GUID/ULID identities and failed retry admission is excluded. Reproduce a real scheduler/workflow identity reuse with no checked base hashes, then test whether modern provenance leaves historical vectors after cleanup. Do not add scans or grant legacy completeness from a synthetic collision alone.
 
 - source_spec: `spec-five-memories-proof-and-process-observation-deferred-items.md`
   summary: Qualify child-parent membership when a listed PID is reused before the first child birth-identity read.
+  activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-membership-and-admission-deferrals.md`
+  status: in-review 2026-11-11
+  implementation_2026_11_11: Real owned-namespace foreign-parent PID reuse now refuses attribution before role retention. Child/parent lifetimes bracket the PPid read; malformed/missing relationships and independent siblings are covered. Strict Release/package process classes pass 37/37; isolated reversed capture passes 30/37 with seven expected regressions and owned cleanup.
+  verification_2026_11_11: `tests/five-membership-and-admission-2026-11-11/`; `spec-five-membership-and-admission-deferrals.md`. Independent review and owner-before-parent publication are pending.
   evidence: Review BH5; medium unverified and pre-existing ordering. Current rereads bind observations after the first identity sample; they do not bind the original children-list membership to that sampled lifetime. Retain an owned Linux foreign-parent PID-reuse boundary and cleanup outcome before introducing a new relationship check.
 
 - source_spec: `spec-five-memories-proof-and-process-observation-deferred-items.md`
   summary: Audit namespace prerequisites for the maintained CI/default lane that collects the Linux PID-reuse reproducer.
+  activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-membership-and-admission-deferrals.md`
+  status: in-review 2026-11-11
+  implementation_2026_11_11: The local topology/all lane collects the complete IntegrationTests project; focused CI selectors omit the namespace class. Real child-scoped unshare EPERM and missing-executable controls distinguish ordinary unsupported skips from strict failures. Successful entry followed by child failure cannot pass. Strict process classes pass 37/37 with no skips; docs retain the explicit qualification selector.
+  verification_2026_11_11: `tests/five-membership-and-admission-2026-11-11/`; `spec-five-membership-and-admission-deferrals.md`. Independent review and owner-before-parent publication are pending.
   evidence: Review BH9; medium unverified. The qualified local host supports user/PID namespaces and passes, and tests/README.md declares those prerequisites. Determine whether the actual maintained lane runs this fact on an unsupported host; retain a concrete namespace-start refusal before changing selection or capability handling.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-membership-and-admission-deferrals.md`
+  summary: Qualify concurrent historical workflow creation between an absent history read and fresh admission.
+  evidence: Review B2/E1; high unverified and pre-existing exclusion gap. Existing/running history is refused, but an older untracked producer could theoretically create and complete the same identity after an absent read. Demonstrate a real owned two-producer interleaving and retained-artifact cleanup outcome before adding an exclusion protocol. Current retained-history proof does not establish writer drain, purged history or production completeness.

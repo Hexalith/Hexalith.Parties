@@ -1,0 +1,100 @@
+[
+  {
+    "decompressedSha256": "dd9486806c34d071f771e7d41d8546952c14e3834d475442980a98cc2d0dc61f",
+    "errors": 0,
+    "failed": 0,
+    "format": "native-xunit-xml-with-public-prefix-normalization",
+    "gzipSha256": "70edcaf72ba20630c9611750ded0ef989c1c07b50f90726d6bace2c737385014",
+    "passed": 2,
+    "path": "memories-focused.xml.gz",
+    "privateNativeSha256": "215c18a87955fd7c0a50514525adb64ed10aec1ed05f77f2c8d86b1f104ffe59",
+    "privateOriginal": "${PRIVATE_NATIVE_REVIEW_RECEIPTS}/memories-focused.xml.gz",
+    "skipped": 0,
+    "total": 2
+  },
+  {
+    "decompressedSha256": "fc1d7ba36d81fd94b256019d0be369a3a25843df0ed240d443a3461c46b1e25d",
+    "errors": 0,
+    "failed": 0,
+    "format": "native-xunit-xml-with-public-prefix-normalization",
+    "gzipSha256": "a936efeabd022c7b69b2d4ab918c2e809c8ebd6230e787ae6e4814b426773450",
+    "passed": 6,
+    "path": "memories-rollback-baseline.xml.gz",
+    "privateNativeSha256": "c909fb2b7c7b18bc99f172a5106e835507589557acd132a37c67dad1f3ef2eea",
+    "privateOriginal": "${PRIVATE_NATIVE_REVIEW_RECEIPTS}/memories-rollback-baseline.xml.gz",
+    "skipped": 0,
+    "total": 6
+  },
+  {
+    "decompressedSha256": "1a9b65261e2cb04c7ef33968771a49427ae12da58967523d29a260481d42d778",
+    "errors": 0,
+    "failed": 2,
+    "format": "native-xunit-xml-with-public-prefix-normalization",
+    "gzipSha256": "1ec3153c6d5b69088940d31e0ab7f122417a91536a6ec3b1bc52e08676774b03",
+    "passed": 0,
+    "path": "memories-rollback-regressions.xml.gz",
+    "privateNativeSha256": "65a7bcdcd187ea8b4101a66c31a39505b61a7142f3c25fd9c109b3e938688431",
+    "privateOriginal": "${PRIVATE_NATIVE_REVIEW_RECEIPTS}/memories-rollback-regressions.xml.gz",
+    "skipped": 0,
+    "total": 2
+  },
+  {
+    "decompressedSha256": "f9b0036ac27fb126a5783542bae44a76346d7c429cc6b950105dd54cf1a0ade8",
+    "errors": 0,
+    "failed": 0,
+    "format": "native-xunit-xml-with-public-prefix-normalization",
+    "gzipSha256": "c2053b86ce9a897d5a51cfe3eaf977562702b42a34afed6f76273ad16baab6ce",
+    "passed": 7,
+    "path": "process-focused.xml.gz",
+    "privateNativeSha256": "cc20ff5abcd4958c41f2c80bd08e674da42e8c6b1c97dab2d5490b7abc1490af",
+    "privateOriginal": "${PRIVATE_NATIVE_REVIEW_RECEIPTS}/process-focused.xml.gz",
+    "skipped": 0,
+    "total": 7
+  },
+  {
+    "decompressedSha256": "56d7c97f40ba0a417fadd7790fac369330c45106a0fccd15ec8bc3e181d5f7ca",
+    "errors": 0,
+    "failed": 4,
+    "format": "native-xunit-xml-with-public-prefix-normalization",
+    "gzipSha256": "7d999f3bfb126e52f629b9e24855255e518808e4eb927f21a8b09bd148aabd03",
+    "passed": 0,
+    "path": "process-rollback-fixture.xml.gz",
+    "privateNativeSha256": "500e131ae5206a95eaeaef388885019d7f9408c6b63ddfff58583b2d1ba0becc",
+    "privateOriginal": "${PRIVATE_NATIVE_REVIEW_RECEIPTS}/process-rollback-fixture.xml.gz",
+    "skipped": 0,
+    "total": 4
+  },
+  {
+    "decompressedSha256": "275d78cfbf56af2a09c38c97f424a736731a05fa692ad2fdc9f93685e0fe4d76",
+    "failed": 0,
+    "format": "native-console-with-public-prefix-normalization",
+    "gzipSha256": "d3101f3aa4ae5898b036fde303292a615deeb2fa10408d55e9bdbc9ab7f25c05",
+    "passed": 7,
+    "path": "signalr-focused.log.gz",
+    "privateNativeSha256": "88c1212fe8543f0d3b59f32de443db95b14220364cb0a98af46d1261f28d6742",
+    "skipped": 0,
+    "total": 7
+  },
+  {
+    "decompressedSha256": "cd2fca8795b408492370d94c87c6acc155255649b67ffad09c3fb01af8e08b67",
+    "failed": 0,
+    "format": "native-console-with-public-prefix-normalization",
+    "gzipSha256": "976c2ffff8f2ac1a3ebbdf6591663462a061ffb191a362935336e635a8c96161",
+    "passed": 3,
+    "path": "architecture-focused.log.gz",
+    "privateNativeSha256": "cd2fca8795b408492370d94c87c6acc155255649b67ffad09c3fb01af8e08b67",
+    "skipped": 0,
+    "total": 3
+  },
+  {
+    "decompressedSha256": "9f75add94930d82f86f40553d972627172fa9fcad2415eaa9947d6de3d460011",
+    "failed": 0,
+    "format": "native-console-with-public-prefix-normalization",
+    "gzipSha256": "1773a9a0cd499919768a6d25725cf69a5cf54524afe187e0ad7edbe889849b9b",
+    "passed": 1,
+    "path": "builds-ancestors.log.gz",
+    "privateNativeSha256": "9f75add94930d82f86f40553d972627172fa9fcad2415eaa9947d6de3d460011",
+    "skipped": 0,
+    "total": 1
+  }
+]

@@ -1,0 +1,46 @@
+{
+  "finalOwnerCommitAndAdoption": "pending parent review/commit/push",
+  "modules": {
+    "builds": {
+      "baselineRevision": "891886ddc60a9924d053bb74bf6bcc73e101b2ce",
+      "testedWorkingFileSha256": {
+        "Github/run-module-integration/run_module_integration.py": "0229f6b97c1f0819242b8acdc8ea5c1f054d927d672347e4c4616f64e3d7c8bf",
+        "Github/run-module-integration/tests/test_run_module_integration.py": "9939646623531a9344427e4a8edb920b2dcae90c41ea9c5349552c27e929f933"
+      }
+    },
+    "eventstore": {
+      "baselineRevision": "c94e6fffaf2d689c94bb288f151a65e10a2fea82",
+      "testedWorkingFileSha256": {
+        "src/Hexalith.EventStore.SignalR/EventStoreSignalRClient.cs": "292dcc9c1b4e4309c92b14606ed9e1bd8fd68f2607bd3b9ccc71fb95a80705f3",
+        "tests/Hexalith.EventStore.SignalR.Tests/EventStoreSignalRClientTests.cs": "89d1d3c6ff381c39adaaf716850ed253b512644b1881c3324f91e52c3ba37694",
+        "tests/Hexalith.EventStore.SignalR.Tests/StalledProjectionHub.cs": "b8fe3a13ead126e68e41ccd7d1a2f8368de223ef953938fbbc747243281e596c",
+        "tests/Hexalith.EventStore.SignalR.Tests/StalledProjectionRpc.cs": "d9fbc0807b7461be727c3b5ac2421b8659e9a6db1ddb07c743cf54ea0f322de4"
+      }
+    },
+    "memories": {
+      "baselineRevision": "43d2d72f7170a29a58b6046f69e05c9ad9734701",
+      "testedWorkingFileSha256": {
+        "src/Hexalith.Memories.Server/Activities/Ingestion/AdmitSourceInventoryActivity.cs": "5451a5c8dedd19ad8431e720f7ed063ff5b9fcdbbc419ee1621b0db3a13262eb",
+        "src/Hexalith.Memories.Server/Ingestion/DaprIngestionWorkflowScheduler.cs": "d866d2cb27dc96dcdf6a747b24dc59cc682e17a0b8a49481fa62b7b988c7f027",
+        "src/Hexalith.Memories.Server/Ingestion/SourceInventoryStore.cs": "41659f4e9ced7bfe19fc527678d76a07a287b4df68569aced4c232ee66c1d9ed",
+        "tests/Hexalith.Memories.IntegrationTests/Ingestion/HistoricalCandidateArtifactWorkflow.cs": "f3bfd4437c35c037347b2a43378bbe2ca54228c0ec86f7ea7fe6598f19240537",
+        "tests/Hexalith.Memories.IntegrationTests/Ingestion/RetryWorkflowErasureIntegrationTests.cs": "73481b38b034c1412af5b00a62de6a7861dd0a320edaa7593ce1a1fefcff99b6",
+        "tests/Hexalith.Memories.IntegrationTests/Ingestion/SourceInventoryProducerIntegrationTests.cs": "20bac98c2c69cdde1648d9afad23b319117a6536a7e33fbc111e96957258ae9d"
+      }
+    },
+    "parties": {
+      "baselineRevision": "96055d5cb2b75a6d12e12e87b349b7fa473a7b66",
+      "testedWorkingFileSha256": {
+        "scripts/qualify-disposable-ci.py": "2db996ecf4fdbb78b481294820d3debbc852870ed9fb5657c33ae08e3605b6f6",
+        "scripts/verify-current-owner-integration.py": "b7c3d96479f2f14fb883b4e9033a5a608081ad75166d23500053558f60652439",
+        "tests/Hexalith.Parties.Ci.Tests/PartiesContainerPublishWorkflowTests.cs": "5abfdd751601ff048e2086dddaebe064289add65860f94371b7d2582ea88fe48",
+        "tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessCapture.cs": "80e3ce61733b1da6a7448546f19e17f218ad5d3ddc0980f874a7175c08fbc733",
+        "tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessCaptureTests.cs": "9330b32471c1ffd6019ce415c5fba4daf980aef08565d1e660d1b5e271487664",
+        "tests/Hexalith.Parties.IntegrationTests/Topology/OrdinaryLauncherProcessLifetimeTests.cs": "b5afd795ee8b3122a2bbd51e466caf535be7a3c5c32f00e7ab6637c970b500fb",
+        "tests/README.md": "923f60c5420cd858cce58b2eac0fa8432b0313b51f387db55a6d0071567586a4",
+        "tests/ci-lifecycle/test_qualification_controller.py": "5306a05b0d4e33d341822c8bf506b2cfec9f839c1c5a9ab22f347f6b75c016d5"
+      }
+    }
+  },
+  "status": "tested-uncommitted-owner-source"
+}

@@ -39,6 +39,7 @@ public sealed class OrdinaryLauncherProcessCaptureTests
                     "1/children" => failure == "invalid-pid" ? "invalid 2 3 4" : "2 3 4",
                     "9/children" => "",
                     "2/children" or "3/children" or "4/children" => "",
+                    "/proc/2/status" or "/proc/3/status" or "/proc/4/status" => "PPid: 1",
                     "/proc/2/comm" or "/proc/3/comm" => "dapr",
                     "/proc/4/comm" => "daprd",
                     _ => throw new InvalidOperationException(path),
@@ -56,6 +57,30 @@ public sealed class OrdinaryLauncherProcessCaptureTests
         capture.Failures.ShouldNotBeEmpty();
         capture.QualificationFailures(launchers, workers).ShouldNotBeEmpty();
         string.Join(";", capture.Failures).ShouldContain("resource");
+    }
+
+    /// <summary>Refuses stale child listings while retaining true siblings and exact ownership.</summary>
+    /// <param name="status">The observed child parent relationship.</param>
+    [Theory]
+    [InlineData("PPid: 9")]
+    [InlineData("Name: dapr")]
+    [InlineData("PPid: invalid")]
+    [InlineData("PPid: 1\nPPid: 1")]
+    public void ForeignMissingOrMalformedParentRefusesAndRetainsIndependentSiblings(string status)
+    {
+        var workers = new ConcurrentDictionary<int, (long Started, string Role, string Resource)>();
+        var capture = new OrdinaryLauncherProcessCapture(id => [id.ToString(System.Globalization.CultureInfo.InvariantCulture)],
+            path => path switch {
+                "1/children" => "2 3 4", "2/children" or "3/children" or "4/children" => "",
+                "/proc/2/comm" => "dapr",
+                "/proc/2/status" => status, "/proc/3/status" or "/proc/4/status" => "PPid: 1",
+                "/proc/3/comm" => "dapr", "/proc/4/comm" => "daprd",
+                _ => throw new InvalidOperationException(path),
+            }, id => id);
+        capture.CaptureDescendants(1, "owned", workers);
+        workers.ShouldNotContainKey(2);
+        workers[3].Role.ShouldBe("cli"); workers[4].Role.ShouldBe("daprd");
+        capture.Failures.ShouldContain(item => item.Contains("parent membership", StringComparison.Ordinal));
     }
 
     /// <summary>Requires CLI and runtime observations for every launcher rather than once globally.</summary>
@@ -94,6 +119,8 @@ public sealed class OrdinaryLauncherProcessCaptureTests
                 "1/children" => "2",
                 "2/children" => "3",
                 "3/children" => "",
+                "/proc/2/status" => "PPid: 1",
+                "/proc/3/status" => "PPid: 2",
                 "/proc/2/comm" => "dapr",
                 "/proc/3/comm" => "daprd",
                 _ => throw new InvalidOperationException(path),
@@ -244,6 +271,8 @@ public sealed class OrdinaryLauncherProcessCaptureTests
     [InlineData("comm", false)]
     [InlineData("comm", true)]
     [InlineData("tasks", false)]
+    [InlineData("status", false)]
+    [InlineData("status", true)]
     [InlineData("children", false)]
     public void LifetimeChangesRefuseAndContinueIndependentSiblings(string boundary, bool disappeared)
     {
@@ -256,8 +285,9 @@ public sealed class OrdinaryLauncherProcessCaptureTests
             return [id.ToString(System.Globalization.CultureInfo.InvariantCulture)];
         }, path =>
         {
-            if (path == "/proc/2/comm" && boundary == "comm" || path == "2/children" && boundary == "children") { changed = true; }
+            if (path == "/proc/2/comm" && boundary == "comm" || path == "2/children" && boundary == "children" || path == "/proc/2/status" && boundary == "status") { changed = true; }
             return path switch { "1/children" => "2 3 4", "2/children" or "3/children" or "4/children" => "",
+                "/proc/2/status" or "/proc/3/status" or "/proc/4/status" => "PPid: 1",
                 "/proc/2/comm" or "/proc/3/comm" => "dapr", "/proc/4/comm" => "daprd", _ => throw new InvalidOperationException(path) };
         }, id => id == 2 && changed ? disappeared ? null : 200 : id);
         capture.CaptureDescendants(1, "owned", workers);

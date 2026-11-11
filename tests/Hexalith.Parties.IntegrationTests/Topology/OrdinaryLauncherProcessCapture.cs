@@ -101,6 +101,16 @@ internal sealed class OrdinaryLauncherProcessCapture(
                         continue;
                     }
                     if (!SameLifetime(parent, started, resource)) { return; }
+                    string[] parentLines = _readText($"/proc/{id}/status").Split('\n')
+                        .Where(line => line.StartsWith("PPid:", StringComparison.Ordinal)).ToArray();
+                    if (!SameLifetime(id, childStarted, resource)) { continue; }
+                    if (!SameLifetime(parent, started, resource)) { return; }
+                    if (parentLines.Length != 1 || !int.TryParse(parentLines[0].AsSpan(5).Trim(), NumberStyles.None,
+                        CultureInfo.InvariantCulture, out int actualParent) || actualParent != parent)
+                    {
+                        _failures.Enqueue($"{resource}: pid {id} parent membership is missing, malformed or differs from pid {parent}");
+                        continue;
+                    }
 
                     string name = _readText($"/proc/{id}/comm").Trim();
                     if (name.Length == 0)

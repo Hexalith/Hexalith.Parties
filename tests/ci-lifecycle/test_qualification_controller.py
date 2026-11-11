@@ -911,19 +911,43 @@ class MetadataDecisionTests(unittest.TestCase):
                             value.finalize_owner(item, 'failure', [])
                     signal_workers.assert_not_called()
 
-    def test_receipt_admission_requires_single_link_regular_bytes(self):
+    def test_receipt_admission_requires_private_single_link_regular_bytes(self):
+        for fault in ('hardlink', 'symlink', 'fifo', 'directory', 'permissions'):
+            with self.subTest(fault=fault), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                value = self.controller(root)
+                value.context = {}
+                receipt = root / 'passing/receipt.json'
+                receipt.parent.mkdir()
+                original = root / 'original.json'
+                original.write_text('{}'); original.chmod(0o600)
+                if fault == 'hardlink': os.link(original, receipt)
+                elif fault == 'symlink': receipt.symlink_to(original)
+                elif fault == 'fifo': os.mkfifo(receipt, 0o600)
+                elif fault == 'directory': receipt.mkdir()
+                else: receipt.write_text('{}'); receipt.chmod(0o644)
+                with self.assertRaises((ValueError, OSError)):
+                    value.issued({'label': 'passing', 'receipt': str(receipt)})
+
+    def test_receipt_owner_uses_one_admission_after_a_name_swap(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             value = self.controller(root)
+            value.context = {'unit': 'context'}
+            state = root / 'data/hexalith-builds/g4-runs'
+            owner = {'schema': Q.HELPER.SCHEMA, 'executionContext': value.context,
+                     'runId': 'a' * 32, 'attemptId': 'b' * 32, 'environmentId': 'c' * 32,
+                     'stateDirectory': str(state)}
             receipt = root / 'passing/receipt.json'
-            receipt.parent.mkdir()
-            original = root / 'original.json'
-            original.write_text('{}')
-            os.link(original, receipt)
-            with patch.object(Q.HELPER, 'receipt_owner', return_value={'unit': 'should-not-be-called'}) as helper:
-                with self.assertRaisesRegex(ValueError, 'nonregular'):
-                    value.issued({'label': 'passing', 'receipt': str(receipt)})
-                helper.assert_not_called()
+            receipt.parent.mkdir(); Q.write(receipt, owner)
+            read = Q.HELPER.read_private_artifact
+            def swap(directory, name, maximum):
+                body = read(directory, name, maximum)
+                receipt.unlink(); Q.write(receipt, dict(owner, attemptId='d' * 32))
+                return body
+            with patch.dict(os.environ, {'XDG_DATA_HOME': str(root / 'data')}), \
+                 patch.object(Q.HELPER._module, 'read_private_artifact', side_effect=swap):
+                self.assertEqual(value.issued({'label': 'passing', 'receipt': str(receipt)}), owner)
 
     def test_empty_public_result_cannot_skip_admission_through_a_link(self):
         with tempfile.TemporaryDirectory() as temporary:

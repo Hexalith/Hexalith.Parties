@@ -1,0 +1,47 @@
+[
+  {
+    "build": "dotnet build tests/Hexalith.EventStore.SignalR.Tests -c Debug -m:1 -p:UseHexalithProjectReferences=true",
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.EventStore",
+    "result": "7 passed",
+    "test": "dotnet tests/Hexalith.EventStore.SignalR.Tests/bin/Debug/net10.0/Hexalith.EventStore.SignalR.Tests.dll -method '*RealStalledGroupInvocationCancellationSettlesAndRevokesCallback' -method '*CancelledJoinPreservesAnotherSubscriberInTheSameGroup' -method '*InlineRecoveryHonorsCallerCancellationDuringReplacementNegotiation'"
+  },
+  {
+    "build": "dotnet build tests/Hexalith.Memories.IntegrationTests -c Debug -m:1 -p:UseHexalithProjectReferences=true",
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+    "result": "2 passed",
+    "test": "dotnet tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll -method '*ActualSchedulerCannotReuseCompletedHistoricalWorkflowWithUnregisteredChunkArtifacts' -method '*ActualAcceptedScheduleLostAcknowledgementRecoversOriginalDurableAdmission' -failSkips -result-xml <receipt>"
+  },
+  {
+    "build": "dotnet build tests/Hexalith.Memories.Server.Tests -c Debug -m:1 -p:UseHexalithProjectReferences=true",
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.Memories",
+    "result": "3 passed",
+    "test": "dotnet tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.Tests.dll -method '*IngestionWorkflowStarts_MatchTheReviewedServerInventoryExactly' -method '*DirectUrlIngestion_UsesTheAdmissionAndTraceCapturingScheduler' -method '*ReviewedWorkflowStartExceptions_PreserveCapturedStateAndClaimCheckBoundaries'"
+  },
+  {
+    "build": "dotnet build tests/Hexalith.Parties.IntegrationTests -c Release -m:1 --no-restore",
+    "cwd": "${PARTIES_ROOT}",
+    "result": "7 passed",
+    "test": "PARTIES_PROCESS_NAMESPACE_REQUIRED=true dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -method '*ForeignMissingOrMalformedParentRefusesAndRetainsIndependentSiblings' -method '*IsolatedPidReuseDuringRoleReadRefusesQualificationAsync' -method '*IsolatedForeignParentPidReuseBeforeIdentityReadRefusesQualificationAsync' -method '*UnmatchedNestedSelectorCannotQualifyPidReuseAsync' -failSkips -result-xml <receipt>"
+  },
+  {
+    "cwd": "${PARTIES_ROOT}/references/Hexalith.Builds",
+    "result": "1 method, 18 ancestor boundary cases passed",
+    "test": "python3 -m unittest discover -s Github/run-module-integration/tests -p test_run_module_integration.py -k test_receipt_and_metadata_ancestor_replacements_are_bound_to_held_admission"
+  },
+  {
+    "baselineTest": "dotnet tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll -method '*AnnotationChildAdmissionEstablishesFreshCoverageBeforeItsFirstContentWrite' -method '*CandidateRedeliveryAndFailedRetryCannotCertifyUnknownLegacyCoverage' -method '*OnlyProvenPreSchedulingFailuresCanSettleAfterSerializedRecreation' -failSkips -result-xml <receipt>",
+    "builds": [
+      "dotnet build src/Hexalith.Memories.Server -c Debug -m:1 --no-restore -p:BuildProjectReferences=false -p:UseHexalithProjectReferences=true",
+      "dotnet build tests/Hexalith.Memories.IntegrationTests -c Debug -m:1 --no-restore -p:BuildProjectReferences=false -p:UseHexalithProjectReferences=true"
+    ],
+    "cwd": "${ROLLBACK_ROOT}/workspace/references/Hexalith.Memories",
+    "regressionTest": "dotnet tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll -method '*ActualSchedulerCannotReuseCompletedHistoricalWorkflowWithUnregisteredChunkArtifacts' -method '*ActualAcceptedScheduleLostAcknowledgementRecoversOriginalDurableAdmission' -result-xml <receipt>",
+    "result": "baseline exit0:6 passed; regressions exit1:2 expected failures"
+  },
+  {
+    "build": "dotnet build tests/Hexalith.Parties.IntegrationTests -c Release -m:1 --no-restore -p:BuildProjectReferences=false -p:MinVerVersionOverride=1.0.0 -p:GeneratePackageOnBuild=false",
+    "cwd": "${ROLLBACK_ROOT}/parties",
+    "result": "exit1:4 expected attribution failures",
+    "test": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -method '*ForeignMissingOrMalformedParentRefusesAndRetainsIndependentSiblings' -result-xml <receipt>"
+  }
+]

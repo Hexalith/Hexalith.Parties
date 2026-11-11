@@ -11,6 +11,12 @@ Hexalith.Parties uses a .NET 10, xUnit v3, Shouldly, NSubstitute, bUnit, Testcon
 | Tier 3 topology integration | `Hexalith.Parties.IntegrationTests` | Aspire/Dapr topology, sidecar health, gateway E2E behavior, and tests that depend on Docker, Dapr, or full orchestration. |
 | CI publication validation | `Hexalith.Parties.Ci.Tests` | Static checks for the GitHub Actions Zot container publication contract. |
 
+The runner-owned `Hexalith.Parties.Platform.IntegrationTests`,
+`Hexalith.Parties.Platform.LifecycleTests` and
+`Hexalith.Parties.Platform.AttachedLifecycleTests` execute through
+`hexalith-module test`. The local script inventories these projects separately
+from its ordinary lanes.
+
 The model-only `PartiesPublishEnvironmentTests` inspect the complete publish
 graph without starting Docker or Dapr. In addition to the standard root
 dependencies, initialize the optional Memories reference before running the
@@ -881,3 +887,15 @@ then invoke the built test class with `PARTIES_ORDINARY_TOPOLOGY_TESTS=true` and
 `PARTIES_ORDINARY_TOPOLOGY_TIMING_PATH` set to a fresh evidence path. The live gate
 still requires readiness, launcher exit 143, observed worker exits and quiescence
 within 30 seconds. Ordinary live tests remain opt-in locally and disabled in CI.
+
+
+The maintained local `scripts/test.ps1 -Lane topology` and `-Lane all` selections
+collect `OrdinaryLauncherProcessLifetimeTests` through the complete IntegrationTests
+project. Focused CI selectors do not collect these namespace controls. Ordinary
+execution records an explicit unsupported skip if Linux namespaces or `unshare`
+are unavailable; successful namespace entry followed by a child failure always
+fails. Qualification requires `PARTIES_PROCESS_NAMESPACE_REQUIRED=true` and
+`-failSkips`, with nonzero discovery. Run both process capture and lifetime classes
+directly. The foreign-parent control additionally requires `python3`; it resets
+PID allocation only inside the verified owned namespace after pipe setup, and
+retains a true independent sibling through refusal and bounded owned cleanup.

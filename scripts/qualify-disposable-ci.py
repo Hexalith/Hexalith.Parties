@@ -717,7 +717,6 @@ class Qualification:
         require(item.get('label') in OWNER_LABELS, 'Unknown controller owner role')
         expected = self.temporary / item['label'] / 'receipt.json'
         require(Path(item['receipt']) == expected, 'Receipt escaped its issued controller role')
-        read_bytes(expected)
         return HELPER.receipt_owner(expected, self.context)
 
     def receipt_present(self, item):

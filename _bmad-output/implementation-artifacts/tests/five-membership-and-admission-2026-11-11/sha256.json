@@ -1,0 +1,16 @@
+{
+  "README.md": "750f0e667875bde4e68db63e55ffafc51d63ae998848fb31ab08458d76568994",
+  "ci-selection.xml.gz": "ca5ca8781fe055edf64ea11f875f56abbaa7c59bfe613b172913a46228fce1ba",
+  "commands.json": "d0e51c17c09732c6827856d0b9b574c0010cff3190530fe9c4d696cb5abc58f0",
+  "eventstore-rollback.xml.gz": "a916a346ae5b3e324f10c2c43cfc544fc57bc68026716a83bc2e25391aa756bf",
+  "eventstore-signalr.xml.gz": "a403f7771092c6bfad7d3a540f05cbe29e22f661a71a5d47fd2b4d703ce3c95b",
+  "memories-producer-green.xml.gz": "993e1fb1f49c8179ba3adcc79b83f0af95fafb1c00ab489e3bd50bd4829f562d",
+  "memories-reuse-red.xml.gz": "6de92bca1baa3f2712dff8d6798a7e4d0a51c5752c4c6f838b92c69bc0e0145e",
+  "native-receipts.json": "643bb507cefedc6b113dad7669494936ebab5b11e4bb0b191138f456cae2d9d7",
+  "process-rollback.xml.gz": "bbd40281ddea7e94c85e09ad2ec4fe8c8539595ab0799b5ae2564801fa963ccc",
+  "process-strict.xml.gz": "558fc557cec0ef34bc2fd8780331080ebfa53e088f5622eef16042d74462ac29",
+  "python-controls.json": "f499a420ebb15f618e448d40320aea4686e27b9fcccf32f1f574c8aa030f7e3a",
+  "rollback-passing-tests.json": "d600a9b31a688c159a03a668c714cc1df5dcdbe2ef674744cef6a5efaec094f5",
+  "source-observations.json": "7c8e87902c50f025834b741661cd4e3ac119b9cef4744dd7aa22a36d4f22dd39",
+  "verification.json": "0fd34d6803888097c36b10898fafbda81a663b4b4cb4d2dfc62160666bb22017"
+}

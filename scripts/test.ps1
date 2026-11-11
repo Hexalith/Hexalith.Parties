@@ -98,6 +98,7 @@ $ciProjects = @(
 
 # Platform suites are executed only by hexalith-module test, which owns their environment.
 $platformProjects = @(
+    "tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleTests.csproj",
     "tests/Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj",
     "tests/Hexalith.Parties.Platform.LifecycleTests/Hexalith.Parties.Platform.LifecycleTests.csproj"
 )

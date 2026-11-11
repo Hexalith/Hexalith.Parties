@@ -1,0 +1,48 @@
+{
+  "memories-focused": {
+    "expectedRegressions": [],
+    "passing": [
+      "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.ActualSchedulerCannotReuseCompletedHistoricalWorkflowWithUnregisteredChunkArtifacts",
+      "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.ActualAcceptedScheduleLostAcknowledgementRecoversOriginalDurableAdmission"
+    ]
+  },
+  "memories-rollback-baseline": {
+    "expectedRegressions": [],
+    "passing": [
+      "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests.AnnotationChildAdmissionEstablishesFreshCoverageBeforeItsFirstContentWrite",
+      "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests.OnlyProvenPreSchedulingFailuresCanSettleAfterSerializedRecreation(stage: \\\"prepare\\\")",
+      "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests.OnlyProvenPreSchedulingFailuresCanSettleAfterSerializedRecreation(stage: \\\"track\\\")",
+      "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests.OnlyProvenPreSchedulingFailuresCanSettleAfterSerializedRecreation(stage: \\\"schedule\\\")",
+      "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests.CandidateRedeliveryAndFailedRetryCannotCertifyUnknownLegacyCoverage(failedRetry: False)",
+      "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests.CandidateRedeliveryAndFailedRetryCannotCertifyUnknownLegacyCoverage(failedRetry: True)"
+    ]
+  },
+  "memories-rollback-regressions": {
+    "expectedRegressions": [
+      "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.ActualSchedulerCannotReuseCompletedHistoricalWorkflowWithUnregisteredChunkArtifacts",
+      "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.ActualAcceptedScheduleLostAcknowledgementRecoversOriginalDurableAdmission"
+    ],
+    "passing": []
+  },
+  "process-focused": {
+    "expectedRegressions": [],
+    "passing": [
+      "Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessLifetimeTests.IsolatedForeignParentPidReuseBeforeIdentityReadRefusesQualificationAsync",
+      "Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessLifetimeTests.IsolatedPidReuseDuringRoleReadRefusesQualificationAsync",
+      "Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessLifetimeTests.UnmatchedNestedSelectorCannotQualifyPidReuseAsync",
+      "Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessCaptureTests.ForeignMissingOrMalformedParentRefusesAndRetainsIndependentSiblings(status: \\\"PPid: 9\\\")",
+      "Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessCaptureTests.ForeignMissingOrMalformedParentRefusesAndRetainsIndependentSiblings(status: \\\"Name: dapr\\\")",
+      "Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessCaptureTests.ForeignMissingOrMalformedParentRefusesAndRetainsIndependentSiblings(status: \\\"PPid: invalid\\\")",
+      "Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessCaptureTests.ForeignMissingOrMalformedParentRefusesAndRetainsIndependentSiblings(status: \\\"PPid: 1\\\\nPPid: 1\\\")"
+    ]
+  },
+  "process-rollback-fixture": {
+    "expectedRegressions": [
+      "Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessCaptureTests.ForeignMissingOrMalformedParentRefusesAndRetainsIndependentSiblings(status: \\\"PPid: 9\\\")",
+      "Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessCaptureTests.ForeignMissingOrMalformedParentRefusesAndRetainsIndependentSiblings(status: \\\"Name: dapr\\\")",
+      "Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessCaptureTests.ForeignMissingOrMalformedParentRefusesAndRetainsIndependentSiblings(status: \\\"PPid: invalid\\\")",
+      "Hexalith.Parties.IntegrationTests.Topology.OrdinaryLauncherProcessCaptureTests.ForeignMissingOrMalformedParentRefusesAndRetainsIndependentSiblings(status: \\\"PPid: 1\\\\nPPid: 1\\\")"
+    ],
+    "passing": []
+  }
+}

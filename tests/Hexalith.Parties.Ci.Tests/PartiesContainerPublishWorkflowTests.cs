@@ -89,6 +89,21 @@ public sealed class PartiesContainerPublishWorkflowTests
         workflow.ShouldNotContain("commitlint.yml@main");
     }
 
+    /// <summary>Retains local namespace discovery separately from focused CI and strict runtime qualification.</summary>
+    [Fact]
+    public void NamespaceControlsRetainOrdinaryLocalAndStrictQualificationSelections()
+    {
+        string local = CiTestPaths.ReadRepoFile("scripts/test.ps1");
+        local.ShouldContain("Hexalith.Parties.IntegrationTests");
+        local.ShouldContain("\"topology\" { $topologyProjects }");
+        local.ShouldContain("\"all\" { $allProjects }");
+        string ci = CiTestPaths.ReadRepoFile(".github/workflows/ci.yml");
+        ci.ShouldNotContain("OrdinaryLauncherProcessLifetimeTests");
+        string documentation = CiTestPaths.ReadRepoFile("tests/README.md");
+        documentation.ShouldContain("PARTIES_PROCESS_NAMESPACE_REQUIRED=true");
+        documentation.ShouldContain("-failSkips");
+    }
+
     [Fact]
     public void CiWorkflowDelegatesToSharedDomainCiWithPartiesTestLanes()
     {

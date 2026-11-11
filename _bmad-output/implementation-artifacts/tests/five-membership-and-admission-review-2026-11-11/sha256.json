@@ -1,0 +1,17 @@
+{
+  "README.md": "b313c7537fd61eb7a41bbf0ecda66b79075f5d00a2501b8552bfa577b04d5b85",
+  "architecture-focused.log.gz": "976c2ffff8f2ac1a3ebbdf6591663462a061ffb191a362935336e635a8c96161",
+  "builds-ancestors.log.gz": "1773a9a0cd499919768a6d25725cf69a5cf54524afe187e0ad7edbe889849b9b",
+  "cleanup.json": "18ead667e7b40e0491360763299343104c44ace29e033b56de4654d3d165c047",
+  "commands.json": "57e758c0b61345f7e9be5ba9b0b3317010d97525b5b4f86f82bf730944d42e99",
+  "memories-focused.xml.gz": "70edcaf72ba20630c9611750ded0ef989c1c07b50f90726d6bace2c737385014",
+  "memories-rollback-baseline.xml.gz": "a936efeabd022c7b69b2d4ab918c2e809c8ebd6230e787ae6e4814b426773450",
+  "memories-rollback-regressions.xml.gz": "1ec3153c6d5b69088940d31e0ab7f122417a91536a6ec3b1bc52e08676774b03",
+  "named-controls.json": "d12392542b479d9654012e75d41265be71158e419a6996b046630ed1839a197e",
+  "process-focused.xml.gz": "c2053b86ce9a897d5a51cfe3eaf977562702b42a34afed6f76273ad16baab6ce",
+  "process-rollback-fixture.xml.gz": "7d999f3bfb126e52f629b9e24855255e518808e4eb927f21a8b09bd148aabd03",
+  "receipts.json": "b51e2cb367d2f22fc7164a69567b6d7fcd63a069a39fe7a34eae8ebf7f4e8789",
+  "rollback.json": "aaef5b6dbea05e4e2136b41bf89797fb096c7e90300d950b7d95e95aa0eeed02",
+  "signalr-focused.log.gz": "d3101f3aa4ae5898b036fde303292a615deeb2fa10408d55e9bdbc9ab7f25c05",
+  "working-source-hashes.json": "73c0b61a60fbc87c90c49afd52896c4d2cd5d0db3f3f400988cbb2964b241b72"
+}

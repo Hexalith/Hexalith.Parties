@@ -1,0 +1,55 @@
+{
+  "baselineGitBlobSha256": {
+    "src/Hexalith.Memories.Server/Activities/Cases/ScheduleAnnotationIngestionActivity.cs": "a1c5e5256ab66b0575571fa78109e11de93b20883ebe78e9898658567aa24188",
+    "src/Hexalith.Memories.Server/Activities/Ingestion/AdmitSourceInventoryActivity.cs": "5116cdd70a77f2ad4d5c7d599d33eb0522e2ca6490996a909b97d15e2e08e8ce",
+    "src/Hexalith.Memories.Server/Ingestion/DaprIngestionWorkflowScheduler.cs": "ae09f671e5a7108bfc5c925894ef78464643bccedc78d208efbe37bd4e9d2a88",
+    "src/Hexalith.Memories.Server/Ingestion/SourceInventoryStore.cs": "817f34b3864a46682890666df1cbb7ab0799e80504d471b6a30a9bcd3d7cfeb7"
+  },
+  "baselinePassed": 6,
+  "baselineReceipt": "memories-rollback-baseline.xml.gz",
+  "baselineRevision": "43d2d72f7170a29a58b6046f69e05c9ad9734701",
+  "binarySha256": {
+    "eventstore/src/Hexalith.EventStore.SignalR/bin/Debug/net10.0/Hexalith.EventStore.SignalR.dll": "32ec3f974911e590113fd4bfe491ccaf8a615a3f2f39b9f98331e184c0db5464",
+    "eventstore/tests/Hexalith.EventStore.SignalR.Tests/bin/Debug/net10.0/Hexalith.EventStore.SignalR.Tests.dll": "854b5f0b64f83f9cebc9e50ae132be81f911324c98ea808c3647b5a7e94f6820",
+    "memories-rollback/src/Hexalith.Memories.Server/bin/Debug/net10.0/Hexalith.Memories.Server.dll": "39cbe62e5345a371b9ee68098cfb78dbfc7ab33776a41c434da1ffb3705f00be",
+    "memories-rollback/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll": "ad5c8f76fbae809b10678df5042a9c0927300879aacf3301378ca5e78dcc12b8",
+    "memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Hexalith.Memories.Server.dll": "951e9fafc0a549836d448fb81d1b7122dc3868952a02b01e612c68ab8f587ed6",
+    "memories/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll": "886bbb120e6125149f8425f7d234b6d4b4d8a829c10d35567de5d9c070dd4c4c",
+    "memories/tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.Tests.dll": "fbad120cc0df3072e63b77ff4fce5a4702046b132e92a0b035dff8c7f9adf858",
+    "parties/tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll": "153709bdb9b2d4cbf480665abac4dd4ad385adc83106b60efaecaabff8941a7b"
+  },
+  "comparison": "identical production source after LF/CRLF normalization; actual and baseline byte hashes retained",
+  "dependencyApproach": "BuildProjectReferences=false reuses recorded Debug dependency artifacts; owned layout restores sibling Builds imports without resetting shared worktrees",
+  "evaluatedDependencies": {
+    "current": {
+      "Dapr.Workflow/1.19.0": "package",
+      "Hexalith.EventStore.Contracts/4.2.0": "project",
+      "Hexalith.Memories.Contracts/1.0.0": "project",
+      "Shouldly/4.3.0": "package",
+      "xunit.v3/4.0.3": "package"
+    },
+    "rollback": {
+      "Dapr.Workflow/1.19.0": "package",
+      "Hexalith.EventStore.Contracts/4.2.0": "project",
+      "Hexalith.Memories.Contracts/1.0.0": "project",
+      "Shouldly/4.3.0": "package",
+      "xunit.v3/4.0.3": "package"
+    }
+  },
+  "expectedRegressions": 2,
+  "layout": "${ROLLBACK_ROOT}/workspace/references/Hexalith.Memories",
+  "partiesFixtureFailure": "All four cases reach ShouldNotContainKey(2); no missing comm/children fixture exception",
+  "partiesFixtureReceipt": "process-rollback-fixture.xml.gz",
+  "regressionReasons": [
+    "The reversed annotation admission does not produce the required historical-identity refusal before child/graph processing",
+    "The reversed scheduler attempts a second real schedule and Dapr returns AlreadyExists for the active original workflow"
+  ],
+  "regressionReceipt": "memories-rollback-regressions.xml.gz",
+  "reversedProductionFileSha256": {
+    "src/Hexalith.Memories.Server/Activities/Cases/ScheduleAnnotationIngestionActivity.cs": "e7834300517bfde1ca0cae370ebc3870c3efc2d2d7570824e3d7a3c91fb48189",
+    "src/Hexalith.Memories.Server/Activities/Ingestion/AdmitSourceInventoryActivity.cs": "5116cdd70a77f2ad4d5c7d599d33eb0522e2ca6490996a909b97d15e2e08e8ce",
+    "src/Hexalith.Memories.Server/Ingestion/DaprIngestionWorkflowScheduler.cs": "ae09f671e5a7108bfc5c925894ef78464643bccedc78d208efbe37bd4e9d2a88",
+    "src/Hexalith.Memories.Server/Ingestion/SourceInventoryStore.cs": "817f34b3864a46682890666df1cbb7ab0799e80504d471b6a30a9bcd3d7cfeb7"
+  },
+  "status": "previous MSB4019 import blocker resolved"
+}

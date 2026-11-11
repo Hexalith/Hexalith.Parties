@@ -1,0 +1,129 @@
+{
+  "binarySha256": {
+    "references/Hexalith.EventStore/src/Hexalith.EventStore.SignalR/bin/Debug/net10.0/Hexalith.EventStore.SignalR.dll": "91390f06e264257e54ee1785ccd3f4302945aca0fd7cb8ec8c46b4181ae823b4",
+    "references/Hexalith.EventStore/tests/Hexalith.EventStore.SignalR.Tests/bin/Debug/net10.0/Hexalith.EventStore.SignalR.Tests.dll": "02b889f65fce0077cdb16697d78bb430462ba2a9216b490362281d266ed01ebc",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Hexalith.Memories.Server.dll": "d69a0d7db9a8e685c362697c34df8f34b3070eac77462fc600c5cb36a46e8133",
+    "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll": "e8179ee6c2e0781b5dba71d4d82c14cf509db37975275d5a0e76a1906e86f286",
+    "tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll": "a02aaf5b35fe341484d1203e8984e527c6d3e162bd9bfc436cca2c8e1b6249de",
+    "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll": "ade7ab8c9ccc63e59a3c8328354560af9114a902990f3ff731a19ba1fe2b77a3"
+  },
+  "cleanup": [
+    {
+      "absent": true,
+      "inspectionExitCode": 1,
+      "ownedContainerIdPrefix": "5a921e581500"
+    },
+    {
+      "absent": true,
+      "inspectionExitCode": 1,
+      "ownedContainerIdPrefix": "64cda3c3c89e"
+    },
+    {
+      "absent": true,
+      "inspectionExitCode": 1,
+      "ownedContainerIdPrefix": "874725fff029"
+    },
+    {
+      "absent": true,
+      "inspectionExitCode": 1,
+      "ownedContainerIdPrefix": "b5a3f34ccfe6"
+    },
+    {
+      "absent": true,
+      "inspectionExitCode": 1,
+      "ownedContainerIdPrefix": "fff28f8f3545"
+    }
+  ],
+  "date": "2026-11-11",
+  "evaluatedDependencies": {
+    "eventstore": {
+      "Hexalith.EventStore.Contracts/4.2.0": "project",
+      "Hexalith.EventStore.SignalR/4.2.0": "project",
+      "Microsoft.AspNetCore.SignalR.Client/10.0.14": "package",
+      "Shouldly/4.3.0": "package",
+      "xunit.v3/4.0.3": "package"
+    },
+    "memories": {
+      "Dapr.Workflow/1.19.0": "package",
+      "Hexalith.EventStore.Contracts/4.2.0": "project",
+      "Hexalith.Memories.Contracts/1.0.0": "project",
+      "Shouldly/4.3.0": "package",
+      "xunit.v3/4.0.3": "package"
+    },
+    "parties": {
+      "Hexalith.EventStore.Contracts/4.2.0": "package",
+      "Hexalith.EventStore.SignalR/4.2.0": "package",
+      "Hexalith.Memories.Contracts/3.0.25": "package",
+      "Microsoft.AspNetCore.SignalR.Client/10.0.14": "package",
+      "Shouldly/4.3.0": "package",
+      "xunit.v3/4.0.3": "package"
+    }
+  },
+  "gates": {
+    "I16Parity": "unvalidated",
+    "deployment": "not qualified",
+    "memoriesPurgedOrUnavailableHistory": "open: no bounded authority distinguishes never-used from purged historical identity with unregistered artifacts",
+    "packagePublicationAndAdoption": "not performed",
+    "parentReviewCommitPushAndFinalSourceStamps": "pending"
+  },
+  "nativeOutcomes": {
+    "ci-selection": {
+      "errors": 0,
+      "failed": 0,
+      "passed": 71,
+      "skipped": 0,
+      "total": 71
+    },
+    "eventstore-rollback": {
+      "errors": 0,
+      "failed": 6,
+      "passed": 57,
+      "skipped": 0,
+      "total": 63
+    },
+    "eventstore-signalr": {
+      "errors": 0,
+      "failed": 0,
+      "passed": 63,
+      "skipped": 0,
+      "total": 63
+    },
+    "memories-producer-green": {
+      "errors": 0,
+      "failed": 0,
+      "passed": 64,
+      "skipped": 0,
+      "total": 64
+    },
+    "memories-reuse-red": {
+      "errors": 0,
+      "failed": 1,
+      "passed": 0,
+      "skipped": 0,
+      "total": 1
+    },
+    "process-rollback": {
+      "errors": 0,
+      "failed": 7,
+      "passed": 30,
+      "skipped": 0,
+      "total": 37
+    },
+    "process-strict": {
+      "errors": 0,
+      "failed": 0,
+      "passed": 37,
+      "skipped": 0,
+      "total": 37
+    }
+  },
+  "rollbackNotes": [
+    "Isolated Memories rollback build is blocked by MSB4019 in sibling EventStore Builds imports; actual pre-correction runtime red remains separately retained",
+    "Isolated source mirrors; no shared checkout was reset",
+    "Initial broad Parties mirror build was blocked by symlinked UI dependencies; focused IntegrationTests build reused recorded Release dependency artifacts",
+    "Initial Builds baseline reader blocked on FIFO; final regression runs FIFO admission in a bounded subprocess and retains expected timeout errors",
+    "Memories pre-correction real scheduling result is separate from the final source-green receipt"
+  ],
+  "schema": "hexalith.parties.membership-admission-evidence.v1",
+  "status": "implementation-tested-parent-review-and-adoption-pending"
+}

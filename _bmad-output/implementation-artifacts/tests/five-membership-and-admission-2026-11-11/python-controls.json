@@ -1,0 +1,18 @@
+{
+  "builds-green": {
+    "privateOriginalSha256": "e0c9ec38eaa1fb971e2686b7654c53540d064310505c41ebea6bfe934d5c96da",
+    "summary": "run-module-integration: declared diagnostic retention refused after exact cleanup (ValueError)\nrun-module-integration: declared diagnostic retention refused after exact cleanup (ValueError)\nrun-module-integration: declared diagnostic retention refused after exact cleanup (ValueError)\n......\n----------------------------------------------------------------------\nRan 73 tests in 22.432s\n\nOK"
+  },
+  "builds-rollback": {
+    "privateOriginalSha256": "722486a975eeea2a6640cf9c6a2233667a8ffcdf9124059950651c21cc0cfaac",
+    "summary": "    with self.assertRaises((ValueError, OSError)):\n         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: (<class 'ValueError'>, <class 'OSError'>) not raised\n\n----------------------------------------------------------------------\nRan 73 tests in 32.828s\n\nFAILED (failures=6, errors=3)"
+  },
+  "current-owner-reader": {
+    "privateOriginalSha256": "7b219d07630688448eeca3f47071c0b0667ee1c39855dd588f7401959b5967cf",
+    "summary": "...............................\n----------------------------------------------------------------------\nRan 31 tests in 0.154s\n\nOK"
+  },
+  "lifecycle-consumer": {
+    "privateOriginalSha256": "b175c4c107b925d2621e671a760d68a0d9e13b7a776a39fc1604932be6c7c585",
+    "summary": ".{\"kind\": \"finalizer-result\", \"observedAtUtc\": \"2026-11-11T11:10:04.049601+00:00\", \"failures\": [{\"label\": \"passing\", \"failureCode\": \"HXLQ102\", \"failureType\": \"ValueError\", \"redacted\": true}], \"issuedOwners\": 0, \"allocationStatus\": \"unverified\", \"issuedOwnersCleanupVerified\": false, \"candidateAcceptance\": false}\n{\"classification\": \"local-process-control\", \"boundary\": \"released-without-receipt\", \"actualChildPid\": 1177115, \"payloadExecuted\": true, \"nativeOwnerIssued\": false, \"finalizer\": {\"kind\": \"finalizer-result\", \"observedAtUtc\": \"2026-11-11T11:10:04.049601+00:00\", \"failures\": [{\"label\": \"passing\", \"failureCode\": \"HXLQ102\", \"failureType\": \"ValueError\", \"redacted\": true}], \"issuedOwners\": 0, \"allocationStatus\": \"unverified\", \"issuedOwnersCleanupVerified\": false, \"candidateAcceptance\": false}}\n.{\"kind\": \"finalizer-result\", \"observedAtUtc\": \"2026-11-11T11:10:04.057862+00:00\", \"failures\": [{\"label\": \"peer\", \"failureCode\": \"HXLQ102\", \"failureType\": \"ValueError\", \"redacted\": true}, {\"label\": \"passing\", \"failureCode\": \"HXLQ102\", \"failureType\": \"ValueError\", \"redacted\": true}], \"issuedOwners\": 0, \"allocationStatus\": \"unverified\", \"issuedOwnersCleanupVerified\": false, \"candidateAcceptance\": false}\n...................................................................................................\n----------------------------------------------------------------------\nRan 140 tests in 6.493s\n\nOK"
+  }
+}
