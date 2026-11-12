@@ -744,3 +744,12 @@ references/Hexalith.Platform|488723fd7efbccbab3bccdae3be4ad79b05a4994|validated-
 
 # Runtime provisioning fix verified by shared preparation and release workflow controls.
 references/Hexalith.Builds|9f85c64beae32befe050240526af398063e81eba|validated-advance|origin/main@9f85c64beae32befe050240526af398063e81eba|codex-agent|2026-11-11
+
+# 2026-11-12 current release task: the user explicitly authorized these source
+# selections and waived human validation. codex-agent records that authorization,
+# rather than a human review or unseen Parties native/release acceptance.
+# Builds6ad: signed4.48.2; exact CI43146494714 all10 jobs passed.
+# Platformf99: qualifiedv1.11.0; Tuple43159448171 andCatalog43159448198 passed.
+# All owning Parties automated package, native, identity and release gates remain required.
+references/Hexalith.Builds|6ad5854aa14a9950e1fbfc32d7e27953a1c4b82b|validated-advance|v4.48.2@6ad5854aa14a9950e1fbfc32d7e27953a1c4b82b|codex-agent|2026-11-12
+references/Hexalith.Platform|f99f51c3053fe0b0292acad461d78c833ec156cc|validated-advance|v1.11.0@f99f51c3053fe0b0292acad461d78c833ec156cc|codex-agent|2026-11-12
