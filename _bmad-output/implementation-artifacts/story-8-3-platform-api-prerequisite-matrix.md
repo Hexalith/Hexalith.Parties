@@ -139,13 +139,13 @@ Selection does not revalidate historical parity receipts. All six canonical pari
 | Root dependency | Current source identity | Release use |
 | --- | --- | --- |
 | AI.Tools | `8a3885dd22aea88edd57771cfe592c382df2c583` (`8a3885dd`) | Source selection only; qualification requires its own executed proof. |
-| Builds | `9f85c64beae32befe050240526af398063e81eba` (`v4.48.0-7-g9f85c64b`) | Source selection only; qualification requires its own executed proof. |
+| Builds | `6ad5854aa14a9950e1fbfc32d7e27953a1c4b82b` (`v4.48.2`) | Source selection only; qualification requires its own executed proof. |
 | Commons | `11555ace9efcae2928a00122dcba91243e5a8a1a` (`v2.30.10`) | Source selection only; qualification requires its own executed proof. |
 | EventStore | `06ab5c16d1dc38e5e3f29ff06824b2c6724e6ea3` (`v4.2.0-25-g06ab5c16`) | Source selection only; qualification requires its own executed proof. |
 | FrontComposer | `57aa756c02edbae4294412885823533308b7db0d` (`v4.7.6-33-g57aa756c`) | Source selection only; qualification requires its own executed proof. |
 | McpCli | `94f5ee691c70dcb30e893c50629d95afb63d216f` (`v2.0.1-74-g94f5ee69`) | Source selection only; qualification requires its own executed proof. |
 | Memories | `13fdb88a3267626b14f75e16cc2de58dcfbbb2bb` (`v3.0.26-5-g13fdb88a`) | Source selection only; qualification requires its own executed proof. |
-| Platform | `488723fd7efbccbab3bccdae3be4ad79b05a4994` (`v1.10.0-38-g488723fd`) | Source selection only; qualification requires its own executed proof. |
+| Platform | `f99f51c3053fe0b0292acad461d78c833ec156cc` (`v1.11.0`) | Source selection only; qualification requires its own executed proof. |
 | PolymorphicSerializations | `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`) | Source selection only; qualification requires its own executed proof. |
 | Tenants | `6188ea48cab9fdf4207072135c66aab5a7b7fe32` (`v7.0.7-5-g6188ea48`) | Source selection only; qualification requires its own executed proof. |
 

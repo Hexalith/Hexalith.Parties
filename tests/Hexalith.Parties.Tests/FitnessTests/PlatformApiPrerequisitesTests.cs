@@ -67,13 +67,13 @@ public sealed class PlatformApiPrerequisitesTests
     private static readonly IReadOnlyDictionary<string, string> CurrentSelectedGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["references/Hexalith.AI.Tools"] = "8a3885dd22aea88edd57771cfe592c382df2c583",
-        ["references/Hexalith.Builds"] = "9f85c64beae32befe050240526af398063e81eba",
+        ["references/Hexalith.Builds"] = "6ad5854aa14a9950e1fbfc32d7e27953a1c4b82b",
         ["references/Hexalith.Commons"] = "11555ace9efcae2928a00122dcba91243e5a8a1a",
         ["references/Hexalith.EventStore"] = "06ab5c16d1dc38e5e3f29ff06824b2c6724e6ea3",
         ["references/Hexalith.FrontComposer"] = "57aa756c02edbae4294412885823533308b7db0d",
         ["references/Hexalith.McpCli"] = "94f5ee691c70dcb30e893c50629d95afb63d216f",
         ["references/Hexalith.Memories"] = "13fdb88a3267626b14f75e16cc2de58dcfbbb2bb",
-        ["references/Hexalith.Platform"] = "488723fd7efbccbab3bccdae3be4ad79b05a4994",
+        ["references/Hexalith.Platform"] = "f99f51c3053fe0b0292acad461d78c833ec156cc",
         ["references/Hexalith.PolymorphicSerializations"] = "bce4eb9f45c6b131b960ab4fa39e50ff01e51960",
         ["references/Hexalith.Tenants"] = "6188ea48cab9fdf4207072135c66aab5a7b7fe32",
     };
@@ -96,13 +96,13 @@ public sealed class PlatformApiPrerequisitesTests
     private static readonly IReadOnlyDictionary<string, string> CurrentSelectedSourceDescribes = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["references/Hexalith.AI.Tools"] = "8a3885dd",
-        ["references/Hexalith.Builds"] = "v4.48.0-7-g9f85c64b",
+        ["references/Hexalith.Builds"] = "v4.48.2",
         ["references/Hexalith.Commons"] = "v2.30.10",
         ["references/Hexalith.EventStore"] = "v4.2.0-25-g06ab5c16",
         ["references/Hexalith.FrontComposer"] = "v4.7.6-33-g57aa756c",
         ["references/Hexalith.McpCli"] = "v2.0.1-74-g94f5ee69",
         ["references/Hexalith.Memories"] = "v3.0.26-5-g13fdb88a",
-        ["references/Hexalith.Platform"] = "v1.10.0-38-g488723fd",
+        ["references/Hexalith.Platform"] = "v1.11.0",
         ["references/Hexalith.PolymorphicSerializations"] = "v1.19.8-1-gbce4eb9f",
         ["references/Hexalith.Tenants"] = "v7.0.7-5-g6188ea48",
     };

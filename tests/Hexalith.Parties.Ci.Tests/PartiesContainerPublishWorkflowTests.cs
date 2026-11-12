@@ -7,9 +7,9 @@ namespace Hexalith.Parties.Ci.Tests;
 public sealed class PartiesContainerPublishWorkflowTests
 {
     private const int ExpectedPackageCount = 11;
-    private const string BuildsCiSha = "9f85c64beae32befe050240526af398063e81eba";
-    private const string BuildsValidationSha = "332b2c144defba546fe0a09626a4a72f2340e22f";
-    private const string BuildsExecutionSha = "9f85c64beae32befe050240526af398063e81eba";
+    private const string BuildsCiSha = "6ad5854aa14a9950e1fbfc32d7e27953a1c4b82b";
+    private const string BuildsValidationSha = "6ad5854aa14a9950e1fbfc32d7e27953a1c4b82b";
+    private const string BuildsExecutionSha = "6ad5854aa14a9950e1fbfc32d7e27953a1c4b82b";
     private static readonly TimeSpan WorkflowReadTimeout = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan PublicationPreflightTimeout = TimeSpan.FromSeconds(10);
 

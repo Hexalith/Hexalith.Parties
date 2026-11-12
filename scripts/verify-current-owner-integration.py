@@ -35,7 +35,7 @@ PERSISTENCE_CASE = "Hexalith.Parties.Platform.IntegrationTests.PartyEnvironmentT
 # TestResultWriter, validates the whole document against that schema before publishing it, so these readers need no
 # schema validator: this stdlib guard only detects producer drift without adding a CI dependency. A test binds
 # RESULT_SCHEMA_BUILDS_COMMIT to the committed Builds gitlink, so a Builds bump fails until these keys are re-derived.
-RESULT_SCHEMA_BUILDS_COMMIT = "9f85c64beae32befe050240526af398063e81eba"
+RESULT_SCHEMA_BUILDS_COMMIT = "6ad5854aa14a9950e1fbfc32d7e27953a1c4b82b"
 RESULT_SCHEMA_SHA256 = "9773678febac38025fae837154341d9036ce8aa94e66b0d30c7e15ee668d7e39"
 RESULT_REQUIRED = frozenset({"schema", "policyId", "bindings", "diagnostics", "terminal", "termination", "retention", "cleanup"})
 RESULT_BINDINGS_REQUIRED = frozenset({"run", "tool", "candidate", "decision", "reuseLineage", "environment", "artifacts", "suite",
