@@ -36,12 +36,12 @@
       <DefineConstants>$(DefineConstants);HES_CANCELLABLE_PROJECTIONS</DefineConstants>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(HexalithFrontComposerFromSource)' == 'true' or '$(HexalithFrontComposerVersion)' == '4.7.1' or '$(HexalithFrontComposerVersion)' == '4.7.3' or '$(HexalithFrontComposerVersion)' == '4.7.4' or '$(HexalithFrontComposerVersion)' == '4.7.5' or '$(HexalithFrontComposerVersion)' == '4.7.6'">
+    <PropertyGroup Condition="'$(HexalithFrontComposerFromSource)' == 'true' or '$(HexalithFrontComposerVersion)' == '4.7.1' or '$(HexalithFrontComposerVersion)' == '4.7.3' or '$(HexalithFrontComposerVersion)' == '4.7.4' or '$(HexalithFrontComposerVersion)' == '4.7.5' or '$(HexalithFrontComposerVersion)' == '4.7.6' or '$(HexalithFrontComposerVersion)' == '5.0.0'">
       <DefineConstants>$(DefineConstants);HFC_SHARED_UI</DefineConstants>
     </PropertyGroup>
-    <!-- 4.7.5 and 4.7.6 publish readiness, operation witnesses, retry clocks and recovery generations.
+    <!-- 4.7.5, 4.7.6 and the measured 5.0.0 cohort publish readiness, operation witnesses, retry clocks and recovery generations.
          Older or unknown packages retain local reconciliation. -->
-    <PropertyGroup Condition="'$(HexalithFrontComposerFromSource)' == 'true' or '$(HexalithFrontComposerVersion)' == '4.7.5' or '$(HexalithFrontComposerVersion)' == '4.7.6'">
+    <PropertyGroup Condition="'$(HexalithFrontComposerFromSource)' == 'true' or '$(HexalithFrontComposerVersion)' == '4.7.5' or '$(HexalithFrontComposerVersion)' == '4.7.6' or '$(HexalithFrontComposerVersion)' == '5.0.0'">
       <DefineConstants>$(DefineConstants);HFC_SHARED_RECONCILE_READINESS</DefineConstants>
     </PropertyGroup>
   </Target>

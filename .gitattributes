@@ -31,3 +31,8 @@ tests/Hexalith.Parties.IntegrationTests/Topology/MemoriesAuthoritativePersistenc
 tests/Hexalith.Parties.Ci.Tests/PartiesContainerPublishWorkflowTests.cs whitespace=cr-at-eol
 tests/Hexalith.Parties.Ci.Tests/ReleaseArtifactVerificationTests.cs whitespace=cr-at-eol
 tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs whitespace=cr-at-eol
+
+# Preserve the existing CRLF byte convention in current browser capability checks.
+tests/Hexalith.Parties.Ci.Tests/AspireRuntimePreparationTests.cs whitespace=cr-at-eol
+tests/e2e/helpers/frontcomposer-assets.ts whitespace=cr-at-eol
+tests/e2e/playwright.config.ts whitespace=cr-at-eol

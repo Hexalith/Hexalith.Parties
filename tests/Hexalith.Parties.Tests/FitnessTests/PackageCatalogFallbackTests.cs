@@ -64,9 +64,11 @@ public sealed class PackageCatalogFallbackTests
         }
     }
 
-    /// <summary>A missing first catalog activates root fallbacks before the next existing catalog supplies items.</summary>
-    [Fact]
-    public void MissingFirstCatalogUsesRootFallbacksBeforeTheNextAvailableCatalog()
+    /// <summary>Any declared caller catalog supplies versions before standalone fallbacks.</summary>
+    [Theory]
+    [InlineData("Hexalith2BuildPackageProps")]
+    [InlineData("Hexalith3BuildPackageProps")]
+    public void MissingFirstCatalogDefersToTheNextAvailableCatalog(string selectedCatalog)
     {
         string root = RepositoryRoot.Locate();
         string directory = Path.Combine(Path.GetTempPath(), $"parties-missing-catalog-{Guid.NewGuid():N}");
@@ -77,13 +79,15 @@ public sealed class PackageCatalogFallbackTests
             var properties = new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["Hexalith1BuildPackageProps"] = Path.Combine(directory, "absent.props"),
-                ["Hexalith2BuildPackageProps"] = catalog,
+                ["Hexalith2BuildPackageProps"] = Path.Combine(directory, "absent-second.props"),
+                ["Hexalith3BuildPackageProps"] = Path.Combine(directory, "absent-third.props"),
+                [selectedCatalog] = catalog,
             };
             IReadOnlyDictionary<string, string> versions = EffectivePackageVersions.ReadPackages(root,
                 isolateEnvironment: true, globalProperties: properties);
             foreach (var family in Families)
             {
-                versions[family.Package].ShouldBe(family.Fallback, family.Property);
+                versions[family.Package].ShouldBe(family.Caller, family.Property);
             }
         }
         finally
