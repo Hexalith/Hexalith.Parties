@@ -14,11 +14,13 @@ import re
 import select
 import shutil
 import signal
+import socket
 import stat
 import subprocess
 import sys
 import time
 from datetime import datetime, timedelta, timezone
+from urllib.parse import urlsplit
 from xml.etree import ElementTree
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -1416,33 +1418,34 @@ class Qualification:
         self.observe('attached-terminal-result', launch=entry['label'], firstTerminal=first, terminationVerified=True)
         return result
 
-    def verify_attached_command(self, entry, result):
+    def verify_attached_command(self, entry, result, intentional_failure=False):
         terminal = result['terminal']
         outcome, cause = terminal['outcome'], terminal['cause']
         if outcome == 'passed':
             expected = (0, 'Success', None, 'None')
         elif outcome in ('withdrawn', 'cancelled'):
             expected = (130, 'Cancelled', 'HXC130', 'Cancelled')
-        elif cause == 'test-failure':
-            expected = (4, 'ProductOrTest', 'HXT007', 'ProductOrTest')
         else:
+            # Mirror Builds AttachedSuiteCommand.Relay: a failed outcome relays its ledger exit and rule, and an
+            # undefined, Success or Cancelled exit relays as ProductOrTest.
             execution = self.attached_admission(entry)['execution']
             code = execution.get('exitCode')
             categories = {1: ('UsageOrManifest', 'Usage'), 2: ('PrerequisiteUnavailable', 'PrerequisiteUnavailable'),
                           3: ('TopologyOrLifecycle', 'TopologyOrLifecycle'), 4: ('ProductOrTest', 'ProductOrTest'),
                           5: ('PersistedState', 'PersistedState'), 6: ('EvidenceSchemaOrPolicy', 'EvidencePolicy')}
-            require(code in categories, 'Attached failure lacks its original CLI exit mapping')
+            code = code if type(code) is int and code in categories else 4
             name, category = categories[code]
             expected = (code, name, execution.get('ruleId') or 'HXT007', category)
+            require(not intentional_failure or (cause == 'test-failure' and expected == (4, 'ProductOrTest', 'HXT007', 'ProductOrTest')),
+                    'Attached failure is not the intentional product assertion')
         child = self.children.get(entry['label'])
         if child is not None:
             require(child.poll() is not None, 'Attached command has not exited')
             entry['commandExitCode'] = child.returncode
             self.save()
         elif entry.get('commandExitCode') is None:
-            identity = {key: entry[key] for key in ('pid', 'birth', 'processGroup') if key in entry}
+            # recover_launch refuses a launch record rebound to another process identity.
             record = self.recover_launch(entry)
-            require(all(record.get(key) == value for key, value in identity.items()), 'Attached CLI exit record changed its launch identity')
             require(record['gateStatus'] == 'released' and type(record.get('commandExitCode')) is int
                     and utc(record['releasedAtUtc']) <= utc(record.get('commandExitedAtUtc')),
                     'Attached CLI lacks a durable observed exit code')
@@ -1479,8 +1482,15 @@ class Qualification:
         self.ready(item)
         self.ready(peer)
         before, other = self.peer_scope(item), self.peer_scope(peer)
-        plan = read(Path(self.state(item)['workspace']) / 'plan.json')
-        challenger = self.begin('collision-challenger', eventstore_port=plan['ports']['eventStoreHttp'], wait_workspace=False)
+        workspace = Path(self.state(item)['workspace'])
+        port = read(workspace / 'plan.json')['ports']['eventStoreHttp']
+        # A claim conflict alone is no live-endpoint proof: the owner's EventStore must serve its claimed plan port.
+        endpoint = urlsplit(str(read(workspace / 'readiness.json').get('eventStoreEndpoint') or ''))
+        require(endpoint.scheme == 'http' and endpoint.hostname in ('localhost', '127.0.0.1', '::1') and endpoint.port == port,
+                'Owner EventStore is not bound to its claimed plan port')
+        with socket.create_connection((endpoint.hostname, port), timeout=5):
+            pass
+        challenger = self.begin('collision-challenger', eventstore_port=port, wait_workspace=False)
         self.children[challenger['label']].wait(timeout=690)
         require(self.capture_result(challenger) != 0, 'Explicit endpoint collision unexpectedly passed')
         public = read(Path(challenger['publicResult']))
@@ -1545,7 +1555,7 @@ class Qualification:
         self.children[entry['label']].wait(timeout=220)
         expected = ('failed', 'test-failure') if scenario == 'attached-failure' else ('withdrawn', 'hold-expired' if peer else cancellation_cause)
         result = self.attached_result(entry, *expected)
-        self.verify_attached_command(entry, result)
+        self.verify_attached_command(entry, result, intentional_failure=scenario == 'attached-failure')
         if scenario != 'owner-cancellation':
             require(self.state(item).get('testRun') is None, 'Attached outcome replaced the active owner outcome')
             if peer:

@@ -510,7 +510,7 @@ class ScenarioOrchestrationTests(unittest.TestCase):
             value.down.assert_called_once()
 
     def test_collision_requires_exact_blocker_and_unchanged_peer(self):
-        for fault in (None, 'wrong-rule', 'wrong-owner', 'changed-peer'):
+        for fault in (None, 'wrong-rule', 'wrong-owner', 'changed-peer', 'wrong-bound-port', 'remote-endpoint', 'not-listening'):
             with self.subTest(fault=fault), tempfile.TemporaryDirectory() as temporary:
                 root = Path(temporary)
                 value = object.__new__(Q.Qualification)
@@ -518,6 +518,9 @@ class ScenarioOrchestrationTests(unittest.TestCase):
                 challenger = {'label': 'collision-challenger', 'publicResult': str(root / 'collision.json')}
                 owner = {'runId': 'a' * 32}
                 Q.write(root / 'plan.json', {'ports': {'eventStoreHttp': 23456}})
+                host = 'eventstore.example' if fault == 'remote-endpoint' else 'localhost'
+                Q.write(root / 'readiness.json', {'eventStoreEndpoint': f'http://{host}:{40645 if fault == "wrong-bound-port" else 23456}'})
+                connection = unittest.mock.MagicMock(side_effect=ConnectionRefusedError('closed') if fault == 'not-listening' else None)
                 public = {'outcome': {'ruleId': 'HXR031' if fault != 'wrong-rule' else 'HXR020'},
                           'diagnostics': [{'ruleId': 'HXR031', 'message': 'blocked by ' + ('b' * 32 if fault == 'wrong-owner' else owner['runId'])}]}
                 Q.write(Path(challenger['publicResult']), public)
@@ -533,13 +536,23 @@ class ScenarioOrchestrationTests(unittest.TestCase):
                 value.peer_scope = Mock(side_effect=[{'owner': 'original'}, {'peer': 'original'}, {'owner': 'original'}, {'peer': 'changed' if fault == 'changed-peer' else 'original'}])
                 value.control = Mock()
                 if fault is None:
-                    value.collision()
+                    with patch.object(Q.socket, 'create_connection', connection):
+                        value.collision()
+                    connection.assert_called_once_with(('localhost', 23456), timeout=5)
                     self.assertEqual(value.begin.call_args_list[-1], unittest.mock.call('collision-challenger', eventstore_port=23456, wait_workspace=False))
                     self.assertEqual(value.ready.call_args_list, [unittest.mock.call(item), unittest.mock.call(peer)])
                     self.assertEqual([record[0] for record in calls.mock_calls[:5]], ['begin', 'begin', 'ready', 'ready', 'begin'])
                     self.assertEqual(value.control.call_count, 2)
+                elif fault in ('wrong-bound-port', 'remote-endpoint', 'not-listening'):
+                    # Only a live owner endpoint on the claimed port may be challenged; a claim alone is no proof.
+                    with patch.object(Q.socket, 'create_connection', connection), \
+                            self.assertRaises(ConnectionRefusedError if fault == 'not-listening' else ValueError):
+                        value.collision()
+                    self.assertEqual(value.begin.call_count, 2)
+                    value.control.assert_not_called()
                 else:
-                    with self.assertRaises(ValueError): value.collision()
+                    with patch.object(Q.socket, 'create_connection', connection), self.assertRaises(ValueError):
+                        value.collision()
                     value.control.assert_not_called()
 
     def test_startup_timeout_orchestration_preserves_actual_deadline_and_cleanup_retry(self):

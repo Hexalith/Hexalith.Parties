@@ -1,14 +1,13 @@
 """Second review regression controls; no real-service or hosted qualification credit."""
 from datetime import datetime, timedelta, timezone
-import json
 import os
 from pathlib import Path
 import re
 import signal
 import subprocess
-import time
 import sys
 import tempfile
+import time
 import unittest
 from unittest.mock import Mock, patch
 
@@ -136,11 +135,34 @@ class LineageRefusalTests(unittest.TestCase):
             with self.assertRaises(ValueError): value.invalid_handoff()
             value.control.assert_not_called()
 
+    def test_invalid_handoff_passes_only_with_exact_ended_and_unknown_refusals(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            value, _, item, _, hold = lifecycle.prepared(Path(temporary))
+            value.start = Mock(return_value=item)
+            value.attach = Mock(return_value=hold)
+            tags = []
+            def tool(owner_item, arguments, tag):
+                tags.append(tag)
+                if tag == 'invalid-handoff-end':
+                    self.assertIn('--attached-run-id=' + hold['attachedRunId'], arguments)
+                    return Mock(returncode=0), {}
+                # Builds Retry refuses an explicitly ended hold as attachment-ended, never as expired.
+                reason = 'unknown-attachment-request' if '--attachment-request-id=' + 'f' * 32 in arguments else 'attachment-ended'
+                return Mock(returncode=3), {'attachment': None, 'diagnostics': [{'ruleId': 'HXR036', 'field': reason}]}
+            value.tool = tool
+            value.control = Mock()
+            value.children = {item['label']: Mock()}
+            value.capture_result = Mock(return_value=0)
+            value.invalid_handoff()
+            self.assertEqual(tags, ['invalid-handoff-end', 'invalid-attached-lineage-attachment-ended',
+                                    'invalid-attached-lineage-unknown-attachment-request'])
+            value.control.assert_called_once_with(item, 'pass')
+
 
 class AttachedCommandTests(unittest.TestCase):
     def test_attached_exit_public_mapping_and_cleanup_diagnostics_are_verified_for_each_cause(self):
         for scenario in ('owner-cancellation', 'hold-expiry', 'attached-failure'):
-            for fault in (None, 'exit', 'outcome', 'rule', 'category', 'diagnostic', 'missing-public', 'rebound-failure'):
+            for fault in (None, 'exit', 'outcome', 'rule', 'category', 'diagnostic', 'missing-public', 'rebound-failure', 'foreign-run'):
                 with self.subTest(scenario=scenario, fault=fault), tempfile.TemporaryDirectory() as temporary:
                     value, entry = lifecycle.ScenarioOrchestrationTests().attached(Path(temporary), scenario)
                     if fault == 'exit':
@@ -151,6 +173,7 @@ class AttachedCommandTests(unittest.TestCase):
                     if fault in ('outcome', 'rule', 'category'):
                         public['outcome'][{'outcome': 'exitCode', 'rule': 'ruleId', 'category': 'category'}[fault]] = 'unexpected'
                     if fault == 'diagnostic': public['diagnostics'].append({'ruleId': 'HXT008', 'category': 'EvidencePolicy'})
+                    if fault == 'foreign-run': public['runId'] = '2' * 32  # another attached run of the same owner
                     Q.write(public_path, public)
                     if fault == 'rebound-failure':
                         if scenario != 'attached-failure': continue
@@ -169,6 +192,38 @@ class AttachedCommandTests(unittest.TestCase):
                     else:
                         value.attached_case(scenario)
                         self.assertIn('commandExitCode', entry)
+
+    def test_finalizer_mirrors_the_builds_relay_for_every_failed_outcome(self):
+        # (cause, ledger exit, ledger rule) -> (CLI exit, public exit name, category, rule) per AttachedSuiteCommand.Relay.
+        cases = [('startup-failure', 3, 'HXR033', (3, 'TopologyOrLifecycle', 'TopologyOrLifecycle', 'HXR033')),
+                 ('test-failure', 6, 'HXT008', (6, 'EvidenceSchemaOrPolicy', 'EvidencePolicy', 'HXT008')),
+                 ('test-failure', 3, 'HXT009', (3, 'TopologyOrLifecycle', 'TopologyOrLifecycle', 'HXT009')),
+                 ('test-failure', 4, 'HXT004', (4, 'ProductOrTest', 'ProductOrTest', 'HXT004')),
+                 ('startup-failure', None, None, (4, 'ProductOrTest', 'ProductOrTest', 'HXT007')),
+                 ('test-failure', 130, 'HXC130', (4, 'ProductOrTest', 'ProductOrTest', 'HXC130'))]
+        for cause, code, rule, expected in cases:
+            for fault in (None, 'category', 'exit'):
+                with self.subTest(cause=cause, code=code, fault=fault), tempfile.TemporaryDirectory() as temporary:
+                    value, entry = lifecycle.ScenarioOrchestrationTests().attached(Path(temporary), 'attached-failure')
+                    ledger = value.diagnostics(value.journal['owners'][0]) / 'attachments.json'
+                    document = Q.read(ledger)
+                    for execution in (document['attachments'][0]['execution'], entry['admission']['execution']):
+                        execution.update(cause=cause, exitCode=code, ruleId=rule)
+                    Q.write(ledger, document)
+                    exit_code = 5 if fault == 'exit' else expected[0]
+                    value.children[entry['label']].returncode = exit_code
+                    value.children[entry['label']].poll.return_value = exit_code
+                    public = Q.read(Path(entry['publicResult']))
+                    public['outcome'] = {'exitCode': expected[1], 'category': 'Usage' if fault == 'category' else expected[2], 'ruleId': expected[3]}
+                    Q.write(Path(entry['publicResult']), public)
+                    value.recover_launch = Mock(return_value={'pid': 1234, 'birth': 'original', 'gateStatus': 'released'})
+                    value.settled_child = Mock()
+                    value.attached_result = Mock(return_value={'terminal': {'outcome': 'failed', 'cause': cause}})
+                    if fault:
+                        with self.assertRaisesRegex(ValueError, 'differs'): value.finalize_attached(entry)
+                    else:
+                        value.finalize_attached(entry)
+                        self.assertEqual(entry['commandExitCode'], expected[0])
 
     def test_finalizer_checks_attached_command_and_requires_an_exit_observation(self):
         with tempfile.TemporaryDirectory() as temporary:
