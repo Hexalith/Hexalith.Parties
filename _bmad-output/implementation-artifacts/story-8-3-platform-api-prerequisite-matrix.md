@@ -136,7 +136,7 @@ The graph selects EventStore `4.2.0`, Commons `2.30.10`, PolymorphicSerializatio
 
 Selection does not revalidate historical parity receipts. All six canonical parity receipts remain Unvalidated; package publication/adoption, deployment, custody, historical completeness and rollback deletion remain separate. The fixed published public Builds/Platform cohort is unchanged; the latest source selection still requires its own upstream admission. Prior observations and approvals remain dated history below.
 
-The 2026-11-12 `/pushall` advances Commons, EventStore, FrontComposer, McpCli, Memories, PolymorphicSerializations, and Tenants to their published `origin/main` tips. Builds stays at `v4.48.2` and Platform stays at `v1.11.0`.
+The 2026-11-12 `/pushall` advances Commons, EventStore, FrontComposer, McpCli, Memories, PolymorphicSerializations, and Tenants to their published `origin/main` tips. Builds stays at `v4.48.2`; the subsequent native prerequisite selects qualified Platform `v1.11.1`. This source selection does not reuse earlier Parties native proof.
 
 | Root dependency | Current source identity | Release use |
 | --- | --- | --- |
@@ -147,7 +147,7 @@ The 2026-11-12 `/pushall` advances Commons, EventStore, FrontComposer, McpCli, M
 | FrontComposer | `56c9206167b7f18c3a95f610f814dfa39d9dcd01` (`v5.0.0-3-g56c92061`) | Source selection only; qualification requires its own executed proof. |
 | McpCli | `ab4d2dcfca150b0aa6b550a788c0f92d5ddb88ae` (`v2.0.1-89-gab4d2dcf`) | Source selection only; qualification requires its own executed proof. |
 | Memories | `f87c33c6d758534a84853e090d1824569802fffb` (`v3.0.27-4-gf87c33c6`) | Source selection only; qualification requires its own executed proof. |
-| Platform | `f99f51c3053fe0b0292acad461d78c833ec156cc` (`v1.11.0`) | Source selection only; qualification requires its own executed proof. |
+| Platform | `38402bc77ac0be3e6902002d08923c51d0e73a77` (`v1.11.1`) | Source selection only; qualification requires its own executed proof. |
 | PolymorphicSerializations | `3400fbf6a318b04fd5b9a7d91c2903727e535126` (`v1.19.9`) | Source selection only; qualification requires its own executed proof. |
 | Tenants | `b239c8e43da8a80fd872c7f4391d219be44b2d1d` (`v7.0.7-8-gb239c8e4`) | Source selection only; qualification requires its own executed proof. |
 

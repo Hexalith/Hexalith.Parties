@@ -766,3 +766,8 @@ references/Hexalith.McpCli|ab4d2dcfca150b0aa6b550a788c0f92d5ddb88ae|validated-ad
 references/Hexalith.Memories|f87c33c6d758534a84853e090d1824569802fffb|validated-advance|v3.0.27-4-gf87c33c6|cursor-agent|2026-11-12
 references/Hexalith.PolymorphicSerializations|3400fbf6a318b04fd5b9a7d91c2903727e535126|validated-advance|v1.19.9|cursor-agent|2026-11-12
 references/Hexalith.Tenants|b239c8e43da8a80fd872c7f4391d219be44b2d1d|validated-advance|v7.0.7-8-gb239c8e4|cursor-agent|2026-11-12
+
+# --- 2026-11-12 qualified native runtime source prerequisite.
+# Platform v1.11.1 peels exactly384; its5tuple/6catalog/2release jobs passed.
+# Retain signed Builds4.48.2/6ad and public SDK4.2; no futureSDK admission.
+references/Hexalith.Platform|38402bc77ac0be3e6902002d08923c51d0e73a77|validated-advance|v1.11.1@38402bc77ac0be3e6902002d08923c51d0e73a77|codex-agent|2026-11-12
