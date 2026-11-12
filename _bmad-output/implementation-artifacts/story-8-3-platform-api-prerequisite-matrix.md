@@ -132,7 +132,7 @@ all six canonical parity receipts remain Unvalidated until actually rerun.
 
 The authorized maintenance selects SDK `11.0.100` while retaining all `net10.0` targets, module CLI `4.48.0`, Aspire `13.6.5`, and UI runtime floor `10.0.15`. The compatible package catalog and standalone fallbacks are aligned. Local package build/test evidence does not establish upstream source publication or public topology qualification.
 
-The graph selects EventStore `4.2.0`, Commons `2.30.10`, PolymorphicSerializations `1.19.8`, FrontComposer `4.7.6`, Memories `3.0.26`, Tenants `7.0.7`, and McpCli `2.0.1`.
+The graph selects EventStore `4.2.0`, Commons `2.30.10`, PolymorphicSerializations `1.19.8`, FrontComposer `5.0.0`, Memories `3.0.27`, Tenants `7.0.7`, and McpCli `2.0.1`.
 
 Selection does not revalidate historical parity receipts. All six canonical parity receipts remain Unvalidated; package publication/adoption, deployment, custody, historical completeness and rollback deletion remain separate. The fixed published public Builds/Platform cohort is unchanged; the latest source selection still requires its own upstream admission. Prior observations and approvals remain dated history below.
 

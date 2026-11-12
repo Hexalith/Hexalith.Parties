@@ -962,6 +962,7 @@ public sealed class PlatformApiPrerequisitesTests
             string precedingSdkVersion = label switch
             {
                 "EventStore" => "4.1.0",
+                "FrontComposer" => "4.7.6",
                 "Memories" => "3.0.25",
                 "Tenants" => "7.0.5",
                 _ => version,
@@ -973,6 +974,7 @@ public sealed class PlatformApiPrerequisitesTests
             string previousTupleVersion = label switch
             {
                 "EventStore" => "4.0.4",
+                "FrontComposer" => "4.7.6",
                 "Tenants" => "7.0.0",
                 "Memories" => "3.0.23",
                 "McpCli" => "2.0.0",
@@ -1031,17 +1033,17 @@ public sealed class PlatformApiPrerequisitesTests
             CurrentSelectedGitlinks["references/Hexalith.Builds"] + ":Props/Directory.Packages.props");
         effectivePackages["Hexalith.EventStore.Contracts"].ShouldBe(currentEventStoreVersion);
         effectivePackages["Hexalith.Commons"].ShouldBe("2.30.10");
-        effectivePackages["Hexalith.FrontComposer.Shell"].ShouldBe("4.7.6");
+        effectivePackages["Hexalith.FrontComposer.Shell"].ShouldBe("5.0.0");
         effectivePackages["Hexalith.McpCli.Abstractions"].ShouldBe("2.0.1");
-        effectivePackages["Hexalith.Memories.Client.Rest"].ShouldBe("3.0.26");
+        effectivePackages["Hexalith.Memories.Client.Rest"].ShouldBe("3.0.27");
         effectivePackages["Hexalith.PolymorphicSerializations"].ShouldBe("1.19.8");
         effectivePackages["Hexalith.Tenants.Client"].ShouldBe("7.0.7");
         catalog.ShouldContain("<PackageVersion Include=\"Hexalith.EventStore.Contracts\" Version=\"$(HexalithEventStoreVersion)\" Condition=\"'$(UseHexalithProjectReferences)' != 'true' or !$(MSBuildProjectName.StartsWith('Hexalith.Works'))\" />");
         catalog.ShouldContain("<HexalithCommonsVersion Condition=\"'$(HexalithCommonsVersion)' == ''\">2.30.10</HexalithCommonsVersion>");
         catalog.ShouldContain("<HexalithEventStoreVersion Condition=\"'$(HexalithEventStoreVersion)' == ''\">4.2.0</HexalithEventStoreVersion>");
-        catalog.ShouldContain("<HexalithFrontComposerVersion Condition=\"'$(HexalithFrontComposerVersion)' == ''\">4.7.6</HexalithFrontComposerVersion>");
+        catalog.ShouldContain("<HexalithFrontComposerVersion Condition=\"'$(HexalithFrontComposerVersion)' == ''\">5.0.0</HexalithFrontComposerVersion>");
         catalog.ShouldContain("<HexalithMcpCliVersion Condition=\"'$(HexalithMcpCliVersion)' == ''\">2.0.1</HexalithMcpCliVersion>");
-        catalog.ShouldContain("<HexalithMemoriesVersion Condition=\"'$(HexalithMemoriesVersion)' == ''\">3.0.26</HexalithMemoriesVersion>");
+        catalog.ShouldContain("<HexalithMemoriesVersion Condition=\"'$(HexalithMemoriesVersion)' == ''\">3.0.27</HexalithMemoriesVersion>");
         catalog.ShouldContain("<HexalithPolymorphicSerializationsVersion Condition=\"'$(HexalithPolymorphicSerializationsVersion)' == ''\">1.19.8</HexalithPolymorphicSerializationsVersion>");
         catalog.ShouldContain("<HexalithTenantsVersion Condition=\"'$(HexalithTenantsVersion)' == ''\">7.0.7</HexalithTenantsVersion>");
         catalog.ShouldContain("<HexalithPartiesVersion Condition=\"'$(HexalithPartiesVersion)' == ''\">3.1.1</HexalithPartiesVersion>");
