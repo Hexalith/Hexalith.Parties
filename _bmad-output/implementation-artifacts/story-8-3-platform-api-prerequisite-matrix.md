@@ -136,18 +136,20 @@ The graph selects EventStore `4.2.0`, Commons `2.30.10`, PolymorphicSerializatio
 
 Selection does not revalidate historical parity receipts. All six canonical parity receipts remain Unvalidated; package publication/adoption, deployment, custody, historical completeness and rollback deletion remain separate. The fixed published public Builds/Platform cohort is unchanged; the latest source selection still requires its own upstream admission. Prior observations and approvals remain dated history below.
 
+The 2026-11-12 `/pushall` advances Commons, EventStore, FrontComposer, McpCli, Memories, PolymorphicSerializations, and Tenants to their published `origin/main` tips. Builds stays at `v4.48.2` and Platform stays at `v1.11.0`.
+
 | Root dependency | Current source identity | Release use |
 | --- | --- | --- |
 | AI.Tools | `8a3885dd22aea88edd57771cfe592c382df2c583` (`8a3885dd`) | Source selection only; qualification requires its own executed proof. |
 | Builds | `6ad5854aa14a9950e1fbfc32d7e27953a1c4b82b` (`v4.48.2`) | Source selection only; qualification requires its own executed proof. |
-| Commons | `11555ace9efcae2928a00122dcba91243e5a8a1a` (`v2.30.10`) | Source selection only; qualification requires its own executed proof. |
-| EventStore | `06ab5c16d1dc38e5e3f29ff06824b2c6724e6ea3` (`v4.2.0-25-g06ab5c16`) | Source selection only; qualification requires its own executed proof. |
-| FrontComposer | `57aa756c02edbae4294412885823533308b7db0d` (`v4.7.6-33-g57aa756c`) | Source selection only; qualification requires its own executed proof. |
-| McpCli | `94f5ee691c70dcb30e893c50629d95afb63d216f` (`v2.0.1-74-g94f5ee69`) | Source selection only; qualification requires its own executed proof. |
-| Memories | `13fdb88a3267626b14f75e16cc2de58dcfbbb2bb` (`v3.0.26-5-g13fdb88a`) | Source selection only; qualification requires its own executed proof. |
+| Commons | `5f9d783babadc30748a91f00e5ad6b863e16dd79` (`v2.30.11`) | Source selection only; qualification requires its own executed proof. |
+| EventStore | `147e861834361c88cfb90c76a44d113e236152cb` (`v4.2.0-33-g147e8618`) | Source selection only; qualification requires its own executed proof. |
+| FrontComposer | `56c9206167b7f18c3a95f610f814dfa39d9dcd01` (`v5.0.0-3-g56c92061`) | Source selection only; qualification requires its own executed proof. |
+| McpCli | `ab4d2dcfca150b0aa6b550a788c0f92d5ddb88ae` (`v2.0.1-89-gab4d2dcf`) | Source selection only; qualification requires its own executed proof. |
+| Memories | `f87c33c6d758534a84853e090d1824569802fffb` (`v3.0.27-4-gf87c33c6`) | Source selection only; qualification requires its own executed proof. |
 | Platform | `f99f51c3053fe0b0292acad461d78c833ec156cc` (`v1.11.0`) | Source selection only; qualification requires its own executed proof. |
-| PolymorphicSerializations | `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`) | Source selection only; qualification requires its own executed proof. |
-| Tenants | `6188ea48cab9fdf4207072135c66aab5a7b7fe32` (`v7.0.7-5-g6188ea48`) | Source selection only; qualification requires its own executed proof. |
+| PolymorphicSerializations | `3400fbf6a318b04fd5b9a7d91c2903727e535126` (`v1.19.9`) | Source selection only; qualification requires its own executed proof. |
+| Tenants | `b239c8e43da8a80fd872c7f4391d219be44b2d1d` (`v7.0.7-8-gb239c8e4`) | Source selection only; qualification requires its own executed proof. |
 
 ### Historical source observation — 2026-11-11 (snapshot and historical-boundary qualification)
 

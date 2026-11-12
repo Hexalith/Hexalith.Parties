@@ -753,3 +753,16 @@ references/Hexalith.Builds|9f85c64beae32befe050240526af398063e81eba|validated-ad
 # All owning Parties automated package, native, identity and release gates remain required.
 references/Hexalith.Builds|6ad5854aa14a9950e1fbfc32d7e27953a1c4b82b|validated-advance|v4.48.2@6ad5854aa14a9950e1fbfc32d7e27953a1c4b82b|codex-agent|2026-11-12
 references/Hexalith.Platform|f99f51c3053fe0b0292acad461d78c833ec156cc|validated-advance|v1.11.0@f99f51c3053fe0b0292acad461d78c833ec156cc|codex-agent|2026-11-12
+
+# --- 2026-11-12 operator-invoked /pushall synchronization.
+#     These seven revisions are published origin/main tips. Builds stays at the
+#     signed v4.48.2 pin and Platform stays at the signed v1.11.0 pin because
+#     Platform main diverged locally and its unpushed tip was not recorded.
+#     Source selection only; qualification and release proof remain separate.
+references/Hexalith.Commons|5f9d783babadc30748a91f00e5ad6b863e16dd79|validated-advance|v2.30.11|cursor-agent|2026-11-12
+references/Hexalith.EventStore|147e861834361c88cfb90c76a44d113e236152cb|validated-advance|v4.2.0-33-g147e8618|cursor-agent|2026-11-12
+references/Hexalith.FrontComposer|56c9206167b7f18c3a95f610f814dfa39d9dcd01|validated-advance|v5.0.0-3-g56c92061|cursor-agent|2026-11-12
+references/Hexalith.McpCli|ab4d2dcfca150b0aa6b550a788c0f92d5ddb88ae|validated-advance|v2.0.1-89-gab4d2dcf|cursor-agent|2026-11-12
+references/Hexalith.Memories|f87c33c6d758534a84853e090d1824569802fffb|validated-advance|v3.0.27-4-gf87c33c6|cursor-agent|2026-11-12
+references/Hexalith.PolymorphicSerializations|3400fbf6a318b04fd5b9a7d91c2903727e535126|validated-advance|v1.19.9|cursor-agent|2026-11-12
+references/Hexalith.Tenants|b239c8e43da8a80fd872c7f4391d219be44b2d1d|validated-advance|v7.0.7-8-gb239c8e4|cursor-agent|2026-11-12
