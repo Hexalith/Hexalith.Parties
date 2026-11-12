@@ -404,7 +404,7 @@ class ScenarioOrchestrationTests(unittest.TestCase):
         observed = 'owner-cancelled' if fault == 'wrong-cause' else expected
         result['terminal'].update(outcome='failed' if scenario == 'attached-failure' else 'withdrawn', cause=observed)
         hold.update(outcome=result['terminal']['outcome'], endReason='terminal-outcome' if scenario == 'attached-failure' else observed)
-        hold['execution']['cause'] = observed
+        hold['execution'].update(cause=observed, exitCode=4 if scenario == 'attached-failure' else 130, ruleId='HXT007' if scenario == 'attached-failure' else 'HXC130')
         own = result['bindings']['attachments']['holds'][0]
         own['end']['reason'] = hold['endReason']
         if scenario == 'hold-expiry':
@@ -433,8 +433,13 @@ class ScenarioOrchestrationTests(unittest.TestCase):
         Q.write(Path(item['publicResult']), {'runId': owner['runId'], 'outcome': {'exitCode': outcome}, 'diagnostics': diagnostics})
         owner_child = Mock(returncode=exit_code)
         owner_child.poll.return_value = exit_code
-        value.children = {item['label']: owner_child, entry['label']: Mock()}
-        value.start = Mock(return_value=item)
+        attached_exit = 4 if scenario == 'attached-failure' else 130
+        attached_child = Mock(returncode=attached_exit)
+        attached_child.poll.return_value = attached_exit
+        Q.write(Path(entry['publicResult']), {'runId': hold['attachedRunId'], 'outcome': {'exitCode': 'ProductOrTest' if scenario == 'attached-failure' else 'Cancelled', 'category': 'ProductOrTest' if scenario == 'attached-failure' else 'Cancelled', 'ruleId': hold['execution']['ruleId']}, 'diagnostics': [{'category': 'None', 'ruleId': 'HXI013'}]})
+        value.children = {item['label']: owner_child, entry['label']: attached_child}
+        value.begin = Mock(return_value=item)
+        value.ready = Mock()
         value.begin_attached = Mock(return_value=entry)
         value.attached_control = Mock()
         value.control = Mock()
@@ -454,10 +459,15 @@ class ScenarioOrchestrationTests(unittest.TestCase):
         if scenario == 'hold-expiry':
             peer = {'label': 'expiry-peer', 'receipt': item['receipt'], 'publicResult': str(root / 'peer-public.json')}
             Q.write(Path(peer['publicResult']), {'runId': owner['runId'], 'outcome': {'exitCode': 'Success'}, 'diagnostics': []})
-            value.start = Mock(side_effect=[item, peer])
+            value.begin = Mock(side_effect=[item, peer])
             peer_child = Mock(returncode=0)
             peer_child.poll.return_value = 0
             value.children[peer['label']] = peer_child
+        calls = Mock()
+        calls.attach_mock(value.begin, 'begin')
+        calls.attach_mock(value.ready, 'ready')
+        calls.attach_mock(value.begin_attached, 'attached')
+        value.owner_start_calls = calls
         return value, entry
 
     def test_ci_owner_cancellation_requires_actual_cause_running_originals_and_original_exit(self):
@@ -494,7 +504,8 @@ class ScenarioOrchestrationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             value, _ = self.attached(Path(temporary), 'hold-expiry')
             value.attached_case('hold-expiry')
-            value.invalid_lineage.assert_called_once()
+            self.assertEqual([record[0] for record in value.owner_start_calls.mock_calls[:5]], ['begin', 'begin', 'ready', 'ready', 'attached'])
+            value.invalid_lineage.assert_called_once_with(value.journal['owners'][0], value.journal['attachedRuns'][0]['admission'], expected_reason='attachment-expired')
             self.assertGreaterEqual(value.peer_scope.call_count, 3)
             value.down.assert_called_once()
 
@@ -510,8 +521,11 @@ class ScenarioOrchestrationTests(unittest.TestCase):
                 public = {'outcome': {'ruleId': 'HXR031' if fault != 'wrong-rule' else 'HXR020'},
                           'diagnostics': [{'ruleId': 'HXR031', 'message': 'blocked by ' + ('b' * 32 if fault == 'wrong-owner' else owner['runId'])}]}
                 Q.write(Path(challenger['publicResult']), public)
-                value.start = Mock(side_effect=[item, peer])
-                value.begin = Mock(return_value=challenger)
+                value.begin = Mock(side_effect=[item, peer, challenger])
+                value.ready = Mock()
+                calls = Mock()
+                calls.attach_mock(value.begin, 'begin')
+                calls.attach_mock(value.ready, 'ready')
                 value.issued = Mock(return_value=owner)
                 value.state = Mock(return_value={'workspace': str(root)})
                 value.children = {entry['label']: Mock() for entry in (item, peer, challenger)}
@@ -520,7 +534,9 @@ class ScenarioOrchestrationTests(unittest.TestCase):
                 value.control = Mock()
                 if fault is None:
                     value.collision()
-                    value.begin.assert_called_once_with('collision-challenger', eventstore_port=23456, wait_workspace=False)
+                    self.assertEqual(value.begin.call_args_list[-1], unittest.mock.call('collision-challenger', eventstore_port=23456, wait_workspace=False))
+                    self.assertEqual(value.ready.call_args_list, [unittest.mock.call(item), unittest.mock.call(peer)])
+                    self.assertEqual([record[0] for record in calls.mock_calls[:5]], ['begin', 'begin', 'ready', 'ready', 'begin'])
                     self.assertEqual(value.control.call_count, 2)
                 else:
                     with self.assertRaises(ValueError): value.collision()

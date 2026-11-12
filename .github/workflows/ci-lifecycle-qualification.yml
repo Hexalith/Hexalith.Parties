@@ -53,7 +53,7 @@ jobs:
   qualification:
     needs: baseline
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -69,7 +69,7 @@ jobs:
           dotnet-version: '10.0.404'
       - name: Prepare the actual pinned package tool and catalog
         run: python3 -B references/Hexalith.Builds/Github/prepare-module-build/prepare_module_build.py --manifest module/hexalith.module-manifest.v2.json
-      - name: Build the explicit declared lifecycle suites
+      - name: Build the declared owner lifecycle suite
         run: |
           dotnet build tests/Hexalith.Parties.Platform.LifecycleTests/Hexalith.Parties.Platform.LifecycleTests.csproj --configuration Release -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true
       - name: Build the explicit attached lifecycle suite when selected
@@ -185,7 +185,7 @@ jobs:
           with os.fdopen(descriptor, 'w') as output:
               json.dump({'auths': {'registry.hexalith.com': {'auth': token}}}, output)
           PY
-      - name: Exercise real passing failing partial-startup and exact retry scenarios
+      - name: Exercise the selected lifecycle qualification cases
         if: ${{ inputs.scenario == 'matrix' }}
         env:
           DOCKER_CONFIG: ${{ runner.temp }}/hexalith-lifecycle-registry.reader

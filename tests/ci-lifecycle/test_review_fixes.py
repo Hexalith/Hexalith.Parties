@@ -211,7 +211,7 @@ class WorkflowControlTests(unittest.TestCase):
         self.assertNotIn('DOCKER_CONFIG=', self.workflow)
         self.assertNotIn('GITHUB_ENV', self.step('Configure only the dedicated pull reader'))
         reader = '${{ runner.temp }}/hexalith-lifecycle-registry.reader'
-        for name in ('Exercise real passing failing partial-startup and exact retry scenarios',
+        for name in ('Exercise the selected lifecycle qualification cases',
                      'Exercise only the explicitly selected CI contract cases',
                      'Observe actual startup cancellation readiness', 'Observe actual execution cancellation readiness and active hold',
                      'Exercise one explicitly selected lifecycle case', 'Record a durable real failure before operator cancellation'):
@@ -227,7 +227,7 @@ class WorkflowControlTests(unittest.TestCase):
         self.assertEqual(selected, {'matrix', 'owner-cancellation', 'attached-failure', 'hold-expiry', 'cancel-execution'})
         for existing in ('focused-ci', 'passing', 'failing', 'retry-with-peer', 'partial-startup', 'collision', 'startup-timeout', 'invalid-handoff', 'cancel-startup', 'failure-then-cancellation'):
             self.assertNotIn(existing, selected)
-        self.assertNotIn('AttachedLifecycleTests', self.step('Build the explicit declared lifecycle suites'))
+        self.assertNotIn('AttachedLifecycleTests', self.step('Build the declared owner lifecycle suite'))
 
     def test_toolchain_versions_and_digests_refuse_before_any_download(self):
         body = self.step('Read verified catalog toolchain versions').split("python3 - <<'PY'\n", 1)[1].split('\n          PY', 1)[0]

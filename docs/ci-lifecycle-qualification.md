@@ -219,7 +219,7 @@ The preparation extends the real caller without qualifying Story 2.10. It is
 based on Builds `b1681870d0b08a5fe103133214c67fda7a449eb1`, EventStore
 `b882c1005050aaebfa70618b5a72c1c8be452281`, and Parties
 `fc9ea3f3b7b8544f8a8f7b8f7912ceb45489766c`. The accompanying
-source changes need compatible Builds and EventStore Testing releases before the
+source changes need compatible Builds, Platform composition and EventStore Testing releases before the
 unchanged pinned package workflow can execute them. No package, workflow or pin
 has been published or dispatched by this preparation.
 
@@ -286,3 +286,34 @@ surviving private-file entries, including dangling links.
 Only `matrix`, `owner-cancellation`, `attached-failure`, `hold-expiry` and
 `cancel-execution` build the attached fixture. Other selections retain their
 existing prerequisite set.
+
+Review pass 2 resumes from Platform `93e006dc03924d6b805ef8ca470fccff3e5f5aa1`,
+Builds `3c2f5944aaa28dc7854a00a8a9df171aa810b0c7`, EventStore
+`76f743ba0a62c254a66973aa707a701d95a6ce43`, and Parties
+`e2a135cd6e4e3700de9d9360bd6d4eac7ac34191`. The compatible Platform
+release must bind EventStore HTTP to the runner's requested plan port in v2.
+The caller's explicit port collision then targets that live endpoint; a claim
+conflict alone supplies no live-service proof.
+
+Collision and expiry begin both owners before waiting for either to become
+ready. The 240-second owner suite bound remains unchanged. Expected hold-expiry
+work takes approximately 160–200 seconds of the roughly 210 seconds remaining
+after readiness, a margin of about 10–50 seconds that must be measured in the
+first hosted run. Missed timing windows still fail. Only the qualification job's
+wall-clock timeout increases to 90 minutes so the ten cases and finalizer fit;
+startup/execution deadlines, hold expiry and policy limits are unchanged.
+
+Each lineage probe retains its own evidence file and requires `HXR036` with the
+exact `attachment-expired`, `attachment-ended` or `unknown-attachment-request`
+reason. Attached command exit codes, public outcome mappings and diagnostic
+categories are checked before success and again during finalization. Missing
+command exit proof, cleanup/evidence diagnostics or a mismatched public result
+fail, even when a valid terminal result is available. The 8 MiB retained-artifact
+copy limit does not cap operational journal or observations writes.
+
+The attached launch gate retains a small supervisor that waits for the actual
+CLI process and atomically appends its observed exit code/time to that same
+launch identity record. An independent finalizer can recover that observation
+after the first controller exits. Attached signals target only the supervisor,
+which forwards once to its exact muxer/tool processes. Owners keep their
+existing tool-only signal boundary. Missing or rebound exit records fail.

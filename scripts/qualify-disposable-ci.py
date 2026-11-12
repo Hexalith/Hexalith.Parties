@@ -208,12 +208,13 @@ def held_directory(path, create=False):
 
 
 def read_bytes(path, limit=8_388_608):
-    """Read bounded metadata bytes from one descriptor opened component by component without following links.
+    """Read held bytes under the selected artifact bound or explicit operational metadata contract.
 
     Ancestors are held through held_directory, and size and link count are checked on the open file before its
     bytes are read from it. A symbolic link at any component or a hard-linked file is refused. A file or ancestor
     replaced after it was opened cannot change the result, because the bytes come only from the held descriptor and
-    the path is never reopened by name.
+    the path is never reopened by name. An explicit None limit admits operational journal/observation metadata
+    under the same uncapped contract as write(); artifact reads retain their default or declared byte bounds.
     """
     path = Path(path).absolute()
     descriptor = held_directory(path.parent)
@@ -222,22 +223,22 @@ def read_bytes(path, limit=8_388_608):
         os.close(descriptor)
         descriptor = child
         info = os.fstat(descriptor)
-        require(stat.S_ISREG(info.st_mode) and info.st_nlink == 1 and info.st_size <= limit,
+        require(stat.S_ISREG(info.st_mode) and info.st_nlink == 1 and (limit is None or info.st_size <= limit),
                 'Refusing nonregular or oversized qualification metadata')
         body = bytearray()
-        while len(body) <= limit:
-            chunk = os.read(descriptor, min(65536, limit + 1 - len(body)))
+        while limit is None or len(body) <= limit:
+            chunk = os.read(descriptor, 65536 if limit is None else min(65536, limit + 1 - len(body)))
             if not chunk:
                 break
             body.extend(chunk)
-        require(len(body) <= limit, 'Refusing nonregular or oversized qualification metadata')
+        require(limit is None or len(body) <= limit, 'Refusing nonregular or oversized qualification metadata')
         return bytes(body)
     finally:
         os.close(descriptor)
 
 
 def read(path, limit=8_388_608):
-    """Read bounded JSON metadata through read_bytes; see it for the link and replacement refusals."""
+    """Read JSON through the selected read_bytes contract, retaining its link and replacement refusals."""
     return json.loads(read_bytes(path, limit).decode('utf-8'))
 
 
@@ -309,12 +310,17 @@ def write(path, value):
     descriptor, and renamed relative to the held parent. A parent that no longer resolves to the held directory is
     refused before the rename, and a destination entry that is not the written file afterwards is removed and refused.
     """
-    return write_retained_bytes(path, (json.dumps(value, indent=2, sort_keys=True) + '\n').encode())
+    return write_atomic_bytes(path, (json.dumps(value, indent=2, sort_keys=True) + '\n').encode())
 
 
 def write_retained_bytes(path, body):
     """Publish already validated retained bytes using the same held-directory atomic boundary."""
     require(isinstance(body, bytes) and len(body) <= 8_388_608, 'Retained artifact exceeds its bounded byte contract')
+    return write_atomic_bytes(path, body)
+
+
+def write_atomic_bytes(path, body):
+    """Atomically publish metadata or bounded artifact bytes without following links."""
     path = Path(path).absolute()
     parent = held_directory(path.parent, create=True)
     temporary = None
@@ -432,17 +438,50 @@ def gated_exec(item, command):
     if not readable or sys.stdin.buffer.read(1) != b'1':
         write(item['launchRecord'], {**record, 'gateStatus': 'closed', 'closedAtUtc': now()})
         return 1
-    write(item['launchRecord'], {**record, 'gateStatus': 'released', 'releasedAtUtc': now()})
+    released = {**record, 'gateStatus': 'released', 'releasedAtUtc': now()}
+    write(item['launchRecord'], released)
+    if item.get('kind') == 'attached-suite':
+        return supervise_attached_command(item, command, released)
     with open(os.devnull, 'rb') as empty:
         os.dup2(empty.fileno(), sys.stdin.fileno())
     os.execvp(command[0], command)
+
+
+def supervise_attached_command(item, command, released):
+    """Retain the real attached command exit across the original controller's own exit."""
+    child = None
+    child_birth = None
+    pending_signals = []
+
+    def flush_signals():
+        # Keep early cancellation until both the child and its stable birth identity are bound.
+        while child is not None and child_birth is not None:
+            try:
+                number = pending_signals.pop(0)
+            except IndexError:
+                return  # A reentrant signal handler may already have drained the queue.
+            signal_tool_processes(tool_processes(child.pid, child_birth), number)
+
+    def forward(number, _frame):
+        # This attacher composes no services. Still target only its muxer/tool identities.
+        pending_signals.append(number)
+        flush_signals()
+
+    for number in (signal.SIGINT, signal.SIGTERM):
+        signal.signal(number, forward)
+    with subprocess.Popen(command, stdin=subprocess.DEVNULL) as child:
+        child_birth = birth(child.pid)
+        flush_signals()
+        exit_code = child.wait()
+    write(item['launchRecord'], {**released, 'commandExitCode': exit_code, 'commandExitedAtUtc': now()})
+    return exit_code
 
 
 def launch_owner(label):
     context = HELPER.ci_context()
     require(ROOT == HELPER.job_root('GITHUB_WORKSPACE'), 'Launch child must use the actual checkout root')
     temporary = HELPER.job_root('RUNNER_TEMP') / 'hexalith-ci-qualification'
-    journal = read(temporary / 'journal.json')
+    journal = read(temporary / 'journal.json', limit=None)
     require(journal['executionContext'] == context and journal['source'] == os.environ.get('GITHUB_SHA'),
             'Launch intent belongs to another job or revision')
     matches = [item for item in journal['owners'] + journal.get('attachedRuns', []) if item['label'] == label]
@@ -659,7 +698,7 @@ class Qualification:
             require(mapping.get('Root') == str(ROOT) and mapping.get('ContentHash') == os.environ['HEXALITH_SOURCE_MAPPING_HASH'],
                     'Qualification mapping differs from the strict prepared source')
         self.prepared_mapping = mapping
-        journal = optional_read(self.journal_path)
+        journal = optional_read(self.journal_path, limit=None)
         self.journal = journal if journal is not None else {
             'schema': 'hexalith.ci-lifecycle-qualification.v1', 'classification': 'baseline-only',
             'source': head, 'mappingHash': mapping['ContentHash'] if mapping else None,
@@ -875,6 +914,9 @@ class Qualification:
                 and record.get('processGroup') == record['pid']
                 and isinstance(record.get('birth'), str) and record['birth'].isdigit()
                 and record.get('gateStatus') in ('waiting', 'closed', 'released'), 'Actual launch process identity is unavailable')
+        if item.get('kind') == 'attached-suite':
+            require(all(record[key] == item[key] for key in ('pid', 'birth', 'processGroup') if key in item),
+                    'Attached launch identity changed after journal publication')
         if birth(record['pid']) == record['birth']:
             require(os.getpgid(record['pid']) == record['processGroup'], 'Launch process group changed')
         item.update({key: record[key] for key in ('pid', 'birth', 'processGroup')})
@@ -1146,8 +1188,10 @@ class Qualification:
         require(birth(item['pid']) == item['birth'], 'Refusing a missing or reused controller process')
         require(os.getpgid(item['pid']) == item['processGroup'] == item['pid'], 'Refusing a foreign process group')
         owner = self.issued(item) if self.receipt_present(item) else None
-        # Only the tool's own processes; the AppHost, DCP and native test host are left to the tool or the exact down.
-        delivered = signal_tool_processes(tool_processes(item['pid'], item['birth']), number)
+        # Owners target their muxer/tool. An attached monitor alone forwards to its muxer/tool once.
+        # The AppHost, DCP and native test host are left to the owner tool or the exact down.
+        processes = {item['pid']: item['birth']} if item.get('kind') == 'attached-suite' else tool_processes(item['pid'], item['birth'])
+        delivered = signal_tool_processes(processes, number)
         self.observe('owned-process-signal', ownerRunId=owner['runId'] if owner else None, pid=item['pid'], signal=number,
                      toolProcessIds=delivered)
 
@@ -1372,6 +1416,50 @@ class Qualification:
         self.observe('attached-terminal-result', launch=entry['label'], firstTerminal=first, terminationVerified=True)
         return result
 
+    def verify_attached_command(self, entry, result):
+        terminal = result['terminal']
+        outcome, cause = terminal['outcome'], terminal['cause']
+        if outcome == 'passed':
+            expected = (0, 'Success', None, 'None')
+        elif outcome in ('withdrawn', 'cancelled'):
+            expected = (130, 'Cancelled', 'HXC130', 'Cancelled')
+        elif cause == 'test-failure':
+            expected = (4, 'ProductOrTest', 'HXT007', 'ProductOrTest')
+        else:
+            execution = self.attached_admission(entry)['execution']
+            code = execution.get('exitCode')
+            categories = {1: ('UsageOrManifest', 'Usage'), 2: ('PrerequisiteUnavailable', 'PrerequisiteUnavailable'),
+                          3: ('TopologyOrLifecycle', 'TopologyOrLifecycle'), 4: ('ProductOrTest', 'ProductOrTest'),
+                          5: ('PersistedState', 'PersistedState'), 6: ('EvidenceSchemaOrPolicy', 'EvidencePolicy')}
+            require(code in categories, 'Attached failure lacks its original CLI exit mapping')
+            name, category = categories[code]
+            expected = (code, name, execution.get('ruleId') or 'HXT007', category)
+        child = self.children.get(entry['label'])
+        if child is not None:
+            require(child.poll() is not None, 'Attached command has not exited')
+            entry['commandExitCode'] = child.returncode
+            self.save()
+        elif entry.get('commandExitCode') is None:
+            identity = {key: entry[key] for key in ('pid', 'birth', 'processGroup') if key in entry}
+            record = self.recover_launch(entry)
+            require(all(record.get(key) == value for key, value in identity.items()), 'Attached CLI exit record changed its launch identity')
+            require(record['gateStatus'] == 'released' and type(record.get('commandExitCode')) is int
+                    and utc(record['releasedAtUtc']) <= utc(record.get('commandExitedAtUtc')),
+                    'Attached CLI lacks a durable observed exit code')
+            entry['commandExitCode'] = record['commandExitCode']
+            self.save()
+        require(entry.get('commandExitCode') == expected[0], 'Attached CLI exit code differs from its first outcome')
+        public = read(Path(entry['publicResult']))
+        summary = public.get('outcome', {})
+        require(public.get('runId') == self.attached_admission(entry)['attachedRunId']
+                and summary.get('exitCode') == expected[1] and summary.get('category') == expected[3]
+                and (expected[2] is None or summary.get('ruleId') == expected[2]),
+                'Attached CLI public outcome differs from its first result')
+        require(isinstance(public.get('diagnostics'), list) and all(value.get('category') == 'None'
+                for value in public['diagnostics']), 'Attached CLI reported a cleanup or evidence failure')
+        write(self.evidence / entry['label'] / 'public-result.json', public)
+        self.observe('attached-command-verified', launch=entry['label'], exitCode=expected[0], cause=cause)
+
     def finalize_attached(self, entry):
         record = self.recover_launch(entry)
         hold = self.attached_admission(entry, required=False)
@@ -1382,15 +1470,14 @@ class Qualification:
             require(record['gateStatus'] in ('waiting', 'closed'), 'Released attached launch lacks exact admission proof')
             return
         self.settled_child(entry)
-        self.attached_result(entry)
-        public = optional_read(Path(entry['publicResult']))
-        if public is not None:
-            require(public.get('runId') == hold['attachedRunId'], 'Attached public result names another run')
-            write(self.evidence / entry['label'] / 'public-result.json', public)
+        result = self.attached_result(entry)
+        self.verify_attached_command(entry, result)
 
     def collision(self):
-        item = self.start('collision-owner')
-        peer = self.start('collision-peer')
+        item = self.begin('collision-owner')
+        peer = self.begin('collision-peer')
+        self.ready(item)
+        self.ready(peer)
         before, other = self.peer_scope(item), self.peer_scope(peer)
         plan = read(Path(self.state(item)['workspace']) / 'plan.json')
         challenger = self.begin('collision-challenger', eventstore_port=plan['ports']['eventStoreHttp'], wait_workspace=False)
@@ -1428,8 +1515,11 @@ class Qualification:
                   'hold-expiry': ('expiry-owner', 'expiry-child'),
                   'owner-cancellation': ('owner-cancel', 'owner-cancel-child')}
         owner_label, attached_label = labels[scenario]
-        item = self.start(owner_label)
-        peer = self.start('expiry-peer') if scenario == 'hold-expiry' else None
+        item = self.begin(owner_label)
+        peer = self.begin('expiry-peer') if scenario == 'hold-expiry' else None
+        self.ready(item)
+        if peer:
+            self.ready(peer)
         scope = self.peer_scope(peer) if peer else None
         entry = self.begin_attached(item, attached_label, 120 if scenario == 'hold-expiry' else 180)
         cancellation_cause = 'ci-job-cancelled' if self.issued(item)['executionContext']['kind'] == 'ci' else 'owner-cancelled'
@@ -1454,12 +1544,13 @@ class Qualification:
                 raise TimeoutError('Attached termination was not observed before owner teardown')
         self.children[entry['label']].wait(timeout=220)
         expected = ('failed', 'test-failure') if scenario == 'attached-failure' else ('withdrawn', 'hold-expired' if peer else cancellation_cause)
-        self.attached_result(entry, *expected)
+        result = self.attached_result(entry, *expected)
+        self.verify_attached_command(entry, result)
         if scenario != 'owner-cancellation':
             require(self.state(item).get('testRun') is None, 'Attached outcome replaced the active owner outcome')
             if peer:
                 require(self.peer_scope(peer) == scope, 'Hold expiry changed its unrelated active peer')
-                self.invalid_lineage(item, entry['admission'])
+                self.invalid_lineage(item, entry['admission'], expected_reason='attachment-expired')
             self.control(item, 'pass')
         self.children[item['label']].wait(timeout=150)
         self.verify_original_owner_command(item, cancelled=scenario == 'owner-cancellation')
@@ -1475,18 +1566,20 @@ class Qualification:
             self.children[peer['label']].wait(timeout=150)
             require(self.capture_result(peer) == 0, 'Expiry peer did not complete real assertions')
 
-    def invalid_lineage(self, item, hold=None):
+    def invalid_lineage(self, item, hold=None, expected_reason='attachment-ended'):
         owner = self.issued(item)
-        identities = [hold['originalAttachmentRequestId']] if hold else []
+        require(expected_reason in ('attachment-ended', 'attachment-expired'), 'Unknown expected lineage refusal')
+        identities = [(hold['originalAttachmentRequestId'], expected_reason)] if hold else []
         # Unknown lineage must never be interpreted as a fresh request.
-        identities.append('f' * 32)
-        for lineage in identities:
+        identities.append(('f' * 32, 'unknown-attachment-request'))
+        for lineage, reason in identities:
             before = read(self.diagnostics(item) / 'attachments.json')
             result, public = self.tool(item, ['test', '--manifest=' + MANIFEST, '--mode=package', '--profile=' + ATTACHED_PROFILE,
                                             '--attach-to=' + owner['runId'], '--attachment-request-id=' + lineage,
-                                            '--output=json'], 'invalid-attached-lineage')
+                                            '--output=json'], 'invalid-attached-lineage-' + reason)
             require(result.returncode != 0 and public.get('attachment') is None
-                    and any(value.get('ruleId') in ('HXR033', 'HXR036') for value in public.get('diagnostics', []))
+                    and any(value.get('ruleId') == 'HXR036' and value.get('field') == reason
+                            for value in public.get('diagnostics', []))
                     and read(self.diagnostics(item) / 'attachments.json') == before,
                     'Invalid attached lineage created a fixture admission or qualifying result')
 
