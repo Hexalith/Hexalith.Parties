@@ -7,9 +7,9 @@ namespace Hexalith.Parties.Ci.Tests;
 public sealed class PartiesContainerPublishWorkflowTests
 {
     private const int ExpectedPackageCount = 11;
-    private const string BuildsCiSha = "6ad5854aa14a9950e1fbfc32d7e27953a1c4b82b";
-    private const string BuildsValidationSha = "6ad5854aa14a9950e1fbfc32d7e27953a1c4b82b";
-    private const string BuildsExecutionSha = "6ad5854aa14a9950e1fbfc32d7e27953a1c4b82b";
+    private const string BuildsCiSha = "9f5d751f7ab0b7a621dcd18b589bf061fabac6ec";
+    private const string BuildsValidationSha = "9f5d751f7ab0b7a621dcd18b589bf061fabac6ec";
+    private const string BuildsExecutionSha = "9f5d751f7ab0b7a621dcd18b589bf061fabac6ec";
     private static readonly TimeSpan WorkflowReadTimeout = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan PublicationPreflightTimeout = TimeSpan.FromSeconds(10);
 
@@ -262,7 +262,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         XDocument project = XDocument.Parse(CiTestPaths.ReadRepoFile("src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj"));
 
         project.Descendants("InvariantGlobalization").Single().Value.ShouldBe("false");
-        project.Descendants("ContainerBaseImage").Single().Value.ShouldBe("mcr.microsoft.com/dotnet/aspnet:10.0-alpine-extra");
+        project.Descendants("ContainerBaseImage").Single().Value.ShouldBe("mcr.microsoft.com/dotnet/aspnet:11.0-alpine-extra");
         project.Descendants("ContainerFamily").Single().Value.ShouldBe("alpine-extra");
     }
 

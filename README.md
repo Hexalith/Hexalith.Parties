@@ -169,8 +169,8 @@ Hexalith.Parties manages **party records** -- people and organizations with cont
 
 ## Prerequisites
 
-- [.NET 11 SDK](https://dot.net) (11.0.100; packages target net10.0)
-- [.NET 10 SDK](https://dot.net) (10.0.404), providing .NET and ASP.NET Core 10.0.15 for the tools, tests and hosts
+- [.NET 11 SDK](https://dot.net) (11.0.100; packages and hosts target net11.0)
+- .NET and ASP.NET Core 11.0.0 for the current tools, tests, and hosts. Historical qualification profiles retain their explicitly selected runtimes.
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - Git
 

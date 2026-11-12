@@ -36,3 +36,6 @@ tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs white
 tests/Hexalith.Parties.Ci.Tests/AspireRuntimePreparationTests.cs whitespace=cr-at-eol
 tests/e2e/helpers/frontcomposer-assets.ts whitespace=cr-at-eol
 tests/e2e/playwright.config.ts whitespace=cr-at-eol
+
+# Keep the authored CRLF convention for the current NET11 host target.
+src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj whitespace=cr-at-eol

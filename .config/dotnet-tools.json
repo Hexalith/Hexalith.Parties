@@ -10,7 +10,7 @@
       "rollForward": false
     },
     "hexalith.builds.module.cli": {
-      "version": "4.48.2",
+      "version": "5.0.0",
       "commands": [
         "hexalith-module"
       ],
