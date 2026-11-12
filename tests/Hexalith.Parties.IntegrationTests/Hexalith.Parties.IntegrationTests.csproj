@@ -3,6 +3,16 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
+  <!-- The exact published 4.2.0 reader requires one trusted JSON exporter in this
+       owned native test process and its managed children. Future SDKs qualify separately. -->
+  <PropertyGroup Condition="'$(HexalithEventStoreVersion)' == '4.2.0' and '$(HexalithUsePublishedSdkForHostedTests)' == 'true' and '$(HexalithEventStoreFromSource)' != 'true'">
+    <RuntimeFrameworkVersion>11.0.0</RuntimeFrameworkVersion>
+    <PartiesPublished42ManagedRuntime>true</PartiesPublished42ManagedRuntime>
+  </PropertyGroup>
+  <ItemGroup>
+    <AssemblyMetadata Include="PartiesPublished42ManagedRuntime" Value="$(PartiesPublished42ManagedRuntime)" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\Hexalith.Parties\Hexalith.Parties.csproj" />
     <ProjectReference Include="../Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj" ReferenceOutputAssembly="false" />

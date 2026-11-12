@@ -37,7 +37,9 @@ builder.Services.AddHealthChecks().AddPartiesDaprHealthChecks(
 
 builder.Services.AddParties(builder.Configuration);
 #if HEXALITH_EVENTSTORE_CATALOG_API
-builder.Services.AddEventStoreDevelopmentDomainCatalog(builder.Configuration, typeof(Hexalith.Parties.Contracts.Routing.PartiesCatalogDeclarations).Assembly);
+builder.Services.AddEventStoreDevelopmentDomainCatalog(builder.Configuration,
+    typeof(Hexalith.Parties.Contracts.Routing.PartiesCatalogDeclarations).Assembly,
+    typeof(Hexalith.Parties.EventStoreExtensions.PartiesCatalogAdapters).Assembly);
 #endif
 string ownerDaprEndpoint = Environment.GetEnvironmentVariable("DAPR_HTTP_ENDPOINT")
     ?? $"http://127.0.0.1:{Environment.GetEnvironmentVariable("DAPR_HTTP_PORT") ?? "3500"}";

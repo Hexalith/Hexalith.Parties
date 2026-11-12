@@ -8,6 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- The executable owns its canonical intent adapter in the same real runtime closure. -->
+    <ProjectReference Include="../Hexalith.Parties.EventStoreExtensions/Hexalith.Parties.EventStoreExtensions.csproj" />
     <InternalsVisibleTo Include="Hexalith.Parties.Tests" />
   </ItemGroup>
 

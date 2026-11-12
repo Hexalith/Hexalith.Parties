@@ -186,6 +186,10 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     {
         try
         {
+            // Check the finite published-4.2 profile before control-plane or application effects.
+            InitializationPhase = "managed-runtime-preflight";
+            await PartiesPublished42ManagedRuntime.RequireAsync(cancellationToken).ConfigureAwait(false);
+
             // 5-minute timeout for full Aspire topology startup including DAPR sidecar
             // initialization and health check stabilization.
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -291,6 +295,10 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 _ = _builder.CreateResourceBuilder(project)
                     .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
                     .WithEnvironment("DOTNET_ENVIRONMENT", "Development");
+                if (PartiesPublished42ManagedRuntime.IsSelected)
+                {
+                    _ = _builder.CreateResourceBuilder(project).WithEnvironment("DOTNET_ROLL_FORWARD", "LatestMajor");
+                }
             }
 
             foreach (IResource resource in _builder.Resources.Cast<IResource>().Concat(
@@ -440,6 +448,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             IsAvailable = false;
             _initializationFailure = ex;
             UnavailableReason = $"{InitializationPhase}: {ex.GetType().Name}: {ex.Message}";
+            UnavailableReason += await PartiesStartupFailureDiagnostics.DescribeAsync(_app).ConfigureAwait(false);
             if (ObserveInitializationFailureAsync is not null)
             {
                 await ObserveInitializationFailureAsync(ex).ConfigureAwait(false);
