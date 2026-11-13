@@ -67,11 +67,11 @@ public sealed class PlatformApiPrerequisitesTests
     private static readonly IReadOnlyDictionary<string, string> CurrentSelectedGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["references/Hexalith.AI.Tools"] = "17a37d83db193f0b7494c1b931fd1e82a67c1424",
-        ["references/Hexalith.Builds"] = "fde085eeccc11617f42e71a1e5d7db23ed5e4290",
+        ["references/Hexalith.Builds"] = "02ed624aa19781cac75d2c9112940e9bd830441a",
         ["references/Hexalith.Commons"] = "fbf4e94233821f6ca336af91a06feaaeb7a16855",
         ["references/Hexalith.EventStore"] = "69b244d9cfb0e5fc077e324fe9c2a9cae7d026dc",
         ["references/Hexalith.FrontComposer"] = "19418a0c29daf38eef03b0891958cd8aa93c59bf",
-        ["references/Hexalith.McpCli"] = "491f114885ec2fc68537411f3c3fe6ad549cbe2f",
+        ["references/Hexalith.McpCli"] = "85a5437b98d0e126147460ca1ee1fa6a36041a21",
         ["references/Hexalith.Memories"] = "c4ee997702ede948ada5f99eeae7b3782e92003b",
         ["references/Hexalith.Platform"] = "b76e0c7c70162653bbff6a8263ebfc4500c1631b",
         ["references/Hexalith.PolymorphicSerializations"] = "e97b56930e213f674b64c157551f499b0473ec43",
@@ -96,11 +96,11 @@ public sealed class PlatformApiPrerequisitesTests
     private static readonly IReadOnlyDictionary<string, string> CurrentSelectedSourceDescribes = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["references/Hexalith.AI.Tools"] = "17a37d83",
-        ["references/Hexalith.Builds"] = "v5.2.2-1-gfde085ee",
+        ["references/Hexalith.Builds"] = "v5.2.2",
         ["references/Hexalith.Commons"] = "v3.0.0",
         ["references/Hexalith.EventStore"] = "v5.0.1-1-g69b244d9",
         ["references/Hexalith.FrontComposer"] = "v5.0.0-4-g19418a0c",
-        ["references/Hexalith.McpCli"] = "v2.0.1-113-g491f1148",
+        ["references/Hexalith.McpCli"] = "v2.0.1-114-g85a5437b",
         ["references/Hexalith.Memories"] = "v4.0.0",
         ["references/Hexalith.Platform"] = "v2.0.0-21-gb76e0c7c",
         ["references/Hexalith.PolymorphicSerializations"] = "v2.0.0-2-ge97b5693",

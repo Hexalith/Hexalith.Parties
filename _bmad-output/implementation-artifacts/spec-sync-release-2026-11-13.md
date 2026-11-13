@@ -202,3 +202,14 @@ The strict committed-source class must run against the final root commit.
 Final exact-source rootCI/range proof, Release and independent verification of
 all eleven newly published packages remain pending. No human checkpoint is
 required; automated gates and original Story/acceptance boundaries are retained.
+
+### Exact producer pin correction after hosted preflight
+
+Hosted source8a900c2f correctly refuses before tests: HXW009 requires both the
+indexed and actual root Builds gitlink to equal Platform's published02ed pin,
+even when laterfde catalog bytes are identical. HXW011 independently requires
+the normal qualified Platform release tag, which is still pending. Restore the
+Root Builds selection to genuine released5.2.2 at02ed, preserving the newer
+unreleased guard work on owning main. No guard or source proof is weakened.
+Wait for actual Platform publication and fetch its real tag before the corrected
+Root CI push. The prior8a observation and failure remain retained as history.

@@ -8,9 +8,9 @@
     "references/Hexalith.Tenants": "401d926eb7d51bdf332696ed3f0fe39a812b3501",
     "references/Hexalith.AI.Tools": "17a37d83db193f0b7494c1b931fd1e82a67c1424",
     "references/Hexalith.Commons": "fbf4e94233821f6ca336af91a06feaaeb7a16855",
-    "references/Hexalith.Builds": "fde085eeccc11617f42e71a1e5d7db23ed5e4290",
+    "references/Hexalith.Builds": "02ed624aa19781cac75d2c9112940e9bd830441a",
     "references/Hexalith.PolymorphicSerializations": "e97b56930e213f674b64c157551f499b0473ec43",
-    "references/Hexalith.McpCli": "491f114885ec2fc68537411f3c3fe6ad549cbe2f",
+    "references/Hexalith.McpCli": "85a5437b98d0e126147460ca1ee1fa6a36041a21",
     "references/Hexalith.Platform": "b76e0c7c70162653bbff6a8263ebfc4500c1631b"
   },
   "sdk": "11.0.100",
@@ -263,6 +263,16 @@
         "checks/parties-final-direct-owner-proof.json.gz",
         "checks/parties-platform522-nested-final-state.json.gz"
       ]
+    },
+    {
+      "command": "Hosted prepare-module-build at8a900c2f in CI43464764093",
+      "result": "expected prerequisite refusal: HXW009 exact producer pin rejects newerfde checkout despite equal catalog bytes; HXW011 requires pending Platform qualified release tag. Corrected Root pin to actual published02ed and wait for normal Platform publication; automated guards retained",
+      "log": "checks/parties-final-root-ci-8a-prerequisite-failure.log.gz"
+    },
+    {
+      "command": "Final direct owner source verification after exact producer correction",
+      "result": "Ten clean direct owners are remotely available; Builds selects exact public signed5.2.2 required by Platform. Later upstream work is preserved separately.",
+      "log": "checks/parties-final-exact-owner-proof.json.gz"
     }
   ],
   "publication": "pending exact-source Platform qualification/normal release, then final Parties CI and normal Release",
@@ -328,5 +338,12 @@
   "finalEvaluatedAudit": {
     "path": "final-evaluated-audit.json",
     "scope": "Final actual selected package/tool/owner input observations; initial registry audit remains unchanged"
+  },
+  "sourceSynchronizationException": {
+    "path": "references/Hexalith.Builds",
+    "selected": "02ed624aa19781cac75d2c9112940e9bd830441a",
+    "release": "v5.2.2",
+    "owningMainPreservedAt": "fde085eeccc11617f42e71a1e5d7db23ed5e4290",
+    "reason": "The unchanged Platform prerequisite verifier requires exact published producer identity; newer unreleased guard work cannot substitute."
   }
 }

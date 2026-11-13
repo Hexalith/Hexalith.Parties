@@ -134,9 +134,9 @@ The user explicitly delegated synchronization, CI repairs and release, including
 necessary direct Platform dependency repairs. codex-agent records exact source
 selection in `.gitlink-signoff.tsv`; this grants no human review, native or
 candidate acceptance. Builds5.2.2 is the verified signed producer. The root
-Builds checkout also preserves the subsequent CI guard commitfde085ee; its
-catalog bytes equal the released02ed producer. The signed tool and Platform
-tuple remain bound to02ed. Platform's
+Builds gitlink selects exactly the published02ed producer required by Platform.
+The later guard commitfde085ee remains preserved on Builds main; equal catalog
+bytes do not authorize substituting it for the qualified tuple. Platform's
 exact-source qualification and normal source publisher remain independent gates,
 as do the final Parties caller, runtime, cleanup and publication checks.
 
@@ -156,11 +156,11 @@ and G5 closure requirements remain unchanged.
 | Root dependency | Current source identity | Release use |
 | --- | --- | --- |
 | AI.Tools | `17a37d83db193f0b7494c1b931fd1e82a67c1424` (`17a37d83`) | Source selection only; consumption requires the matching committed root gitlink and clean checkout, with its own executed qualification. |
-| Builds | `fde085eeccc11617f42e71a1e5d7db23ed5e4290` (`v5.2.2-1-gfde085ee`) | Source selection only; consumption requires the matching committed root gitlink and clean checkout, with its own executed qualification. |
+| Builds | `02ed624aa19781cac75d2c9112940e9bd830441a` (`v5.2.2`) | Source selection only; consumption requires the matching committed root gitlink and clean checkout, with its own executed qualification. |
 | Commons | `fbf4e94233821f6ca336af91a06feaaeb7a16855` (`v3.0.0`) | Source selection only; consumption requires the matching committed root gitlink and clean checkout, with its own executed qualification. |
 | EventStore | `69b244d9cfb0e5fc077e324fe9c2a9cae7d026dc` (`v5.0.1-1-g69b244d9`) | Source selection only; consumption requires the matching committed root gitlink and clean checkout, with its own executed qualification. |
 | FrontComposer | `19418a0c29daf38eef03b0891958cd8aa93c59bf` (`v5.0.0-4-g19418a0c`) | Source selection only; consumption requires the matching committed root gitlink and clean checkout, with its own executed qualification. |
-| McpCli | `491f114885ec2fc68537411f3c3fe6ad549cbe2f` (`v2.0.1-113-g491f1148`) | Source selection only; consumption requires the matching committed root gitlink and clean checkout, with its own executed qualification. |
+| McpCli | `85a5437b98d0e126147460ca1ee1fa6a36041a21` (`v2.0.1-114-g85a5437b`) | Source selection only; consumption requires the matching committed root gitlink and clean checkout, with its own executed qualification. |
 | Memories | `c4ee997702ede948ada5f99eeae7b3782e92003b` (`v4.0.0`) | Source selection only; the current package graph retains admitted3.0.27 and does not adopt4.0.0 by implication. |
 | Platform | `b76e0c7c70162653bbff6a8263ebfc4500c1631b` (`v2.0.0-21-gb76e0c7c`) | Source selection only; consumption requires the matching committed root gitlink and clean checkout, with its own executed qualification. |
 | PolymorphicSerializations | `e97b56930e213f674b64c157551f499b0473ec43` (`v2.0.0-2-ge97b5693`) | Source selection only; consumption requires the matching committed root gitlink and clean checkout, with its own executed qualification. |

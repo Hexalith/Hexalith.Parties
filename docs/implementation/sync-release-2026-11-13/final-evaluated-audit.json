@@ -1,8 +1,8 @@
 {
   "schema": "hexalith.parties.final-evaluated-consumer-audit.v1",
-  "observedAtUtc": "2026-11-13T16:34:17.340093+00:00",
+  "observedAtUtc": "2026-11-13T16:45:37.109075+00:00",
   "scope": "Actual final selected worktree inputs and official registry observations; no inferred runtime, human or release acceptance",
-  "rootHeadBeforeRecording": "84c25dac7bc54b609c6fa5cd4ff2a545dab8cbf9",
+  "rootHeadBeforeRecording": "8a900c2f526ceec5f89fda97e752b1ffa8951c98",
   "inputSha256": {
     "global.json": "5feaf50426a6c5554654e326bedd2f6c6273f13b948b1ec6e11e12cae68f9f05",
     ".config/dotnet-tools.json": "9da4af0af015284fd7411755b37b71a958747caf055baeef0918db1f0737c838",
@@ -17,9 +17,9 @@
     "references/Hexalith.Tenants": "401d926eb7d51bdf332696ed3f0fe39a812b3501",
     "references/Hexalith.AI.Tools": "17a37d83db193f0b7494c1b931fd1e82a67c1424",
     "references/Hexalith.Commons": "fbf4e94233821f6ca336af91a06feaaeb7a16855",
-    "references/Hexalith.Builds": "fde085eeccc11617f42e71a1e5d7db23ed5e4290",
+    "references/Hexalith.Builds": "02ed624aa19781cac75d2c9112940e9bd830441a",
     "references/Hexalith.PolymorphicSerializations": "e97b56930e213f674b64c157551f499b0473ec43",
-    "references/Hexalith.McpCli": "491f114885ec2fc68537411f3c3fe6ad549cbe2f",
+    "references/Hexalith.McpCli": "85a5437b98d0e126147460ca1ee1fa6a36041a21",
     "references/Hexalith.Platform": "b76e0c7c70162653bbff6a8263ebfc4500c1631b"
   },
   "sdk": {

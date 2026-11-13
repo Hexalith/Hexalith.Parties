@@ -33,10 +33,10 @@ The earlier Story 2.10 qualification branch selected CLI5.1.0 from
 `9ebc31f606bc02f8a0ec2f1ec344127e2468c6b4` with the5.0.1 catalog/helper
 source `3c2f5944aaa28dc7854a00a8a9df171aa810b0c7`. That historical
 selection did not establish tool or runtime acceptance. The current signed
-CLI selects Builds5.2.2 at `02ed624aa19781cac75d2c9112940e9bd830441a`.
-The root catalog/helper checkout also preserves the subsequent CI guard source
-`fde085eeccc11617f42e71a1e5d7db23ed5e4290`; its catalog bytes are identical
-to the released producer. Platform's signed tuple remains bound to02ed.
+CLI and root catalog/helper source select published Builds5.2.2 at
+`02ed624aa19781cac75d2c9112940e9bd830441a`, exactly matching Platform's
+qualified producer pin. Subsequent unreleased Builds guard changes remain on
+the owning main branch and cannot substitute for this exact tuple.
 The immutable CI and publisher workflow revisions above stay separately pinned.
 
 CI runs on pushes and pull requests to `main`, scheduled nightly runs, and Pact Broker `repository_dispatch` events with type `contract_requiring_verification_published`.

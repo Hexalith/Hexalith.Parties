@@ -813,3 +813,5 @@ references/Hexalith.EventStore|69b244d9cfb0e5fc077e324fe9c2a9cae7d026dc|validate
 references/Hexalith.McpCli|491f114885ec2fc68537411f3c3fe6ad549cbe2f|validated-advance|origin/main@491f114885ec2fc68537411f3c3fe6ad549cbe2f|codex-agent|2026-11-13
 references/Hexalith.Platform|b76e0c7c70162653bbff6a8263ebfc4500c1631b|validated-advance|origin/main@b76e0c7c70162653bbff6a8263ebfc4500c1631b|codex-agent|2026-11-13
 references/Hexalith.Builds|fde085eeccc11617f42e71a1e5d7db23ed5e4290|validated-advance|origin/main@fde085eeccc11617f42e71a1e5d7db23ed5e4290|codex-agent|2026-11-13
+# Final qualified cohort selects Builds v5.2.2@02ed; later guard source fde remains on owning main.
+references/Hexalith.McpCli|85a5437b98d0e126147460ca1ee1fa6a36041a21|validated-advance|origin/main@85a5437b98d0e126147460ca1ee1fa6a36041a21|codex-agent|2026-11-13
