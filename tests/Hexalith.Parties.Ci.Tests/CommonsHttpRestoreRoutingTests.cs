@@ -594,8 +594,13 @@ with tempfile.TemporaryDirectory() as temporary_root:
 
     consumer.pack_support_packages = capture_support_pack
     consumer.write_nuget_config = lambda *args: temporary_root / "NuGet.Config"
-    consumer.write_client_consumer = lambda root, version: root / "ClientConsumer.csproj"
-    consumer.write_portal_consumer = lambda root, version: root / "PortalConsumer.csproj"
+    consumer.package_target_framework = lambda package_directory: "net11.0"
+    def capture_consumer(root, version, framework, project_name):
+        if framework != "net11.0":
+            raise SystemExit(f"Consumer did not receive the package target framework: {framework!r}")
+        return root / project_name
+    consumer.write_client_consumer = lambda root, version, framework: capture_consumer(root, version, framework, "ClientConsumer.csproj")
+    consumer.write_portal_consumer = lambda root, version, framework: capture_consumer(root, version, framework, "PortalConsumer.csproj")
     consumer.validate_consumer = lambda project_file, version, required, front, tenants, **options: captured_consumer_validations.append(
         (project_file.name, version, required, front, tenants, options)
     )
@@ -683,6 +688,7 @@ spec.loader.exec_module(module)
 for name in ("commons", "event_store", "front_composer", "tenants"):
     setattr(module, f"resolve_hexalith_{name}_version", lambda root: "1.0.0")
 module.package_versions = lambda directory: {package_id: "1.0.0" for package_id in module.PACKAGE_IDS}
+module.package_target_framework = lambda directory: "net11.0"
 def reject_source_support(*args):
     raise SystemExit("Default consumer validation must not pack external source dependencies")
 module.pack_support_packages = reject_source_support
@@ -706,6 +712,8 @@ with tempfile.TemporaryDirectory() as directory:
         work = root / f"work-{index}"
         with patch.object(sys, "argv", ["validator", str(packages), "--work-directory", str(work), *arguments]):
             assert module.main() == 0
+        for relative in ("client-consumer/ClientConsumer.csproj", "portal-consumer/PortalConsumer.csproj"):
+            assert ElementTree.parse(work / relative).getroot().findtext("PropertyGroup/TargetFramework") == "net11.0"
         sources = ElementTree.parse(work / "NuGet.Config").getroot().find("packageSources")
         assert sources is not None
         assert [child.tag for child in sources] == ["clear", *(["add"] * (1 + len(expected)))], ElementTree.tostring(sources)
@@ -1035,6 +1043,7 @@ print(f"boundaries|checked={checked}")
     /// <param name="suite">The Python regression suite to execute.</param>
     [Theory]
     [InlineData("SupportVersions")]
+    [InlineData("ConsumerTargets")]
     [InlineData("RestoredVersions")]
     [InlineData("RestoreIsolation")]
     public void ConsumerValidationQualifiesNuGetIdentityAndRestoreIsolation(string suite)

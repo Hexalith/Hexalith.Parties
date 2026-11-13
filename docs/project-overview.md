@@ -15,7 +15,7 @@ Public command and query traffic goes through **Hexalith.EventStore**; the `part
 | **Domain** | Party records (Person / Organization), contact channels, identifiers, GDPR consent & erasure |
 | **Style** | Event sourcing + CQRS + EventStore SDK domain/projection/query handlers, fronted by the EventStore gateway |
 | **Repository** | Monolith - exactly 15 projects under `src` plus one sample project, 17 runnable .NET test projects plus three support hosts and one contracts artifact, and Playwright e2e |
-| **Language / runtime** | C# / **.NET 10** (SDK `11.0.100`) |
+| **Language / runtime** | C# / **.NET 11** (SDK `11.0.100`) |
 | **Orchestration** | .NET Aspire 13.6.5 (`dotnet aspire run`) |
 | **Eventing** | DAPR pub/sub — CloudEvents 1.0 on `{tenant}.parties.events` (Redis local; Kafka/RabbitMQ/Service Bus in prod) |
 | **Integration** | Typed .NET client · `parties-ui` Blazor Server BFF · `parties-mcp` (AI tools, 5) · DAPR event subscription · Blazor Picker, AdminPortal & ConsumerPortal |
@@ -43,10 +43,10 @@ Public command and query traffic goes through **Hexalith.EventStore**; the `part
 | Actors / pub-sub | DAPR | 1.19.1 |
 | Validation | FluentValidation | 12.2.0 |
 | Mediation | MediatR | 14.2.0 |
-| AuthN | JWT Bearer | 10.0.15 |
+| AuthN | JWT Bearer | 11.0.0 |
 | MCP | ModelContextProtocol | 2.4.0 |
-| UI | FluentUI Blazor + CustomElements | 5.0.1 / 10.0.15 |
-| Rich search (opt) | Hexalith.Memories.Client.Rest | 3.0.26 |
+| UI | FluentUI Blazor + CustomElements | 5.0.1 / 11.0.0 |
+| Rich search (opt) | Hexalith.Memories.Client.Rest | 3.0.27 |
 | Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers | 4.0.3 / 4.3.0 / 6.2.0 / 2.15.2 / 4.16.0 |
 
 The DAPR row describes the .NET client/actor SDK packages. The selected runtime

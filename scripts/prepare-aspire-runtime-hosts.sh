@@ -92,6 +92,8 @@ if [[ "$gateway_profile" == packaged ]]; then
         printf 'The packaged runtime requires one exact evaluated stable SDK version; received: %s\n' "$sdk_version" >&2
         exit 1
     fi
+    target_framework="$(dotnet msbuild "$gateway_project" -nologo "-p:Configuration=$configuration" -getProperty:TargetFramework)"
+    case "$target_framework" in net10.0|net11.0) ;; *) printf 'The packaged runtime requires a qualified evaluated target framework; received: %s\n' "$target_framework" >&2; exit 1 ;; esac
     catalog_hosts="$(dotnet msbuild "$gateway_project" -nologo "-p:Configuration=$configuration" -getProperty:HexalithEventStoreCatalogHostsSupported)"
     if [[ "$catalog_hosts" == true ]]; then
         runtime_hosts[2]=tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj
@@ -106,7 +108,8 @@ if [[ "$gateway_profile" == packaged ]]; then
     memories_version="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["HexalithMemoriesVersion"])' <<< "$families_json")"
     frontcomposer_version="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["HexalithFrontComposerVersion"])' <<< "$families_json")"
     mcpcli_version="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["HexalithMcpCliVersion"])' <<< "$families_json")"
-    cohort_arguments=("-p:HexalithEventStoreVersion=$sdk_version" "-p:HexalithUsePublishedSdkForHostedTests=true"
+    cohort_arguments=("-p:HexalithPartiesRuntimeTargetFramework=$target_framework"
+        "-p:CustomAfterMicrosoftCommonProps=$script_directory/PartiesHostedRuntime.props" "-p:HexalithEventStoreVersion=$sdk_version" "-p:HexalithUsePublishedSdkForHostedTests=true"
         "-p:HexalithTenantsVersion=$tenants_version" "-p:HexalithMemoriesVersion=$memories_version"
         "-p:HexalithFrontComposerVersion=$frontcomposer_version" "-p:HexalithMcpCliVersion=$mcpcli_version")
 fi
@@ -117,7 +120,7 @@ for project in "${runtime_hosts[@]}" "${catalog_artifacts[@]}"; do
         dotnet build "$project" --configuration "$configuration" --disable-build-servers \
             -t:Rebuild -m:1 -p:BuildInParallel=false -p:CopyLocalLockFileAssemblies=true -warnaserror "${output_arguments[@]}" "${cohort_arguments[@]}"
         metadata="$(dotnet msbuild "$project" -nologo "-p:Configuration=$configuration" "${output_arguments[@]}" "${cohort_arguments[@]}" \
-            -getProperty:TargetPath,ProjectAssetsFile,Configuration,HexalithEventStoreVersion)"
+            -getProperty:TargetPath,ProjectAssetsFile,Configuration,HexalithEventStoreVersion,TargetFramework,HexalithPartiesRuntimeTargetFramework,CustomAfterMicrosoftCommonProps)"
         receipt="$receipt_directory/$(printf '%s' "$project" | sha256sum | cut -d ' ' -f 1).json"
         role=runtime
         for artifact in "${catalog_artifacts[@]}"; do [[ "$project" != "$artifact" ]] || role=catalog; done
@@ -130,13 +133,13 @@ for project in "${runtime_hosts[@]}" "${catalog_artifacts[@]}"; do
             for owner_index in "${!receipt_projects[@]}"; do
                 if [[ "${receipt_projects[$owner_index]}" == "$native_ui_project" ]]; then
                     python3 "$script_directory/validate-aspire-runtime-cohort.py" --record "${receipt_paths[$owner_index]}" --project "$native_ui_project" \
-                        --metadata-json "${receipt_metadata[$owner_index]}" --configuration "$configuration" --version "$sdk_version" \
+                        --metadata-json "${receipt_metadata[$owner_index]}" --configuration "$configuration" --version "$sdk_version" --target-framework "$target_framework" \
                         --build-started-ns "${receipt_started[$owner_index]}" --role "${receipt_roles[$owner_index]}" --families-json "$families_json"
                 fi
             done
         fi
         python3 "$script_directory/validate-aspire-runtime-cohort.py" --record "$receipt" --project "$project" \
-            --metadata-json "$metadata" --configuration "$configuration" --version "$sdk_version" --build-started-ns "$started_ns" --role "$role" --families-json "$families_json" "${native_ui_arguments[@]}"
+            --metadata-json "$metadata" --configuration "$configuration" --version "$sdk_version" --target-framework "$target_framework" --build-started-ns "$started_ns" --role "$role" --families-json "$families_json" "${native_ui_arguments[@]}"
         receipt_projects+=("$project")
         receipt_metadata+=("$metadata")
         receipt_started+=("$started_ns")
@@ -158,11 +161,11 @@ if [[ "$gateway_profile" == packaged ]]; then
             native_ui_arguments=(--private-admin-ui-receipt "$receipt_directory/$(printf '%s' "$native_ui_project" | sha256sum | cut -d ' ' -f 1).json")
         fi
         python3 "$script_directory/validate-aspire-runtime-cohort.py" --record "${receipt_paths[$index]}" --project "${receipt_projects[$index]}" \
-            --metadata-json "${receipt_metadata[$index]}" --configuration "$configuration" --version "$sdk_version" \
+            --metadata-json "${receipt_metadata[$index]}" --configuration "$configuration" --version "$sdk_version" --target-framework "$target_framework" \
             --build-started-ns "${receipt_started[$index]}" --role "${receipt_roles[$index]}" --families-json "$families_json" "${native_ui_arguments[@]}"
     done
     python3 "$script_directory/validate-aspire-runtime-cohort.py" --complete-manifest "$receipt_directory/prepared.json" \
-        --configuration "$configuration" --version "$sdk_version" --families-json "$families_json" "${receipts[@]}" --archive-cache "$receipt_directory/public-archives" \
+        --configuration "$configuration" --version "$sdk_version" --target-framework "$target_framework" --families-json "$families_json" "${receipts[@]}" --archive-cache "$receipt_directory/public-archives" \
         --public-package "Hexalith.Tenants.Contracts=$tenants_version" --public-package "Hexalith.Tenants.Server=$tenants_version" \
         --public-package "Hexalith.Memories.EventStore=$memories_version" --public-package "Hexalith.Memories.EventStoreExtensions=$memories_version"
 fi

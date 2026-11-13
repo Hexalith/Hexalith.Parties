@@ -26,6 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PROJECT = ROOT / "references/Hexalith.EventStore/src/Hexalith.EventStore.AppHost/Hexalith.EventStore.AppHost.csproj"
 REFERENCE = re.compile(r"\{([a-zA-Z0-9_-]+)\.value\}\Z")
 SENSITIVE = re.compile(r"(?:password|username|signingkey|client[_-]?secret|api[_-]?key|token)\Z", re.IGNORECASE)
+BUILD_PROPERTIES = ("-p:Configuration=Release", "-p:MinVerVersionOverride=1.0.0")
 
 
 URL = re.compile(r"[a-z][a-z0-9+.-]*://[^\s\"<>]+", re.IGNORECASE)
@@ -254,6 +255,23 @@ def run_private(command, directory, environment, timeout):
                     stop_owned_command(process)
                 finally:
                     process.stdout.close()
+    return output
+
+
+def owner_assembly(project, environment):
+    """Evaluate the selected owner's actual output using the same build properties."""
+    output = run_private(["dotnet", "msbuild", str(project), "-nologo", "-nr:false", "-m:1",
+                          *BUILD_PROPERTIES, "-getProperty:TargetPath"], ROOT, environment, 60)
+    require(isinstance(output, bytes) and 0 < len(output) <= 4096,
+            "evaluated owner AppHost target path invalid")
+    value = output.decode("utf-8").removesuffix("\n").removesuffix("\r")
+    require(bool(value) and not any(character in value for character in ("\r", "\n", "\0")),
+            "evaluated owner AppHost target path invalid")
+    assembly = Path(value)
+    require(assembly.is_absolute() and assembly.name == project.stem + ".dll" and not assembly.is_symlink(),
+            "evaluated owner AppHost target path invalid")
+    require(assembly.is_file(), "built owner AppHost assembly missing")
+    return assembly
 
 
 @contextmanager
@@ -267,10 +285,9 @@ def emitted_manifests(project=DEFAULT_PROJECT, build=True):
     environment.update({"DOTNET_ENVIRONMENT": "Production", "ASPNETCORE_ENVIRONMENT": "Production",
                         "SKIP_PREREQUISITE_CHECK": "true"})
     if build:
-        run_private(["dotnet", "build", str(project), "--disable-build-servers", "-c", "Release", "-m:1", "-p:NuGetAudit=false",
-                     "-p:MinVerVersionOverride=1.0.0"], ROOT, environment, 300)
-    assembly = project.parent / "bin/Release/net11.0" / (project.stem + ".dll")
-    require(assembly.is_file(), "built owner AppHost assembly missing")
+        run_private(["dotnet", "build", str(project), "--disable-build-servers", "-m:1",
+                     *BUILD_PROPERTIES], ROOT, environment, 300)
+    assembly = owner_assembly(project, environment)
     environment.update({"Authentication__JwtBearer__Authority": AUTHORITY, "Authentication__JwtBearer__Issuer": AUTHORITY,
                         "Authentication__JwtBearer__Audience": AUDIENCES[0],
                         "Authentication__JwtBearer__ValidAudiences__0": AUDIENCES[1],

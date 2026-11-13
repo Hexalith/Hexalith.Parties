@@ -4,7 +4,7 @@
 
 ## Project at a glance
 
-- **Type:** Monolith — single cohesive .NET 10 solution (backend, event-sourced domain service)
+- **Type:** Monolith — single cohesive .NET 11 solution (backend, event-sourced domain service)
 - **Domain:** Party records (Person / Organization) — contact channels, identifiers, GDPR consent & erasure
 - **Architecture:** Event sourcing + CQRS + EventStore SDK domain/projection/query handlers, fronted by the **Hexalith.EventStore** gateway
 - **Orchestration:** .NET Aspire 13.6.5 (`dotnet aspire run --project src/Hexalith.Parties.AppHost`)

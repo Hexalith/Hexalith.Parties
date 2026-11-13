@@ -1,0 +1,7 @@
+<Project>
+    <!-- Private hosted-test compatibility only. The selector survives restore's removal
+         of global TargetFramework; each original owner still supplies its own props. -->
+    <PropertyGroup Condition="'$(HexalithUsePublishedSdkForHostedTests)' == 'true' and '$(IsPublishing)' != 'true' and ('$(HexalithPartiesRuntimeTargetFramework)' == 'net10.0' or '$(HexalithPartiesRuntimeTargetFramework)' == 'net11.0') and '$(TargetFramework)' == 'net10.0'">
+        <TargetFramework>$(HexalithPartiesRuntimeTargetFramework)</TargetFramework>
+    </PropertyGroup>
+</Project>

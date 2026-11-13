@@ -34,6 +34,10 @@ public sealed class AspireRuntimePreparationTests
     [InlineData("packaged", false, false, "probe-failed")]
     [InlineData("packaged-isolated", false, false, "probe-failed")]
     [InlineData("packaged", false, true, "valid")]
+    [InlineData("packaged", false, false, "framework-metadata")]
+    [InlineData("packaged", false, false, "framework-assets")]
+    [InlineData("packaged", false, false, "framework-deps")]
+    [InlineData("packaged", false, false, "framework-runtime")]
     [InlineData("packaged", false, false, "wrong-version")]
     [InlineData("packaged", false, false, "project-type")]
     [InlineData("packaged", false, false, "missing-sdk")]
@@ -69,6 +73,7 @@ public sealed class AspireRuntimePreparationTests
         try
         {
             File.Copy(CiTestPaths.RepoFile("scripts/prepare-aspire-runtime-hosts.sh"), script);
+            File.Copy(CiTestPaths.RepoFile("scripts/PartiesHostedRuntime.props"), Path.Combine(root, "scripts", "PartiesHostedRuntime.props"));
             File.Copy(CiTestPaths.RepoFile("scripts/validate-aspire-runtime-cohort.py"), Path.Combine(root, "scripts", "validate-aspire-runtime-cohort.py"));
             string[] catalogProjects = profile == "native" ? [] : ["src/Hexalith.Parties/Hexalith.Parties.csproj",
                 "src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj",
@@ -93,7 +98,8 @@ public sealed class AspireRuntimePreparationTests
                 configuration = next((arg.split('=', 1)[1] for arg in args if arg.startswith('-p:Configuration=')), 'Release')
                 if '--configuration' in args:
                     configuration = args[args.index('--configuration') + 1]
-                target = (project.parent / 'bin' / configuration / 'net10.0' / (project.stem + '.dll')).resolve()
+                framework = next((arg.split('=', 1)[1] for arg in args if arg.startswith('-p:HexalithPartiesRuntimeTargetFramework=')), 'net11.0')
+                target = (project.parent / 'bin' / configuration / framework / (project.stem + '.dll')).resolve()
                 assets = (project.parent / 'obj/project.assets.json').resolve()
                 artifacts = next((arg.split('=', 1)[1] for arg in args if arg.startswith('-p:ArtifactsPath=')), None)
                 if artifacts:
@@ -103,18 +109,23 @@ public sealed class AspireRuntimePreparationTests
                 if '-getProperty:HexalithEventStoreVersion' in args:
                     if os.environ['PARTIES_COHORT_MUTATION'] == 'probe-failed': sys.exit(33)
                     print('3.130.2')
+                elif '-getProperty:TargetFramework' in args:
+                    print('net11.0')
                 elif '-getProperty:HexalithEventStoreCatalogHostsSupported' in args:
                     print('true')
                 elif any(arg.startswith('-getProperty:HexalithTenantsVersion,') for arg in args):
                     print(json.dumps({'Properties':families}))
                 elif any(arg.startswith('-getProperty:TargetPath,') for arg in args):
                     print(json.dumps({'Properties':{'TargetPath':str(target), 'ProjectAssetsFile':str(assets),
-                        'Configuration':configuration, 'HexalithEventStoreVersion':'3.130.2'}}))
+                        'Configuration':configuration, 'HexalithEventStoreVersion':'3.130.2',
+                        'TargetFramework':'net10.0' if os.environ['PARTIES_COHORT_MUTATION'] == 'framework-metadata' else framework,
+                        'HexalithPartiesRuntimeTargetFramework':framework,
+                        'CustomAfterMicrosoftCommonProps':next(arg.split('=',1)[1] for arg in args if arg.startswith('-p:CustomAfterMicrosoftCommonProps='))}}))
                 elif args[0] == 'build':
                     mode = os.environ['PARTIES_COHORT_MUTATION']
                     target.parent.mkdir(parents=True, exist_ok=True)
                     target.write_bytes(b'completed entry PE')
-                    target.with_suffix('.runtimeconfig.json').write_text('{"runtimeOptions":{"tfm":"net10.0"}}')
+                    target.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net10.0' if mode == 'framework-runtime' else framework}}))
                     assets.parent.mkdir(parents=True, exist_ok=True)
                     cache = Path('packages').resolve()
                     official = Path(os.environ['PARTIES_OFFICIAL_ARCHIVES'])
@@ -145,8 +156,8 @@ public sealed class AspireRuntimePreparationTests
                     elif mode == 'project-type': libraries['Hexalith.EventStore.Client/3.130.2']['type'] = 'project'
                     elif mode == 'missing-core-library': libraries.pop('Hexalith.EventStore.Contracts/3.130.2')
                     elif mode == 'missing-sdk': libraries = {}
-                    if mode != 'missing-assets': assets.write_text(json.dumps({'libraries':libraries,'targets':{'net10.0':targets},'packageFolders':{str(cache):{}}}))
-                    target.with_suffix('.deps.json').write_text(json.dumps({'libraries':libraries,'targets':{'net10.0':targets}}))
+                    if mode != 'missing-assets': assets.write_text(json.dumps({'project':{'frameworks':{'net10.0' if mode == 'framework-assets' else framework:{}}},'libraries':libraries,'targets':{framework:targets},'packageFolders':{str(cache):{}}}))
+                    target.with_suffix('.deps.json').write_text(json.dumps({'runtimeTarget':{'name':'net10.0' if mode == 'framework-deps' else framework},'libraries':libraries,'targets':{framework:targets}}))
                     archive_cache = Path(artifacts or 'artifacts') / 'runtime-profile' / configuration / 'public-archives'
                     archive_cache.mkdir(parents=True,exist_ok=True)
                     for package,version,repo in [('Hexalith.Tenants.Contracts','6.0.0','Hexalith.Tenants'),('Hexalith.Tenants.Server','6.0.0','Hexalith.Tenants'),('Hexalith.Memories.EventStore','3.0.13','Hexalith.Memories'),('Hexalith.Memories.EventStoreExtensions','3.0.13','Hexalith.Memories')]:
@@ -229,8 +240,10 @@ public sealed class AspireRuntimePreparationTests
             builds.ShouldAllBe(call => call.Contains(configuration) && call.Contains("-warnaserror") && call.Contains("-m:1"));
             if (profile != "native")
             {
-                builds.ShouldAllBe(call => call.Contains("-p:HexalithEventStoreVersion=3.130.2") && call.Contains("-p:HexalithUsePublishedSdkForHostedTests=true"));
+                builds.ShouldAllBe(call => call.Contains("-p:HexalithPartiesRuntimeTargetFramework=net11.0") && call.Contains("-p:CustomAfterMicrosoftCommonProps=" + Path.Combine(root, "scripts", "PartiesHostedRuntime.props")) && call.Contains("-p:HexalithEventStoreVersion=3.130.2") && call.Contains("-p:HexalithUsePublishedSdkForHostedTests=true"));
                 arguments.Count(call => call.Any(argument => argument.StartsWith("-getProperty:TargetPath,", StringComparison.Ordinal))).ShouldBe(11 + qualificationProjects.Length);
+                arguments.Where(call => call.Any(argument => argument.StartsWith("-getProperty:TargetPath,", StringComparison.Ordinal)))
+                    .ShouldAllBe(call => call.Contains("-p:HexalithPartiesRuntimeTargetFramework=net11.0") && call.Contains("-p:CustomAfterMicrosoftCommonProps=" + Path.Combine(root, "scripts", "PartiesHostedRuntime.props")));
                 builds.ShouldAllBe(call => call.Contains("-t:Rebuild") && call.Contains("-p:HexalithFrontComposerVersion=4.7.4")
                     && call.Contains("-p:HexalithTenantsVersion=6.0.0") && call.Contains("-p:HexalithMemoriesVersion=3.0.13")
                     && call.Contains("-p:HexalithMcpCliVersion=2.0.1"));
@@ -252,6 +265,42 @@ public sealed class AspireRuntimePreparationTests
             }
         }
         finally { Directory.Delete(root, recursive: true); }
+    }
+
+    /// <summary>The hosted profile reaches real restore discovery while preserving native, publish and explicit library targets.</summary>
+    /// <param name="hosted">Whether the private package profile is selected.</param>
+    /// <param name="publishing">Whether ordinary publication is being evaluated.</param>
+    /// <param name="expected">The expected inherited host framework.</param>
+    [Theory]
+    [InlineData(true, false, "net11.0")]
+    [InlineData(false, false, "net10.0")]
+    [InlineData(true, true, "net10.0")]
+    public async Task HostedFrameworkProfileSurvivesActualRestoreDiscovery(bool hosted, bool publishing, string expected)
+    {
+        string workspace = Path.Combine(Path.GetTempPath(), "parties-runtime-framework-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(workspace);
+        try
+        {
+            string owner = Path.Combine(workspace, "Directory.Build.props");
+            const string Original = "<Project><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>";
+            File.WriteAllText(owner, Original);
+            string library = Path.Combine(workspace, "Library.csproj");
+            File.WriteAllText(library, """<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>netstandard2.0</TargetFramework></PropertyGroup></Project>""");
+            string project = Path.Combine(workspace, "Host.csproj");
+            File.WriteAllText(project, """<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><ProjectReference Include="Library.csproj" /></ItemGroup></Project>""");
+            string graph = Path.Combine(workspace, "restore-graph.json");
+            var result = await RunDotnetAsync(workspace, "msbuild", project, "-nologo", "-target:GenerateRestoreGraphFile",
+                "-p:RestoreGraphOutputPath=" + graph, "-p:HexalithUsePublishedSdkForHostedTests=" + hosted.ToString().ToLowerInvariant(),
+                "-p:IsPublishing=" + publishing.ToString().ToLowerInvariant(), "-p:HexalithPartiesRuntimeTargetFramework=net11.0",
+                "-p:CustomAfterMicrosoftCommonProps=" + CiTestPaths.RepoFile("scripts/PartiesHostedRuntime.props")).ConfigureAwait(true);
+            result.ExitCode.ShouldBe(0, result.Output + result.Error);
+            using JsonDocument document = JsonDocument.Parse(File.ReadAllText(graph));
+            JsonElement projects = document.RootElement.GetProperty("projects");
+            projects.GetProperty(project).GetProperty("frameworks").EnumerateObject().Select(item => item.Name).ShouldBe([expected]);
+            projects.GetProperty(library).GetProperty("frameworks").EnumerateObject().Select(item => item.Name).ShouldBe(["netstandard2.0"]);
+            File.ReadAllText(owner).ShouldBe(Original, "The compatibility profile cannot edit the selected owner's props.");
+        }
+        finally { Directory.Delete(workspace, recursive: true); }
     }
 
     /// <summary>Configuration uses the explicit owner root or bounded declared layouts without initializing submodules.</summary>

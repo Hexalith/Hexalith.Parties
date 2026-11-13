@@ -12,6 +12,8 @@ import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path
 
+RUNTIME_PROFILE = Path(__file__).with_name("PartiesHostedRuntime.props").resolve()
+
 SDK_IDS = {
     "Hexalith.EventStore.Admin.Abstractions", "Hexalith.EventStore.Admin.Cli", "Hexalith.EventStore.Admin.Server",
     "Hexalith.EventStore.Aspire", "Hexalith.EventStore.Client", "Hexalith.EventStore.Contracts",
@@ -241,7 +243,7 @@ def runtime_inputs(target: Path) -> set[Path]:
 
 
 def bind_native_ui(target: Path, project: Path, configuration: str, version: str, families: dict,
-                   owner_receipt: Path | None) -> dict | None:
+                   owner_receipt: Path | None, target_framework: str | None = None) -> dict | None:
     """Bind the wrapper's transitive UI reference to the exact separately qualified host artifact."""
     if project.resolve() != MEMORY_QUALIFICATION_PROJECT:
         if owner_receipt is not None:
@@ -253,7 +255,7 @@ def bind_native_ui(target: Path, project: Path, configuration: str, version: str
         return None
     if owner_receipt is None:
         raise ValueError("Qualification wrapper requires the completed private Admin UI artifact receipt")
-    owner = verify_receipt(load(owner_receipt), PRIVATE_ADMIN_UI_PROJECT, configuration, version, families)
+    owner = verify_receipt(load(owner_receipt), PRIVATE_ADMIN_UI_PROJECT, configuration, version, families, target_framework)
     owner_target = Path(owner["targetPath"])
     source_proof = owner_target.parent / "native-admin-ui-artifact.tsv"
     if str(source_proof) not in owner["files"]:
@@ -287,11 +289,42 @@ def native_ui_sources(target: Path) -> set[Path]:
     return paths
 
 
+def require_framework(value: str) -> str:
+    """Keep the explicit hosted compatibility profile finite and separate from package family identity."""
+    if value not in {"net10.0", "net11.0"}:
+        raise ValueError("The prepared runtime requires an exact qualified target framework")
+    return value
+
+
+def validate_framework(assets: dict, target: Path, framework: str, role: str) -> None:
+    """Bind evaluated, restored and deployed frameworks before any prepared PE can launch."""
+    framework = require_framework(framework)
+    if set(assets.get("project", {}).get("frameworks", {})) != {framework}:
+        raise ValueError("Restored runtime target framework differs from the evaluated build profile")
+    names = {framework, ".NETCoreApp,Version=v" + framework.removeprefix("net")}
+    if not assets.get("targets") or any(name.split("/", 1)[0] not in names for name in assets["targets"]):
+        raise ValueError("Restored runtime target graph differs from the evaluated build profile")
+    deps = load(target.with_suffix(".deps.json"))
+    if deps.get("runtimeTarget", {}).get("name", "").split("/", 1)[0] not in names \
+            or not deps.get("targets") or any(name.split("/", 1)[0] not in names for name in deps["targets"]):
+        raise ValueError("Deployed runtime target framework differs from the evaluated build profile")
+    runtimeconfig = target.with_suffix(".runtimeconfig.json")
+    if role == "runtime" or runtimeconfig.is_file():
+        if load(runtimeconfig).get("runtimeOptions", {}).get("tfm") != framework:
+            raise ValueError("Deployed runtime configuration differs from the evaluated build profile")
+
+
 def record(metadata: dict, project: Path, configuration: str, version: str, started_ns: int, role: str, families: dict,
-           private_admin_ui_receipt: Path | None = None) -> dict:
+           private_admin_ui_receipt: Path | None = None, target_framework: str | None = None) -> dict:
     properties = metadata.get("Properties", metadata)
     if properties["Configuration"] != configuration or properties["HexalithEventStoreVersion"] != version:
         raise ValueError("Evaluated build configuration/cohort differs from the completed build")
+    framework = require_framework(properties.get("TargetFramework"))
+    if target_framework is not None and framework != require_framework(target_framework):
+        raise ValueError("Evaluated runtime target framework differs from the selected build profile")
+    if properties.get("HexalithPartiesRuntimeTargetFramework") != framework \
+            or Path(properties.get("CustomAfterMicrosoftCommonProps", "")).resolve() != RUNTIME_PROFILE:
+        raise ValueError("Evaluated runtime build profile differs from the selected hosted profile")
     target, assets_path = Path(properties["TargetPath"]).resolve(), Path(properties["ProjectAssetsFile"]).resolve()
     if not target.is_file() or target.stat().st_mtime_ns < started_ns:
         raise ValueError("The completed rebuild did not produce its actual runtime entry PE")
@@ -300,30 +333,37 @@ def record(metadata: dict, project: Path, configuration: str, version: str, star
     if not deps.is_file() or role == "runtime" and not runtimeconfig.is_file():
         raise ValueError("The prepared runtime dependency/configuration output is missing")
     assets = validate(assets_path, version, project)
+    validate_framework(assets, target, framework, role)
     validate_families(assets, families)
-    native_ui = bind_native_ui(target, project, configuration, version, families, private_admin_ui_receipt)
+    native_ui = bind_native_ui(target, project, configuration, version, families, private_admin_ui_receipt, framework)
     validate_deps(deps, version, set(assets["libraries"]), families, project, native_ui is not None)
     archives, binaries = sdk_proof(assets, target, version, families)
-    paths = runtime_inputs(target) | {assets_path, project.resolve()}
+    paths = runtime_inputs(target) | {assets_path, project.resolve(), RUNTIME_PROFILE}
     paths.update(native_ui_sources(target))
     return {"schemaVersion": 1, "completed": True, "project": str(project.resolve()), "configuration": configuration,
-            "sdkVersion": version, "familyVersions": families, "role": role, "targetPath": str(target), "assetsPath": str(assets_path),
+            "sdkVersion": version, "targetFramework": framework, "familyVersions": families, "role": role, "targetPath": str(target), "assetsPath": str(assets_path),
             "buildStartedNs": started_ns, "completedNs": time.time_ns(),
             "runtimeInputs": [str(path) for path in sorted(runtime_inputs(target))],
             "files": {str(path): digest(path) for path in sorted(paths)},
             "sdkArchives": archives, "sdkBinaries": binaries, "nativeAdminUi": native_ui}
 
 
-def verify_receipt(receipt: dict, project: Path, configuration: str, version: str, families: dict | None = None) -> dict:
+def verify_receipt(receipt: dict, project: Path, configuration: str, version: str, families: dict | None = None,
+                   target_framework: str | None = None) -> dict:
     if families is not None and receipt.get("familyVersions") != families:
         raise ValueError("Prepared public family selection differs from the actual launch")
     if receipt.get("schemaVersion") != 1 or receipt.get("completed") is not True or receipt.get("project") != str(project.resolve()):
         raise ValueError("The completed preparation receipt does not bind this project")
     if receipt.get("configuration") != configuration or receipt.get("sdkVersion") != version:
         raise ValueError("Prepared runtime configuration/cohort differs from the actual launch")
+    framework = require_framework(receipt.get("targetFramework"))
+    if target_framework is not None and framework != require_framework(target_framework):
+        raise ValueError("Prepared runtime target framework differs from the actual launch")
     for filename, expected in receipt["files"].items():
         if digest(Path(filename)) != expected:
             raise ValueError("Prepared runtime file drifted after completed build: " + filename)
+    if str(RUNTIME_PROFILE) not in receipt["files"]:
+        raise ValueError("Prepared runtime build profile is not bound to its actual source")
     target, assets_path = Path(receipt["targetPath"]), Path(receipt["assetsPath"])
     if not isinstance(receipt.get("runtimeInputs"), list):
         raise ValueError("Prepared runtime input inventory is missing")
@@ -335,12 +375,13 @@ def verify_receipt(receipt: dict, project: Path, configuration: str, version: st
     if not native_ui_sources(target).issubset({Path(filename) for filename in receipt["files"]}):
         raise ValueError("Native UI artifact provenance contains unbound source files")
     assets = validate(assets_path, version, project)
+    validate_framework(assets, target, framework, receipt["role"])
     validate_families(assets, receipt["familyVersions"])
     bound_ui = receipt.get("nativeAdminUi")
     if bound_ui is not None and digest(Path(bound_ui["path"])) != bound_ui["sha256"]:
         raise ValueError("Qualification wrapper private Admin UI receipt drifted")
     native_ui = bind_native_ui(target, project, configuration, version, receipt["familyVersions"],
-                              Path(bound_ui["path"]) if bound_ui is not None else None)
+                              Path(bound_ui["path"]) if bound_ui is not None else None, framework)
     validate_deps(target.with_suffix(".deps.json"), version, set(assets["libraries"]), receipt["familyVersions"], project, native_ui is not None)
     archives, binaries = sdk_proof(assets, target, version, receipt["familyVersions"])
     if archives != receipt["sdkArchives"] or binaries != receipt["sdkBinaries"]:
@@ -377,12 +418,15 @@ def public_archive(package: str, cache: Path) -> dict:
     return archive_identity(path, package_id, version, repository)
 
 
-def complete(paths: list[Path], configuration: str, version: str, packages: list[str], cache: Path, families: dict) -> dict:
+def complete(paths: list[Path], configuration: str, version: str, packages: list[str], cache: Path, families: dict,
+             target_framework: str | None = None) -> dict:
     projects = {}
     restored_archives = []
     for path in paths:
         receipt = load(path)
-        verify_receipt(receipt, Path(receipt["project"]), configuration, version, families)
+        if target_framework is None:
+            target_framework = require_framework(receipt.get("targetFramework"))
+        verify_receipt(receipt, Path(receipt["project"]), configuration, version, families, target_framework)
         if receipt["project"] in projects:
             raise ValueError("A prepared project appears more than once")
         projects[receipt["project"]] = {"receipt": str(path.resolve()), "sha256": digest(path)}
@@ -396,11 +440,12 @@ def complete(paths: list[Path], configuration: str, version: str, packages: list
         if archive["sha256"] != official[archive["id"], archive["version"]]["sha256"]:
             raise ValueError("Restored archive differs from independently retrieved official package: " + archive["id"])
     return {"schemaVersion": 1, "completed": True, "configuration": configuration, "sdkVersion": version,
-            "completedNs": time.time_ns(), "familyVersions": families, "projects": projects,
+            "completedNs": time.time_ns(), "targetFramework": target_framework, "familyVersions": families, "projects": projects,
             "publicArchives": public}
 
 
-def verify_manifest(path: Path, project: Path, configuration: str, version: str, families: dict | None = None) -> dict:
+def verify_manifest(path: Path, project: Path, configuration: str, version: str, families: dict | None = None,
+                    target_framework: str | None = None) -> dict:
     manifest = load(path)
     if manifest.get("schemaVersion") != 1 or manifest.get("completed") is not True:
         raise ValueError("The packaged runtime preparation did not complete")
@@ -408,6 +453,9 @@ def verify_manifest(path: Path, project: Path, configuration: str, version: str,
         raise ValueError("Completed preparation belongs to another configuration/cohort")
     if families is not None and manifest.get("familyVersions") != families:
         raise ValueError("Completed public family selection differs from the actual launch")
+    framework = require_framework(manifest.get("targetFramework"))
+    if target_framework is not None and framework != require_framework(target_framework):
+        raise ValueError("Completed runtime target framework differs from the actual launch")
     bound = manifest["projects"][str(project.resolve())]
     receipt_path = Path(bound["receipt"])
     if digest(receipt_path) != bound["sha256"]:
@@ -416,7 +464,7 @@ def verify_manifest(path: Path, project: Path, configuration: str, version: str,
         actual = archive_identity(Path(proof["path"]), proof["id"], proof["version"], proof["repository"])
         if actual != proof:
             raise ValueError("Public peer package identity/source proof drifted")
-    receipt = verify_receipt(load(receipt_path), project, configuration, version, manifest["familyVersions"])
+    receipt = verify_receipt(load(receipt_path), project, configuration, version, manifest["familyVersions"], framework)
     official = {(archive["id"], archive["version"]): archive for archive in manifest["publicArchives"]}
     for archive in receipt["sdkArchives"]:
         proof = official.get((archive["id"], archive["version"]))
@@ -442,18 +490,21 @@ def main() -> None:
     parser.add_argument("--archive-cache", type=Path)
     parser.add_argument("--manifest", type=Path)
     parser.add_argument("--families-json", default="{}")
+    parser.add_argument("--target-framework", choices=("net10.0", "net11.0"))
     args = parser.parse_args()
     try:
         families = json.loads(args.families_json)
+        if (args.record or args.complete_manifest or args.manifest) and args.target_framework is None:
+            raise ValueError("Completed runtime evidence requires the exact evaluated --target-framework")
         if args.record:
             value = record(json.loads(args.metadata_json), args.project, args.configuration, args.version, args.build_started_ns, args.role, families,
-                           args.private_admin_ui_receipt)
+                           args.private_admin_ui_receipt, args.target_framework)
             write(args.record, value)
         elif args.complete_manifest:
-            value = complete(args.receipt, args.configuration, args.version, args.public_package, args.archive_cache, families)
+            value = complete(args.receipt, args.configuration, args.version, args.public_package, args.archive_cache, families, args.target_framework)
             write(args.complete_manifest, value)
         elif args.manifest:
-            print(json.dumps(verify_manifest(args.manifest, args.project, args.configuration, args.version, families)))
+            print(json.dumps(verify_manifest(args.manifest, args.project, args.configuration, args.version, families, args.target_framework)))
         elif args.assets:
             validate(args.assets, args.version, args.project)
         else:

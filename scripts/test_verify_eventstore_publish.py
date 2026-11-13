@@ -3,6 +3,7 @@
 import copy
 from contextlib import redirect_stdout
 import io
+from itertools import product
 import json
 import os
 import sys
@@ -86,11 +87,11 @@ class OwnerPublishTests(unittest.TestCase):
 
     def test_failed_emissions_remove_private_output_and_keep_diagnostics_bounded(self):
         marker = "synthetic-credential-must-never-appear"
-        for failure in ("publication", "malformed-json", "validation", "second-emission"):
-            with self.subTest(failure=failure), tempfile.TemporaryDirectory() as workspace:
+        for framework, failure in product(("net10.0", "net11.0"), ("publication", "malformed-json", "validation", "second-emission")):
+            with self.subTest(framework=framework, failure=failure), tempfile.TemporaryDirectory() as workspace:
                 project = Path(workspace) / "Owner.csproj"
                 project.touch()
-                assembly = project.parent / "bin/Release/net11.0/Owner.dll"
+                assembly = project.parent / "bin/Release" / framework / "Owner.dll"
                 assembly.parent.mkdir(parents=True)
                 assembly.touch()
                 private_paths = []
@@ -103,6 +104,8 @@ class OwnerPublishTests(unittest.TestCase):
                     return directory
 
                 def emit(command, directory, environment, timeout):
+                    if "-getProperty:TargetPath" in command:
+                        return (str(assembly) + "\n").encode()
                     if "--output-path" not in command:
                         return
                     path = Path(command[command.index("--output-path") + 1])
@@ -146,6 +149,79 @@ class OwnerPublishTests(unittest.TestCase):
             mutate(mutated["resources"])
             with self.assertRaises(publisher.QualificationError):
                 publisher.validate_manifest(mutated, poison, grants)
+
+
+@unittest.skipUnless(sys.platform == "linux", "Owned command supervision is qualified on Linux only")
+class EvaluatedOwnerPathTests(unittest.TestCase):
+    def test_real_msbuild_target_path_uses_the_selected_framework_configuration_and_properties(self):
+        for framework in ("net10.0", "net11.0"):
+            with self.subTest(framework=framework), tempfile.TemporaryDirectory() as workspace:
+                project = Path(workspace) / "Owner.csproj"
+                project.write_text("""<Project><PropertyGroup>
+                    <TargetFramework>""" + framework + """</TargetFramework>
+                    <TargetPath>$(MSBuildProjectDirectory)/custom output/$(Configuration)/$(TargetFramework)/$(MinVerVersionOverride)/$(MSBuildProjectName).dll</TargetPath>
+                    </PropertyGroup></Project>""")
+                assembly = project.parent / "custom output/Release" / framework / "1.0.0/Owner.dll"
+                assembly.parent.mkdir(parents=True)
+                assembly.touch()
+                self.assertEqual(publisher.owner_assembly(project, os.environ.copy()), assembly)
+                self.assertFalse((project.parent / "bin/Release" / framework / "Owner.dll").exists())
+
+    def test_build_and_target_query_share_selection_and_keep_package_auditing_enabled(self):
+        with tempfile.TemporaryDirectory() as workspace:
+            project = Path(workspace) / "Owner.csproj"
+            project.touch()
+            assembly = project.parent / "redirected/Release/net11.0/Owner.dll"
+            assembly.parent.mkdir(parents=True)
+            assembly.touch()
+            commands = []
+
+            def run(command, directory, environment, timeout):
+                commands.append(command)
+                if "-getProperty:TargetPath" in command:
+                    return (str(assembly) + "\n").encode()
+                if "--output-path" in command:
+                    raise publisher.QualificationError("fixture stops before publisher execution")
+
+            with mock.patch.object(publisher, "run_private", side_effect=run):
+                with self.assertRaisesRegex(publisher.QualificationError, "fixture stops"):
+                    with publisher.emitted_manifests(project):
+                        self.fail("fixture publisher must not complete")
+            self.assertEqual(commands[0][:2], ["dotnet", "build"])
+            self.assertEqual(commands[1][:2], ["dotnet", "msbuild"])
+            for command in commands[:2]:
+                self.assertIn(str(project), command)
+                self.assertEqual([argument for argument in command if argument.startswith("-p:")],
+                                 list(publisher.BUILD_PROPERTIES))
+                self.assertFalse(any("NuGetAudit=false" in argument for argument in command))
+            self.assertEqual(commands[2][1], str(assembly))
+
+    def test_absent_or_invalid_evaluated_paths_refuse_without_disclosing_output(self):
+        marker = "synthetic-private-target-path"
+        with tempfile.TemporaryDirectory() as workspace:
+            project = Path(workspace) / "Owner.csproj"
+            project.touch()
+            absent = project.parent / marker / "Owner.dll"
+            wrong_owner = project.parent / marker / "Foreign.dll"
+            wrong_owner.parent.mkdir()
+            wrong_owner.touch()
+            directory = project.parent / "Owner.dll"
+            directory.mkdir()
+            linked = project.parent / "linked/Owner.dll"
+            linked.parent.mkdir()
+            linked.symlink_to(wrong_owner)
+            for output in (b"", b"Owner.dll\n", b"\xff", (str(absent) + "\n").encode(),
+                           (str(wrong_owner) + "\n").encode(), (str(directory) + "\n").encode(),
+                           (str(linked) + "\n").encode(), (str(absent) + "\n" + marker).encode(),
+                           (str(absent) + "\0").encode(), b"x" * 4097):
+                with self.subTest(output=output), mock.patch.object(publisher, "run_private", return_value=output):
+                    captured = io.StringIO()
+                    with mock.patch.object(sys, "argv", ["verify-eventstore-publish", "--project", str(project), "--no-build"]), redirect_stdout(captured):
+                        self.assertEqual(publisher.main(), 1)
+                    self.assertNotIn(marker, captured.getvalue())
+                    self.assertNotIn(workspace, captured.getvalue())
+                    self.assertIn("output withheld", captured.getvalue())
+                    self.assertLess(len(captured.getvalue()), 300)
 
 
 @unittest.skipUnless(sys.platform == "linux", "Owned command supervision is qualified on Linux only")

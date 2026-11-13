@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -145,6 +146,48 @@ def package_versions(package_directory: Path) -> dict[str, str]:
         raise ValueError(f"Expected Parties packages to share one version, found {sorted(distinct_versions)}")
 
     return versions
+
+
+def validate_target_framework(value: str) -> str:
+    """Require one ordinary .NET target before writing an independent consumer."""
+    if re.fullmatch(r"net[1-9][0-9]*\.(?:0|[1-9][0-9]*)", value) is None:
+        raise ValueError(f"Unsupported consumer target framework: {value!r}")
+    return value
+
+
+def package_target_framework(package_directory: Path) -> str:
+    """Derive one shared target from the actual Parties runtime package assets."""
+    selected: dict[str, str] = {}
+    for package_path in package_directory.glob("*.nupkg"):
+        if ".symbols." in package_path.name or package_path.name.endswith(".snupkg"):
+            continue
+        package_id, _ = package_identity(package_path)
+        if package_id not in PACKAGE_IDS:
+            continue
+        if package_id in selected:
+            raise ValueError(f"Expected exactly one {package_id} package for consumer target selection")
+        with zipfile.ZipFile(package_path) as package:
+            assemblies = [
+                name.split("/") for name in package.namelist()
+                if name.startswith("lib/") and name.endswith(f"/{package_id}.dll")
+            ]
+            if len(assemblies) != 1 or len(assemblies[0]) != 3:
+                raise ValueError(f"{package_path.name}: expected exactly one runtime target assembly")
+            framework = validate_target_framework(assemblies[0][1])
+            reference_assemblies = [
+                name for name in package.namelist()
+                if name.startswith("ref/") and name.endswith(f"/{package_id}.dll")
+            ]
+            if reference_assemblies and reference_assemblies != [f"ref/{framework}/{package_id}.dll"]:
+                raise ValueError(f"{package_path.name}: reference and runtime target frameworks differ")
+            selected[package_id] = framework
+    missing = sorted(set(PACKAGE_IDS) - set(selected))
+    if missing:
+        raise ValueError(f"Missing local packages required for consumer target selection: {missing}")
+    frameworks = set(selected.values())
+    if len(frameworks) != 1:
+        raise ValueError(f"Expected Parties consumer packages to share one target framework, found {selected}")
+    return next(iter(frameworks))
 
 
 def normalize_nuget_version(version: str) -> str:
@@ -292,7 +335,8 @@ def write_nuget_config(root: Path, package_directories: list[Path], additional_s
     return config_file
 
 
-def write_client_consumer(root: Path, version: str) -> Path:
+def write_client_consumer(root: Path, version: str, target_framework: str) -> Path:
+    target_framework = validate_target_framework(target_framework)
     project_dir = root / "client-consumer"
     project_dir.mkdir(parents=True)
     project_file = project_dir / "ClientConsumer.csproj"
@@ -300,7 +344,7 @@ def write_client_consumer(root: Path, version: str) -> Path:
         f"""<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net11.0</TargetFramework>
+    <TargetFramework>{target_framework}</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
@@ -357,14 +401,15 @@ Console.WriteLine("Published catalog: 41 routes, 41 operation schemas, 28 canoni
     return project_file
 
 
-def write_portal_consumer(root: Path, version: str) -> Path:
+def write_portal_consumer(root: Path, version: str, target_framework: str) -> Path:
+    target_framework = validate_target_framework(target_framework)
     project_dir = root / "portal-consumer"
     project_dir.mkdir(parents=True)
     project_file = project_dir / "PortalConsumer.csproj"
     project_file.write_text(
         f"""<Project Sdk="Microsoft.NET.Sdk.Razor">
   <PropertyGroup>
-    <TargetFramework>net11.0</TargetFramework>
+    <TargetFramework>{target_framework}</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
@@ -506,6 +551,7 @@ def main() -> int:
     package_directory = args.package_directory.resolve()
     versions = package_versions(package_directory)
     version = versions["Hexalith.Parties.Contracts"]
+    target_framework = package_target_framework(package_directory)
 
     work_directory = args.work_directory
     if work_directory.exists():
@@ -524,7 +570,7 @@ def main() -> int:
     write_nuget_config(work_directory, package_feeds, sources)
 
     validate_consumer(
-        write_client_consumer(work_directory, version),
+        write_client_consumer(work_directory, version, target_framework),
         event_store_version,
         CLIENT_REQUIRED_EVENT_STORE_PACKAGE_IDS,
         front_composer_version,
@@ -533,7 +579,7 @@ def main() -> int:
         commons_version=commons_version,
     )
     validate_consumer(
-        write_portal_consumer(work_directory, version),
+        write_portal_consumer(work_directory, version, target_framework),
         event_store_version,
         PORTAL_REQUIRED_EVENT_STORE_PACKAGE_IDS,
         front_composer_version,

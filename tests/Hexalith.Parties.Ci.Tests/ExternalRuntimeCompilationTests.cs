@@ -119,6 +119,7 @@ public sealed class ExternalRuntimeCompilationTests
                     using JsonDocument completed = JsonDocument.Parse(File.ReadAllText(manifest));
                     completed.RootElement.GetProperty("completed").GetBoolean().ShouldBeTrue();
                     completed.RootElement.GetProperty("sdkVersion").GetString().ShouldBe(FixtureVersion);
+                    completed.RootElement.GetProperty("targetFramework").GetString().ShouldBe("net10.0");
                     completed.RootElement.GetProperty("projects").EnumerateObject().Count().ShouldBe(RuntimeProjects.Length);
                     foreach (string project in RuntimeProjects)
                     {
@@ -211,7 +212,7 @@ public sealed class ExternalRuntimeCompilationTests
     private static void WriteRuntimeTree(string root, string commonFeed, string selectedFeed)
     {
         Directory.CreateDirectory(Path.Combine(root, "scripts"));
-        foreach (string script in new[] { "prepare-aspire-runtime-hosts.sh", "validate-aspire-runtime-cohort.py" })
+        foreach (string script in new[] { "prepare-aspire-runtime-hosts.sh", "validate-aspire-runtime-cohort.py", "PartiesHostedRuntime.props" })
         {
             File.Copy(CiTestPaths.RepoFile("scripts/" + script), Path.Combine(root, "scripts", script));
         }

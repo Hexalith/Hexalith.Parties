@@ -107,7 +107,7 @@ public sealed class DevelopmentCatalogModelFinalizationTests
                 Bootstrap.UsePreparedInputsForModelTest(builder, _ => Task.FromResult(new JsonObject
                 {
                     ["HexalithEventStoreVersion"] = sdk, ["HexalithTenantsVersion"] = "7.0.5", ["HexalithMemoriesVersion"] = "3.0.25",
-                    ["HexalithFrontComposerVersion"] = "4.7.6", ["HexalithMcpCliVersion"] = "2.0.1",
+                    ["HexalithFrontComposerVersion"] = "4.7.6", ["HexalithMcpCliVersion"] = "2.0.1", ["TargetFramework"] = "net11.0",
                 }), (project, version, _) =>
                 {
                     version.ShouldBe(sdk);

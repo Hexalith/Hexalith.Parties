@@ -43,6 +43,7 @@ internal sealed class PartiesDevelopmentCatalogBootstrap : IDistributedApplicati
     private bool _cleanupBlocked;
     private readonly Lock _disposalGate = new();
     private Task? _disposal;
+    private string? _targetFramework;
     private readonly Dictionary<string, JsonObject> _prepared = new(StringComparer.Ordinal);
     private JsonObject? _families;
 
@@ -294,6 +295,9 @@ internal sealed class PartiesDevelopmentCatalogBootstrap : IDistributedApplicati
         }
         JsonObject rootSelection = await RootSelectionAsync(token).ConfigureAwait(false);
         string sdkVersion = rootSelection["HexalithEventStoreVersion"]!.GetValue<string>();
+        _targetFramework = rootSelection["TargetFramework"]!.GetValue<string>();
+        if (_targetFramework is not ("net10.0" or "net11.0"))
+            throw new InvalidDataException("The prepared runtime requires an exact qualified target framework.");
         _families = new JsonObject();
         foreach (string name in new[] { "HexalithFrontComposerVersion", "HexalithTenantsVersion", "HexalithMemoriesVersion", "HexalithMcpCliVersion" })
         {
@@ -558,6 +562,9 @@ internal sealed class PartiesDevelopmentCatalogBootstrap : IDistributedApplicati
         string gateway = selected["eventstore"];
         JsonObject rootSelection = await RootSelectionAsync(token).ConfigureAwait(false);
         string sdkVersion = rootSelection["HexalithEventStoreVersion"]!.GetValue<string>();
+        _targetFramework = rootSelection["TargetFramework"]!.GetValue<string>();
+        if (_targetFramework is not ("net10.0" or "net11.0"))
+            throw new InvalidDataException("The prepared runtime requires an exact qualified target framework.");
         _families = new JsonObject();
         foreach (string name in new[] { "HexalithFrontComposerVersion", "HexalithTenantsVersion", "HexalithMemoriesVersion", "HexalithMcpCliVersion" })
         {
@@ -568,7 +575,9 @@ internal sealed class PartiesDevelopmentCatalogBootstrap : IDistributedApplicati
         {
             IResourceBuilder<ProjectResource> resource = _builder.CreateResourceBuilder(runtime)
                 .WithEnvironment("HexalithEventStoreVersion", sdkVersion)
-                .WithEnvironment("HexalithUsePublishedSdkForHostedTests", "true");
+                .WithEnvironment("HexalithUsePublishedSdkForHostedTests", "true")
+                .WithEnvironment("HexalithPartiesRuntimeTargetFramework", _targetFramework)
+                .WithEnvironment("CustomAfterMicrosoftCommonProps", Path.Combine(_root.FullName, "scripts", "PartiesHostedRuntime.props"));
             foreach ((string key, JsonNode? value) in _families) { _ = resource.WithEnvironment(key, value!.GetValue<string>()); }
         }
         string[] preparedNames = ["eventstore", "eventstore-admin", "eventstore-admin-ui", "tenants", "memories", "memories-domain-service", "sample", "sample-blazor-ui", "parties"];
@@ -774,7 +783,7 @@ internal sealed class PartiesDevelopmentCatalogBootstrap : IDistributedApplicati
 #endif
         string project = Path.Combine(_root.FullName, "tests", "Hexalith.Parties.EventStoreGateway.TestHost", "Hexalith.Parties.EventStoreGateway.TestHost.csproj");
         string output = await ProcessAsync("dotnet", ["msbuild", project, "-nologo", "-p:Configuration=" + _configuration,
-            "-getProperty:HexalithEventStoreVersion,HexalithTenantsVersion,HexalithMemoriesVersion,HexalithFrontComposerVersion,HexalithMcpCliVersion"], token).ConfigureAwait(false);
+            "-getProperty:HexalithEventStoreVersion,HexalithTenantsVersion,HexalithMemoriesVersion,HexalithFrontComposerVersion,HexalithMcpCliVersion,TargetFramework"], token).ConfigureAwait(false);
         return JsonNode.Parse(output)!["Properties"]!.AsObject();
     }
 
@@ -786,7 +795,7 @@ internal sealed class PartiesDevelopmentCatalogBootstrap : IDistributedApplicati
         string manifest = PreparedManifestPath(_builder.Configuration, _root.FullName, _configuration);
         string output = await ProcessAsync("python3", [Path.Combine(_root.FullName, "scripts", "validate-aspire-runtime-cohort.py"),
             "--manifest", manifest, "--project", project, "--version", version, "--configuration", _configuration,
-            "--families-json", _families!.ToJsonString()], token).ConfigureAwait(false);
+            "--families-json", _families!.ToJsonString(), "--target-framework", _targetFramework!], token).ConfigureAwait(false);
         return JsonNode.Parse(output)!.AsObject();
     }
 

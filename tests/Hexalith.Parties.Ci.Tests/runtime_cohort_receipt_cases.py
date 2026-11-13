@@ -86,12 +86,13 @@ class RuntimeReceiptCases(unittest.TestCase):
         libraries, packages = {}, {}
         for package, version in [(name, "3.129.1") for name in sorted(cohort.CORE_IDS)] + [("Hexalith.FrontComposer.Contracts", "4.7.4"), ("Hexalith.McpCli.Abstractions", "2.0.1")]:
             self.add_package(package, version, libraries, packages)
-        self.assets = {"libraries": libraries, "targets": {"net10.0": packages}, "packageFolders": {str(self.cache): {}}}
+        self.assets = {"project": {"frameworks": {"net10.0": {}}}, "libraries": libraries, "targets": {"net10.0": packages}, "packageFolders": {str(self.cache): {}}}
         self.assets_path.write_text(json.dumps(self.assets))
         self.deps = {"libraries": libraries, "targets": {"net10.0": packages}, "runtimeTarget": {"name": "net10.0"}}
         self.target.with_suffix(".deps.json").write_text(json.dumps(self.deps))
         self.metadata = {"Properties": {"TargetPath": str(self.target), "ProjectAssetsFile": str(self.assets_path),
-                                       "Configuration": "Release", "HexalithEventStoreVersion": "3.129.1"}}
+                                       "Configuration": "Release", "HexalithEventStoreVersion": "3.129.1", "TargetFramework": "net10.0", "HexalithPartiesRuntimeTargetFramework": "net10.0",
+                                       "CustomAfterMicrosoftCommonProps": str(cohort.RUNTIME_PROFILE)}}
         self.receipt_path = self.root / "receipt.json"
         self.manifest = self.root / "prepared.json"
 
@@ -129,6 +130,78 @@ class RuntimeReceiptCases(unittest.TestCase):
         with patch.object(cohort, "public_archive", side_effect=official):
             cohort.write(self.manifest, cohort.complete([self.receipt_path], "Release", "3.129.1", [], self.cache, self.families))
         return receipt
+
+    def test_evaluated_framework_must_match_the_explicit_preparation_profile(self):
+        with self.assertRaisesRegex(ValueError, "Evaluated runtime target framework"):
+            cohort.record(self.metadata, self.project, "Release", "3.129.1", 0, "runtime", self.families,
+                          target_framework="net11.0")
+        for value in (None, "", "net9.0", "net12.0", "net10.0;net11.0"):
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "qualified target framework"):
+                cohort.record({"Properties": {**self.metadata["Properties"], "TargetFramework": value}},
+                              self.project, "Release", "3.129.1", 0, "runtime", self.families)
+
+    def test_restore_dependency_and_runtime_framework_drift_refuse_preparation(self):
+        for graph in ("restore-framework", "restore-target", "dependency-framework", "dependency-target", "runtime"):
+            with self.subTest(graph=graph):
+                self.tearDown(); self.setUp()
+                if graph.startswith("restore"):
+                    if graph == "restore-framework": self.assets["project"]["frameworks"] = {"net11.0": {}}
+                    else: self.assets["targets"]["net11.0"] = self.assets["targets"].pop("net10.0")
+                    self.assets_path.write_text(json.dumps(self.assets))
+                elif graph.startswith("dependency"):
+                    if graph == "dependency-framework": self.deps["runtimeTarget"]["name"] = ".NETCoreApp,Version=v11.0"
+                    else: self.deps["targets"] = {"net11.0": self.deps["targets"]["net10.0"]}
+                    self.target.with_suffix(".deps.json").write_text(json.dumps(self.deps))
+                else:
+                    self.target.with_suffix(".runtimeconfig.json").write_text('{"runtimeOptions":{"tfm":"net11.0"}}')
+                with self.assertRaisesRegex(ValueError, "framework|profile"):
+                    self.prepare()
+                self.assertFalse(self.manifest.exists())
+
+    def test_profile_selector_path_and_receipt_binding_refuse_substitution(self):
+        for key, value in (("HexalithPartiesRuntimeTargetFramework", "net11.0"),
+                           ("CustomAfterMicrosoftCommonProps", str(self.root / "foreign.props"))):
+            with self.subTest(key=key), self.assertRaisesRegex(ValueError, "runtime build profile"):
+                cohort.record({"Properties": {**self.metadata["Properties"], key: value}}, self.project,
+                              "Release", "3.129.1", 0, "runtime", self.families)
+        receipt = self.prepare()
+        del receipt["files"][str(cohort.RUNTIME_PROFILE)]
+        cohort.write(self.receipt_path, receipt)
+        manifest = cohort.load(self.manifest)
+        manifest["projects"][str(self.project)]["sha256"] = cohort.digest(self.receipt_path)
+        cohort.write(self.manifest, manifest)
+        result, runner = self.launch()
+        self.assertNotEqual(0, result.returncode)
+        self.assertFalse(runner.exists())
+        self.assertIn("build profile is not bound", result.stderr)
+
+    def test_framework_mismatch_and_missing_selection_refuse_actual_launch(self):
+        self.prepare()
+        result, runner = self.launch(target_framework="net11.0")
+        self.assertNotEqual(0, result.returncode)
+        self.assertFalse(runner.exists())
+        self.assertIn("target framework differs", result.stderr)
+        result = subprocess.run([sys.executable, str(SCRIPT), "--manifest", str(self.manifest), "--project", str(self.project),
+                                 "--configuration", "Release", "--version", "3.129.1"], capture_output=True, text=True)
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("--target-framework", result.stderr)
+
+    def test_net11_runtime_keeps_exact_older_published_package_bodies(self):
+        self.assets["project"]["frameworks"] = {"net11.0": {}}
+        self.assets["targets"]["net11.0"] = self.assets["targets"].pop("net10.0")
+        self.assets_path.write_text(json.dumps(self.assets))
+        self.deps["targets"] = {".NETCoreApp,Version=v11.0": self.assets["targets"]["net11.0"]}
+        self.deps["runtimeTarget"]["name"] = ".NETCoreApp,Version=v11.0"
+        self.target.with_suffix(".deps.json").write_text(json.dumps(self.deps))
+        self.target.with_suffix(".runtimeconfig.json").write_text('{"runtimeOptions":{"tfm":"net11.0"}}')
+        self.metadata["Properties"]["TargetFramework"] = "net11.0"
+        self.metadata["Properties"]["HexalithPartiesRuntimeTargetFramework"] = "net11.0"
+        receipt = self.prepare()
+        self.assertEqual("net11.0", receipt["targetFramework"])
+        self.assertTrue(all(binary["entry"].startswith("lib/net10.0/") for binary in receipt["sdkBinaries"]))
+        result, runner = self.launch(target_framework="net11.0")
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertTrue(runner.exists())
 
     def test_repacked_local_archive_cannot_authenticate_its_own_runtime(self):
         archive = next((self.cache / "hexalith.eventstore.client").rglob("*.nupkg"))
@@ -242,10 +315,11 @@ class RuntimeReceiptCases(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertTrue(runner.exists())
 
-    def launch(self, configuration="Release", families=None):
+    def launch(self, configuration="Release", families=None, target_framework="net10.0"):
         runner = self.root / "runner-started"
         result = subprocess.run([sys.executable, str(SCRIPT), "--manifest", str(self.manifest), "--project", str(self.project),
-                                 "--configuration", configuration, "--version", "3.129.1", "--families-json", json.dumps(families or self.families)],
+                                 "--configuration", configuration, "--version", "3.129.1", "--families-json", json.dumps(families or self.families),
+                                 "--target-framework", target_framework],
                                 capture_output=True, text=True)
         if result.returncode == 0:
             runner.write_text("started after the exact entrypoint")
