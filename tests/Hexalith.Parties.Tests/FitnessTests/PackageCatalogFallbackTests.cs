@@ -28,8 +28,13 @@ public sealed class PackageCatalogFallbackTests
         {
             string catalog = WriteCatalog(directory);
             IReadOnlyDictionary<string, string> standalone = EffectivePackageVersions.ReadPackages(root, isolateEnvironment: true);
+            // A catalog imported as the project has a different MSBuildProjectName. Compare
+            // the same real consumer under explicit and default catalog selection instead.
             IReadOnlyDictionary<string, string> defaults = EffectivePackageVersions.ReadPackages(root,
-                "references/Hexalith.Builds/Props/Directory.Packages.props", isolateEnvironment: true);
+                isolateEnvironment: true, globalProperties: new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["Hexalith1BuildPackageProps"] = RepositoryDependencyPaths.Resolve(root, "references/Hexalith.Builds/Props/Directory.Packages.props"),
+                });
             var properties = new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["Hexalith1BuildPackageProps"] = catalog,

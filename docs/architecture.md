@@ -58,7 +58,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Validation | FluentValidation (+ DI ext.) | `12.2.0` |
 | Mediation | MediatR | `15.0.0` |
 | AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `11.0.0` |
-| API docs | Microsoft.AspNetCore.OpenApi / Swashbuckle.SwaggerUI | `11.0.0` / `11.0.1` |
+| API docs | Microsoft.AspNetCore.OpenApi / Swashbuckle.SwaggerUI | `10.0.15` / `11.0.1` |
 | MCP | ModelContextProtocol / .AspNetCore | `2.4.0` / `2.4.0` |
 | UI | Microsoft.FluentUI.AspNetCore.Components | `5.0.1` |
 | | Microsoft.AspNetCore.Components.CustomElements | `11.0.0` |

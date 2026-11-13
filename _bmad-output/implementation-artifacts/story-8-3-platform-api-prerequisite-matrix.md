@@ -143,13 +143,13 @@ Current source selections below preserve the incoming upstream owner revisions. 
 | AI.Tools | `10b709b86f9c9148e5a18177e8d11fad79ae2c0b` (`10b709b8`) | Source selection only; qualification requires its own executed proof. |
 | Builds | `3c2f5944aaa28dc7854a00a8a9df171aa810b0c7` (`v5.0.1`) | Source selection only; qualification requires its own executed proof. |
 | Commons | `fbf4e94233821f6ca336af91a06feaaeb7a16855` (`v3.0.0`) | Source selection only; qualification requires its own executed proof. |
-| EventStore | `639c9d5c0c8c8fba14aaec536dd1c2e3ceaccc13` (`v5.0.0-13-g639c9d5c`) | Source selection only; qualification requires its own executed proof. |
+| EventStore | `ec73195a109e1b6a22e5141642df1d256e990bbd` (`v5.0.0-14-gec73195a`) | Source selection only; qualification requires its own executed proof. |
 | FrontComposer | `19418a0c29daf38eef03b0891958cd8aa93c59bf` (`v5.0.0-4-g19418a0c`) | Source selection only; qualification requires its own executed proof. |
-| McpCli | `42d3c2fd48405e0f2c27f9b61f6d7025e4246934` (`v2.0.1-107-g42d3c2fd`) | Source selection only; qualification requires its own executed proof. |
-| Memories | `a3f0b3a4a0f0905f6b88da039491ceb286103207` (`v3.0.27-7-ga3f0b3a4`) | Source selection only; qualification requires its own executed proof. |
+| McpCli | `06c1b93b957b9e5271ac826f24558563725577ac` (`v2.0.1-111-g06c1b93b`) | Source selection only; qualification requires its own executed proof. |
+| Memories | `1d94e17a3492ebbfca5f6ea181a44841c8a89473` (`v3.0.27-11-g1d94e17a`) | Source selection only; qualification requires its own executed proof. |
 | Platform | `32643bde39b4da0e4538f8388e225727f82122f6` (`v2.0.0`) | Source selection only; qualification requires its own executed proof. |
 | PolymorphicSerializations | `e97b56930e213f674b64c157551f499b0473ec43` (`v2.0.0-2-ge97b5693`) | Source selection only; qualification requires its own executed proof. |
-| Tenants | `8ce40cdfe9b1bdd0ec3bd643b0f3386501e514c2` (`v7.0.7-18-g8ce40cdf`) | Source selection only; qualification requires its own executed proof. |
+| Tenants | `401d926eb7d51bdf332696ed3f0fe39a812b3501` (`v7.0.7-19-g401d926e`) | Source selection only; qualification requires its own executed proof. |
 
 ### Historical source observation — 2026-11-11 (toolchain release synchronization)
 

@@ -58,8 +58,8 @@ public sealed class PlatformApiPrerequisitesTests
     ];
 
     // Committed source observations are separate from historical migration/parity approvals.
-    private const string CurrentSelectedEventStoreSha = "639c9d5c0c8c8fba14aaec536dd1c2e3ceaccc13";
-    private const string CurrentSelectedEventStoreDescribe = "v5.0.0-13-g639c9d5c";
+    private const string CurrentSelectedEventStoreSha = "ec73195a109e1b6a22e5141642df1d256e990bbd";
+    private const string CurrentSelectedEventStoreDescribe = "v5.0.0-14-gec73195a";
     // Observe the synchronized source independently of the upstream package release tag.
     private const string CurrentSelectedEventStoreTag = "v5.0.0";
     // Current committed selections are observed independently of historical approvals
@@ -69,13 +69,13 @@ public sealed class PlatformApiPrerequisitesTests
         ["references/Hexalith.AI.Tools"] = "10b709b86f9c9148e5a18177e8d11fad79ae2c0b",
         ["references/Hexalith.Builds"] = "3c2f5944aaa28dc7854a00a8a9df171aa810b0c7",
         ["references/Hexalith.Commons"] = "fbf4e94233821f6ca336af91a06feaaeb7a16855",
-        ["references/Hexalith.EventStore"] = "639c9d5c0c8c8fba14aaec536dd1c2e3ceaccc13",
+        ["references/Hexalith.EventStore"] = "ec73195a109e1b6a22e5141642df1d256e990bbd",
         ["references/Hexalith.FrontComposer"] = "19418a0c29daf38eef03b0891958cd8aa93c59bf",
-        ["references/Hexalith.McpCli"] = "42d3c2fd48405e0f2c27f9b61f6d7025e4246934",
-        ["references/Hexalith.Memories"] = "a3f0b3a4a0f0905f6b88da039491ceb286103207",
+        ["references/Hexalith.McpCli"] = "06c1b93b957b9e5271ac826f24558563725577ac",
+        ["references/Hexalith.Memories"] = "1d94e17a3492ebbfca5f6ea181a44841c8a89473",
         ["references/Hexalith.Platform"] = "32643bde39b4da0e4538f8388e225727f82122f6",
         ["references/Hexalith.PolymorphicSerializations"] = "e97b56930e213f674b64c157551f499b0473ec43",
-        ["references/Hexalith.Tenants"] = "8ce40cdfe9b1bdd0ec3bd643b0f3386501e514c2",
+        ["references/Hexalith.Tenants"] = "401d926eb7d51bdf332696ed3f0fe39a812b3501",
     };
 
     // The 2026-11-09 published SDK 4.2 selection; dated rows written while it was current keep these identities.
@@ -98,13 +98,13 @@ public sealed class PlatformApiPrerequisitesTests
         ["references/Hexalith.AI.Tools"] = "10b709b8",
         ["references/Hexalith.Builds"] = "v5.0.1",
         ["references/Hexalith.Commons"] = "v3.0.0",
-        ["references/Hexalith.EventStore"] = "v5.0.0-13-g639c9d5c",
+        ["references/Hexalith.EventStore"] = "v5.0.0-14-gec73195a",
         ["references/Hexalith.FrontComposer"] = "v5.0.0-4-g19418a0c",
-        ["references/Hexalith.McpCli"] = "v2.0.1-107-g42d3c2fd",
-        ["references/Hexalith.Memories"] = "v3.0.27-7-ga3f0b3a4",
+        ["references/Hexalith.McpCli"] = "v2.0.1-111-g06c1b93b",
+        ["references/Hexalith.Memories"] = "v3.0.27-11-g1d94e17a",
         ["references/Hexalith.Platform"] = "v2.0.0",
         ["references/Hexalith.PolymorphicSerializations"] = "v2.0.0-2-ge97b5693",
-        ["references/Hexalith.Tenants"] = "v7.0.7-18-g8ce40cdf",
+        ["references/Hexalith.Tenants"] = "v7.0.7-19-g401d926e",
     };
 
     private static readonly string[] RequiredAbsentPayloadProtectionPaths =
@@ -1044,7 +1044,10 @@ public sealed class PlatformApiPrerequisitesTests
         effectivePackages["Hexalith.Tenants.Client"].ShouldBe("7.0.7");
         catalog.ShouldContain("<PackageVersion Include=\"Hexalith.EventStore.Contracts\" Version=\"$(HexalithEventStoreVersion)\" Condition=\"'$(UseHexalithProjectReferences)' != 'true' or !$(MSBuildProjectName.StartsWith('Hexalith.Works'))\" />");
         catalog.ShouldContain("<HexalithCommonsVersion Condition=\"'$(HexalithCommonsVersion)' == ''\">3.0.0</HexalithCommonsVersion>");
-        catalog.ShouldContain("<HexalithEventStoreVersion Condition=\"'$(HexalithEventStoreVersion)' == ''\">4.2.0</HexalithEventStoreVersion>");
+        catalog.ShouldContain("<HexalithEventStoreVersion Condition=\"'$(HexalithEventStoreVersion)' == ''\">5.0.0</HexalithEventStoreVersion>");
+        // The producer retains SDK4.2 only for its finite measured consumers; real evaluation
+        // and unknown-name controls are exercised by RetainedCatalogViewTests.
+        catalog.ShouldContain("<HexalithEventStoreVersion Condition=\"'$(HexalithEventStoreVersion)' == '' and ('$(HexalithPartiesSdk42CatalogView)' == 'true' or '$(HexalithPlatformSdk42CatalogView)' == 'true' or '$(HexalithBuildsPackagedHostSdk42CatalogView)' == 'true')\">4.2.0</HexalithEventStoreVersion>");
         catalog.ShouldContain("<HexalithFrontComposerVersion Condition=\"'$(HexalithFrontComposerVersion)' == ''\">5.0.0</HexalithFrontComposerVersion>");
         catalog.ShouldContain("<HexalithMcpCliVersion Condition=\"'$(HexalithMcpCliVersion)' == ''\">2.0.1</HexalithMcpCliVersion>");
         catalog.ShouldContain("<HexalithMemoriesVersion Condition=\"'$(HexalithMemoriesVersion)' == ''\">3.0.27</HexalithMemoriesVersion>");
