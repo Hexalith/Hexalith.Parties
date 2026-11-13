@@ -1,5 +1,17 @@
 # Disposable CI lifecycle qualification
 
+This qualification branch selects genuine module CLI **5.1.0** and the
+`domain-ci-v2.yml` workflow at Builds
+`9ebc31f606bc02f8a0ec2f1ec344127e2468c6b4`. Its separate catalog/helper
+source is `3c2f5944aaa28dc7854a00a8a9df171aa810b0c7`, matching published
+Platform **2.0.0** source `32643bde39b4da0e4538f8388e225727f82122f6`
+and compatibility range `[5.0.1, 6.0.0-0)`. Packages and hosts target
+`net11.0`. This selection grants no lifecycle qualification or tool acceptance;
+Parties main remains pinned to 5.0.0 and Platform to 5.0.1. The full matrix,
+independent finalization and separate actual cancellation proofs remain required.
+
+## Recorded baseline — 2026-11-08
+
 This registered manual workflow remains a **baseline-only** diagnostic for
 Story 2.8. It grants no candidate acceptance or loaded-backend identity credit.
 The ordinary and manual baseline callers select genuine Builds `v4.44.13`
