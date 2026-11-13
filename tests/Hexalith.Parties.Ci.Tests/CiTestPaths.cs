@@ -40,6 +40,6 @@ internal static class CiTestPaths
     public static string ProjectOutputFile(string relativeProjectDirectory, string configuration, string fileName)
         => ArtifactsPath is { } artifacts
             ? Path.Combine(artifacts, "bin", Path.GetFileName(relativeProjectDirectory), configuration.ToLowerInvariant(), fileName)
-            : RepoFile(relativeProjectDirectory + "/bin/" + configuration + "/net10.0/" + fileName);
+            : RepoFile(relativeProjectDirectory + "/bin/" + configuration + "/net11.0/" + fileName);
 }
 

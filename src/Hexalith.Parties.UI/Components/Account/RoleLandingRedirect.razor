@@ -1,6 +1,6 @@
 @page "/"
 @attribute [Authorize]
-@inject AuthenticationStateProvider AuthState
+@implements IDisposable
 @inject NavigationManager Nav
 @inject PartyIdClaimResolver Resolver
 
@@ -22,10 +22,23 @@
 
 @code {
     private bool _noArea;
+    private long _authenticationVersion;
+    private bool _disposed;
 
-    protected override async Task OnInitializedAsync()
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
+
+    /// <inheritdoc/>
+    protected override async Task OnParametersSetAsync()
     {
-        AuthenticationState authState = await AuthState.GetAuthenticationStateAsync();
+        long version = ++_authenticationVersion;
+        AuthenticationState authState = await AuthenticationState;
+        if (_disposed || version != _authenticationVersion)
+        {
+            return;
+        }
+
+        _noArea = false;
 
         if (PartiesUiAuthorization.AdminRoleNames.Any(authState.User.IsInRole))
         {
@@ -46,5 +59,12 @@
             // they see the no-area state. (Distinct from Story 1.4's party-binding NoPartyBinding.)
             _noArea = true;
         }
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        _disposed = true;
+        _authenticationVersion++;
     }
 }

@@ -22,7 +22,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Initialize only recorded root-direct dependencies
-        uses: Hexalith/Hexalith.Builds/Github/initialize-build@9f5d751f7ab0b7a621dcd18b589bf061fabac6ec
+        uses: Hexalith/Hexalith.Builds/Github/initialize-build@3c2f5944aaa28dc7854a00a8a9df171aa810b0c7
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
@@ -30,7 +30,7 @@ jobs:
       - name: Require the genuine diagnostic tool inputs
         shell: bash
         run: |
-          test "$(git -C references/Hexalith.Builds rev-parse HEAD)" = 9f5d751f7ab0b7a621dcd18b589bf061fabac6ec
+          test "$(git -C references/Hexalith.Builds rev-parse HEAD)" = 3c2f5944aaa28dc7854a00a8a9df171aa810b0c7
           python3 - <<'PYTHON'
           import json
           from pathlib import Path
@@ -40,7 +40,7 @@ jobs:
       - name: Test observer ownership and redaction boundaries
         run: python3 -B -m unittest discover -s tests/ci-lifecycle -p test_startup_observer.py -v
       - name: Prepare the ordinary verified package imports and local tool
-        uses: Hexalith/Hexalith.Builds/Github/prepare-module-build@9f5d751f7ab0b7a621dcd18b589bf061fabac6ec
+        uses: Hexalith/Hexalith.Builds/Github/prepare-module-build@3c2f5944aaa28dc7854a00a8a9df171aa810b0c7
         with:
           manifest: module/hexalith.module-manifest.v2.json
       - name: Prepare ordinary package dependencies

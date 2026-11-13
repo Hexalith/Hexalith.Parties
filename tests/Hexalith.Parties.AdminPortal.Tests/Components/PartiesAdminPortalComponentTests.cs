@@ -4762,7 +4762,7 @@ public sealed class PartiesAdminPortalComponentTests : AdminPortalBunitContext
         public void SetAnonymous()
         {
             _state = new(new ClaimsPrincipal(new ClaimsIdentity()));
-            NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+            NotifyAuthenticationStateChanged(Task.FromResult(_state));
         }
 
         public void SetAuthenticated(string userId, string tenantId)
@@ -4773,7 +4773,7 @@ public sealed class PartiesAdminPortalComponentTests : AdminPortalBunitContext
                 new Claim(PartiesClaimTypes.EventStoreTenant, tenantId),
             ];
             _state = new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(claims, "Test")));
-            NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+            NotifyAuthenticationStateChanged(Task.FromResult(_state));
         }
     }
 

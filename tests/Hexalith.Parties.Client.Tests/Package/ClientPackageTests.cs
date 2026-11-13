@@ -11,7 +11,7 @@ public sealed class ClientPackageTests : IDisposable
 {
     private const string LocalVersionOverride = "0.0.0-local.0";
     private const string LocalPackVersionProperties = $"-p:MinVerVersionOverride={LocalVersionOverride} -p:PackageVersion={LocalVersionOverride}";
-    private const int MaxDeclaredDependencyCount = 16;
+    private const int MaxDeclaredDependencyCount = 12;
     private const long MaxPackedClientPackageBytes = 5L * 1024L * 1024L;
 
     private static readonly string[] s_forbiddenDependencyTerms =
@@ -56,13 +56,9 @@ public sealed class ClientPackageTests : IDisposable
             "Hexalith.McpCli.Abstractions",
             "Hexalith.Parties.Contracts",
             "Microsoft.Extensions.Configuration",
-            "Microsoft.Extensions.Configuration.Abstractions",
             "Microsoft.Extensions.Configuration.Binder",
             "Microsoft.Extensions.DependencyInjection",
-            "Microsoft.Extensions.DependencyInjection.Abstractions",
-            "Microsoft.Extensions.Diagnostics.Abstractions",
             "Microsoft.Extensions.Http",
-            "Microsoft.Extensions.Logging.Abstractions",
             "Microsoft.Extensions.Options",
             "Microsoft.Extensions.Options.ConfigurationExtensions",
         ]);
@@ -92,7 +88,7 @@ public sealed class ClientPackageTests : IDisposable
             <Project Sdk="Microsoft.NET.Sdk">
               <PropertyGroup>
                 <OutputType>Exe</OutputType>
-                <TargetFramework>net10.0</TargetFramework>
+                <TargetFramework>net11.0</TargetFramework>
                 <ImplicitUsings>enable</ImplicitUsings>
                 <Nullable>enable</Nullable>
                 <RestoreNoCache>true</RestoreNoCache>
@@ -126,6 +122,18 @@ public sealed class ClientPackageTests : IDisposable
             if (!ReferenceEquals(services, returned))
             {
                 throw new InvalidOperationException("AddPartiesClient must return the original service collection.");
+            }
+
+            Type[] sharedFrameworkTypes =
+            [
+                typeof(IConfiguration),
+                typeof(IServiceCollection),
+                typeof(System.Diagnostics.Metrics.IMeterFactory),
+                typeof(Microsoft.Extensions.Logging.ILogger),
+            ];
+            if (sharedFrameworkTypes.Any(type => string.IsNullOrEmpty(type.Assembly.Location)))
+            {
+                throw new InvalidOperationException("The shared framework abstraction closure must resolve.");
             }
 
             using ServiceProvider provider = services.BuildServiceProvider();

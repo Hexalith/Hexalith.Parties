@@ -30,6 +30,21 @@ public sealed class RoleLandingRedirectTests : BunitContext
     // on /me. The unbound/ambiguous negatives are proven in NoPartyBindingRoutingTests.
     public RoleLandingRedirectTests() => Services.AddPartiesUiClaimsResolution();
 
+    /// <summary>Role changes rerun routing through the framework authentication cascade.</summary>
+    [Fact]
+    public async Task AuthenticationChangesReevaluateRoleLandingAsync()
+    {
+        BunitAuthorizationContext auth = AddAuthorization();
+        auth.SetAuthorized("user");
+        IRenderedComponent<RoleLandingRedirect> cut = Render<RoleLandingRedirect>();
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("No area assigned"));
+
+        await cut.InvokeAsync(() => auth.SetRoles(PartiesRoles.Admin)).ConfigureAwait(true);
+
+        NavigationManager navigation = Services.GetRequiredService<NavigationManager>();
+        cut.WaitForAssertion(() => navigation.Uri.ShouldEndWith("/admin"));
+    }
+
     [Fact]
     public void AdminRole_LandsOnAdminArea()
     {

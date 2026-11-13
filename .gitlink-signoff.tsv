@@ -771,3 +771,9 @@ references/Hexalith.Tenants|b239c8e43da8a80fd872c7f4391d219be44b2d1d|validated-a
 # Platform v1.11.1 peels exactly384; its5tuple/6catalog/2release jobs passed.
 # Retain signed Builds4.48.2/6ad and public SDK4.2; no futureSDK admission.
 references/Hexalith.Platform|38402bc77ac0be3e6902002d08923c51d0e73a77|validated-advance|v1.11.1@38402bc77ac0be3e6902002d08923c51d0e73a77|codex-agent|2026-11-12
+
+# 2026-11-13 explicit user delegation: qualified Platform v2.0.0 and signed Builds5.0.1.
+# Tuple43391842440, catalog43391842426 and automatic release43396965519 passed.
+# Source selection only; Parties native, cleanup, identity and release gates remain required.
+references/Hexalith.Platform|32643bde39b4da0e4538f8388e225727f82122f6|validated-advance|v2.0.0@32643bde39b4da0e4538f8388e225727f82122f6|codex-agent|2026-11-13
+references/Hexalith.Builds|3c2f5944aaa28dc7854a00a8a9df171aa810b0c7|validated-advance|v5.0.1@3c2f5944aaa28dc7854a00a8a9df171aa810b0c7|codex-agent|2026-11-13

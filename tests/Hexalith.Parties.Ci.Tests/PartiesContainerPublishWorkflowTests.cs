@@ -7,9 +7,9 @@ namespace Hexalith.Parties.Ci.Tests;
 public sealed class PartiesContainerPublishWorkflowTests
 {
     private const int ExpectedPackageCount = 11;
-    private const string BuildsCiSha = "9f5d751f7ab0b7a621dcd18b589bf061fabac6ec";
-    private const string BuildsValidationSha = "9f5d751f7ab0b7a621dcd18b589bf061fabac6ec";
-    private const string BuildsExecutionSha = "9f5d751f7ab0b7a621dcd18b589bf061fabac6ec";
+    private const string BuildsCiSha = "3c2f5944aaa28dc7854a00a8a9df171aa810b0c7";
+    private const string BuildsValidationSha = "3c2f5944aaa28dc7854a00a8a9df171aa810b0c7";
+    private const string BuildsExecutionSha = "3c2f5944aaa28dc7854a00a8a9df171aa810b0c7";
     private static readonly TimeSpan WorkflowReadTimeout = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan PublicationPreflightTimeout = TimeSpan.FromSeconds(10);
 
@@ -143,7 +143,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         }
         using JsonDocument tools = JsonDocument.Parse(CiTestPaths.ReadRepoFile(".config/dotnet-tools.json"));
         JsonElement tool = tools.RootElement.GetProperty("tools").GetProperty("hexalith.builds.module.cli");
-        tool.GetProperty("version").GetString().ShouldBe("4.48.0");
+        tool.GetProperty("version").GetString().ShouldBe("5.0.1");
         tool.GetProperty("rollForward").GetBoolean().ShouldBeFalse();
         workflow.ShouldNotContain("submodules: recursive");
 

@@ -476,7 +476,7 @@ public sealed class AspireRuntimePreparationTests
             File.Copy(CiTestPaths.RepoFile("tests/Hexalith.Parties.EventStoreSample.Contracts.TestArtifact/" + ContractsProject), Path.Combine(contractsDirectory, ContractsProject));
             File.Copy(CiTestPaths.RepoFile("global.json"), Path.Combine(workspace, "global.json"));
             File.WriteAllText(Path.Combine(workspace, "Directory.Build.props"),
-                "<Project><PropertyGroup><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><TreatWarningsAsErrors>true</TreatWarningsAsErrors></PropertyGroup></Project>");
+                "<Project><PropertyGroup><TargetFramework>net11.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><TreatWarningsAsErrors>true</TreatWarningsAsErrors></PropertyGroup></Project>");
             new XDocument(new XElement("Project", new XElement("Import", new XAttribute("Project", CiTestPaths.RepoFile("Directory.Packages.props")))))
                 .Save(Path.Combine(workspace, "Directory.Packages.props"));
             string native = Path.Combine(owner, "samples", "Hexalith.EventStore.Sample");
