@@ -29,17 +29,20 @@ dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net11.0/Hexalith.Parties.Ci.T
 
 ## CI
 
-The 5.1.0 selection belongs to the dedicated Story 2.10 qualification branch.
-The selected upstream main `1d44297aa7ed94426a51b9e4fb14b7d5896c4157`
-uses 5.0.1, as does Platform; this branch grants no tool acceptance. Its
-catalog/helper source is `3c2f5944aaa28dc7854a00a8a9df171aa810b0c7`,
-while the executable and CI workflow source is
-`9ebc31f606bc02f8a0ec2f1ec344127e2468c6b4`.
+The earlier Story 2.10 qualification branch selected CLI5.1.0 from
+`9ebc31f606bc02f8a0ec2f1ec344127e2468c6b4` with the5.0.1 catalog/helper
+source `3c2f5944aaa28dc7854a00a8a9df171aa810b0c7`. That historical
+selection did not establish tool or runtime acceptance. The current signed
+CLI selects Builds5.2.2 at `02ed624aa19781cac75d2c9112940e9bd830441a`.
+The root catalog/helper checkout also preserves the subsequent CI guard source
+`fde085eeccc11617f42e71a1e5d7db23ed5e4290`; its catalog bytes are identical
+to the released producer. Platform's signed tuple remains bound to02ed.
+The immutable CI and publisher workflow revisions above stay separately pinned.
 
 CI runs on pushes and pull requests to `main`, scheduled nightly runs, and Pact Broker `repository_dispatch` events with type `contract_requiring_verification_published`.
 
-The current tool manifest selects published module CLI **5.1.0**,
-within the qualified Platform source's `[5.0.1, 6.0.0-0)` prerequisite. The
+The current tool manifest selects published module CLI **5.2.2**,
+within the qualified Platform source's `[5.2.2, 6.0.0-0)` prerequisite. The
 immutable reusable workflow restores that exact manifest. The repository pins
 .NET SDK **11.0.100** with current Parties targets at `net11.0`; the active
 AppHost SDK, package preparation and Aspire CLI expectations use **13.6.5**.
@@ -532,7 +535,7 @@ change also requires an approved parser-invariant and test update. Edit
 `TEMPLATE` for non-ACL changes, then regenerate. Missing, duplicate, unsafe or
 stale input fails without rewriting in `--check` mode.
 
-The local module tool is pinned to 5.1.0 with Aspire CLI 13.6.5 alongside
+The local module tool is pinned to 5.2.2 with Aspire CLI 13.6.5 alongside
 aspirate; package CI continues to restore packages and build Release. Source mode is selected only
 by the tool's persisted mapping, with no file-existence fallback. Legacy hosting
 projects and package publication gates remain in their existing scope.

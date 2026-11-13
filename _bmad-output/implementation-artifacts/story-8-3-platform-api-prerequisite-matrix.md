@@ -128,7 +128,72 @@ all six canonical parity receipts remain Unvalidated until actually rerun.
 | PolymorphicSerializations | `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`) | `git ls-tree HEAD references/Hexalith.PolymorphicSerializations` -> `160000 commit bce4eb9f45c6b131b960ab4fa39e50ff01e51960 references/Hexalith.PolymorphicSerializations`; synchronized source selection; qualification still requires its own executed proof. |
 | Tenants | `8e20524574901d71ad5f4876804c64c3c6c87b88` (`v7.0.3-2-g8e205245`) | `git ls-tree HEAD references/Hexalith.Tenants` -> `160000 commit 8e20524574901d71ad5f4876804c64c3c6c87b88 references/Hexalith.Tenants`; synchronized source selection; qualification still requires its own executed proof. |
 
-### Current source observation — 2026-11-13 (qualified Platform and NET11 CI repair)
+### Current source observation — 2026-11-13 (synchronized release repair)
+
+The user explicitly delegated synchronization, CI repairs and release, including
+necessary direct Platform dependency repairs. codex-agent records exact source
+selection in `.gitlink-signoff.tsv`; this grants no human review, native or
+candidate acceptance. Builds5.2.2 is the verified signed producer. The root
+Builds checkout also preserves the subsequent CI guard commitfde085ee; its
+catalog bytes equal the released02ed producer. The signed tool and Platform
+tuple remain bound to02ed. Platform's
+exact-source qualification and normal source publisher remain independent gates,
+as do the final Parties caller, runtime, cleanup and publication checks.
+
+The graph selects EventStore `4.2.0`, Commons `3.0.0`, PolymorphicSerializations `2.0.0`, FrontComposer `5.0.0`, Memories `3.0.27`, Tenants `7.0.7`, and McpCli `2.0.1`.
+
+The shared catalog's unqualified default remains SDK5; the finite named Parties
+and Platform view retains measured SDK4.2. Memories4.0.0 source is synchronized
+independently of the admitted3.0.27 package cohort. A newer source or package
+publication does not supply caller qualification. Describe strings below retain
+the observed release anchors, including `--match v2.0.1` for McpCli and the
+recorded Platform anchor when later publication tags become available.
+
+Selection does not revalidate historical parity receipts. All previous dated
+approvals, immutable-consumption refusals, retained test cohorts, rollback paths
+and G5 closure requirements remain unchanged.
+
+| Root dependency | Current source identity | Release use |
+| --- | --- | --- |
+| AI.Tools | `17a37d83db193f0b7494c1b931fd1e82a67c1424` (`17a37d83`) | Source selection only; consumption requires the matching committed root gitlink and clean checkout, with its own executed qualification. |
+| Builds | `fde085eeccc11617f42e71a1e5d7db23ed5e4290` (`v5.2.2-1-gfde085ee`) | Source selection only; consumption requires the matching committed root gitlink and clean checkout, with its own executed qualification. |
+| Commons | `fbf4e94233821f6ca336af91a06feaaeb7a16855` (`v3.0.0`) | Source selection only; consumption requires the matching committed root gitlink and clean checkout, with its own executed qualification. |
+| EventStore | `69b244d9cfb0e5fc077e324fe9c2a9cae7d026dc` (`v5.0.1-1-g69b244d9`) | Source selection only; consumption requires the matching committed root gitlink and clean checkout, with its own executed qualification. |
+| FrontComposer | `19418a0c29daf38eef03b0891958cd8aa93c59bf` (`v5.0.0-4-g19418a0c`) | Source selection only; consumption requires the matching committed root gitlink and clean checkout, with its own executed qualification. |
+| McpCli | `491f114885ec2fc68537411f3c3fe6ad549cbe2f` (`v2.0.1-113-g491f1148`) | Source selection only; consumption requires the matching committed root gitlink and clean checkout, with its own executed qualification. |
+| Memories | `c4ee997702ede948ada5f99eeae7b3782e92003b` (`v4.0.0`) | Source selection only; the current package graph retains admitted3.0.27 and does not adopt4.0.0 by implication. |
+| Platform | `b76e0c7c70162653bbff6a8263ebfc4500c1631b` (`v2.0.0-21-gb76e0c7c`) | Source selection only; consumption requires the matching committed root gitlink and clean checkout, with its own executed qualification. |
+| PolymorphicSerializations | `e97b56930e213f674b64c157551f499b0473ec43` (`v2.0.0-2-ge97b5693`) | Source selection only; consumption requires the matching committed root gitlink and clean checkout, with its own executed qualification. |
+| Tenants | `401d926eb7d51bdf332696ed3f0fe39a812b3501` (`v7.0.7-19-g401d926e`) | Source selection only; consumption requires the matching committed root gitlink and clean checkout, with its own executed qualification. |
+
+### Historical source observation — 2026-11-13 (before synchronized release repair)
+
+The current selection uses SDK `11.0.100`, `net11.0` Parties targets and UI runtime `11.0.0`, patched Aspire `13.6.5`, and the published module CLI `5.0.1` with roll-forward disabled. The selected qualified Platform source release is `v2.0.0` at `32643bde39b4da0e4538f8388e225727f82122f6`; its exact-source producer qualifications establish source compatibility. Parties still requires its own complete CI, native-effect, cleanup and release gates.
+
+The graph selects EventStore `4.2.0`, Commons `3.0.0`, PolymorphicSerializations `2.0.0`, FrontComposer `5.0.0`, Memories `3.0.27`, Tenants `7.0.7`, and McpCli `2.0.1`.
+
+Selection does not revalidate historical parity receipts. All six canonical parity receipts remain Unvalidated.
+
+Current source selections below preserve the incoming upstream owner revisions. Package selection and source observation have separate authority. This update does not reuse or revalidate historical approvals, parity receipts, public image identities, custody, deployment or retirement acceptance.
+
+| Root dependency | Current source identity | Release use |
+| --- | --- | --- |
+| AI.Tools | `10b709b86f9c9148e5a18177e8d11fad79ae2c0b` (`10b709b8`) | Source selection only; qualification requires its own executed proof. |
+| Builds | `3c2f5944aaa28dc7854a00a8a9df171aa810b0c7` (`v5.0.1`) | Source selection only; qualification requires its own executed proof. |
+| Commons | `fbf4e94233821f6ca336af91a06feaaeb7a16855` (`v3.0.0`) | Source selection only; qualification requires its own executed proof. |
+| EventStore | `639c9d5c0c8c8fba14aaec536dd1c2e3ceaccc13` (`v5.0.0-13-g639c9d5c`) | Source selection only; qualification requires its own executed proof. |
+| FrontComposer | `19418a0c29daf38eef03b0891958cd8aa93c59bf` (`v5.0.0-4-g19418a0c`) | Source selection only; qualification requires its own executed proof. |
+| McpCli | `42d3c2fd48405e0f2c27f9b61f6d7025e4246934` (`v2.0.1-107-g42d3c2fd`) | Source selection only; qualification requires its own executed proof. |
+| Memories | `a3f0b3a4a0f0905f6b88da039491ceb286103207` (`v3.0.27-7-ga3f0b3a4`) | Source selection only; qualification requires its own executed proof. |
+| Platform | `32643bde39b4da0e4538f8388e225727f82122f6` (`v2.0.0`) | Source selection only; qualification requires its own executed proof. |
+| PolymorphicSerializations | `e97b56930e213f674b64c157551f499b0473ec43` (`v2.0.0-2-ge97b5693`) | Source selection only; qualification requires its own executed proof. |
+| Tenants | `8ce40cdfe9b1bdd0ec3bd643b0f3386501e514c2` (`v7.0.7-18-g8ce40cdf`) | Source selection only; qualification requires its own executed proof. |
+
+### Intermediate source observation — 2026-11-13 (first synchronization)
+
+This separately retained intermediate observation records the already published
+Parties84c25dac source snapshot; it does not replace the initial observation
+above or the final synchronized selection.
 
 The current selection uses SDK `11.0.100`, `net11.0` Parties targets and UI runtime `11.0.0`, patched Aspire `13.6.5`, and the published module CLI `5.0.1` with roll-forward disabled. The selected qualified Platform source release is `v2.0.0` at `32643bde39b4da0e4538f8388e225727f82122f6`; its exact-source producer qualifications establish source compatibility. Parties still requires its own complete CI, native-effect, cleanup and release gates.
 

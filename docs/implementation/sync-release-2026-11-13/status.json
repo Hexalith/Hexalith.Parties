@@ -1,17 +1,17 @@
 {
-  "observedAtUtc": "2026-11-13T10:12:12.246132+00:00",
+  "observedAtUtc": "2026-11-13T16:29:39.215284+00:00",
   "baselineSource": "864c55a9820f7e819714a7e6d92cc3d6ee82a2fe",
   "selectedSubmodules": {
-    "references/Hexalith.EventStore": "ec73195a109e1b6a22e5141642df1d256e990bbd",
-    "references/Hexalith.Memories": "1d94e17a3492ebbfca5f6ea181a44841c8a89473",
+    "references/Hexalith.EventStore": "69b244d9cfb0e5fc077e324fe9c2a9cae7d026dc",
+    "references/Hexalith.Memories": "c4ee997702ede948ada5f99eeae7b3782e92003b",
     "references/Hexalith.FrontComposer": "19418a0c29daf38eef03b0891958cd8aa93c59bf",
     "references/Hexalith.Tenants": "401d926eb7d51bdf332696ed3f0fe39a812b3501",
-    "references/Hexalith.AI.Tools": "10b709b86f9c9148e5a18177e8d11fad79ae2c0b",
+    "references/Hexalith.AI.Tools": "17a37d83db193f0b7494c1b931fd1e82a67c1424",
     "references/Hexalith.Commons": "fbf4e94233821f6ca336af91a06feaaeb7a16855",
-    "references/Hexalith.Builds": "89487655de9e1c79848c5384261a8a2f009d2577",
+    "references/Hexalith.Builds": "fde085eeccc11617f42e71a1e5d7db23ed5e4290",
     "references/Hexalith.PolymorphicSerializations": "e97b56930e213f674b64c157551f499b0473ec43",
-    "references/Hexalith.McpCli": "06c1b93b957b9e5271ac826f24558563725577ac",
-    "references/Hexalith.Platform": "7479945e9cc6333bd402d63510481634960a6592"
+    "references/Hexalith.McpCli": "491f114885ec2fc68537411f3c3fe6ad549cbe2f",
+    "references/Hexalith.Platform": "b76e0c7c70162653bbff6a8263ebfc4500c1631b"
   },
   "sdk": "11.0.100",
   "sdkFeed": "https://builds.dotnet.microsoft.com/dotnet/release-metadata/releases-index.json",
@@ -23,26 +23,29 @@
     "@semantic-release/github": "12.0.11"
   },
   "retainedCompatibility": {
-    "EventStore": "4.2.0 for exact measured Parties/Platform views; shared current default5.0.0 remains separately qualified"
+    "EventStore": "4.2.0 for exact measured Parties/Platform views; shared current default5.0.0 remains separately qualified",
+    "Memories": "latest public4.0.0 source synchronized; admitted package3.0.27 retained until independently qualified",
+    "OpenAPI": "finite named consumer view retains Microsoft.AspNetCore.OpenApi10.0.15 and Microsoft.OpenApi2.13.0; global unqualified defaults remain11.0.0/3.11.0",
+    "DaprHosting": "Authenticated Aspire13.6 catalog selects CommunityToolkit.Aspire.Hosting.Dapr13.6.2-beta.959; stable13.0.0 is older and newer17.x betas require a different toolchain"
   },
   "checks": [
     {
       "command": "dotnet build Hexalith.Parties.Standalone.slnx -c Release --disable-build-servers -m:1 -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true",
       "result": "passed; zero warnings/errors",
-      "log": "parties-release-final-catalog-build-20261113.log"
+      "log": "checks/parties-release-final-catalog-build-20261113.log.gz"
     },
     {
       "command": "dotnet build Hexalith.Memories.slnx -c Release --disable-build-servers -m:1 -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true",
       "owner": "Hexalith.Memories",
       "result": "passed; zero warnings/errors",
-      "log": "parties-release-memories-final-solution-20261113.log"
+      "log": "checks/parties-release-memories-final-solution-20261113.log.gz"
     },
     {
       "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net11.0/Hexalith.Parties.Ci.Tests.dll",
       "result": "655 of656 passed before UI artifacts refreshed; failed test then passed in6-case SignalRSecurityFloorTests rerun",
       "logs": [
-        "parties-release-ci-tests-20261113.log",
-        "parties-release-security-floor-20261113.log"
+        "checks/parties-release-ci-tests-20261113.log.gz",
+        "checks/parties-release-security-floor-20261113.log.gz"
       ]
     },
     {
@@ -64,7 +67,7 @@
     {
       "command": "python3 tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py",
       "result": "5 passed; exact test identities are retained in the captured log",
-      "log": "parties-release-consumer-tests-20261113.log"
+      "log": "checks/parties-release-consumer-tests-20261113.log.gz"
     },
     {
       "command": "pwsh -NoProfile -File Tools/test-authoritative-package-catalog.ps1",
@@ -94,28 +97,236 @@
     {
       "command": "CI=true npm --prefix tests/e2e run test:ui",
       "result": "81 browser tests pass, including exact restored FrontComposer asset-byte checks",
-      "log": "parties-release-ui-browser-20261113.log"
+      "log": "checks/parties-release-ui-browser-20261113.log.gz"
     },
     {
       "command": "python3 -m unittest discover -s tests/tooling/release_packages -p *_test.py",
       "owner": "Hexalith.Memories",
       "result": "28 passed after actual current Redis consumer target repair",
-      "log": "parties-memories-release-package-tests-20261113.log"
+      "log": "checks/parties-memories-release-package-tests-20261113.log.gz"
+    },
+    {
+      "command": "python3 -B -m unittest scripts.test_verify_eventstore_publish -v; python3 tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py; python3 tests/Hexalith.Parties.Ci.Tests/runtime_cohort_receipt_cases.py",
+      "result": "14 publisher,8 generated consumer and35 runtime receipt controls pass after adopting evaluated-output fixes and signed Builds5.2.1 source catalog",
+      "logs": [
+        "checks/parties-continued-evaluated-output-0.log.gz",
+        "checks/parties-continued-evaluated-output-1.log.gz",
+        "checks/parties-continued-evaluated-output-2.log.gz"
+      ]
+    },
+    {
+      "command": "Platform final eight Python helper modules; npm run test:source-release; actual signed-tool isolated owner build; compatibility and enrollment methods",
+      "owner": "Hexalith.Platform",
+      "result": "100 Python,82 source-release controls pass;4 compatibility and12 enrollment cases pass; actual default SDK4.2/OpenAPI10.0.15/2.13.0 Release build has0 warnings/errors",
+      "evidence": "references/Hexalith.Platform/docs/implementation/builds521-verification"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Release --disable-build-servers -m:1 -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true; dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net11.0/Hexalith.Parties.Ci.Tests.dll",
+      "result": "zero build warnings/errors; all664 tests passed, zero failures/skips/not-run",
+      "logs": [
+        "checks/parties-final-cli521-ci-build.log.gz",
+        "checks/parties-final-cli521-ci-tests.log.gz"
+      ]
+    },
+    {
+      "command": "final auth helper suites and source-release controls; actionlint; actual authenticated recorded-artifact preparation",
+      "owner": "Hexalith.Platform",
+      "result": "111 Python controls,82 source-release controls and actionlint pass; real authenticated signed-artifact preparation passes; ordinary Git/signature/tool/build/test subprocesses receive no GH_TOKEN"
+    },
+    {
+      "command": "direct built Release/net11 assemblies for thirteen independent unit projects, individually executed",
+      "result": {
+        "total": 3003,
+        "passed": 3002,
+        "failed": 0,
+        "skipped": 1,
+        "errors": 0,
+        "not-run": 0
+      },
+      "projects": 13,
+      "logs": [
+        "checks/final-unit-AdminPortal.log.gz",
+        "checks/final-unit-Aspire.log.gz",
+        "checks/final-unit-Authentication.log.gz",
+        "checks/final-unit-Client.log.gz",
+        "checks/final-unit-ConsumerPortal.log.gz",
+        "checks/final-unit-Contracts.log.gz",
+        "checks/final-unit-Mcp.log.gz",
+        "checks/final-unit-Picker.log.gz",
+        "checks/final-unit-Projections.log.gz",
+        "checks/final-unit-Sample.log.gz",
+        "checks/final-unit-Security.log.gz",
+        "checks/final-unit-Server.log.gz",
+        "checks/final-unit-UI.log.gz"
+      ],
+      "limitation": "Platform-dependent source observation tests remain pending final qualified tuple; existing projection skip preserved"
+    },
+    {
+      "command": "domain test assembly excluding pending PlatformApiPrerequisitesTests, followed by focused failed-case rerun",
+      "result": "2852 total:2836 passed,2 failed,14 explicit external-runtime skips; stale getting-started tool documentation corrected, both failed methods then pass2/2. Repeated broad parallel MSBuild query failure has empty diagnostics; focused method and4 direct isolated MSBuild queries pass. No retry or skip changes added.",
+      "logs": [
+        "checks/parties-final-domain-without-pending-source-tests.log.gz",
+        "checks/parties-final-catalog-doc-rerun.log.gz",
+        "checks/parties-isolated-msbuild-direct-probes.json.gz"
+      ],
+      "pending": "final full exact-source CI must resolve any recurring query failure; current tuple source-observation class remains pending final commit"
+    },
+    {
+      "command": "same15 parallel catalog tests, then domain assembly excluding pending Platform source-observation class",
+      "result": "both pass after per-query MSBuild server opt-out;15/15 and2838/2852 with14 existing external-runtime skips; zero failures, no assertions/counts weakened",
+      "logs": [
+        "checks/parties-final-owned-evaluator-cases.log.gz",
+        "checks/parties-final-owned-evaluator-domain.log.gz"
+      ],
+      "upstreamBehavior": "https://github.com/dotnet/core/blob/main/release-notes/11.0/preview/preview7/sdk.md"
+    },
+    {
+      "command": "mvn -B -ntp package, then python3 -B -m unittest -v test_run_owned from infrastructure/keycloak-workload-binding",
+      "owner": "Hexalith.Platform341abd8d",
+      "result": "23 Java and32 Python controls pass after normal provider build; initial Python invocation without provider correctly refused build-provider-first",
+      "log": "checks/parties-platform341-provider-checks.json.gz"
+    },
+    {
+      "command": "full Ci.Tests and domain assembly excluding only the pending committed-source-observation class after review patches",
+      "result": {
+        "ci": {
+          "total": 665,
+          "passed": 665,
+          "failed": 0,
+          "skipped": 0,
+          "not-run": 0,
+          "errors": 0
+        },
+        "domain": {
+          "total": 2852,
+          "passed": 2838,
+          "failed": 0,
+          "skipped": 14,
+          "not-run": 0,
+          "errors": 0
+        }
+      },
+      "logs": [
+        "checks/parties-final-review-ci-full.log.gz",
+        "checks/parties-final-review-domain-full.log.gz"
+      ],
+      "scope": "full665 CI controls, real NET11/NET10 compiler and40 actual project checks included; source-observation class requires final root commit and clean direct owners"
+    },
+    {
+      "command": "dotnet build Hexalith.Parties.Standalone.slnx -c Release --disable-build-servers -m:1 -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true",
+      "result": "passed; zero warnings/errors against actual released Builds02ed624aa19781cac75d2c9112940e9bd830441a source catalog; signed tool and Platform qualification remain separate",
+      "logs": [
+        "checks/parties-final-builds522-source-solution.log.gz",
+        "checks/parties-final-builds522-source-solution.json.gz"
+      ]
+    },
+    {
+      "command": "Independent Builds5.2.2 normal release, both public NuGet archives/signatures/catalog hashes/source and exact original member comparisons",
+      "result": "passed;354 original files identical, only .signature.p7s added; signed AppHost/Tooling pair measured; no runtime or candidate acceptance inferred",
+      "logs": [
+        "checks/builds522-verification.json.gz",
+        "checks/builds522-publisher-member-comparison.json.gz",
+        "checks/builds-consumer-context-publication-20261113.json.gz"
+      ]
+    },
+    {
+      "command": "Clean recorded Platformb76e0c7c package build and current artifact/MCP/complete-pair classes using actual signed Builds5.2.2",
+      "result": "build zero warnings/errors;24 passed, zero failed/skipped/not-run, including original17 current cases",
+      "logs": [
+        "checks/parties-platform522-real-current-build.log.gz",
+        "checks/parties-platform522-real-current-tests.log.gz",
+        "checks/parties-platform522-real-current.xml.gz"
+      ]
+    },
+    {
+      "command": "Actual fresh companion source comparisons and17-owner authenticated reader preparation",
+      "result": "passed; frozen349/412 source obligations unchanged; no hosted qualification inferred",
+      "logs": [
+        "checks/parties-platform522-legacy-source-comparison.log.gz",
+        "checks/parties-platform522-pre-extension-source-comparison.log.gz",
+        "checks/parties-platform522-reader-receipt.json.gz"
+      ]
+    },
+    {
+      "command": "Root CLI5.2.2 tool restore and PartiesContainerPublishWorkflowTests",
+      "result": "tool restore succeeded;71 focused controls passed; zero failed/skipped/not-run",
+      "logs": [
+        "checks/parties-final-cli522-focused-build.log.gz",
+        "checks/parties-final-cli522-focused-tests.log.gz",
+        "checks/parties-final-cli522-focused.xml.gz"
+      ]
+    },
+    {
+      "command": "Remote verification of all10actual direct owner checkouts and authorized nested prerequisite cleanup",
+      "result": "all10clean and equal remote main; no initialized nested owners remain;17Platform direct sources verified before deinit and object stores retained",
+      "logs": [
+        "checks/parties-final-direct-owner-proof.json.gz",
+        "checks/parties-platform522-nested-final-state.json.gz"
+      ]
     }
   ],
-  "publication": "pending final exact-source green CI and matching qualified Platform/Builds source",
-  "blockingPlatform": {
-    "source": "7479945e9cc6333bd402d63510481634960a6592",
-    "sourceReleaseRun": "https://github.com/Hexalith/Hexalith.Platform/actions/runs/43404015935",
-    "tupleRun": "https://github.com/Hexalith/Hexalith.Platform/actions/runs/43403197342",
-    "reason": "recorded Builds pointer3d110e differs from signed tuple metadata3c2f; current source lacks a qualified release tag"
-  },
+  "publication": "pending exact-source Platform qualification/normal release, then final Parties CI and normal Release",
   "humanValidation": "user explicitly waived human checkpoints; no production environment reviewer rule exists",
-  "scopeClarification": "nested Platform dependency repair/prerequisite releases requested; no answer received; no nested changes made here",
+  "scopeClarification": "User explicitly authorized required nested Platform repairs and prerequisite publication. Only direct Platform-declared owners initialized; no recursive nested updates.",
   "hostedOwnerCi": {
     "Memories": "https://github.com/Hexalith/Hexalith.Memories/actions/runs/43406111604",
     "remainingSourceFailure": "FrontComposer Shell/Testing stillnet10.0 but selected OpenIdConnect11.0.0; reported to active FrontComposer owner task",
     "correctedFailure": "current Redis consumer test fixture net10.0 changed to net11.0 in source 1d94e17a3492ebbfca5f6ea181a44841c8a89473"
   },
-  "currentRootPushedBeforeReceipt": "bf51610311ac6ef73cc194fd453e5f2fed28270c"
+  "currentRootPushedBeforeReceipt": "bf51610311ac6ef73cc194fd453e5f2fed28270c",
+  "continuation": {
+    "status": "catalog6/6 and historical349/412 green; current group30 failed1/17; genuine producer consumer-context successor required",
+    "buildsSource": "0e7424fdce6373920fb2019d1ad2a74d8fe5295c",
+    "buildsRelease": "https://github.com/Hexalith/Hexalith.Builds/releases/tag/v5.2.1",
+    "buildsCi": "https://github.com/Hexalith/Hexalith.Builds/actions/runs/43413073348",
+    "buildsReleaseRun": "https://github.com/Hexalith/Hexalith.Builds/actions/runs/43417380822",
+    "platformBase": "b74d0ee3426091cab5f3c75506728285124cc7d2",
+    "preservedConcurrentFeature": "Story2.12 and published Folders source",
+    "partiesSourceBeforeContinuation": "84c25dac7bc54b609c6fa5cd4ff2a545dab8cbf9",
+    "updatedAtUtc": "2026-11-13T14:07:04.035487+00:00",
+    "platformSource": "49edf00b2b3f0ad6aee3057c62c827cd3123e47a",
+    "platformTupleRun": "https://github.com/Hexalith/Hexalith.Platform/actions/runs/43431743956",
+    "platformCatalogRun": "https://github.com/Hexalith/Hexalith.Platform/actions/runs/43431743889",
+    "legacyCompanion": "56495a3404682ce3f2d7661a10af8ebebe9b8450",
+    "preExtensionCompanion": "d64ff09032ab74f6d6a1c024faa5e463e79dcef0",
+    "packageReaderCompanion": "3ef724f2ccae7f8515ab8158c32e2b6fd204439e",
+    "sameSourceComparisons": "both real checkouts pass;349/412 control contracts unchanged",
+    "readerWorkspace": "all17 direct owners prepared, without nested initialization",
+    "signedBuildsVerification": "both packages pass repository signatures, SHA512, source/version and exact354 original file comparison; fresh installs independently confirmed by producer owner",
+    "platformCatalogResult": "success: all6 compatibility rows",
+    "priorQualification": "at da27ecf0 all6catalog rows and both349/412 historical lanes passed; current lane failed only anonymous GitHub rate limit",
+    "preservedConcurrentReview": "e13bb671 and1b2885a8 review records and79b3ec6a Story2.12 corrections preserved; no story acceptance implied",
+    "producerFixSource": "02ed624aa19781cac75d2c9112940e9bd830441a",
+    "producerFixCi": "https://github.com/Hexalith/Hexalith.Builds/actions/runs/43451348835",
+    "producerFixStatus": "9bbe consumer fix all7 CI passed; later exact-main run exposed a process fixture race, corrected at02ed after72focused controls; normal exact-source release still pending"
+  },
+  "previousBlockingPlatform": {
+    "source": "7479945e9cc6333bd402d63510481634960a6592",
+    "sourceReleaseRun": "https://github.com/Hexalith/Hexalith.Platform/actions/runs/43404015935",
+    "tupleRun": "https://github.com/Hexalith/Hexalith.Platform/actions/runs/43403197342",
+    "reason": "recorded Builds pointer3d110e differs from signed tuple metadata3c2f; current source lacks a qualified release tag"
+  },
+  "blockingPlatform": {
+    "source": "49edf00b2b3f0ad6aee3057c62c827cd3123e47a",
+    "status": "catalog6/6 and historical349/412 green; current group30 failed1/17; genuine producer consumer-context successor required",
+    "tupleRun": "https://github.com/Hexalith/Hexalith.Platform/actions/runs/43431743956",
+    "catalogRun": "https://github.com/Hexalith/Hexalith.Platform/actions/runs/43431743889",
+    "previousFailure": "old current lane used anonymous GitHub API and hit HTTP403 rate limit; scoped read-only metadata authentication now implemented",
+    "updatedAtUtc": "2026-11-13T14:07:04.035487+00:00",
+    "currentFailure": "signed Builds5.2.1 module/closure provenance selects global EventStore5.0.0 rather than authenticated Platform.Composition4.2.0; local duplication rejected",
+    "artifact": "https://api.github.com/repos/Hexalith/Hexalith.Platform/actions/artifacts/14043828003"
+  },
+  "registryAuditScope": "registry-audit.json is the immutable initial09:35 catalog/configuration observation; final evaluated consumer audit is required after qualified successor adoption",
+  "freshRegistryObservation": "checks/parties-final-fresh-registry-observations.json.gz",
+  "evidencePathBase": "All checks/... paths resolve relative to this status.json directory; repository references/... paths resolve at the superproject root.",
+  "finalPlatformQualification": {
+    "source": "b76e0c7c70162653bbff6a8263ebfc4500c1631b",
+    "tupleRun": "https://github.com/Hexalith/Hexalith.Platform/actions/runs/43462834314",
+    "catalogRun": "https://github.com/Hexalith/Hexalith.Platform/actions/runs/43462834460",
+    "status": "pending hosted qualification; no source release claimed"
+  },
+  "finalEvaluatedAudit": {
+    "path": "final-evaluated-audit.json",
+    "scope": "Final actual selected package/tool/owner input observations; initial registry audit remains unchanged"
+  }
 }

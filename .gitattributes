@@ -73,3 +73,6 @@ scripts/PartiesHostedRuntime.props whitespace=blank-at-eol,blank-at-eof,space-be
 tests/Hexalith.Parties.Ci.Tests/ExternalRuntimeCompilationTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.Tests/FitnessTests/RetainedCatalogViewTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.Tests/FitnessTests/PackageCatalogFallbackTests.cs text eol=crlf whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# Recognize the shared evaluator's existing CRLF while checking whitespace.
+tests/PackageTests.Shared/EffectivePackageVersions.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

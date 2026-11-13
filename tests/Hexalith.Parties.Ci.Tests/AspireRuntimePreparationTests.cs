@@ -125,7 +125,9 @@ public sealed class AspireRuntimePreparationTests
                     mode = os.environ['PARTIES_COHORT_MUTATION']
                     target.parent.mkdir(parents=True, exist_ok=True)
                     target.write_bytes(b'completed entry PE')
-                    target.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net10.0' if mode == 'framework-runtime' else framework}}))
+                    target.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{
+                        'tfm':'net10.0' if mode == 'framework-runtime' else framework,
+                        'framework':{'name':'Microsoft.NETCore.App','version':framework[3:] + '.0'}}}))
                     assets.parent.mkdir(parents=True, exist_ok=True)
                     cache = Path('packages').resolve()
                     official = Path(os.environ['PARTIES_OFFICIAL_ARCHIVES'])
@@ -267,9 +269,9 @@ public sealed class AspireRuntimePreparationTests
         finally { Directory.Delete(root, recursive: true); }
     }
 
-    /// <summary>The hosted profile reaches real restore discovery while preserving native, publish and explicit library targets.</summary>
+    /// <summary>The hosted profile reaches real restore discovery while ordinary CLI publication retains owner targets.</summary>
     /// <param name="hosted">Whether the private package profile is selected.</param>
-    /// <param name="publishing">Whether ordinary publication is being evaluated.</param>
+    /// <param name="publishing">Whether the real publish command is invoked.</param>
     /// <param name="expected">The expected inherited host framework.</param>
     [Theory]
     [InlineData(true, false, "net11.0")]
@@ -284,20 +286,41 @@ public sealed class AspireRuntimePreparationTests
             string owner = Path.Combine(workspace, "Directory.Build.props");
             const string Original = "<Project><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>";
             File.WriteAllText(owner, Original);
-            string library = Path.Combine(workspace, "Library.csproj");
+            string library = Path.Combine(workspace, "Library", "Library.csproj");
+            string project = Path.Combine(workspace, "Host", "Host.csproj");
+            Directory.CreateDirectory(Path.GetDirectoryName(library)!);
+            Directory.CreateDirectory(Path.GetDirectoryName(project)!);
             File.WriteAllText(library, """<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>netstandard2.0</TargetFramework></PropertyGroup></Project>""");
-            string project = Path.Combine(workspace, "Host.csproj");
-            File.WriteAllText(project, """<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><ProjectReference Include="Library.csproj" /></ItemGroup></Project>""");
+            File.WriteAllText(project, """<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType></PropertyGroup><ItemGroup><ProjectReference Include="../Library/Library.csproj" /></ItemGroup></Project>""");
+            File.WriteAllText(Path.Combine(Path.GetDirectoryName(project)!, "Program.cs"), "System.Console.WriteLine(\"published owner target\");");
             string graph = Path.Combine(workspace, "restore-graph.json");
-            var result = await RunDotnetAsync(workspace, "msbuild", project, "-nologo", "-target:GenerateRestoreGraphFile",
-                "-p:RestoreGraphOutputPath=" + graph, "-p:HexalithUsePublishedSdkForHostedTests=" + hosted.ToString().ToLowerInvariant(),
-                "-p:IsPublishing=" + publishing.ToString().ToLowerInvariant(), "-p:HexalithPartiesRuntimeTargetFramework=net11.0",
-                "-p:CustomAfterMicrosoftCommonProps=" + CiTestPaths.RepoFile("scripts/PartiesHostedRuntime.props")).ConfigureAwait(true);
+            string published = Path.Combine(workspace, "published");
+            string[] command = publishing
+                ? ["publish", project, "--configuration", "Release", "--output", published]
+                : ["msbuild", project, "-nologo", "-target:GenerateRestoreGraphFile", "-p:RestoreGraphOutputPath=" + graph];
+            var result = await RunDotnetAsync(workspace, [.. command,
+                "-p:HexalithUsePublishedSdkForHostedTests=" + hosted.ToString().ToLowerInvariant(),
+                "-p:HexalithPartiesRuntimeTargetFramework=net11.0",
+                "-p:CustomAfterMicrosoftCommonProps=" + CiTestPaths.RepoFile("scripts/PartiesHostedRuntime.props")]).ConfigureAwait(true);
             result.ExitCode.ShouldBe(0, result.Output + result.Error);
-            using JsonDocument document = JsonDocument.Parse(File.ReadAllText(graph));
-            JsonElement projects = document.RootElement.GetProperty("projects");
-            projects.GetProperty(project).GetProperty("frameworks").EnumerateObject().Select(item => item.Name).ShouldBe([expected]);
-            projects.GetProperty(library).GetProperty("frameworks").EnumerateObject().Select(item => item.Name).ShouldBe(["netstandard2.0"]);
+            if (publishing)
+            {
+                foreach ((string file, string target) in new[] { (project, expected), (library, "netstandard2.0") })
+                {
+                    using JsonDocument assets = JsonDocument.Parse(File.ReadAllText(Path.Combine(Path.GetDirectoryName(file)!, "obj", "project.assets.json")));
+                    assets.RootElement.GetProperty("project").GetProperty("frameworks").EnumerateObject().Select(item => item.Name).ShouldBe([target]);
+                }
+                File.Exists(Path.Combine(published, "Host.dll")).ShouldBeTrue("The normal Publish target must complete.");
+                using JsonDocument runtime = JsonDocument.Parse(File.ReadAllText(Path.Combine(published, "Host.runtimeconfig.json")));
+                runtime.RootElement.GetProperty("runtimeOptions").GetProperty("tfm").GetString().ShouldBe(expected);
+            }
+            else
+            {
+                using JsonDocument document = JsonDocument.Parse(File.ReadAllText(graph));
+                JsonElement projects = document.RootElement.GetProperty("projects");
+                projects.GetProperty(project).GetProperty("frameworks").EnumerateObject().Select(item => item.Name).ShouldBe([expected]);
+                projects.GetProperty(library).GetProperty("frameworks").EnumerateObject().Select(item => item.Name).ShouldBe(["netstandard2.0"]);
+            }
             File.ReadAllText(owner).ShouldBe(Original, "The compatibility profile cannot edit the selected owner's props.");
         }
         finally { Directory.Delete(workspace, recursive: true); }

@@ -14,17 +14,27 @@ public sealed class RetainedCatalogViewTests
     public void CurrentPartiesProjectsUseTheMeasuredRetainedCatalogView()
     {
         string root = RepositoryRoot.Locate();
-        string[] names = new[] { "src", "samples", "tests" }
+        string[] projects = new[] { "src", "samples", "tests" }
             .SelectMany(directory => Directory.GetFiles(Path.Combine(root, directory), "*.csproj", SearchOption.AllDirectories))
             .Where(path => !Path.GetRelativePath(root, path).Split(Path.DirectorySeparatorChar).Any(segment => segment is "bin" or "obj"))
-            .Select(path => Path.GetFileNameWithoutExtension(path)!)
+            .Select(path => Path.GetRelativePath(root, path))
             .Order(StringComparer.Ordinal)
             .ToArray();
+        string[] names = projects.Select(path => Path.GetFileNameWithoutExtension(path)!).ToArray();
         names.Length.ShouldBe(40, "The measured project cohort must be reconsidered when an owning project is added or removed.");
         names.Distinct(StringComparer.Ordinal).Count().ShouldBe(names.Length);
-        foreach (string name in names)
+        IReadOnlyDictionary<string, string> packageMode = new Dictionary<string, string>
         {
+            ["UseHexalithProjectReferences"] = "false",
+            ["UseNuGetDeps"] = "true",
+        };
+        foreach (string project in projects)
+        {
+            string name = Path.GetFileNameWithoutExtension(project);
             AssertCatalog(root, name, "4.2.0", "10.0.15", "2.13.0");
+            IReadOnlyDictionary<string, string> packages = EffectivePackageVersions.ReadPackages(root, project,
+                configuration: "Release", isolateEnvironment: true, globalProperties: packageMode);
+            AssertPackages(packages, project, "4.2.0", "10.0.15", "2.13.0");
         }
     }
 
@@ -37,6 +47,13 @@ public sealed class RetainedCatalogViewTests
     public void UnknownProjectsKeepTheCurrentCatalogDefault(string name)
         => AssertCatalog(RepositoryRoot.Locate(), name, "5.0.0", "11.0.0", "3.11.0");
 
+    private static void AssertPackages(IReadOnlyDictionary<string, string> packages, string project, string sdk, string aspNetOpenApi, string openApi)
+    {
+        packages["Hexalith.EventStore.Contracts"].ShouldBe(sdk, project);
+        packages["Microsoft.AspNetCore.OpenApi"].ShouldBe(aspNetOpenApi, project);
+        packages["Microsoft.OpenApi"].ShouldBe(openApi, project);
+    }
+
     private static void AssertCatalog(string root, string name, string sdk, string aspNetOpenApi, string openApi)
     {
         string directory = Path.Combine(Path.GetTempPath(), $"parties-retained-catalog-{Guid.NewGuid():N}");
@@ -47,9 +64,7 @@ public sealed class RetainedCatalogViewTests
             string catalog = RepositoryDependencyPaths.Resolve(root, "references/Hexalith.Builds/Props/Directory.Packages.props");
             new XDocument(new XElement("Project", new XElement("Import", new XAttribute("Project", catalog)))).Save(project);
             IReadOnlyDictionary<string, string> packages = EffectivePackageVersions.ReadPackages(root, project, isolateEnvironment: true);
-            packages["Hexalith.EventStore.Contracts"].ShouldBe(sdk, name);
-            packages["Microsoft.AspNetCore.OpenApi"].ShouldBe(aspNetOpenApi, name);
-            packages["Microsoft.OpenApi"].ShouldBe(openApi, name);
+            AssertPackages(packages, name, sdk, aspNetOpenApi, openApi);
         }
         finally
         {

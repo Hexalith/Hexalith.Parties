@@ -2696,3 +2696,7 @@ rollback: None required (test-only).
 - source_spec: `_bmad-output/implementation-artifacts/spec-sync-release-2026-11-13.md`
   summary: Qualify the exact EventStore 5.0.0 catalog/host/selector capabilities before admitting that current catalog family to Parties runtime gates.
   evidence: Directory.Build.targets intentionally closes unknown cohorts; upstream Builds 00d91d526ec54c0269a9abdfff7c9c8a5f7f80da now supplies exact retained SDK4.2 Parties/Platform views while shared defaults remain SDK5. Real native/protocol qualification is required before changing those guards.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-sync-release-2026-11-13.md`
+  summary: Preserve evaluated AssemblyName support when generalizing the owner publisher helper.
+  evidence: Pre-existing `scripts/verify-eventstore-publish.py:owner_assembly` requires the TargetPath basename to match the project stem; custom AssemblyName is unsupported. All currently selected fixed owner projects use default names, so no current release failure depends on this limitation.

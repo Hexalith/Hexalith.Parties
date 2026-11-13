@@ -44,7 +44,7 @@ dotnet tool restore
 dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json
 ```
 
-The repository pins module tool **5.1.0** alongside aspirate and uses Aspire CLI
+The repository pins module tool **5.2.2** alongside aspirate and uses Aspire CLI
 **13.6.5**. From this independent checkout, `debug` resolves direct references
 once, builds the selected
 source projects in Debug, and waits for exactly `parties`, `eventstore`, `tenants`,

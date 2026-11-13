@@ -82,6 +82,11 @@ internal static class EffectivePackageVersions
                 startInfo.Environment.Remove(name);
             }
         }
+        // SDK 11 enables a shared MSBuild server by default. These bounded probes
+        // own and reap their child trees, so each query must evaluate in its own
+        // process rather than attach to a worker another probe can terminate.
+        startInfo.Environment["DOTNET_CLI_USE_MSBUILD_SERVER"] = "false";
+        startInfo.Environment["MSBUILDUSESERVER"] = "0";
         PackageTestProcessResult result = PackageTestProcess.Run(startInfo, repositoryRoot, 30_000);
         if (result.ExitCode != 0)
         {

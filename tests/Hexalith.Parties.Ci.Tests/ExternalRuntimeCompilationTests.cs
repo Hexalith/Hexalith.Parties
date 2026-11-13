@@ -38,8 +38,11 @@ public sealed class ExternalRuntimeCompilationTests
     ];
 
     /// <summary>Matching version strings cannot admit missing contracts, while supplying those contracts permits the same runtime preparation.</summary>
-    [Fact]
-    public void RuntimePreparationCompilesTheSelectedPackagesBeforeCompleting()
+    /// <param name="targetFramework">The actual runtime framework consuming NET10 fixture packages.</param>
+    [Theory]
+    [InlineData("net10.0")]
+    [InlineData("net11.0")]
+    public void RuntimePreparationCompilesTheSelectedPackagesBeforeCompleting(string targetFramework)
     {
         if (OperatingSystem.IsWindows()) { Assert.Skip("Runtime preparation requires Bash."); return; }
         string workspace = Path.Combine(Path.GetTempPath(), "parties-runtime-compilation-" + Guid.NewGuid().ToString("N"));
@@ -60,7 +63,7 @@ public sealed class ExternalRuntimeCompilationTests
                 string selectedFeed = Path.Combine(root, "selected-feed");
                 Directory.CreateDirectory(root);
                 PackFixture(workspace, selectedFeed, "Hexalith.EventStore.DomainService", contractsAvailable);
-                WriteRuntimeTree(root, commonFeed, selectedFeed);
+                WriteRuntimeTree(root, commonFeed, selectedFeed, targetFramework);
                 string receiptDirectory = Path.Combine(root, "artifacts", "runtime-profile", PackageTestProcess.ProbeConfiguration);
                 string manifest = Path.Combine(receiptDirectory, "prepared.json");
                 Directory.CreateDirectory(receiptDirectory);
@@ -119,11 +122,16 @@ public sealed class ExternalRuntimeCompilationTests
                     using JsonDocument completed = JsonDocument.Parse(File.ReadAllText(manifest));
                     completed.RootElement.GetProperty("completed").GetBoolean().ShouldBeTrue();
                     completed.RootElement.GetProperty("sdkVersion").GetString().ShouldBe(FixtureVersion);
-                    completed.RootElement.GetProperty("targetFramework").GetString().ShouldBe("net10.0");
+                    completed.RootElement.GetProperty("targetFramework").GetString().ShouldBe(targetFramework);
                     completed.RootElement.GetProperty("projects").EnumerateObject().Count().ShouldBe(RuntimeProjects.Length);
                     foreach (string project in RuntimeProjects)
                     {
-                        completed.RootElement.GetProperty("projects").TryGetProperty(Path.Combine(root, project), out _).ShouldBeTrue(project);
+                        JsonElement binding = completed.RootElement.GetProperty("projects").GetProperty(Path.Combine(root, project));
+                        using JsonDocument receipt = JsonDocument.Parse(File.ReadAllText(binding.GetProperty("receipt").GetString()!));
+                        receipt.RootElement.GetProperty("targetFramework").GetString().ShouldBe(targetFramework);
+                        receipt.RootElement.GetProperty("sdkBinaries").EnumerateArray()
+                            .ShouldAllBe(binary => binary.GetProperty("entry").GetString()!.StartsWith("lib/net10.0/", StringComparison.Ordinal),
+                                "NET11 hosts must consume the original locally packed NET10 fixture binaries.");
                     }
                     foreach (string package in SdkPackages.Concat(PeerPackages))
                     {
@@ -209,7 +217,7 @@ public sealed class ExternalRuntimeCompilationTests
         return start;
     }
 
-    private static void WriteRuntimeTree(string root, string commonFeed, string selectedFeed)
+    private static void WriteRuntimeTree(string root, string commonFeed, string selectedFeed, string targetFramework)
     {
         Directory.CreateDirectory(Path.Combine(root, "scripts"));
         foreach (string script in new[] { "prepare-aspire-runtime-hosts.sh", "validate-aspire-runtime-cohort.py", "PartiesHostedRuntime.props" })
@@ -222,7 +230,7 @@ public sealed class ExternalRuntimeCompilationTests
             new XElement("config", new XElement("add", new XAttribute("key", "globalPackagesFolder"), new XAttribute("value", Path.Combine(root, "packages"))))))
             .Save(Path.Combine(root, "NuGet.Config"));
         new XDocument(new XElement("Project", new XElement("PropertyGroup",
-            new XElement("TargetFramework", "net10.0"), new XElement("ImplicitUsings", "enable"), new XElement("Nullable", "enable"),
+            new XElement("TargetFramework", targetFramework), new XElement("ImplicitUsings", "enable"), new XElement("Nullable", "enable"),
             new XElement("TreatWarningsAsErrors", "true"), new XElement("NuGetAudit", "false"),
             new XElement("HexalithEventStoreVersion", FixtureVersion), new XElement("HexalithTenantsVersion", FixtureVersion),
             new XElement("HexalithMemoriesVersion", FixtureVersion), new XElement("HexalithFrontComposerVersion", FixtureVersion),

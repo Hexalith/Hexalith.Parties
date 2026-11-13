@@ -24,7 +24,9 @@ context:
 
 **Always:** Preserve existing work and historical evidence. Centralize NuGet versions in Builds. Keep exact-source CI, runtime, cleanup and publication checks meaningful. Record source selection under codex-agent delegation, without claiming human review or runtime qualification. Latest stable versions are the default; preserve deliberate historical compatibility test cohorts. Parent owns synchronization, signoff ledger, commits, pushes, hosted CI, and release; implementation agent makes local fixes only and does not commit. Submodule commits must be pushed before root gitlinks are recorded.
 
-**Never:** Initialize nested submodules, load skills below references, weaken warnings or automated gates, invent approvals, print credentials, delete published releases, force push, or permanently remove environment protections. User approval checkpoints are waived for this maintenance run.
+**Authorized continuation:** On 2026-11-13 the user explicitly authorized necessary Platform nested dependency repairs and matching prerequisite publication. Limit nested checkout/reference changes to this release path; preserve other active task work and use exact recorded revisions without recursive updates.
+
+**Never:** Initialize unrelated nested submodules, load skills below references, weaken warnings or automated gates, invent approvals, print credentials, delete published releases, force push, or permanently remove environment protections. User approval checkpoints are waived for this maintenance run.
 
 </frozen-after-approval>
 
@@ -33,7 +35,7 @@ context:
 - `global.json` and root submodule SDK pins already select latest stable11.0.100 (Microsoft release feed 2026-11-13); no artificial SDK edit needed.
 - `references/Hexalith.Builds/Props/Directory.Packages.props` owns current effective package families. Registry audit `/tmp/parties-package-audit.json` finds all63 consumed stable NuGet/tool IDs current. Broader shared catalog updates are Conversations1.5.0 to1.6.0, Projects1.2.3 to1.2.4, and Swashbuckle.AspNetCore11.0.0 to11.0.1; make these in Builds owner and verify affected catalog controls after reading its DEVELOPMENT.md/configuration. Parent commits and pushes owner changes.
 - `package.json`, `package-lock.json`: @semantic-release/github12.0.10 to12.0.11; keep Node24 engines and matching Node24 declarations.
-- `Directory.Packages.props`: standalone fallbacks EventStore4.2.0, FrontComposer4.7.6 and Memories3.0.26 lag effective5.0.0,5.0.0,3.0.27. Preserve caller-selected catalogs.
+- `Directory.Packages.props`: current evaluated Parties consumers deliberately retain the authenticated finite SDK4.2.0/OpenAPI2 view; the shared unknown-consumer SDK5.0.0 default remains unqualified. Align standalone fallbacks with the actual named consumer graph (FrontComposer5.0.0, Memories3.0.27) and preserve caller-selected catalogs.
 - `tests/e2e/helpers/frontcomposer-assets.ts`: UI output hardcodes net10.0 while current host targets net11.0.
 - `scripts/verify-eventstore-publish.py` and `scripts/test_verify_eventstore_publish.py`: publisher output assumes net10.0 while current EventStore targets net11.0.
 - `scripts/validate-consumer-package-references.py`: generated smoke consumers still target net10.0; root packages target net11.0. Preserve intentional historical cases elsewhere.
@@ -58,6 +60,8 @@ context:
 - Given an external blocker, when its exact command fails, then evidence remains explicit and no publication or qualification is claimed.
 
 ## Implementation Notes
+
+- User authorization received for nested Platform dependency repairs and prerequisite release. Continue through reviewed finite catalog helpers from upstream Platform3de642ba and Parties84c25dac, preserve concurrent Story2.12/Folders changes, and wait for the Builds owner to deliver the independently verified host-compatible successor before binding any tuple. The Builds task remains sole publisher for that repository.
 
 - Full browser gate81/81 passes. Hosted current Memories consumer fixture failure is repaired at1d94e17a3492ebbfca5f6ea181a44841c8a89473; all28 package controls pass. Its remaining source-debug failure is pre-existing FrontComposer source targetnet10 versus OpenIdConnect11 from current catalog, reported to the active owner task. Root gate is green; exact-source main CI remains queued behind an older cancelled runtime job. A force-cancel was requested for that superseded job, which had no started steps.
 
@@ -98,3 +102,103 @@ context:
 - Package-mode serialized Release builds and individual Ci.Tests --pass, or exact first-failure evidence.
 - `bash scripts/check-no-warning-override.sh` and `git diff --check` --pass.
 - Final exact-source hosted CI/range gate and normal Release --success; independent NuGet verification binds every manifest package to source.
+
+### SDK 11 evaluator isolation repair
+
+The unchanged parallel catalog tests repeatedly failed with exit1 and empty
+diagnostics while focused and serialized evaluation passed. Diagnostic direct
+and supervised parallel queries observed shared MSBuild server connection
+fallbacks. SDK11 now enables the shared server by default; bounded package
+process supervisors intentionally reap their owned descendant trees. The
+MSBuild evaluator therefore explicitly disables shared server use for each
+query, after environment isolation, without adding retries, changing assertions
+or serializing the suite. The same real parallel cases and broader assembly
+will verify the repair. Original failed runs remain retained as evidence.
+
+### Final review scope and remaining producer gate
+
+Review the whole root maintenance diff from864c55a9, including published
+FrontComposer-owner current-output/consumer fixes preserved at4aea34e0 and
+84c25dac. The new owned evaluator repair passes15 parallel catalog cases and
+2838 domain cases (14 explicit external-runtime skips), while thirteen other
+unit projects pass3002 cases with one existing skip. Full664 Ci.Tests and the
+standalone solution already passed before this last evaluator change; final
+source data requires a committed root tuple and clean direct dependencies.
+
+Prepared consumer code in the Platform owner is independently reviewed, with
+three review patches implemented. Its real signed producer successor is now
+Builds source9bbe8380 in normal CI43445886145; no package/release identity has
+been invented. Parent must verify its normal signed release, bind it atomically
+to Platform, regenerate fresh companions, pass unchanged automated source
+qualification and normally release Platform. Final root CLI/gitlink/source
+observation fields will then adopt that qualified tuple before root commit,
+exact-source CI/range gates and normal publication. Current intermediate
+5.2.1/Platform observations are preparation data, not final qualification.
+
+## Review Triage Log
+
+All three root review layers completed before triage: blind hunter10 findings, edge-case hunter1, verification reviewer1 Other finding. Full review input is `/tmp/parties-root-final-review.diff` from baseline864c55a9; independently pushed owner changes are preserved.
+
+| ID | Verdict | Route | Evidence and resolution |
+| --- | --- | --- | --- |
+| RB1 | medium | patch (publish-boundary group) | The hosted profile checks only `IsPublishing`; a real CLI invocation uses `_IsPublishing`, allowing the private NET11 override during publish. The existing test manually sets a different property. Guard the actual CLI signal as well and exercise real publish without that injected stand-in, preserving ordinary owner props. |
+| RB2 | medium | patch | `validate_framework` accepts a matching TFM label without authenticating its shared-framework declarations. An incompatible `.NETCore.App10`/`net11.0` runtime configuration can be certified despite being unrunnable. Validate required framework identity/version generations and extend the real receipt refusal controls with otherwise coherent malformed/incompatible runtime configurations. |
+| RB3 | medium | defer (pre-existing) | The owner publisher historically derives a DLL name from the fixed project stem; the evaluated TargetPath change preserves that old restriction. A custom AssemblyName is valid MSBuild but unsupported by this helper. All current fixed owner projects use the default name, so this is not a current release blocker; retain as a separate helper-capability limitation rather than expanding this repair. |
+| RB4 | medium | patch | The actual preparation/compiler regression covers inherited net10 only; restore and synthetic-output proofs do not establish the NET11 profile through compilation. Extend the existing real compiler/preparation case with NET11 consuming actual locally packed NET10 fixtures and completing its receipt, retaining missing-contract refusal and NET10 coverage. |
+| RB5 | medium | patch | Named substitute `.proj` probes establish the finite catalog-name rule but cannot detect overrides/import order in the forty actual owning projects. Keep those positive/unknown-name probes and evaluate all actual project files under the real Release package context. |
+| RB6 | medium | patch (parent final-source group) | Current intermediate Platform constants/matrix record79 while actual prepared owner is341. Parent must atomically align SHA, anchored describe, matrix and final committed root pointer to the genuinely qualified final source before the committed-source class runs. No relaxed assertion is allowed. |
+| RB7 | medium | patch (parent ledger) | No final prepared Platform source is signed off yet. This intentionally awaits actual final qualification; append the genuine remote-verified final source provenance before root commit and prove both push-range and release-floor RC gates. |
+| RB8 | medium | patch (parent history) | Relative to initial baseline864, four rows in the newly archived Nov13 observation had been replaced during the first synchronization. Restore that original dated observation and retain the already published intermediate table separately with an explicit intermediate heading; preserve every prior receipt and approval. |
+| RB9 | low | patch (parent evidence index) | Several status log references omit the actual `checks/` path and `.gz` suffix; the old five-case consumer capture may be missing. Resolve every evidence path to retained bytes, capture available original logs, and explicitly distinguish superseded/unretained historical observations from the existing current eight-case receipt. |
+| RB10 | medium | patch (parent final audit) | The registry file is the genuine initial9:35 audit and must retain its original data. Label its scope as initial and add a separate final evaluated consumer audit with actual final source/tool/npm identities and explicit SDK4.2/OpenAPI2/Memories3.0.27 compatibility exceptions. Fresh official63-index observations at14:54 already identify newly published Memories4.0.0 and the CLI successor separately. |
+| RE1 | medium | patch (parent final-source group) | The edge-case layer independently finds the same79-versus341 source-observation mismatch as RB6. Align all final records to the actual qualified committed pointer; preserve strict identity tests. |
+| RV1 | medium | patch (publish-boundary group) | Verified Other finding reproduces actual `dotnet publish` with `_IsPublishing=true`, empty `IsPublishing`, and unintended NET11 output. The same real-command guard/test repair required by RB1 closes this issue. |
+
+Required remote producer/Platform/root qualification and publication remain pending. No human checkpoint is required or invented.
+
+### Final reviewed implementation and source selection, 2026-11-13
+
+The preceding preparations retain their dated facts. Both genuine Builds5.2.2
+packages at02ed624aa19781cac75d2c9112940e9bd830441a are publicly verified:
+repository signatures, catalogSHA512, source metadata and all354 original
+publisher members match, with only the repository signature added. Platform
+sourceb76e0c7c70162653bbff6a8263ebfc4500c1631b atomically consumes the typed
+API, exact tool/range/binding and measured21st complete validation pair. All
+historical pairs and crossed-pair refusals remain intact. Fresh immutable
+companions preserve the genuine349/412 obligations and real17-owner reader.
+The clean final standalone source builds with0warnings/errors and passes all24
+affected controls, including the actual17 current artifact cases, with0skips.
+Main is pushed; exact hosted tuple43462834314 and catalog43462834460 remain
+required before normal qualified source publication.
+
+RB1/RV1, RB2, RB4 and RB5 are implemented and verified by the meaningful
+publish/compiler/runtime-framework/actual40-project controls. Full final Ci.Tests
+passes665/665. The domain assembly excluding only the pending committed-source
+class passes2838 with14 existing external-fixture skips. Thirteen other unit
+projects pass3002 with one existing skip. After the genuine5.2.2 tool pin,
+71 current container/publication controls pass, and the full solution against
+the released catalog builds without warnings/errors. RB8 preserves the initial
+Nov13 observation and separately labels the first synchronization. RB9 resolves
+all captured log references to retained compressed evidence. RB3 remains the
+explicit pre-existing custom-AssemblyName helper limitation in deferred-work.
+
+RB6/RE1 and RB7 now use the actual remote-verified Platformb76 source, matching
+current constants, anchored descriptors, matrix and source-only provenance.
+The root also preserves latest EventStore69b244d9, McpCli491f1148 and Builds
+CI-guardfde085ee sources. The latter's catalog bytes are exactly equal to the
+signed02ed producer, while the Platform tuple remains fixed at02ed. All ten
+root owners are clean and remote-main verified. The17 authorized Platform
+prerequisites were clean/exact before deinitialization; no nested owner remains
+initialized in the umbrella workspace.
+
+RB10 is resolved by final-evaluated-audit.json from the actual selected project,
+tool manifest, package lock, owner revisions and fresh official registries. The
+initial9:35 registry observation remains unchanged and labeled initial. The
+current SDK is latest stable11.0.100. Exact SDK4.2/OpenAPI2 and Memories3.0.27
+cohorts remain disclosed holds. The catalog selects Dapr hosting13.6.2-beta.959
+for Aspire13.6; stable13.0.0 is older, and17.x betas require another toolchain.
+
+The strict committed-source class must run against the final root commit.
+Final exact-source rootCI/range proof, Release and independent verification of
+all eleven newly published packages remain pending. No human checkpoint is
+required; automated gates and original Story/acceptance boundaries are retained.

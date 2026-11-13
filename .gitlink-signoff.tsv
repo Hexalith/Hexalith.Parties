@@ -794,3 +794,22 @@ references/Hexalith.Platform|7479945e9cc6333bd402d63510481634960a6592|validated-
 
 # Current Redis consumer qualification repair; source selection only.
 references/Hexalith.Memories|1d94e17a3492ebbfca5f6ea181a44841c8a89473|validated-advance|origin/main@1d94e17a3492ebbfca5f6ea181a44841c8a89473|codex-agent|2026-11-13
+
+# 2026-11-13 authorized continuation: remote-verified source selection.
+# Signed Builds5.2.1 identities are verified; source selection grants no
+# human review or substitute for final Parties runtime/release gates.
+references/Hexalith.Builds|0e7424fdce6373920fb2019d1ad2a74d8fe5295c|validated-advance|v5.2.1@0e7424fdce6373920fb2019d1ad2a74d8fe5295c|codex-agent|2026-11-13
+references/Hexalith.AI.Tools|17a37d83db193f0b7494c1b931fd1e82a67c1424|validated-advance|origin/main@17a37d83db193f0b7494c1b931fd1e82a67c1424|codex-agent|2026-11-13
+references/Hexalith.EventStore|83f756886917ea00ff9431973f6949f9467f0ea2|validated-advance|origin/main@83f756886917ea00ff9431973f6949f9467f0ea2|codex-agent|2026-11-13
+references/Hexalith.Memories|6d8031776fbe2a94b173ff19bb5cc9d637ec4eb6|validated-advance|origin/main@6d8031776fbe2a94b173ff19bb5cc9d637ec4eb6|codex-agent|2026-11-13
+
+references/Hexalith.EventStore|cfce9a623ccc6dcb0de85ce9c9e4dbc7eeab392f|validated-advance|origin/main@cfce9a623ccc6dcb0de85ce9c9e4dbc7eeab392f|codex-agent|2026-11-13
+
+references/Hexalith.McpCli|7862574e19ae7b8123985af907b59afc3461da6a|validated-advance|origin/main@7862574e19ae7b8123985af907b59afc3461da6a|codex-agent|2026-11-13
+
+references/Hexalith.Memories|c4ee997702ede948ada5f99eeae7b3782e92003b|validated-advance|v4.0.0@c4ee997702ede948ada5f99eeae7b3782e92003b|codex-agent|2026-11-13
+references/Hexalith.Builds|02ed624aa19781cac75d2c9112940e9bd830441a|validated-advance|v5.2.2@02ed624aa19781cac75d2c9112940e9bd830441a|codex-agent|2026-11-13
+references/Hexalith.EventStore|69b244d9cfb0e5fc077e324fe9c2a9cae7d026dc|validated-advance|origin/main@69b244d9cfb0e5fc077e324fe9c2a9cae7d026dc|codex-agent|2026-11-13
+references/Hexalith.McpCli|491f114885ec2fc68537411f3c3fe6ad549cbe2f|validated-advance|origin/main@491f114885ec2fc68537411f3c3fe6ad549cbe2f|codex-agent|2026-11-13
+references/Hexalith.Platform|b76e0c7c70162653bbff6a8263ebfc4500c1631b|validated-advance|origin/main@b76e0c7c70162653bbff6a8263ebfc4500c1631b|codex-agent|2026-11-13
+references/Hexalith.Builds|fde085eeccc11617f42e71a1e5d7db23ed5e4290|validated-advance|origin/main@fde085eeccc11617f42e71a1e5d7db23ed5e4290|codex-agent|2026-11-13

@@ -310,8 +310,31 @@ def validate_framework(assets: dict, target: Path, framework: str, role: str) ->
         raise ValueError("Deployed runtime target framework differs from the evaluated build profile")
     runtimeconfig = target.with_suffix(".runtimeconfig.json")
     if role == "runtime" or runtimeconfig.is_file():
-        if load(runtimeconfig).get("runtimeOptions", {}).get("tfm") != framework:
+        options = load(runtimeconfig).get("runtimeOptions")
+        if not isinstance(options, dict) or options.get("tfm") != framework:
             raise ValueError("Deployed runtime configuration differs from the evaluated build profile")
+        if ("framework" in options) == ("frameworks" in options):
+            raise ValueError("Deployed runtime shared framework declarations are missing or ambiguous")
+        declarations = [options["framework"]] if "framework" in options else options["frameworks"]
+        if not isinstance(declarations, list) or not declarations:
+            raise ValueError("Deployed runtime shared framework declarations are malformed")
+        references = assets["project"]["frameworks"][framework].get("frameworkReferences", {})
+        if not isinstance(references, dict):
+            raise ValueError("Restored runtime shared framework references are malformed")
+        required = {"Microsoft.NETCore.App"} | set(references)
+        declared = set()
+        generation = framework.removeprefix("net")
+        for declaration in declarations:
+            if not isinstance(declaration, dict) or not isinstance(declaration.get("name"), str) \
+                    or not isinstance(declaration.get("version"), str) \
+                    or re.fullmatch(re.escape(generation) + r"\.(0|[1-9][0-9]*)", declaration["version"]) is None:
+                raise ValueError("Deployed runtime shared framework version differs from the evaluated build profile")
+            name = declaration["name"]
+            if name in declared:
+                raise ValueError("Deployed runtime shared framework declarations contain duplicates")
+            declared.add(name)
+        if declared != required:
+            raise ValueError("Deployed runtime shared framework declarations differ from actual restored references")
 
 
 def record(metadata: dict, project: Path, configuration: str, version: str, started_ns: int, role: str, families: dict,

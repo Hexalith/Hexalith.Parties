@@ -76,7 +76,8 @@ class RuntimeReceiptCases(unittest.TestCase):
         self.output.mkdir(parents=True)
         self.target = self.output / "Host.dll"
         self.target.write_bytes(b"prepared host entry")
-        self.target.with_suffix(".runtimeconfig.json").write_text('{"runtimeOptions":{"tfm":"net10.0"}}')
+        self.target.with_suffix(".runtimeconfig.json").write_text(json.dumps({"runtimeOptions": {
+            "tfm": "net10.0", "framework": {"name": "Microsoft.NETCore.App", "version": "10.0.0"}}}))
         self.assets_path = self.root / "obj/project.assets.json"
         self.assets_path.parent.mkdir()
         self.cache = self.root / "packages"
@@ -186,16 +187,87 @@ class RuntimeReceiptCases(unittest.TestCase):
         self.assertNotEqual(0, result.returncode)
         self.assertIn("--target-framework", result.stderr)
 
-    def test_net11_runtime_keeps_exact_older_published_package_bodies(self):
-        self.assets["project"]["frameworks"] = {"net11.0": {}}
-        self.assets["targets"]["net11.0"] = self.assets["targets"].pop("net10.0")
+    def use_framework(self, framework, aspnet=False):
+        packages = next(iter(self.assets["targets"].values()))
+        references = {"Microsoft.NETCore.App": {"privateAssets": "all"}}
+        declarations = [{"name": "Microsoft.NETCore.App", "version": framework[3:] + ".0"}]
+        if aspnet:
+            references["Microsoft.AspNetCore.App"] = {"privateAssets": "none"}
+            declarations.append({"name": "Microsoft.AspNetCore.App", "version": framework[3:] + ".0"})
+        self.assets["project"]["frameworks"] = {framework: {"frameworkReferences": references}}
+        self.assets["targets"] = {framework: packages}
         self.assets_path.write_text(json.dumps(self.assets))
-        self.deps["targets"] = {".NETCoreApp,Version=v11.0": self.assets["targets"]["net11.0"]}
-        self.deps["runtimeTarget"]["name"] = ".NETCoreApp,Version=v11.0"
+        runtime_target = ".NETCoreApp,Version=v" + framework[3:]
+        self.deps["targets"] = {runtime_target: packages}
+        self.deps["runtimeTarget"]["name"] = runtime_target
         self.target.with_suffix(".deps.json").write_text(json.dumps(self.deps))
-        self.target.with_suffix(".runtimeconfig.json").write_text('{"runtimeOptions":{"tfm":"net11.0"}}')
-        self.metadata["Properties"]["TargetFramework"] = "net11.0"
-        self.metadata["Properties"]["HexalithPartiesRuntimeTargetFramework"] = "net11.0"
+        options = {"tfm": framework}
+        options.update({"frameworks": declarations} if aspnet else {"framework": declarations[0]})
+        self.target.with_suffix(".runtimeconfig.json").write_text(json.dumps({"runtimeOptions": options}))
+        self.metadata["Properties"]["TargetFramework"] = framework
+        self.metadata["Properties"]["HexalithPartiesRuntimeTargetFramework"] = framework
+
+    def test_real_shape_shared_framework_declarations_qualify_both_generations(self):
+        for framework in ("net10.0", "net11.0"):
+            for aspnet in (False, True):
+                with self.subTest(framework=framework, aspnet=aspnet):
+                    self.tearDown(); self.setUp(); self.use_framework(framework, aspnet)
+                    receipt = self.prepare()
+                    self.assertEqual(framework, receipt["targetFramework"])
+                    result, runner = self.launch(target_framework=framework)
+                    self.assertEqual(0, result.returncode, result.stderr)
+                    self.assertTrue(runner.exists())
+
+    def test_shared_framework_declarations_refuse_otherwise_coherent_missing_malformed_or_foreign_runtime(self):
+        for framework in ("net10.0", "net11.0"):
+            core = {"name": "Microsoft.NETCore.App", "version": framework[3:] + ".0"}
+            aspnet = {"name": "Microsoft.AspNetCore.App", "version": framework[3:] + ".0"}
+            other = "10.0.0" if framework == "net11.0" else "11.0.0"
+            cases = [
+                {}, {"framework": None}, {"frameworks": []}, {"frameworks": core}, {"frameworks": [None]},
+                {"frameworks": [{"version": core["version"]}, aspnet]},
+                {"frameworks": [{"name": core["name"]}, aspnet]},
+                {"frameworks": [{"name": core["name"], "version": 11}, aspnet]},
+                {"frameworks": [{**core, "version": "malformed"}, aspnet]},
+                {"frameworks": [{**core, "version": framework[3:] + ".0-preview.1"}, aspnet]},
+                {"frameworks": [{**core, "version": framework[3:].replace(".0", ".1") + ".0"}, aspnet]},
+                {"frameworks": [{**core, "version": other}, aspnet], "rollForward": "Disable"},
+                {"frameworks": [core, {**aspnet, "version": other}]},
+                {"frameworks": [aspnet]}, {"framework": core},
+                {"frameworks": [core, aspnet, core]},
+                {"frameworks": [core, aspnet, {"name": "Foreign.App", "version": core["version"]}]},
+                {"framework": core, "frameworks": [core, aspnet]},
+                {"includedFrameworks": [core, aspnet]},
+            ]
+            for declarations in cases:
+                with self.subTest(framework=framework, declarations=declarations):
+                    self.tearDown(); self.setUp(); self.use_framework(framework, aspnet=True)
+                    self.target.with_suffix(".runtimeconfig.json").write_text(json.dumps({
+                        "runtimeOptions": {"tfm": framework, **declarations}}))
+                    with self.assertRaisesRegex(ValueError, "shared framework"):
+                        self.prepare()
+                    self.assertFalse(self.manifest.exists())
+
+    def test_rebound_hashes_cannot_hide_foreign_shared_framework_generation(self):
+        self.use_framework("net11.0", aspnet=True)
+        receipt = self.prepare()
+        config = self.target.with_suffix(".runtimeconfig.json")
+        document = cohort.load(config)
+        document["runtimeOptions"]["frameworks"][0]["version"] = "10.0.0"
+        document["runtimeOptions"]["rollForward"] = "Disable"
+        config.write_text(json.dumps(document))
+        receipt["files"][str(config)] = cohort.digest(config)
+        cohort.write(self.receipt_path, receipt)
+        manifest = cohort.load(self.manifest)
+        manifest["projects"][str(self.project)]["sha256"] = cohort.digest(self.receipt_path)
+        cohort.write(self.manifest, manifest)
+        result, runner = self.launch(target_framework="net11.0")
+        self.assertNotEqual(0, result.returncode)
+        self.assertFalse(runner.exists())
+        self.assertIn("shared framework", result.stderr)
+
+    def test_net11_runtime_keeps_exact_older_published_package_bodies(self):
+        self.use_framework("net11.0", aspnet=True)
         receipt = self.prepare()
         self.assertEqual("net11.0", receipt["targetFramework"])
         self.assertTrue(all(binary["entry"].startswith("lib/net10.0/") for binary in receipt["sdkBinaries"]))
