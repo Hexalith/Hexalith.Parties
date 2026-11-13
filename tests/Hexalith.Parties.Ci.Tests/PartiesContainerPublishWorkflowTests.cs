@@ -7,7 +7,7 @@ namespace Hexalith.Parties.Ci.Tests;
 public sealed class PartiesContainerPublishWorkflowTests
 {
     private const int ExpectedPackageCount = 11;
-    private const string BuildsCiSha = "3c2f5944aaa28dc7854a00a8a9df171aa810b0c7";
+    private const string BuildsCiSha = "9ebc31f606bc02f8a0ec2f1ec344127e2468c6b4";
     private const string BuildsValidationSha = "3c2f5944aaa28dc7854a00a8a9df171aa810b0c7";
     private const string BuildsExecutionSha = "3c2f5944aaa28dc7854a00a8a9df171aa810b0c7";
     private static readonly TimeSpan WorkflowReadTimeout = TimeSpan.FromSeconds(10);
@@ -143,7 +143,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         }
         using JsonDocument tools = JsonDocument.Parse(CiTestPaths.ReadRepoFile(".config/dotnet-tools.json"));
         JsonElement tool = tools.RootElement.GetProperty("tools").GetProperty("hexalith.builds.module.cli");
-        tool.GetProperty("version").GetString().ShouldBe("5.0.1");
+        tool.GetProperty("version").GetString().ShouldBe("5.1.0");
         tool.GetProperty("rollForward").GetBoolean().ShouldBeFalse();
         workflow.ShouldNotContain("submodules: recursive");
 
