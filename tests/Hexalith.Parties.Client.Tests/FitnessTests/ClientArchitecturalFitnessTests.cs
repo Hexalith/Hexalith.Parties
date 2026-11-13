@@ -398,7 +398,7 @@ public sealed class ClientArchitecturalFitnessTests
 
         using JsonDocument document = JsonDocument.Parse(File.ReadAllText(assetsFilePath));
         JsonElement targets = document.RootElement.GetProperty("targets");
-        JsonProperty target = targets.EnumerateObject().Single(property => property.Name.StartsWith("net10.0", StringComparison.OrdinalIgnoreCase));
+        JsonProperty target = targets.EnumerateObject().Single(property => property.Name.StartsWith("net11.0", StringComparison.OrdinalIgnoreCase));
 
         HashSet<string> directPackageNames =
         [

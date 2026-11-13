@@ -8,8 +8,8 @@ public sealed class PartiesContainerPublishWorkflowTests
 {
     private const int ExpectedPackageCount = 11;
     private const string BuildsCiSha = "9ebc31f606bc02f8a0ec2f1ec344127e2468c6b4";
-    private const string BuildsValidationSha = "9f5d751f7ab0b7a621dcd18b589bf061fabac6ec";
-    private const string BuildsExecutionSha = "9f5d751f7ab0b7a621dcd18b589bf061fabac6ec";
+    private const string BuildsValidationSha = "3c2f5944aaa28dc7854a00a8a9df171aa810b0c7";
+    private const string BuildsExecutionSha = "3c2f5944aaa28dc7854a00a8a9df171aa810b0c7";
     private static readonly TimeSpan WorkflowReadTimeout = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan PublicationPreflightTimeout = TimeSpan.FromSeconds(10);
 

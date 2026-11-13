@@ -27,6 +27,24 @@ public sealed class SelfScopedPartiesClientTests
 {
     private const string BoundPartyId = "party-123";
 
+    /// <summary>An authentication transition during resolution never reaches the old party's client.</summary>
+    [Fact]
+    public async Task AuthenticationTransitionDuringResolutionRefusesStalePartyAsync()
+    {
+        var pending = new TaskCompletionSource<Microsoft.AspNetCore.Components.Authorization.AuthenticationState>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var provider = new FakeAuthStateProvider(pending.Task);
+        IPartiesQueryClient query = Substitute.For<IPartiesQueryClient>();
+        var service = new SelfScopedPartiesClient(provider, new PartyIdClaimResolver(), query,
+            Substitute.For<IPartiesCommandClient>(), Substitute.For<IAdminPortalGdprClient>());
+
+        Task<PartyDetail> reading = service.GetMyPartyAsync(TestContext.Current.CancellationToken);
+        provider.Publish(Task.FromResult(new Microsoft.AspNetCore.Components.Authorization.AuthenticationState(UnboundPrincipal())));
+        pending.SetResult(new Microsoft.AspNetCore.Components.Authorization.AuthenticationState(BoundPrincipal(BoundPartyId)));
+
+        await Should.ThrowAsync<InvalidOperationException>(() => reading).ConfigureAwait(true);
+        await query.DidNotReceiveWithAnyArgs().GetPartyAsync(default!, default).ConfigureAwait(true);
+    }
+
     [Fact]
     public async Task GetMyPartyAsync_BoundPrincipal_InjectsResolvedPartyIdIntoQueryClient()
     {

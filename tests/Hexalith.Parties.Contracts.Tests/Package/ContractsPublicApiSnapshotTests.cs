@@ -10,6 +10,68 @@ namespace Hexalith.Parties.Contracts.Tests.Package;
 public sealed class ContractsPublicApiSnapshotTests
 {
     private const string SnapshotRelativePath = "Package/ContractsPublicApiSnapshot.txt";
+    private const string FrozenCoreLibraryIdentity = ", System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e";
+    private const string CurrentCoreLibraryIdentity = ", System.Private.CoreLib, Version=11.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e";
+
+    /// <summary>The two runtime-generated generic reference spellings preserve their frozen contract identity.</summary>
+    [Fact]
+    public void GenericByReferenceCoreLibraryIdentityRetainsTheFrozenSurface()
+    {
+        FriendlyName(typeof(DateTimeOffset?).MakeByRefType()).ShouldBe(
+            "System.Nullable`1[[System.DateTimeOffset" + FrozenCoreLibraryIdentity + "]]&");
+        FriendlyName(typeof(long?).MakeByRefType()).ShouldBe(
+            "System.Nullable`1[[System.Int64" + FrozenCoreLibraryIdentity + "]]&");
+        FriendlyName(typeof(long?)).ShouldBe("System.Nullable<System.Int64>");
+        FriendlyName(typeof(long).MakeByRefType()).ShouldBe("System.Int64&");
+    }
+
+    /// <summary>Only the measured strong-named CoreLib 11 spelling is compatible with the frozen spelling.</summary>
+    /// <param name="candidate">The qualified type spelling to compare.</param>
+    /// <param name="compatible">Whether its complete signature must match the frozen signature.</param>
+    [Theory]
+    [MemberData(nameof(CoreLibraryCompatibilityCases))]
+    public void GenericByReferenceIdentityRefusesUnqualifiedChanges(string candidate, bool compatible)
+    {
+        ArgumentNullException.ThrowIfNull(candidate);
+        string frozen = "System.Nullable`1[[System.Int64" + FrozenCoreLibraryIdentity + "]]&";
+        string actual = CanonicalGenericByReferenceName(candidate);
+        string.Equals(actual, frozen, StringComparison.Ordinal).ShouldBe(compatible);
+    }
+
+    /// <summary>Supplies historical/current successes and hostile framework, module and signature changes.</summary>
+    public static TheoryData<string, bool> CoreLibraryCompatibilityCases()
+    {
+        string frozen = "System.Nullable`1[[System.Int64" + FrozenCoreLibraryIdentity + "]]&";
+        string current = "System.Nullable`1[[System.Int64" + CurrentCoreLibraryIdentity + "]]&";
+        return new()
+        {
+            { frozen, true },
+            { current, true },
+            { current.Replace("11.0.0.0", "12.0.0.0", StringComparison.Ordinal), false },
+            { current.Replace("7cec85d7bea7798e", "0000000000000000", StringComparison.Ordinal), false },
+            { current.Replace("Culture=neutral", "Culture=en-US", StringComparison.Ordinal), false },
+            { current.Replace("System.Private.CoreLib", "Foreign.CoreLib", StringComparison.Ordinal), false },
+            { current.Replace("System.Int64", "System.Int32", StringComparison.Ordinal), false },
+            { current.Replace("System.Nullable`1", "Foreign.Nullable`1", StringComparison.Ordinal), false },
+            { current.TrimEnd('&'), false },
+            { current.Replace("System.Private.CoreLib", "Hexalith.Parties.Contracts", StringComparison.Ordinal), false },
+        };
+    }
+
+    /// <summary>Framework compatibility cannot conceal a module-owned generic argument's assembly version.</summary>
+    [Fact]
+    public void GenericByReferenceIdentityPreservesModuleAssemblyVersions()
+    {
+        const string moduleIdentity = ", Hexalith.Parties.Contracts, Version=10.0.0.0, Culture=neutral, PublicKeyToken=null";
+        string frozen = "Example.Pair`2[[System.Int64" + FrozenCoreLibraryIdentity
+            + "],[Hexalith.Parties.Contracts.Models.PartyDetail" + moduleIdentity + "]]&";
+        string current = frozen.Replace(FrozenCoreLibraryIdentity, CurrentCoreLibraryIdentity, StringComparison.Ordinal);
+        CanonicalGenericByReferenceName(current).ShouldBe(frozen);
+
+        string changedModule = current.Replace(moduleIdentity,
+            moduleIdentity.Replace("10.0.0.0", "11.0.0.0", StringComparison.Ordinal), StringComparison.Ordinal);
+        CanonicalGenericByReferenceName(changedModule).ShouldNotBe(frozen);
+    }
 
     [Fact]
     public void PublicContractSurface_MatchesCheckedInSnapshot()
@@ -104,6 +166,14 @@ public sealed class ContractsPublicApiSnapshotTests
 
     private static string FriendlyName(Type type)
     {
+        if (type.IsByRef && type.GetElementType()!.IsGenericType)
+        {
+            // FullName embeds the executing runtime's strong-named CoreLib identity here.
+            // Preserve the frozen spelling for the independently measured NET11 identity;
+            // every other assembly/version, element type and by-reference marker stays visible.
+            return CanonicalGenericByReferenceName(type.FullName ?? type.Name);
+        }
+
         if (type.IsGenericType)
         {
             string name = type.GetGenericTypeDefinition().FullName!;
@@ -118,6 +188,9 @@ public sealed class ContractsPublicApiSnapshotTests
 
         return type.FullName ?? type.Name;
     }
+
+    private static string CanonicalGenericByReferenceName(string name)
+        => name.Replace(CurrentCoreLibraryIdentity, FrozenCoreLibraryIdentity, StringComparison.Ordinal);
 
     private static string FindProjectDirectory([CallerFilePath] string sourceFile = "")
     {

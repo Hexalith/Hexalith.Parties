@@ -128,7 +128,30 @@ all six canonical parity receipts remain Unvalidated until actually rerun.
 | PolymorphicSerializations | `bce4eb9f45c6b131b960ab4fa39e50ff01e51960` (`v1.19.8-1-gbce4eb9f`) | `git ls-tree HEAD references/Hexalith.PolymorphicSerializations` -> `160000 commit bce4eb9f45c6b131b960ab4fa39e50ff01e51960 references/Hexalith.PolymorphicSerializations`; synchronized source selection; qualification still requires its own executed proof. |
 | Tenants | `8e20524574901d71ad5f4876804c64c3c6c87b88` (`v7.0.3-2-g8e205245`) | `git ls-tree HEAD references/Hexalith.Tenants` -> `160000 commit 8e20524574901d71ad5f4876804c64c3c6c87b88 references/Hexalith.Tenants`; synchronized source selection; qualification still requires its own executed proof. |
 
-### Current source observation — 2026-11-11 (toolchain release synchronization)
+### Current source observation — 2026-11-13 (qualified Platform and NET11 CI repair)
+
+The current selection uses SDK `11.0.100`, `net11.0` Parties targets and UI runtime `11.0.0`, patched Aspire `13.6.5`, and the published module CLI `5.0.1` with roll-forward disabled. The selected qualified Platform source release is `v2.0.0` at `32643bde39b4da0e4538f8388e225727f82122f6`; its exact-source producer qualifications establish source compatibility. Parties still requires its own complete CI, native-effect, cleanup and release gates.
+
+The graph selects EventStore `4.2.0`, Commons `3.0.0`, PolymorphicSerializations `2.0.0`, FrontComposer `5.0.0`, Memories `3.0.27`, Tenants `7.0.7`, and McpCli `2.0.1`.
+
+Selection does not revalidate historical parity receipts. All six canonical parity receipts remain Unvalidated.
+
+Current source selections below preserve the incoming upstream owner revisions. Package selection and source observation have separate authority. This update does not reuse or revalidate historical approvals, parity receipts, public image identities, custody, deployment or retirement acceptance.
+
+| Root dependency | Current source identity | Release use |
+| --- | --- | --- |
+| AI.Tools | `10b709b86f9c9148e5a18177e8d11fad79ae2c0b` (`10b709b8`) | Source selection only; qualification requires its own executed proof. |
+| Builds | `3c2f5944aaa28dc7854a00a8a9df171aa810b0c7` (`v5.0.1`) | Source selection only; qualification requires its own executed proof. |
+| Commons | `fbf4e94233821f6ca336af91a06feaaeb7a16855` (`v3.0.0`) | Source selection only; qualification requires its own executed proof. |
+| EventStore | `639c9d5c0c8c8fba14aaec536dd1c2e3ceaccc13` (`v5.0.0-13-g639c9d5c`) | Source selection only; qualification requires its own executed proof. |
+| FrontComposer | `19418a0c29daf38eef03b0891958cd8aa93c59bf` (`v5.0.0-4-g19418a0c`) | Source selection only; qualification requires its own executed proof. |
+| McpCli | `42d3c2fd48405e0f2c27f9b61f6d7025e4246934` (`v2.0.1-107-g42d3c2fd`) | Source selection only; qualification requires its own executed proof. |
+| Memories | `a3f0b3a4a0f0905f6b88da039491ceb286103207` (`v3.0.27-7-ga3f0b3a4`) | Source selection only; qualification requires its own executed proof. |
+| Platform | `32643bde39b4da0e4538f8388e225727f82122f6` (`v2.0.0`) | Source selection only; qualification requires its own executed proof. |
+| PolymorphicSerializations | `e97b56930e213f674b64c157551f499b0473ec43` (`v2.0.0-2-ge97b5693`) | Source selection only; qualification requires its own executed proof. |
+| Tenants | `8ce40cdfe9b1bdd0ec3bd643b0f3386501e514c2` (`v7.0.7-18-g8ce40cdf`) | Source selection only; qualification requires its own executed proof. |
+
+### Historical source observation — 2026-11-11 (toolchain release synchronization)
 
 The authorized maintenance selects SDK `11.0.100` while retaining all `net10.0` targets, module CLI `4.48.0`, Aspire `13.6.5`, and UI runtime floor `10.0.15`. The compatible package catalog and standalone fallbacks are aligned. Local package build/test evidence does not establish upstream source publication or public topology qualification.
 

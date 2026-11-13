@@ -6,9 +6,10 @@ This qualification branch selects genuine module CLI **5.1.0** and the
 source is `3c2f5944aaa28dc7854a00a8a9df171aa810b0c7`, matching published
 Platform **2.0.0** source `32643bde39b4da0e4538f8388e225727f82122f6`
 and compatibility range `[5.0.1, 6.0.0-0)`. Packages and hosts target
-`net11.0`. This selection grants no lifecycle qualification or tool acceptance;
-Parties main remains pinned to 5.0.0 and Platform to 5.0.1. The full matrix,
-independent finalization and separate actual cancellation proofs remain required.
+`net11.0`. This selection grants no lifecycle qualification or tool acceptance.
+The selected upstream main `1d44297aa7ed94426a51b9e4fb14b7d5896c4157`
+uses 5.0.1, as does Platform. The full matrix, independent finalization and
+separate actual cancellation proofs remain required.
 
 ## Recorded baseline — 2026-11-08
 

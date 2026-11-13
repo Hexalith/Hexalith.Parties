@@ -4,14 +4,30 @@ using Microsoft.AspNetCore.Components.Authorization;
 
 namespace Hexalith.Parties.UI.Tests;
 
-/// <summary>
-/// A minimal <see cref="AuthenticationStateProvider"/> test double that returns a fixed principal —
-/// the simplest way to drive <see cref="Hexalith.Parties.UI.Services.SelfScopedPartiesClient"/> without
-/// pulling in a real OIDC stack. Mirrors the per-circuit principal source the FrontComposer auth bridge
-/// provides at runtime.
-/// </summary>
-internal sealed class FakeAuthStateProvider(ClaimsPrincipal user) : AuthenticationStateProvider
+/// <summary>Controls the actual provider notification protocol for self-scoped client tests.</summary>
+internal sealed class FakeAuthStateProvider : AuthenticationStateProvider
 {
-    public override Task<AuthenticationState> GetAuthenticationStateAsync()
-        => Task.FromResult(new AuthenticationState(user));
+    private Task<AuthenticationState> _state;
+
+    /// <summary>Initializes a provider with a completed principal.</summary>
+    /// <param name="user">The initial principal.</param>
+    internal FakeAuthStateProvider(ClaimsPrincipal user)
+        : this(Task.FromResult(new AuthenticationState(user)))
+    {
+    }
+
+    /// <summary>Initializes a provider with a controlled authentication operation.</summary>
+    /// <param name="state">The initial authentication operation.</param>
+    internal FakeAuthStateProvider(Task<AuthenticationState> state) => _state = state;
+
+    /// <inheritdoc/>
+    public override Task<AuthenticationState> GetAuthenticationStateAsync() => _state;
+
+    /// <summary>Publishes a replacement authentication operation.</summary>
+    /// <param name="state">The new authoritative authentication operation.</param>
+    internal void Publish(Task<AuthenticationState> state)
+    {
+        _state = state;
+        NotifyAuthenticationStateChanged(state);
+    }
 }

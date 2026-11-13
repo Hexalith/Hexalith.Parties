@@ -5,10 +5,10 @@ Hexalith.Parties uses GitHub Actions with shared Hexalith.Builds workflows and a
 ## Workflows
 
 - `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@9ebc31f606bc02f8a0ec2f1ec344127e2468c6b4`.
-- `.github/workflows/release.yml` is a manual `workflow_dispatch` workflow with a protected, caller-owned release job. It uses `Hexalith/Hexalith.Builds/Github/prepare-domain-release@9f5d751f7ab0b7a621dcd18b589bf061fabac6ec` and takes the nested publisher from that same immutable Builds checkout.
-- `.github/workflows/commitlint.yml` delegates Conventional Commit validation to the retained immutable Builds revision `9f5d751f7ab0b7a621dcd18b589bf061fabac6ec`, for pull requests and main pushes.
+- `.github/workflows/release.yml` is a manual `workflow_dispatch` workflow with a protected, caller-owned release job. It uses `Hexalith/Hexalith.Builds/Github/prepare-domain-release@3c2f5944aaa28dc7854a00a8a9df171aa810b0c7` and takes the nested publisher from that same immutable Builds checkout.
+- `.github/workflows/commitlint.yml` delegates Conventional Commit validation to the retained immutable Builds revision `3c2f5944aaa28dc7854a00a8a9df171aa810b0c7`, for pull requests and main pushes.
 - `.github/workflows/dependency-review.yml` delegates dependency review for pull requests.
-- `.github/workflows/codeql.yml` delegates C# CodeQL scanning to `Hexalith/Hexalith.Builds/.github/workflows/codeql.yml@9f5d751f7ab0b7a621dcd18b589bf061fabac6ec`.
+- `.github/workflows/codeql.yml` delegates C# CodeQL scanning to `Hexalith/Hexalith.Builds/.github/workflows/codeql.yml@3c2f5944aaa28dc7854a00a8a9df171aa810b0c7`.
 - `.github/workflows/rc-gate.yml` validates root gitlink signoff on ordinary `main` pushes, release candidates and tags.
 
 The validation callers pin their reusable workflow definitions independently.
@@ -30,17 +30,18 @@ dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net11.0/Hexalith.Parties.Ci.T
 ## CI
 
 The 5.1.0 selection belongs to the dedicated Story 2.10 qualification branch.
-Parties main remains pinned to 5.0.0 and Platform to 5.0.1; this branch grants
-no tool acceptance. Its catalog/helper source is
-`3c2f5944aaa28dc7854a00a8a9df171aa810b0c7`, while the executable and
-CI workflow source is `9ebc31f606bc02f8a0ec2f1ec344127e2468c6b4`.
+The selected upstream main `1d44297aa7ed94426a51b9e4fb14b7d5896c4157`
+uses 5.0.1, as does Platform; this branch grants no tool acceptance. Its
+catalog/helper source is `3c2f5944aaa28dc7854a00a8a9df171aa810b0c7`,
+while the executable and CI workflow source is
+`9ebc31f606bc02f8a0ec2f1ec344127e2468c6b4`.
 
 CI runs on pushes and pull requests to `main`, scheduled nightly runs, and Pact Broker `repository_dispatch` events with type `contract_requiring_verification_published`.
 
 The current tool manifest selects published module CLI **5.1.0**,
-within the Platform source's `[5.0.1, 6.0.0-0)` prerequisite. The
+within the qualified Platform source's `[5.0.1, 6.0.0-0)` prerequisite. The
 immutable reusable workflow restores that exact manifest. The repository pins
-.NET SDK **11.0.100** while Parties targets use `net11.0`; the active
+.NET SDK **11.0.100** with current Parties targets at `net11.0`; the active
 AppHost SDK, package preparation and Aspire CLI expectations use **13.6.5**.
 The earlier Builds v4.47.0 at
 `5ec1779040606be89306129a7d2b245258c9acd2` passes source CI `42661065183`
@@ -145,8 +146,8 @@ CI 42172122108 with all five rows before its publication. That historical proof
 is bound to its original source and grants no new-source runtime acceptance.
 
 Release execution remains pinned to
-`9f85c64beae32befe050240526af398063e81eba`; commitlint/CodeQL validation remains
-`9f5d751f7ab0b7a621dcd18b589bf061fabac6ec`. Supported package-mode
+`3c2f5944aaa28dc7854a00a8a9df171aa810b0c7`; commitlint/CodeQL validation remains
+`3c2f5944aaa28dc7854a00a8a9df171aa810b0c7`. Supported package-mode
 preparation generates verified runtime-free Release imports before restore/build
 of `Hexalith.Parties.Standalone.slnx` and package consumer validation.
 

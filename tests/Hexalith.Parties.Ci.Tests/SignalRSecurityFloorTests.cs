@@ -7,7 +7,7 @@ namespace Hexalith.Parties.Ci.Tests;
 public sealed class SignalRSecurityFloorTests
 {
     private static readonly Version MinimumFixedVersion = new(10, 0, 13);
-    private static readonly Version MinimumRuntimeVersion = new(10, 0, 15);
+    private static readonly Version MinimumRuntimeVersion = new(11, 0, 0);
 
     [Theory]
     [InlineData("Hexalith.Parties.Contracts.Tests")]
@@ -42,7 +42,7 @@ public sealed class SignalRSecurityFloorTests
             .Cast<System.Reflection.AssemblyConfigurationAttribute>().Single().Configuration;
         using (JsonDocument assets = JsonDocument.Parse(File.ReadAllText(CiTestPaths.ProjectAssetsFile("src/Hexalith.Parties.UI"))))
         {
-            assets.RootElement.GetProperty("project").GetProperty("frameworks").GetProperty("net10.0")
+            assets.RootElement.GetProperty("project").GetProperty("frameworks").GetProperty("net11.0")
                 .GetProperty("frameworkReferences").TryGetProperty("Microsoft.AspNetCore.App", out _).ShouldBeTrue();
             assets.RootElement.GetProperty("project").GetProperty("restore").GetProperty("restoreAuditProperties")
                 .GetProperty("enableAudit").GetString().ShouldBe("true");

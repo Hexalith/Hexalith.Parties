@@ -31,7 +31,7 @@ HEX = re.compile(r"[a-f0-9]{64}\Z", re.ASCII)
 IDENTITY = re.compile(r"[a-f0-9]{32}\Z", re.ASCII)
 TRX_ID = re.compile(r"[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}\Z", re.ASCII)
 PERSISTENCE_CASE = "Hexalith.Parties.Platform.IntegrationTests.PartyEnvironmentTests.RealDependencies_CreateQueryAndPersistMatchingPartyEvents"
-# Required keys observed in the current-source hexalith.test-result.v1 schema (Builds a9f443f0, sha256 below). The producer, Builds
+# Required keys observed in the current-source hexalith.test-result.v1 schema (Builds 5.0.1, sha256 below). The producer, Builds
 # TestResultWriter, validates the whole document against that schema before publishing it, so these readers need no
 # schema validator: this stdlib guard only detects producer drift without adding a CI dependency. A test binds
 # RESULT_SCHEMA_BUILDS_COMMIT to the committed Builds gitlink, so a Builds bump fails until these keys are re-derived.

@@ -1735,7 +1735,9 @@ public sealed class CreateEditPartyPageTests : AdminPortalBunitContext
 
         public void NotifyCurrentState() => NotifyAuthenticationStateChanged(Task.FromResult(_state));
 
-        public override Task<AuthenticationState> GetAuthenticationStateAsync()
+        public override Task<AuthenticationState> GetAuthenticationStateAsync() => ReadCurrentState();
+
+        private Task<AuthenticationState> ReadCurrentState()
         {
             Task<AuthenticationState>? next = Interlocked.Exchange(ref _nextState, null);
             return next ?? Task.FromResult(_state);
@@ -1749,20 +1751,20 @@ public sealed class CreateEditPartyPageTests : AdminPortalBunitContext
                 new Claim(PartiesClaimTypes.EventStoreTenant, tenantId),
             ];
             _state = new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(claims, "Test")));
-            NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+            NotifyAuthenticationStateChanged(ReadCurrentState());
         }
 
         public void SetUnauthenticated()
         {
             _state = new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
-            NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+            NotifyAuthenticationStateChanged(ReadCurrentState());
         }
 
         public void SetAuthenticatedWithoutTenant(string userId)
         {
             Claim[] claims = [new Claim(PartiesClaimTypes.Subject, userId)];
             _state = new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(claims, "Test")));
-            NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+            NotifyAuthenticationStateChanged(ReadCurrentState());
         }
     }
 }

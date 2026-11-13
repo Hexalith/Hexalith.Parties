@@ -39,3 +39,24 @@ tests/e2e/playwright.config.ts whitespace=cr-at-eol
 
 # Keep the authored CRLF convention for the current NET11 host target.
 src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj whitespace=cr-at-eol
+
+# Preserve authored CRLF in the .NET 11 authentication compatibility repair.
+src/Hexalith.Parties.AdminPortal/Services/AdminPortalAuthorizationService.cs text eol=crlf whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+src/Hexalith.Parties.UI/Services/SelfScopedPartiesClient.cs text eol=crlf whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+src/Hexalith.Parties.UI/Services/SelfScopedPartiesClientServiceCollectionExtensions.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.AdminPortal.Tests/Services/AdminPortalAuthorizationServiceTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.AdminPortal.Tests/Services/AuthorizationTenantProjectionStore.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.AdminPortal.Tests/Services/ControllableAuthenticationStateProvider.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.UI.Tests/FakeAuthStateProvider.cs text eol=crlf whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.UI.Tests/SelfScopedPartiesClientTests.cs text eol=crlf whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+src/Hexalith.Parties.UI/Components/Account/RoleLandingRedirect.razor whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.UI.Tests/RoleLandingRedirectTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.AdminPortal.Tests/Components/CreateEditPartyPageTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Contracts.Tests/Package/ContractsPackageTests.cs text eol=crlf whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Contracts.Tests/Package/ContractsPackageFixture.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Contracts.Tests/Package/ContractsPackageArtifacts.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Contracts.Tests/Package/ContractsPublicApiSnapshotTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Client.Tests/Package/ClientPackageTests.cs text eol=crlf whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Client.Tests/FitnessTests/ClientArchitecturalFitnessTests.cs text eol=crlf whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+.gitlink-signoff.tsv whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
