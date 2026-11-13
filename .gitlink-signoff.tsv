@@ -791,3 +791,6 @@ references/Hexalith.Builds|89487655de9e1c79848c5384261a8a2f009d2577|validated-ad
 references/Hexalith.PolymorphicSerializations|e97b56930e213f674b64c157551f499b0473ec43|validated-advance|origin/main@e97b56930e213f674b64c157551f499b0473ec43|codex-agent|2026-11-13
 references/Hexalith.McpCli|06c1b93b957b9e5271ac826f24558563725577ac|validated-advance|origin/main@06c1b93b957b9e5271ac826f24558563725577ac|codex-agent|2026-11-13
 references/Hexalith.Platform|7479945e9cc6333bd402d63510481634960a6592|validated-advance|origin/main@7479945e9cc6333bd402d63510481634960a6592|codex-agent|2026-11-13
+
+# Current Redis consumer qualification repair; source selection only.
+references/Hexalith.Memories|1d94e17a3492ebbfca5f6ea181a44841c8a89473|validated-advance|origin/main@1d94e17a3492ebbfca5f6ea181a44841c8a89473|codex-agent|2026-11-13

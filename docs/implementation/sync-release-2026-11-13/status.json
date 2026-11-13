@@ -1,9 +1,9 @@
 {
-  "observedAtUtc": "2026-11-13T10:05:04.025595+00:00",
+  "observedAtUtc": "2026-11-13T10:12:12.246132+00:00",
   "baselineSource": "864c55a9820f7e819714a7e6d92cc3d6ee82a2fe",
   "selectedSubmodules": {
     "references/Hexalith.EventStore": "ec73195a109e1b6a22e5141642df1d256e990bbd",
-    "references/Hexalith.Memories": "9888a388f7129248ac3f2021bfb994ef9344ce59",
+    "references/Hexalith.Memories": "1d94e17a3492ebbfca5f6ea181a44841c8a89473",
     "references/Hexalith.FrontComposer": "19418a0c29daf38eef03b0891958cd8aa93c59bf",
     "references/Hexalith.Tenants": "401d926eb7d51bdf332696ed3f0fe39a812b3501",
     "references/Hexalith.AI.Tools": "10b709b86f9c9148e5a18177e8d11fad79ae2c0b",
@@ -90,6 +90,17 @@
       "command": "Python ci_alignment and coverage_contract suites",
       "owner": "Hexalith.Memories",
       "result": "15 alignment and40 coverage controls passed"
+    },
+    {
+      "command": "CI=true npm --prefix tests/e2e run test:ui",
+      "result": "81 browser tests pass, including exact restored FrontComposer asset-byte checks",
+      "log": "parties-release-ui-browser-20261113.log"
+    },
+    {
+      "command": "python3 -m unittest discover -s tests/tooling/release_packages -p *_test.py",
+      "owner": "Hexalith.Memories",
+      "result": "28 passed after actual current Redis consumer target repair",
+      "log": "parties-memories-release-package-tests-20261113.log"
     }
   ],
   "publication": "pending final exact-source green CI and matching qualified Platform/Builds source",
@@ -100,5 +111,11 @@
     "reason": "recorded Builds pointer3d110e differs from signed tuple metadata3c2f; current source lacks a qualified release tag"
   },
   "humanValidation": "user explicitly waived human checkpoints; no production environment reviewer rule exists",
-  "scopeClarification": "nested Platform dependency repair/prerequisite releases requested; no answer received; no nested changes made here"
+  "scopeClarification": "nested Platform dependency repair/prerequisite releases requested; no answer received; no nested changes made here",
+  "hostedOwnerCi": {
+    "Memories": "https://github.com/Hexalith/Hexalith.Memories/actions/runs/43406111604",
+    "remainingSourceFailure": "FrontComposer Shell/Testing stillnet10.0 but selected OpenIdConnect11.0.0; reported to active FrontComposer owner task",
+    "correctedFailure": "current Redis consumer test fixture net10.0 changed to net11.0 in source 1d94e17a3492ebbfca5f6ea181a44841c8a89473"
+  },
+  "currentRootPushedBeforeReceipt": "bf51610311ac6ef73cc194fd453e5f2fed28270c"
 }

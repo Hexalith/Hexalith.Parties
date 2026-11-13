@@ -59,6 +59,8 @@ context:
 
 ## Implementation Notes
 
+- Full browser gate81/81 passes. Hosted current Memories consumer fixture failure is repaired at1d94e17a3492ebbfca5f6ea181a44841c8a89473; all28 package controls pass. Its remaining source-debug failure is pre-existing FrontComposer source targetnet10 versus OpenIdConnect11 from current catalog, reported to the active owner task. Root gate is green; exact-source main CI remains queued behind an older cancelled runtime job. A force-cancel was requested for that superseded job, which had no started steps.
+
 - Owning commits are pushed: Builds89487655de9e1c79848c5384261a8a2f009d2577 (catalog plus validated audit317/157/1), Memories9888a388f7129248ac3f2021bfb994ef9344ce59 (NET11 closure and compatible stable-validation fallback). Both sets of exact messages passed pinned commitlint. Memories maintainer push reported bypassed PR/three-check rules, as user authorized.
 - Upstream Builds now supplies measured retained SDK4.2 views for exact Parties/Platform project names. Shared default remains5.0.0. Actual11 fresh local packages feed generated net11 client/portal consumers successfully:41 routes,41 schemas,28 intents. No local test package was uploaded.
 - Final full builds for Parties and Memories passed with0 warnings/errors; all13 current retention/mechanism tests,493 Web tests and21 runbook/migration tests pass. Stable validation11 removes the observed preview advisory; an old original Builds catalog independently resolves the owner minimum fallback.
