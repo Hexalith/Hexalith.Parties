@@ -60,3 +60,7 @@ tests/Hexalith.Parties.Contracts.Tests/Package/ContractsPublicApiSnapshotTests.c
 tests/Hexalith.Parties.Client.Tests/Package/ClientPackageTests.cs text eol=crlf whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.Client.Tests/FitnessTests/ClientArchitecturalFitnessTests.cs text eol=crlf whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 .gitlink-signoff.tsv whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# Accept the repository CRLF convention in current framework compatibility fixes.
+scripts/validate-consumer-package-references.py whitespace=cr-at-eol
+tests/Hexalith.Parties.IntegrationTests/Topology/DevelopmentCatalogModelFinalizationTests.cs whitespace=cr-at-eol

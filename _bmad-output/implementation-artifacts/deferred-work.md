@@ -2692,3 +2692,7 @@ rollback: None required (test-only).
   summary: Establish per-unit historical identity authority across source changes without blocking ordinary fresh production cleanup.
   evidence: Review E1/D1, high verified and pre-existing. Actual historical source-A workflow purge, independently reconciled empty source B, and reused tenant/unit identity grant modern provenance; real deletion returns true while chunk7 survives with the same complete persisted hash. Source coverage is not unit authority. The rejected blanket prerequisite also breaks ordinary cleanup because qualification endpoints are non-Production. A new owner-approved per-unit freshness or old-writer exclusion protocol is required; no negative scan or synthetic source attestation supplies it. Evidence: `tests/five-snapshot-history-and-publish-2026-11-11/review-cross-source/`.
   status: open
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-sync-release-2026-11-13.md`
+  summary: Qualify the exact EventStore 5.0.0 catalog/host/selector capabilities before admitting that current catalog family to Parties runtime gates.
+  evidence: Directory.Build.targets intentionally closes unknown cohorts; upstream Builds 00d91d526ec54c0269a9abdfff7c9c8a5f7f80da now supplies exact retained SDK4.2 Parties/Platform views while shared defaults remain SDK5. Real native/protocol qualification is required before changing those guards.

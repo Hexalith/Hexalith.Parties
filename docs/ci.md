@@ -49,8 +49,10 @@ and release `42664680297`; both official tool archives, their source metadata,
 signatures and published inventory have been independently verified. The
 former 4.45.0 pin corrected `HXW010` in main CI `42609106160` and remains a
 historical checkpoint. Final Platform/root source and publication gates remain
-required. EventStore SDK **4.2.0** is the latest stable version verified directly
-against nuget.org on 2026-11-09 and remains the effective package selection.
+required. The shared catalog defaults to EventStore SDK **5.0.0**, while its explicit
+retained Parties/Platform view selects the measured SDK **4.2.0** cohort.
+FrontComposer **5.0.0** and Memories **3.0.27** remain current. These registry
+selections were verified on 2026-11-13; exact SDK5 qualification stays separate.
 
 Ordinary CI also runs the deterministic lifecycle controller tests and the
 Docker-free private catalog configuration/cleanup tests. These checks execute
@@ -265,7 +267,7 @@ The enabled job then prepares arm64 emulation and the shared container publisher
   - `registry.hexalith.com/parties-ui`
 
 The UI retains `InvariantGlobalization=false` and the ICU-capable
-`mcr.microsoft.com/dotnet/aspnet:10.0-alpine-extra` base. DW-105's
+`mcr.microsoft.com/dotnet/aspnet:11.0-alpine-extra` base. DW-105's
 [local qualification](../_bmad-output/implementation-artifacts/tests/five-runtime-release-deferred-items-2026-10-22/README.md)
 rebuilds and SDK-publishes a fresh local image, then reuses the shared smoke
 helpers in Development for bounded startup, `/alive`, `/health`, `/ready` and RCL
@@ -469,13 +471,12 @@ administrator contracts produce CS0246, while the compatible package completes.
 This compiler regression control is separate from current-runtime preparation
 and deployed topology qualification.
 
-The owned central catalog pins `Microsoft.AspNetCore.SignalR.Common` to `10.0.13`
-for GHSA-334f-vvp4-7g6p, with its required Options and
-DependencyInjection.Abstractions floors aligned to `10.0.13`. NuGet audit stays
-active. The Web SDK prunes this package from the UI in favor of the shared ASP.NET
-runtime, so the UI alone requires runtime `10.0.15` through
+The current central catalog pins `Microsoft.AspNetCore.SignalR.Common`,
+Options and DependencyInjection.Abstractions to `11.0.0`. NuGet audit stays
+active. The UI requires the matching ASP.NET Core runtime `11.0.0` through
 `RuntimeFrameworkVersion`. Local UI starts require that runtime to be installed.
-The UI ships as a container outside the ten-package NuGet manifest;
+The earlier 10.0.13 package and 10.0.15 runtime security floors remain historical.
+The UI ships as a container outside the eleven-package NuGet manifest;
 the existing container liveness gate remains required. The separately built
 EventStore diagnostic source project retains its own upstream catalog and can
 still report the older SignalR vulnerability; this is not the owned package graph.

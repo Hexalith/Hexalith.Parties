@@ -38,7 +38,7 @@ Public command and query traffic goes through **Hexalith.EventStore**; the `part
 
 | Category | Technology | Version |
 |----------|-----------|---------|
-| Runtime | .NET | net10.0 (SDK 11.0.100) |
+| Runtime | .NET | net11.0 (SDK 11.0.100) |
 | Orchestration | .NET Aspire | 13.6.5 |
 | Actors / pub-sub | DAPR | 1.19.1 |
 | Validation | FluentValidation | 12.2.0 |

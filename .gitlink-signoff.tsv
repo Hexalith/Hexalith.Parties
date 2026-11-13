@@ -777,3 +777,17 @@ references/Hexalith.Platform|38402bc77ac0be3e6902002d08923c51d0e73a77|validated-
 # Source selection only; Parties native, cleanup, identity and release gates remain required.
 references/Hexalith.Platform|32643bde39b4da0e4538f8388e225727f82122f6|validated-advance|v2.0.0@32643bde39b4da0e4538f8388e225727f82122f6|codex-agent|2026-11-13
 references/Hexalith.Builds|3c2f5944aaa28dc7854a00a8a9df171aa810b0c7|validated-advance|v5.0.1@3c2f5944aaa28dc7854a00a8a9df171aa810b0c7|codex-agent|2026-11-13
+
+# 2026-11-13 explicit user-delegated synchronization to remote-verified main tips.
+# codex-agent records source selection only; no human review, runtime qualification,
+# signed tool acceptance or release approval is inferred. Automated gates remain required.
+references/Hexalith.EventStore|ec73195a109e1b6a22e5141642df1d256e990bbd|validated-advance|origin/main@ec73195a109e1b6a22e5141642df1d256e990bbd|codex-agent|2026-11-13
+references/Hexalith.Memories|9888a388f7129248ac3f2021bfb994ef9344ce59|validated-advance|origin/main@9888a388f7129248ac3f2021bfb994ef9344ce59|codex-agent|2026-11-13
+references/Hexalith.FrontComposer|19418a0c29daf38eef03b0891958cd8aa93c59bf|validated-advance|origin/main@19418a0c29daf38eef03b0891958cd8aa93c59bf|codex-agent|2026-11-13
+references/Hexalith.Tenants|401d926eb7d51bdf332696ed3f0fe39a812b3501|validated-advance|origin/main@401d926eb7d51bdf332696ed3f0fe39a812b3501|codex-agent|2026-11-13
+references/Hexalith.AI.Tools|10b709b86f9c9148e5a18177e8d11fad79ae2c0b|validated-advance|origin/main@10b709b86f9c9148e5a18177e8d11fad79ae2c0b|codex-agent|2026-11-13
+references/Hexalith.Commons|fbf4e94233821f6ca336af91a06feaaeb7a16855|validated-advance|origin/main@fbf4e94233821f6ca336af91a06feaaeb7a16855|codex-agent|2026-11-13
+references/Hexalith.Builds|89487655de9e1c79848c5384261a8a2f009d2577|validated-advance|origin/main@89487655de9e1c79848c5384261a8a2f009d2577|codex-agent|2026-11-13
+references/Hexalith.PolymorphicSerializations|e97b56930e213f674b64c157551f499b0473ec43|validated-advance|origin/main@e97b56930e213f674b64c157551f499b0473ec43|codex-agent|2026-11-13
+references/Hexalith.McpCli|06c1b93b957b9e5271ac826f24558563725577ac|validated-advance|origin/main@06c1b93b957b9e5271ac826f24558563725577ac|codex-agent|2026-11-13
+references/Hexalith.Platform|7479945e9cc6333bd402d63510481634960a6592|validated-advance|origin/main@7479945e9cc6333bd402d63510481634960a6592|codex-agent|2026-11-13

@@ -7,15 +7,15 @@
 | Tool | Version |
 |------|---------|
 | .NET SDK | **11.0.100** (pinned in `global.json`, rollForward latestPatch) |
-| .NET 10 SDK | **10.0.404**, supplying .NET and ASP.NET Core **10.0.15** alongside SDK 11 |
+| .NET 10 SDK | **10.0.404** for retained compatibility fixtures alongside SDK 11 |
 | Docker Desktop | latest (must be running before Aspire) |
 | Node.js | **24.22.1**, with bundled **npm 11.19.1**, for root release tools and `tests/e2e` |
 | Git | recent |
 | `jq` | optional (Bash examples) |
 | PowerShell `pwsh` 7+ | local scripts and CI parity commands |
 
-The .NET 11 SDK builds the existing `net10.0` targets. Install the serviced
-ASP.NET Core runtime `10.0.15` for the UI; SDK selection does not retarget packages.
+The .NET 11 SDK builds the current `net11.0` targets. Install the matching
+ASP.NET Core runtime `11.0.0` for the current UI and host projects.
 
 ## 1. Clone & submodules
 
@@ -127,8 +127,8 @@ xUnit v3 runs under Microsoft.Testing.Platform here. Project-level `dotnet test 
 
 ```bash
 dotnet build tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0
-dotnet tests/Hexalith.Parties.Server.Tests/bin/Release/net10.0/Hexalith.Parties.Server.Tests.dll -class Fully.Qualified.TestClass
-dotnet tests/Hexalith.Parties.Server.Tests/bin/Release/net10.0/Hexalith.Parties.Server.Tests.dll -method Fully.Qualified.TestClass.TestMethod
+dotnet tests/Hexalith.Parties.Server.Tests/bin/Release/net11.0/Hexalith.Parties.Server.Tests.dll -class Fully.Qualified.TestClass
+dotnet tests/Hexalith.Parties.Server.Tests/bin/Release/net11.0/Hexalith.Parties.Server.Tests.dll -method Fully.Qualified.TestClass.TestMethod
 ```
 
 Package compatibility tests in `Hexalith.Parties.Client.Tests` and `Hexalith.Parties.Contracts.Tests` can require network access to NuGet repository signature metadata. A sandbox or CI environment that blocks `api.nuget.org:443` has not validated those package tests; rerun them in a network-enabled package-validation environment before release.
@@ -191,7 +191,7 @@ Read by the `parties-ui` host:
 
 ## 6. Conventions
 
-- **C#**: `net10.0`, nullable enabled, implicit usings, file-scoped namespaces, `sealed record` for contracts. Warnings are errors.
+- **C#**: `net11.0`, nullable enabled, implicit usings, file-scoped namespaces, `sealed record` for contracts. Warnings are errors.
 - **Commands/events** are immutable records in `Contracts`; **never** add infra dependencies to `Contracts` (architectural fitness test enforces this).
 - **Event contract evolves additively** — new optional fields and new event types only; existing fields are never removed/renamed (forward-compatible subscribers). See [event-handler-patterns.md](event-handler-patterns.md).
 - **Privacy**: never log event payloads or PII; projection logs carry only projection name + counts. Mark personal-data properties with `[PersonalData]`.

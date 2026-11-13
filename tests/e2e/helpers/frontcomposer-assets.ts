@@ -7,7 +7,7 @@ import { expect, type Page, type TestInfo } from '@playwright/test';
 // A package pass cannot certify the newer producer source or its reconciler.
 export async function qualifyFrontComposerAssets(page: Page, testInfo?: TestInfo): Promise<'source' | 'package'> {
   const configuration = process.env.CI ? 'Release' : 'Debug';
-  const output = new URL(`../../../src/Hexalith.Parties.UI/bin/${configuration}/net10.0/`, import.meta.url);
+  const output = new URL(`../../../src/Hexalith.Parties.UI/bin/${configuration}/net11.0/`, import.meta.url);
   const [fromSource, mode, root] = (await readFile(new URL('Hexalith.Parties.UI.source-metadata.txt', output), 'utf8'))
     .trim().split(/\r?\n/);
   const [version, ...folders] = (await readFile(new URL('Hexalith.Parties.UI.package-metadata.txt', output), 'utf8'))

@@ -13,7 +13,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Attribute | Value |
 |-----------|-------|
 | Repository type | Monolith — single cohesive .NET solution (`Hexalith.Parties.slnx`), exactly 15 projects under `src` plus one sample project + 17 runnable .NET test projects + 3 support hosts + 1 contracts artifact + Playwright e2e |
-| Primary language | C# / **.NET 10** (SDK pinned `11.0.100`) |
+| Primary language | C# / **.NET 11** (SDK pinned `11.0.100`) |
 | Architecture style | Event sourcing + CQRS + EventStore SDK domain/projection/query handlers, gateway-fronted (EventStore) |
 | Orchestration | .NET Aspire 13.6.5 (`dotnet aspire run`) |
 | Eventing | DAPR pub/sub (Redis local; Kafka/RabbitMQ/Service Bus in prod) |
@@ -56,15 +56,15 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Gateway/eventing | Hexalith.EventStore | package selected by `HexalithEventStoreVersion` in the effective MSBuild graph; source and installed acceptance remain separately verified |
 | Tenancy | Hexalith.Tenants | package selected by `HexalithTenantsVersion` in the effective MSBuild graph; historical committed source gitlink `c9feedb6656d70c7271e851c844ee29bdfb28c3e` (`v5.8.0-131-gc9feedb6`), observed at Parties `7e73709992512d944f4950e6efb28c6132f9473c` on 2026-10-18; historical owner approvals and parity remain bound to their original identities |
 | Validation | FluentValidation (+ DI ext.) | `12.2.0` |
-| Mediation | MediatR | `14.2.0` |
-| AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `10.0.15` |
-| API docs | Microsoft.AspNetCore.OpenApi / Swashbuckle.SwaggerUI | `10.0.15` / `11.0.0` |
+| Mediation | MediatR | `15.0.0` |
+| AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `11.0.0` |
+| API docs | Microsoft.AspNetCore.OpenApi / Swashbuckle.SwaggerUI | `11.0.0` / `11.0.1` |
 | MCP | ModelContextProtocol / .AspNetCore | `2.4.0` / `2.4.0` |
 | UI | Microsoft.FluentUI.AspNetCore.Components | `5.0.1` |
-| | Microsoft.AspNetCore.Components.CustomElements | `10.0.15` |
-| Rich search (opt) | Hexalith.Memories.Client.Rest | package `3.0.26` by default |
+| | Microsoft.AspNetCore.Components.CustomElements | `11.0.0` |
+| Rich search (opt) | Hexalith.Memories.Client.Rest | package `3.0.27` by default |
 | Observability | OpenTelemetry (exporter/hosting/instrumentation) | `1.21.0` core/hosting/exporter and ASP.NET Core/HTTP/runtime instrumentation |
-| Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `10.11.0` |
+| Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `11.0.0` |
 | Versioning | MinVer (git-tag SemVer, prefix `v`) | `8.0.0` |
 | Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `4.0.3` / `4.3.0` / `6.2.0` / `2.15.2` / `4.16.0`† / `18.1.0` |
 

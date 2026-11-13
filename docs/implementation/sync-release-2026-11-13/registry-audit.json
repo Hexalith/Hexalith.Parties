@@ -1,0 +1,2753 @@
+{
+  "date": "2026-11-13T09:35:30.134147+00:00",
+  "nuget": [
+    {
+      "id": "aspirate",
+      "configured": "9.1.0",
+      "latestStable": "9.1.0",
+      "latest": "9.1.0",
+      "projects": [
+        ".config/dotnet-tools.json"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/aspirate/index.json"
+    },
+    {
+      "id": "Aspire.Hosting",
+      "configured": "13.6.5",
+      "latestStable": "13.6.5",
+      "latest": "13.6.5",
+      "projects": [
+        "src/Hexalith.Parties.Aspire/Hexalith.Parties.Aspire.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/aspire.hosting/index.json"
+    },
+    {
+      "id": "Aspire.Hosting.Azure.AppContainers",
+      "configured": "13.6.5",
+      "latestStable": "13.6.5",
+      "latest": "13.6.5",
+      "projects": [
+        "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/aspire.hosting.azure.appcontainers/index.json"
+    },
+    {
+      "id": "Aspire.Hosting.Docker",
+      "configured": "13.6.5",
+      "latestStable": "13.6.5",
+      "latest": "13.6.5",
+      "projects": [
+        "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/aspire.hosting.docker/index.json"
+    },
+    {
+      "id": "Aspire.Hosting.Keycloak",
+      "configured": "13.6.5-preview.1.26559.7",
+      "latestStable": "13.6.5-preview.1.26559.7",
+      "latest": "13.6.5-preview.1.26559.7",
+      "projects": [
+        "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/aspire.hosting.keycloak/index.json"
+    },
+    {
+      "id": "Aspire.Hosting.Kubernetes",
+      "configured": "13.6.5-preview.1.26559.7",
+      "latestStable": "13.6.5-preview.1.26559.7",
+      "latest": "13.6.5-preview.1.26559.7",
+      "projects": [
+        "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/aspire.hosting.kubernetes/index.json"
+    },
+    {
+      "id": "Aspire.Hosting.Redis",
+      "configured": "13.6.5",
+      "latestStable": "13.6.5",
+      "latest": "13.6.5",
+      "projects": [
+        "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/aspire.hosting.redis/index.json"
+    },
+    {
+      "id": "Aspire.Hosting.Testing",
+      "configured": "13.6.5",
+      "latestStable": "13.6.5",
+      "latest": "13.6.5",
+      "projects": [
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/aspire.hosting.testing/index.json"
+    },
+    {
+      "id": "bunit",
+      "configured": "2.15.2",
+      "latestStable": "2.15.2",
+      "latest": "2.15.2",
+      "projects": [
+        "tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj",
+        "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+        "tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj",
+        "tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/bunit/index.json"
+    },
+    {
+      "id": "CommunityToolkit.Aspire.Hosting.Dapr",
+      "configured": "13.0.0",
+      "latestStable": "13.0.0",
+      "latest": "17.0.0-beta.1051",
+      "projects": [
+        "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/communitytoolkit.aspire.hosting.dapr/index.json"
+    },
+    {
+      "id": "coverlet.collector",
+      "configured": "10.1.0",
+      "latestStable": "10.1.0",
+      "latest": "10.1.0",
+      "projects": [
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj",
+        "tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj",
+        "tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+        "tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj",
+        "tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj",
+        "tests/Hexalith.Parties.Authentication.Tests/Hexalith.Parties.Authentication.Tests.csproj",
+        "tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj",
+        "tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj",
+        "tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj",
+        "tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj",
+        "tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/coverlet.collector/index.json"
+    },
+    {
+      "id": "Dapr.Actors",
+      "configured": "1.19.1",
+      "latestStable": "1.19.1",
+      "latest": "1.19.1",
+      "projects": [
+        "src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/dapr.actors/index.json"
+    },
+    {
+      "id": "Dapr.Actors.AspNetCore",
+      "configured": "1.19.1",
+      "latestStable": "1.19.1",
+      "latest": "1.19.1",
+      "projects": [
+        "src/Hexalith.Parties/Hexalith.Parties.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/dapr.actors.aspnetcore/index.json"
+    },
+    {
+      "id": "Dapr.AspNetCore",
+      "configured": "1.19.1",
+      "latestStable": "1.19.1",
+      "latest": "1.19.1",
+      "projects": [
+        "src/Hexalith.Parties/Hexalith.Parties.csproj",
+        "samples/Hexalith.Parties.Sample/Hexalith.Parties.Sample.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/dapr.aspnetcore/index.json"
+    },
+    {
+      "id": "Dapr.Client",
+      "configured": "1.19.1",
+      "latestStable": "1.19.1",
+      "latest": "1.19.1",
+      "projects": [
+        "src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/dapr.client/index.json"
+    },
+    {
+      "id": "FluentValidation",
+      "configured": "12.2.0",
+      "latestStable": "12.2.0",
+      "latest": "12.2.0",
+      "projects": [
+        "src/Hexalith.Parties/Hexalith.Parties.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/fluentvalidation/index.json"
+    },
+    {
+      "id": "FluentValidation.DependencyInjectionExtensions",
+      "configured": "12.2.0",
+      "latestStable": "12.2.0",
+      "latest": "12.2.0",
+      "projects": [
+        "src/Hexalith.Parties/Hexalith.Parties.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/fluentvalidation.dependencyinjectionextensions/index.json"
+    },
+    {
+      "id": "Fluxor",
+      "configured": "6.11.0",
+      "latestStable": "6.11.0",
+      "latest": "6.11.0",
+      "projects": [
+        "src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/fluxor/index.json"
+    },
+    {
+      "id": "hexalith.builds.module.cli",
+      "configured": "5.1.0",
+      "latestStable": "5.1.0",
+      "latest": "5.1.0",
+      "projects": [
+        ".config/dotnet-tools.json"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.builds.module.cli/index.json"
+    },
+    {
+      "id": "Hexalith.Commons",
+      "configured": "3.0.0",
+      "latestStable": "3.0.0",
+      "latest": "3.0.0",
+      "projects": [
+        "src/Hexalith.Parties/Hexalith.Parties.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.commons/index.json"
+    },
+    {
+      "id": "Hexalith.Commons.Http",
+      "configured": "3.0.0",
+      "latestStable": "3.0.0",
+      "latest": "3.0.0",
+      "projects": [
+        "src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj",
+        "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj",
+        "src/Hexalith.Parties/Hexalith.Parties.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.commons.http/index.json"
+    },
+    {
+      "id": "Hexalith.Commons.ServiceDefaults",
+      "configured": "3.0.0",
+      "latestStable": "3.0.0",
+      "latest": "3.0.0",
+      "projects": [
+        "src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj",
+        "src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.commons.servicedefaults/index.json"
+    },
+    {
+      "id": "Hexalith.Commons.UniqueIds",
+      "configured": "3.0.0",
+      "latestStable": "3.0.0",
+      "latest": "3.0.0",
+      "projects": [
+        "src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj",
+        "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj",
+        "src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj",
+        "src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.commons.uniqueids/index.json"
+    },
+    {
+      "id": "Hexalith.EventStore.Admin.Abstractions",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0",
+      "projects": [
+        "tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.admin.abstractions/index.json"
+    },
+    {
+      "id": "Hexalith.EventStore.Aspire",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0",
+      "projects": [
+        "src/Hexalith.Parties.Aspire/Hexalith.Parties.Aspire.csproj",
+        "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.aspire/index.json"
+    },
+    {
+      "id": "Hexalith.EventStore.Client",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0",
+      "projects": [
+        "src/Hexalith.Parties/Hexalith.Parties.csproj",
+        "src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj",
+        "tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.client/index.json"
+    },
+    {
+      "id": "Hexalith.EventStore.Contracts",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0",
+      "projects": [
+        "src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj",
+        "src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj",
+        "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj",
+        "src/Hexalith.Parties.EventStoreExtensions/Hexalith.Parties.EventStoreExtensions.csproj",
+        "tests/Hexalith.Parties.EventStoreSample.Contracts.TestArtifact/Hexalith.Parties.EventStoreSample.Contracts.TestArtifact.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.contracts/index.json"
+    },
+    {
+      "id": "Hexalith.EventStore.DomainService",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0",
+      "projects": [
+        "src/Hexalith.Parties.EventStoreExtensions/Hexalith.Parties.EventStoreExtensions.csproj",
+        "src/Hexalith.Parties/Hexalith.Parties.csproj",
+        "src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj",
+        "tests/Hexalith.Parties.EventStoreSample.TestHost/Hexalith.Parties.EventStoreSample.TestHost.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.domainservice/index.json"
+    },
+    {
+      "id": "Hexalith.EventStore.Gateway",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0",
+      "projects": [
+        "tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.gateway/index.json"
+    },
+    {
+      "id": "Hexalith.EventStore.Server",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0",
+      "projects": [
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.server/index.json"
+    },
+    {
+      "id": "Hexalith.EventStore.ServiceDefaults",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0",
+      "projects": [
+        "tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.servicedefaults/index.json"
+    },
+    {
+      "id": "Hexalith.EventStore.SignalR",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0",
+      "projects": [
+        "src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj",
+        "tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.signalr/index.json"
+    },
+    {
+      "id": "Hexalith.EventStore.Testing",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0",
+      "projects": [
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleTests.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.testing/index.json"
+    },
+    {
+      "id": "Hexalith.EventStore.Testing.Integration",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0",
+      "projects": [
+        "tests/Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.testing.integration/index.json"
+    },
+    {
+      "id": "Hexalith.FrontComposer.Contracts",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0",
+      "projects": [
+        "src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj",
+        "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.frontcomposer.contracts/index.json"
+    },
+    {
+      "id": "Hexalith.FrontComposer.Contracts.UI",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0",
+      "projects": [
+        "src/Hexalith.Parties.ConsumerPortal/Hexalith.Parties.ConsumerPortal.csproj",
+        "src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj",
+        "src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.frontcomposer.contracts.ui/index.json"
+    },
+    {
+      "id": "Hexalith.FrontComposer.Mcp",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0",
+      "projects": [
+        "src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.frontcomposer.mcp/index.json"
+    },
+    {
+      "id": "Hexalith.FrontComposer.Shell",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0",
+      "projects": [
+        "src/Hexalith.Parties.ConsumerPortal/Hexalith.Parties.ConsumerPortal.csproj",
+        "src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj",
+        "src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj",
+        "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.frontcomposer.shell/index.json"
+    },
+    {
+      "id": "Hexalith.FrontComposer.SourceTools",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0",
+      "projects": [
+        "src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.frontcomposer.sourcetools/index.json"
+    },
+    {
+      "id": "Hexalith.McpCli.Abstractions",
+      "configured": "2.0.1",
+      "latestStable": "2.0.1",
+      "latest": "2.0.1",
+      "projects": [
+        "src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.mcpcli.abstractions/index.json"
+    },
+    {
+      "id": "Hexalith.Memories.Client.Rest",
+      "configured": "3.0.27",
+      "latestStable": "3.0.27",
+      "latest": "3.0.27",
+      "projects": [
+        "src/Hexalith.Parties/Hexalith.Parties.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.memories.client.rest/index.json"
+    },
+    {
+      "id": "Hexalith.Parties.Contracts",
+      "configured": "3.1.1",
+      "latestStable": "3.1.1",
+      "latest": "3.1.1",
+      "projects": [
+        "tests/Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.contracts/index.json"
+    },
+    {
+      "id": "Hexalith.Tenants.Client",
+      "configured": "7.0.7",
+      "latestStable": "7.0.7",
+      "latest": "7.0.7",
+      "projects": [
+        "src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj",
+        "src/Hexalith.Parties/Hexalith.Parties.csproj",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.tenants.client/index.json"
+    },
+    {
+      "id": "Hexalith.Tenants.Contracts",
+      "configured": "7.0.7",
+      "latestStable": "7.0.7",
+      "latest": "7.0.7",
+      "projects": [
+        "src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj",
+        "tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.tenants.contracts/index.json"
+    },
+    {
+      "id": "Hexalith.Tenants.Testing",
+      "configured": "7.0.7",
+      "latestStable": "7.0.7",
+      "latest": "7.0.7",
+      "projects": [
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/hexalith.tenants.testing/index.json"
+    },
+    {
+      "id": "MediatR",
+      "configured": "15.0.0",
+      "latestStable": "15.0.0",
+      "latest": "15.0.0",
+      "projects": [
+        "src/Hexalith.Parties/Hexalith.Parties.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/mediatr/index.json"
+    },
+    {
+      "id": "Microsoft.AspNetCore.Authentication.JwtBearer",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0",
+      "projects": [
+        "src/Hexalith.Parties/Hexalith.Parties.csproj",
+        "tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.authentication.jwtbearer/index.json"
+    },
+    {
+      "id": "Microsoft.AspNetCore.Components.CustomElements",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0",
+      "projects": [
+        "src/Hexalith.Parties.Picker/Hexalith.Parties.Picker.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.components.customelements/index.json"
+    },
+    {
+      "id": "Microsoft.AspNetCore.Mvc.Testing",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0",
+      "projects": [
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+        "tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.mvc.testing/index.json"
+    },
+    {
+      "id": "Microsoft.AspNetCore.SignalR.Client",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0",
+      "projects": [
+        "tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.signalr.client/index.json"
+    },
+    {
+      "id": "Microsoft.Extensions.Configuration.Binder",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0",
+      "projects": [
+        "tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.configuration.binder/index.json"
+    },
+    {
+      "id": "Microsoft.Extensions.Http",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0",
+      "projects": [
+        "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.http/index.json"
+    },
+    {
+      "id": "Microsoft.Extensions.Logging.Abstractions",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0",
+      "projects": [
+        "src/Hexalith.Parties/Hexalith.Parties.csproj",
+        "src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj",
+        "src/Hexalith.Parties.Testing/Hexalith.Parties.Testing.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.logging.abstractions/index.json"
+    },
+    {
+      "id": "Microsoft.Extensions.Options",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0",
+      "projects": [
+        "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.options/index.json"
+    },
+    {
+      "id": "Microsoft.FluentUI.AspNetCore.Components",
+      "configured": "5.0.1",
+      "latestStable": "5.0.1",
+      "latest": "5.0.1",
+      "projects": [
+        "src/Hexalith.Parties.ConsumerPortal/Hexalith.Parties.ConsumerPortal.csproj",
+        "src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj",
+        "src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj",
+        "tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.fluentui.aspnetcore.components/index.json"
+    },
+    {
+      "id": "Microsoft.FluentUI.AspNetCore.Components.Icons",
+      "configured": "5.0.1",
+      "latestStable": "5.0.1",
+      "latest": "5.0.1",
+      "projects": [
+        "tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.fluentui.aspnetcore.components.icons/index.json"
+    },
+    {
+      "id": "Microsoft.NET.Test.Sdk",
+      "configured": "18.12.0",
+      "latestStable": "18.12.0",
+      "latest": "18.12.0",
+      "projects": [
+        "tests/Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "tests/Hexalith.Parties.Platform.LifecycleTests/Hexalith.Parties.Platform.LifecycleTests.csproj",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj",
+        "tests/Hexalith.Parties.Aspire.Tests/Hexalith.Parties.Aspire.Tests.csproj",
+        "tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj",
+        "tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+        "tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj",
+        "tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj",
+        "tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleTests.csproj",
+        "tests/Hexalith.Parties.Authentication.Tests/Hexalith.Parties.Authentication.Tests.csproj",
+        "tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj",
+        "tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj",
+        "tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj",
+        "tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj",
+        "tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj",
+        "tests/Hexalith.Parties.Catalog.Tests/Hexalith.Parties.Catalog.Tests.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.net.test.sdk/index.json"
+    },
+    {
+      "id": "ModelContextProtocol.AspNetCore",
+      "configured": "2.4.0",
+      "latestStable": "2.4.0",
+      "latest": "2.4.0",
+      "projects": [
+        "src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/modelcontextprotocol.aspnetcore/index.json"
+    },
+    {
+      "id": "NSubstitute",
+      "configured": "6.2.0",
+      "latestStable": "6.2.0",
+      "latest": "6.2.0",
+      "projects": [
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj",
+        "tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+        "tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj",
+        "tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj",
+        "tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj",
+        "tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj",
+        "tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj",
+        "tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/nsubstitute/index.json"
+    },
+    {
+      "id": "Shouldly",
+      "configured": "4.3.0",
+      "latestStable": "4.3.0",
+      "latest": "5.0.0-preview.2",
+      "projects": [
+        "tests/Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj",
+        "tests/Hexalith.Parties.Aspire.Tests/Hexalith.Parties.Aspire.Tests.csproj",
+        "tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj",
+        "tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+        "tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj",
+        "tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj",
+        "tests/Hexalith.Parties.Authentication.Tests/Hexalith.Parties.Authentication.Tests.csproj",
+        "tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj",
+        "tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj",
+        "tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj",
+        "tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj",
+        "tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj",
+        "tests/Hexalith.Parties.Catalog.Tests/Hexalith.Parties.Catalog.Tests.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/shouldly/index.json"
+    },
+    {
+      "id": "StackExchange.Redis",
+      "configured": "3.4.35",
+      "latestStable": "3.4.35",
+      "latest": "4.0.161-alpha",
+      "projects": [
+        "tests/Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/stackexchange.redis/index.json"
+    },
+    {
+      "id": "xunit.runner.visualstudio",
+      "configured": "4.0.1",
+      "latestStable": "4.0.1",
+      "latest": "4.0.1",
+      "projects": [
+        "tests/Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "tests/Hexalith.Parties.Platform.LifecycleTests/Hexalith.Parties.Platform.LifecycleTests.csproj",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj",
+        "tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj",
+        "tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+        "tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj",
+        "tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj",
+        "tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleTests.csproj",
+        "tests/Hexalith.Parties.Authentication.Tests/Hexalith.Parties.Authentication.Tests.csproj",
+        "tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj",
+        "tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj",
+        "tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj",
+        "tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj",
+        "tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/xunit.runner.visualstudio/index.json"
+    },
+    {
+      "id": "xunit.v3",
+      "configured": "4.0.3",
+      "latestStable": "4.0.3",
+      "latest": "4.0.3",
+      "projects": [
+        "tests/Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "tests/Hexalith.Parties.Platform.LifecycleTests/Hexalith.Parties.Platform.LifecycleTests.csproj",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj",
+        "tests/Hexalith.Parties.Aspire.Tests/Hexalith.Parties.Aspire.Tests.csproj",
+        "tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj",
+        "tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+        "tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj",
+        "tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj",
+        "tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleTests.csproj",
+        "tests/Hexalith.Parties.Authentication.Tests/Hexalith.Parties.Authentication.Tests.csproj",
+        "tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj",
+        "tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj",
+        "tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj",
+        "tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj",
+        "tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj",
+        "tests/Hexalith.Parties.Catalog.Tests/Hexalith.Parties.Catalog.Tests.csproj"
+      ],
+      "source": "https://api.nuget.org/v3-flatcontainer/xunit.v3/index.json"
+    }
+  ],
+  "npm": [
+    {
+      "id": "@commitlint/cli",
+      "manifest": "package.json",
+      "configured": "^21.2.4",
+      "locked": "21.2.4",
+      "latest": "21.2.4"
+    },
+    {
+      "id": "@commitlint/config-conventional",
+      "manifest": "package.json",
+      "configured": "^21.2.4",
+      "locked": "21.2.4",
+      "latest": "21.2.4"
+    },
+    {
+      "id": "@semantic-release/commit-analyzer",
+      "manifest": "package.json",
+      "configured": "^13.0.1",
+      "locked": "13.0.1",
+      "latest": "13.0.1"
+    },
+    {
+      "id": "@semantic-release/exec",
+      "manifest": "package.json",
+      "configured": "^7.1.0",
+      "locked": "7.1.0",
+      "latest": "7.1.0"
+    },
+    {
+      "id": "@semantic-release/github",
+      "manifest": "package.json",
+      "configured": "^12.0.10",
+      "locked": "12.0.10",
+      "latest": "12.0.11"
+    },
+    {
+      "id": "@semantic-release/release-notes-generator",
+      "manifest": "package.json",
+      "configured": "^14.1.1",
+      "locked": "14.1.1",
+      "latest": "14.1.1"
+    },
+    {
+      "id": "semantic-release",
+      "manifest": "package.json",
+      "configured": "^25.0.9",
+      "locked": "25.0.9",
+      "latest": "25.0.9"
+    },
+    {
+      "id": "@axe-core/playwright",
+      "manifest": "tests/e2e/package.json",
+      "configured": "^4.14.0",
+      "locked": "4.14.0",
+      "latest": "4.14.0"
+    },
+    {
+      "id": "@playwright/test",
+      "manifest": "tests/e2e/package.json",
+      "configured": "^1.65.0",
+      "locked": "1.65.0",
+      "latest": "1.65.0"
+    },
+    {
+      "id": "@types/node",
+      "manifest": "tests/e2e/package.json",
+      "configured": "^24.19.2",
+      "locked": "24.19.2",
+      "latest": "26.6.6"
+    },
+    {
+      "id": "typescript",
+      "manifest": "tests/e2e/package.json",
+      "configured": "^7.0.2",
+      "locked": "7.0.2",
+      "latest": "7.0.2"
+    }
+  ],
+  "catalog": [
+    {
+      "id": "AdaptiveCards",
+      "configured": "3.1.0",
+      "latestStable": "3.1.0",
+      "latest": "3.1.0"
+    },
+    {
+      "id": "AdaptiveCards.Templating",
+      "configured": "2.0.6",
+      "latestStable": "2.0.6",
+      "latest": "2.0.6"
+    },
+    {
+      "id": "AngleSharp",
+      "configured": "1.10.2",
+      "latestStable": "1.10.2",
+      "latest": "1.10.3-beta.950"
+    },
+    {
+      "id": "Aspire.Azure.Messaging.ServiceBus",
+      "configured": "13.6.5",
+      "latestStable": "13.6.5",
+      "latest": "13.6.5"
+    },
+    {
+      "id": "Aspire.Azure.Security.KeyVault",
+      "configured": "13.6.5",
+      "latestStable": "13.6.5",
+      "latest": "13.6.5"
+    },
+    {
+      "id": "Aspire.Azure.Storage.Blobs",
+      "configured": "13.6.5",
+      "latestStable": "13.6.5",
+      "latest": "13.6.5"
+    },
+    {
+      "id": "Aspire.Azure.Storage.Queues",
+      "configured": "13.6.5",
+      "latestStable": "13.6.5",
+      "latest": "13.6.5"
+    },
+    {
+      "id": "Aspire.Hosting",
+      "configured": "13.6.5",
+      "latestStable": "13.6.5",
+      "latest": "13.6.5"
+    },
+    {
+      "id": "Aspire.Hosting.Azure.AppContainers",
+      "configured": "13.6.5",
+      "latestStable": "13.6.5",
+      "latest": "13.6.5"
+    },
+    {
+      "id": "Aspire.Hosting.Azure.CosmosDB",
+      "configured": "13.6.5",
+      "latestStable": "13.6.5",
+      "latest": "13.6.5"
+    },
+    {
+      "id": "Aspire.Hosting.Docker",
+      "configured": "13.6.5",
+      "latestStable": "13.6.5",
+      "latest": "13.6.5"
+    },
+    {
+      "id": "Aspire.Hosting.Keycloak",
+      "configured": "13.6.5-preview.1.26559.7",
+      "latestStable": null,
+      "latest": "13.6.5-preview.1.26559.7"
+    },
+    {
+      "id": "Aspire.Hosting.Kubernetes",
+      "configured": "13.6.5-preview.1.26559.7",
+      "latestStable": null,
+      "latest": "13.6.5-preview.1.26559.7"
+    },
+    {
+      "id": "Aspire.Hosting.Redis",
+      "configured": "13.6.5",
+      "latestStable": "13.6.5",
+      "latest": "13.6.5"
+    },
+    {
+      "id": "Aspire.Hosting.Testing",
+      "configured": "13.6.5",
+      "latestStable": "13.6.5",
+      "latest": "13.6.5"
+    },
+    {
+      "id": "Aspire.Microsoft.Azure.Cosmos",
+      "configured": "13.6.5",
+      "latestStable": "13.6.5",
+      "latest": "13.6.5"
+    },
+    {
+      "id": "AspNet.Security.OAuth.Amazon",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "AspNet.Security.OAuth.Apple",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "AspNet.Security.OAuth.Basecamp",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "AspNet.Security.OAuth.Discord",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "AspNet.Security.OAuth.GitHub",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "AspNet.Security.OAuth.Instagram",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "AspNet.Security.OAuth.LinkedIn",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "AspNet.Security.OAuth.Notion",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "AspNet.Security.OAuth.Okta",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "AspNet.Security.OAuth.Paypal",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "AspNet.Security.OAuth.Reddit",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "AspNet.Security.OAuth.Shopify",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "AspNet.Security.OAuth.Slack",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "AspNet.Security.OAuth.Twitter",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "AspNet.Security.OAuth.Yahoo",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Azure.Bicep.Core",
+      "configured": "0.49.2",
+      "latestStable": "0.49.2",
+      "latest": "0.49.2"
+    },
+    {
+      "id": "Azure.Core",
+      "configured": "1.65.0",
+      "latestStable": "1.65.0",
+      "latest": "1.65.0"
+    },
+    {
+      "id": "Azure.Identity",
+      "configured": "1.21.0",
+      "latestStable": "1.21.0",
+      "latest": "1.21.0"
+    },
+    {
+      "id": "Azure.Monitor.OpenTelemetry.AspNetCore",
+      "configured": "1.6.0",
+      "latestStable": "1.6.0",
+      "latest": "1.6.0"
+    },
+    {
+      "id": "Azure.ResourceManager",
+      "configured": "1.14.0",
+      "latestStable": "1.14.0",
+      "latest": "1.14.0"
+    },
+    {
+      "id": "Azure.ResourceManager.CognitiveServices",
+      "configured": "1.6.0",
+      "latestStable": "1.6.0",
+      "latest": "1.7.0-beta.1"
+    },
+    {
+      "id": "Azure.ResourceManager.ContainerRegistry",
+      "configured": "1.4.0",
+      "latestStable": "1.4.0",
+      "latest": "1.5.0-beta.4"
+    },
+    {
+      "id": "Azure.ResourceManager.KeyVault",
+      "configured": "1.5.0",
+      "latestStable": "1.5.0",
+      "latest": "1.5.0"
+    },
+    {
+      "id": "Azure.ResourceManager.Logic",
+      "configured": "1.2.0",
+      "latestStable": "1.2.0",
+      "latest": "1.2.0"
+    },
+    {
+      "id": "Azure.Security.KeyVault.Keys",
+      "configured": "4.10.2",
+      "latestStable": "4.10.2",
+      "latest": "4.11.0-beta.6"
+    },
+    {
+      "id": "Azure.Security.KeyVault.Secrets",
+      "configured": "4.12.0",
+      "latestStable": "4.12.0",
+      "latest": "4.13.0-beta.1"
+    },
+    {
+      "id": "Azure.Storage.Blobs",
+      "configured": "12.30.1",
+      "latestStable": "12.30.1",
+      "latest": "12.31.0-beta.1"
+    },
+    {
+      "id": "BenchmarkDotNet",
+      "configured": "0.15.8",
+      "latestStable": "0.15.8",
+      "latest": "0.16.0-preview.2"
+    },
+    {
+      "id": "bunit",
+      "configured": "2.15.2",
+      "latestStable": "2.15.2",
+      "latest": "2.15.2"
+    },
+    {
+      "id": "ByteAether.Ulid",
+      "configured": "1.4.2",
+      "latestStable": "1.4.2",
+      "latest": "1.4.2"
+    },
+    {
+      "id": "Cocona",
+      "configured": "2.2.0",
+      "latestStable": "2.2.0",
+      "latest": "2.2.0"
+    },
+    {
+      "id": "CommunityToolkit.Aspire.Hosting.Dapr",
+      "configured": "13.0.0",
+      "latestStable": "13.0.0",
+      "latest": "17.0.0-beta.1051"
+    },
+    {
+      "id": "CompareNETObjects",
+      "configured": "4.84.0",
+      "latestStable": "4.84.0",
+      "latest": "4.84.0"
+    },
+    {
+      "id": "coverlet.collector",
+      "configured": "10.1.0",
+      "latestStable": "10.1.0",
+      "latest": "10.1.0"
+    },
+    {
+      "id": "Dapr.Actors",
+      "configured": "1.19.1",
+      "latestStable": "1.19.1",
+      "latest": "1.19.1"
+    },
+    {
+      "id": "Dapr.Actors.AspNetCore",
+      "configured": "1.19.1",
+      "latestStable": "1.19.1",
+      "latest": "1.19.1"
+    },
+    {
+      "id": "Dapr.Actors.Generators",
+      "configured": "1.19.1",
+      "latestStable": "1.19.1",
+      "latest": "1.19.1"
+    },
+    {
+      "id": "Dapr.AI",
+      "configured": "1.19.1",
+      "latestStable": "1.19.1",
+      "latest": "1.19.1"
+    },
+    {
+      "id": "Dapr.AI.Microsoft.Extensions",
+      "configured": "1.19.1",
+      "latestStable": "1.19.1",
+      "latest": "1.19.1"
+    },
+    {
+      "id": "Dapr.AspNetCore",
+      "configured": "1.19.1",
+      "latestStable": "1.19.1",
+      "latest": "1.19.1"
+    },
+    {
+      "id": "Dapr.Client",
+      "configured": "1.19.1",
+      "latestStable": "1.19.1",
+      "latest": "1.19.1"
+    },
+    {
+      "id": "Dapr.Workflow",
+      "configured": "1.19.1",
+      "latestStable": "1.19.1",
+      "latest": "1.19.1"
+    },
+    {
+      "id": "Deque.AxeCore.Commons",
+      "configured": "4.14.0",
+      "latestStable": "4.14.0",
+      "latest": "4.14.0"
+    },
+    {
+      "id": "Deque.AxeCore.Playwright",
+      "configured": "4.14.0",
+      "latestStable": "4.14.0",
+      "latest": "4.14.0"
+    },
+    {
+      "id": "docfx.console",
+      "configured": "2.59.4",
+      "latestStable": "2.59.4",
+      "latest": "2.59.4"
+    },
+    {
+      "id": "FluentAssertions",
+      "configured": "8.11.0",
+      "latestStable": "8.11.0",
+      "latest": "8.11.0"
+    },
+    {
+      "id": "FluentValidation",
+      "configured": "12.2.0",
+      "latestStable": "12.2.0",
+      "latest": "12.2.0"
+    },
+    {
+      "id": "FluentValidation.AspNetCore",
+      "configured": "11.3.1",
+      "latestStable": "11.3.1",
+      "latest": "11.3.1"
+    },
+    {
+      "id": "FluentValidation.DependencyInjectionExtensions",
+      "configured": "12.2.0",
+      "latestStable": "12.2.0",
+      "latest": "12.2.0"
+    },
+    {
+      "id": "Fluxor",
+      "configured": "6.11.0",
+      "latestStable": "6.11.0",
+      "latest": "6.11.0"
+    },
+    {
+      "id": "Fluxor.Blazor.Web",
+      "configured": "6.11.0",
+      "latestStable": "6.11.0",
+      "latest": "6.11.0"
+    },
+    {
+      "id": "FsCheck",
+      "configured": "3.6.0",
+      "latestStable": "3.6.0",
+      "latest": "3.6.0"
+    },
+    {
+      "id": "FsCheck.Xunit.v3",
+      "configured": "3.6.0",
+      "latestStable": "3.6.0",
+      "latest": "3.6.0"
+    },
+    {
+      "id": "GitHubActionsTestLogger",
+      "configured": "3.0.5",
+      "latestStable": "3.0.5",
+      "latest": "3.0.5"
+    },
+    {
+      "id": "Google.Apis",
+      "configured": "1.78.0",
+      "latestStable": "1.78.0",
+      "latest": "1.78.0"
+    },
+    {
+      "id": "Google.Apis.Auth.AspNetCore3",
+      "configured": "1.78.0",
+      "latestStable": "1.78.0",
+      "latest": "1.78.0"
+    },
+    {
+      "id": "Grpc",
+      "configured": "2.46.6",
+      "latestStable": "2.46.6",
+      "latest": "2.46.6"
+    },
+    {
+      "id": "Grpc.HealthCheck",
+      "configured": "2.85.0",
+      "latestStable": "2.85.0",
+      "latest": "2.85.0"
+    },
+    {
+      "id": "Grpc.Net.ClientFactory",
+      "configured": "2.85.0",
+      "latestStable": "2.85.0",
+      "latest": "2.85.0"
+    },
+    {
+      "id": "Hexalith.Applications",
+      "configured": "1.0.6",
+      "latestStable": "1.0.6",
+      "latest": "1.0.6"
+    },
+    {
+      "id": "Hexalith.Applications.Abstractions",
+      "configured": "1.0.6",
+      "latestStable": "1.0.6",
+      "latest": "1.0.6"
+    },
+    {
+      "id": "Hexalith.Applications.Commands",
+      "configured": "1.0.6",
+      "latestStable": "1.0.6",
+      "latest": "1.0.6"
+    },
+    {
+      "id": "Hexalith.Applications.Commands.Abstractions",
+      "configured": "1.0.6",
+      "latestStable": "1.0.6",
+      "latest": "1.0.6"
+    },
+    {
+      "id": "Hexalith.Chatbot.Contracts",
+      "configured": "1.83.0",
+      "latestStable": "1.83.0",
+      "latest": "1.83.0"
+    },
+    {
+      "id": "Hexalith.Commons",
+      "configured": "3.0.0",
+      "latestStable": "3.0.0",
+      "latest": "3.0.0"
+    },
+    {
+      "id": "Hexalith.Commons.Aspire",
+      "configured": "3.0.0",
+      "latestStable": "3.0.0",
+      "latest": "3.0.0"
+    },
+    {
+      "id": "Hexalith.Commons.Configurations",
+      "configured": "3.0.0",
+      "latestStable": "3.0.0",
+      "latest": "3.0.0"
+    },
+    {
+      "id": "Hexalith.Commons.Diagnostics",
+      "configured": "3.0.0",
+      "latestStable": "3.0.0",
+      "latest": "3.0.0"
+    },
+    {
+      "id": "Hexalith.Commons.Http",
+      "configured": "3.0.0",
+      "latestStable": "3.0.0",
+      "latest": "3.0.0"
+    },
+    {
+      "id": "Hexalith.Commons.Metadatas",
+      "configured": "3.0.0",
+      "latestStable": "3.0.0",
+      "latest": "3.0.0"
+    },
+    {
+      "id": "Hexalith.Commons.Publication",
+      "configured": "3.0.0",
+      "latestStable": "3.0.0",
+      "latest": "3.0.0"
+    },
+    {
+      "id": "Hexalith.Commons.Serialization",
+      "configured": "3.0.0",
+      "latestStable": "3.0.0",
+      "latest": "3.0.0"
+    },
+    {
+      "id": "Hexalith.Commons.ServiceDefaults",
+      "configured": "3.0.0",
+      "latestStable": "3.0.0",
+      "latest": "3.0.0"
+    },
+    {
+      "id": "Hexalith.Commons.StringEncoders",
+      "configured": "3.0.0",
+      "latestStable": "3.0.0",
+      "latest": "3.0.0"
+    },
+    {
+      "id": "Hexalith.Commons.TenantAccess",
+      "configured": "3.0.0",
+      "latestStable": "3.0.0",
+      "latest": "3.0.0"
+    },
+    {
+      "id": "Hexalith.Commons.UniqueIds",
+      "configured": "3.0.0",
+      "latestStable": "3.0.0",
+      "latest": "3.0.0"
+    },
+    {
+      "id": "Hexalith.Conversations.Client",
+      "configured": "1.5.0",
+      "latestStable": "1.6.0",
+      "latest": "1.6.0"
+    },
+    {
+      "id": "Hexalith.Conversations.Contracts",
+      "configured": "1.5.0",
+      "latestStable": "1.6.0",
+      "latest": "1.6.0"
+    },
+    {
+      "id": "Hexalith.Documents",
+      "configured": "2.7.1",
+      "latestStable": "2.7.1",
+      "latest": "2.7.1"
+    },
+    {
+      "id": "Hexalith.Documents.ApiServer",
+      "configured": "2.7.1",
+      "latestStable": "2.7.1",
+      "latest": "2.7.1"
+    },
+    {
+      "id": "Hexalith.Documents.Commands",
+      "configured": "2.7.1",
+      "latestStable": "2.7.1",
+      "latest": "2.7.1"
+    },
+    {
+      "id": "Hexalith.Documents.Requests",
+      "configured": "2.7.1",
+      "latestStable": "2.7.1",
+      "latest": "2.7.1"
+    },
+    {
+      "id": "Hexalith.Documents.UI.Components",
+      "configured": "2.7.1",
+      "latestStable": "2.7.1",
+      "latest": "2.7.1"
+    },
+    {
+      "id": "Hexalith.Documents.WebApp",
+      "configured": "2.7.1",
+      "latestStable": "2.7.1",
+      "latest": "2.7.1"
+    },
+    {
+      "id": "Hexalith.Documents.WebServer",
+      "configured": "2.7.1",
+      "latestStable": "2.7.1",
+      "latest": "2.7.1"
+    },
+    {
+      "id": "Hexalith.Domains",
+      "configured": "2.0.2",
+      "latestStable": "2.0.2",
+      "latest": "2.0.2"
+    },
+    {
+      "id": "Hexalith.Domains.Abstractions",
+      "configured": "2.0.2",
+      "latestStable": "2.0.2",
+      "latest": "2.0.2"
+    },
+    {
+      "id": "Hexalith.EventStore.Admin.Abstractions",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0"
+    },
+    {
+      "id": "Hexalith.EventStore.Admin.Server",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0"
+    },
+    {
+      "id": "Hexalith.EventStore.Aspire",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0"
+    },
+    {
+      "id": "Hexalith.EventStore.Client",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0"
+    },
+    {
+      "id": "Hexalith.EventStore.Contracts",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0"
+    },
+    {
+      "id": "Hexalith.EventStore.DomainService",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0"
+    },
+    {
+      "id": "Hexalith.EventStore.Gateway",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0"
+    },
+    {
+      "id": "Hexalith.EventStore.RestApi.Generators",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0"
+    },
+    {
+      "id": "Hexalith.EventStore.Server",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0"
+    },
+    {
+      "id": "Hexalith.EventStore.ServiceDefaults",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0"
+    },
+    {
+      "id": "Hexalith.EventStore.SignalR",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0"
+    },
+    {
+      "id": "Hexalith.EventStore.Testing",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0"
+    },
+    {
+      "id": "Hexalith.EventStore.Testing.Integration",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0"
+    },
+    {
+      "id": "Hexalith.Folders",
+      "configured": "1.4.0",
+      "latestStable": "1.4.0",
+      "latest": "1.4.0"
+    },
+    {
+      "id": "Hexalith.Folders.Aspire",
+      "configured": "1.4.0",
+      "latestStable": "1.4.0",
+      "latest": "1.4.0"
+    },
+    {
+      "id": "Hexalith.Folders.Client",
+      "configured": "1.4.0",
+      "latestStable": "1.4.0",
+      "latest": "1.4.0"
+    },
+    {
+      "id": "Hexalith.Folders.Contracts",
+      "configured": "1.4.0",
+      "latestStable": "1.4.0",
+      "latest": "1.4.0"
+    },
+    {
+      "id": "Hexalith.Folders.Testing",
+      "configured": "1.4.0",
+      "latestStable": "1.4.0",
+      "latest": "1.4.0"
+    },
+    {
+      "id": "Hexalith.FrontComposer.Contracts",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0"
+    },
+    {
+      "id": "Hexalith.FrontComposer.Contracts.UI",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0"
+    },
+    {
+      "id": "Hexalith.FrontComposer.Mcp",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0"
+    },
+    {
+      "id": "Hexalith.FrontComposer.Shell",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0"
+    },
+    {
+      "id": "Hexalith.FrontComposer.SourceTools",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0"
+    },
+    {
+      "id": "Hexalith.FrontComposer.Testing",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0"
+    },
+    {
+      "id": "Hexalith.IdentityStores",
+      "configured": "1.4.5",
+      "latestStable": "1.4.5",
+      "latest": "1.4.5"
+    },
+    {
+      "id": "Hexalith.IdentityStores.Abstractions",
+      "configured": "1.4.5",
+      "latestStable": "1.4.5",
+      "latest": "1.4.5"
+    },
+    {
+      "id": "Hexalith.IdentityStores.UI",
+      "configured": "1.4.5",
+      "latestStable": "1.4.5",
+      "latest": "1.4.5"
+    },
+    {
+      "id": "Hexalith.KeyValueStorages",
+      "configured": "2.1.2",
+      "latestStable": "2.1.2",
+      "latest": "2.1.2"
+    },
+    {
+      "id": "Hexalith.KeyValueStorages.Abstractions",
+      "configured": "2.1.2",
+      "latestStable": "2.1.2",
+      "latest": "2.1.2"
+    },
+    {
+      "id": "Hexalith.KeyValueStorages.DaprComponents",
+      "configured": "2.1.2",
+      "latestStable": "2.1.2",
+      "latest": "2.1.2"
+    },
+    {
+      "id": "Hexalith.KeyValueStorages.Files",
+      "configured": "2.1.2",
+      "latestStable": "2.1.2",
+      "latest": "2.1.2"
+    },
+    {
+      "id": "Hexalith.McpCli.Abstractions",
+      "configured": "2.0.1",
+      "latestStable": "2.0.1",
+      "latest": "2.0.1"
+    },
+    {
+      "id": "Hexalith.Memories.Aspire",
+      "configured": "3.0.27",
+      "latestStable": "3.0.27",
+      "latest": "3.0.27"
+    },
+    {
+      "id": "Hexalith.Memories.Client.Rest",
+      "configured": "3.0.27",
+      "latestStable": "3.0.27",
+      "latest": "3.0.27"
+    },
+    {
+      "id": "Hexalith.Memories.Contracts",
+      "configured": "3.0.27",
+      "latestStable": "3.0.27",
+      "latest": "3.0.27"
+    },
+    {
+      "id": "Hexalith.Memories.EventStore",
+      "configured": "3.0.27",
+      "latestStable": "3.0.27",
+      "latest": "3.0.27"
+    },
+    {
+      "id": "Hexalith.Memories.EventStoreExtensions",
+      "configured": "3.0.27",
+      "latestStable": "3.0.27",
+      "latest": "3.0.27"
+    },
+    {
+      "id": "Hexalith.NetAspire.Defaults",
+      "configured": "1.4.8",
+      "latestStable": "1.4.8",
+      "latest": "1.4.8"
+    },
+    {
+      "id": "Hexalith.NetAspire.Hosting",
+      "configured": "1.4.8",
+      "latestStable": "1.4.8",
+      "latest": "1.4.8"
+    },
+    {
+      "id": "Hexalith.Parties.AdminPortal",
+      "configured": "3.1.1",
+      "latestStable": "3.1.1",
+      "latest": "3.1.1"
+    },
+    {
+      "id": "Hexalith.Parties.Aspire",
+      "configured": "3.1.1",
+      "latestStable": "3.1.1",
+      "latest": "3.1.1"
+    },
+    {
+      "id": "Hexalith.Parties.Client",
+      "configured": "3.1.1",
+      "latestStable": "3.1.1",
+      "latest": "3.1.1"
+    },
+    {
+      "id": "Hexalith.Parties.ConsumerPortal",
+      "configured": "3.1.1",
+      "latestStable": "3.1.1",
+      "latest": "3.1.1"
+    },
+    {
+      "id": "Hexalith.Parties.Contracts",
+      "configured": "3.1.1",
+      "latestStable": "3.1.1",
+      "latest": "3.1.1"
+    },
+    {
+      "id": "Hexalith.Parties.EventStoreExtensions",
+      "configured": "3.1.1",
+      "latestStable": "3.1.1",
+      "latest": "3.1.1"
+    },
+    {
+      "id": "Hexalith.Parties.Picker",
+      "configured": "3.1.1",
+      "latestStable": "3.1.1",
+      "latest": "3.1.1"
+    },
+    {
+      "id": "Hexalith.Parties.Testing",
+      "configured": "3.1.1",
+      "latestStable": "3.1.1",
+      "latest": "3.1.1"
+    },
+    {
+      "id": "Hexalith.PolymorphicSerializations",
+      "configured": "2.0.0",
+      "latestStable": "2.0.0",
+      "latest": "2.0.0"
+    },
+    {
+      "id": "Hexalith.PolymorphicSerializations.CodeGenerators",
+      "configured": "2.0.0",
+      "latestStable": "2.0.0",
+      "latest": "2.0.0"
+    },
+    {
+      "id": "Hexalith.Projects",
+      "configured": "1.2.3",
+      "latestStable": "1.2.4",
+      "latest": "1.2.4"
+    },
+    {
+      "id": "Hexalith.Projects.Client",
+      "configured": "1.2.3",
+      "latestStable": "1.2.4",
+      "latest": "1.2.4"
+    },
+    {
+      "id": "Hexalith.Projects.Contracts",
+      "configured": "1.2.3",
+      "latestStable": "1.2.4",
+      "latest": "1.2.4"
+    },
+    {
+      "id": "Hexalith.Projects.ServiceDefaults",
+      "configured": "1.2.3",
+      "latestStable": "1.2.4",
+      "latest": "1.2.4"
+    },
+    {
+      "id": "Hexalith.Projects.Testing",
+      "configured": "1.2.3",
+      "latestStable": "1.2.4",
+      "latest": "1.2.4"
+    },
+    {
+      "id": "Hexalith.Security.ApiServer",
+      "configured": "2.14.9",
+      "latestStable": "2.14.9",
+      "latest": "2.14.9"
+    },
+    {
+      "id": "Hexalith.Security.WebApp",
+      "configured": "2.14.9",
+      "latestStable": "2.14.9",
+      "latest": "2.14.9"
+    },
+    {
+      "id": "Hexalith.Security.WebServer",
+      "configured": "2.14.9",
+      "latestStable": "2.14.9",
+      "latest": "2.14.9"
+    },
+    {
+      "id": "Hexalith.Tenants.Aspire",
+      "configured": "7.0.7",
+      "latestStable": "7.0.7",
+      "latest": "7.0.7"
+    },
+    {
+      "id": "Hexalith.Tenants.Client",
+      "configured": "7.0.7",
+      "latestStable": "7.0.7",
+      "latest": "7.0.7"
+    },
+    {
+      "id": "Hexalith.Tenants.Contracts",
+      "configured": "7.0.7",
+      "latestStable": "7.0.7",
+      "latest": "7.0.7"
+    },
+    {
+      "id": "Hexalith.Tenants.Server",
+      "configured": "7.0.7",
+      "latestStable": "7.0.7",
+      "latest": "7.0.7"
+    },
+    {
+      "id": "Hexalith.Tenants.Testing",
+      "configured": "7.0.7",
+      "latestStable": "7.0.7",
+      "latest": "7.0.7"
+    },
+    {
+      "id": "Hexalith.Works.Contracts",
+      "configured": "1.0.2",
+      "latestStable": "1.0.2",
+      "latest": "1.0.2"
+    },
+    {
+      "id": "HotChocolate",
+      "configured": "16.7.5",
+      "latestStable": "16.7.5",
+      "latest": "16.8.0-p.11"
+    },
+    {
+      "id": "Humanizer",
+      "configured": "3.0.10",
+      "latestStable": "3.0.10",
+      "latest": "3.0.10"
+    },
+    {
+      "id": "ISO3166",
+      "configured": "1.0.4",
+      "latestStable": "1.0.4",
+      "latest": "1.0.4"
+    },
+    {
+      "id": "JsonSchema.Net",
+      "configured": "9.6.0",
+      "latestStable": "9.6.0",
+      "latest": "9.6.0"
+    },
+    {
+      "id": "Kreuzberg",
+      "configured": "4.10.4",
+      "latestStable": "4.10.4",
+      "latest": "5.0.0-rc.35"
+    },
+    {
+      "id": "LibGit2Sharp",
+      "configured": "0.32.0",
+      "latestStable": "0.32.0",
+      "latest": "0.32.0"
+    },
+    {
+      "id": "MailKit",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "5.0.0"
+    },
+    {
+      "id": "MediatR",
+      "configured": "15.0.0",
+      "latestStable": "15.0.0",
+      "latest": "15.0.0"
+    },
+    {
+      "id": "MessagePack",
+      "configured": "3.1.12",
+      "latestStable": "3.1.12",
+      "latest": "4.0.0-rc.1"
+    },
+    {
+      "id": "Microsoft.AspNetCore.Authentication.Facebook",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.AspNetCore.Authentication.Google",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.AspNetCore.Authentication.JwtBearer",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.AspNetCore.Authentication.MicrosoftAccount",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.AspNetCore.Authentication.OpenIdConnect",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.AspNetCore.Authorization",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.AspNetCore.Components.Authorization",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.AspNetCore.Components.CustomElements",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.AspNetCore.Components.Web",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.AspNetCore.Components.WebAssembly",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.AspNetCore.Components.WebAssembly.Authentication",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.AspNetCore.Components.WebAssembly.DevServer",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.AspNetCore.Components.WebAssembly.Server",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.AspNetCore.DataProtection",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.AspNetCore.DataProtection.Abstractions",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.AspNetCore.Identity",
+      "configured": "2.3.14",
+      "latestStable": "2.3.14",
+      "latest": "2.3.14"
+    },
+    {
+      "id": "Microsoft.AspNetCore.Mvc.Testing",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.AspNetCore.OpenApi",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.AspNetCore.SignalR.Client",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.AspNetCore.SignalR.Common",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.AspNetCore.SignalR.StackExchangeRedis",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.AspNetCore.TestHost",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.Azure.Cosmos",
+      "configured": "3.64.0",
+      "latestStable": "3.64.0",
+      "latest": "3.65.0-preview.0"
+    },
+    {
+      "id": "Microsoft.Bot.Builder",
+      "configured": "4.23.1",
+      "latestStable": "4.23.1",
+      "latest": "4.23.1"
+    },
+    {
+      "id": "Microsoft.Build",
+      "configured": "18.12.2",
+      "latestStable": "18.12.2",
+      "latest": "18.12.2"
+    },
+    {
+      "id": "Microsoft.Build.Framework",
+      "configured": "18.12.2",
+      "latestStable": "18.12.2",
+      "latest": "18.12.2"
+    },
+    {
+      "id": "Microsoft.Build.Locator",
+      "configured": "1.11.2",
+      "latestStable": "1.11.2",
+      "latest": "1.11.2"
+    },
+    {
+      "id": "Microsoft.Build.Utilities.Core",
+      "configured": "18.12.2",
+      "latestStable": "18.12.2",
+      "latest": "18.12.2"
+    },
+    {
+      "id": "Microsoft.CodeAnalysis.Analyzers",
+      "configured": "5.9.0",
+      "latestStable": "5.9.0",
+      "latest": "5.9.0"
+    },
+    {
+      "id": "Microsoft.CodeAnalysis.Common",
+      "configured": "5.9.0",
+      "latestStable": "5.9.0",
+      "latest": "5.9.0"
+    },
+    {
+      "id": "Microsoft.CodeAnalysis.CSharp",
+      "configured": "5.9.0",
+      "latestStable": "5.9.0",
+      "latest": "5.9.0"
+    },
+    {
+      "id": "Microsoft.CodeAnalysis.CSharp.Workspaces",
+      "configured": "5.9.0",
+      "latestStable": "5.9.0",
+      "latest": "5.9.0"
+    },
+    {
+      "id": "Microsoft.CodeAnalysis.Workspaces.Common",
+      "configured": "5.9.0",
+      "latestStable": "5.9.0",
+      "latest": "5.9.0"
+    },
+    {
+      "id": "Microsoft.Extensions.Configuration",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.Extensions.Configuration.Abstractions",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.Extensions.Configuration.Binder",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.Extensions.Configuration.FileExtensions",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.Extensions.Configuration.UserSecrets",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.Extensions.DependencyInjection",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.Extensions.Diagnostics.Abstractions",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.Extensions.Hosting",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.Extensions.Hosting.Abstractions",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.Extensions.Http",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.Extensions.Http.Resilience",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.Extensions.Identity.Stores",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.Extensions.Localization",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.Extensions.Localization.Abstractions",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.Extensions.Logging.Abstractions",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.Extensions.Options",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.Extensions.Options.ConfigurationExtensions",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.Extensions.Options.DataAnnotations",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.Extensions.ServiceDiscovery",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.Extensions.TimeProvider.Testing",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "Microsoft.FluentUI.AspNetCore.Components",
+      "configured": "5.0.1",
+      "latestStable": "5.0.1",
+      "latest": "5.0.1"
+    },
+    {
+      "id": "Microsoft.FluentUI.AspNetCore.Components.Icons",
+      "configured": "5.0.1",
+      "latestStable": "5.0.1",
+      "latest": "5.0.1"
+    },
+    {
+      "id": "Microsoft.Graph",
+      "configured": "6.10.0",
+      "latestStable": "6.10.0",
+      "latest": "6.10.0"
+    },
+    {
+      "id": "Microsoft.Identity.Client",
+      "configured": "4.92.0",
+      "latestStable": "4.92.0",
+      "latest": "4.92.0"
+    },
+    {
+      "id": "Microsoft.Identity.Web",
+      "configured": "4.18.0",
+      "latestStable": "4.18.0",
+      "latest": "4.18.0"
+    },
+    {
+      "id": "Microsoft.IdentityModel.Abstractions",
+      "configured": "8.23.0",
+      "latestStable": "8.23.0",
+      "latest": "8.23.0"
+    },
+    {
+      "id": "Microsoft.IdentityModel.JsonWebTokens",
+      "configured": "8.23.0",
+      "latestStable": "8.23.0",
+      "latest": "8.23.0"
+    },
+    {
+      "id": "Microsoft.IdentityModel.Logging",
+      "configured": "8.23.0",
+      "latestStable": "8.23.0",
+      "latest": "8.23.0"
+    },
+    {
+      "id": "Microsoft.IdentityModel.Protocols",
+      "configured": "8.23.0",
+      "latestStable": "8.23.0",
+      "latest": "8.23.0"
+    },
+    {
+      "id": "Microsoft.IdentityModel.Protocols.OpenIdConnect",
+      "configured": "8.23.0",
+      "latestStable": "8.23.0",
+      "latest": "8.23.0"
+    },
+    {
+      "id": "Microsoft.IdentityModel.Tokens",
+      "configured": "8.23.0",
+      "latestStable": "8.23.0",
+      "latest": "8.23.0"
+    },
+    {
+      "id": "Microsoft.NET.Test.Sdk",
+      "configured": "18.12.0",
+      "latestStable": "18.12.0",
+      "latest": "18.12.0"
+    },
+    {
+      "id": "Microsoft.OpenApi",
+      "configured": "3.11.0",
+      "latestStable": "3.11.0",
+      "latest": "3.11.0"
+    },
+    {
+      "id": "Microsoft.Playwright",
+      "configured": "1.64.1",
+      "latestStable": "1.64.1",
+      "latest": "1.64.1"
+    },
+    {
+      "id": "Microsoft.SemanticKernel",
+      "configured": "1.82.0",
+      "latestStable": "1.82.0",
+      "latest": "1.82.0"
+    },
+    {
+      "id": "Microsoft.SourceLink.GitHub",
+      "configured": "11.0.100",
+      "latestStable": "11.0.100",
+      "latest": "11.0.100"
+    },
+    {
+      "id": "Microsoft.TeamsFx",
+      "configured": "3.0.0",
+      "latestStable": "3.0.0",
+      "latest": "3.0.0"
+    },
+    {
+      "id": "Microsoft.Testing.Extensions.CodeCoverage",
+      "configured": "18.12.0",
+      "latestStable": "18.12.0",
+      "latest": "18.12.0"
+    },
+    {
+      "id": "Microsoft.TypeScript.MSBuild",
+      "configured": "7.0.1",
+      "latestStable": "7.0.1",
+      "latest": "7.0.1"
+    },
+    {
+      "id": "Microsoft.VisualStudio.Threading.Analyzers",
+      "configured": "18.12.1",
+      "latestStable": "18.12.1",
+      "latest": "18.12.1"
+    },
+    {
+      "id": "MinVer",
+      "configured": "8.0.0",
+      "latestStable": "8.0.0",
+      "latest": "8.1.0-alpha.1"
+    },
+    {
+      "id": "ModelContextProtocol",
+      "configured": "2.4.0",
+      "latestStable": "2.4.0",
+      "latest": "2.4.0"
+    },
+    {
+      "id": "ModelContextProtocol.AspNetCore",
+      "configured": "2.4.0",
+      "latestStable": "2.4.0",
+      "latest": "2.4.0"
+    },
+    {
+      "id": "Moq",
+      "configured": "4.21.0",
+      "latestStable": "4.21.0",
+      "latest": "4.21.0"
+    },
+    {
+      "id": "Moq.Contrib.HttpClient",
+      "configured": "1.4.0",
+      "latestStable": "1.4.0",
+      "latest": "1.4.0"
+    },
+    {
+      "id": "NBomber",
+      "configured": "6.7.1",
+      "latestStable": "6.7.1",
+      "latest": "6.8.0-beta.2"
+    },
+    {
+      "id": "NBomber.Http",
+      "configured": "6.2.1",
+      "latestStable": "6.2.1",
+      "latest": "6.3.0-beta.1"
+    },
+    {
+      "id": "NetArchTest.eNhancedEdition",
+      "configured": "1.4.5",
+      "latestStable": "1.4.5",
+      "latest": "1.4.5"
+    },
+    {
+      "id": "Newtonsoft.Json",
+      "configured": "13.0.4",
+      "latestStable": "13.0.4",
+      "latest": "14.0.1-beta2"
+    },
+    {
+      "id": "NFalkorDB",
+      "configured": "1.2.0",
+      "latestStable": "1.2.0",
+      "latest": "1.2.0"
+    },
+    {
+      "id": "NRedisStack",
+      "configured": "1.8.0",
+      "latestStable": "1.8.0",
+      "latest": "1.8.0"
+    },
+    {
+      "id": "NSubstitute",
+      "configured": "6.2.0",
+      "latestStable": "6.2.0",
+      "latest": "6.2.0"
+    },
+    {
+      "id": "NSwag.MSBuild",
+      "configured": "14.8.0",
+      "latestStable": "14.8.0",
+      "latest": "14.8.0"
+    },
+    {
+      "id": "NuGet.Versioning",
+      "configured": "8.0.0",
+      "latestStable": "8.0.0",
+      "latest": "8.0.0"
+    },
+    {
+      "id": "NUlid",
+      "configured": "1.7.3",
+      "latestStable": "1.7.3",
+      "latest": "1.7.3"
+    },
+    {
+      "id": "ObjectComparator",
+      "configured": "3.9.0",
+      "latestStable": "3.9.0",
+      "latest": "3.9.0"
+    },
+    {
+      "id": "Octokit",
+      "configured": "14.0.0",
+      "latestStable": "14.0.0",
+      "latest": "14.0.0"
+    },
+    {
+      "id": "OpenTelemetry",
+      "configured": "1.21.0",
+      "latestStable": "1.21.0",
+      "latest": "1.21.0"
+    },
+    {
+      "id": "OpenTelemetry.Exporter.InMemory",
+      "configured": "1.21.0",
+      "latestStable": "1.21.0",
+      "latest": "1.21.0"
+    },
+    {
+      "id": "OpenTelemetry.Exporter.OpenTelemetryProtocol",
+      "configured": "1.21.0",
+      "latestStable": "1.21.0",
+      "latest": "1.21.0"
+    },
+    {
+      "id": "OpenTelemetry.Extensions.Hosting",
+      "configured": "1.21.0",
+      "latestStable": "1.21.0",
+      "latest": "1.21.0"
+    },
+    {
+      "id": "OpenTelemetry.Instrumentation.AspNetCore",
+      "configured": "1.21.0",
+      "latestStable": "1.21.0",
+      "latest": "1.21.0"
+    },
+    {
+      "id": "OpenTelemetry.Instrumentation.GrpcNetClient",
+      "configured": "1.21.0-beta.1",
+      "latestStable": null,
+      "latest": "1.21.0-beta.1"
+    },
+    {
+      "id": "OpenTelemetry.Instrumentation.Http",
+      "configured": "1.21.0",
+      "latestStable": "1.21.0",
+      "latest": "1.21.0"
+    },
+    {
+      "id": "OpenTelemetry.Instrumentation.Runtime",
+      "configured": "1.21.0",
+      "latestStable": "1.21.0",
+      "latest": "1.21.0"
+    },
+    {
+      "id": "OpenTelemetry.Instrumentation.StackExchangeRedis",
+      "configured": "1.21.0-beta.1",
+      "latestStable": null,
+      "latest": "1.21.0-beta.1"
+    },
+    {
+      "id": "OrchardCore.Localization.Core",
+      "configured": "3.0.1",
+      "latestStable": "3.0.1",
+      "latest": "3.0.1"
+    },
+    {
+      "id": "PactNet",
+      "configured": "5.0.1",
+      "latestStable": "5.0.1",
+      "latest": "5.0.1"
+    },
+    {
+      "id": "Radzen.Blazor",
+      "configured": "13.0.0",
+      "latestStable": "13.0.0",
+      "latest": "13.0.0"
+    },
+    {
+      "id": "Roslynator.Analyzers",
+      "configured": "5.0.1",
+      "latestStable": "5.0.1",
+      "latest": "5.0.1"
+    },
+    {
+      "id": "Roslynator.Formatting.Analyzers",
+      "configured": "5.0.1",
+      "latestStable": "5.0.1",
+      "latest": "5.0.1"
+    },
+    {
+      "id": "Scriban",
+      "configured": "7.6.1",
+      "latestStable": "7.6.1",
+      "latest": "7.6.1"
+    },
+    {
+      "id": "SendGrid",
+      "configured": "9.29.3",
+      "latestStable": "9.29.3",
+      "latest": "9.29.3"
+    },
+    {
+      "id": "SendGrid.Extensions.DependencyInjection",
+      "configured": "1.0.1",
+      "latestStable": "1.0.1",
+      "latest": "1.0.1"
+    },
+    {
+      "id": "Serilog",
+      "configured": "4.4.0",
+      "latestStable": "4.4.0",
+      "latest": "4.4.1-dev-02453"
+    },
+    {
+      "id": "Serilog.Enrichers.Environment",
+      "configured": "3.0.1",
+      "latestStable": "3.0.1",
+      "latest": "3.0.1"
+    },
+    {
+      "id": "Serilog.Enrichers.Process",
+      "configured": "3.0.0",
+      "latestStable": "3.0.0",
+      "latest": "3.0.0"
+    },
+    {
+      "id": "Serilog.Enrichers.Thread",
+      "configured": "4.0.0",
+      "latestStable": "4.0.0",
+      "latest": "4.0.0"
+    },
+    {
+      "id": "Serilog.Formatting.Compact",
+      "configured": "3.0.0",
+      "latestStable": "3.0.0",
+      "latest": "3.0.0"
+    },
+    {
+      "id": "Serilog.Sinks.Console",
+      "configured": "6.1.1",
+      "latestStable": "6.1.1",
+      "latest": "6.1.1"
+    },
+    {
+      "id": "Serilog.Sinks.Debug",
+      "configured": "3.0.0",
+      "latestStable": "3.0.0",
+      "latest": "3.0.0"
+    },
+    {
+      "id": "Serilog.Sinks.File",
+      "configured": "7.0.0",
+      "latestStable": "7.0.0",
+      "latest": "8.0.0-nblumhardt-02322"
+    },
+    {
+      "id": "Shouldly",
+      "configured": "4.3.0",
+      "latestStable": "4.3.0",
+      "latest": "5.0.0-preview.2"
+    },
+    {
+      "id": "SonarAnalyzer.CSharp",
+      "configured": "10.36.0.15337",
+      "latestStable": "10.36.0.15337",
+      "latest": "10.36.0.15337"
+    },
+    {
+      "id": "StackExchange.Redis",
+      "configured": "3.4.35",
+      "latestStable": "3.4.35",
+      "latest": "4.0.161-alpha"
+    },
+    {
+      "id": "StyleCop.Analyzers",
+      "configured": "1.3.180",
+      "latestStable": "1.3.180",
+      "latest": "1.3.180"
+    },
+    {
+      "id": "Swashbuckle.AspNetCore",
+      "configured": "11.0.0",
+      "latestStable": "11.0.1",
+      "latest": "11.0.1"
+    },
+    {
+      "id": "Swashbuckle.AspNetCore.SwaggerUI",
+      "configured": "11.0.1",
+      "latestStable": "11.0.1",
+      "latest": "11.0.1"
+    },
+    {
+      "id": "System.Collections.Immutable",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "System.CommandLine",
+      "configured": "3.0.0",
+      "latestStable": "3.0.0",
+      "latest": "3.0.0"
+    },
+    {
+      "id": "System.ComponentModel.Annotations",
+      "configured": "5.0.0",
+      "latestStable": "5.0.0",
+      "latest": "6.0.0-preview.4.21253.7"
+    },
+    {
+      "id": "System.Diagnostics.DiagnosticSource",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "System.IdentityModel.Tokens.Jwt",
+      "configured": "8.23.0",
+      "latestStable": "8.23.0",
+      "latest": "8.23.0"
+    },
+    {
+      "id": "System.Reactive",
+      "configured": "7.0.0",
+      "latestStable": "7.0.0",
+      "latest": "7.0.0"
+    },
+    {
+      "id": "System.Security.Cryptography.Pkcs",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "System.Security.Cryptography.Xml",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "System.Text.Json",
+      "configured": "11.0.0",
+      "latestStable": "11.0.0",
+      "latest": "11.0.0"
+    },
+    {
+      "id": "System.Threading.Tasks.Extensions",
+      "configured": "4.6.3",
+      "latestStable": "4.6.3",
+      "latest": "4.6.3"
+    },
+    {
+      "id": "Testcontainers",
+      "configured": "4.16.0",
+      "latestStable": "4.16.0",
+      "latest": "4.16.0"
+    },
+    {
+      "id": "Threenine.Data",
+      "configured": "5.0.1",
+      "latestStable": "5.0.1",
+      "latest": "5.0.1"
+    },
+    {
+      "id": "Verify",
+      "configured": "33.3.4",
+      "latestStable": "33.3.4",
+      "latest": "33.3.4"
+    },
+    {
+      "id": "Verify.XunitV3",
+      "configured": "33.3.4",
+      "latestStable": "33.3.4",
+      "latest": "33.3.4"
+    },
+    {
+      "id": "xunit.runner.visualstudio",
+      "configured": "4.0.1",
+      "latestStable": "4.0.1",
+      "latest": "4.0.1"
+    },
+    {
+      "id": "xunit.v3",
+      "configured": "4.0.3",
+      "latestStable": "4.0.3",
+      "latest": "4.0.3"
+    },
+    {
+      "id": "xunit.v3.assert",
+      "configured": "4.0.3",
+      "latestStable": "4.0.3",
+      "latest": "4.0.3"
+    },
+    {
+      "id": "xunit.v3.extensibility.core",
+      "configured": "4.0.3",
+      "latestStable": "4.0.3",
+      "latest": "4.0.3"
+    },
+    {
+      "id": "YamlDotNet",
+      "configured": "18.1.0",
+      "latestStable": "18.1.0",
+      "latest": "18.1.0"
+    }
+  ]
+}

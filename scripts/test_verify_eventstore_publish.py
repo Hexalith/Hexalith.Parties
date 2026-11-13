@@ -90,7 +90,7 @@ class OwnerPublishTests(unittest.TestCase):
             with self.subTest(failure=failure), tempfile.TemporaryDirectory() as workspace:
                 project = Path(workspace) / "Owner.csproj"
                 project.touch()
-                assembly = project.parent / "bin/Release/net10.0/Owner.dll"
+                assembly = project.parent / "bin/Release/net11.0/Owner.dll"
                 assembly.parent.mkdir(parents=True)
                 assembly.touch()
                 private_paths = []

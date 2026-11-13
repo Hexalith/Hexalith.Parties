@@ -37,7 +37,7 @@ public sealed class PartiesContainerPublishWorkflowTests
     [InlineData("package.json", "package-lock.json", "@commitlint/config-conventional", "^21.2.4", "21.2.4")]
     [InlineData("package.json", "package-lock.json", "@semantic-release/commit-analyzer", "^13.0.1", "13.0.1")]
     [InlineData("package.json", "package-lock.json", "@semantic-release/exec", "^7.1.0", "7.1.0")]
-    [InlineData("package.json", "package-lock.json", "@semantic-release/github", "^12.0.10", "12.0.10")]
+    [InlineData("package.json", "package-lock.json", "@semantic-release/github", "^12.0.11", "12.0.11")]
     [InlineData("package.json", "package-lock.json", "@semantic-release/release-notes-generator", "^14.1.1", "14.1.1")]
     [InlineData("package.json", "package-lock.json", "semantic-release", "^25.0.9", "25.0.9")]
     [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@axe-core/playwright", "^4.14.0", "4.14.0")]

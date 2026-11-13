@@ -27,7 +27,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Shouldly;
 
+#if HEXALITH_EVENTSTORE_QUERY_SELECTOR_BINDINGS
 using Bootstrap = apphost::Hexalith.Parties.AppHost.PartiesDevelopmentCatalogBootstrap;
+#endif
 
 namespace Hexalith.Parties.IntegrationTests.Topology;
 

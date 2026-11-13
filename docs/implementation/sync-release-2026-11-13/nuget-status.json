@@ -1,0 +1,117 @@
+{
+  "publication": "Existing release only; no new publication is claimed",
+  "releaseTag": "v3.1.1",
+  "releaseSource": "84e3df796ac977041a21ec7bd8e5789bdc44241a",
+  "packages": [
+    {
+      "id": "Hexalith.Parties.Contracts",
+      "checkedVersion": "3.1.1",
+      "latestStable": "3.1.1",
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.contracts/3.1.1/hexalith.parties.contracts.3.1.1.nupkg",
+      "bytes": 139133,
+      "sha256": "27f4317f103244445ce8d3d7f2c278e9af739f320740661609eb77809bdb0c4d",
+      "repositoryCommit": "84e3df796ac977041a21ec7bd8e5789bdc44241a",
+      "matchesReleaseTag": true
+    },
+    {
+      "id": "Hexalith.Parties.Client",
+      "checkedVersion": "3.1.1",
+      "latestStable": "3.1.1",
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.client/3.1.1/hexalith.parties.client.3.1.1.nupkg",
+      "bytes": 64284,
+      "sha256": "4e2c1a6e014c63a9d95991669fe0f52f4af6d650130a2c8723d3fc2ffa997046",
+      "repositoryCommit": "84e3df796ac977041a21ec7bd8e5789bdc44241a",
+      "matchesReleaseTag": true
+    },
+    {
+      "id": "Hexalith.Parties.AdminPortal",
+      "checkedVersion": "3.1.1",
+      "latestStable": "3.1.1",
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.adminportal/3.1.1/hexalith.parties.adminportal.3.1.1.nupkg",
+      "bytes": 153959,
+      "sha256": "a181e035c410c96a14cbb7c3a560ff89bfe77c81a4f15dda708e97b3c21eff23",
+      "repositoryCommit": "84e3df796ac977041a21ec7bd8e5789bdc44241a",
+      "matchesReleaseTag": true
+    },
+    {
+      "id": "Hexalith.Parties.ConsumerPortal",
+      "checkedVersion": "3.1.1",
+      "latestStable": "3.1.1",
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.consumerportal/3.1.1/hexalith.parties.consumerportal.3.1.1.nupkg",
+      "bytes": 86647,
+      "sha256": "c1e8ffc63fe56c1e7d38c23365c41a333388d6fa984a84bf5f10fa70251baa1d",
+      "repositoryCommit": "84e3df796ac977041a21ec7bd8e5789bdc44241a",
+      "matchesReleaseTag": true
+    },
+    {
+      "id": "Hexalith.Parties.Picker",
+      "checkedVersion": "3.1.1",
+      "latestStable": "3.1.1",
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.picker/3.1.1/hexalith.parties.picker.3.1.1.nupkg",
+      "bytes": 61497,
+      "sha256": "687a3278cbac4be93bf49d7ee78d602e3e5426ee8665744de3776af001312bce",
+      "repositoryCommit": "84e3df796ac977041a21ec7bd8e5789bdc44241a",
+      "matchesReleaseTag": true
+    },
+    {
+      "id": "Hexalith.Parties.Authentication",
+      "checkedVersion": "3.1.1",
+      "latestStable": "3.1.1",
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.authentication/3.1.1/hexalith.parties.authentication.3.1.1.nupkg",
+      "bytes": 28453,
+      "sha256": "4ef2f5116b548b768516d6246aadd6b92c71f34b38e73bafa854f0607213b37f",
+      "repositoryCommit": "84e3df796ac977041a21ec7bd8e5789bdc44241a",
+      "matchesReleaseTag": true
+    },
+    {
+      "id": "Hexalith.Parties.Projections",
+      "checkedVersion": "3.1.1",
+      "latestStable": "3.1.1",
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.projections/3.1.1/hexalith.parties.projections.3.1.1.nupkg",
+      "bytes": 83459,
+      "sha256": "d245ae83d6f2196eeb97be23fc4a8ae2b8ab6139740e7a745bf360e19b978563",
+      "repositoryCommit": "84e3df796ac977041a21ec7bd8e5789bdc44241a",
+      "matchesReleaseTag": true
+    },
+    {
+      "id": "Hexalith.Parties.Security",
+      "checkedVersion": "3.1.1",
+      "latestStable": "3.1.1",
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.security/3.1.1/hexalith.parties.security.3.1.1.nupkg",
+      "bytes": 90872,
+      "sha256": "d3c62e0fa08cc1422dffdda16b69ecac86e214c47890bce2efb3828c6e7ce6de",
+      "repositoryCommit": "84e3df796ac977041a21ec7bd8e5789bdc44241a",
+      "matchesReleaseTag": true
+    },
+    {
+      "id": "Hexalith.Parties.Testing",
+      "checkedVersion": "3.1.1",
+      "latestStable": "3.1.1",
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.testing/3.1.1/hexalith.parties.testing.3.1.1.nupkg",
+      "bytes": 33995,
+      "sha256": "d727587c6a43fb14a4fa483911e891993683652393ededc947420fd232d450e1",
+      "repositoryCommit": "84e3df796ac977041a21ec7bd8e5789bdc44241a",
+      "matchesReleaseTag": true
+    },
+    {
+      "id": "Hexalith.Parties.Aspire",
+      "checkedVersion": "3.1.1",
+      "latestStable": "3.1.1",
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.aspire/3.1.1/hexalith.parties.aspire.3.1.1.nupkg",
+      "bytes": 27808,
+      "sha256": "468f30f582947142a220ff5f5bfa00f0d6e4af4b22c71188814e9096e13b8fb7",
+      "repositoryCommit": "84e3df796ac977041a21ec7bd8e5789bdc44241a",
+      "matchesReleaseTag": true
+    },
+    {
+      "id": "Hexalith.Parties.EventStoreExtensions",
+      "checkedVersion": "3.1.1",
+      "latestStable": "3.1.1",
+      "url": "https://api.nuget.org/v3-flatcontainer/hexalith.parties.eventstoreextensions/3.1.1/hexalith.parties.eventstoreextensions.3.1.1.nupkg",
+      "bytes": 30480,
+      "sha256": "1cfc71dc4e7d53ee9f4dff6e620cdb9bdc94970d25f6e4ac221549d672aaa968",
+      "repositoryCommit": "84e3df796ac977041a21ec7bd8e5789bdc44241a",
+      "matchesReleaseTag": true
+    }
+  ]
+}

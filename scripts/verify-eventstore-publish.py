@@ -269,7 +269,7 @@ def emitted_manifests(project=DEFAULT_PROJECT, build=True):
     if build:
         run_private(["dotnet", "build", str(project), "--disable-build-servers", "-c", "Release", "-m:1", "-p:NuGetAudit=false",
                      "-p:MinVerVersionOverride=1.0.0"], ROOT, environment, 300)
-    assembly = project.parent / "bin/Release/net10.0" / (project.stem + ".dll")
+    assembly = project.parent / "bin/Release/net11.0" / (project.stem + ".dll")
     require(assembly.is_file(), "built owner AppHost assembly missing")
     environment.update({"Authentication__JwtBearer__Authority": AUTHORITY, "Authentication__JwtBearer__Issuer": AUTHORITY,
                         "Authentication__JwtBearer__Audience": AUDIENCES[0],

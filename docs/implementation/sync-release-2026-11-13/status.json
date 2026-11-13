@@ -1,0 +1,104 @@
+{
+  "observedAtUtc": "2026-11-13T10:05:04.025595+00:00",
+  "baselineSource": "864c55a9820f7e819714a7e6d92cc3d6ee82a2fe",
+  "selectedSubmodules": {
+    "references/Hexalith.EventStore": "ec73195a109e1b6a22e5141642df1d256e990bbd",
+    "references/Hexalith.Memories": "9888a388f7129248ac3f2021bfb994ef9344ce59",
+    "references/Hexalith.FrontComposer": "19418a0c29daf38eef03b0891958cd8aa93c59bf",
+    "references/Hexalith.Tenants": "401d926eb7d51bdf332696ed3f0fe39a812b3501",
+    "references/Hexalith.AI.Tools": "10b709b86f9c9148e5a18177e8d11fad79ae2c0b",
+    "references/Hexalith.Commons": "fbf4e94233821f6ca336af91a06feaaeb7a16855",
+    "references/Hexalith.Builds": "89487655de9e1c79848c5384261a8a2f009d2577",
+    "references/Hexalith.PolymorphicSerializations": "e97b56930e213f674b64c157551f499b0473ec43",
+    "references/Hexalith.McpCli": "06c1b93b957b9e5271ac826f24558563725577ac",
+    "references/Hexalith.Platform": "7479945e9cc6333bd402d63510481634960a6592"
+  },
+  "sdk": "11.0.100",
+  "sdkFeed": "https://builds.dotnet.microsoft.com/dotnet/release-metadata/releases-index.json",
+  "packageUpdates": {
+    "Conversations": "1.6.0",
+    "Projects": "1.2.4",
+    "Swashbuckle.AspNetCore": "11.0.1",
+    "Microsoft.Extensions.Validation": "11.0.0",
+    "@semantic-release/github": "12.0.11"
+  },
+  "retainedCompatibility": {
+    "EventStore": "4.2.0 for exact measured Parties/Platform views; shared current default5.0.0 remains separately qualified"
+  },
+  "checks": [
+    {
+      "command": "dotnet build Hexalith.Parties.Standalone.slnx -c Release --disable-build-servers -m:1 -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true",
+      "result": "passed; zero warnings/errors",
+      "log": "parties-release-final-catalog-build-20261113.log"
+    },
+    {
+      "command": "dotnet build Hexalith.Memories.slnx -c Release --disable-build-servers -m:1 -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true",
+      "owner": "Hexalith.Memories",
+      "result": "passed; zero warnings/errors",
+      "log": "parties-release-memories-final-solution-20261113.log"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net11.0/Hexalith.Parties.Ci.Tests.dll",
+      "result": "655 of656 passed before UI artifacts refreshed; failed test then passed in6-case SignalRSecurityFloorTests rerun",
+      "logs": [
+        "parties-release-ci-tests-20261113.log",
+        "parties-release-security-floor-20261113.log"
+      ]
+    },
+    {
+      "command": "python3 scripts/pack-release-packages.py /tmp/parties-release-20261113-consumer-packages 1.0.0",
+      "result": "eleven local test packages created; no registry upload"
+    },
+    {
+      "command": "python3 scripts/validate-consumer-package-references.py /tmp/parties-release-20261113-consumer-packages",
+      "result": "actual generated net11 client and portal consumers pass;41 routes,41 schemas,28 intent adapters"
+    },
+    {
+      "command": "npm --prefix tests/e2e run typecheck",
+      "result": "passed"
+    },
+    {
+      "command": "python3 -B -m unittest scripts.test_verify_eventstore_publish -v",
+      "result": "11 passed"
+    },
+    {
+      "command": "python3 tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py",
+      "result": "5 passed; exact test identities are retained in the captured log",
+      "log": "parties-release-consumer-tests-20261113.log"
+    },
+    {
+      "command": "pwsh -NoProfile -File Tools/test-authoritative-package-catalog.ps1",
+      "owner": "Hexalith.Builds",
+      "result": "68 identities plus87 retained SDK4.2 positive/negative probes pass"
+    },
+    {
+      "command": "pwsh -NoProfile -File Tools/validate-package-version-audit.ps1",
+      "owner": "Hexalith.Builds",
+      "result": "317 packages,157 families,1 source validated"
+    },
+    {
+      "command": "current _fixed_test_commands for all retention/mechanism proofs",
+      "owner": "Hexalith.Memories",
+      "result": "13 actual current net11 tests passed"
+    },
+    {
+      "command": "Web.Tests full assembly; QuickstartPrerequisiteTests; OperationalRunbookSetTests and MigrateEmbeddingVectorsToolTests",
+      "owner": "Hexalith.Memories",
+      "result": "493 web,19 prerequisite,21 runbook/migration tests passed"
+    },
+    {
+      "command": "Python ci_alignment and coverage_contract suites",
+      "owner": "Hexalith.Memories",
+      "result": "15 alignment and40 coverage controls passed"
+    }
+  ],
+  "publication": "pending final exact-source green CI and matching qualified Platform/Builds source",
+  "blockingPlatform": {
+    "source": "7479945e9cc6333bd402d63510481634960a6592",
+    "sourceReleaseRun": "https://github.com/Hexalith/Hexalith.Platform/actions/runs/43404015935",
+    "tupleRun": "https://github.com/Hexalith/Hexalith.Platform/actions/runs/43403197342",
+    "reason": "recorded Builds pointer3d110e differs from signed tuple metadata3c2f; current source lacks a qualified release tag"
+  },
+  "humanValidation": "user explicitly waived human checkpoints; no production environment reviewer rule exists",
+  "scopeClarification": "nested Platform dependency repair/prerequisite releases requested; no answer received; no nested changes made here"
+}
