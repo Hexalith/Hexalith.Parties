@@ -620,6 +620,11 @@ public sealed class AspireRuntimePreparationTests
     [InlineData("4.1.1", false, false, false)]
     [InlineData("4.2.0", false, true, true)]
     [InlineData("4.2.1", false, false, false)]
+    [InlineData("5.1.0", false, true, true)]
+    [InlineData("5.1.1", false, false, false)]
+    [InlineData("5.1.0-preview.1", false, false, false)]
+    [InlineData("5.1.0+build.1", false, false, false)]
+    [InlineData("5.2.0", false, false, false)]
     [InlineData("4.0.4-preview.1", false, false, false)]
     [InlineData("4.0.4+build.1", false, false, false)]
     [InlineData("4.0.4.0", false, false, false)]
@@ -653,7 +658,7 @@ public sealed class AspireRuntimePreparationTests
             constants.Contains("HEXALITH_EVENTSTORE_CATALOG_HOSTS", StringComparer.Ordinal).ShouldBe(hostsAvailable);
             constants.Contains("HEXALITH_DEVELOPMENT_CATALOG_SOURCE", StringComparer.Ordinal).ShouldBe(source);
             constants.Contains("HEXALITH_EVENTSTORE_QUERY_SELECTOR_BINDINGS", StringComparer.Ordinal)
-                .ShouldBe(source || version is "4.1.0" or "4.2.0");
+                .ShouldBe(source || version is "4.1.0" or "4.2.0" or "5.1.0");
         }
         finally { Directory.Delete(workspace, recursive: true); }
     }
@@ -670,6 +675,11 @@ public sealed class AspireRuntimePreparationTests
     [InlineData("4.1.1", false, false, false)]
     [InlineData("4.2.0", false, true, true)]
     [InlineData("4.2.1", false, false, false)]
+    [InlineData("5.1.0", false, true, true)]
+    [InlineData("5.1.1", false, false, false)]
+    [InlineData("5.1.0-preview.1", false, false, false)]
+    [InlineData("5.1.0+build.1", false, false, false)]
+    [InlineData("5.2.0", false, false, false)]
     [InlineData("4.1.0-preview.1", false, false, false)]
     [InlineData("4.1.0+build.1", false, false, false)]
     [InlineData("4.1.0.0", false, false, false)]
