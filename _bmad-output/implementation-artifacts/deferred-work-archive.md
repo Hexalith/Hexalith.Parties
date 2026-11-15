@@ -1867,3 +1867,323 @@ archived: 2026-10-25
 resolution: Lifecycle status queries now use metadata folded from committed events in the existing detail slot. Domain evaluation cannot publish premature lifecycle authority; legacy side records and cleanup tombstones cannot certify success. Complete committed replay backfills old rows without changing empty-v1 bytes. Connected failed/canceled append, retry, persisted projection and recreated-query controls pass.
 verification: `spec-five-recovery-and-ui-conformance-deferred-items.md`; `tests/five-recovery-and-ui-conformance-2026-10-23/validation.json` and `matrix-audit.json`.
 
+### DW-56: Replace actor-era query failure vocabulary on the SDK path
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)"), 2026-09-06
+location: PartySdkQueryService failure vocabulary
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: PartySdkQueryService still returns actor-era failure reasons on the SDK path, which misleads operators after AC8 actor deletion.
+status: done 2026-10-26
+archived: 2026-11-15
+decision: 2026-09-07 Compatible canonical aliases — Add semantic SDK and read-model aliases in EventStore.Contracts while preserving legacy wire values. Switch Parties source and tests to the aliases and retain old constants as obsolete compatible members.
+
+resolution: EventStore provides semantic QueryExecutionFailure, ReadModelUnavailable and ResponseMismatch constants with unchanged historical wire values; legacy members remain compatible and obsolete. Compiled owner consumers and qualified Parties source consumers adopt semantic names. A narrow Parties bridge keeps the user-selected 3.127.0 package graph buildable until matching package publication.
+verification: `tests/five-owner-config-and-recovery-deferred-items-2026-10-23/final-verification.json` records reviewed owner publication/adoption and current results. Original candidate and pre-review receipts remain historical; matching published aliases are still absent from the selected 3.127.0 package.
+historical_remaining_gate_2026_10_23: Matching published EventStore aliases and package consumer adoption are not established by source proof.
+closure_state_2026_10_23: Independent source review, owner main publication and root adoption are complete. EventStore owner 596de60e140da779f170279a822ded010070d774 supplies the aliases; user-selected package 3.127.0 still requires the legacy bridge, so matching package adoption stays open.
+
+resolution_2026_10_26: Adopted published EventStore 3.128.0 (repository c5d1c280d8c1c1a207cd159d817f614e93c93130). Parties binds semantic published constants directly; package query/gateway compatibility controls retain historical wire values. This supersedes the former 3.127.0 package prerequisite; historical source receipts remain attached to their original revisions.
+verification_2026_10_26: `tests/five-published-sdk-and-runtime-closure-2026-10-26/`
+
+### DW-91: Restore forward skip-link reachability after route focus
+
+origin: migrated from legacy ledger ("Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-08-19)"), 2026-09-06
+location: FrontComposer shell route-focus handling and tests/e2e/specs/parties-accessibility.spec.ts
+reason: `frontcomposer-skip-link-reachability-after-route-focus` — **route to FrontComposer shell owners.** Measured 2026-08-19 on the accessibility specimen at FrontComposer `7a337a21`: once the shell hydrates it moves focus to the route `<h1>` (`h1#parties-accessibility-specimen-title`). That is a deliberate SPA announcement pattern, but it also advances the browser's sequential focus navigation point past both `.fc-skip-link` anchors, so the first `Tab` after load reaches the page's first interactive control rather than "Skip to content". A keyboard user would have to Shift+Tab backwards to reach a skip link after a client-side route change. On a cold document load the DOM order is correct — the skip links are the shell's first two focusable descendants, which `parties-accessibility.spec.ts` now asserts explicitly by seeding focus on `.fc-shell-root`. Question for the owners: should the shell reset the sequential focus navigation point (for example by focusing a container ahead of the skip links, or by focusing the skip link itself) so WCAG 2.4.1 bypass remains forward-reachable after route changes? Also recorded in "Deferred from: code review of story-8-10 (2026-09-06)": Skip links are no longer the real first-Tab keyboard stop after a client-side route change — already routed to FrontComposer shell owners as `frontcomposer-skip-link-reachability-after-route-focus` above; the review layer that raised this again confirmed no further action is needed beyond what that entry already tracks. [tests/e2e/specs/parties-accessibility.spec.ts:37-49]
+status: done 2026-10-28
+archived: 2026-11-15
+progress: 2026-10-21 Reviewed FrontComposer source fix and producer/Parties source regressions delivered on main. Producer browser cases pass 105/105 across three engines, consumer candidate cases pass 8/8, and the original six package assertions remain enforced. Owner publication, catalog/package adoption and removal of the two explicit source opt-ins remain required before closure. See spec-dw-91-forward-skip-links.md and tests/dw-91-forward-skip-links-2026-10-21/validation-resume.json.
+decision: 2026-09-06 Restore forward skip access — Adjust FrontComposer route focus so skip links remain forward reachable while retaining an accessible route announcement, then add producer and Parties Playwright coverage.
+
+implementation_2026_10_27: Source qualification now includes a deterministic regression for a delayed 150 ms landmark-focus retry found during this batch. Mounted skip targets focus once; overlay-editor focus retains its existing path. Forward route and compact keyboard assertions remain enforced. Published Shell 4.7.0 still needs matching publication/adoption. Qualification and remaining gates: `tests/five-frontcomposer-ui-deferred-items-2026-10-27/README.md`. Status stays open; this batch does not promote G4 or Story 8.9.
+
+adoption_2026_10_28: Shell 4.7.1 at published producer 5688c3eba98567133285b0f51843d9daa8f24f0b is adopted. Cold/hydrated and client-navigation forward-Tab browser controls now execute without opt-ins or capability skips; the heading announcement and skip-target/onward flow pass against exact installed/served package bytes. This closes the named package-adoption exit only; G4 and Story 8.9 remain blocked. Evidence: `tests/five-published-frontcomposer-adoption-2026-10-28/README.md` (UI 445/445, Admin 327/327, Consumer 85/85 and browser 68/68, zero skips/retries).
+
+
+### DW-96: Resolve or supersede Story 8.6 residual review debt
+
+origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
+location: Story 8.6 spec and runnable Parties/EventStore topology
+reason: deferral_id: `8.6-residual-review-debt` authored_by_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md` owner: `Amelia (Parties Developer) + Murat (Test Architect) + Hexalith.EventStore SDK owners where producer/runtime proof is required` exit_proof: `Resolve or explicitly supersede every unchecked [Review][Defer] item in Story 8.6; in particular, exercise SDK handler discovery through an authenticated projected query and enforce the deny-default EventStore-only DAPR ACL in a runnable topology before removing retained host or ACL rollback seams.` rollback: `Keep the completed 8.6 SDK handlers and exact ACL as the production path, retain source/package selection plus the Parties AppHost and gateway topology as switch-back and diagnostic surfaces, and do not delete further host, query, projection, or ACL compatibility seams until the corresponding deferred proof passes.` evidence: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md and _bmad-output/implementation-artifacts/deferred-work.md record the unchecked review deferrals and their detailed evidence; sprint-status.yaml keeps 8.6 done because these are accepted non-blocking residual debts, not unimplemented acceptance tasks.`
+status: done 2026-10-26
+archived: 2026-11-15
+
+reconciliation_2026_10_26: All six historical Story 8.6 checkboxes are resolved against DW-30/32/33/53/51 or explicitly superseded by open DW-50. The current published package runtime passes authenticated projected-query and independently persisted stream verification. Existing isolated fixture identities/private namespaces qualify actual configured sidecar metadata, permitted 200 calls and all six Dapr-specific PermissionDenied 403 caller/verb/path controls, with all three selected runtime cases executed and zero skips. Original-name attempts collided with the user's non-mTLS discovery entries and remain historical failures; the passing receipt qualifies the explicitly configured isolated topology, not simultaneous original-name coexistence. Production ACL bytes, original default mode and every rollback seam remain intact.
+resolution_2026_10_26: Scope of the residual umbrella is resolved or explicitly superseded. DCP now owns every fixed internal sidecar endpoint in the fixture graph before dynamic proxy allocation, and worker observation retains immutable planned names across model expansion. Complete Integration and focused custody controls pass; all fifteen failed/prior/final runtime sessions have no remaining owned workers, containers, networks or private directories. DW-50 and independent migration/deployment gates remain open.
+verification_2026_10_26: `tests/five-published-sdk-and-runtime-closure-2026-10-26/`; exact runtime command sets both PARTIES_MTLS_TOPOLOGY_TESTS=true and PARTIES_MTLS_ISOLATED_IDENTITIES=true. Original-name, observer-race and port-allocation failures are preserved separately.
+
+### DW-101: Consolidate Admin and Consumer exports onto the approved FrontComposer browser-download service after G4-D delivery
+
+origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
+location: Admin and Consumer exports and FrontComposer browser-download service
+source_spec: `_bmad-output/implementation-artifacts/spec-8-9-ui-frontcomposer-and-fluent-consolidation.md`
+reason: This independently testable download and cleanup slice was split from Story 8.9 after its hardened draft exceeded the 1,600-token workflow limit.
+status: done 2026-10-28
+archived: 2026-11-15
+
+implementation_2026_10_27: FrontComposer now supplies injectable stream/file/unchanged-JSON download with safe leaf names, cancellation and browser/interop cleanup. Admin and Consumer source candidates preserve bytes and safe caller filenames. Existing package-mode helpers remain the rollback pending owner acceptance and matching publication. Qualification and remaining gates: `tests/five-frontcomposer-ui-deferred-items-2026-10-27/README.md`. Status stays open; this batch does not promote G4 or Story 8.9.
+
+adoption_2026_10_28: Approved package service adoption is qualified in Admin and Consumer flows with the runtime opt-in. Component/browser controls preserve JSON bytes, safe caller filenames, MIME type, repeated transfer, object-URL/anchor cleanup, cancellation and existing failure feedback. The package browser gate serves original assets without source substitution. Retained helpers remain available when registration is disabled; G4 and Story 8.9 are not promoted. Evidence: `tests/five-published-frontcomposer-adoption-2026-10-28/README.md` (UI 445/445, Admin 327/327, Consumer 85/85 and browser 68/68, zero skips/retries).
+
+
+### DW-102: Adopt the FrontComposer typed-name destructive confirmation mode for Admin erasure after G4-E delivery
+
+origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
+location: Admin erasure UI and FrontComposer destructive confirmation
+source_spec: `_bmad-output/implementation-artifacts/spec-8-9-ui-frontcomposer-and-fluent-consolidation.md`
+reason: This independently shippable destructive-interaction slice was split from Story 8.9 after its hardened draft exceeded the 1,600-token workflow limit.
+status: done 2026-10-28
+archived: 2026-11-15
+
+implementation_2026_10_27: FrontComposer now supplies optional ordinal typed-name confirmation with guarded single submit, safe Cancel focus, Escape and a native accessible warning across the V5 shadow boundary. Admin keeps its authorization and exact-name callback guard. Ordinary dialog callers and the local package fallback remain covered; owner acceptance/publication remain open. Qualification and remaining gates: `tests/five-frontcomposer-ui-deferred-items-2026-10-27/README.md`. Status stays open; this batch does not promote G4 or Story 8.9.
+
+adoption_2026_10_28: The approved package typed-name mode is adopted with actual shared rendering. Empty, case and whitespace mismatches refuse submission; ordinal exact match and domain authorization guards permit exactly one request. Safe initial Cancel focus, accessible warning/description, Cancel/Escape and one-shot restoration to the recreated initiating button pass. The unregistered local dialog remains rollback; G4 and Story 8.9 are unchanged. Evidence: `tests/five-published-frontcomposer-adoption-2026-10-28/README.md` (UI 445/445, Admin 327/327, Consumer 85/85 and browser 68/68, zero skips/retries).
+
+
+### DW-107: Add MSBuild/PublishContainer proof for rebound OCI created labels and reject impossible RFC 3339 calendar days.
+
+origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
+location: RebindContainerProvenanceLabels and shared OCI validation
+source_spec: `_bmad-output/implementation-artifacts/spec-update-latest-hexalith-packages.md`
+reason: RebindContainerProvenanceLabels is only string-checked; the shared OCI validator ignores org.opencontainers.image.created, and the regex accepts dates such as 2026-02-31.
+status: done 2026-10-25
+archived: 2026-11-15
+decision: 2026-09-06 Authorize cross-repo hardening — Add real calendar validation, executable publish and rebind proof, and required created-label validation in the owning repositories.
+implementation_2026_10_23: Parties and shared Builds targets reject impossible calendar dates; the publisher binds both mandatory created labels to its exact instant. The existing three-argument publication reader remains compatible while graph validation requires canonical equal image/artifact labels and equality across platforms. Executable MSBuild, producer Python, real consumer-reader and SDK dual-RID archive checks pass locally.
+remaining_gate_2026_10_23: Shared immutable publisher/validator adoption and publication remain required. The current release execution pin is unchanged; fetching the exact historical object restored full CI (449 passed). Published working-source hardening and its parent gitlink do not qualify that unchanged immutable executor.
+verification_2026_10_23: `tests/five-publish-and-process-safety-2026-10-23/`; spec `spec-five-publish-and-process-safety-deferred-items.md`.
+
+
+implementation_2026_10_24: The release workflow and publication reader now select published Builds integration `11a3a79cfac4bba9548c6364a17a01ee9b561370`; validator bytes are pinned to SHA-256 `1913f75bdf39c494c5723bca5c04fcb2e6dc0474ad2d86c22e63aae96b9e850c`. Valid OCI fixtures contain canonical matching image/artifact created labels. Executable missing, malformed, impossible-calendar, unequal-pair and cross-platform created mutations reject. The authoritative NuGet-404 behavior remains intact. Full CI passes 455/455 and the unchanged owner publisher suite passes 150/150.
+remaining_gate_2026_10_24: Parent review and immutable adoption records/commit remain final workflow steps. No release dispatch, deployment or production publication was performed.
+verification_2026_10_24: `tests/five-memories-inventory-and-publication-2026-10-24/`; historical 2026-10-23 observations remain preserved.
+
+review_loop_1_2026_10_24: Re-executed the unchanged immutable publisher controls (150/150), Parties CI/OCI readers (455/455), and canonical-created positive/negative controls. Exact executor/validator pins and authoritative NuGet-404 behavior remain preserved; no release was dispatched. Evidence: `tests/five-memories-inventory-and-publication-2026-10-24/review1-verification.json`; prior same-day counts above remain historical.
+  review_loop_2_2026_10_24: The immutable published executor and validator pins, canonical created-label fixtures and executable negative mutations are preserved. The loop2 receipt reruns the reader/CI/publisher controls without releasing or deploying.
+
+implementation_2026_10_25: Published immutable executor 11a3a79cfac4bba9548c6364a17a01ee9b561370 was fetched read-only; its validator SHA-256 matches 1913f75bdf39c494c5723bca5c04fcb2e6dc0474ad2d86c22e63aae96b9e850c. The unchanged owner publisher suite passes 150 tests. Current CI prerequisite restoration and final review remain in the batch receipt; no release was dispatched.
+verification_2026_10_25: `tests/five-processing-and-memories-erasure-2026-10-25/`; source receipt remains separate from package/deployment qualification.
+
+
+review1_2026_10_25: Review-1 reruns pass 455 CI and 150 publisher controls. A new actual dual-RID SDK local archive passes the published executor/validator identities above with matching canonical created labels. Parent owns final closure/adoption review; no release was dispatched. Final executed evidence: `tests/five-processing-and-memories-erasure-2026-10-25/review1-verification.json`.
+
+resolution_2026_10_25_final: The published immutable executor/validator pin and actual dual-RID archive pass the executable created-label controls. This closes the requested local MSBuild/OCI proof and immutable adoption debt; no release dispatch or deployment was performed.
+verification_final: `tests/five-processing-and-memories-erasure-2026-10-25/`; spec `spec-five-processing-and-memories-erasure-deferred-items.md`.
+
+
+### DW-112: Hide or retarget Skip to navigation when FrontComposer unmounts `#fc-nav` on compact viewports.
+
+origin: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-09-06)
+location: references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Components/Layout/FrontComposerShell.razor
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+reason: The skip-to-navigation link renders whenever `HasNavigation` is true, but `#fc-nav` mounts only when `HasNavigation && !IsSubCompactDesktopViewport`. On Tablet/Phone the href has no focus target. Parties consumes the shell and does not edit this submodule; route to FrontComposer shell owners.
+status: done 2026-10-28
+archived: 2026-11-15
+decision: 2026-09-07 Hide compact link — Render Skip to navigation only when #fc-nav is mounted, preserve Skip to content, and add producer plus Parties viewport coverage.
+implementation_2026_10_23: The owning FrontComposer shell now uses the identical link/target viewport condition. Producer desktop/compact/resize cases pass. Parties component/browser compact checks are explicitly opt-in; the published-package negative control fails as expected, while its existing desktop keyboard flow passes.
+remaining_gate_2026_10_23: Matching FrontComposer publication/adoption and positive Parties compact browser/component source qualification remain open. Pinned source Debug reaches Platform HXR020; focused consumer mapping fails MSB4044 (AssetsFile), including explicit net10 fallback. No warning/source gate was bypassed.
+verification_2026_10_23: `tests/five-publish-and-process-safety-2026-10-23/`; spec `spec-five-publish-and-process-safety-deferred-items.md`.
+
+
+implementation_2026_10_24: Compact tests automatically execute for validated source selections and compare actual served owner focus/CSS bytes. Actual desktop/phone/tablet/resized browser coverage revealed a duplicated `fc-nav` inside FluentLayout's hidden drawer; the owner now places the unique focus target on the owning navigation item outside copied ChildContent. Source bUnit and actual browser controls pass. Forced package negative controls still execute and fail behaviorally.
+remaining_gate_2026_10_24: Matching FrontComposer package publication/adoption remains separate. Positive mapped source qualification closes the former source-assets blocker, not package qualification.
+verification_2026_10_24: `tests/five-memories-inventory-and-publication-2026-10-24/`; pinned Node 24.22.1 browser and warning-free mapped source builds are recorded independently from package controls.
+
+review_loop_1_2026_10_24: Re-executed mapped source bUnit (415/415) and actual source browser (4/4, zero skips) with owner asset comparison. Forced package bUnit and actual-browser controls fail for duplicate navigation targets as expected; matching package adoption remains deferred. Evidence: `tests/five-memories-inventory-and-publication-2026-10-24/review1-verification.json`; prior same-day counts above remain historical.
+  review_loop_2_2026_10_24: The preserved mapped compact/browser and package-negative controls are rerun in the loop2 receipt; owner package publication/adoption and deployed qualification remain open.
+
+implementation_2026_10_27: Existing unique mounted navigation targets and compact link conditions remain intact. Source viewport/resize controls now include the landmark-focus ownership correction described under DW-91. Published Shell 4.7.0 negative controls and publication/adoption gates remain separate. Qualification and remaining gates: `tests/five-frontcomposer-ui-deferred-items-2026-10-27/README.md`. Status stays open; this batch does not promote G4 or Story 8.9.
+
+adoption_2026_10_28: Shell 4.7.1 package adoption closes the named mounted-target gate. Component and actual desktop/phone/tablet/repeated-resize browser controls run unconditionally with exact installed/served asset comparisons: navigation bypass exists exactly with one mounted navigation target, and the content bypass/route announcement survive. Source launch currently refuses HXR015 and receives no qualification from these package passes; aggregate gates remain blocked. Evidence: `tests/five-published-frontcomposer-adoption-2026-10-28/README.md` (UI 445/445, Admin 327/327, Consumer 85/85 and browser 68/68, zero skips/retries).
+
+
+### DW-126: Reconcile the runtime-toolchain qualification packet
+
+origin: Story 8.10 Round 6 ledger normalization (2026-10-04); preserved package-update deferral
+location: scripts/validate-runtime-toolchain-evidence.py and the runtime-toolchain evidence schema/baseline
+source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-dotnet-10-0-401-and-submodules.md`
+reason: The validator/schema/baseline expect 13.5.0-preview.1.260825-0345; the selected CommunityToolkit.Aspire.Hosting.Dapr is now 13.6.0-preview.1.261001-0243. Coordinated packet regeneration is required to qualify the current catalog.
+status: done 2026-10-28
+archived: 2026-11-15
+resolution_2026_10_28: The specifically named validator/schema/baseline and obsolete preview references are absent from current tracked operative tooling. Current CI delegates to the shared domain workflow and validates declarations through the pinned module tool; the effective catalog is evaluated independently. This obsolete-packet report is inapplicable to the current repository. No retired validator was restored and no runtime/package qualification was inferred. The separate current source-map identity/catalog/tool-version blockers remain recorded.
+verification_2026_10_28: `tests/five-reconciliation-and-migration-2026-10-28/disposition-verification.json` and reproducible `verify-dispositions.py`.
+
+
+### DW-159: Detect external runtime roots that compile against contracts missing from their selected EventStore package
+
+status: done 2026-11-03
+archived: 2026-11-15
+resolution: The existing runtime preparation compiler gate now has real local-package regression controls using native Tenants verifier source. Matching version strings with missing administrator contracts produce CS0246 and stop later roots/completion; the compatible control passes with isolated environments/caches. Actual current package preparation rebuilt all ten selected runtime/artifact projects successfully.
+verification: `tests/five-preflight-and-migration-qualification-2026-11-03/`
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-preflight-and-migration-qualification-deferred-items.md`
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
+source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+location: `tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs` (external runtime project inventory: `ReadExternalRuntimeProjects`, `ReadExternalRuntimeGraphs`)
+severity: medium
+owner: Parties build and test maintainers (external-runtime preflight in `PlatformApiPrerequisitesTests`); Administrator / jpiquot reopened it
+reason: The 2026-10-21 preflight verifies graph selection for the AppHost's external runtime roots (package selection, reference contexts and missing mappings), but no compile-level or contract-availability check exists yet. An external runtime root that compiles against contracts missing from its selected published EventStore package therefore still passes, and the failure first appears at topology startup. The motivating case is the upstream Tenants source/package mismatch (`spec-fix-ci-and-publish-release.md:95`): CS0246 for `IDomainServiceAdministratorVerifier` / `DomainServiceAdministratorClaim` while EventStore `3.115.0` was selected on both sides.
+decision: Administrator / jpiquot reopened this item on 2026-11-01 (spec 8.10 Round 7 decision 4). Graph-selection verification is partial progress; equal package versions cannot establish compile compatibility.
+progress: The 2026-10-21 preflight inventories the seven external runtime roots and their transitive project closure, checking package selection, reference contexts and missing mappings in Debug/Release. The original completed receipt remains historical in deferred-work-archive.md.
+exit_proof: Detect an external runtime root that uses contracts absent from its selected published EventStore package before topology startup, including the motivating Tenants CS0246 case for IDomainServiceAdministratorVerifier / DomainServiceAdministratorClaim even when EventStore version strings match. Record the package-mode compile or equivalent discriminating contract-availability check and exact result; graph version equality alone cannot close this item.
+rollback: None required (test-only verification). The 2026-10-21 graph-selection preflight stays in place; a compile-level check is additive and can be reverted on its own.
+evidence: spec-fix-ci-and-publish-release.md:95; PlatformApiPrerequisitesTests.ReadExternalRuntimeGraphs; tests/five-verification-maintenance-deferred-items-2026-10-21/validation.json; spec-8-10-final-readiness-documentation-and-retirement-gate.md Round 7 decision 4.
+
+### DW-182: Obtain owner signoff for all root gitlinks changed since Parties v1.2.1 before another release.
+
+status: done 2026-11-02
+archived: 2026-11-15
+resolution: Administrator / jpiquot approved the ten exact committed root gitlinks and the independently evaluated Release package graph in `dw-182-i16-approval-comparison-2026-11-02.md` for current-selection assertions. `bash scripts/gitlink-rc-gate.sh --diff v1.2.1` exited 0 with all ten pointers marked `BUMP ok`. The later Parties `18579b62ef9ac3c8780fc5e8ba26112d2665f566` advanced Tenants from `4b3e431745550f8466f1ce0d70e6b507c747b59a` to `4d0d599879767196928e1c265622483a62b457ae`; the owner approved and signed this exact successor, and the same RC diff gate again exited 0 with all ten `BUMP ok`. This closes source-selection signoff only; the six current I16 parity receipts remain Unvalidated and no publication, deployment, custody, or rollback deletion is authorized.
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
+location: scripts/gitlink-rc-gate.sh; root gitlinks changed since v1.2.1; release publication gate
+source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+reason: `bash scripts/gitlink-rc-gate.sh --diff v1.2.1` exited 1 before the 2026-11-02 owner decision for Builds, Commons, EventStore, FrontComposer, McpCli, Memories, Platform, and Tenants; the then-current release workflow blocked publication at that gate.
+
+### DW-196: Fence legacy natural-language migration and erase both NL namespaces
+
+status: done 2026-10-25
+archived: 2026-11-15
+origin: review-loop-3
+severity: medium
+
+### DW-197: Qualify erasure of natural-language retry payloads and delayed retry work
+
+status: done 2026-10-25
+archived: 2026-11-15
+origin: review-loop-3
+severity: medium
+
+### DW-198: Bound legacy semantic deletion discovery without full Redis keyspace scans
+
+status: done 2026-10-25
+archived: 2026-11-15
+origin: review-loop-3
+severity: medium
+
+### DW-199: Bring the five-verification maintenance spec under the spine I17 six-clause gate
+
+status: done 2026-11-02
+archived: 2026-11-15
+resolution: Added the six required retrospective §4 clauses with the original dependency evidence, bounded rollback exercise and current parity limits. The isolated parent tree built cleanly and passed 338 selected main/CI tests; historical closure remains historical.
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-build-and-governance-deferred-items.md`
+origin: Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-11-01)
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+location: `_bmad-output/implementation-artifacts/spec-five-verification-maintenance-deferred-items.md`
+severity: medium
+reason: Spine I17 lets an Epic 8 ledger item be worked only through a spec that declares all six §4 clauses. DW-144/DW-92 (8.10) and DW-33/DW-52 (8.6) were closed under `route: 'oneshot'` with no Prerequisites, Touched repos, Rollback path, Validation lanes, Non-goals or Parity checklist, although the commit (`fb07a6cf`) edits the I16 surfaces `EpicEightClosureFitnessTests`/`PlatformApiPrerequisitesTests` and the I6 surface `EventStoreGatewayRoutingTests`. The fix edits another spec, so it is out of scope for an 8.10 code review.
+
+### DW-200: Decide whether executed DI exclusions should guard the retired projection interfaces again
+
+status: done 2026-11-02
+archived: 2026-11-15
+resolution: Retained the DW-33 typed SDK registration decision and added a source-wide retired-interface declaration guard, including ordinary comments/strings and comment-separated declaration controls. Focused architecture and projection tests passed.
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-build-and-governance-deferred-items.md`
+origin: Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-11-01)
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+location: `tests/Hexalith.Parties.Tests/Projections/ProjectionPlatformAdapterTests.cs:39`
+severity: low
+reason: `fb07a6cf` removed the `ServiceType.FullName` exclusions for `Hexalith.Parties.Projections.Services.IPartyProjectionPlatformAdapter` and `IProjectionRebuildService`. The remaining guard, `ArchitecturalFitnessTests.PartiesProjectionRuntimeUsesOnlyEventStoreSdkHandlers`, only checks that 18 fixed file paths are absent, so a retired interface re-declared in another file and registered in `AddParties` passes every test. Restoring the exclusions reverses the DW-33 owner decision (typed checks over string-name exclusions), so it needs that owner's call.
+
+### DW-201: Reconcile the stale Tenants row in the architecture technology table
+
+status: done 2026-11-02
+archived: 2026-11-15
+resolution: The maintained row now names the effective HexalithTenantsVersion property and its selected 6.0.0 package; a documentation fitness assertion binds the row to the evaluated catalog value. Historical gitlink evidence stays dated.
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-build-and-governance-deferred-items.md`
+origin: Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-11-01)
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+location: `docs/architecture.md:57`
+severity: low
+reason: Pre-existing and outside the reviewed diff. The row says Tenants package `5.11.1` "by default", while the effective Release graph (`dotnet msbuild src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj -p:Configuration=Release -getProperty:HexalithTenantsVersion`) selects `6.0.0`. `DocumentationFitnessTests.MaintainedTechnologyTablesMatchCentralPackageCatalog` has no assertion for this row, so it drifts silently.
+
+### DW-202: Stop the solution build and the Admin UI TestHost from building one EventStore project two ways
+
+status: done 2026-11-02
+archived: 2026-11-15
+resolution: Removed the duplicate Admin.UI solution entry and aligned the EventStore package family to 3.132.2, matching the committed source at upstream v3.132.2 after user authorization. The focused TestHost and canonical Release solution restore/build pass with zero warnings/errors. At this fix, the all-lane I16 identity assertions still failed for independently advanced Platform/McpCli gitlinks pending owner reconciliation, which DW-182 completed on 2026-11-02 (`01c888e4`); this fix grants no current parity or release qualification.
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-build-and-governance-deferred-items.md`
+origin: Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-11-01), Round 8 decision (a)
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+location: `tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj` (`BuildNativeAdminUiArtifact`); `Hexalith.Parties.slnx`
+severity: medium
+owner: Parties build and test maintainers; introducing change `a3666267`
+reason: Blocks the canonical Story 8.10 Release solution build lane. Since `a3666267` (2026-11-01), `Hexalith.Parties.slnx` builds `references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj` twice in one session. It builds directly as a solution project with project references (listed since `7dd18054`), and again through the TestHost's nested `Restore;Build` with `HexalithUsePublishedSdkForHostedTests=true` (published 3.130.2 packages). Both builds share that project's `obj/` and `bin/`. The direct build succeeds; the nested restore then rewrites `project.assets.json` and the nested compile fails with 522 CS0234/CS0246 errors and 0 warnings. The focused TestHost build passes from a restored state, and CI's `Hexalith.Parties.Standalone.slnx` (no direct `references/` projects) is green, so this is not an approved-identity regression.
+exit_proof: `dotnet restore Hexalith.Parties.slnx && dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1` exits 0 with zero warnings at the approved identity set, and the focused TestHost build stays green.
+rollback: None required (build-only). Candidate fixes: give the nested native build its own intermediate and output paths, or stop listing `Admin.UI.csproj` directly in `Hexalith.Parties.slnx`.
+evidence: Spec 8.10 Round 8 diagnosis, 2026-11-01. A solution restore leaves Admin.UI with the project-reference graph; the lane command reproduces 522 errors right after the nested build logs "Restored …Hexalith.EventStore.Admin.UI.csproj"; the focused TestHost build passes before and after that restore; CI run `41335345599` is green for `f98e702a`.
+
+source_mapping_followup_2026_11_10: The separate HXW006 Debug conflict in the same nested native UI build is resolved by preserving mapper-owned source selectors and retaining explicit package selectors outside source mode. Fresh pinned-tool Debug and Release IntegrationTests builds pass with zero warnings/errors; each mode passes 61 catalog/Admin UI cases, 24 catalog selector cases and four build-profile controls without skips. A deliberate conflicting source override still fails with HXW006. Historical DW-202 resolution and full-solution qualification scope remain unchanged. Evidence: `tests/hxw006-admin-ui-source-mapping-2026-11-10/verification.json`; spec `spec-hxw006-admin-ui-source-mapping.md`.
+
+### DW-203: Keep ClientPackageTests from rewriting the shared restore state of in-repo dependency projects
+
+status: done 2026-11-02
+archived: 2026-11-15
+resolution: Client and Contracts source package probes now isolate all source project intermediate/output paths and assert their shared assets do not name the temporary fixture. The canonical all lane built and ran IntegrationTests after Client.Tests (207 passed, zero failed, opt-in skips); affected package classes pass 7/7 after the review patch.
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-build-and-governance-deferred-items.md`
+origin: Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-11-01), Round 8 decision (a)
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+location: `tests/Hexalith.Parties.Client.Tests/Package/ClientPackageTests.cs:183-197`
+severity: medium
+owner: Parties test maintainers; introducing change `c1cf1cbb`
+reason: Leaves the canonical all-tests lane with IntegrationTests unbuilt. Since `c1cf1cbb` (2026-10-31), the test builds and packs in-repo dependency projects, including `references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts`, in place with `-p:RestorePackagesPath=<work>/packages -p:RestoreNoCache=true`, then deletes the work directory. The pack rewrites each project's shared `obj/project.assets.json`: after a reproduced run, Contracts' `packageFolders` pointed at the deleted `/tmp/hexalith-parties-client-package-*/packages`. In the 2026-11-01 `-Lane all` run, IntegrationTests then logged MSB3106 for `…/packages/hexalith.commons.uniqueids/2.30.8/…` under such a deleted folder, followed by CS0234 (`Hexalith.Commons`) in the source-built `EventStore.Contracts`. A focused IntegrationTests build, which did not recompile Contracts, passed; the end-to-end lane-order failure was not re-run.
+exit_proof: `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults` builds and runs IntegrationTests after Client.Tests, and after `ClientPackageTests` no in-repo project's `obj/project.assets.json` names a deleted temporary package folder.
+rollback: None required (test-only). Candidate fix: restore and pack with isolated `MSBuildProjectExtensionsPath`/`BaseIntermediateOutputPath` under the temporary work directory, or pack copies of the projects.
+evidence: Spec 8.10 Round 8 diagnosis, 2026-11-01; `/tmp/parties-810-qualification-6p4w60kn/all-tests.log` (MSB3106 then CS0234 at `EventIdentityValidator.cs:1`); reproduced `packageFolders` after `Hexalith.Parties.Client.Tests.dll -class Hexalith.Parties.Client.Tests.Package.ClientPackageTests`.
+
+### DW-204: Reconcile current I16 committed-selection assertions and Platform/McpCli gitlink signoff
+
+status: done 2026-11-02
+archived: 2026-11-15
+resolution: The owner approved all ten current committed gitlinks and the effective Release graph in `dw-182-i16-approval-comparison-2026-11-02.md`. The current-only guard matches the committed SHA, checkout, local describe, and effective graph. `dotnet restore Hexalith.Parties.Standalone.slnx`, `dotnet build Hexalith.Parties.Standalone.slnx --configuration Release --no-restore -m:1`, and `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release` exited 0; the build had zero warnings/errors and the lane passed 16 projects (6,483 succeeded, 0 failed, 26 skipped). The later Tenants successor `4d0d599879767196928e1c265622483a62b457ae` is approved for current-selection assertions and signed in `.gitlink-signoff.tsv`; the effective Tenants package remains `6.0.0`. The RC diff gate again passes all ten pointers. All six canonical I16 parity receipts remain Unvalidated; current Epic 8 parity is not claimed.
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-dw-182-i16-committed-selection-reconciliation.md`
+origin: Deferred from: implementation of spec-five-build-and-governance-deferred-items.md (2026-11-02); converted from an unnumbered bullet by the spec 8.10 Round 9 review
+source_spec: `_bmad-output/implementation-artifacts/spec-five-build-and-governance-deferred-items.md`
+location: `tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs` (`CommittedSelectionObservations_PreservePackageGraphAndImmutableConsumptionRefusals`); `.gitlink-signoff.tsv`
+severity: medium
+owner: Administrator / jpiquot (root gitlink and package selection)
+reason: Reconcile the current I16 committed-selection assertions and obtain owner signoff for Platform and McpCli gitlinks before claiming current Epic 8 parity. The 2026-11-02 all lane built and ran 16 test projects, but three PlatformApiPrerequisitesTests assertions still compare current Platform/McpCli gitlinks and the EventStore package to the older approved 2026-11-01 selection. These failures predate this correction; DW-182 already tracks the required owner selection. Do not update immutable expected identities or claim current parity without that decision.
+exit_proof: The committed-selection method passes against the owner-approved ten gitlinks and effective Release graph, and `bash scripts/gitlink-rc-gate.sh --diff v1.2.1` reports `BUMP ok` for all ten root pointers.
+rollback: Revert the reconciling commits `01c888e4` and `56fc3b73`; the dated approvals and selection constants remain in history. No source, package, or deployment state changes.
+
+### DW-205: Reconcile the DW-182 spec's bookkeeping with its review and successor history
+
+status: done 2026-11-03
+archived: 2026-11-15
+resolution: Recovered the original review round, recorded the owner-authorized Tenants successor history and independently reviewed its assertions. The spec counter and change log distinguish the original review, retrospective successor review and later current-selection advances without changing frozen approvals.
+verification: `tests/five-preflight-and-migration-qualification-2026-11-03/`
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-preflight-and-migration-qualification-deferred-items.md`
+origin: Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-11-02), Round 9
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+location: `_bmad-output/implementation-artifacts/spec-dw-182-i16-committed-selection-reconciliation.md:5`
+severity: low
+reason: The DW-182 spec says `status: 'done'` with `review_loop_iteration: 0`, although it records a six-finding review triage. Its `## Spec Change Log` is empty. A "Tenants successor after owner continuation" section was added after the spec was done; it extends the frozen ten-gitlink intent to Tenants `4d0d599879767196928e1c265622483a62b457ae`, and the related test changes (the `initialOwnerRows`/`ownerRow` assertions) have no recorded review. The fix edits another spec, so it is out of scope for an 8.10 code review. The approval question itself is the Round 9 decision in spec 8.10.
+
+### DW-206: Cover the caller-catalog branch of the root package fallbacks
+
+status: done 2026-11-03
+archived: 2026-11-15
+resolution: Executed MSBuild consumer controls cover a distinct caller catalog, explicit family overrides, unchanged standalone selection, and missing-first-catalog fallbacks. The current default is EventStore 4.0.4 / Tenants 7.0.0 / FrontComposer 4.7.5 / Memories 3.0.18; the older pins remain only the absent-catalog fallbacks.
+verification: `tests/five-preflight-and-migration-qualification-2026-11-03/`
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-preflight-and-migration-qualification-deferred-items.md`
+origin: Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-11-02), Round 9 (reclassified from patch at owner direction)
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+location: `Directory.Packages.props:7-13`; `tests/PackageTests.Shared/EffectivePackageVersions.cs`
+severity: medium
+reason: `573fbb3f` added `and !Exists('$(Hexalith1BuildPackageProps)')` to the EventStore, Tenants, FrontComposer and Memories fallbacks. The property is defined later in the file, so the clause fires only when a caller passes it, as the Platform downstream SDK preflight does. With it, EventStore/FrontComposer/Memories evaluate to `3.132.1`/`4.7.5`/`3.0.15`; standalone they stay `3.132.2`/`4.7.4`/`3.0.13`. Every Parties test that evaluates MSBuild covers only the standalone case, so dropping or misspelling the clause still passes. This is an owner build change, not Story 8.10 closure scope.
+exit_proof: A fitness test evaluates a Parties consumer with `-p:Hexalith1BuildPackageProps=<temporary catalog with distinct family defaults>` and asserts that the caller defaults apply, that an explicit `-p:Hexalith*Version=` still wins over them, and that the standalone control keeps the root pins.
+rollback: None required (test-only).
+
+### DW-207: Make the supervisor fixtures' ready-file handshake atomic
+
+status: done 2026-11-03
+archived: 2026-11-15
+resolution: All five supervisor PID publishers now replace same-directory temporary files atomically, and caller-loss waits for both ready and caller files. Three executions under two CPU load workers passed 30/30 each, zero failures/skips.
+verification: `tests/five-preflight-and-migration-qualification-2026-11-03/`
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-five-preflight-and-migration-qualification-deferred-items.md`
+origin: Deferred from: spec-8-10-final-readiness-documentation-and-retirement-gate.md Round 10 requalification (2026-11-02); flaky verification, not a review finding
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+location: `tests/Hexalith.Parties.Contracts.Tests/Package/PackageTestProcessTests.cs` (`SupervisorMissingStateDirectory_StillReapsOwnedFamily` and the other supervisor facts that poll a `ready` file)
+severity: low
+reason: The child writes `ready` with `pathlib.Path.write_text`, which creates the file before writing it. The test polls `File.Exists` and then parses the content at once, so under load it can read an empty file. On 2026-11-02 the second `scripts/test.ps1 -Lane all` run failed once with `FormatException: The input string '' was not in a correct format`, while the first run and the focused 30/30 runs passed. The test code was unchanged and does not use the stdin path.
+exit_proof: The supervisor fixtures publish `ready` atomically (write a temporary file, then `os.replace`), or the reader waits for complete content, and the Contracts.Tests supervisor facts pass repeatedly under parallel CPU load.
+rollback: None required (test-only).
+
