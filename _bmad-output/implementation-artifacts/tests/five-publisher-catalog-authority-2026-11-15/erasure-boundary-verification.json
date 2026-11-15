@@ -1,0 +1,56 @@
+{
+  "stage": "focused qualification-arrangement correction; parent owns full verification and publication",
+  "date": "2026-11-15",
+  "source": "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Ingestion/RetryWorkflowErasureIntegrationTests.cs",
+  "sourceSha256": "257d3e974b29c1b1e31c32b59f4dc981e375c3d520c6f0190bd6350f03f90931",
+  "productionChanges": false,
+  "oldOrdering": [
+    "Original worker holds a content-bearing legacy activity and the workflow is suspended.",
+    "Original worker stops before erasure; upgraded worker resumes the still-live victim.",
+    "Initial zero-dispatch assertion passes before asynchronous activity redelivery reaches the upgraded worker.",
+    "Modern retry succeeds and victim deletion/purge follows; final zero-dispatch check observes an earlier increment."
+  ],
+  "oldFailureEvidence": {
+    "log": "TestResults/five-authority-final-integration-tests.log (prior failing run; overwritten by the final passing rerun after these observations were recorded)",
+    "finalAssertionSourceLine": 533,
+    "descriptionTrapLogLine": 172,
+    "embeddingTrapLogLine": 311,
+    "interpretation": "Both traps execute on the first upgraded host while old activity history remains: description before the modern retry, embedding after modern-history purge but before victim legacy-history purge. Late release/restart did not cause these increments.",
+    "guardLimit": "The traps count activity dispatch. A tombstone alone cannot prevent an already queued raw activity from dispatching; production Generate* guards were not changed."
+  },
+  "correctedBoundary": [
+    "Keep the original worker connected and the old content activity blocked.",
+    "Reconcile only fixture-owned exact inventory, then run production unit deletion with the original client: permanent fence, actual suspended-workflow termination, confirmed purge and physical data absence precede replacement-worker exposure.",
+    "On a separate live replacement unit and canonical legacy retry identity, retain current-workflow raw-input refusal and unchanged retained payload bytes, then progress its admitted modern retry.",
+    "Physically purge both replacement retry histories and its generated content through production deletion.",
+    "Release the old victim activity only after erasure, restart the upgraded worker, and retain zero post-upgrade dispatch, complete unit/history/payload absence and unrelated survivor assertions."
+  ],
+  "verification": {
+    "project": "tests/Hexalith.Memories.IntegrationTests/Hexalith.Memories.IntegrationTests.csproj",
+    "buildConfiguration": "Debug; -m:1 --disable-build-servers --artifacts-path ${TMPDIR}/build -p:UseHexalithProjectReferences=true -p:MinVerVersionOverride=1.0.0",
+    "selectors": [
+      "-method",
+      "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.OriginalSameNameRawRetrySuspendedInEachContentActivityTerminatesAfterWorkerUpgradeAndPurgesHistory"
+    ],
+    "arguments": [
+      "-failSkips",
+      "-parallel",
+      "none"
+    ],
+    "total": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "buildLog": "TestResults/five-authority-patch-erasure-boundary-build.log",
+    "log": "TestResults/five-authority-patch-erasure-boundary.log",
+    "xml": "TestResults/five-authority-patch-erasure-boundary.xml",
+    "executedTests": "erasure-boundary-executed-tests.json.gz",
+    "buildWarnings": 0,
+    "buildErrors": 0,
+    "exitCode": 0,
+    "workspace": "run-with-temp; command exited after fixture disposal, both owned containers deleted and disposable build workspace removed",
+    "initialBuildBlocker": "DAPR1303 rejected nameof plus intentional historical JsonElement input. The refusal control now uses the same typeof(...).Name wire-registration arrangement as the original historical input; no diagnostic suppression was added."
+  },
+  "limits": "Controlled source fixture cutover only. Production writer exclusion, real historical completeness, matching package adoption and deployment remain open external gates. Existing triage, compressed receipts and parent custom-SDK evidence are preserved."
+}

@@ -926,3 +926,41 @@ unsupported output is explicitly refused: the app has both secret references,
 while `memories-dapr` has no environment. Passing refusal controls qualify the
 checker and observed publisher limitation; positive sidecar delivery remains an
 upstream gate. Raw manifests and synthetic credentials stay private and are removed.
+
+
+## Publisher identity, catalog fallback and per-unit authority (2026-11-15)
+
+The publisher resolves one bounded MSBuild JSON evaluation of `TargetPath` and
+`AssemblyName`, preserving the build's exact configuration/properties. Default
+and custom names are exercised with real MSBuild; missing, mismatched, malformed
+and symlinked outputs refuse without disclosing raw diagnostics. Run the Python
+suite through `run-with-temp`, with `ArtifactsPath` beneath its private `TMPDIR`.
+
+The standalone EventStore fallback is exact `5.1.0`. Caller and catalog selections
+retain precedence; explicit `5.0.0` remains outside the catalog/host/selector
+qualification set. `AspireRuntimePreparationTests` evaluates positive and negative
+cohorts and fallback precedence. The independently selected 5.1.0 Release/package
+runtime runs `scripts/verify-catalog-runtime.py` with a short persistent results
+path so DCP Unix sockets fit the platform limit. Keep disposable artifacts below
+the repository when ancestor-based source identity checks are required.
+
+Memories source now requires exact unit authority for complete semantic erasure.
+Configured service generations issue namespaced identities through HTTP, directory,
+annotation and EventStore-adapter paths, with issuance retained atomically before
+content writes. Unit records and generation reservations survive workflow purge
+and deletion. Existing bare markers and source-B coverage cannot certify source-A
+artifacts; discovery retains obligations without changing historical hashes.
+Missing issuer proof leaves ingestion and tracked lost-ack recovery usable while
+complete-erasure claims refuse. Historical units need explicit exact-unit inventory
+and writer-exclusion evidence; see the owner's pipeline-persistence procedure.
+
+The source lane runs `UnitOwnershipAuthorityIntegrationTests`,
+`SourceInventoryProducerIntegrationTests`, `RetryWorkflowErasureIntegrationTests`
+and `RefreshPublicationIntegrationTests` against actual Redis/FalkorDB and an
+authenticated Dapr workflow sidecar. The real historical controls purge persisted
+workflow history and complete an older producer between an actual absent lookup
+and ordinary/annotation admission. Complete persisted hashes and unrelated survivors
+are compared across connection recreation. Fixture evidence covers only owned
+synthetic units and excluded fixture writers. Publication/adoption and a real
+operator cutover remain separate external gates. Exact commands, revisions,
+per-test outcomes and cleanup are retained in the dated batch receipt.

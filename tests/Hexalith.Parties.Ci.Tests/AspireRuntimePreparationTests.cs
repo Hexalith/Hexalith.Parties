@@ -404,7 +404,10 @@ public sealed class AspireRuntimePreparationTests
                     properties.GetProperty("RunWorkingDirectory").GetString().ShouldBe(properties.GetProperty("TargetDir").GetString());
                     string[] compiled = result.RootElement.GetProperty("Items").GetProperty("Compile").EnumerateArray()
                         .Select(item => item.GetProperty("FullPath").GetString()!).Order(StringComparer.Ordinal).ToArray();
-                    compiled.ShouldBe(RepresentativeSampleSources(selected).Where(path => !path.Contains("Hexalith.EventStore.Sample.Contracts", StringComparison.Ordinal)).Order(StringComparer.Ordinal));
+                    compiled.ShouldBe(RepresentativeSampleSources(selected).Where(path => !path.Contains("Hexalith.EventStore.Sample.Contracts", StringComparison.Ordinal))
+                        .Concat(new[] { "Counter/SampleCatalog.cs", "Greeting/GreetingCatalogDeclarations.cs" }
+                            .Select(path => Path.GetFullPath(Path.Combine(selected, "samples", "Hexalith.EventStore.Sample", path))))
+                        .Order(StringComparer.Ordinal));
                     compiled.ShouldAllBe(path => path.StartsWith(selected + Path.DirectorySeparatorChar, StringComparison.Ordinal));
                     File.ReadAllText(Path.Combine(selected, "samples", "Hexalith.EventStore.Sample", "Program.cs")).ShouldContain("selected");
                 }
@@ -620,6 +623,7 @@ public sealed class AspireRuntimePreparationTests
     [InlineData("4.1.1", false, false, false)]
     [InlineData("4.2.0", false, true, true)]
     [InlineData("4.2.1", false, false, false)]
+    [InlineData("5.0.0", false, false, false)]
     [InlineData("5.1.0", false, true, true)]
     [InlineData("5.1.1", false, false, false)]
     [InlineData("5.1.0-preview.1", false, false, false)]
@@ -663,6 +667,49 @@ public sealed class AspireRuntimePreparationTests
         finally { Directory.Delete(workspace, recursive: true); }
     }
 
+    /// <summary>Uses the qualified fallback while preserving both caller and catalog authority, including explicit unsupported selections.</summary>
+    /// <param name="selection">The independent caller or catalog selection.</param>
+    [Theory]
+    [InlineData("fallback")]
+    [InlineData("caller")]
+    [InlineData("catalog")]
+    public async Task StandaloneCatalogFallbackPreservesSelectionPrecedence(string selection)
+    {
+        string workspace = Directory.CreateTempSubdirectory("parties-catalog-default-").FullName;
+        try
+        {
+            string wrapper = Path.Combine(workspace, "Directory.Packages.props");
+            File.Copy(CiTestPaths.RepoFile("Directory.Packages.props"), wrapper);
+            if (selection == "catalog")
+            {
+                string catalog = Path.Combine(workspace, "references", "Hexalith.Builds", "Props", "Directory.Packages.props");
+                Directory.CreateDirectory(Path.GetDirectoryName(catalog)!);
+                File.WriteAllText(catalog, "<Project><PropertyGroup><HexalithEventStoreVersion>5.0.0</HexalithEventStoreVersion><HexalithTenantsVersion>7.0.7</HexalithTenantsVersion><HexalithMemoriesVersion>3.0.27</HexalithMemoriesVersion><HexalithFrontComposerVersion>5.0.0</HexalithFrontComposerVersion><HexalithVersionsLoaded>true</HexalithVersionsLoaded></PropertyGroup></Project>");
+            }
+            string project = Path.Combine(workspace, "Capability.proj");
+            new XDocument(new XElement("Project",
+                new XElement("PropertyGroup", new XElement("HexalithVersionsLoaded", selection == "catalog" ? "false" : "true"),
+                    new XElement("HexalithEventStoreVersion", selection == "caller" ? "5.0.0" : string.Empty),
+                    new XElement("HexalithTenantsVersion", selection == "caller" ? "7.0.7" : string.Empty),
+                    new XElement("HexalithMemoriesVersion", selection == "caller" ? "3.0.27" : string.Empty),
+                    new XElement("HexalithFrontComposerVersion", selection == "caller" ? "5.0.0" : string.Empty)),
+                new XElement("Import", new XAttribute("Project", wrapper)),
+                new XElement("Import", new XAttribute("Project", CiTestPaths.RepoFile("Directory.Build.targets")))))
+                .Save(project);
+            var result = await RunDotnetAsync(workspace, "msbuild", project, "-nologo",
+                "-getProperty:HexalithEventStoreVersion,HexalithTenantsVersion,HexalithMemoriesVersion,HexalithFrontComposerVersion,HexalithEventStoreCatalogHostsSupported").ConfigureAwait(true);
+            result.ExitCode.ShouldBe(0, result.Output + result.Error);
+            using JsonDocument evaluation = JsonDocument.Parse(result.Output);
+            JsonElement properties = evaluation.RootElement.GetProperty("Properties");
+            properties.GetProperty("HexalithEventStoreVersion").GetString().ShouldBe(selection == "fallback" ? "5.1.0" : "5.0.0");
+            properties.GetProperty("HexalithTenantsVersion").GetString().ShouldBe(selection == "fallback" ? "8.0.0" : "7.0.7");
+            properties.GetProperty("HexalithMemoriesVersion").GetString().ShouldBe(selection == "fallback" ? "4.0.0" : "3.0.27");
+            properties.GetProperty("HexalithFrontComposerVersion").GetString().ShouldBe(selection == "fallback" ? "6.0.0" : "5.0.0");
+            properties.GetProperty("HexalithEventStoreCatalogHostsSupported").GetString().ShouldBe(selection == "fallback" ? "true" : string.Empty);
+        }
+        finally { Directory.Delete(workspace, recursive: true); }
+    }
+
     /// <summary>Unconditionally evaluates the real transport target and the separate selector fence, even when guarded callers compile away.</summary>
     /// <param name="version">The exact selected EventStore package.</param>
     /// <param name="source">Whether the tool selected current source.</param>
@@ -675,6 +722,7 @@ public sealed class AspireRuntimePreparationTests
     [InlineData("4.1.1", false, false, false)]
     [InlineData("4.2.0", false, true, true)]
     [InlineData("4.2.1", false, false, false)]
+    [InlineData("5.0.0", false, false, false)]
     [InlineData("5.1.0", false, true, true)]
     [InlineData("5.1.1", false, false, false)]
     [InlineData("5.1.0-preview.1", false, false, false)]

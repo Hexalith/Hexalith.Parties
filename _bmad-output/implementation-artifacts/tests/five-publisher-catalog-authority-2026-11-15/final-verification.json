@@ -1,0 +1,171 @@
+{
+  "date": "2026-11-15",
+  "stage": "reviewed final source verification",
+  "sourceBases": {
+    "parties": "cb9ba9ecfb76125efd407d294d3d01b62e8af687",
+    "memories": "b7e195031cab96b38949b90317ea8033797027b8",
+    "eventstore": "fdb59895975e86a1e234325a01237f259cdbd53b",
+    "builds": "73e60af8a1fcdf3f06726d5d1b6e1199cce778ee"
+  },
+  "reviewedMemoriesCommit": "7a5c892508700b2e5c71c921cdaeedf68de5f03d",
+  "preservedMemoriesRemoteCommit": "261e1b798c0a481b5a4841f2ccdf8574fe9ebe76",
+  "rebaseSourceEquality": "All 24 tested Memories files have identical SHA256 before and after rebase onto unrelated remote release work.",
+  "sourceHashes": "final-source-sha256.json",
+  "lanes": {
+    "ci": {
+      "total": 120,
+      "passed": 120,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "durationSeconds": "63.989",
+      "startUtc": "2026-11-15T12:32:32.5984871+00:00",
+      "finishUtc": "2026-11-15T12:33:36.5844921+00:00",
+      "classes": [
+        "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests"
+      ],
+      "cwd": ".",
+      "wrapper": "TMPDIR=\"$PWD/TestResults\" run-with-temp bash -c",
+      "build": "dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Debug -m:1 --disable-build-servers --artifacts-path \"$TMPDIR/build\" -p:MinVerVersionOverride=1.0.0",
+      "test": "dotnet \"$TMPDIR/build/bin/Hexalith.Parties.Ci.Tests/debug/Hexalith.Parties.Ci.Tests.dll\" -class Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests -failSkips -parallel none -result-xml TestResults/five-authority-final-ci.xml",
+      "buildWarnings": 0,
+      "buildErrors": 0,
+      "buildLog": "TestResults/five-authority-final-ci-build.log",
+      "log": "TestResults/five-authority-final-ci-tests.log",
+      "xml": "TestResults/five-authority-final-ci.xml",
+      "xmlSha256": "ebc608dacc2c37c64637c687338f137c22118f576ff7fbe7a98756353dc5c96b",
+      "executedTests": "final-ci-executed-tests.json.gz",
+      "workspaceRemoved": true
+    },
+    "integration": {
+      "total": 108,
+      "passed": 108,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "durationSeconds": "52.537",
+      "startUtc": "2026-11-15T12:55:29.9387960+00:00",
+      "finishUtc": "2026-11-15T12:56:22.4743666+00:00",
+      "classes": [
+        "Hexalith.Memories.IntegrationTests.Ingestion.RefreshPublicationIntegrationTests",
+        "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests",
+        "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests",
+        "Hexalith.Memories.IntegrationTests.Ingestion.UnitOwnershipAuthorityIntegrationTests"
+      ],
+      "cwd": "references/Hexalith.Memories",
+      "wrapper": "TMPDIR=\"$PWD/TestResults\" run-with-temp bash -c",
+      "build": "dotnet build tests/Hexalith.Memories.IntegrationTests/Hexalith.Memories.IntegrationTests.csproj -c Debug -m:1 --disable-build-servers --artifacts-path \"$TMPDIR/build\" -p:UseHexalithProjectReferences=true -p:MinVerVersionOverride=1.0.0",
+      "test": "dotnet \"$TMPDIR/build/bin/Hexalith.Memories.IntegrationTests/debug/Hexalith.Memories.IntegrationTests.dll\" -class Hexalith.Memories.IntegrationTests.Ingestion.RefreshPublicationIntegrationTests -class Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests -class Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests -class Hexalith.Memories.IntegrationTests.Ingestion.UnitOwnershipAuthorityIntegrationTests -failSkips -parallel none -result-xml ../../TestResults/five-authority-final-integration.xml",
+      "buildWarnings": 0,
+      "buildErrors": 0,
+      "buildLog": "TestResults/five-authority-final-integration-build.log",
+      "log": "TestResults/five-authority-final-integration-tests.log",
+      "xml": "TestResults/five-authority-final-integration.xml",
+      "xmlSha256": "c027d4c6485f9341db4e3cf21a865fa0872377b58c758750061ba159d62aac17",
+      "executedTests": "final-integration-executed-tests.json.gz",
+      "workspaceRemoved": true,
+      "binariesSha256": {
+        "Hexalith.Memories.IntegrationTests.dll": "65a0cfc82364b101ca0aabd327b751aa57ebe01500b3550e1bbe1168c06a0352",
+        "Hexalith.Memories.Server.dll": "8ecb5789e9a330362f96282b5368060430dd492fc5e95abe33fc503b868006fc"
+      }
+    },
+    "server": {
+      "total": 99,
+      "passed": 99,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "durationSeconds": "4.769",
+      "startUtc": "2026-11-15T12:38:14.5154943+00:00",
+      "finishUtc": "2026-11-15T12:38:19.2836352+00:00",
+      "classes": [
+        "Hexalith.Memories.Server.Tests.Architecture.IngestionWorkflowDeterminismGuardTests",
+        "Hexalith.Memories.Server.Tests.Cases.CaseServiceTests",
+        "Hexalith.Memories.Server.Tests.Endpoints.DirectoryIngestionEndpointE2ETests",
+        "Hexalith.Memories.Server.Tests.Endpoints.IngestionEndpointE2ETests",
+        "Hexalith.Memories.Server.Tests.Endpoints.ReIngestionEndpointE2ETests",
+        "Hexalith.Memories.Server.Tests.EventStoreIntegration.EventIngestionWorkflowSchedulerAdapterTests",
+        "Hexalith.Memories.Server.Tests.Ingestion.DaprIngestionWorkflowSchedulerTests",
+        "Hexalith.Memories.Server.Tests.Ingestion.DirectoryIngestionServiceTests"
+      ],
+      "cwd": "references/Hexalith.Memories",
+      "wrapper": "TMPDIR=\"$PWD/TestResults\" run-with-temp bash -c",
+      "build": "dotnet build tests/Hexalith.Memories.Server.Tests/Hexalith.Memories.Server.Tests.csproj -c Debug -m:1 --disable-build-servers --artifacts-path \"$TMPDIR/build\" -p:UseHexalithProjectReferences=true -p:MinVerVersionOverride=1.0.0",
+      "test": "dotnet \"$TMPDIR/build/bin/Hexalith.Memories.Server.Tests/debug/Hexalith.Memories.Server.Tests.dll\" -class Hexalith.Memories.Server.Tests.Architecture.IngestionWorkflowDeterminismGuardTests -class Hexalith.Memories.Server.Tests.Cases.CaseServiceTests -class Hexalith.Memories.Server.Tests.Endpoints.DirectoryIngestionEndpointE2ETests -class Hexalith.Memories.Server.Tests.Endpoints.IngestionEndpointE2ETests -class Hexalith.Memories.Server.Tests.Endpoints.ReIngestionEndpointE2ETests -class Hexalith.Memories.Server.Tests.EventStoreIntegration.EventIngestionWorkflowSchedulerAdapterTests -class Hexalith.Memories.Server.Tests.Ingestion.DaprIngestionWorkflowSchedulerTests -class Hexalith.Memories.Server.Tests.Ingestion.DirectoryIngestionServiceTests -failSkips -parallel none -result-xml ../../TestResults/five-authority-final-server.xml",
+      "buildWarnings": 0,
+      "buildErrors": 0,
+      "buildLog": "TestResults/five-authority-final-server-build.log",
+      "log": "TestResults/five-authority-final-server-tests.log",
+      "xml": "TestResults/five-authority-final-server.xml",
+      "xmlSha256": "a4b6008d7892642e97fe01195f41ce4c9f1fe5c6fc4fbce7b15633b6adbb5d36",
+      "executedTests": "final-server-executed-tests.json.gz",
+      "workspaceRemoved": true,
+      "binariesSha256": {
+        "Hexalith.Memories.Server.Tests.dll": "63b722f5b261f5c4ab9bc5f85d052487c94fb7a444ad0ce46eaea0139049d39a",
+        "Hexalith.Memories.Server.dll": "69b53b821b89148c60706a2bbd5c25ba24cce0c5ef0abd9bcf5e40f1924dd391"
+      }
+    },
+    "publisher": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0,
+      "scope": "Actual SDK manifest emissions plus mutation/path/process controls; not deployment.",
+      "basis": "Earlier 14-control run and six-control path/process subset; final publisher source/test hashes are identical to that run. Actual custom SDK build/execute adds one positive qualification in sdk-custom-probe.json."
+    },
+    "catalogRuntime": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "configuration": "Release",
+      "profile": "published package catalog; separate from new Memories source protocol",
+      "familyVersions": {
+        "HexalithEventStoreVersion": "5.1.0",
+        "HexalithTenantsVersion": "8.0.0",
+        "HexalithMemoriesVersion": "4.0.0",
+        "HexalithFrontComposerVersion": "6.0.0",
+        "HexalithMcpCliVersion": "3.0.0"
+      },
+      "command": "TMPDIR=\"$PWD/TestResults\" HexalithEventStoreVersion=5.1.0 HexalithTenantsVersion=8.0.0 HexalithMemoriesVersion=4.0.0 HexalithFrontComposerVersion=6.0.0 run-with-temp python3 scripts/verify-catalog-runtime.py --configuration Release --results-directory TestResults/q5",
+      "buildLog": "TestResults/q5/build.log",
+      "prepareLog": "TestResults/q5/prepare.log",
+      "testLog": "TestResults/q5/test.log",
+      "verification": {
+        "configuration": "Release",
+        "exitCode": 0,
+        "workspaceRemoved": true,
+        "runtimeCustodyRetained": true,
+        "retainedRuntimeProfile": "historical diagnostics; temporary binaries removed"
+      },
+      "cleanup": {
+        "scope": "final exact fallback cohort q5",
+        "liveOwnedProcesses": 0,
+        "removedFifos": 14,
+        "removedSockets": 7,
+        "custodyRemoved": true
+      }
+    }
+  },
+  "review": {
+    "layers": [
+      "blind hunter",
+      "edge case hunter",
+      "verification gap"
+    ],
+    "actionableFindings": "All original 14 findings and settlement follow-up EC3 resolved; P1 refuted by existing no-op mutation guard.",
+    "triage": "review-triage.json"
+  },
+  "supersededIntermediateFailures": [
+    "Exact older fallback cohort native preparation failed: current Tenants source needs RefreshTenantAccess absent from Contracts7.0.7. Final fallback is coherent 5.1/8/4/6 and passes native runtime.",
+    "Two original legacy activity qualifier variants dispatched queued old activities before victim history purge. Fixture now fences, terminates and purges on original worker before replacement exposure; both variants and full integration pass. No production Generate activity guard changed.",
+    "Two Server architecture source assertions still expected old admission helper/line. Updated to actual source inventory call set and reran 99/99."
+  ],
+  "guard": "bash scripts/check-no-warning-override.sh passed; both owning diffs passed git diff --check",
+  "externalGates": [
+    "Actual operator-controlled nonreused generation and complete older/out-of-band writer exclusion",
+    "Complete independently owned historical inventory for each real historical unit",
+    "Matching Memories package publication/adoption and deployed qualification; source fixture exclusion is not production proof"
+  ],
+  "limits": "No deployed writer exclusion or historical inventory was attested. The baseline AppHost was observed only security Starting/dependents Waiting and then stopped; native fixture runtime separately passes with its controlled mTLS setup. Source tests do not qualify the new protocol in a published Memories package."
+}

@@ -1,0 +1,52 @@
+{
+  "allRowsCoveredAndExecuted": true,
+  "publisherEvidence": "14/14 final suite and 6/6 current identity/process subset; no skips",
+  "rows": [
+    {
+      "row": "publisher identity",
+      "lane": "publisher final log and real MSBuild fixtures",
+      "passed": true,
+      "executedTests": []
+    },
+    {
+      "row": "catalog fallback/refusal",
+      "lane": "ci",
+      "passed": true,
+      "executedTests": [
+        "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.StandaloneCatalogFallbackPreservesSelectionPrecedence(selection: \\\"fallback\\\")",
+        "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.StandaloneCatalogFallbackPreservesSelectionPrecedence(selection: \\\"caller\\\")",
+        "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.StandaloneCatalogFallbackPreservesSelectionPrecedence(selection: \\\"catalog\\\")"
+      ]
+    },
+    {
+      "row": "purged history",
+      "lane": "memoriesIntegration",
+      "passed": true,
+      "executedTests": [
+        "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.PurgedActualHistoricalWorkflowCannotGainCompletenessFromReusedIdentity(crossSource: False)",
+        "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.PurgedActualHistoricalWorkflowCannotGainCompletenessFromReusedIdentity(crossSource: True)"
+      ]
+    },
+    {
+      "row": "concurrent producer",
+      "lane": "memoriesIntegration",
+      "passed": true,
+      "executedTests": [
+        "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.ActualOlderProducerBetweenAbsentReadAndAdmissionCannotGainModernAuthority(annotation: False)",
+        "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests.ActualOlderProducerBetweenAbsentReadAndAdmissionCannotGainModernAuthority(annotation: True)"
+      ]
+    },
+    {
+      "row": "cross-source authority",
+      "lane": "memoriesIntegration",
+      "passed": true,
+      "executedTests": [
+        "Hexalith.Memories.IntegrationTests.Ingestion.UnitOwnershipAuthorityIntegrationTests.HistoricalUnitRequiresExactEvidenceRegardlessOfSourceOrBareMarker(bareMarker: null)",
+        "Hexalith.Memories.IntegrationTests.Ingestion.UnitOwnershipAuthorityIntegrationTests.HistoricalUnitRequiresExactEvidenceRegardlessOfSourceOrBareMarker(bareMarker: \\\"modern\\\")",
+        "Hexalith.Memories.IntegrationTests.Ingestion.UnitOwnershipAuthorityIntegrationTests.HistoricalUnitRequiresExactEvidenceRegardlessOfSourceOrBareMarker(bareMarker: \\\"legacy-owner-reconciled-v1\\\")",
+        "Hexalith.Memories.IntegrationTests.Ingestion.UnitOwnershipAuthorityIntegrationTests.UnconfiguredProducerCannotBorrowIssuedAuthorityForUnscheduledCleanup"
+      ]
+    }
+  ],
+  "sourceReceiptNote": "Implementation source hashes match current code. Spec metadata changed during parent workflow; its implementation hash remains a historical snapshot."
+}

@@ -1,0 +1,155 @@
+{
+  "date": "2026-11-15",
+  "userAuthorization": [
+    "push changes on main when done",
+    "apply recommended"
+  ],
+  "memories": {
+    "commit": "7a5c892508700b2e5c71c921cdaeedf68de5f03d",
+    "branch": "main",
+    "remote": "https://github.com/Hexalith/Hexalith.Memories.git",
+    "remoteMain": "7a5c892508700b2e5c71c921cdaeedf68de5f03d",
+    "remoteAvailabilityVerified": true,
+    "preservedRemoteWork": "261e1b798c0a481b5a4841f2ccdf8574fe9ebe76",
+    "testedSourceUnchangedAcrossRebase": true,
+    "commitlint": {
+      "version": "21.2.4",
+      "preCommit": "passed; 0 problems, 0 warnings",
+      "postCommit": "passed; exact committed message matches validated candidate"
+    },
+    "pushResult": "success",
+    "remoteRuleNotice": [
+      "Changes must be made through a pull request.",
+      "3 of 3 required status checks are expected."
+    ]
+  },
+  "parties": {
+    "base": "cb9ba9ecfb76125efd407d294d3d01b62e8af687",
+    "branch": "main",
+    "remote": "https://github.com/Hexalith/Hexalith.Parties.git",
+    "publication": "Containing commit is the parent adoption/publication unit; final remote verification is reported after push.",
+    "commitlint": {
+      "version": "21.2.4",
+      "preCommit": "passed; 0 problems, 0 warnings",
+      "candidateSha256": "fbeaa1534af5fdccc305fc0fb0102290b65ac18b7ac3a112830776836403bf26",
+      "postCommit": "Exact committed message will be revalidated after creating the containing commit."
+    }
+  },
+  "rootDeclaredSubmodules": [
+    {
+      "path": "references/Hexalith.EventStore",
+      "branch": "main",
+      "head": "fdb59895975e86a1e234325a01237f259cdbd53b",
+      "status": "",
+      "remote": "https://github.com/Hexalith/Hexalith.EventStore.git",
+      "recent": "fdb598959 build: sync submodule pointers with origin",
+      "originMain": "fdb59895975e86a1e234325a01237f259cdbd53b",
+      "aheadBehind": "0\t0",
+      "headAvailableOnRemoteMain": true
+    },
+    {
+      "path": "references/Hexalith.Memories",
+      "branch": "main",
+      "head": "7a5c892508700b2e5c71c921cdaeedf68de5f03d",
+      "status": "",
+      "remote": "https://github.com/Hexalith/Hexalith.Memories.git",
+      "recent": "7a5c8925 fix: bind ingestion erasure to unit ownership",
+      "originMain": "7a5c892508700b2e5c71c921cdaeedf68de5f03d",
+      "aheadBehind": "0\t0",
+      "headAvailableOnRemoteMain": true
+    },
+    {
+      "path": "references/Hexalith.FrontComposer",
+      "branch": "main",
+      "head": "bca9dff291ce42c57516598732340a80703dfb6d",
+      "status": "",
+      "remote": "https://github.com/Hexalith/Hexalith.FrontComposer.git",
+      "recent": "bca9dff2 build: record synchronized submodule pointers",
+      "originMain": "0d065fceb2bfca9999307cb864a3f93392fb3400",
+      "aheadBehind": "0\t2",
+      "headAvailableOnRemoteMain": true
+    },
+    {
+      "path": "references/Hexalith.Tenants",
+      "branch": "main",
+      "head": "2ec938397c5b330cf1e694e8cc442cb4ad022f2b",
+      "status": "",
+      "remote": "https://github.com/Hexalith/Hexalith.Tenants.git",
+      "recent": "2ec93839 build: sync local changes via /pushall",
+      "originMain": "8b03eb999cd596aa07906face9db295e6705f9de",
+      "aheadBehind": "0\t1",
+      "headAvailableOnRemoteMain": true
+    },
+    {
+      "path": "references/Hexalith.AI.Tools",
+      "branch": "main",
+      "head": "17a37d83db193f0b7494c1b931fd1e82a67c1424",
+      "status": "",
+      "remote": "https://github.com/Hexalith/Hexalith.AI.Tools.git",
+      "recent": "17a37d8 build(deps): refresh commit validation transitives",
+      "originMain": "17a37d83db193f0b7494c1b931fd1e82a67c1424",
+      "aheadBehind": "0\t0",
+      "headAvailableOnRemoteMain": true
+    },
+    {
+      "path": "references/Hexalith.Commons",
+      "branch": "main",
+      "head": "fbf4e94233821f6ca336af91a06feaaeb7a16855",
+      "status": "",
+      "remote": "https://github.com/Hexalith/Hexalith.Commons.git",
+      "recent": "fbf4e94 chore(release): 3.0.0 [skip ci]",
+      "originMain": "fbf4e94233821f6ca336af91a06feaaeb7a16855",
+      "aheadBehind": "0\t0",
+      "headAvailableOnRemoteMain": true
+    },
+    {
+      "path": "references/Hexalith.Builds",
+      "branch": "main",
+      "head": "73e60af8a1fcdf3f06726d5d1b6e1199cce778ee",
+      "status": "",
+      "remote": "https://github.com/Hexalith/Hexalith.Builds.git",
+      "recent": "73e60af8 fix: update",
+      "originMain": "73e60af8a1fcdf3f06726d5d1b6e1199cce778ee",
+      "aheadBehind": "0\t0",
+      "headAvailableOnRemoteMain": true
+    },
+    {
+      "path": "references/Hexalith.PolymorphicSerializations",
+      "branch": "main",
+      "head": "e97b56930e213f674b64c157551f499b0473ec43",
+      "status": "",
+      "remote": "https://github.com/Hexalith/Hexalith.PolymorphicSerializations.git",
+      "recent": "e97b569 build: merge setup-dotnet-6.1.0 dependabot branch via /pushall",
+      "originMain": "e97b56930e213f674b64c157551f499b0473ec43",
+      "aheadBehind": "0\t0",
+      "headAvailableOnRemoteMain": true
+    },
+    {
+      "path": "references/Hexalith.McpCli",
+      "branch": "main",
+      "head": "23072f04f423eea3f30456fe5af13d2d382624fe",
+      "status": "",
+      "remote": "https://github.com/Hexalith/Hexalith.McpCli.git",
+      "recent": "23072f04 build: sync local changes via /pushall",
+      "originMain": "32a3e65989136f28b34500a4d9db8f04cf601885",
+      "aheadBehind": "0\t3",
+      "headAvailableOnRemoteMain": true
+    },
+    {
+      "path": "references/Hexalith.Platform",
+      "branch": "main",
+      "head": "f6f85032598865b9123f16364448bfd02c0ff5b0",
+      "status": "",
+      "remote": "https://github.com/Hexalith/Hexalith.Platform.git",
+      "recent": "f6f85032 fix: submodules",
+      "originMain": "695463c5eed801e96dbd9efc6a8cef4b70e900f9",
+      "aheadBehind": "0\t1",
+      "headAvailableOnRemoteMain": true
+    }
+  ],
+  "externalGates": [
+    "Production writer exclusion and nonreused generation custody",
+    "Real independently complete historical unit inventories",
+    "Matching Memories package publication/adoption and deployed qualification"
+  ]
+}

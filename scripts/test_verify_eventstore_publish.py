@@ -104,8 +104,8 @@ class OwnerPublishTests(unittest.TestCase):
                     return directory
 
                 def emit(command, directory, environment, timeout):
-                    if "-getProperty:TargetPath" in command:
-                        return (str(assembly) + "\n").encode()
+                    if "-getProperty:TargetPath,AssemblyName" in command:
+                        return json.dumps({"Properties": {"TargetPath": str(assembly), "AssemblyName": assembly.stem}}).encode()
                     if "--output-path" not in command:
                         return
                     path = Path(command[command.index("--output-path") + 1])
@@ -154,14 +154,15 @@ class OwnerPublishTests(unittest.TestCase):
 @unittest.skipUnless(sys.platform == "linux", "Owned command supervision is qualified on Linux only")
 class EvaluatedOwnerPathTests(unittest.TestCase):
     def test_real_msbuild_target_path_uses_the_selected_framework_configuration_and_properties(self):
-        for framework in ("net10.0", "net11.0"):
-            with self.subTest(framework=framework), tempfile.TemporaryDirectory() as workspace:
+        for framework, name in product(("net10.0", "net11.0"), ("Owner", "Custom.Publisher")):
+            with self.subTest(framework=framework, name=name), tempfile.TemporaryDirectory() as workspace:
                 project = Path(workspace) / "Owner.csproj"
                 project.write_text("""<Project><PropertyGroup>
                     <TargetFramework>""" + framework + """</TargetFramework>
-                    <TargetPath>$(MSBuildProjectDirectory)/custom output/$(Configuration)/$(TargetFramework)/$(MinVerVersionOverride)/$(MSBuildProjectName).dll</TargetPath>
+                    <AssemblyName>""" + name + """</AssemblyName>
+                    <TargetPath>$(MSBuildProjectDirectory)/custom output/$(Configuration)/$(TargetFramework)/$(MinVerVersionOverride)/$(AssemblyName).dll</TargetPath>
                     </PropertyGroup></Project>""")
-                assembly = project.parent / "custom output/Release" / framework / "1.0.0/Owner.dll"
+                assembly = project.parent / "custom output/Release" / framework / ("1.0.0/" + name + ".dll")
                 assembly.parent.mkdir(parents=True)
                 assembly.touch()
                 self.assertEqual(publisher.owner_assembly(project, os.environ.copy()), assembly)
@@ -178,8 +179,8 @@ class EvaluatedOwnerPathTests(unittest.TestCase):
 
             def run(command, directory, environment, timeout):
                 commands.append(command)
-                if "-getProperty:TargetPath" in command:
-                    return (str(assembly) + "\n").encode()
+                if "-getProperty:TargetPath,AssemblyName" in command:
+                    return json.dumps({"Properties": {"TargetPath": str(assembly), "AssemblyName": assembly.stem}}).encode()
                 if "--output-path" in command:
                     raise publisher.QualificationError("fixture stops before publisher execution")
 
@@ -210,10 +211,19 @@ class EvaluatedOwnerPathTests(unittest.TestCase):
             linked = project.parent / "linked/Owner.dll"
             linked.parent.mkdir()
             linked.symlink_to(wrong_owner)
-            for output in (b"", b"Owner.dll\n", b"\xff", (str(absent) + "\n").encode(),
-                           (str(wrong_owner) + "\n").encode(), (str(directory) + "\n").encode(),
-                           (str(linked) + "\n").encode(), (str(absent) + "\n" + marker).encode(),
-                           (str(absent) + "\0").encode(), b"x" * 4097):
+            real_directory = project.parent / "real"
+            real_directory.mkdir()
+            (real_directory / "Owner.dll").touch()
+            linked_directory = project.parent / "linked-directory"
+            linked_directory.symlink_to(real_directory, target_is_directory=True)
+            def evaluated(path, name="Owner"):
+                return json.dumps({"Properties": {"TargetPath": str(path), "AssemblyName": name}}).encode()
+            for output in (b"", b"Owner.dll\n", b"\xff", evaluated(absent), evaluated(wrong_owner),
+                           evaluated(directory), evaluated(linked), evaluated(linked_directory / "Owner.dll"), evaluated(absent, "../Owner"),
+                           evaluated(absent, ""), evaluated(absent, " "), evaluated(absent, None), evaluated(absent, "Owner\n"),
+                           evaluated(absent, "Owner\\bad"), evaluated("Owner.dll"), evaluated(str(absent) + "\0"),
+                           b'{"Properties":{"TargetPath":"x","TargetPath":"y","AssemblyName":"Owner"}}',
+                           b'[]', b'{"Properties":null}', b"x" * 4097):
                 with self.subTest(output=output), mock.patch.object(publisher, "run_private", return_value=output):
                     captured = io.StringIO()
                     with mock.patch.object(sys, "argv", ["verify-eventstore-publish", "--project", str(project), "--no-build"]), redirect_stdout(captured):

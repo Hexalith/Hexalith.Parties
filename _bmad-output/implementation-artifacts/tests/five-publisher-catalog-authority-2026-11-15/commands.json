@@ -1,0 +1,26 @@
+[
+  {
+    "cwd": "${PARTIES_ROOT}",
+    "command": "run-with-temp bash -c 'ArtifactsPath=\"$TMPDIR/build\" python3 -m unittest scripts/test_verify_eventstore_publish.py > TestResults/five-authority-publisher-final.log 2>&1'"
+  },
+  {
+    "cwd": "${PARTIES_ROOT}",
+    "command": "TMPDIR=\"$PWD/TestResults\" run-with-temp bash -c 'dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Debug -m:1 --disable-build-servers --artifacts-path \"$TMPDIR/build\" -p:MinVerVersionOverride=1.0.0 > TestResults/five-authority-ci-build.log 2>&1 && dotnet \"$TMPDIR/build/bin/Hexalith.Parties.Ci.Tests/debug/Hexalith.Parties.Ci.Tests.dll\" -class Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests -failSkips -result-xml TestResults/five-authority-ci.xml > TestResults/five-authority-ci-tests.log 2>&1'"
+  },
+  {
+    "cwd": "${MEMORIES_ROOT}",
+    "command": "TMPDIR=\"$PWD/TestResults\" run-with-temp bash -c 'dotnet build tests/Hexalith.Memories.IntegrationTests/Hexalith.Memories.IntegrationTests.csproj -c Debug -m:1 --disable-build-servers --artifacts-path \"$TMPDIR/build\" -p:UseHexalithProjectReferences=true -p:MinVerVersionOverride=1.0.0 > ../../TestResults/five-authority-memories-build.log 2>&1 && sha256sum \"$TMPDIR/build/bin/Hexalith.Memories.IntegrationTests/debug/Hexalith.Memories.IntegrationTests.dll\" \"$TMPDIR/build/bin/Hexalith.Memories.Server/debug/Hexalith.Memories.Server.dll\" > ../../TestResults/five-authority-memories-binaries.sha256 && dotnet \"$TMPDIR/build/bin/Hexalith.Memories.IntegrationTests/debug/Hexalith.Memories.IntegrationTests.dll\" -class Hexalith.Memories.IntegrationTests.Ingestion.UnitOwnershipAuthorityIntegrationTests -class Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests -class Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests -class Hexalith.Memories.IntegrationTests.Ingestion.RefreshPublicationIntegrationTests -failSkips -parallel none -result-xml ../../TestResults/five-authority-memories.xml > ../../TestResults/five-authority-memories-tests.log 2>&1'"
+  },
+  {
+    "cwd": "${MEMORIES_ROOT}",
+    "command": "TMPDIR=\"$PWD/TestResults\" run-with-temp bash -c 'dotnet build tests/Hexalith.Memories.Server.Tests/Hexalith.Memories.Server.Tests.csproj -c Debug -m:1 --disable-build-servers --artifacts-path \"$TMPDIR/build\" -p:UseHexalithProjectReferences=true -p:MinVerVersionOverride=1.0.0 > ../../TestResults/five-authority-memories-server-build.log 2>&1 && sha256sum \"$TMPDIR/build/bin/Hexalith.Memories.Server.Tests/debug/Hexalith.Memories.Server.Tests.dll\" > ../../TestResults/five-authority-memories-server-binaries.sha256 && dotnet \"$TMPDIR/build/bin/Hexalith.Memories.Server.Tests/debug/Hexalith.Memories.Server.Tests.dll\" -class Hexalith.Memories.Server.Tests.EventStoreIntegration.EventIngestionWorkflowSchedulerAdapterTests -class Hexalith.Memories.Server.Tests.Ingestion.DirectoryIngestionServiceTests -class Hexalith.Memories.Server.Tests.Ingestion.DaprIngestionWorkflowSchedulerTests -class Hexalith.Memories.Server.Tests.Endpoints.IngestionEndpointE2ETests -class Hexalith.Memories.Server.Tests.Endpoints.DirectoryIngestionEndpointE2ETests -class Hexalith.Memories.Server.Tests.Endpoints.ReIngestionEndpointE2ETests -class Hexalith.Memories.Server.Tests.Architecture.IngestionWorkflowDeterminismGuardTests -failSkips -parallel none -result-xml ../../TestResults/five-authority-memories-server.xml > ../../TestResults/five-authority-memories-server-tests.log 2>&1'"
+  },
+  {
+    "cwd": "${PARTIES_ROOT}",
+    "command": "TMPDIR=\"$PWD/TestResults\" HexalithEventStoreVersion=5.1.0 run-with-temp python3 scripts/verify-catalog-runtime.py --configuration Release --results-directory TestResults/c5"
+  },
+  {
+    "cwd": "${PARTIES_ROOT}",
+    "command": "bash scripts/check-no-warning-override.sh"
+  }
+]

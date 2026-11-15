@@ -1,0 +1,121 @@
+[
+  {
+    "id": "BH1",
+    "verdict": "medium",
+    "route": "patch: directory settlement",
+    "evidence": "Early workflow lookup/normalization precedes the scheduler proof catch; a pre-admitted directory entry can remain Preparing without any schedule call.",
+    "disposition": "resolved by source patch and final passing controls"
+  },
+  {
+    "id": "BH2",
+    "verdict": "medium",
+    "route": "patch: reconciliation idempotence",
+    "evidence": "The Lua expected-authority equality rejects an identical committed retry after a lost acknowledgement; accept only the identical desired authority while retaining all inventory guards.",
+    "disposition": "resolved by source patch and final passing controls"
+  },
+  {
+    "id": "BH3",
+    "verdict": "medium",
+    "route": "patch: reconciliation bounds",
+    "evidence": "The supplied list is sorted before its count guard, and SMEMBERS precedes any retained cardinality guard; both violate the bounded owner seam.",
+    "disposition": "resolved by source patch and final passing controls"
+  },
+  {
+    "id": "BH4",
+    "verdict": "low",
+    "route": "patch: replacement coverage",
+    "evidence": "Successful expected-authority replacement is an implemented owner operation, but only stale refusal was exercised; extend its existing persisted-state control.",
+    "disposition": "resolved by source patch and final passing controls"
+  },
+  {
+    "id": "BH5",
+    "verdict": "medium",
+    "route": "patch: inventory omission coverage",
+    "evidence": "The retained-obligation omission guard lacks an executed negative case; add a direct case preserving authority, provenance and content bytes.",
+    "disposition": "resolved by source patch and final passing controls"
+  },
+  {
+    "id": "BH6",
+    "verdict": "medium",
+    "route": "patch: generation race coverage",
+    "evidence": "The new global custody reservation spans tenants and reconciliation/issuance operations; add a direct competing-operation control proving one custody winner and no loser admission.",
+    "disposition": "resolved by source patch and final passing controls"
+  },
+  {
+    "id": "BH7",
+    "verdict": "medium",
+    "route": "patch: event workflow verification",
+    "evidence": "Prefixing event workflow IDs changes the production dedup-prefix branch; the adapter mock does not execute that branch or its retry/duplicate lifecycle.",
+    "disposition": "resolved by source patch and final passing controls"
+  },
+  {
+    "id": "BH8",
+    "verdict": "medium",
+    "route": "patch: configured callers",
+    "evidence": "Manual qualification in admission tests bypasses changed HTTP and CaseService ID issuance; execute configured entry points and bind returned IDs to authority.",
+    "disposition": "resolved by source patch and final passing controls"
+  },
+  {
+    "id": "BH9",
+    "verdict": "low",
+    "route": "resolved: parent SDK qualification",
+    "evidence": "A disposable actual Microsoft.NET.Sdk executable with Custom.Publisher AssemblyName built, resolved through owner_assembly and executed successfully; sdk-custom-probe.json retains the result. A new permanent harness is unnecessary.",
+    "disposition": "resolved by actual custom SDK build/execute"
+  },
+  {
+    "id": "BH10",
+    "verdict": "medium",
+    "route": "patch: coherent fallback cohort",
+    "evidence": "The exact older fallback families compiled the consumer but native preparation fails because current Tenants source requires RefreshTenantAccess absent from Contracts7.0.7. Align only fallback values to the already runtime-qualified5.1/8.0.0/4.0.0/6.0.0 cohort and verify the complete fallback selection.",
+    "disposition": "resolved by source patch and final passing controls"
+  },
+  {
+    "id": "EC1",
+    "verdict": "medium",
+    "route": "patch: directory settlement",
+    "evidence": "Duplicate of BH1: real scheduler preflight errors happen outside settlement, while the directory owns an already persisted Preparing admission.",
+    "disposition": "resolved by source patch and final passing controls"
+  },
+  {
+    "id": "EC2",
+    "verdict": "medium",
+    "route": "patch: authority capacity",
+    "evidence": "Accepted512-character Unicode evidence fields serialize beyond4096 characters, yet IsComplete rejects that size. Reject oversized authority before mutation using the same limit.",
+    "disposition": "resolved by source patch and final passing controls"
+  },
+  {
+    "id": "VG1",
+    "verdict": "medium",
+    "route": "patch: configured callers",
+    "evidence": "Filed regression gap accepted: existing endpoint/CaseService tests omit generation settings; manually qualified Redis controls cannot detect plain-ID regressions.",
+    "disposition": "resolved by source patch and final passing controls"
+  },
+  {
+    "id": "VG2",
+    "verdict": "medium",
+    "route": "patch: directory failure coverage",
+    "evidence": "Filed regression gap accepted: configured directory preparation-failure compensation is unexecuted; persist and settle Unscheduled across a recreated connection.",
+    "disposition": "resolved by source patch and final passing controls"
+  },
+  {
+    "id": "EC3",
+    "verdict": "medium",
+    "route": "patch: settlement ownership",
+    "evidence": "Only an acknowledged successful admission creation grants this call compensation ownership. Rejected and identical duplicate preflight failures preserve the original producer.",
+    "disposition": "resolved; independent edge follow-up and final 108/99 controls pass"
+  },
+  {
+    "id": "P1",
+    "verdict": "false",
+    "route": "rejected",
+    "evidence": "ChangeAsync returns before serialization when updated == current; the existing guard disproves the alleged empty-inventory mutation.",
+    "disposition": "refuted; no production change for this claim"
+  },
+  {
+    "id": "P2",
+    "verdict": "medium",
+    "route": "patch: qualification ordering",
+    "evidence": "Old raw activity dispatch can occur if replacement worker is exposed before erasure. The controlled fixture must fence, terminate and physically purge using the original worker before replacement exposure.",
+    "disposition": "test-only correction; both variants and all 108 related integration controls pass"
+  }
+]

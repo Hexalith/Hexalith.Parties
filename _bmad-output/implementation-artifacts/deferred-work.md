@@ -2522,6 +2522,9 @@ archived: 2026-11-15
   verification_snapshot_2026_11_11: `tests/five-snapshot-history-and-publish-2026-11-11/`
   review_resolution_snapshot_2026_11_11: The proposed source-wide prerequisite was rejected and removed: it blocks ordinary production cleanup and source-B reconciliation still grants false completeness to source-A historical chunks. Production fresh behavior is preserved. Only the legacy-NL base-key collision is corrected here; purged/concurrent/cross-source identity safety stays open pending per-unit authority or old-writer exclusion.
   final_verification_snapshot_2026_11_11: `tests/five-snapshot-history-and-publish-2026-11-11/final-verification.json`; independent false-success proof in `review-cross-source/`.
+  implementation_2026_11_15: The configured Memories issuer now reserves immutable generation-qualified tenant/unit authority atomically before writes; purged history and bare markers grant no completeness. Real Dapr purge/reuse retains complete chunk/NL hashes on refusal, while tracked lost-ack recovery remains covered.
+  verification_2026_11_15: `tests/five-publisher-catalog-authority-2026-11-15/final-verification.json`; reviewed final source lanes pass with zero targeted skips.
+  remaining_gate_2026_11_15: Matching package publication/adoption and a real operator-established generation/writer cutover remain external; disposable source evidence does not attest production exclusion.
 
 
 - source_spec: `spec-five-memories-proof-and-process-observation-deferred-items.md`
@@ -2550,17 +2553,35 @@ archived: 2026-11-15
   verification_snapshot_2026_11_11: `tests/five-snapshot-history-and-publish-2026-11-11/`
   review_resolution_snapshot_2026_11_11: The proposed source-wide prerequisite was rejected and removed: it blocks ordinary production cleanup and source-B reconciliation still grants false completeness to source-A historical chunks. Production fresh behavior is preserved. Only the legacy-NL base-key collision is corrected here; purged/concurrent/cross-source identity safety stays open pending per-unit authority or old-writer exclusion.
   final_verification_snapshot_2026_11_11: `tests/five-snapshot-history-and-publish-2026-11-11/final-verification.json`; independent false-success proof in `review-cross-source/`.
+  implementation_2026_11_15: Actual older Dapr producers complete between a real absent lookup and ordinary/annotation admission. Missing exact-unit authority refuses complete erasure and discovery no longer mutates historical hashes before refusal. Configured generation issuance uses the same Redis boundary for ordinary, annotation, directory and event paths.
+  verification_2026_11_15: `tests/five-publisher-catalog-authority-2026-11-15/final-verification.json`; reviewed final source lanes pass with zero targeted skips.
+  remaining_gate_2026_11_15: Production writer exclusion is an operator-owned external prerequisite; this batch attests only its owned synthetic writers and units.
 
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-snapshot-history-and-publish-deferrals.md`
   summary: Establish per-unit historical identity authority across source changes without blocking ordinary fresh production cleanup.
   evidence: Review E1/D1, high verified and pre-existing. Actual historical source-A workflow purge, independently reconciled empty source B, and reused tenant/unit identity grant modern provenance; real deletion returns true while chunk7 survives with the same complete persisted hash. Source coverage is not unit authority. The rejected blanket prerequisite also breaks ordinary cleanup because qualification endpoints are non-Production. A new owner-approved per-unit freshness or old-writer exclusion protocol is required; no negative scan or synthetic source attestation supplies it. Evidence: `tests/five-snapshot-history-and-publish-2026-11-11/review-cross-source/`.
   status: open
+  implementation_2026_11_15: Source-B coverage cannot authorize source-A unit erasure. Exact-unit records retain tenant/unit/generation, original producer binding and external exclusion evidence across source changes, purge and deletion. Missing configuration cannot borrow another producer receipt. Historical cleanup requires exact-unit inventory/evidence and conditional authority replacement.
+  verification_2026_11_15: `tests/five-publisher-catalog-authority-2026-11-15/final-verification.json`; reviewed final source lanes pass with zero targeted skips.
+  remaining_gate_2026_11_15: A real historical inventory and verified writer exclusion remain open for existing deployments; no production mutation, attestation or deployment was performed.
+
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-sync-release-2026-11-13.md`
   summary: Qualify the exact EventStore 5.0.0 catalog/host/selector capabilities before admitting that current catalog family to Parties runtime gates.
+  status: done 2026-11-15
+  disposition_2026_11_15: Superseded by the approved retirement of 5.0 support. Fallback selects the qualified 5.1/8/4/6 cohort; no 5.0 capability qualification or admission is claimed.
   evidence: Directory.Build.targets intentionally closes unknown cohorts; upstream Builds 00d91d526ec54c0269a9abdfff7c9c8a5f7f80da now supplies exact retained SDK4.2 Parties/Platform views while shared defaults remain SDK5. Real native/protocol qualification is required before changing those guards.
+  implementation_2026_11_15: Approved support decision selects exact 5.1.0 as the standalone fallback and preserves caller/catalog precedence. Explicit 5.0.0 remains refused. Exact positive/negative cohort controls pass and the explicitly selected 5.1.0 Release/package native runtime control passes.
+  verification_2026_11_15: `tests/five-publisher-catalog-authority-2026-11-15/final-verification.json`; reviewed final source lanes pass with zero targeted skips.
+  remaining_gate_2026_11_15: No 5.0.0 admission or deployment is authorized. Source, package and production evidence remain distinct.
+
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-sync-release-2026-11-13.md`
   summary: Preserve evaluated AssemblyName support when generalizing the owner publisher helper.
+  status: done 2026-11-15
+  resolution_2026_11_15: Reviewed evaluated identity fix passes all 14 publisher controls and an actual custom-name SDK executable build/resolution/run.
   evidence: Pre-existing `scripts/verify-eventstore-publish.py:owner_assembly` requires the TargetPath basename to match the project stem; custom AssemblyName is unsupported. All currently selected fixed owner projects use default names, so no current release failure depends on this limitation.
+  implementation_2026_11_15: One bounded MSBuild JSON evaluation binds TargetPath to evaluated AssemblyName using the build configuration/properties. Real default/custom identities pass; malformed, mismatched, missing and symlinked outputs refuse with bounded private diagnostics.
+  verification_2026_11_15: `tests/five-publisher-catalog-authority-2026-11-15/final-verification.json`; reviewed final source lanes pass with zero targeted skips.
+  remaining_gate_2026_11_15: Source review and publication are complete in the enclosing workflow; local manifest qualification supplies no deployment acceptance.

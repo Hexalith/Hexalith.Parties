@@ -261,14 +261,28 @@ def run_private(command, directory, environment, timeout):
 def owner_assembly(project, environment):
     """Evaluate the selected owner's actual output using the same build properties."""
     output = run_private(["dotnet", "msbuild", str(project), "-nologo", "-nr:false", "-m:1",
-                          *BUILD_PROPERTIES, "-getProperty:TargetPath"], ROOT, environment, 60)
+                          *BUILD_PROPERTIES, "-getProperty:TargetPath,AssemblyName"], ROOT, environment, 60)
     require(isinstance(output, bytes) and 0 < len(output) <= 4096,
             "evaluated owner AppHost target path invalid")
-    value = output.decode("utf-8").removesuffix("\n").removesuffix("\r")
-    require(bool(value) and not any(character in value for character in ("\r", "\n", "\0")),
+    try:
+        def unique_properties(pairs):
+            result = {}
+            for key, value in pairs:
+                require(key not in result, "evaluated owner AppHost target path invalid")
+                result[key] = value
+            return result
+        evaluation = json.loads(output.decode("utf-8"), object_pairs_hook=unique_properties)
+        properties = evaluation["Properties"]
+        value, name = properties["TargetPath"], properties["AssemblyName"]
+    except (ValueError, KeyError, TypeError) as error:
+        raise QualificationError("evaluated owner AppHost target path invalid") from error
+    require(isinstance(value, str) and isinstance(name, str) and bool(value) and bool(name)
+            and name.strip() == name and name not in {".", ".."} and not any(character in name for character in '/\\:')
+            and not any(ord(character) < 32 or ord(character) == 127 for character in value + name),
             "evaluated owner AppHost target path invalid")
     assembly = Path(value)
-    require(assembly.is_absolute() and assembly.name == project.stem + ".dll" and not assembly.is_symlink(),
+    require(assembly.is_absolute() and assembly.name == name + ".dll"
+            and not any(path.is_symlink() for path in (assembly, *assembly.parents)),
             "evaluated owner AppHost target path invalid")
     require(assembly.is_file(), "built owner AppHost assembly missing")
     return assembly

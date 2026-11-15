@@ -1,0 +1,143 @@
+{
+  "stage": "focused review patch; full validation/publication remains with parent",
+  "date": "2026-11-15",
+  "scope": "Only selectors covering patched files were run. Earlier implementation receipts and parent triage/custom-SDK evidence are preserved.",
+  "lanes": [
+    {
+      "lane": "authority",
+      "total": 21,
+      "passed": 21,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "project": "Hexalith.Memories.IntegrationTests",
+      "selectors": [
+        "-class",
+        "Hexalith.Memories.IntegrationTests.Ingestion.UnitOwnershipAuthorityIntegrationTests"
+      ],
+      "arguments": [
+        "-failSkips",
+        "-parallel",
+        "none"
+      ],
+      "log": "TestResults/five-authority-patch-authority.log",
+      "xml": "TestResults/five-authority-patch-authority.xml"
+    },
+    {
+      "lane": "producers",
+      "total": 9,
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "project": "Hexalith.Memories.IntegrationTests",
+      "selectors": [
+        "-method",
+        "*.ConfiguredDirectoryEarlyFailuresSettleOnlyProvablyNeverScheduledAdmissions",
+        "-method",
+        "*.ConfiguredEventWorkflowKeepsIssuedIdentityThroughFailedRetryAndDuplicateDelivery"
+      ],
+      "arguments": [
+        "-failSkips",
+        "-parallel",
+        "none"
+      ],
+      "log": "TestResults/five-authority-patch-producers.log",
+      "xml": "TestResults/five-authority-patch-producers.xml"
+    },
+    {
+      "lane": "callers",
+      "total": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "project": "Hexalith.Memories.Server.Tests",
+      "selectors": [
+        "-method",
+        "*.ConfiguredHttpEntryPointsIssueGenerationQualifiedIdentifiers",
+        "-method",
+        "*.CreateAnnotationAsync_ShouldAcceptCommandBeforeSchedulingProjectionWorkflow",
+        "-method",
+        "*.PostIngest_WithValidFilePayload_SchedulesThroughIngestionWorkflowScheduler"
+      ],
+      "arguments": [
+        "-failSkips",
+        "-parallel",
+        "none"
+      ],
+      "log": "TestResults/five-authority-patch-callers.log",
+      "xml": "TestResults/five-authority-patch-callers.xml"
+    },
+    {
+      "lane": "scheduler",
+      "total": 13,
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "project": "Hexalith.Memories.Server.Tests",
+      "selectors": [
+        "-class",
+        "Hexalith.Memories.Server.Tests.Ingestion.DaprIngestionWorkflowSchedulerTests",
+        "-class",
+        "Hexalith.Memories.Server.Tests.Ingestion.DirectoryIngestionServiceTests"
+      ],
+      "arguments": [
+        "-failSkips",
+        "-parallel",
+        "none"
+      ],
+      "log": "TestResults/five-authority-patch-scheduler.log",
+      "xml": "TestResults/five-authority-patch-scheduler.xml"
+    },
+    {
+      "lane": "fallback",
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "project": "Hexalith.Parties.Ci.Tests",
+      "selectors": [
+        "-method",
+        "*.StandaloneCatalogFallbackPreservesSelectionPrecedence"
+      ],
+      "arguments": [
+        "-failSkips"
+      ],
+      "log": "TestResults/five-authority-patch-ci.log",
+      "xml": "TestResults/five-authority-patch-ci.xml"
+    }
+  ],
+  "totalPassed": 51,
+  "buildLogs": [
+    "TestResults/five-authority-patch-integration-build.log",
+    "TestResults/five-authority-patch-server-build.log",
+    "TestResults/five-authority-patch-ci-build.log"
+  ],
+  "buildConfiguration": "Debug; -m:1 --disable-build-servers --artifacts-path ${TMPDIR}/build -p:MinVerVersionOverride=1.0.0; Memories also -p:UseHexalithProjectReferences=true",
+  "workspace": "run-with-temp with canonical owning-repository TestResults as parent TMPDIR; all final jobs exited 0 and disposed their fixtures",
+  "sourceSha256": {
+    "Directory.Packages.props": "9619eabb6f9f5468bf67dff6df104607bb0abe529b6f50c7f4381f179b71b3f1",
+    "tests/Hexalith.Parties.Ci.Tests/AspireRuntimePreparationTests.cs": "f1b210ec2cfc13d8ca3a54a3e0a30d486e74868e218924bacc121a6d8b870eaa",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/DaprIngestionWorkflowScheduler.cs": "31097788a83258b075da56cfb032fea970ab0ff36cb2477a42434c8cebb00095",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/DirectoryIngestionService.cs": "9c4e93836d7be11fd60a260256964c79061365c8a8b91546e4e09e1b5ec9c8ae",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/SourceInventoryStore.cs": "2ba27874b8fc92ec401854a840b4bcfc94b3150b56fa818193ca966a65762cfa",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/UnitOwnershipAuthority.cs": "a091476e3ef4ea25f4fde28664426c8532b25d33a9e2ec3d10369956c1fbe7c5",
+    "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Ingestion/SourceInventoryProducerIntegrationTests.cs": "a39cd4baab64b52cac569d24d669c96944fd6ff6d5c0b892018497a7e2c2e66e",
+    "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Ingestion/UnitOwnershipAuthorityIntegrationTests.cs": "cf74e6b90468376d9bd3e5864e9d59d1b9aa2fa679d4322e2177edf9de1572a9",
+    "references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/Cases/CaseServiceTests.cs": "b8dce745fb976fcb995c5c7cb8b9eed43559e34d63384ea622b0cdd564de20c9",
+    "references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/Endpoints/IngestionEndpointE2ETests.cs": "5889c2ba24d059c01a6103e527a2124abe6a20259b6fe8deb11f7ebed5484cda"
+  },
+  "settlement": "Only an acknowledged created admission grants this call settlement ownership. Generic pre-admission lookup/normalization failures, observed executions and admission rejections never settle another producer. Directory owns its early CAS result and checks full retained request binding plus Preparing state across cancellation.",
+  "reconciliation": "Identical desired retries remain subject to scope, inventory, cardinality and global custody guards. Reader/writer share 4096 serialized characters; Count and SCARD are bounded before enumeration.",
+  "callers": "Configured file/URL and CaseService annotation entry points execute; a CaseService-returned ID binds native Redis issuance. Actual IngestionWorkflow code executes the prefixed event identity, persists failed-unit identity, performs verified failed retry into native syntactic/chunk indexes and short-circuits duplicate delivery. Workflow transport is substituted in that bounded event control.",
+  "fallback": [
+    "5.1.0",
+    "8.0.0",
+    "4.0.0",
+    "6.0.0"
+  ],
+  "externalGates": "Production writer exclusion, independently complete real historical inventories, package/deployment and parent publication remain open."
+}

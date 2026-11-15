@@ -1,0 +1,124 @@
+{
+  "date": "2026-11-15",
+  "stage": "implementation; independent review and Git publication follow in parent workflow",
+  "sourceBases": {
+    "parties": "cb9ba9ecfb76125efd407d294d3d01b62e8af687",
+    "memories": "b7e195031cab96b38949b90317ea8033797027b8",
+    "eventstore": "fdb59895975e86a1e234325a01237f259cdbd53b",
+    "builds": "73e60af8a1fcdf3f06726d5d1b6e1199cce778ee"
+  },
+  "sourceState": "Uncommitted implementation files; source-input hashes identify current implementation. Parent records reviewed commit revisions separately.",
+  "lanes": {
+    "ci": {
+      "total": 120,
+      "passed": 120,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "durationSeconds": "66.356",
+      "startUtc": "2026-11-15T11:02:42.1517459+00:00",
+      "finishUtc": "2026-11-15T11:03:48.5049492+00:00"
+    },
+    "memoriesIntegration": {
+      "total": 87,
+      "passed": 87,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "durationSeconds": "56.031",
+      "startUtc": "2026-11-15T11:15:25.1420131+00:00",
+      "finishUtc": "2026-11-15T11:16:21.1699910+00:00"
+    },
+    "memoriesServer": {
+      "total": 56,
+      "passed": 56,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "durationSeconds": "4.283",
+      "startUtc": "2026-11-15T11:15:17.1852244+00:00",
+      "finishUtc": "2026-11-15T11:15:21.4667627+00:00"
+    },
+    "catalogRuntime": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "sdkVersion": "5.1.0",
+      "familyVersions": {
+        "HexalithTenantsVersion": "8.0.0",
+        "HexalithMemoriesVersion": "4.0.0",
+        "HexalithFrontComposerVersion": "6.0.0",
+        "HexalithMcpCliVersion": "3.0.0"
+      },
+      "configuration": "Release",
+      "targetFramework": "net11.0",
+      "scope": "Explicit 5.1.0 Release/package catalog topology; does not qualify Memories ownership changes or deployed writer exclusion.",
+      "verification": {
+        "configuration": "Release",
+        "exitCode": 0,
+        "workspaceRemoved": true,
+        "runtimeCustodyRetained": true,
+        "retainedRuntimeProfile": "historical diagnostics; temporary binaries removed"
+      },
+      "cleanup": {
+        "scope": "owned successful catalog runtime debug FIFOs",
+        "removedFifos": 24,
+        "liveOwnedProcesses": 0,
+        "unrecognizedEntries": 0,
+        "custodyRemoved": true,
+        "removedDiagnosticSockets": 12
+      }
+    },
+    "publisher": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0,
+      "scope": "Actual SDK manifest emissions plus mutation/path/process controls; not deployment."
+    },
+    "publisherPathsCurrent": {
+      "total": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "scope": "Includes real default/custom names on net10.0/net11.0 and parent-directory symlink refusal."
+    }
+  },
+  "binariesSha256": {
+    "Hexalith.Memories.IntegrationTests.dll": "b69dcddab6fe3818cb9dd24463859a4f2e79c6eccedacd204cd63824d391dd7a",
+    "Hexalith.Memories.Server.dll": "3cb6f2603a8d23dca8eb49ae7e1c3c639764a9248c9e98b20c54170b81dc4a5e",
+    "Hexalith.Memories.Server.Tests.dll": "a07fa83d6097be205411340e0b47f4c10aabb715e3e8d5c9aa4ca3d29e6719bd"
+  },
+  "commands": [
+    "run-with-temp bash -c 'ArtifactsPath=\"$TMPDIR/build\" python3 -m unittest scripts/test_verify_eventstore_publish.py > TestResults/five-authority-publisher-final.log 2>&1'",
+    "run-with-temp python3 -m unittest scripts.test_verify_eventstore_publish.EvaluatedOwnerPathTests scripts.test_verify_eventstore_publish.OwnedCommandTests",
+    "TMPDIR=\"$PARTIES_ROOT/TestResults\" run-with-temp bash -c 'dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Debug -m:1 --disable-build-servers --artifacts-path \"$TMPDIR/build\" -p:MinVerVersionOverride=1.0.0 && dotnet \"$TMPDIR/build/bin/Hexalith.Parties.Ci.Tests/debug/Hexalith.Parties.Ci.Tests.dll\" -class Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests -failSkips -result-xml TestResults/five-authority-ci.xml'",
+    "TMPDIR=\"$MEMORIES_ROOT/TestResults\" run-with-temp bash -c 'dotnet build tests/Hexalith.Memories.IntegrationTests/Hexalith.Memories.IntegrationTests.csproj -c Debug -m:1 --disable-build-servers --artifacts-path \"$TMPDIR/build\" -p:UseHexalithProjectReferences=true -p:MinVerVersionOverride=1.0.0 && dotnet \"$TMPDIR/build/bin/Hexalith.Memories.IntegrationTests/debug/Hexalith.Memories.IntegrationTests.dll\" -class Hexalith.Memories.IntegrationTests.Ingestion.UnitOwnershipAuthorityIntegrationTests -class Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests -class Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests -class Hexalith.Memories.IntegrationTests.Ingestion.RefreshPublicationIntegrationTests -failSkips -parallel none -result-xml \"$PARTIES_ROOT/TestResults/five-authority-memories.xml\"'",
+    "TMPDIR=\"$MEMORIES_ROOT/TestResults\" run-with-temp bash -c 'dotnet build tests/Hexalith.Memories.Server.Tests/Hexalith.Memories.Server.Tests.csproj -c Debug -m:1 --disable-build-servers --artifacts-path \"$TMPDIR/build\" -p:UseHexalithProjectReferences=true -p:MinVerVersionOverride=1.0.0 && dotnet \"$TMPDIR/build/bin/Hexalith.Memories.Server.Tests/debug/Hexalith.Memories.Server.Tests.dll\" -class Hexalith.Memories.Server.Tests.EventStoreIntegration.EventIngestionWorkflowSchedulerAdapterTests -class Hexalith.Memories.Server.Tests.Ingestion.DirectoryIngestionServiceTests -class Hexalith.Memories.Server.Tests.Ingestion.DaprIngestionWorkflowSchedulerTests -class Hexalith.Memories.Server.Tests.Endpoints.IngestionEndpointE2ETests -class Hexalith.Memories.Server.Tests.Endpoints.DirectoryIngestionEndpointE2ETests -class Hexalith.Memories.Server.Tests.Endpoints.ReIngestionEndpointE2ETests -class Hexalith.Memories.Server.Tests.Architecture.IngestionWorkflowDeterminismGuardTests -failSkips -parallel none -result-xml \"$PARTIES_ROOT/TestResults/five-authority-memories-server.xml\"'",
+    "TMPDIR=\"$PARTIES_ROOT/TestResults\" HexalithEventStoreVersion=5.1.0 run-with-temp python3 scripts/verify-catalog-runtime.py --configuration Release --results-directory TestResults/c5",
+    "bash scripts/check-no-warning-override.sh"
+  ],
+  "commandNotes": "Commands preserve executable arguments and normalize workspace prefixes only. Log redirections and sha256sum captures are omitted from the concise display; exact final shell orchestration is retained in commands.json. Root and owner commands execute in their owning repository.",
+  "externalGates": [
+    "Actual operator-controlled nonreused generation and complete older/out-of-band writer exclusion",
+    "Complete independently owned historical inventory for each real historical unit",
+    "Matching Memories package publication/adoption and deployed qualification; source fixture exclusion is not production proof"
+  ],
+  "intermediateDispositions": [
+    "CI artifact-root discovery initially failed outside the repository. Canonical owner-rooted TMPDIR keeps disposable outputs under the correct ancestor; final 120/120 passes.",
+    "Catalog fake import needed the actual HexalithVersionsLoaded flag, and supported sample-source expectations needed the catalog declarations; corrected without widening cohort guards.",
+    "An initial package preparation failed because a proposed new Contracts property was absent in selected published Contracts. Removed the property/API change; event qualification now stays in the existing Server adapter. Final package build/preparation passes.",
+    "An initial runtime attempt hit the Unix-domain socket length limit and Git ancestor lookup outside the repository. Short persistent results plus repository-rooted disposable artifacts resolves both; final 5.1.0 runtime passes.",
+    "Concurrent Dapr byte assertions exposed legacy discovery mutating publicationVisible before refusal. Removed that content mutation; full persisted hash assertions remain and pass.",
+    "One intermediate historical worker-upgrade run reproduced contentCallsAfterUpgrade=1 in its unchanged embedding-phase control. The retained prior batch already documents this intermittent boundary; the final serialized selection passes both variants. No assertion was weakened.",
+    "Historical fixture bare markers were migrated to explicit exact-unit authority; fresh controls use disposable configured generations. Final source suite has no skips.",
+    "Owner-rooted canonical TMPDIR fixes source guard file lookup and path comparison artifacts. Exact syntactic ownership validation uses the real id field, while semantic ownership uses memoryUnitId. Final 56-case server lane passes."
+  ],
+  "postBuildFormatting": {
+    "scope": "CRLF normalization only; no semantic change",
+    "files": [
+      "src/Hexalith.Memories.Server/Ingestion/IngestionWorkflowConfigurationCapture.cs"
+    ]
+  }
+}
