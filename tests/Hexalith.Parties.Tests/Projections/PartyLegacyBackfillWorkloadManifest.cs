@@ -7,4 +7,5 @@ namespace Hexalith.Parties.Tests.Projections;
 /// <param name="Histories">The original complete captured histories, including event identities and payloads.</param>
 /// <param name="IndexOperation">The one stable shared operation resumed by every workload.</param>
 /// <param name="Existing">Whether the rehearsal replaces existing ETag-bearing canonical models.</param>
-internal sealed record PartyLegacyBackfillWorkloadManifest(string Tenant, ProjectionRequest[] Histories, string IndexOperation, bool Existing);
+/// <param name="LargeOperation">The stable aggregate operation interrupted and resumed across processes.</param>
+internal sealed record PartyLegacyBackfillWorkloadManifest(string Tenant, ProjectionRequest[] Histories, string IndexOperation, bool Existing, string LargeOperation);

@@ -1,0 +1,45 @@
+{
+  "baseline": "5dacf507003d861e6ed935a4298cafb34b5f6e9a",
+  "rootDeclaredRepositories": {
+    "references/Hexalith.EventStore": {
+      "head": "fdb59895975e86a1e234325a01237f259cdbd53b",
+      "workingTreeClean": true
+    },
+    "references/Hexalith.Memories": {
+      "head": "7a5c892508700b2e5c71c921cdaeedf68de5f03d",
+      "workingTreeClean": true
+    },
+    "references/Hexalith.FrontComposer": {
+      "head": "bca9dff291ce42c57516598732340a80703dfb6d",
+      "workingTreeClean": true
+    },
+    "references/Hexalith.Tenants": {
+      "head": "2ec938397c5b330cf1e694e8cc442cb4ad022f2b",
+      "workingTreeClean": true
+    },
+    "references/Hexalith.AI.Tools": {
+      "head": "17a37d83db193f0b7494c1b931fd1e82a67c1424",
+      "workingTreeClean": true
+    },
+    "references/Hexalith.Commons": {
+      "head": "fbf4e94233821f6ca336af91a06feaaeb7a16855",
+      "workingTreeClean": true
+    },
+    "references/Hexalith.Builds": {
+      "head": "73e60af8a1fcdf3f06726d5d1b6e1199cce778ee",
+      "workingTreeClean": true
+    },
+    "references/Hexalith.PolymorphicSerializations": {
+      "head": "e97b56930e213f674b64c157551f499b0473ec43",
+      "workingTreeClean": true
+    },
+    "references/Hexalith.McpCli": {
+      "head": "23072f04f423eea3f30456fe5af13d2d382624fe",
+      "workingTreeClean": true
+    },
+    "references/Hexalith.Platform": {
+      "head": "f6f85032598865b9123f16364448bfd02c0ff5b0",
+      "workingTreeClean": true
+    }
+  }
+}

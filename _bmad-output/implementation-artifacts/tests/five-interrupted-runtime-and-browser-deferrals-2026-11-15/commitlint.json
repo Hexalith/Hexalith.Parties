@@ -1,0 +1,14 @@
+{
+  "candidate": "test: qualify interrupted runtime boundaries\n",
+  "sha256": "0577b38d588f9e1cb286bac276013ef39b1e428ab4ee1bd28d54eb77fb26224d",
+  "cliVersion": "21.2.4",
+  "command": [
+    "${HOME}/.nvm/versions/node/v24.22.1/bin/node",
+    "node_modules/@commitlint/cli/cli.js",
+    "--edit",
+    "${TMPDIR}/commit-message.txt",
+    "--verbose"
+  ],
+  "exitCode": 0,
+  "output": "\u29d7   --- input ---\ntest: qualify interrupted runtime boundaries\n\u2714   found 0 problems, 0 warnings\n"
+}

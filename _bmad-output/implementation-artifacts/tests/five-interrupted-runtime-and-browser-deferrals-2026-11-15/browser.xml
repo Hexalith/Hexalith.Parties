@@ -1,0 +1,12 @@
+<testsuites id="" name="" tests="3" failures="0" skipped="0" errors="0" time="6.783805999999999">
+<testsuite name="admin-parties-list.spec.ts" timestamp="2026-11-15T16:58:57.817Z" hostname="chromium" tests="1" failures="0" skipped="0" time="1.897" errors="0">
+<testcase name="Admin parties list › direct GDPR route for an erased party keeps export and records available without PII" classname="admin-parties-list.spec.ts" time="1.897">
+</testcase>
+</testsuite>
+<testsuite name="consumer-portal-routes.spec.ts" timestamp="2026-11-15T16:58:57.817Z" hostname="chromium" tests="2" failures="0" skipped="0" time="1.471" errors="0">
+<testcase name="Consumer portal route shells › bound Consumer exports own data through the self-scoped path" classname="consumer-portal-routes.spec.ts" time="0.661">
+</testcase>
+<testcase name="Consumer portal route shells › bound Consumer navigation cancels an active shared download without late feedback or browser resources" classname="consumer-portal-routes.spec.ts" time="0.81">
+</testcase>
+</testsuite>
+</testsuites>

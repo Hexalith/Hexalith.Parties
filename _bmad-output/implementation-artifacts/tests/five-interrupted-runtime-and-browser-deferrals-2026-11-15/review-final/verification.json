@@ -1,0 +1,64 @@
+{
+  "backfill": {
+    "total": 11,
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0
+  },
+  "memoryConsumer": {
+    "total": 42,
+    "passed": 42,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0
+  },
+  "memoryWrapper": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0
+  },
+  "memoryChild": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0
+  },
+  "browser": {
+    "tests": 3,
+    "failures": 0,
+    "skipped": 0,
+    "errors": 0
+  },
+  "browserConfig": {
+    "passed": 20,
+    "failed": 0,
+    "skipped": 0,
+    "node": "24.22.1",
+    "npm": "11.19.1"
+  },
+  "independentSlices": true,
+  "outerEntriesRemainOpen": true,
+  "providerCleanupSucceeded": true,
+  "sourceOwnedTopologyDisposed": true,
+  "sourceSessionDirectoryExists": false,
+  "sourceOriginalPreparationReceiptsRetained": 13,
+  "sourceDebugBlocker": "NU1109: source EventStore OpenAPI >=11.0.0 vs central10.0.15",
+  "pinnedPackagePreparationBlockers": [
+    "HXW011",
+    "HXW010"
+  ],
+  "firstCompleteSourceRuntime": {
+    "wrapperPassed": 1,
+    "childPassed": 1,
+    "skips": 0,
+    "cleanupSucceeded": true
+  },
+  "initialBrowserEngineRefusal": "Node26.4.0/npm11.18.0; corrected by selecting installed pinned Node24.22.1/npm11.19.1",
+  "reviewCorrectionsResolved": true,
+  "publicationPending": true,
+  "browserInheritedOverridesCleared": true
+}

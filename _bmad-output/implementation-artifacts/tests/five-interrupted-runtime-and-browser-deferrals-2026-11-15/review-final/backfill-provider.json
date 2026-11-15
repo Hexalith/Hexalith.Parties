@@ -1,0 +1,21 @@
+{
+  "scope": "owned synthetic provider; no deployed writer drain or historical completeness",
+  "daprd": "1.19.1",
+  "redis": "Redis server v=7.4.7 sha=00000000:0 malloc=jemalloc-5.3.0 bits=64 build=7ff529a4e8a149e0",
+  "image": "redis/redis-stack:latest@sha256:880df9c228597cb0d15b585f39a4327d6ee2d8b0d0f155e3f75dba9a761d4ec3",
+  "testExitCode": 0,
+  "ownedProcessIds": {
+    "tests": 222680,
+    "sidecar": 222525
+  },
+  "ownedProcessesExited": true,
+  "processCleanup": {
+    "tests": true,
+    "sidecar": true
+  },
+  "ownedContainerId": "0fd1cf4e1259bcaffe8155c070c73c982a55da0da8aa23f14b4cc6e7e627f33a",
+  "containerRemovalExitCode": 0,
+  "ownedContainerAbsent": true,
+  "cleanupErrors": [],
+  "cleanupSucceeded": true
+}

@@ -1,0 +1,14 @@
+{
+  "command": "run-with-temp python3 _bmad-output/implementation-artifacts/tests/five-interrupted-runtime-and-browser-deferrals-2026-11-15/test_run_browser.py",
+  "passed": 2,
+  "failed": 0,
+  "skipped": 0,
+  "realProcessTreeCleanup": true,
+  "unrelatedWorkerSurvived": true,
+  "fullBrowserInvocationInheritedOverrides": {
+    "PLAYWRIGHT_SKIP_WEBSERVER": "1",
+    "BASE_URL": "http://127.0.0.1:5099"
+  },
+  "fullBrowserPassed": 3,
+  "configurationPassed": 20
+}

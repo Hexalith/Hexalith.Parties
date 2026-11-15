@@ -1,0 +1,68 @@
+[
+  {
+    "id": "hexalith.eventstore.client",
+    "version": "5.1.0",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Hexalith/Hexalith.EventStore",
+      "commit": "49084f66f8d6545cae442875355a7066d5f5e73d"
+    },
+    "nupkgSha256": "a3d0de6ff9f9d8eaafaa39a5faa9798ee9dd87c8721b9a9445a3a17c2abbdb40",
+    "nuspecSha256": "cd919f0ee2881ebf21df4d47d3dc173cf6c559cac3465a27339a7e519e12dce5"
+  },
+  {
+    "id": "hexalith.eventstore.contracts",
+    "version": "5.1.0",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Hexalith/Hexalith.EventStore",
+      "commit": "49084f66f8d6545cae442875355a7066d5f5e73d"
+    },
+    "nupkgSha256": "f5edf8e8bea1ac6477eae165dddb27b178236be4437d7e9f3bd2a6c384dc11b0",
+    "nuspecSha256": "a9a4c2d82a4258a42a6d58b6b53db24426345d139be8a4bda62843a781609ff3"
+  },
+  {
+    "id": "hexalith.eventstore.domainservice",
+    "version": "5.1.0",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Hexalith/Hexalith.EventStore",
+      "commit": "49084f66f8d6545cae442875355a7066d5f5e73d"
+    },
+    "nupkgSha256": "bb4d7dfb5146c1ede107651bd5d657ef2ea2cdddb0d752d6f3f3b8864cf8a8c5",
+    "nuspecSha256": "5cc51730e8ff38fb6dec037c6a4fee3fecf417722bcb5b8e9b331a4cdf2c4575"
+  },
+  {
+    "id": "hexalith.memories.client.rest",
+    "version": "4.0.0",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Hexalith/Hexalith.Memories",
+      "commit": "c4ee997702ede948ada5f99eeae7b3782e92003b"
+    },
+    "nupkgSha256": "c34a01af37981894e66caf4f217ee61527c8cb03116a72dd2f6267cf21ca8ea8",
+    "nuspecSha256": "47e15d43590f42020c0e21735e4b985fb01361c9d9ef44f61127c4cc980660ba"
+  },
+  {
+    "id": "hexalith.memories.contracts",
+    "version": "4.0.0",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Hexalith/Hexalith.Memories",
+      "commit": "c4ee997702ede948ada5f99eeae7b3782e92003b"
+    },
+    "nupkgSha256": "c431f690b2890e2cab1101575a8c1ee20dd992afd6c966356d2121e49c50330e",
+    "nuspecSha256": "db4f075a761d396b4d67829a70209996b47bae9d209f59f45b144e6b84e6f400"
+  },
+  {
+    "id": "hexalith.frontcomposer.shell",
+    "version": "6.0.0",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Hexalith/Hexalith.FrontComposer",
+      "commit": "d7e8f57808b610f7cddf95ecd06db178dfd7592f"
+    },
+    "nupkgSha256": "87591655be1b72b0ed4153900448d0423c8993d3cb423e334d536159589719db",
+    "nuspecSha256": "63a2a6b83c702f91efb17de0857336925070c588b28d2a4d467f92998faee82d"
+  }
+]

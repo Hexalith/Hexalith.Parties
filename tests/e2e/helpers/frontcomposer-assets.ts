@@ -5,9 +5,10 @@ import { expect, type Page, type TestInfo } from '@playwright/test';
 
 // Use the exact evaluated build selection, including NuGet fallback folders.
 // A package pass cannot certify the newer producer source or its reconciler.
-export async function qualifyFrontComposerAssets(page: Page, testInfo?: TestInfo): Promise<'source' | 'package'> {
+export async function qualifyFrontComposerAssets(page: Page, testInfo?: TestInfo,
+  metadataOutput?: URL): Promise<'source' | 'package'> {
   const configuration = process.env.CI ? 'Release' : 'Debug';
-  const output = new URL(`../../../src/Hexalith.Parties.UI/bin/${configuration}/net11.0/`, import.meta.url);
+  const output = metadataOutput ?? new URL(`../../../src/Hexalith.Parties.UI/bin/${configuration}/net11.0/`, import.meta.url);
   const [fromSource, mode, root] = (await readFile(new URL('Hexalith.Parties.UI.source-metadata.txt', output), 'utf8'))
     .trim().split(/\r?\n/);
   const [version, ...folders] = (await readFile(new URL('Hexalith.Parties.UI.package-metadata.txt', output), 'utf8'))
@@ -17,7 +18,7 @@ export async function qualifyFrontComposerAssets(page: Page, testInfo?: TestInfo
     expect(mode, 'Source qualification requires the validated pinned-tool mapping.').toBe('source');
     expect(path.isAbsolute(root)).toBe(true);
   } else {
-    expect(version, 'This adoption authorizes exactly the selected 5.0.0 package capabilities.').toBe('5.0.0');
+    expect(['5.0.0', '6.0.0'], 'Only the exact retained 5.0.0 and current 6.0.0 package capabilities are qualified.').toContain(version);
     expect(folders.length, 'Read the restored package folders from the current build.').toBeGreaterThan(0);
   }
   const assets = [];

@@ -13,6 +13,8 @@ using Hexalith.Parties.Projections.Handlers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
+using NSubstitute;
+
 using Shouldly;
 
 using StackExchange.Redis;
@@ -184,10 +186,11 @@ internal sealed class PartyLegacyBackfillRuntimeFixture
 
     /// <summary>Invokes one aggregate stage, commit or verify with fresh handlers and a fresh SDK store.</summary>
     public async Task<ProjectionDispatchResponse> DetailAsync(ProjectionRequest history, string operation, string action, CancellationToken token,
-        Func<ReadModelBatch, CancellationToken, Task>? beforeStage = null)
+        Func<ReadModelBatch, CancellationToken, Task>? beforeStage = null,
+        Func<ReadModelBatch, CancellationToken, Task>? beforeBatch = null)
     {
         using DaprClient dapr = Client();
-        using ServiceProvider provider = Provider(dapr, beforeStage);
+        using ServiceProvider provider = Provider(dapr, beforeStage, beforeBatch);
         var request = new ProjectionDispatchRequest(history, [PartyProjectionNames.Detail], operation, Catalog());
         return action switch
         {
@@ -245,14 +248,32 @@ internal sealed class PartyLegacyBackfillRuntimeFixture
         SyncTimeout = 5000,
     });
 
-    private ServiceProvider Provider(DaprClient dapr, Func<ReadModelBatch, CancellationToken, Task>? beforeStage = null)
+    private ServiceProvider Provider(DaprClient dapr, Func<ReadModelBatch, CancellationToken, Task>? beforeStage = null,
+        Func<ReadModelBatch, CancellationToken, Task>? beforeBatch = null)
     {
         var store = new DaprReadModelStore(dapr);
+        IReadModelBatchStore batches = store;
+        if (beforeBatch is not null)
+        {
+            batches = Substitute.For<IReadModelBatchStore, IReadModelPendingBatchRecoveryStore>();
+            batches.ExecuteAsync(Arg.Any<ReadModelBatch>(), Arg.Any<CancellationToken>()).Returns(async call =>
+            {
+                ReadModelBatch batch = call.Arg<ReadModelBatch>();
+                CancellationToken cancellation = call.Arg<CancellationToken>();
+                await beforeBatch(batch, cancellation).ConfigureAwait(false);
+                return await store.ExecuteAsync(batch, cancellation).ConfigureAwait(false);
+            });
+            var recovery = (IReadModelPendingBatchRecoveryStore)batches;
+            recovery.RecoverPendingAsync(Arg.Any<ReadModelBatchScope>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+                .Returns(call => ((IReadModelPendingBatchRecoveryStore)store).RecoverPendingAsync(call.Arg<ReadModelBatchScope>(), call.Arg<string>(), call.Arg<CancellationToken>()));
+            recovery.RecoverNonExpiringPendingAsync(Arg.Any<ReadModelBatchScope>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+                .Returns(call => ((IReadModelPendingBatchRecoveryStore)store).RecoverNonExpiringPendingAsync(call.Arg<ReadModelBatchScope>(), call.Arg<string>(), call.Arg<CancellationToken>()));
+        }
         IOptions<PartySdkReadModelOptions> options = Options.Create(new PartySdkReadModelOptions
         { ReadModelStateStoreName = _configuration.StateStoreName });
-        return new ServiceCollection().AddSingleton<IReadModelStore>(store).AddSingleton<IReadModelBatchStore>(store)
+        return new ServiceCollection().AddSingleton<IReadModelStore>(store).AddSingleton(batches)
             .AddSingleton<IReadModelBatchStagingStore>(beforeStage is null ? store : new PartyLegacyBackfillCompetingWriterStore(store, beforeStage))
-            .AddSingleton<IAsyncDomainProjectionHandler>(new PartyDetailSdkProjectionHandler(store, store, options))
+            .AddSingleton<IAsyncDomainProjectionHandler>(new PartyDetailSdkProjectionHandler(store, batches, options))
             .AddSingleton<IAsyncDomainProjectionHandler>(new PartyIndexSdkProjectionHandler(store, options)).BuildServiceProvider();
     }
 

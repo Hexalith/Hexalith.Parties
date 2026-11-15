@@ -1,0 +1,9 @@
+{
+  "baseline": "5dacf507003d861e6ed935a4298cafb34b5f6e9a",
+  "Builds": "73e60af8a1fcdf3f06726d5d1b6e1199cce778ee",
+  "overlays": {
+    "tests/e2e/helpers/frontcomposer-assets.ts": "d7ba31d77e7427518b7005da04841374331b72f1b99c59fe9a403929a55c3721",
+    "tests/e2e/config-tests/frontcomposer-assets.test.mjs": "4674aae3ea35e5bb1308b4209264cf69fd047503b9b5702f4d7a78c5831f817c",
+    "tests/e2e/package.json": "6c2ddcdae56d9b9aa29ffa26da9ed679605bea6b0af0f0dcdecbc45568fb7210"
+  }
+}

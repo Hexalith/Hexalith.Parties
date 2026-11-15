@@ -28,12 +28,19 @@ public sealed class PartyMemoryOwnedRuntimeTests
     [Fact(Timeout = 600000)]
     public Task ActualSelectedMemoriesRefreshErasureAndReplayControl() => ExecuteOwnedRuntimeAsync(focused: true, TestContext.Current.CancellationToken);
 
-    private static async Task ExecuteOwnedRuntimeAsync(bool focused, CancellationToken token)
+    /// <summary>Qualifies the current source issuer only within this new disposable session's custody.</summary>
+    [Fact(Timeout = 600000)]
+    public Task ActualCurrentSourceMemoriesRunsAuthorityAndPhysicalErasureControl()
+        => ExecuteOwnedRuntimeAsync(focused: false, TestContext.Current.CancellationToken, currentSourceAuthority: true);
+
+    private static async Task ExecuteOwnedRuntimeAsync(bool focused, CancellationToken token, bool currentSourceAuthority = false)
     {
         Assert.SkipUnless(Environment.GetEnvironmentVariable("PARTIES_MEMORIES_OWNED_RUNTIME") == "1",
             "Set PARTIES_MEMORIES_OWNED_RUNTIME=1 to start the owned authenticated source topology.");
         string child = MemoryRuntimeIdentity.SelectChild(typeof(PartyMemoryOwnedRuntimeTests).Assembly);
         PartiesTopologySession session = PartiesTopologySession.Create(isolatedIdentities: true);
+        string generation = Guid.NewGuid().ToString("N");
+        string exclusion = "owned-disposable-session:" + session.Id + ":" + generation;
         string appToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
         string apiToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
         using RSA proofKey = RSA.Create(2048);
@@ -64,6 +71,11 @@ public sealed class PartyMemoryOwnedRuntimeTests
                 .WithEnvironment("Memories__Testing__SourceInventoryDeletionDelayMilliseconds", "5000")
                 .WithEnvironment("EventStore__CommandGateway__BoundCommand__PrivateKeyPkcs8Base64", builder.AddParameter("owned-command-proof-key", proofPrivateKey, secret: true))
                 .WithEnvironment("DAPR_API_TOKEN", apiToken);
+            if (currentSourceAuthority)
+            {
+                _ = memories.WithEnvironment("Ingestion__OwnershipGeneration", generation)
+                    .WithEnvironment("Ingestion__OwnershipWriterExclusionEvidenceId", exclusion);
+            }
             _ = ConfigureOwnedAppChannel(memories, appToken);
             DaprSidecarAnnotation sidecar = memories.Resource.Annotations.OfType<DaprSidecarAnnotation>().Single();
             memories.Resource.Annotations.Add(new EnvironmentCallbackAnnotation(async context =>
@@ -160,6 +172,24 @@ public sealed class PartyMemoryOwnedRuntimeTests
             { session.Id, SidecarHttp = sidecarHttp.ToString(), SidecarGrpc = sidecarGrpc.ToString(), AppHttpPort = appHttpPort, AppGrpcPort = appGrpcPort }), token).ConfigureAwait(true);
             await AssertCredentialNegativesAsync(sidecarHttp, apiToken, session.AppId("eventstore"), privateRoot, token).ConfigureAwait(true);
             await AssertDomainServiceAclDenialsAsync(fixture, session, apiToken, privateRoot, token).ConfigureAwait(true);
+            string custody = Path.Combine(privateRoot, "source-authority-custody.json");
+            Uri search = fixture.App.GetEndpoint("fixture-memories-search", "tcp");
+            if (currentSourceAuthority)
+            {
+                memoriesState.Snapshot.EnvironmentVariables.Single(variable => variable.Name == "Ingestion__OwnershipGeneration").Value.ShouldBe(generation);
+                memoriesState.Snapshot.EnvironmentVariables.Single(variable => variable.Name == "Ingestion__OwnershipWriterExclusionEvidenceId").Value.ShouldBe(exclusion);
+                memoriesState.Snapshot.EnvironmentVariables.Single(variable => variable.Name == "ConnectionStrings__redis").Value.ShouldBe(search.Authority);
+                List<object> resources = [];
+                foreach (string name in new[] { "fixture-redis", "fixture-memories-search", "fixture-memories-graph" })
+                {
+                    fixture.App.ResourceNotifications.TryGetCurrentState(name, out ResourceEvent? state).ShouldBeTrue();
+                    state.ShouldNotBeNull().Snapshot.State.ShouldNotBeNull().Text.ShouldBe("Running");
+                    resources.Add(new { Name = name, State = state.Snapshot.State!.Text, Endpoint = fixture.App.GetEndpoint(name, "tcp").ToString() });
+                }
+                await File.WriteAllTextAsync(custody, JsonSerializer.Serialize(new
+                { Session = session.Id, Generation = generation, WriterExclusionEvidenceId = exclusion,
+                    Scope = "new private nonpersistent fixture resources only; no production writer exclusion", Resources = resources }), token).ConfigureAwait(true);
+            }
             string configPath = Path.Combine(privateRoot, "runtime.json");
             await File.WriteAllTextAsync(configPath, JsonSerializer.Serialize(new
             {
@@ -169,13 +199,19 @@ public sealed class PartyMemoryOwnedRuntimeTests
                 daprApiToken = apiToken, appApiToken = appToken, jwtIssuer = PartiesAspireTopologyFixture.JwtIssuer,
                 jwtAudience = "hexalith-memories", jwtSigningKey = PartiesAspireTopologyFixture.JwtSigningKey,
                 tenantClaimName = "tenant", stateStoreName = "statestore", fakeEmbeddingEnabled = true, ownedSourceInventoryQualificationEnabled = true,
+                ownershipGeneration = currentSourceAuthority ? generation : null,
+                ownershipWriterExclusionEvidenceId = currentSourceAuthority ? exclusion : null,
+                ownershipSessionId = currentSourceAuthority ? session.Id : null,
+                ownershipCustodyPath = currentSourceAuthority ? custody : null,
+                ownershipRedisEndpoint = currentSourceAuthority ? search.Authority : null,
             }), token).ConfigureAwait(true);
             string root = ResolveRoot();
             var start = new ProcessStartInfo("dotnet") { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, WorkingDirectory = root };
             string provenance = Path.Combine(privateRoot, "executed-identities.json");
             await File.WriteAllTextAsync(provenance, JsonSerializer.Serialize(MemoryRuntimeIdentity.Files(typeof(PartyMemoryOwnedRuntimeTests).Assembly, child)), token).ConfigureAwait(true);
             foreach (string argument in new[] { child,
-                "-method", focused ? "*SelectedMemoriesRefreshAndCleanupPersistAcrossClientRecreation" : "*SelectedMemoriesIngestionAndCleanupPersistAcrossRestart", "-result-xml", Path.Combine(privateRoot, "runtime.xml") }) { start.ArgumentList.Add(argument); }
+                "-method", focused ? "*SelectedMemoriesRefreshAndCleanupPersistAcrossClientRecreation" : "*SelectedMemoriesIngestionAndCleanupPersistAcrossRestart",
+                "-failSkips", "-parallelMode", "none", "-result-xml", Path.Combine(privateRoot, "runtime.xml") }) { start.ArgumentList.Add(argument); }
             start.Environment["PARTIES_MEMORIES_RUNTIME_CONFIG"] = configPath;
             start.Environment["PARTIES_MEMORIES_RUNTIME_PROVENANCE"] = provenance;
             using Process process = Process.Start(start) ?? throw new InvalidOperationException("The owned runtime qualification process did not start.");
@@ -184,6 +220,10 @@ public sealed class PartyMemoryOwnedRuntimeTests
             finally { if (!process.HasExited) { process.Kill(entireProcessTree: true); } }
             await File.WriteAllTextAsync(Path.Combine(privateRoot, "runtime.log"), (await output.ConfigureAwait(true)) + (await error.ConfigureAwait(true)), token).ConfigureAwait(true);
             process.ExitCode.ShouldBe(0, "Exact private runtime evidence: " + privateRoot);
+            var executed = System.Xml.Linq.XDocument.Load(Path.Combine(privateRoot, "runtime.xml")).Descendants("assembly").ShouldHaveSingleItem();
+            executed.Attribute("total")!.Value.ShouldBe("1");
+            executed.Attribute("passed")!.Value.ShouldBe("1");
+            executed.Attribute("skipped")!.Value.ShouldBe("0");
             phase = "authoritative-stream-and-domain-replay";
             await MemoriesAuthoritativePersistence.AssertAsync(fixture, sidecarHttp, apiToken, proofPrivateKey, privateRoot, deadline.Token).ConfigureAwait(true);
         }

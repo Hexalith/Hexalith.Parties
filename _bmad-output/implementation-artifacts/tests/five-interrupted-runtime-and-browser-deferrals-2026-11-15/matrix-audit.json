@@ -1,0 +1,49 @@
+{
+  "matrixRows": [
+    {
+      "row": 1,
+      "behavior": "canonical and incomplete generation preserved across interruption",
+      "tests": [
+        "Hexalith.Parties.Tests.Projections.PartyLegacyBackfillProcessRuntimeTests.ActualProviderBackfillSurvivesSeparateWorkloadProcesses"
+      ]
+    },
+    {
+      "row": 2,
+      "behavior": "new process resumes same generation and complete records, erasure and survivors",
+      "tests": [
+        "Hexalith.Parties.Tests.Projections.PartyLegacyBackfillProcessRuntimeTests.ActualProviderBackfillSurvivesSeparateWorkloadProcesses"
+      ]
+    },
+    {
+      "row": 3,
+      "behavior": "session-bound exact authority, provenance, receipts and terminal absence",
+      "tests": [
+        "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedRuntimeTests.ActualCurrentSourceMemoriesRunsAuthorityAndPhysicalErasureControl",
+        "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests.SelectedMemoriesIngestionAndCleanupPersistAcrossRestart"
+      ]
+    },
+    {
+      "row": 4,
+      "behavior": "missing/foreign authority refuses and retains obligations/current unit",
+      "tests": [
+        "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests.SelectedMemoriesIngestionAndCleanupPersistAcrossRestart"
+      ]
+    },
+    {
+      "row": 5,
+      "behavior": "served package bytes match, exports succeed and navigation cancels",
+      "tests": [
+        "Admin parties list \u203a direct GDPR route for an erased party keeps export and records available without PII",
+        "Consumer portal route shells \u203a bound Consumer exports own data through the self-scoped path",
+        "Consumer portal route shells \u203a bound Consumer navigation cancels an active shared download without late feedback or browser resources"
+      ]
+    }
+  ],
+  "allRowsHaveExecutedPassingCoverage": true,
+  "sourceFilesChecked": 1138,
+  "allCapturedSourceBytesMatch": true,
+  "nestedWorkloadXmlCount": 12,
+  "notes": "Local/source/package evidence only; broad source/preparation blockers and external gates remain documented.",
+  "scope": "Initial implementation before review corrections",
+  "supersededBy": "review-final/matrix-audit.json"
+}

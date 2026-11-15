@@ -1,0 +1,78 @@
+{
+  "head": "5dacf507003d861e6ed935a4298cafb34b5f6e9a",
+  "remoteMain": "5dacf507003d861e6ed935a4298cafb34b5f6e9a",
+  "submodules": [
+    {
+      "path": "references/Hexalith.EventStore",
+      "head": "fdb59895975e86a1e234325a01237f259cdbd53b",
+      "remoteMain": "2dcf708cbab0d4ad0cf72f947d0b0a1444e251a1",
+      "workingTreeClean": true,
+      "unpushedCommits": 0
+    },
+    {
+      "path": "references/Hexalith.Memories",
+      "head": "7a5c892508700b2e5c71c921cdaeedf68de5f03d",
+      "remoteMain": "003e3d8677292739bb7978efea95415210c78719",
+      "workingTreeClean": true,
+      "unpushedCommits": 0
+    },
+    {
+      "path": "references/Hexalith.FrontComposer",
+      "head": "bca9dff291ce42c57516598732340a80703dfb6d",
+      "remoteMain": "38856d023dedd7c49da69b1cdb2fc54396f22f38",
+      "workingTreeClean": true,
+      "unpushedCommits": 0
+    },
+    {
+      "path": "references/Hexalith.Tenants",
+      "head": "2ec938397c5b330cf1e694e8cc442cb4ad022f2b",
+      "remoteMain": "d73267fdbe84d09ccddf0a6492390e32d8938405",
+      "workingTreeClean": true,
+      "unpushedCommits": 0
+    },
+    {
+      "path": "references/Hexalith.AI.Tools",
+      "head": "17a37d83db193f0b7494c1b931fd1e82a67c1424",
+      "remoteMain": "17a37d83db193f0b7494c1b931fd1e82a67c1424",
+      "workingTreeClean": true,
+      "unpushedCommits": 0
+    },
+    {
+      "path": "references/Hexalith.Commons",
+      "head": "fbf4e94233821f6ca336af91a06feaaeb7a16855",
+      "remoteMain": "fbf4e94233821f6ca336af91a06feaaeb7a16855",
+      "workingTreeClean": true,
+      "unpushedCommits": 0
+    },
+    {
+      "path": "references/Hexalith.Builds",
+      "head": "73e60af8a1fcdf3f06726d5d1b6e1199cce778ee",
+      "remoteMain": "afeee370137aaf961451e4f6881a61251273e674",
+      "workingTreeClean": true,
+      "unpushedCommits": 0
+    },
+    {
+      "path": "references/Hexalith.PolymorphicSerializations",
+      "head": "e97b56930e213f674b64c157551f499b0473ec43",
+      "remoteMain": "e97b56930e213f674b64c157551f499b0473ec43",
+      "workingTreeClean": true,
+      "unpushedCommits": 0
+    },
+    {
+      "path": "references/Hexalith.McpCli",
+      "head": "23072f04f423eea3f30456fe5af13d2d382624fe",
+      "remoteMain": "7a496c37936c415eab711dfd8724364b795926ce",
+      "workingTreeClean": true,
+      "unpushedCommits": 0
+    },
+    {
+      "path": "references/Hexalith.Platform",
+      "head": "f6f85032598865b9123f16364448bfd02c0ff5b0",
+      "remoteMain": "ddb1c0b141372a66d4a9d9c231d0041afbb7cd0c",
+      "workingTreeClean": true,
+      "unpushedCommits": 0
+    }
+  ],
+  "fetchCommand": "git fetch --no-recurse-submodules origin main",
+  "initialFetchCorrection": "Default on-demand nested fetch refused in Platform; explicitly disabled recursion. No submodule checkout, initialization or update performed."
+}

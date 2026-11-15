@@ -77,6 +77,13 @@ tests/Hexalith.Parties.Tests/FitnessTests/PackageCatalogFallbackTests.cs text eo
 # Recognize the shared evaluator's existing CRLF while checking whitespace.
 tests/PackageTests.Shared/EffectivePackageVersions.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 
+# Preserve authored CRLF in the private current-source authority qualification.
+tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeConfiguration.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Tests/Search/PartyMemoryUnitAuthorityRuntime.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Tests/Search/PartyMemoryUnitAuthorityRuntimeTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
 # Preserve the existing CRLF convention in the private native UI boundary.
 tests/Hexalith.Parties.Ci.Tests/NativeAdminUiBuildProfileTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
@@ -90,3 +97,5 @@ tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj whitespace=blan
 tests/Hexalith.Parties.UI.Tests/PackageProjectionBarrier.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.UI.Tests/PackageProjectionHub.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.UI.Tests/ProjectionTransportPackageTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+tests/Hexalith.Parties.Tests/Search/PartyMemoryUnitAuthorityRuntimeTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

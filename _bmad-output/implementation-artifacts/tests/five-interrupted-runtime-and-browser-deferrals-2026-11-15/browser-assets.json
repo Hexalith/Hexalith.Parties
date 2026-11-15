@@ -1,0 +1,95 @@
+[
+  {
+    "mode": "package",
+    "version": "6.0.0",
+    "sourceRoot": null,
+    "assets": [
+      {
+        "servedPath": "/_content/Hexalith.FrontComposer.Shell/js/fc-focus.js",
+        "selectedPath": "hexalith.frontcomposer.shell/6.0.0/staticwebassets/js/fc-focus.js",
+        "sha256": "885eabb1ead35f829373f7ec3b25d8beecdf36d0514e50558b7a50abebcf2b87",
+        "bytes": 58424
+      },
+      {
+        "servedPath": "/_content/Hexalith.FrontComposer.Shell/js/fc-keyboard.js",
+        "selectedPath": "hexalith.frontcomposer.shell/6.0.0/staticwebassets/js/fc-keyboard.js",
+        "sha256": "64dc9446d10219f530fdd8fbe274b1ddeebe4b6a6ebb2aaff1112978347ec06d",
+        "bytes": 29819
+      },
+      {
+        "servedPath": "/_content/Hexalith.FrontComposer.Shell/js/fc-download.js",
+        "selectedPath": "hexalith.frontcomposer.shell/6.0.0/staticwebassets/js/fc-download.js",
+        "sha256": "ce8a8f32468f1d1fd5a84fdc0667d7ba8f792f49c4be36880db5b8a8ac3a0181",
+        "bytes": 1196
+      },
+      {
+        "servedPath": "/_content/Hexalith.FrontComposer.Shell/css/fc-shell.css",
+        "selectedPath": "hexalith.frontcomposer.shell/6.0.0/staticwebassets/css/fc-shell.css",
+        "sha256": "dceb51b05c81b0b5f1a90b5318ede9366dfdb9c2d10b6b1d9f89f4389a35d3a3",
+        "bytes": 2042
+      }
+    ]
+  },
+  {
+    "mode": "package",
+    "version": "6.0.0",
+    "sourceRoot": null,
+    "assets": [
+      {
+        "servedPath": "/_content/Hexalith.FrontComposer.Shell/js/fc-focus.js",
+        "selectedPath": "hexalith.frontcomposer.shell/6.0.0/staticwebassets/js/fc-focus.js",
+        "sha256": "885eabb1ead35f829373f7ec3b25d8beecdf36d0514e50558b7a50abebcf2b87",
+        "bytes": 58424
+      },
+      {
+        "servedPath": "/_content/Hexalith.FrontComposer.Shell/js/fc-keyboard.js",
+        "selectedPath": "hexalith.frontcomposer.shell/6.0.0/staticwebassets/js/fc-keyboard.js",
+        "sha256": "64dc9446d10219f530fdd8fbe274b1ddeebe4b6a6ebb2aaff1112978347ec06d",
+        "bytes": 29819
+      },
+      {
+        "servedPath": "/_content/Hexalith.FrontComposer.Shell/js/fc-download.js",
+        "selectedPath": "hexalith.frontcomposer.shell/6.0.0/staticwebassets/js/fc-download.js",
+        "sha256": "ce8a8f32468f1d1fd5a84fdc0667d7ba8f792f49c4be36880db5b8a8ac3a0181",
+        "bytes": 1196
+      },
+      {
+        "servedPath": "/_content/Hexalith.FrontComposer.Shell/css/fc-shell.css",
+        "selectedPath": "hexalith.frontcomposer.shell/6.0.0/staticwebassets/css/fc-shell.css",
+        "sha256": "dceb51b05c81b0b5f1a90b5318ede9366dfdb9c2d10b6b1d9f89f4389a35d3a3",
+        "bytes": 2042
+      }
+    ]
+  },
+  {
+    "mode": "package",
+    "version": "6.0.0",
+    "sourceRoot": null,
+    "assets": [
+      {
+        "servedPath": "/_content/Hexalith.FrontComposer.Shell/js/fc-focus.js",
+        "selectedPath": "hexalith.frontcomposer.shell/6.0.0/staticwebassets/js/fc-focus.js",
+        "sha256": "885eabb1ead35f829373f7ec3b25d8beecdf36d0514e50558b7a50abebcf2b87",
+        "bytes": 58424
+      },
+      {
+        "servedPath": "/_content/Hexalith.FrontComposer.Shell/js/fc-keyboard.js",
+        "selectedPath": "hexalith.frontcomposer.shell/6.0.0/staticwebassets/js/fc-keyboard.js",
+        "sha256": "64dc9446d10219f530fdd8fbe274b1ddeebe4b6a6ebb2aaff1112978347ec06d",
+        "bytes": 29819
+      },
+      {
+        "servedPath": "/_content/Hexalith.FrontComposer.Shell/js/fc-download.js",
+        "selectedPath": "hexalith.frontcomposer.shell/6.0.0/staticwebassets/js/fc-download.js",
+        "sha256": "ce8a8f32468f1d1fd5a84fdc0667d7ba8f792f49c4be36880db5b8a8ac3a0181",
+        "bytes": 1196
+      },
+      {
+        "servedPath": "/_content/Hexalith.FrontComposer.Shell/css/fc-shell.css",
+        "selectedPath": "hexalith.frontcomposer.shell/6.0.0/staticwebassets/css/fc-shell.css",
+        "sha256": "dceb51b05c81b0b5f1a90b5318ede9366dfdb9c2d10b6b1d9f89f4389a35d3a3",
+        "bytes": 2042
+      }
+    ]
+  }
+]

@@ -50,6 +50,7 @@ public sealed class PartyMemoryRuntimeTests
             }
         }
         config.OwnedSourceInventoryQualificationEnabled.ShouldBeTrue("Enable the explicit non-Production owned source-inventory protocol and both controlled delays.");
+        await PartyMemoryUnitAuthorityRuntime.ValidateAsync(config, token);
         PartyMemoryIndexingService.SupportsExplicitSourceRefresh.ShouldBeTrue("The actual loaded Parties assembly must support revision-aware source refresh.");
         typeof(PartyMemoryIndexingService).Assembly.GetCustomAttributes<System.Reflection.AssemblyMetadataAttribute>()
             .Single(attribute => attribute.Key == "HexalithMemoriesSourceRefresh").Value.ShouldBe("true");
@@ -78,6 +79,9 @@ public sealed class PartyMemoryRuntimeTests
         var otherMemories = new MemoriesClient(otherHttp, Options.Create(new MemoriesClientOptions()), NullLogger<MemoriesClient>.Instance);
         List<string> authorityUnitIds = [];
         var canonicalOutputs = new List<object>();
+        var unitAuthorities = new List<object>();
+        var issuedAuthorities = new Dictionary<string, string?>();
+        var producerWorkflows = new Dictionary<string, string>();
         string mappingKey = PartyMemoryUnitMappingStore.BuildKey(tenant, party);
         string intentKey = mappingKey.Replace("memory-mapping", "memory-ingestion", StringComparison.Ordinal);
         bool terminalUnitAbsenceObserved = false;
@@ -202,6 +206,18 @@ public sealed class PartyMemoryRuntimeTests
         string firstSource = indexed.SourceUri;
         firstSource.ShouldNotBeNullOrWhiteSpace();
         await AssertDerivedStateAsync(http, tenant, party, populated: true, token);
+        producerWorkflows[canonical!] = indexed.WorkflowInstanceId!;
+        issuedAuthorities[canonical!] = await PartyMemoryUnitAuthorityRuntime.InspectAsync(config, http, tenant, caseId,
+            firstSource, indexed.WorkflowInstanceId!, canonical!, deleted: false, unitAuthorities, token);
+        await PartyMemoryUnitAuthorityRuntime.RefuseUnqualifiedRefreshAsync(config, http, tenant, caseId, firstSource, canonical!, async () =>
+        {
+            using DaprClient negativeClient = Dapr(config);
+            var negativeSdk = new DaprReadModelStore(negativeClient);
+            (await new PartyMemoryUnitMappingStore(negativeSdk, stateOptions, NullLogger<PartyMemoryUnitMappingStore>.Instance)
+                .GetMappingsAsync(tenant, party, token).ConfigureAwait(true)).ShouldHaveSingleItem().MemoryUnitId.ShouldBe(firstCanonical);
+            (await new PartyMemoryIngestionIntentStore(negativeSdk, stateOptions).GetAsync(tenant, party, token).ConfigureAwait(true))
+                .ShouldHaveSingleItem().MemoryUnitId.ShouldBe(firstCanonical);
+        }, unitAuthorities, token);
         // A new canonical projection revision must refresh the same source URI.
         using (DaprClient refreshDapr = Dapr(config))
         {
@@ -224,6 +240,9 @@ public sealed class PartyMemoryRuntimeTests
         ingestionRequests.Observations.ShouldContain(observation => observation.RefreshExistingSource && observation.SourceRevisionNumber == 2);
         canonical.ShouldNotBeNullOrWhiteSpace();
         canonical.ShouldNotBe(firstCanonical);
+        producerWorkflows[canonical!] = indexed.WorkflowInstanceId!;
+        issuedAuthorities[canonical!] = await PartyMemoryUnitAuthorityRuntime.InspectAsync(config, http, tenant, caseId,
+            firstSource, indexed.WorkflowInstanceId!, canonical!, deleted: false, unitAuthorities, token);
         indexed.SourceUri.ShouldBe(firstSource);
         ingestionRequests.Observations.Where(observation => observation.SourceRevisionNumber is 1 or 2)
             .Select(observation => observation.SourceUri).Distinct().ShouldBe([firstSource]);
@@ -242,6 +261,8 @@ public sealed class PartyMemoryRuntimeTests
         persisted.MemoryUnitId.ShouldBe(canonical);
         persisted.WorkflowInstanceId.ShouldBe(indexed.WorkflowInstanceId);
         (await mappings.GetMappingsAsync(tenant, party, token)).Select(item => item.MemoryUnitId).ShouldBe([firstCanonical, canonical!], ignoreOrder: true);
+        (await PartyMemoryUnitAuthorityRuntime.InspectAsync(config, http, tenant, caseId, firstSource,
+            indexed.WorkflowInstanceId!, canonical!, deleted: false, unitAuthorities, token)).ShouldBe(issuedAuthorities[canonical!]);
         (ReadOnlyMemory<byte> before, string previousEtag) = await restarted.GetByteStateAndETagAsync(config.StateStoreName, mappingKey, cancellationToken: token);
         previousEtag.ShouldNotBeNullOrWhiteSpace();
         using (JsonDocument mappingJson = JsonDocument.Parse(before))
@@ -256,6 +277,37 @@ public sealed class PartyMemoryRuntimeTests
             await QualifyLostAcknowledgementAndDelayedCleanupAsync(config, http, tenant, caseId, stateOptions, searchOptions, token);
         }
         await AssertDerivedStateAsync(http, tenant, party, populated: true, token);
+
+        if (config.OwnershipGeneration is not null)
+        {
+            // Dedicated sources keep these destructive cleanup faults after the
+            // main refresh proof and independent of each other and its obligations.
+            foreach (string control in PartyMemoryUnitAuthorityRuntime.Faults)
+            {
+                string negativeParty = "authority-cleanup-" + Guid.NewGuid().ToString("N");
+                string negativeUnit = await PopulateSurvivorAsync(http, memories, tenant, caseId, negativeParty, "retainedauthority", token);
+                string negativeSource = PartyMemoryUrn.Build(tenant, negativeParty);
+                await mappings.RecordMappingAsync(tenant, negativeParty, negativeUnit, negativeSource, caseId, token);
+                async Task<bool> AttemptCleanupAsync() => (await new PartyMemoryCleanupService(http, mappings,
+                    NullLogger<PartyMemoryCleanupService>.Instance, intents).DeleteByPartyAsync(tenant, caseId, negativeParty, token).ConfigureAwait(true)).Cleaned;
+                await PartyMemoryUnitAuthorityRuntime.RefuseUnqualifiedCleanupAsync(config, http, tenant, caseId, negativeSource,
+                    negativeUnit, control, AttemptCleanupAsync, async () =>
+                    {
+                        (await mappings.GetMappingsAsync(tenant, negativeParty, token).ConfigureAwait(true))
+                            .ShouldContain(item => item.MemoryUnitId == negativeUnit);
+                        (await intents.GetAsync(tenant, negativeParty, token).ConfigureAwait(true))
+                            .ShouldContain(item => item.MemoryUnitId == negativeUnit && !item.CleanupSettled);
+                    }, unitAuthorities, token);
+                bool repaired = false;
+                for (int attempt = 0; attempt < 120; attempt++)
+                {
+                    repaired = await AttemptCleanupAsync();
+                    if (repaired) { break; }
+                    await Task.Delay(250, token);
+                }
+                repaired.ShouldBeTrue("Restored exact authority must allow this dedicated scope to finish cleanup.");
+            }
+        }
 
         PartyMemoryCleanupResult? cleanup = null;
         for (int attempt = 0; attempt < 120; attempt++)
@@ -276,6 +328,8 @@ public sealed class PartyMemoryRuntimeTests
         {
             using HttpResponseMessage absence = await http.GetAsync(MemoriesRoutes.CaseMemoryUnitPath(tenant, caseId, output), token);
             (await PartyMemoryCleanupResponse.IsAbsentAsync(absence, token)).ShouldBeTrue("Every recorded canonical output requires a direct qualified absence read: " + output);
+            (await PartyMemoryUnitAuthorityRuntime.InspectAsync(config, http, tenant, caseId, firstSource,
+                producerWorkflows[output], output, deleted: true, unitAuthorities, token)).ShouldBe(issuedAuthorities[output]);
         }
         await AssertDerivedStateAsync(http, tenant, party, populated: false, token);
         terminalUnitAbsenceObserved = true;
@@ -311,7 +365,9 @@ public sealed class PartyMemoryRuntimeTests
             await PersistAuthorityThenTeardownAsync(
                 Path.ChangeExtension(path!, ".authority.json"),
                 () => JsonSerializer.Serialize(new
-                { TenantId = tenant, CaseId = caseId, UnitIds = authorityUnitIds.Distinct().ToArray(), CanonicalOutputs = canonicalOutputs, SurvivorCaseId = survivorCaseId, OtherTenantId = otherTenant, OtherCaseId = otherCaseId, SurvivorsVerified = survivorsVerified, Requests = ingestionRequests.Observations }),
+                { TenantId = tenant, CaseId = caseId, UnitIds = authorityUnitIds.Distinct().ToArray(), CanonicalOutputs = canonicalOutputs,
+                    UnitAuthorityObservations = unitAuthorities, SurvivorCaseId = survivorCaseId, OtherTenantId = otherTenant,
+                    OtherCaseId = otherCaseId, SurvivorsVerified = survivorsVerified, Requests = ingestionRequests.Observations }),
                 qualificationCompleted,
                 () => TeardownAsync(config, http, tenant, party, caseId, mappingKey, intentKey,
                     terminalUnitAbsenceObserved, diagnosticPath),

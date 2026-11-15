@@ -1,0 +1,40 @@
+{
+  "commands": [
+    {
+      "arguments": [
+        "aspire",
+        "start",
+        "--apphost",
+        "${ROOT}/src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+        "--no-build",
+        "--isolated",
+        "--non-interactive"
+      ],
+      "observedExitCode": 0,
+      "privateRawLogSha256": "5bfab468f08c23ad27340a664573216dda6be59d19be025b98eb2bbf0526ad21"
+    },
+    {
+      "arguments": [
+        "aspire",
+        "describe",
+        "--apphost",
+        "${ROOT}/src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+        "--non-interactive"
+      ],
+      "observedExitCode": 0,
+      "privateRawLogSha256": "f0d7773be64678f83684d5b0f56310123f3056145735f9bcff745389cf534451"
+    },
+    {
+      "arguments": [
+        "aspire",
+        "stop",
+        "--apphost",
+        "${ROOT}/src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+        "--non-interactive"
+      ],
+      "observedExitCode": 0,
+      "privateRawLogSha256": "bf49d5e492f84354743815419a7c6859da4af309f2f95d997ab8887f2503257d"
+    }
+  ],
+  "readinessClaimed": false
+}

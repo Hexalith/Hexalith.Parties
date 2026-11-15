@@ -24,9 +24,16 @@ catalog/source protocol qualification; unguarded raw handlers do not retain that
 admitted plan across re-preparation.
 
 `PartyLegacyBackfillProcessRuntimeTests` separately transports one immutable synthetic
-history/tenant/operation manifest through five exiting seed, aggregate rebuild,
-shared stage, shared commit and final verification workloads. Both initially absent
-and existing canonical models are covered. Each child uses the real SDK store and
+history/tenant/operation manifest through six exiting seed, interrupted generation,
+aggregate resume, shared stage, shared commit and final verification workloads.
+Its 4,097-record legacy processing history interrupts before the third bounded
+generation batch and before canonical cutover. The first two persisted groups,
+their batch identities and first-bucket bytes survive a separately exiting
+workload. A new process reuses the original operation and immutable history,
+then verifies every ordered record against the fold, bucket capacity, canonical
+detail parity and erasure fences. Original canonical bytes remain unchanged
+until resume. Both initially absent and existing small canonical models are
+covered alongside that legacy large history. Each child uses the real SDK store and
 checks the nine retained actor/foreign-tenant byte values; the final child inspects
 detail, processing and index checkpoints, contents and erasure suppression. Redis
 and Dapr remain running across those workload processes. This qualifies workload
@@ -57,7 +64,10 @@ After building `Hexalith.Parties.Tests`, invoke its test assembly with
 `-class Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests`
 and `-class Hexalith.Parties.Tests.Projections.PartyLegacyBackfillProcessRuntimeTests`.
 An absent configuration skips this explicitly opt-in lane; skipped execution is
-not qualification. Preserve the command, selected package/provider identities,
+not qualification. Set `PARTIES_BACKFILL_WORKLOAD_EVIDENCE` to a retained results
+directory outside `TMPDIR` to preserve each workload's XML, immutable input,
+canonical and generation snapshots before disposable workspace cleanup.
+Preserve the command, selected package/provider identities,
 test XML and the owned-resource cleanup result. Destroy the exclusively owned
 container and sidecar after the run; do not enumerate or delete SDK recovery
 keys individually. The ordinary source rehearsal remains available independently.

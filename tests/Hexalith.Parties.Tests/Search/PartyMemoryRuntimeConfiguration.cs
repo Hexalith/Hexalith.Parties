@@ -16,4 +16,9 @@ internal sealed record PartyMemoryRuntimeConfiguration
     public string InventoryAclRepairEndpoint { get; init; } = string.Empty;
     public bool FakeEmbeddingEnabled { get; init; }
     public bool OwnedSourceInventoryQualificationEnabled { get; init; }
+    public string? OwnershipGeneration { get; init; }
+    public string? OwnershipWriterExclusionEvidenceId { get; init; }
+    public string? OwnershipSessionId { get; init; }
+    public string? OwnershipCustodyPath { get; init; }
+    public string? OwnershipRedisEndpoint { get; init; }
 }

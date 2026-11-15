@@ -1009,3 +1009,49 @@ production inventory, older-writer drain, deployment, G4 or owner acceptance.
 See the [dated receipt](../_bmad-output/implementation-artifacts/tests/five-current-package-capability-deferrals-2026-11-15/README.md)
 for final runtime disposition, package/source/assembly identities, commands,
 cleanup, and the five entries' remaining external gates.
+
+
+## Interrupted durable recovery and current-source authority (2026-11-15)
+
+The [bounded five-entry receipt](../_bmad-output/implementation-artifacts/tests/five-interrupted-runtime-and-browser-deferrals-2026-11-15/README.md)
+keeps three independent lanes. Explicit EventStore 5.1.0, Memories 4.0.0 and
+FrontComposer 6.0.0 Release builds change no default or dependency selection.
+The owned backfill lane passes nine controls, including six separate workloads
+for each canonical-state variant. It interrupts a 4,097-record generation before
+canonical cutover, resumes the same immutable history and operation in a new
+process, compares all 64 previously persisted bucket byte values, bounds each
+batch and bucket, and verifies the complete history, erasure and nine survivors.
+See `docs/read-model-migration.md` for its opt-in configuration and retained
+workload evidence. This remains aggregate one-shot recovery plus shared staged
+recovery; it is not owner-authorized aggregate staged resume or a deployed cutover.
+
+`ActualCurrentSourceMemoriesRunsAuthorityAndPhysicalErasureControl` is a distinct
+opt-in current-source profile. It binds `Ingestion:OwnershipGeneration` and
+`Ingestion:OwnershipWriterExclusionEvidenceId` to its new private disposable
+session, then checks the actual host environment and running backing resources.
+The child independently reads exact-unit issuance/provenance, producer bindings,
+generation reservations and retained deletion receipts through fresh Redis
+connections. Missing and foreign unit authority refuse real refresh admission
+while the current unit and local obligations remain. The full existing delayed
+ingestion/deletion, failed-producer, physical-erasure, survivor and authoritative
+stream/replay controls execute with that authority. Clients and adapters are
+recreated; the selected services remain running. Enable
+`PARTIES_MEMORIES_OWNED_RUNTIME=1` only after the strict matching runtime
+preparation and bind its `prepared.json` as documented above. The earlier
+package-matched profile remains separate; this newer source-host authority
+qualification supplies no published-package or production writer-exclusion proof.
+
+The exact 6.0.0 browser helper compares all four served/restored assets before
+maintained Admin export, Consumer JSON export and navigation-cancellation
+controls. Exact 5.0.0 admission remains available. `test:config` also verifies
+unknown/neighboring/prerelease/build-metadata refusal and every byte mismatch.
+Run with pinned Node 24.22.1/npm 11.19.1 and Chromium, retries disabled. The receipt
+retains three real asset attachments and nonzero passing browser results.
+G4, deployment, historical custody and named owner acceptance remain separate.
+
+Pinned source preparation succeeds diagnostically, but the mapped Debug child
+build reports NU1109 (source EventStore requires OpenAPI 11.0.0 while the selected
+central catalog pins 10.0.15). Pinned package preparation refuses the retained
+Platform release identity/tool range with HXW011/HXW010. The dated receipt keeps
+these failures separate from the successful direct per-project Release fallback;
+no compiler, cohort, framework, source-mapping or acceptance gate is weakened.

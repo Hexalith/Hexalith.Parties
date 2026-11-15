@@ -1,0 +1,429 @@
+[
+  {
+    "source": "${PRIVATE}/final/backfill-runtime/backfill.xml",
+    "publicFile": "backfill.xml.gz",
+    "rawSha256": "62e1eafc46ac618cc62f1920a69ba672edd136b4e207e96067085175fa2bbf46",
+    "normalizedSha256": "7a8fc837690b701557e3dec186103a0436c0acc18378e6423ab7ee55e43f78cb",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/memory-consumer.xml",
+    "publicFile": "memory-consumer.xml.gz",
+    "rawSha256": "22dc3deab825dee62f15b7fe0f5f9e31ec12a2f70bf39470479b2679c8e7c09e",
+    "normalizedSha256": "a340fdf41453fa1fb879ca524b1815104f8d06f2ba057d794ca55fd4a45e1900",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-wrapper.xml",
+    "publicFile": "source-wrapper.xml.gz",
+    "rawSha256": "71307ab061586ad976c2a6735ea993fe95f7c72213fa7b5e895134d3e4616534",
+    "normalizedSha256": "804357549dea13268461e410f9e221839b8f9d3f2f05d06f2f08e0b8931f8c40",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-runtime-parties-five-memory-runtime-aa9b0b83cdb1/runtime.xml",
+    "publicFile": "source-child.xml.gz",
+    "rawSha256": "e147a35cd89fad8711935c2f839faebe45a2c1da281dda9d82ab6649340bc7dd",
+    "normalizedSha256": "34c0281530cb064874abafb798a0b03cd969eeed380305a0b99350b7fc295980",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-runtime-parties-five-memory-runtime-aa9b0b83cdb1/runtime.authority.json",
+    "publicFile": "runtime/runtime.authority.json",
+    "rawSha256": "085564ab864534e272bee6780be41f801495d7961f6f9276e3980867fbde8212",
+    "normalizedSha256": "085564ab864534e272bee6780be41f801495d7961f6f9276e3980867fbde8212",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-runtime-parties-five-memory-runtime-aa9b0b83cdb1/source-authority-custody.json",
+    "publicFile": "runtime/source-authority-custody.json",
+    "rawSha256": "1616b4d966877a0d663425a37b72f0207198f02f9b42df2b13ed3dd7c1d80299",
+    "normalizedSha256": "1616b4d966877a0d663425a37b72f0207198f02f9b42df2b13ed3dd7c1d80299",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-runtime-parties-five-memory-runtime-aa9b0b83cdb1/authoritative-persistence.json",
+    "publicFile": "runtime/authoritative-persistence.json",
+    "rawSha256": "95fec45906285ed302bf0e76298bbefe5cb44342148f127807114acf08f066e1",
+    "normalizedSha256": "95fec45906285ed302bf0e76298bbefe5cb44342148f127807114acf08f066e1",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-runtime-parties-five-memory-runtime-aa9b0b83cdb1/catalog-generation-controls.json",
+    "publicFile": "runtime/catalog-generation-controls.json",
+    "rawSha256": "f7c5cdd7beb40b295d2e7150fd4f29fb8545f0e35e40f522c94f0327e8781104",
+    "normalizedSha256": "f7c5cdd7beb40b295d2e7150fd4f29fb8545f0e35e40f522c94f0327e8781104",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-runtime-parties-five-memory-runtime-aa9b0b83cdb1/ownership.json",
+    "publicFile": "runtime/ownership.json",
+    "rawSha256": "18f5dc66f84a457c52b5ba9045b684e356e55dbea7eda0d2c3ce29e00fbbfaab",
+    "normalizedSha256": "392dd40f1f22c061b7debd87c96b2d003619a58d980623a972fdcf80a14852cb",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-runtime-parties-five-memory-runtime-aa9b0b83cdb1/executed-identities.json",
+    "publicFile": "runtime/executed-identities.json",
+    "rawSha256": "cbad09d21db74848c00190853ddcd9c58aaa71289c2f821dacda11bce020c749",
+    "normalizedSha256": "bc1e370595a32c7709fd05908bc036aee3baab135da18d54f1ab0f5c49136af9",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-runtime-parties-five-memory-runtime-aa9b0b83cdb1/endpoint-binding.json",
+    "publicFile": "runtime/endpoint-binding.json",
+    "rawSha256": "bb950b01e6edd2a6ebf5552981b024a71580a6c2316aa7b96dda1e33c973ba2d",
+    "normalizedSha256": "bb950b01e6edd2a6ebf5552981b024a71580a6c2316aa7b96dda1e33c973ba2d",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-runtime-parties-five-memory-runtime-aa9b0b83cdb1/authentication-negative-controls.json",
+    "publicFile": "runtime/authentication-negative-controls.json",
+    "rawSha256": "faee449dea64192e904f9b0c5551255021f8981a0c999d0d5901c77666cc9602",
+    "normalizedSha256": "faee449dea64192e904f9b0c5551255021f8981a0c999d0d5901c77666cc9602",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-runtime-parties-five-memory-runtime-aa9b0b83cdb1/domain-service-acl-negative-controls.json",
+    "publicFile": "runtime/domain-service-acl-negative-controls.json",
+    "rawSha256": "a286ef3696c9f6ec0c27d07214a31247bdb8bbbe1d65939b407e3b5c4488704e",
+    "normalizedSha256": "a286ef3696c9f6ec0c27d07214a31247bdb8bbbe1d65939b407e3b5c4488704e",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-runtime-parties-five-memory-runtime-aa9b0b83cdb1/runtime.provisioning.teardown.json",
+    "publicFile": "runtime/runtime.provisioning.teardown.json",
+    "rawSha256": "f85c9a8152c24e340f627fbfab2de1cc8f221e7819f37388799846ad5e780138",
+    "normalizedSha256": "f85c9a8152c24e340f627fbfab2de1cc8f221e7819f37388799846ad5e780138",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-runtime-parties-five-memory-runtime-aa9b0b83cdb1/runtime.provisioning.survivor.teardown.json",
+    "publicFile": "runtime/runtime.provisioning.survivor.teardown.json",
+    "rawSha256": "e54ff8132ebdc27437d5c3d65460f3dee5dc68c39b1d25dadb228e81be2edea4",
+    "normalizedSha256": "e54ff8132ebdc27437d5c3d65460f3dee5dc68c39b1d25dadb228e81be2edea4",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/backfill-runtime/receipt.json",
+    "publicFile": "backfill-provider.json",
+    "rawSha256": "1209d814f882339c45e992f7a41bef5f19f1d170600deabda1202bf9ca5c2bc9",
+    "normalizedSha256": "1209d814f882339c45e992f7a41bef5f19f1d170600deabda1202bf9ca5c2bc9",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/backfill-workloads/synthetic-backfill-1c19a6e1708e49628b8f6982847d5514/seed.xml",
+    "publicFile": "workloads/synthetic-backfill-1c19a6e1708e49628b8f6982847d5514/seed.xml.gz",
+    "rawSha256": "7fe51837ec35bb6f06fd87090a11051642d6ea26bcfaad14b9664295c2e212c5",
+    "normalizedSha256": "7c906759942bb24b6659a58a6a3e514bfca9212847dda7b0b948a0fb59245a0c",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/backfill-workloads/synthetic-backfill-1c19a6e1708e49628b8f6982847d5514/interrupt.xml",
+    "publicFile": "workloads/synthetic-backfill-1c19a6e1708e49628b8f6982847d5514/interrupt.xml.gz",
+    "rawSha256": "14aefce15dfb54e2e5ec881e328cbf2d1187ac489be9257023144f4dcca80512",
+    "normalizedSha256": "875a6656b47a49562d627c7b229a302d16c8dbdb09e02b49f663d5309a43ee2e",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/backfill-workloads/synthetic-backfill-1c19a6e1708e49628b8f6982847d5514/rebuild.xml",
+    "publicFile": "workloads/synthetic-backfill-1c19a6e1708e49628b8f6982847d5514/rebuild.xml.gz",
+    "rawSha256": "f35a0a5f4c58d1435902e34ef13c7ded24ddf231593c14470090c07d6c292790",
+    "normalizedSha256": "1d91cd0cb737906fcbe16975d3088fa80ec9170db7de460c744ff4e8a34f3f35",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/backfill-workloads/synthetic-backfill-1c19a6e1708e49628b8f6982847d5514/stage.xml",
+    "publicFile": "workloads/synthetic-backfill-1c19a6e1708e49628b8f6982847d5514/stage.xml.gz",
+    "rawSha256": "67adbccaa5ead630a576bf9ac7736b193517463531e2dea34aff898f5050977d",
+    "normalizedSha256": "6770beec59ee9cda92d9d3fa718b0368ef36329649717ab29086cd78e015c49a",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/backfill-workloads/synthetic-backfill-1c19a6e1708e49628b8f6982847d5514/commit.xml",
+    "publicFile": "workloads/synthetic-backfill-1c19a6e1708e49628b8f6982847d5514/commit.xml.gz",
+    "rawSha256": "f05070374fef95d81284de38a65b4bad1e3d02a7d346c0188c701159db395005",
+    "normalizedSha256": "f0e45957b193b0684991a36bf4aa7303083cee1843c9ea32c8dd19dd800da128",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/backfill-workloads/synthetic-backfill-1c19a6e1708e49628b8f6982847d5514/verify.xml",
+    "publicFile": "workloads/synthetic-backfill-1c19a6e1708e49628b8f6982847d5514/verify.xml.gz",
+    "rawSha256": "0f5eb9f4ac7751b9615712793762cd200deb31532b9dc1572ce2b5514525cee1",
+    "normalizedSha256": "12d2027a27818119176dfec9872038e558fd830616cedf011d1f247abde0f7fc",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/backfill-workloads/synthetic-backfill-cc02dff16d804acca7732c1c30a31141/seed.xml",
+    "publicFile": "workloads/synthetic-backfill-cc02dff16d804acca7732c1c30a31141/seed.xml.gz",
+    "rawSha256": "34d1d0b4b3f3ed7cbf024b80824f93056e35fac0bedd2680a6ea8910518ab91e",
+    "normalizedSha256": "a8dead66b03f8281ae820dadda8024ce8a6b51f9c3047d03b6510a48b45039bd",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/backfill-workloads/synthetic-backfill-cc02dff16d804acca7732c1c30a31141/interrupt.xml",
+    "publicFile": "workloads/synthetic-backfill-cc02dff16d804acca7732c1c30a31141/interrupt.xml.gz",
+    "rawSha256": "be828f833929cfa61447fe32009c6f0959b6a335e03ae74065641d1dbc65ed8d",
+    "normalizedSha256": "00b8d8f976fe569673e27a290aa6f479bc4619e850f066d8134876f916a225f1",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/backfill-workloads/synthetic-backfill-cc02dff16d804acca7732c1c30a31141/rebuild.xml",
+    "publicFile": "workloads/synthetic-backfill-cc02dff16d804acca7732c1c30a31141/rebuild.xml.gz",
+    "rawSha256": "504c3465bad0d58389d71212da896f39531d5536479261c2c84d293a09f2eae2",
+    "normalizedSha256": "68f5813124d9d97e07ecf2cf31686b8ac2fe8c58c465e1d13bfc030b2b9a7b92",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/backfill-workloads/synthetic-backfill-cc02dff16d804acca7732c1c30a31141/stage.xml",
+    "publicFile": "workloads/synthetic-backfill-cc02dff16d804acca7732c1c30a31141/stage.xml.gz",
+    "rawSha256": "ea715728bdf02bcd9d34ed956ef02ab1bf3ffbb5462eb875b448b5e5f0733000",
+    "normalizedSha256": "beed12c409e04f93643b3dafc95fb131a1b3e9d589252936ab2f9bb0f389e0e7",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/backfill-workloads/synthetic-backfill-cc02dff16d804acca7732c1c30a31141/commit.xml",
+    "publicFile": "workloads/synthetic-backfill-cc02dff16d804acca7732c1c30a31141/commit.xml.gz",
+    "rawSha256": "14b23e2e7fcf72aa8c3708e4c96a61bc3ce0fdaf79e78c8c9b056d57dc77d063",
+    "normalizedSha256": "780584697fee808070b65a0c88fb26740f6e1857b361dba4988bbca418599c97",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/backfill-workloads/synthetic-backfill-cc02dff16d804acca7732c1c30a31141/verify.xml",
+    "publicFile": "workloads/synthetic-backfill-cc02dff16d804acca7732c1c30a31141/verify.xml.gz",
+    "rawSha256": "978f7e8903a5b4a5e0f86aa1edd914945479a771598f25d12b0782c5977d63d2",
+    "normalizedSha256": "bcf3daabb03449ca1cef2c78f0c5651e758f44d9836a2f237a1c4d7dc2aa8233",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-prepared-receipts/143d0bb7baa507de1776e9e7a729840aa9cd27720828ae1f70ed8ec1b6b4d86e.json",
+    "publicFile": "prepared/143d0bb7baa507de1776e9e7a729840aa9cd27720828ae1f70ed8ec1b6b4d86e.json",
+    "rawSha256": "2bf062e2a8037cb619aad0dc818a6820d5b2445bb45b400dd2eac885f301bf51",
+    "normalizedSha256": "4c65a1caaa20080cf790c851f4db81e3f89569f903cda505313da099e6fa18b9",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-prepared-receipts/406b9c9e7bf9c8f7b8e9a0936337c700fd81fb583c2a5df56fa8583cc9d48d74.json",
+    "publicFile": "prepared/406b9c9e7bf9c8f7b8e9a0936337c700fd81fb583c2a5df56fa8583cc9d48d74.json",
+    "rawSha256": "d10dd3621f028036049f15fd863a0f5238c9de7f074c8b8c9359e26e7c4a988b",
+    "normalizedSha256": "38e3d923790394f14117d7a73d0a5a9ce8d33b908ba10f4b98cacf73854e079f",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-prepared-receipts/4b87a578f16b91637231ba4c74619e3efba021b75fab894c043815bd60cdce38.json",
+    "publicFile": "prepared/4b87a578f16b91637231ba4c74619e3efba021b75fab894c043815bd60cdce38.json",
+    "rawSha256": "d2fcabea831efae41c281b3d847f3e288fc81f3e329bd05bdebba6cd7b2c4c01",
+    "normalizedSha256": "72c3d8b9488e0c32615f3c5a214c94fc3fbedbaacc74e1184fb78e5e88867b1a",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-prepared-receipts/757f44c407f739691bb4519c9f37283216b0ba4a661524fc489dddcfa8feeb76.json",
+    "publicFile": "prepared/757f44c407f739691bb4519c9f37283216b0ba4a661524fc489dddcfa8feeb76.json",
+    "rawSha256": "b561153f44a90505c67ee90ae6550d1a35c97e3ea907cc17615975e4d2e802c8",
+    "normalizedSha256": "6233efd54c01a867dda19b68e88e08924bf5c7a32f51fc01bbc887a92fedada0",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-prepared-receipts/a0be3bb39998b81d3d8cba5be4241be3804436148e23f48f2cf89cd13cedf7b6.json",
+    "publicFile": "prepared/a0be3bb39998b81d3d8cba5be4241be3804436148e23f48f2cf89cd13cedf7b6.json",
+    "rawSha256": "adf10c65631b3dff860cc12029ff603c241a1ab736fd2a75ed63038fa50087cd",
+    "normalizedSha256": "0ca21aed529736601ee2a7055002ec6b62cc1049be030aca32d06c2d24076749",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-prepared-receipts/a7ce49c66998300ff5f059bd4a65d14f3ef0666f1ccec6f5f2e6113fa3773475.json",
+    "publicFile": "prepared/a7ce49c66998300ff5f059bd4a65d14f3ef0666f1ccec6f5f2e6113fa3773475.json",
+    "rawSha256": "2a871f11c4b72407f2513f9965d426bd262e07283b42de928d16cf6ab29aae37",
+    "normalizedSha256": "cd9e8c2129b9df16884955dd1266559c110cd5058f8cbd62d778f0d4b818ff1a",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-prepared-receipts/bb8fd8f78f62a23053137dbc2319530918b59b62025d0cfe4cd4e9df10fe9bcc.json",
+    "publicFile": "prepared/bb8fd8f78f62a23053137dbc2319530918b59b62025d0cfe4cd4e9df10fe9bcc.json",
+    "rawSha256": "dbb978dd5c85b59804ae6252f2626ed4ff089b916e423c27729d4f323d8c42b3",
+    "normalizedSha256": "b02d807b4a2520d9a1f21660f24d73d4545e9d4a1f8c4e8411285dbb177f12db",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-prepared-receipts/c4cd929b00f7f23d0930f918c845c9f0e1367883598a269604d63aa1ed0055b6.json",
+    "publicFile": "prepared/c4cd929b00f7f23d0930f918c845c9f0e1367883598a269604d63aa1ed0055b6.json",
+    "rawSha256": "dedf9924468fa622e6f6d5b65a33a12624c4e1d8c067ddbd7ab1bae7113aaebd",
+    "normalizedSha256": "99f17afcdaa2b17320fa4ed23dc0b7676160c42da31b4e2c8dd5daff7917f7e2",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-prepared-receipts/cc0bc1b6d4eea473d5f20d5f375f7e745cfa916dc67cfab0d87287228405afb4.json",
+    "publicFile": "prepared/cc0bc1b6d4eea473d5f20d5f375f7e745cfa916dc67cfab0d87287228405afb4.json",
+    "rawSha256": "aded15dc8744a9e73be9c7c481eb069c873e9fbf31fb428d2528da74cf879bd9",
+    "normalizedSha256": "c21a06d9d833fa17ad6383f80fa36cadae50d4d20f825b97e903d82075ba5199",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-prepared-receipts/d3d0fa3ad256b3f9843c8e1be114d2549b66a245fc562ec16b16e303bb4d55bc.json",
+    "publicFile": "prepared/d3d0fa3ad256b3f9843c8e1be114d2549b66a245fc562ec16b16e303bb4d55bc.json",
+    "rawSha256": "ed99333619d7bf6087dbaefc58452af7878c86408e96b0a2b4746e858f53e556",
+    "normalizedSha256": "9715fc4633c481701f0f65cc9b3f8171b10a2aa425947abf5cb448b2a100a3c2",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-prepared-receipts/e9a8fac1f7691556f15d4247ffbc7ae6691fd7a8d01cb1d14b45c28af3202fef.json",
+    "publicFile": "prepared/e9a8fac1f7691556f15d4247ffbc7ae6691fd7a8d01cb1d14b45c28af3202fef.json",
+    "rawSha256": "470fbd695252abb8ec717d99b7b97e3559623c435cef735697a1ab9532b0eb82",
+    "normalizedSha256": "799e62d001575922887b68f5aaf844d1f3f34b562d1dea660b6433074167fc4c",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-prepared-receipts/eb1b8c4fdb3cc8f47454f15c88a21c9af3a73e7fd180eabcdb2e3a754d93adfc.json",
+    "publicFile": "prepared/eb1b8c4fdb3cc8f47454f15c88a21c9af3a73e7fd180eabcdb2e3a754d93adfc.json",
+    "rawSha256": "2be2e806245162425c8935ce33b33a3d7c9f03e850679d583b121872616e5e2f",
+    "normalizedSha256": "c344dc034b587102247bf47bfd5bc1eedf6439cfcf24c8e7b9acd417ea64d6a7",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-prepared-receipts/f41f30223f0fd0526d1d01a004f84bb9e6a658924f68e39de7ea4dca17db88a7.json",
+    "publicFile": "prepared/f41f30223f0fd0526d1d01a004f84bb9e6a658924f68e39de7ea4dca17db88a7.json",
+    "rawSha256": "82e7ca90a72afa7697249e42de18090d573c414316a6bd450e34a2c4b0519b61",
+    "normalizedSha256": "34c39ac47e19eb80bf1a86f67c6e120bea858ccef394504898c90755d1de75dd",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-prepared-receipts/prepared.json",
+    "publicFile": "prepared/prepared.json",
+    "rawSha256": "0e2e09d6182162d2cad831c2a7d9f1a47fe0854b46d4e72b581f782e5456b5ab",
+    "normalizedSha256": "4c8d1c40bb0d75d0f2ebb4afb270385d8c33f50300ad9ee39c45c9cdb12f132e",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-assemblies.json",
+    "publicFile": "source-host-assemblies.json.gz",
+    "rawSha256": "e75a562b9fe76bb7c95a6c64b87cdf161eaf7bbadf4caf03415cfc53c6cd6a6b",
+    "normalizedSha256": "e75a562b9fe76bb7c95a6c64b87cdf161eaf7bbadf4caf03415cfc53c6cd6a6b",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/Hexalith.Parties.Tests-build.log",
+    "publicFile": "checks/Hexalith.Parties.Tests-build.log.gz",
+    "rawSha256": "2874ad95260ff70e1694f2de9215350113249e4368320119fd0257b988147f52",
+    "normalizedSha256": "ae884e2a5ba485645952ab9212cc3ce4ed54c4cae8d21ac70d98dda79c11c719",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/Hexalith.Parties.IntegrationTests-build.log",
+    "publicFile": "checks/Hexalith.Parties.IntegrationTests-build.log.gz",
+    "rawSha256": "a8ec20a76405ec2f974014a730539145cf9ae3f1dafa5d1bbf9475b0db750ce8",
+    "normalizedSha256": "6f63404dc56abd35b1b2500aaac12f275e905bbdbdf6b7de0162c1083f8eabdc",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/final/source-host-prepare.log",
+    "publicFile": "checks/source-host-prepare.log.gz",
+    "rawSha256": "69751ac0fb953ab9f90dff11f3462e3a41ec9715ed893098382f655f0d01ef4b",
+    "normalizedSha256": "03fe91c9a3573819085cba4f197fa5ed951b77a0504486c8381d01a772e2ba86",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/source-prepare.json",
+    "publicFile": "blockers/source-prepare.json.gz",
+    "rawSha256": "3dee97c67b42ecb79cae7108a65d2b30151a83d4a75caf310ff140dde2d99969",
+    "normalizedSha256": "aabf7ccf1195132c8b711c161a9561d7757897c4d5d3f0dbb8c2b4dc4229af39",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/source-prepare.log",
+    "publicFile": "blockers/source-prepare.log.gz",
+    "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "normalizedSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/source-backfill-build.log",
+    "publicFile": "blockers/source-backfill-build.log.gz",
+    "rawSha256": "fedbacd5190b36014dd0e60f6d3d5a4467dfaf4e8bf650b456a5892d7acbc0dc",
+    "normalizedSha256": "7a7a02b376d61b27ac3c849908859eced90d56fa9612f6f5273889b965a23959",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/package-prepare.json",
+    "publicFile": "blockers/package-prepare.json.gz",
+    "rawSha256": "5bf584eb43be081a63315caddbe915393d52aacd4899e6a53749ad6d171db247",
+    "normalizedSha256": "8d3a306110219d9b0552d190c71b0f4ff047afbcdc54a8f0a30cb090efe6d3bc",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/package-prepare.log",
+    "publicFile": "blockers/package-prepare.log.gz",
+    "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "normalizedSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/browser-build.log",
+    "publicFile": "checks/browser-build.log.gz",
+    "rawSha256": "4f8720976b3e2f5cf6f4ca55875540f59e02af629741007bef0aac0f1cdcfbce",
+    "normalizedSha256": "6a6533d7b0acf1e371e4ba5c6d7ad37c84df59c0fb0f60e55ec7ab1d3cd62075",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/browser-typecheck.log",
+    "publicFile": "checks/browser-typecheck.log.gz",
+    "rawSha256": "9b5e7f499d4a7b0ba86c88c063ef897e384db99bc9cd1385f318d1a77104bbf5",
+    "normalizedSha256": "9b5e7f499d4a7b0ba86c88c063ef897e384db99bc9cd1385f318d1a77104bbf5",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/browser-config.log",
+    "publicFile": "checks/browser-config.log.gz",
+    "rawSha256": "8b695e96cb3c4a3184c10f6874f8b4145dd1cfa962b37db80b8bf4ab8fdcf4d1",
+    "normalizedSha256": "8b695e96cb3c4a3184c10f6874f8b4145dd1cfa962b37db80b8bf4ab8fdcf4d1",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/browser-behavior.log",
+    "publicFile": "checks/browser-behavior.log.gz",
+    "rawSha256": "1b0e8026ba1cdd00704c66a02e246c0f0c67bd768ba2ca884ae573da1280303f",
+    "normalizedSha256": "1b0e8026ba1cdd00704c66a02e246c0f0c67bd768ba2ca884ae573da1280303f",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/browser-npm-ci.log",
+    "publicFile": "checks/browser-npm-ci.log.gz",
+    "rawSha256": "2d8b9a08266bc63c8420b9a4c6138ea5a7a2e8c9a5ceb1b24fe2428a676f1f43",
+    "normalizedSha256": "b762dcf6e73a9e39feb3be5cd93607a6a9f370cf085eb8d3f6f77e9dd7be9408",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/browser-assemblies.json",
+    "publicFile": "browser-assemblies.json",
+    "rawSha256": "cb61c308e1727fa9273810a48f2585f5fbba3e19cb2e7713e0864b77660b11c2",
+    "normalizedSha256": "cb61c308e1727fa9273810a48f2585f5fbba3e19cb2e7713e0864b77660b11c2",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/browser-source-identities.json",
+    "publicFile": "browser-source-identities.json",
+    "rawSha256": "fb692a2284457307f2d498ebc1df7d63a5a1a6ce94d255f7a372a62e47b1a838",
+    "normalizedSha256": "fb692a2284457307f2d498ebc1df7d63a5a1a6ce94d255f7a372a62e47b1a838",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/browser-Hexalith.Parties.UI.package-metadata.txt",
+    "publicFile": "browser-Hexalith.Parties.UI.package-metadata.txt",
+    "rawSha256": "006ce48d67b6a7417077fd9b96fdfe1d46edcdfa525ddff4e11921eb696cb03a",
+    "normalizedSha256": "3e4cafd76df565e692f70ff9672e42438fd12ff0472c7af73ff8d1d6e536c36b",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/browser-Hexalith.Parties.UI.source-metadata.txt",
+    "publicFile": "browser-Hexalith.Parties.UI.source-metadata.txt",
+    "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "normalizedSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  },
+  {
+    "source": "${PRIVATE}/browser-test-results/junit.xml",
+    "publicFile": "browser.xml",
+    "rawSha256": "ba128ff5c2e26c303258e36266dd4cf2fb7b97a9537c8110909cd340d5988194",
+    "normalizedSha256": "355f30733008ce5f5ed435e62b3c7838dab59a44a20065307fc5a53d8eab5d04",
+    "rawOriginalCustody": "retained privately outside TMPDIR"
+  }
+]

@@ -1,0 +1,23 @@
+{
+  "Hexalith.FrontComposer.Mcp.dll": "6ed8018dd8e364ac48d7e7bd0e74c4c084f313bb962f2ff0acae4798717ec818",
+  "Hexalith.Parties.AdminPortal.dll": "715ea8f8161f89729ada14933b325c8b51fe51f7dcdd434a89f9534c68dfc755",
+  "Hexalith.Commons.UniqueIds.dll": "1d01a83eab399d61c0e5052246a881a1917730311b125b25be68b4299a99fcfc",
+  "Hexalith.Commons.Http.dll": "f205e847c1a11ab643e065e10a7fc65ef1619c4e821dab63a88a76e951d0d76c",
+  "Hexalith.Parties.Picker.dll": "76ca6f01b5b4728039bf164347871c2c8b7809650cd55f166ecbaa9cbcb65fdb",
+  "Hexalith.Parties.Client.dll": "db3b283f4784784ad6abc4db079fe43e967d623987ab21e82c7f9dfdd7753c9f",
+  "Hexalith.FrontComposer.Shell.dll": "2bd42f0eed17483d9a82625b9d1987ef0e298e5bf9ead3cd8a93ab5dd99f5546",
+  "Hexalith.McpCli.Abstractions.dll": "d84cb2a7e6823756633c374a8cec55ae088962ea1b508be53b7604de7ca13e88",
+  "Hexalith.Commons.ServiceDefaults.dll": "9125c5cec2c7572cbacbdf2432588d1c1db4ff92e66202a2532814abca67bb25",
+  "Hexalith.FrontComposer.Contracts.UI.dll": "54deb060d7e1d450c98fba429e1c3ca81164d085d9507ec2eb1b03b60e266902",
+  "Hexalith.EventStore.Client.dll": "786cbb4bebd8d3720300afd775b0c38ccafdd1a73e8f1c1ccd79ef931ab5cbc2",
+  "Hexalith.Parties.Authentication.dll": "cc861ceadeb0b220767ffb88c2e2d157c477dba5f712e8a8132b1c4b73d5ed07",
+  "Hexalith.Parties.ConsumerPortal.dll": "0f0ab5b7c184aac92112367a1aef3bfc723515e3062d3ae16f8a21604ea7b2ca",
+  "Hexalith.EventStore.Contracts.dll": "e165e434435170f6b9ec1699cc371c22a3d3b0a4f34b68209c99b564064f76b2",
+  "Hexalith.Tenants.Contracts.dll": "84ca1ba9b50bb0d03c2e97180c583bc6097ba11337e8da2d6a8ad48df8f74782",
+  "Hexalith.FrontComposer.Contracts.dll": "d1231ed413d81f31ac66b4717f114a7991b9798123333720517f5bcf2ef480b9",
+  "Hexalith.FrontComposer.Schema.dll": "d7f8169edb977c6d637b8faa0d115a9c8f80539fd9208eece1783cae991c6822",
+  "Hexalith.Parties.Contracts.dll": "56a1bed6e50824af0fc33736d0cf2ff8c0129c4c17c6ef3e9ef10eb788f64b51",
+  "Hexalith.EventStore.SignalR.dll": "b16fea61094e0d33e7d1a7994b85c201ea9f33db20000f6cec064fb230d634d0",
+  "Hexalith.Tenants.Client.dll": "03cc88d5e4602962012232f20425be5a56966e08e2ad262ec6695df040616c8a",
+  "Hexalith.Parties.UI.dll": "a8120a4fff4c09a5145546256ea78e0df12c8024907c3f46989a53338e7e534f"
+}

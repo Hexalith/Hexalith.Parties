@@ -1,0 +1,7 @@
+{
+  "command": "PARTIES_FIVE_RESULTS=${PRIVATE}/parent-review-final run-with-temp python3 ${PRIVATE}/run-parent-review-final.py",
+  "result": "wrapper1 failed before topology startup: bootstrap script not found above assembly output",
+  "correction": "TMPDIR=${ROOT}/artifacts/j run-with-temp creates a private ignored descendant workspace; lookup guards unchanged",
+  "qualification": false,
+  "successfulFinalEvidence": "../source-wrapper.xml.gz"
+}

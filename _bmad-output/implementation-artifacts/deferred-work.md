@@ -358,6 +358,12 @@ qualification_2026_11_15: Explicit EventStore 5.1.0 package controls pass 39 pro
 remaining_gate_2026_11_15: Deployed older-writer drain, independent historical private-material reconciliation, owner-approved migration/cutover, deployed state and rollback remain open. No production completeness attestation is supplied.
 verification_2026_11_15: `tests/five-current-package-capability-deferrals-2026-11-15/` retains exact commands, package provenance, assembly hashes and per-test results.
 
+qualification_interrupted_runtime_2026_11_15: The exact 5.1.0 owned Redis/Dapr lane interrupts a 4,097-record legacy generation before canonical cutover and resumes the immutable history/operation in another workload process. All 64 persisted early bucket byte values and group identities survive; all 129 bounded buckets, 4,097 ordered records, erasure fences and nine actor/foreign-tenant survivors verify.
+remaining_gate_interrupted_runtime_2026_11_15: Status stays open for deployed older-writer drain, historical private-material reconciliation, owner-approved migration/cutover and deployed rollback. Aggregate one-shot recovery is not guarded aggregate staged resume.
+verification_interrupted_runtime_2026_11_15: `tests/five-interrupted-runtime-and-browser-deferrals-2026-11-15/`
+
+
+review_interrupted_runtime_2026_11_15: Final reviewed provider11/11 includes distinguishable pre-cutover detail, all64 early buckets,12 workload children and evidence-failure cleanup. Consumer/custody controls pass42/42. Evidence: `tests/five-interrupted-runtime-and-browser-deferrals-2026-11-15/review-final/`. External gates remain open.
 
 ### DW-51: Resolve projection-handler performance and validation-coupling debt
 
@@ -426,6 +432,12 @@ activated_by_snapshot_spec_2026_11_11: `_bmad-output/implementation-artifacts/sp
 qualification_2026_11_11: The owned Release/package provider lane passes9/9 with no skips. Five separate workload processes per absent/existing variant retain immutable synthetic history, tenant and operation identity through seed/rebuild/stage/commit/verify; durable detail/processing/index, erasure and all nine survivor bytes match. Redis/Dapr remain running.
 remaining_gate_2026_11_11: Workload process restart is now qualified only for the supported aggregate one-shot/shared staged protocols in the disposable provider. DW-58 stays open for deployed provider/workload qualification, aggregate guarded staged resume, production history/key completeness, writer drain, authorization, cutover and rollback acceptance.
 verification_2026_11_11: `tests/five-snapshot-history-and-publish-2026-11-11/`
+qualification_interrupted_runtime_2026_11_15: Six separately exiting workloads per small-canonical-state variant now include interruption and resume of a 4,097-record generation on the actual owned provider. Original canonical bytes survive interruption, every early bucket byte survives resume, complete SDK detail/processing/index and erasure outcomes match, and all nine rollback/unrelated survivors retain their bytes in every workload. The provider lane passes9/9 without skips and owned cleanup succeeds.
+remaining_gate_interrupted_runtime_2026_11_15: DW-58 remains open. This local aggregate one-shot/shared staged proof does not authorize aggregate guarded staged resume, production capture/key completeness, writer drain, migration/cutover, deployed provider qualification or rollback acceptance.
+verification_interrupted_runtime_2026_11_15: `tests/five-interrupted-runtime-and-browser-deferrals-2026-11-15/`
+
+
+review_interrupted_runtime_2026_11_15: Final reviewed provider11/11 includes distinguishable pre-cutover detail, all64 early buckets,12 workload children and evidence-failure cleanup. Consumer/custody controls pass42/42. Evidence: `tests/five-interrupted-runtime-and-browser-deferrals-2026-11-15/review-final/`. External gates remain open.
 
 ### DW-59: Preserve mappings when unit ID and source URI match different rows
 
@@ -614,6 +626,12 @@ verification_2026_11_15: `tests/five-current-package-capability-deferrals-2026-1
 
 runtime_2026_11_15: The full owned package-matched runtime passes 1 wrapper and 1 actual child control with zero skips. It verifies same-URI revisions, lost acknowledgement and recreated adapters, admitted pre-materialization/output-known cleanup refusal, failed-producer cleanup, delayed physical deletion, persisted empty mappings/intents and unrelated survivors. Six native stream/domain-replay observations bind actual persisted bytes. The nonpackable Memories host uses exact 4.0.0 nuspec source revision c4ee997702ede948ada5f99eeae7b3782e92003b with unchanged published libraries; the current-source-host authority refusal remains separate. Owned topology disposal succeeds, its session directory is absent and cleanup records no failure.
 
+qualification_interrupted_runtime_2026_11_15: A distinct current-source Memories host profile binds its private session generation and writer-exclusion custody to three new nonpersistent backing resources. Actual exact-unit issued-v2 authority, tenant/unit/producer bindings, generation reservation and matching key provenance survive client/SDK recreation. Missing/foreign authority refuses real refresh admission with current unit bytes and consumer obligations retained. Complete source inventory and unrelated survivors are independently inspected.
+remaining_gate_interrupted_runtime_2026_11_15: Status remains open for unknown historical coverage, production writer exclusion/custody, publication/adoption, deployment and owner acceptance. Current-source host evidence is separate from the older package-matched profile and does not certify the published4.0.0 implementation.
+verification_interrupted_runtime_2026_11_15: `tests/five-interrupted-runtime-and-browser-deferrals-2026-11-15/`
+
+
+review_interrupted_runtime_2026_11_15: Final current-source wrapper/child each pass with13 authority observations; four invalid variants refuse refresh and actual cleanup, preserve obligations/bytes, and recover after exact restoration. Cleanup and unrelated survivors verify. Consumer/custody controls pass42/42. Evidence: `tests/five-interrupted-runtime-and-browser-deferrals-2026-11-15/review-final/`. External gates remain open.
 
 ### DW-83: Persist recovery when mapping and compensating deletion both fail
 
@@ -1272,6 +1290,12 @@ verification_2026_11_15: `tests/five-current-package-capability-deferrals-2026-1
 
 runtime_2026_11_15: The full owned package-matched runtime passes 1 wrapper and 1 actual child control with zero skips. It verifies same-URI revisions, lost acknowledgement and recreated adapters, admitted pre-materialization/output-known cleanup refusal, failed-producer cleanup, delayed physical deletion, persisted empty mappings/intents and unrelated survivors. Six native stream/domain-replay observations bind actual persisted bytes. The nonpackable Memories host uses exact 4.0.0 nuspec source revision c4ee997702ede948ada5f99eeae7b3782e92003b with unchanged published libraries; the current-source-host authority refusal remains separate. Owned topology disposal succeeds, its session directory is absent and cleanup records no failure.
 
+qualification_interrupted_runtime_2026_11_15: The full current-source owned runtime passes the delayed admitted/output-known/lost-acknowledgement, failed-extraction, asynchronous physical deletion, empty retained consumer state, ETag/fence and unrelated survivor controls under its session-bound per-unit authority. Exact authority/provenance and deletion receipts remain inspectable after erasure; native persisted-stream and domain replay agree. Wrapper and child each pass once without skips; owned topology cleanup succeeds.
+remaining_gate_interrupted_runtime_2026_11_15: DW-168 remains open for production workload/key/trust custody, historical reconciliation, writer drain, publication/adoption, deployment and owner acceptance. Services remain running through consumer client recreation; this supplies no producer-workload restart or production physical-erasure certification.
+verification_interrupted_runtime_2026_11_15: `tests/five-interrupted-runtime-and-browser-deferrals-2026-11-15/`
+
+
+review_interrupted_runtime_2026_11_15: Final current-source wrapper/child each pass with13 authority observations; four invalid variants refuse refresh and actual cleanup, preserve obligations/bytes, and recover after exact restoration. Cleanup and unrelated survivors verify. Consumer/custody controls pass42/42. Evidence: `tests/five-interrupted-runtime-and-browser-deferrals-2026-11-15/review-final/`. External gates remain open.
 
 ### DW-169: D7 — Use concurrency-aware removal when cleaning a party memory-unit mapping inventory.
 
@@ -2620,4 +2644,9 @@ archived: 2026-11-15
 
 - source_spec: `spec-five-current-package-capability-deferrals.md`
   summary: Qualify FrontComposer 6.0.0 shared download and cancellation through the maintained browser asset verifier.
+  status: done 2026-11-15
+  resolution_review_2026_11_15: Three real browser cases and twenty configuration controls pass on exact6.0.0; two runner controls qualify managed-host binding and timeout cleanup. Review corrections and final identities are retained under the dated receipt review-final/. Whole G4 and deployment remain separate.
   evidence: Review VG1; medium, existing verification blocker. tests/e2e/helpers/frontcomposer-assets.ts:20 admits only5.0.0, so Consumer export/cancellation and Admin export browser assertions stop before6.0.0 execution. Newly admitted shared UI component tests mock JavaScript and cannot qualify real downloads. Extend exact asset admission only after measured served/restored-byte parity, then execute the existing browser controls; no browser/G4 acceptance is claimed by this batch.
+  qualification_interrupted_runtime_2026_11_15: Exact6.0.0 now passes measured four-asset served/restored parity and the maintained real Admin export, Consumer JSON export and active-download navigation-cancellation controls (3/3, zero skips/retries). Exact5.0.0 admission is retained;20 configuration controls include unknown/prerelease/build-metadata and byte-mismatch refusal.
+  verification_interrupted_runtime_2026_11_15: `tests/five-interrupted-runtime-and-browser-deferrals-2026-11-15/` retains exact asset/package/assembly hashes, attachments, commands and browser XML.
+  remaining_gate_interrupted_runtime_2026_11_15: The local VG1 browser blocker is qualified. G4, named owner acceptance and deployment remain separate; this is no current-source FrontComposer qualification.

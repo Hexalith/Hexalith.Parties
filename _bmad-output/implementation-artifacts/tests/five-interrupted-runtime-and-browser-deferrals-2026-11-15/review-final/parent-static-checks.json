@@ -1,0 +1,29 @@
+[
+  {
+    "command": [
+      "bash",
+      "scripts/check-no-warning-override.sh"
+    ],
+    "exitCode": 0,
+    "output": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts.\n"
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "exitCode": 0,
+    "output": ""
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "--cached",
+      "--check"
+    ],
+    "exitCode": 0,
+    "output": ""
+  }
+]
