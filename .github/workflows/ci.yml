@@ -244,26 +244,21 @@ jobs:
           runtime-version: ${{ steps.toolchain.outputs.runtime }}
       - name: Trust the runner HTTPS development certificate
         run: bash scripts/prepare-aspire-https-trust.sh
-      - name: Build the test entry point before freezing runtime artifacts
-        run: dotnet build tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj --configuration Release --disable-build-servers -m:1 -warnaserror -p:HexalithUsePublishedSdkForHostedTests=true -p:CopyLocalLockFileAssemblies=true
-      - name: Prepare the exact public runtime cohort
-        run: bash scripts/prepare-aspire-runtime-hosts.sh --configuration Release
-      - name: Require concurrent catalogs, authenticated effects and complete cleanup
+      - name: Verify disposable catalog workspace ownership
+        run: python3 -B -m unittest discover -s scripts -p 'test_verify_catalog_runtime.py' -v
+      - name: Require concurrent catalogs, authenticated effects and complete workspace cleanup
         env:
           PARTIES_MTLS_TOPOLOGY_TESTS: 'true'
           DAPR_MTLS_RUNTIME_PROFILE: ${{ steps.toolchain.outputs.runtime }}
-        run: |
-          dotnet test --project tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj \
-            --configuration Release --no-build --no-restore \
-            --filter-method Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyIsolationTests.ConcurrentSessions_IsolateStreamsRejectCrossCallsAndSurvivePeerDisposalAsync \
-            --minimum-expected-tests 1 --fail-skips on \
-            --report-xunit-trx --results-directory TestResults/catalog-runtime
+        run: python3 -B scripts/verify-catalog-runtime.py --configuration Release --results-directory TestResults/catalog-runtime
       - name: Retain the actual runtime result
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: published-catalog-runtime-results
-          path: TestResults/catalog-runtime
+          path: |
+            TestResults/catalog-runtime
+            !TestResults/catalog-runtime/runtime-custody/**
           if-no-files-found: error
 
   memories-3018-package-protocol:

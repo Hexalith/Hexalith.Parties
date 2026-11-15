@@ -603,6 +603,18 @@ and native root assets, and maps no subscription receiver. Its real HTTP
 as zero subscriptions. Native/default/publish keep the original UI host and its
 `200 []` discovery. This changes no SDK receiver guard or catalog authority.
 
+Under authenticated package mapping, the private native UI artifact uses its
+own isolated output and the original EventStore project with the exact retained
+SDK4.2.0 profile. Root's catalog guards remain active for mapped Root projects;
+the external application's ordinary SDK5 catalog view remains unchanged.
+`scripts/prepare-native-admin-ui-artifact.py` verifies the actual native compiler
+output, framework, complete source inventory, restored SDK archives and deployed
+binaries through the existing runtime receipt reader. Each build independently
+downloads the official package bytes. The wrapper binds that completed receipt,
+incoming mapping/catalog provenance and native assets, and receipt readback
+refuses source, package or artifact drift. Mapped source and ordinary unmapped
+builds retain the original nested MSBuild profile.
+
 `scripts/prepare-aspire-runtime-hosts.sh` prepares the package pair by default;
 the shared `--gateway-profile native` option explicitly prepares both native
 projects for a matching native run. It builds the selected pair and the remaining

@@ -213,3 +213,18 @@ Root Builds selection to genuine released5.2.2 at02ed, preserving the newer
 unreleased guard work on owning main. No guard or source proof is weakened.
 Wait for actual Platform publication and fetch its real tag before the corrected
 Root CI push. The prior8a observation and failure remain retained as history.
+
+### Qualified prerequisite and remaining native UI build repair
+
+Platform v2.1.0 normally publishes exactb76e0c7c after catalog6/6, original349,
+pre-extension412 and current478+97+9 required controls pass with zero skipped or
+unexecuted cases. Normal source publisher43468621091 succeeds and the genuine
+tag is independently resolved. Native, candidate and Story acceptance remainfalse.
+Corrected Root4eca9e8f passes118source tests and the exact pinned CI preparation
+helper with Builds5.2.2/02ed. Nine independent hosted CI jobs pass, including
+concurrent runtime effects/cleanup. The full mapped solution exposes one further
+private Admin UI artifact boundary, recorded in
+[the focused repair spec](spec-native-ui-catalog-boundary-2026-11-13.md).
+Its repair preserves all mapped Root guards and authenticates the separate real
+native application through existing public SDK/runtime receipts. Full prepared
+solution and Ci.Tests verification, final exact-source CI and release remainpending.

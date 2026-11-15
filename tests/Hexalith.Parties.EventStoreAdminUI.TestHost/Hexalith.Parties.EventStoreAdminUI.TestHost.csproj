@@ -93,9 +93,23 @@
       <!-- The inherited mapper owns source selectors and reconciles the hosted SDK edges.
            Keep the explicit package profile only when no source mapping is active. -->
       <_NativeAdminUiBuildProperties Condition="'$(HexalithSourceMappingMode)' != 'source'">$(_NativeAdminUiBuildProperties);UseHexalithProjectReferences=false;UseNuGetDeps=true</_NativeAdminUiBuildProperties>
+      <!-- Root's authenticated package catalog deliberately gives this external owner
+           its ordinary SDK5 view. Qualify only the private SDK4 application artifact
+           independently; mapped source keeps the original inherited mapper. -->
+      <_NativeAdminUiPackageBoundary Condition="'$(HexalithSourceMappingApplies)' == 'true' and '$(HexalithSourceMappingMode)' == 'package'">true</_NativeAdminUiPackageBoundary>
+      <_NativeAdminUiBoundaryRoot>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)native-admin-ui/qualified', '$(MSBuildProjectDirectory)/'))</_NativeAdminUiBoundaryRoot>
     </PropertyGroup>
+    <Exec Condition="'$(_NativeAdminUiPackageBoundary)' == 'true'"
+          Command="python3 &quot;$(_AdminUiRepositoryRoot)/scripts/prepare-native-admin-ui-artifact.py&quot; --owner-root &quot;$(_AdminUiEventStoreRoot)&quot; --output &quot;$(_NativeAdminUiBoundaryRoot)&quot; --configuration &quot;$(Configuration)&quot; --version &quot;$(HexalithEventStoreVersion)&quot; --target-framework &quot;$(TargetFramework)&quot;" />
+    <ReadLinesFromFile Condition="'$(_NativeAdminUiPackageBoundary)' == 'true'" File="$(_NativeAdminUiBoundaryRoot)/target.txt">
+      <Output TaskParameter="Lines" ItemName="_NativeAdminUiBuiltAssembly" />
+    </ReadLinesFromFile>
+    <ReadLinesFromFile Condition="'$(_NativeAdminUiPackageBoundary)' == 'true'" File="$(_NativeAdminUiBoundaryRoot)/evidence.txt">
+      <Output TaskParameter="Lines" ItemName="_NativeAdminUiBoundaryEvidence" />
+    </ReadLinesFromFile>
     <MSBuild Projects="$(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj"
-             Targets="Restore;Build;GetTargetPath" Properties="$(_NativeAdminUiBuildProperties)" BuildInParallel="false">
+             Targets="Restore;Build;GetTargetPath" Properties="$(_NativeAdminUiBuildProperties)" BuildInParallel="false"
+             Condition="'$(_NativeAdminUiPackageBoundary)' != 'true'">
       <Output TaskParameter="TargetOutputs" ItemName="_NativeAdminUiBuiltAssembly" />
     </MSBuild>
     <ItemGroup>
@@ -111,12 +125,15 @@
     </Exec>
     <ItemGroup>
       <_NativeAdminUiEvidence Include="$(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj;@(_NativeAdminUiBuiltAssembly);@(_NativeAdminUiBuiltAssembly->'%(RootDir)%(Directory)%(Filename).deps.json');$(TargetDir)wwwroot/**/*;$(_NativeAdminUiStageRoot)/**/*" />
+      <_NativeAdminUiEvidence Include="@(_NativeAdminUiBoundaryEvidence)" />
+      <_NativeAdminUiBoundaryHeader Include="nativeBoundaryManifest|$(_NativeAdminUiBoundaryRoot)/prepared.json;configuration|$(Configuration);targetFramework|$(TargetFramework)"
+          Condition="'$(_NativeAdminUiPackageBoundary)' == 'true'" />
     </ItemGroup>
     <RemoveDuplicates Inputs="@(_NativeAdminUiEvidence)"><Output TaskParameter="Filtered" ItemName="_UniqueNativeAdminUiEvidence" /></RemoveDuplicates>
     <GetFileHash Files="@(_UniqueNativeAdminUiEvidence)" Algorithm="SHA256"><Output TaskParameter="Items" ItemName="_NativeAdminUiHashedEvidence" /></GetFileHash>
     <Copy SourceFiles="@(_NativeAdminUiBuiltAssembly->'%(RootDir)%(Directory)%(Filename).deps.json')" DestinationFolder="$(TargetDir)native-ui-artifact" />
     <WriteLinesToFile File="$(TargetDir)native-admin-ui-artifact.tsv" Overwrite="true"
-      Lines="sourceProject|$(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj;sourceCommit|$(_NativeAdminUiSourceCommit);sdkVersion|$(HexalithEventStoreVersion);properties|$(_NativeAdminUiBuildProperties);@(_NativeAdminUiHashedEvidence->'%(FullPath)|%(FileHash)')" />
+      Lines="sourceProject|$(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj;sourceCommit|$(_NativeAdminUiSourceCommit);sdkVersion|$(HexalithEventStoreVersion);properties|$(_NativeAdminUiBuildProperties);@(_NativeAdminUiBoundaryHeader);@(_NativeAdminUiHashedEvidence->'%(FullPath)|%(FileHash)')" />
   </Target>
   <Target Name="SelectAdminUiRunDirectory" BeforeTargets="ComputeRunArguments">
     <PropertyGroup><RunWorkingDirectory>$(TargetDir)</RunWorkingDirectory></PropertyGroup>

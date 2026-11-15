@@ -1,0 +1,67 @@
+{
+  "baselineCommit": "4eca9e8fbad451a602a9ec7d2d6384345b6b0e4e",
+  "preparedEnvironmentFile": "/tmp/parties-exact-producer-preflight/github-env.txt",
+  "mappingHash": "8753f31b15709d3afd5cd90d9fd19921cf514372b08c51376c11984d8c0e3442",
+  "buildsVersion": "5.2.2",
+  "buildsSource": "02ed624aa19781cac75d2c9112940e9bd830441a",
+  "nativeSdkVersion": "4.2.0",
+  "nativeTargetFramework": "net11.0",
+  "before": {
+    "exitCode": 1,
+    "error": "HXW012",
+    "count": 4
+  },
+  "after": {
+    "exitCode": 0,
+    "warnings": 0,
+    "errors": 0
+  },
+  "ordinaryDebug": {
+    "exitCode": 0,
+    "warnings": 0,
+    "errors": 0
+  },
+  "ordinaryRelease": {
+    "exitCode": 0,
+    "warnings": 0,
+    "errors": 0
+  },
+  "wrongRootSdk": {
+    "exitCode": 1,
+    "error": "HXW012",
+    "count": 4
+  },
+  "profileTests": {
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.Ci.Tests/bin/Release/net11.0/Hexalith.Parties.Ci.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Ci.Tests.NativeAdminUiBuildProfileTests",
+      "-result-xml",
+      "/tmp/parties-native-ui-boundary/profile-tests.xml"
+    ],
+    "total": 5,
+    "failed": 0,
+    "skipped": 0
+  },
+  "receiptTests": {
+    "command": [
+      "python3",
+      "-B",
+      "tests/Hexalith.Parties.Ci.Tests/runtime_cohort_receipt_cases.py"
+    ],
+    "total": 41,
+    "failed": 0,
+    "skipped": 0
+  },
+  "files": {
+    ".gitattributes": "a76b1db70f062ed0cfb1f476794ec3f5aad645d555966c3dd14deea0c8cd8541",
+    "docs/ci.md": "80405f90d45a717227246893e452087130b1f5978484e6e216682cc7bd089815",
+    "scripts/prepare-native-admin-ui-artifact.py": "ce892d890fc5260342ac308a3c71fd63d4fbf2a104b9be35b786bf0a531052c2",
+    "scripts/validate-aspire-runtime-cohort.py": "ad80c3be88629c9c2a81cdac98df6138e8ab9e657a61a3385da346d3edd8165b",
+    "tests/Hexalith.Parties.Ci.Tests/NativeAdminUiBuildProfileTests.cs": "9c0120bd2b6ca83c68c93500d2d0830a008d9f50bb018fe296d8a7835677c7df",
+    "tests/Hexalith.Parties.Ci.Tests/runtime_cohort_receipt_cases.py": "8a252b4a990c18a14ac14f60f9fa816b4f3101eb24bc704f357e57cdb54246c3",
+    "tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj": "ab4ebec72edcfc30192c44493ed5baa72ebadaeaabb481e4d03f59ada78f25dc"
+  },
+  "scope": "Local private build boundary; no hosted runtime, broader CI or release acceptance"
+}

@@ -601,13 +601,30 @@ static string ResolveOptionalReferenceProjectPath(string repositoryName, string 
 
 static DirectoryInfo FindRepositoryRoot()
 {
-    DirectoryInfo? directory = new(AppContext.BaseDirectory);
-    while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "Hexalith.Parties.slnx")))
+    string? configuredRoot = Environment.GetEnvironmentVariable("PARTIES_TEST_REPOSITORY_ROOT");
+    if (configuredRoot is not null)
     {
-        directory = directory.Parent;
+        if (!Path.IsPathFullyQualified(configuredRoot)
+            || !File.Exists(Path.Combine(configuredRoot, "Hexalith.Parties.slnx")))
+        {
+            throw new DirectoryNotFoundException("PARTIES_TEST_REPOSITORY_ROOT must identify an absolute Parties repository containing Hexalith.Parties.slnx.");
+        }
+
+        return new DirectoryInfo(configuredRoot);
     }
 
-    return directory ?? throw new DirectoryNotFoundException("Could not locate the Hexalith.Parties repository root.");
+    foreach (string startingDirectory in new[] { AppContext.BaseDirectory, Directory.GetCurrentDirectory() })
+    {
+        DirectoryInfo? directory = new(startingDirectory);
+        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "Hexalith.Parties.slnx")))
+        {
+            directory = directory.Parent;
+        }
+
+        if (directory is not null) { return directory; }
+    }
+
+    throw new DirectoryNotFoundException("Could not locate the Hexalith.Parties repository root.");
 }
 
 // PUBLISH-MODE-JWT-HELPER - single-place contract for JWT authority/issuer wiring.

@@ -270,11 +270,30 @@ def bind_native_ui(target: Path, project: Path, configuration: str, version: str
     return {"path": str(owner_receipt.resolve()), "sha256": digest(owner_receipt)}
 
 
-def native_ui_sources(target: Path) -> set[Path]:
+def native_ui_owner_sources(directory: Path) -> set[Path]:
+    """Inventory the complete original UI, excluding only build output directories."""
+    if not directory.is_absolute() or not directory.is_dir() or directory.is_symlink():
+        raise ValueError("The complete native Admin UI source directory is required")
+    paths = set()
+    for path in directory.rglob("*"):
+        relative = path.relative_to(directory)
+        if any(part in {"bin", "obj"} for part in relative.parts) \
+                or relative.parts[:2] == (".artifacts", "ui-test-obj") or path.name.endswith(".csproj.lscache"):
+            continue
+        if path.is_symlink():
+            raise ValueError("Linked native Admin UI sources cannot qualify an artifact")
+        if path.is_file():
+            paths.add(path.resolve())
+    return paths
+
+
+def native_ui_sources(target: Path, configuration: str | None = None, version: str | None = None,
+                      target_framework: str | None = None) -> set[Path]:
     """Require actual absolute-source/hash evidence while preserving the artifact metadata headers."""
     paths = set()
     for proof in target.parent.glob("native-admin-ui-artifact.tsv"):
         sources = set()
+        headers = {}
         for row in proof.read_text(encoding="utf-8").splitlines():
             filename, separator, expected = row.partition("|")
             if separator and Path(filename).is_absolute():
@@ -282,8 +301,30 @@ def native_ui_sources(target: Path) -> set[Path]:
                 if not re.fullmatch(r"[0-9a-fA-F]{64}", expected) or digest(source) != expected.lower():
                     raise ValueError("Native UI artifact provenance differs from its actual file: " + filename)
                 sources.add(source)
+            elif separator:
+                if filename in headers:
+                    raise ValueError("Native UI artifact provenance contains duplicate headers")
+                headers[filename] = expected
         if not sources:
             raise ValueError("Native UI artifact provenance requires at least one absolute source/hash row")
+        if "nativeSourceDirectory" in headers:
+            inventory = native_ui_owner_sources(Path(headers["nativeSourceDirectory"]))
+            recorded = {path for path in sources if path.is_relative_to(Path(headers["nativeSourceDirectory"]))}
+            if inventory != recorded:
+                raise ValueError("Native UI complete source inventory drifted after compilation")
+        if headers.get("nativeBoundaryManifest"):
+            manifest = Path(headers["nativeBoundaryManifest"])
+            if manifest.resolve() not in sources:
+                raise ValueError("Native UI artifact boundary manifest is not bound to its provenance")
+            if configuration is None or version is None or target_framework is None \
+                    or headers.get("configuration") != configuration or headers.get("sdkVersion") != version \
+                    or headers.get("targetFramework") != target_framework:
+                raise ValueError("Native UI artifact boundary differs from the expected outer host context")
+            owner = verify_manifest(manifest, Path(headers["sourceProject"]), configuration, version, {}, target_framework)
+            # The host must consume exactly the application authenticated by that boundary.
+            if digest(target.parent / "Hexalith.EventStore.Admin.UI.dll") != digest(Path(owner["targetPath"])):
+                raise ValueError("Native UI artifact differs from its qualified native owner")
+            paths.update(Path(path) for path in owner["files"])
         paths.update(sources)
         paths.add(proof.resolve())
     return paths
@@ -362,7 +403,7 @@ def record(metadata: dict, project: Path, configuration: str, version: str, star
     validate_deps(deps, version, set(assets["libraries"]), families, project, native_ui is not None)
     archives, binaries = sdk_proof(assets, target, version, families)
     paths = runtime_inputs(target) | {assets_path, project.resolve(), RUNTIME_PROFILE}
-    paths.update(native_ui_sources(target))
+    paths.update(native_ui_sources(target, configuration, version, framework))
     return {"schemaVersion": 1, "completed": True, "project": str(project.resolve()), "configuration": configuration,
             "sdkVersion": version, "targetFramework": framework, "familyVersions": families, "role": role, "targetPath": str(target), "assetsPath": str(assets_path),
             "buildStartedNs": started_ns, "completedNs": time.time_ns(),
@@ -395,7 +436,7 @@ def verify_receipt(receipt: dict, project: Path, configuration: str, version: st
         raise ValueError("Prepared runtime inventory contains unbound inputs")
     if runtime_inputs(target) != recorded_inputs:
         raise ValueError("Prepared runtime file inventory drifted after completed build")
-    if not native_ui_sources(target).issubset({Path(filename) for filename in receipt["files"]}):
+    if not native_ui_sources(target, configuration, version, framework).issubset({Path(filename) for filename in receipt["files"]}):
         raise ValueError("Native UI artifact provenance contains unbound source files")
     assets = validate(assets_path, version, project)
     validate_framework(assets, target, framework, receipt["role"])

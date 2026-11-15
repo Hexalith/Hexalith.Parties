@@ -1,0 +1,10 @@
+[
+  "dotnet",
+  "msbuild",
+  "tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj",
+  "-t:HexalithValidateCatalogBeforeRestore",
+  "-p:HexalithEventStoreVersion=5.0.0",
+  "-nologo",
+  "-m:1",
+  "-nr:false"
+]

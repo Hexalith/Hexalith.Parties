@@ -1,5 +1,5 @@
 {
-  "observedAtUtc": "2026-11-13T16:29:39.215284+00:00",
+  "observedAtUtc": "2026-11-13T17:57:13.449924+00:00",
   "baselineSource": "864c55a9820f7e819714a7e6d92cc3d6ee82a2fe",
   "selectedSubmodules": {
     "references/Hexalith.EventStore": "69b244d9cfb0e5fc077e324fe9c2a9cae7d026dc",
@@ -273,6 +273,29 @@
       "command": "Final direct owner source verification after exact producer correction",
       "result": "Ten clean direct owners are remotely available; Builds selects exact public signed5.2.2 required by Platform. Later upstream work is preserved separately.",
       "log": "checks/parties-final-exact-owner-proof.json.gz"
+    },
+    {
+      "command": "Independent exact-source Platform hosted artifacts and normal source release verification",
+      "result": "actual349/412/478/97/9 cases pass with zero failures/skips/not-run; official v2.1.0 tag resolves b76e0c7c; normal qualified publisher43468621091 succeeds; no native/Story/candidate acceptance inferred",
+      "logs": [
+        "checks/parties-platform522-normal-publication-verified.json.gz",
+        "checks/parties-platform522-hosted-historical-counts.json.gz",
+        "checks/parties-platform522-hosted-current-counts.json.gz"
+      ]
+    },
+    {
+      "command": "Corrected Root4eca9e8f exact prepared module helper and committed-source fitness class",
+      "result": "pinned9eb helper succeeds with real qualified Platform2.1.0 and signed Builds5.2.2; all118source tests pass with zero failures/skips/not-run",
+      "logs": [
+        "checks/parties-exact-pinned-module-preflight.json.gz",
+        "checks/parties-exact-producer-committed-fitness-tests.log.gz",
+        "checks/parties-exact-producer-committed-fitness.xml.gz"
+      ]
+    },
+    {
+      "command": "Hosted CI43469191710 at4eca9e8f",
+      "result": "nine independent jobs pass; main solution build exposes private nested Admin UI forced SDK4.2 versus its ordinary SDK5 catalog context (fourHXW012). Local repair and independent review tracked in spec-native-ui-catalog-boundary-2026-11-13.md; final CI and release still pending",
+      "log": "checks/parties-corrected-ci-hosted-build-failure.log.gz"
     }
   ],
   "publication": "pending exact-source Platform qualification/normal release, then final Parties CI and normal Release",
@@ -333,7 +356,25 @@
     "source": "b76e0c7c70162653bbff6a8263ebfc4500c1631b",
     "tupleRun": "https://github.com/Hexalith/Hexalith.Platform/actions/runs/43462834314",
     "catalogRun": "https://github.com/Hexalith/Hexalith.Platform/actions/runs/43462834460",
-    "status": "pending hosted qualification; no source release claimed"
+    "status": "passed exact-source catalog, all tuple profiles and normal source publication",
+    "release": "https://github.com/Hexalith/Hexalith.Platform/releases/tag/v2.1.0",
+    "tag": "v2.1.0",
+    "publicationRun": "https://github.com/Hexalith/Hexalith.Platform/actions/runs/43468621091",
+    "historicalPassed": {
+      "legacy": 349,
+      "preExtension": 412
+    },
+    "currentPassed": {
+      "current42": 478,
+      "base42": 97,
+      "extensions": 9
+    },
+    "failed": 0,
+    "skipped": 0,
+    "notRun": 0,
+    "candidateAcceptance": false,
+    "nativeAcceptance": false,
+    "storyAcceptance": false
   },
   "finalEvaluatedAudit": {
     "path": "final-evaluated-audit.json",
@@ -345,5 +386,43 @@
     "release": "v5.2.2",
     "owningMainPreservedAt": "fde085eeccc11617f42e71a1e5d7db23ed5e4290",
     "reason": "The unchanged Platform prerequisite verifier requires exact published producer identity; newer unreleased guard work cannot substitute."
+  },
+  "status": "paused at user request",
+  "pausedAtUtc": "2026-11-13T17:59:17.866926+00:00",
+  "pause": {
+    "instruction": "stop and save",
+    "head": "4eca9e8fbad451a602a9ec7d2d6384345b6b0e4e",
+    "workingTree": "preserved uncommitted native UI repair, review fixes and checkpoint evidence",
+    "runningLocalChecks": "stopped by SIGTERM at user request; incomplete checks confer no success",
+    "lastParentResults": [
+      {
+        "command": [
+          "python3",
+          "/tmp/parties-native-ui-final-full/prepare_module_build.py",
+          "--manifest",
+          "module/hexalith.module-manifest.v2.json"
+        ],
+        "exitCode": 0,
+        "log": "/tmp/parties-native-ui-final-full/prepare.log"
+      },
+      {
+        "command": [
+          "dotnet",
+          "build",
+          "Hexalith.Parties.Standalone.slnx",
+          "-c",
+          "Release",
+          "--disable-build-servers",
+          "-m:1",
+          "-p:UseHexalithProjectReferences=false",
+          "-p:UseNuGetDeps=true"
+        ],
+        "exitCode": 0,
+        "log": "/tmp/parties-native-ui-final-full/solution.log"
+      }
+    ],
+    "finalPartiesRelease": "not dispatched or created",
+    "completedPreparedSolutionBuild": "passed before stopping; zero warnings/errors",
+    "fullCiTests": "interrupted at user request; no pass claimed"
   }
 }

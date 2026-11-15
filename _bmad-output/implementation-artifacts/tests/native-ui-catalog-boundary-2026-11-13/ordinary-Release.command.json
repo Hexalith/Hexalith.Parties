@@ -1,0 +1,10 @@
+[
+  "dotnet",
+  "build",
+  "tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj",
+  "-c",
+  "Release",
+  "-m:1",
+  "-nr:false",
+  "-warnaserror"
+]

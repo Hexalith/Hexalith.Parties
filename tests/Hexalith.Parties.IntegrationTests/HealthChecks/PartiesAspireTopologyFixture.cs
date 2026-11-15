@@ -1112,11 +1112,31 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             return;
         }
 
-        DirectoryInfo? repository = new(AppContext.BaseDirectory);
-        while (repository is not null
-            && !File.Exists(Path.Combine(repository.FullName, "scripts", "aspire-start-mtls.sh")))
+        DirectoryInfo? repository = null;
+        string? configuredRoot = Environment.GetEnvironmentVariable("PARTIES_TEST_REPOSITORY_ROOT");
+        if (configuredRoot is not null)
         {
-            repository = repository.Parent;
+            if (!Path.IsPathFullyQualified(configuredRoot)
+                || !File.Exists(Path.Combine(configuredRoot, "scripts", "aspire-start-mtls.sh")))
+            {
+                throw new FileNotFoundException("PARTIES_TEST_REPOSITORY_ROOT must identify an absolute Parties repository containing scripts/aspire-start-mtls.sh.");
+            }
+
+            repository = new(configuredRoot);
+        }
+        else
+        {
+            foreach (string startingDirectory in new[] { AppContext.BaseDirectory, Directory.GetCurrentDirectory() })
+            {
+                repository = new(startingDirectory);
+                while (repository is not null
+                    && !File.Exists(Path.Combine(repository.FullName, "scripts", "aspire-start-mtls.sh")))
+                {
+                    repository = repository.Parent;
+                }
+
+                if (repository is not null) { break; }
+            }
         }
 
         string repositoryRoot = repository?.FullName

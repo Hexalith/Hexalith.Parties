@@ -1,0 +1,28 @@
+[
+  {
+    "case": "actual completed native owner and wrapper provenance",
+    "result": "passed",
+    "boundFiles": 215,
+    "officialArchives": 5
+  },
+  {
+    "case": "altered-native-sdk-binary",
+    "result": "refused",
+    "diagnostic": "Native UI artifact provenance differs from its actual file: /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.EventStoreAdminUI.TestHost/obj/Release/net11.0/native-admin-ui/qualified/build/bin/Hexalith.EventStore.Admin.UI/release/Hexalith.EventStore.Client.dll"
+  },
+  {
+    "case": "altered-wrapper-native-artifact",
+    "result": "refused",
+    "diagnostic": "Native UI artifact differs from its qualified native owner"
+  },
+  {
+    "case": "missing-official-archive",
+    "result": "refused",
+    "diagnostic": "[Errno 2] No such file or directory: '/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.EventStoreAdminUI.TestHost/obj/Release/net11.0/native-admin-ui/qualified/public-archives/hexalith.eventstore.admin.abstractions.4.2.0.nupkg'"
+  },
+  {
+    "case": "actual-restored-sdk5-in-private-sdk4-assets",
+    "result": "refused",
+    "diagnostic": "Restored runtime SDK cohort differs from exact package 4.2.0: Hexalith.EventStore.Client/5.0.0 (type=package)"
+  }
+]
