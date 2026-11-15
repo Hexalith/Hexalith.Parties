@@ -1,0 +1,12 @@
+{
+  ".gitattributes": "adfd48780a89e0336efad703efa32c9b58d8105ee113058df12f4384fe2814bc",
+  "Directory.Build.targets": "cc24f97466b1507d252ca06c91dc10cf7ec7d6ebfd199b2267a39f17f533c465",
+  "tests/Hexalith.Parties.Ci.Tests/AspireRuntimePreparationTests.cs": "46a180d10ad6821a7c250e39a0a5633740ba548d07b0e81c0bf0e6251223e7f1",
+  "tests/Hexalith.Parties.Ci.Tests/MemoriesRefreshCompilationTests.cs": "a528456e5b3a66d2c5829bc195b414b1b9390771bfa0c596db524c1e5ee38020",
+  "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj": "0802035864023413723301d7394413d2102c36b5d0fb085a04ebd903442bb414",
+  "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj": "2bf167ba39b494f8d0e7b1f976e42bbf72a88cc6bc33041daf9bfefd3902c5fa",
+  "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj": "a1cbc52becb6b96e0c1810131e68714845ec58baff5ba6f09646ad11b1ca9531",
+  "tests/Hexalith.Parties.UI.Tests/PackageProjectionBarrier.cs": "ef3a840e366ce53b3081c811be7f2b2a39ff94defa91447ad5a1f8562a786ddb",
+  "tests/Hexalith.Parties.UI.Tests/PackageProjectionHub.cs": "6d7c35ada38874c6d72f57657676127bc67b45c0cc8dc3d63fef326d2bf0531c",
+  "tests/Hexalith.Parties.UI.Tests/ProjectionTransportPackageTests.cs": "62394a100eb9f85afc9ccde1f8f2d34434c899457344c834b06cc8101872150d"
+}

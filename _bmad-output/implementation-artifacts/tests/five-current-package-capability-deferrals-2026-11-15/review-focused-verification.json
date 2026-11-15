@@ -1,0 +1,102 @@
+{
+  "scope": "Only the changed transport control class; broader UI/runtime results remain historical and their production/runtime input bytes are unchanged.",
+  "lanes": {
+    "current": {
+      "total": 3,
+      "pass": 3,
+      "fail": 0,
+      "skip": 0,
+      "rawXmlSha256": "95153a5fcc1fc3fabf17ce64a8f41fbe7a9b4a46fe315af5f70e12cc0a6ebf48",
+      "tests": [
+        {
+          "id": "dbf54193-255e-4108-9442-648b48fb2a0d",
+          "name": "Hexalith.Parties.UI.Tests.ProjectionTransportPackageTests.SelectedTransportCancelsAStalledJoinThroughTheProductionAdapter",
+          "result": "Pass",
+          "time": "0.359",
+          "time-rtf": "00:00:00.3590000",
+          "start-rtf": "2026-11-15T15:51:50.6532449+00:00",
+          "finish-rtf": "2026-11-15T15:51:51.0209409+00:00",
+          "type": "Hexalith.Parties.UI.Tests.ProjectionTransportPackageTests",
+          "method": "SelectedTransportCancelsAStalledJoinThroughTheProductionAdapter",
+          "source-file": "${REPO}/tests/Hexalith.Parties.UI.Tests/ProjectionTransportPackageTests.cs",
+          "source-line": "19"
+        },
+        {
+          "id": "c61e4419-521b-41f0-9d7e-c51854bc373f",
+          "name": "Hexalith.Parties.UI.Tests.ProjectionTransportPackageTests.SelectedTransportReconnectsRejoinsAndDeliversThroughTheProductionAdapter",
+          "result": "Pass",
+          "time": "0.042",
+          "time-rtf": "00:00:00.0420000",
+          "start-rtf": "2026-11-15T15:51:51.0280942+00:00",
+          "finish-rtf": "2026-11-15T15:51:51.0710276+00:00",
+          "type": "Hexalith.Parties.UI.Tests.ProjectionTransportPackageTests",
+          "method": "SelectedTransportReconnectsRejoinsAndDeliversThroughTheProductionAdapter",
+          "source-file": "${REPO}/tests/Hexalith.Parties.UI.Tests/ProjectionTransportPackageTests.cs",
+          "source-line": "108"
+        },
+        {
+          "id": "d364ce93-53cc-4aa5-bf53-cb87e8d40949",
+          "name": "Hexalith.Parties.UI.Tests.ProjectionTransportPackageTests.SelectedTransportCancelsAStalledLeaveThroughTheProductionAdapter",
+          "result": "Pass",
+          "time": "0.023",
+          "time-rtf": "00:00:00.0230000",
+          "start-rtf": "2026-11-15T15:51:51.0715026+00:00",
+          "finish-rtf": "2026-11-15T15:51:51.0947528+00:00",
+          "type": "Hexalith.Parties.UI.Tests.ProjectionTransportPackageTests",
+          "method": "SelectedTransportCancelsAStalledLeaveThroughTheProductionAdapter",
+          "source-file": "${REPO}/tests/Hexalith.Parties.UI.Tests/ProjectionTransportPackageTests.cs",
+          "source-line": "22"
+        }
+      ]
+    },
+    "default": {
+      "total": 3,
+      "pass": 3,
+      "fail": 0,
+      "skip": 0,
+      "rawXmlSha256": "bec6a4af8d09fa467d5c942ca5713c1827ab46dd762a166d09e286768ce14f15",
+      "tests": [
+        {
+          "id": "46ffbb12-46e3-4464-8de0-0151f50710e3",
+          "name": "Hexalith.Parties.UI.Tests.ProjectionTransportPackageTests.SelectedTransportCancelsAStalledLeaveThroughTheProductionAdapter",
+          "result": "Pass",
+          "time": "0.318",
+          "time-rtf": "00:00:00.3180000",
+          "start-rtf": "2026-11-15T15:52:12.4717412+00:00",
+          "finish-rtf": "2026-11-15T15:52:12.7977482+00:00",
+          "type": "Hexalith.Parties.UI.Tests.ProjectionTransportPackageTests",
+          "method": "SelectedTransportCancelsAStalledLeaveThroughTheProductionAdapter",
+          "source-file": "${REPO}/tests/Hexalith.Parties.UI.Tests/ProjectionTransportPackageTests.cs",
+          "source-line": "22"
+        },
+        {
+          "id": "cf0486cc-9396-47e8-bf07-7280f4acbefd",
+          "name": "Hexalith.Parties.UI.Tests.ProjectionTransportPackageTests.SelectedTransportReconnectsRejoinsAndDeliversThroughTheProductionAdapter",
+          "result": "Pass",
+          "time": "0.044",
+          "time-rtf": "00:00:00.0440000",
+          "start-rtf": "2026-11-15T15:52:12.8048855+00:00",
+          "finish-rtf": "2026-11-15T15:52:12.8497672+00:00",
+          "type": "Hexalith.Parties.UI.Tests.ProjectionTransportPackageTests",
+          "method": "SelectedTransportReconnectsRejoinsAndDeliversThroughTheProductionAdapter",
+          "source-file": "${REPO}/tests/Hexalith.Parties.UI.Tests/ProjectionTransportPackageTests.cs",
+          "source-line": "108"
+        },
+        {
+          "id": "296e2014-f128-411f-938f-040cf6071eba",
+          "name": "Hexalith.Parties.UI.Tests.ProjectionTransportPackageTests.SelectedTransportCancelsAStalledJoinThroughTheProductionAdapter",
+          "result": "Pass",
+          "time": "0.017",
+          "time-rtf": "00:00:00.0170000",
+          "start-rtf": "2026-11-15T15:52:12.8502598+00:00",
+          "finish-rtf": "2026-11-15T15:52:12.8682094+00:00",
+          "type": "Hexalith.Parties.UI.Tests.ProjectionTransportPackageTests",
+          "method": "SelectedTransportCancelsAStalledJoinThroughTheProductionAdapter",
+          "source-file": "${REPO}/tests/Hexalith.Parties.UI.Tests/ProjectionTransportPackageTests.cs",
+          "source-line": "19"
+        }
+      ]
+    }
+  },
+  "disposableFocusedJobRemoved": true
+}

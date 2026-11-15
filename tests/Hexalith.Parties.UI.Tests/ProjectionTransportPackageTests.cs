@@ -39,16 +39,28 @@ public sealed class ProjectionTransportPackageTests
             Substitute.For<IProjectionAccessTokenProvider>(), NullLoggerFactory.Instance);
         IProjectionStream stream = concrete;
         using var cancellation = new CancellationTokenSource();
-        Action callback = () => { };
+        Dictionary<string, string?> selection = typeof(ProjectionTransportPackageTests).Assembly
+            .GetCustomAttributes(typeof(System.Reflection.AssemblyMetadataAttribute), false)
+            .Cast<System.Reflection.AssemblyMetadataAttribute>().ToDictionary(attribute => attribute.Key, attribute => attribute.Value);
+        bool retiresUncertainConnection = selection["HexalithEventStoreVersion"] == "5.1.0"
+            || (bool.TryParse(selection["HexalithEventStoreFromSource"], out bool fromSource) && fromSource);
+        int removedCallbackCalls = 0;
+        Action callback = () => Interlocked.Increment(ref removedCallbackCalls);
+        int survivorCallbackCalls = 0;
+        Action survivor = () => Interlocked.Increment(ref survivorCallbackCalls);
+        var deliveryFence = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         try
         {
             await stream.EnsureStartedAsync(token).ConfigureAwait(true);
+            await stream.SubscribeAsync("survivor", "acme", survivor, token).ConfigureAwait(true);
+            await stream.SubscribeAsync("delivery-fence", "acme", () => deliveryFence.TrySetResult(), token).ConfigureAwait(true);
             if (leave)
             {
                 barrier.Release.TrySetResult();
                 await stream.SubscribeAsync("counter", "acme", callback, token).ConfigureAwait(true);
             }
             long generation = stream.RecoveryGeneration;
+            string connection = barrier.ConnectionId;
             Task operation = leave ? stream.UnsubscribeAsync("counter", "acme", callback, cancellation.Token)
                 : stream.SubscribeAsync("counter", "acme", callback, cancellation.Token);
             await (leave ? barrier.LeaveEntered : barrier.Entered).Task.WaitAsync(TimeSpan.FromSeconds(5), token).ConfigureAwait(true);
@@ -57,7 +69,38 @@ public sealed class ProjectionTransportPackageTests
             (leave ? barrier.LeaveFinished : barrier.Finished).Task.IsCompleted.ShouldBeFalse("The caller must settle before the server acknowledgement is released.");
             (leave ? barrier.LeaveRelease : barrier.Release).TrySetResult();
             await (leave ? barrier.LeaveFinished : barrier.Finished).Task.WaitAsync(TimeSpan.FromSeconds(5), token).ConfigureAwait(true);
-            stream.RecoveryGeneration.ShouldBe(generation);
+            string activeConnection = connection;
+            if (retiresUncertainConnection)
+            {
+                // Observe automatic repair without initiating another membership operation.
+                await barrier.OriginalDisconnected.Task.WaitAsync(TimeSpan.FromSeconds(5), token).ConfigureAwait(true);
+                activeConnection = await barrier.SurvivorRejoined.Task.WaitAsync(TimeSpan.FromSeconds(5), token).ConfigureAwait(true);
+                activeConnection.ShouldNotBe(connection);
+                barrier.ConnectionId.ShouldBe(activeConnection);
+            }
+            IHubContext<PackageProjectionHub> hub = app.Services.GetRequiredService<IHubContext<PackageProjectionHub>>();
+            // Direct delivery prevents absent counter-group membership from making revocation vacuous.
+            // All three writes reach the same connection in order; its fence callback observes
+            // both the canceled notification and the survivor's actual group notification first.
+            await hub.Clients.Client(activeConnection).SendAsync("ProjectionChanged", "counter", "acme", token).ConfigureAwait(true);
+            await hub.Clients.Group("survivor:acme").SendAsync("ProjectionChanged", "survivor", "acme", token).ConfigureAwait(true);
+            await hub.Clients.Client(activeConnection).SendAsync("ProjectionChanged", "delivery-fence", "acme", token).ConfigureAwait(true);
+            await deliveryFence.Task.WaitAsync(TimeSpan.FromSeconds(5), token).ConfigureAwait(true);
+            removedCallbackCalls.ShouldBe(0, "The active connection received the canceled notification before the delivery fence.");
+            survivorCallbackCalls.ShouldBe(1, "The retained group must deliver exactly once before the ordered fence.");
+            if (retiresUncertainConnection)
+            {
+                barrier.ConnectionId.ShouldNotBe(connection, "The selected transport must terminate the uncertain legacy connection.");
+                stream.RecoveryGeneration.ShouldBeGreaterThan(generation, "Physical recovery must notify retained subscribers to catch up.");
+            }
+            else
+            {
+                barrier.OriginalDisconnected.Task.IsCompleted.ShouldBeFalse();
+                barrier.ConnectionId.ShouldBe(connection);
+                stream.RecoveryGeneration.ShouldBe(generation);
+            }
+            TestContext.Current.TestOutputHelper?.WriteLine(
+                $"leave={leave}; originalDisconnected={barrier.OriginalDisconnected.Task.IsCompleted}; physicalReplacement={activeConnection != connection}; canceledCallbacks={removedCallbackCalls}; survivorCallbacks={survivorCallbackCalls}; orderedFence={deliveryFence.Task.IsCompletedSuccessfully}");
         }
         finally { barrier.Release.TrySetResult(); barrier.LeaveRelease.TrySetResult(); await concrete.DisposeAsync().ConfigureAwait(true); await app.StopAsync(token).ConfigureAwait(true); }
     }

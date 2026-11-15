@@ -354,6 +354,11 @@ remaining_gate_2026_10_28: Drain all deployed older processing writers, independ
 verification_2026_10_28: `tests/five-data-lifecycle-qualification-2026-10-28/` binds current nupkg provenance and executed assemblies to commands and per-test XML.
 
 
+qualification_2026_11_15: Explicit EventStore 5.1.0 package controls pass 39 processing-generation recovery, 218 current projection-handler and 941 query controls, including bounded buckets/staging, interrupted recovery, scoped/stale/corrupt cursors and complete authorized exports. The default SDK 4.2 catalog view is unchanged; this is an independently selected exact package cohort.
+remaining_gate_2026_11_15: Deployed older-writer drain, independent historical private-material reconciliation, owner-approved migration/cutover, deployed state and rollback remain open. No production completeness attestation is supplied.
+verification_2026_11_15: `tests/five-current-package-capability-deferrals-2026-11-15/` retains exact commands, package provenance, assembly hashes and per-test results.
+
+
 ### DW-51: Resolve projection-handler performance and validation-coupling debt
 
 status: done 2026-10-21
@@ -602,6 +607,14 @@ remaining_gate_2026_10_28: Independently reconcile unknown legacy inventory afte
 verification_2026_10_28: `tests/five-data-lifecycle-qualification-2026-10-28/`; prior source/live receipts remain historical and do not transfer qualification to a deployment.
 
 
+qualification_2026_11_15: Explicit Memories 4.0.0 consumer controls pass all 18 bounded source-inventory and 27 actual REST/recovery cases. Empty/partial local mappings retain scoped discoveries and refuse incomplete coverage, foreign authority and uncertain terminal evidence. Selected-package runtime evidence is recorded separately in the dated receipt.
+remaining_gate_2026_11_15: Unknown historical inventory, older-writer exclusion, owner completeness attestation, production configuration and deployed cleanup remain open. Memories 4.0.0 predates the newer source per-unit authority fix; this package evidence does not qualify that contract or certify historical coverage.
+verification_2026_11_15: `tests/five-current-package-capability-deferrals-2026-11-15/`; initial mixed-current-source refusal is retained independently.
+
+
+runtime_2026_11_15: The full owned package-matched runtime passes 1 wrapper and 1 actual child control with zero skips. It verifies same-URI revisions, lost acknowledgement and recreated adapters, admitted pre-materialization/output-known cleanup refusal, failed-producer cleanup, delayed physical deletion, persisted empty mappings/intents and unrelated survivors. Six native stream/domain-replay observations bind actual persisted bytes. The nonpackable Memories host uses exact 4.0.0 nuspec source revision c4ee997702ede948ada5f99eeae7b3782e92003b with unchanged published libraries; the current-source-host authority refusal remains separate. Owned topology disposal succeeds, its session directory is absent and cleanup records no failure.
+
+
 ### DW-83: Persist recovery when mapping and compensating deletion both fail
 
 status: done 2026-10-23
@@ -731,6 +744,11 @@ verification_2026_10_30: `spec-five-causal-reconciliation-deferred-items.md`; `t
 
 
 adoption_2026_11_03: The already selected FrontComposer 4.7.5 and EventStore 4.0.4 cohorts now enable the existing shared readiness/witness/retry/generation and cancellation branches. Registered execution is checked inside the actual producer assembly; unregistered and older-package local rollback remains available. Source callback draining and acknowledged membership are separately qualified owner worktree changes, not features invented for the existing 4.0.4 package. No dependency selection changed. Named owner acceptance and transport publication/adoption remain open; G4/Story 8.9 are not promoted. Evidence: `tests/five-subscription-and-package-adoption-2026-11-03/`.
+
+adoption_2026_11_15: Exact FrontComposer 6.0.0 now enables the existing shared UI and readiness/witness/retry/generation branches. The actual producer implementation and unregistered local rollback execute within the 465 passing UI controls, with 359 Admin and 99 Consumer controls. Exact EventStore 5.1.0 transport controls require physical recovery after uncertain legacy RPC cancellation; older admitted transport retains its original connection/generation assertions. Both verify revoked callbacks and unrelated subscriber survival. No dependency/default version property changed.
+remaining_gate_2026_11_15: Named owner acceptance, production composition/deployment and complete G4/Story 8.9 acceptance remain open. Local exact-package qualification cannot supply owner approval or deployed guarantees.
+verification_2026_11_15: `tests/five-current-package-capability-deferrals-2026-11-15/` distinguishes current-package, older-default and source-host evidence.
+
 
 ### DW-101: Consolidate Admin and Consumer exports onto the approved FrontComposer browser-download service after G4-D delivery
 
@@ -1247,6 +1265,14 @@ remaining_gate_2026_10_28: Qualify the installed selected producer's delayed-ing
 verification_2026_10_28: `tests/five-data-lifecycle-qualification-2026-10-28/` retains per-test package evidence and exact external gates.
 
 
+qualification_2026_11_15: Explicit Memories 4.0.0/EventStore 5.1.0 consumer recovery, pending/uncertain terminal evidence, mapping and restart controls pass. The owned full runtime is selected independently with matching child/compiler/cohort identities; its actual disposition, persisted-erasure evidence, survivors and cleanup are retained in the dated receipt rather than inferred from HTTP success.
+remaining_gate_2026_11_15: Production workload/key/trust configuration, independent historical source reconciliation after older-writer drain, owner acceptance and deployed qualification remain open. The newer source per-unit authority contract is outside Memories 4.0.0 package qualification; no historical completeness or deployment is attested.
+verification_2026_11_15: `tests/five-current-package-capability-deferrals-2026-11-15/` preserves the mixed-current-source refusal separately from the package-matched source-host runtime.
+
+
+runtime_2026_11_15: The full owned package-matched runtime passes 1 wrapper and 1 actual child control with zero skips. It verifies same-URI revisions, lost acknowledgement and recreated adapters, admitted pre-materialization/output-known cleanup refusal, failed-producer cleanup, delayed physical deletion, persisted empty mappings/intents and unrelated survivors. Six native stream/domain-replay observations bind actual persisted bytes. The nonpackable Memories host uses exact 4.0.0 nuspec source revision c4ee997702ede948ada5f99eeae7b3782e92003b with unchanged published libraries; the current-source-host authority refusal remains separate. Owned topology disposal succeeds, its session directory is absent and cleanup records no failure.
+
+
 ### DW-169: D7 — Use concurrency-aware removal when cleaning a party memory-unit mapping inventory.
 
 status: done 2026-10-18
@@ -1724,6 +1750,12 @@ archived: 2026-10-21
   review_loop_2_2026_10_24: Consumer reservations retain the original protocol/revision/body digest before admission. Canonical JSON redelivery recovers that persisted identity without resubmission or unproved legacy adoption; a proven unsubmitted successor binds its own actual body. Modern refresh uses bounded key provenance, incomplete legacy registration is rediscovered natively before sealing, and actual NL TopK/current publication controls remain required. Final evidence is retained separately in the loop2 receipt.
 
   qualification_2026_11_03: Matching Debug wrapper/child configuration, selected family versions, mapping identity and shared producer bytes are now enforced before runtime mutation. Two focused authenticated child runs pass same-URI revision/current-content, both-output erasure, terminal mapping/intent and unrelated-case byte-preservation assertions. Full malformed-PDF cleanup still refuses with inventory HTTP 409; the focused wrapper still refuses native gateway proof with HTTP 503 despite later Available actor inspection. Both broader gates and all production/history acceptance remain open. Evidence: `tests/five-subscription-and-package-adoption-2026-11-03/README.md`.
+
+  qualification_2026_11_15: Exact Memories 4.0.0 now compiles revision-aware REST refresh with stable persisted request identity. The always-compiled capability/request control and all 27 REST/recovery cases pass. The exact cohort is selected explicitly; the retained default catalog view remains unchanged. Runtime content at the same source URI is an independent lane in the dated receipt.
+  remaining_gate_2026_11_15: Unknown historical inventory, older-writer exclusion, production workload/deployment and named owner acceptance remain open. The newer source per-unit authority contract is not qualified by this 4.0.0 package evidence; initial mixed-current-source refusal is preserved.
+  verification_2026_11_15: `tests/five-current-package-capability-deferrals-2026-11-15/` binds package/source/assembly identities, per-test outcomes and cleanup.
+
+  runtime_2026_11_15: The full owned package-matched wrapper and child pass without skips: actual requests refresh revisions 1 and 2 at one source URI, distinct canonical outputs expose changed current content, both outputs are physically erased, unrelated case/tenant bytes survive, and native persisted-stream/domain replay agrees. Exact 4.0.0 source-host revision, package/assembly hashes and completed cleanup are retained; newer source per-unit authority and external gates remain excluded.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-memories-recovery-deferred-items.md`
   summary: Qualify whether ingestion-inventory persistence needs a separate health capability probe.
@@ -2585,3 +2617,7 @@ archived: 2026-11-15
   implementation_2026_11_15: One bounded MSBuild JSON evaluation binds TargetPath to evaluated AssemblyName using the build configuration/properties. Real default/custom identities pass; malformed, mismatched, missing and symlinked outputs refuse with bounded private diagnostics.
   verification_2026_11_15: `tests/five-publisher-catalog-authority-2026-11-15/final-verification.json`; reviewed final source lanes pass with zero targeted skips.
   remaining_gate_2026_11_15: Source review and publication are complete in the enclosing workflow; local manifest qualification supplies no deployment acceptance.
+
+- source_spec: `spec-five-current-package-capability-deferrals.md`
+  summary: Qualify FrontComposer 6.0.0 shared download and cancellation through the maintained browser asset verifier.
+  evidence: Review VG1; medium, existing verification blocker. tests/e2e/helpers/frontcomposer-assets.ts:20 admits only5.0.0, so Consumer export/cancellation and Admin export browser assertions stop before6.0.0 execution. Newly admitted shared UI component tests mock JavaScript and cannot qualify real downloads. Extend exact asset admission only after measured served/restored-byte parity, then execute the existing browser controls; no browser/G4 acceptance is claimed by this batch.

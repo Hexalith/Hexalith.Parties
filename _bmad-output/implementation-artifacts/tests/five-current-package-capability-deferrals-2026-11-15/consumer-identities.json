@@ -1,0 +1,403 @@
+{
+  "ui": [
+    {
+      "name": "Hexalith.Commons.Http.dll",
+      "sha256": "f205e847c1a11ab643e065e10a7fc65ef1619c4e821dab63a88a76e951d0d76c"
+    },
+    {
+      "name": "Hexalith.Commons.ServiceDefaults.dll",
+      "sha256": "9125c5cec2c7572cbacbdf2432588d1c1db4ff92e66202a2532814abca67bb25"
+    },
+    {
+      "name": "Hexalith.Commons.UniqueIds.dll",
+      "sha256": "1d01a83eab399d61c0e5052246a881a1917730311b125b25be68b4299a99fcfc"
+    },
+    {
+      "name": "Hexalith.EventStore.Client.dll",
+      "sha256": "786cbb4bebd8d3720300afd775b0c38ccafdd1a73e8f1c1ccd79ef931ab5cbc2"
+    },
+    {
+      "name": "Hexalith.EventStore.Contracts.dll",
+      "sha256": "e165e434435170f6b9ec1699cc371c22a3d3b0a4f34b68209c99b564064f76b2"
+    },
+    {
+      "name": "Hexalith.EventStore.SignalR.dll",
+      "sha256": "b16fea61094e0d33e7d1a7994b85c201ea9f33db20000f6cec064fb230d634d0"
+    },
+    {
+      "name": "Hexalith.FrontComposer.Contracts.UI.dll",
+      "sha256": "54deb060d7e1d450c98fba429e1c3ca81164d085d9507ec2eb1b03b60e266902"
+    },
+    {
+      "name": "Hexalith.FrontComposer.Contracts.dll",
+      "sha256": "d1231ed413d81f31ac66b4717f114a7991b9798123333720517f5bcf2ef480b9"
+    },
+    {
+      "name": "Hexalith.FrontComposer.Mcp.dll",
+      "sha256": "6ed8018dd8e364ac48d7e7bd0e74c4c084f313bb962f2ff0acae4798717ec818"
+    },
+    {
+      "name": "Hexalith.FrontComposer.Schema.dll",
+      "sha256": "d7f8169edb977c6d637b8faa0d115a9c8f80539fd9208eece1783cae991c6822"
+    },
+    {
+      "name": "Hexalith.FrontComposer.Shell.dll",
+      "sha256": "2bd42f0eed17483d9a82625b9d1987ef0e298e5bf9ead3cd8a93ab5dd99f5546"
+    },
+    {
+      "name": "Hexalith.McpCli.Abstractions.dll",
+      "sha256": "d84cb2a7e6823756633c374a8cec55ae088962ea1b508be53b7604de7ca13e88"
+    },
+    {
+      "name": "Hexalith.Parties.AdminPortal.dll",
+      "sha256": "095e9bd890d4b1c62e3fd4de180db6100b68a70f15dcb21c9946a949b3a35192"
+    },
+    {
+      "name": "Hexalith.Parties.Authentication.dll",
+      "sha256": "b70a8997b5a71e87bdaea7482a0164251d01e814c6e5acb426c44881c58baf60"
+    },
+    {
+      "name": "Hexalith.Parties.Client.dll",
+      "sha256": "10e1af3987ee879e6658519964e9b9bfeed215c3cea70ffcfc72b453b8bf60b8"
+    },
+    {
+      "name": "Hexalith.Parties.ConsumerPortal.dll",
+      "sha256": "cfcf8cf3c85dbb3117c3fa7e53ed104e46681de06baa5ab85613b00378ca01de"
+    },
+    {
+      "name": "Hexalith.Parties.Contracts.dll",
+      "sha256": "c75b2603b92f6e271004adbfeb4b4c97c255af169ca1d9845941bd445094c017"
+    },
+    {
+      "name": "Hexalith.Parties.Picker.dll",
+      "sha256": "782399e370efa6afd5b9071e065ca50ba5085071f77ee6fc561cde5b185b8dcb"
+    },
+    {
+      "name": "Hexalith.Parties.UI.Tests.dll",
+      "sha256": "d04ef9b5a34c1a100cbdb03d4121bfc5db909e435fc605b0a840483ea1afc7c5"
+    },
+    {
+      "name": "Hexalith.Parties.UI.dll",
+      "sha256": "7f3677c74157ad82c0cd2b5d0f9178688ff622621c9ce8dd8950973520fbcb0d"
+    },
+    {
+      "name": "Hexalith.Tenants.Client.dll",
+      "sha256": "03cc88d5e4602962012232f20425be5a56966e08e2ad262ec6695df040616c8a"
+    },
+    {
+      "name": "Hexalith.Tenants.Contracts.dll",
+      "sha256": "84ca1ba9b50bb0d03c2e97180c583bc6097ba11337e8da2d6a8ad48df8f74782"
+    }
+  ],
+  "ui-packages": {
+    "Hexalith.EventStore.Client/5.1.0": "package",
+    "Hexalith.EventStore.Contracts/5.1.0": "package",
+    "Hexalith.EventStore.SignalR/5.1.0": "package",
+    "Hexalith.FrontComposer.Contracts/6.0.0": "package",
+    "Hexalith.FrontComposer.Contracts.UI/6.0.0": "package",
+    "Hexalith.FrontComposer.Mcp/6.0.0": "package",
+    "Hexalith.FrontComposer.Schema/6.0.0": "package",
+    "Hexalith.FrontComposer.Shell/6.0.0": "package"
+  },
+  "admin": [
+    {
+      "name": "Hexalith.Commons.Http.dll",
+      "sha256": "f205e847c1a11ab643e065e10a7fc65ef1619c4e821dab63a88a76e951d0d76c"
+    },
+    {
+      "name": "Hexalith.Commons.UniqueIds.dll",
+      "sha256": "1d01a83eab399d61c0e5052246a881a1917730311b125b25be68b4299a99fcfc"
+    },
+    {
+      "name": "Hexalith.EventStore.Client.dll",
+      "sha256": "786cbb4bebd8d3720300afd775b0c38ccafdd1a73e8f1c1ccd79ef931ab5cbc2"
+    },
+    {
+      "name": "Hexalith.EventStore.Contracts.dll",
+      "sha256": "e165e434435170f6b9ec1699cc371c22a3d3b0a4f34b68209c99b564064f76b2"
+    },
+    {
+      "name": "Hexalith.FrontComposer.Contracts.UI.dll",
+      "sha256": "54deb060d7e1d450c98fba429e1c3ca81164d085d9507ec2eb1b03b60e266902"
+    },
+    {
+      "name": "Hexalith.FrontComposer.Contracts.dll",
+      "sha256": "d1231ed413d81f31ac66b4717f114a7991b9798123333720517f5bcf2ef480b9"
+    },
+    {
+      "name": "Hexalith.FrontComposer.Shell.dll",
+      "sha256": "2bd42f0eed17483d9a82625b9d1987ef0e298e5bf9ead3cd8a93ab5dd99f5546"
+    },
+    {
+      "name": "Hexalith.McpCli.Abstractions.dll",
+      "sha256": "d84cb2a7e6823756633c374a8cec55ae088962ea1b508be53b7604de7ca13e88"
+    },
+    {
+      "name": "Hexalith.Parties.AdminPortal.Tests.dll",
+      "sha256": "3cd48d4cd730bdbbbb034fa9afdc0554ce4645538cd312a4b6124e5793ee1ae2"
+    },
+    {
+      "name": "Hexalith.Parties.AdminPortal.dll",
+      "sha256": "82e8d65b03c11a21bb568da3f931d5f75cb1ef40a69c72b45ad2571050e2b3e1"
+    },
+    {
+      "name": "Hexalith.Parties.Client.dll",
+      "sha256": "ccaea45d7b70bf4cade39d29c1628bdafdd365488329e6dab99d2a4fdb7a427b"
+    },
+    {
+      "name": "Hexalith.Parties.Contracts.dll",
+      "sha256": "59a0c65a90289ab5814ecb000ae6ccef87c81fd43b2181e282a573bbf6351ca9"
+    },
+    {
+      "name": "Hexalith.Tenants.Client.dll",
+      "sha256": "03cc88d5e4602962012232f20425be5a56966e08e2ad262ec6695df040616c8a"
+    },
+    {
+      "name": "Hexalith.Tenants.Contracts.dll",
+      "sha256": "84ca1ba9b50bb0d03c2e97180c583bc6097ba11337e8da2d6a8ad48df8f74782"
+    }
+  ],
+  "admin-packages": {
+    "Hexalith.EventStore.Client/5.1.0": "package",
+    "Hexalith.EventStore.Contracts/5.1.0": "package",
+    "Hexalith.FrontComposer.Contracts/6.0.0": "package",
+    "Hexalith.FrontComposer.Contracts.UI/6.0.0": "package",
+    "Hexalith.FrontComposer.Shell/6.0.0": "package"
+  },
+  "consumer": [
+    {
+      "name": "Hexalith.Commons.Http.dll",
+      "sha256": "f205e847c1a11ab643e065e10a7fc65ef1619c4e821dab63a88a76e951d0d76c"
+    },
+    {
+      "name": "Hexalith.Commons.UniqueIds.dll",
+      "sha256": "1d01a83eab399d61c0e5052246a881a1917730311b125b25be68b4299a99fcfc"
+    },
+    {
+      "name": "Hexalith.EventStore.Contracts.dll",
+      "sha256": "e165e434435170f6b9ec1699cc371c22a3d3b0a4f34b68209c99b564064f76b2"
+    },
+    {
+      "name": "Hexalith.FrontComposer.Contracts.UI.dll",
+      "sha256": "54deb060d7e1d450c98fba429e1c3ca81164d085d9507ec2eb1b03b60e266902"
+    },
+    {
+      "name": "Hexalith.FrontComposer.Contracts.dll",
+      "sha256": "d1231ed413d81f31ac66b4717f114a7991b9798123333720517f5bcf2ef480b9"
+    },
+    {
+      "name": "Hexalith.FrontComposer.Shell.dll",
+      "sha256": "2bd42f0eed17483d9a82625b9d1987ef0e298e5bf9ead3cd8a93ab5dd99f5546"
+    },
+    {
+      "name": "Hexalith.McpCli.Abstractions.dll",
+      "sha256": "d84cb2a7e6823756633c374a8cec55ae088962ea1b508be53b7604de7ca13e88"
+    },
+    {
+      "name": "Hexalith.Parties.Client.dll",
+      "sha256": "ccaea45d7b70bf4cade39d29c1628bdafdd365488329e6dab99d2a4fdb7a427b"
+    },
+    {
+      "name": "Hexalith.Parties.ConsumerPortal.Tests.dll",
+      "sha256": "0fc814f01ef7537fedb0451a3cfa2b23b11dc5021a518514ca98a09d04a603b1"
+    },
+    {
+      "name": "Hexalith.Parties.ConsumerPortal.dll",
+      "sha256": "504a4ca09576105789da3c3a28ff29792a6b4445f1b6d1a0bf60a2d09bb4f217"
+    },
+    {
+      "name": "Hexalith.Parties.Contracts.dll",
+      "sha256": "59a0c65a90289ab5814ecb000ae6ccef87c81fd43b2181e282a573bbf6351ca9"
+    }
+  ],
+  "consumer-packages": {
+    "Hexalith.EventStore.Contracts/5.1.0": "package",
+    "Hexalith.FrontComposer.Contracts/6.0.0": "package",
+    "Hexalith.FrontComposer.Contracts.UI/6.0.0": "package",
+    "Hexalith.FrontComposer.Shell/6.0.0": "package"
+  },
+  "memory-history": [
+    {
+      "name": "Hexalith.Commons.Http.dll",
+      "sha256": "f205e847c1a11ab643e065e10a7fc65ef1619c4e821dab63a88a76e951d0d76c"
+    },
+    {
+      "name": "Hexalith.Commons.ServiceDefaults.dll",
+      "sha256": "9125c5cec2c7572cbacbdf2432588d1c1db4ff92e66202a2532814abca67bb25"
+    },
+    {
+      "name": "Hexalith.Commons.UniqueIds.dll",
+      "sha256": "1d01a83eab399d61c0e5052246a881a1917730311b125b25be68b4299a99fcfc"
+    },
+    {
+      "name": "Hexalith.Commons.dll",
+      "sha256": "b5a1a6de3eee1d798637f54562f0d575ac5c839559284fe57e3ae2e4b954afe8"
+    },
+    {
+      "name": "Hexalith.EventStore.Admin.Abstractions.dll",
+      "sha256": "12de1a601e528fdafe0df8117fa12d33cf401d65c4d75a5524cdf61ecfe6cf26"
+    },
+    {
+      "name": "Hexalith.EventStore.Client.dll",
+      "sha256": "786cbb4bebd8d3720300afd775b0c38ccafdd1a73e8f1c1ccd79ef931ab5cbc2"
+    },
+    {
+      "name": "Hexalith.EventStore.Contracts.dll",
+      "sha256": "e165e434435170f6b9ec1699cc371c22a3d3b0a4f34b68209c99b564064f76b2"
+    },
+    {
+      "name": "Hexalith.EventStore.DomainService.dll",
+      "sha256": "213d32a31a086652ce64689b08a3633ed79da9da50e826d05fde2be7e05687f5"
+    },
+    {
+      "name": "Hexalith.EventStore.Gateway.dll",
+      "sha256": "af41eef10f9eacfea0df2e95976597f6567839a1cf618f16a9774bd2a2418bab"
+    },
+    {
+      "name": "Hexalith.EventStore.Server.dll",
+      "sha256": "5d2d955570bde4b60370380e9fecba05a29099a3f09b9304bd0ff141156f8181"
+    },
+    {
+      "name": "Hexalith.EventStore.ServiceDefaults.dll",
+      "sha256": "cd4ff890f3cc3a1f0e1636aad0fe0e6261dbfd68d83d716c9668799af0a78eb6"
+    },
+    {
+      "name": "Hexalith.EventStore.Testing.dll",
+      "sha256": "09b3195be9d487dca3a449ad75c3a295728db57839997ceef806d6257ed4be86"
+    },
+    {
+      "name": "Hexalith.McpCli.Abstractions.dll",
+      "sha256": "d84cb2a7e6823756633c374a8cec55ae088962ea1b508be53b7604de7ca13e88"
+    },
+    {
+      "name": "Hexalith.Memories.Client.Rest.dll",
+      "sha256": "7964b42d50db42d8d273b68ba55f8c6eea2c5ef79da89a34b9ba470560e6102d"
+    },
+    {
+      "name": "Hexalith.Memories.Contracts.dll",
+      "sha256": "d91ffb96fccc78297b0ff243c84d9ff00ce95a1a911abafe3e06a234ea5fa8f9"
+    },
+    {
+      "name": "Hexalith.Parties.Authentication.dll",
+      "sha256": "90feeab98540b7d144837600a20b0680b1fb5f5c4dc066ac79b2a0b3c195f260"
+    },
+    {
+      "name": "Hexalith.Parties.Client.dll",
+      "sha256": "ccaea45d7b70bf4cade39d29c1628bdafdd365488329e6dab99d2a4fdb7a427b"
+    },
+    {
+      "name": "Hexalith.Parties.Contracts.dll",
+      "sha256": "59a0c65a90289ab5814ecb000ae6ccef87c81fd43b2181e282a573bbf6351ca9"
+    },
+    {
+      "name": "Hexalith.Parties.EventStoreExtensions.dll",
+      "sha256": "ea9a86b2995c0a2f81c34a8c4ed25fa990c9d036526b4448b297ad49038a14e9"
+    },
+    {
+      "name": "Hexalith.Parties.EventStoreGateway.TestHost.dll",
+      "sha256": "6b50cb2a104583b9733ab2a3c6d5d74076f7a1852798a266f07da73e5788b69b"
+    },
+    {
+      "name": "Hexalith.Parties.Projections.dll",
+      "sha256": "09c37b3a8c2ca2b172096377268f52c779a50c749af3250d991a2fefb547f88c"
+    },
+    {
+      "name": "Hexalith.Parties.Security.dll",
+      "sha256": "fec8d345ecada054bfc19689c3c2cbc136305605c90e8fe6362fcbdf194e1a89"
+    },
+    {
+      "name": "Hexalith.Parties.Testing.dll",
+      "sha256": "475fdae73bda9caee4ca416ec228db80946b53af936c5edd7194ccc6dd9f6881"
+    },
+    {
+      "name": "Hexalith.Parties.Tests.dll",
+      "sha256": "8a8a32fa79e9ecd6f8beece522da12d3b53caf0b08de29d1099cbdb09fd2b0f2"
+    },
+    {
+      "name": "Hexalith.Parties.dll",
+      "sha256": "a6ea74feecc7df7662f618670b7c567c3b6efc7d277af3f04b427a6c2e9ad7cb"
+    },
+    {
+      "name": "Hexalith.Tenants.Client.dll",
+      "sha256": "03cc88d5e4602962012232f20425be5a56966e08e2ad262ec6695df040616c8a"
+    },
+    {
+      "name": "Hexalith.Tenants.Contracts.dll",
+      "sha256": "84ca1ba9b50bb0d03c2e97180c583bc6097ba11337e8da2d6a8ad48df8f74782"
+    },
+    {
+      "name": "Hexalith.Tenants.Server.dll",
+      "sha256": "44350594b5a88ae352266edbc3412d0eba55229482805043cbc98372a57d4677"
+    },
+    {
+      "name": "Hexalith.Tenants.Testing.dll",
+      "sha256": "4e2bda4bc2083abcd6cd14cb0c2f7f9af5c8e8b8df465ccbf8bc4d5f872a9fed"
+    }
+  ],
+  "memory-history-packages": {
+    "Hexalith.EventStore.Admin.Abstractions/5.1.0": "package",
+    "Hexalith.EventStore.Client/5.1.0": "package",
+    "Hexalith.EventStore.Contracts/5.1.0": "package",
+    "Hexalith.EventStore.DomainService/5.1.0": "package",
+    "Hexalith.EventStore.Gateway/5.1.0": "package",
+    "Hexalith.EventStore.Server/5.1.0": "package",
+    "Hexalith.EventStore.ServiceDefaults/5.1.0": "package",
+    "Hexalith.EventStore.Testing/5.1.0": "package",
+    "Hexalith.Memories.Client.Rest/4.0.0": "package",
+    "Hexalith.Memories.Contracts/4.0.0": "package"
+  },
+  "projections": [
+    {
+      "name": "Hexalith.Commons.UniqueIds.dll",
+      "sha256": "1d01a83eab399d61c0e5052246a881a1917730311b125b25be68b4299a99fcfc"
+    },
+    {
+      "name": "Hexalith.EventStore.Client.dll",
+      "sha256": "786cbb4bebd8d3720300afd775b0c38ccafdd1a73e8f1c1ccd79ef931ab5cbc2"
+    },
+    {
+      "name": "Hexalith.EventStore.Contracts.dll",
+      "sha256": "e165e434435170f6b9ec1699cc371c22a3d3b0a4f34b68209c99b564064f76b2"
+    },
+    {
+      "name": "Hexalith.EventStore.DomainService.dll",
+      "sha256": "213d32a31a086652ce64689b08a3633ed79da9da50e826d05fde2be7e05687f5"
+    },
+    {
+      "name": "Hexalith.EventStore.ServiceDefaults.dll",
+      "sha256": "cd4ff890f3cc3a1f0e1636aad0fe0e6261dbfd68d83d716c9668799af0a78eb6"
+    },
+    {
+      "name": "Hexalith.McpCli.Abstractions.dll",
+      "sha256": "d84cb2a7e6823756633c374a8cec55ae088962ea1b508be53b7604de7ca13e88"
+    },
+    {
+      "name": "Hexalith.Parties.Contracts.dll",
+      "sha256": "59a0c65a90289ab5814ecb000ae6ccef87c81fd43b2181e282a573bbf6351ca9"
+    },
+    {
+      "name": "Hexalith.Parties.Projections.Tests.dll",
+      "sha256": "9b0e3cbaddfbe2c54d19b3fa3559055baa33b1004aa398c66e12fb7b286d1af6"
+    },
+    {
+      "name": "Hexalith.Parties.Projections.dll",
+      "sha256": "09c37b3a8c2ca2b172096377268f52c779a50c749af3250d991a2fefb547f88c"
+    },
+    {
+      "name": "Hexalith.Parties.Testing.dll",
+      "sha256": "475fdae73bda9caee4ca416ec228db80946b53af936c5edd7194ccc6dd9f6881"
+    }
+  ],
+  "projections-packages": {
+    "Hexalith.EventStore.Client/5.1.0": "package",
+    "Hexalith.EventStore.Contracts/5.1.0": "package",
+    "Hexalith.EventStore.DomainService/5.1.0": "package",
+    "Hexalith.EventStore.ServiceDefaults/5.1.0": "package"
+  },
+  "capabilities": [
+    {
+      "name": "Hexalith.Parties.Ci.Tests.dll",
+      "sha256": "5b5174381ca3cef9a9590e06b316af856260ea58ae3fe35f61cd01c664a8b5f8"
+    }
+  ]
+}

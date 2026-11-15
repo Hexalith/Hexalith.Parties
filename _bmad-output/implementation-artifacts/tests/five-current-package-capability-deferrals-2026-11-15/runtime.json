@@ -1,0 +1,495 @@
+[
+  {
+    "lane": "full",
+    "files": {
+      "authentication-negative-controls.json": "faee449dea64192e904f9b0c5551255021f8981a0c999d0d5901c77666cc9602",
+      "domain-service-acl-negative-controls.json": "0dd17048a35d8d094e48384422803f27606871b99e16038dd4ea5ec7f48120cf",
+      "endpoint-binding.json": "eebe182a02e3ce55207d4b7e547941d71d5f53ffe8be520fc44e1f1f203b5026",
+      "executed-identities.json": "a284c68abf9460b1827b17c47b45831fb6b215c7be09b1e9fd8eef0a0558518a",
+      "ownership.json": "61045d129126fd3ffb904adc523877f1dc36b994fe0a37064fca247b2cf2bfde",
+      "phase.json": "0184c981fcfb56e471c6ce0ce93baaff5a7fae28745d477a05da9a579f47487c",
+      "runtime.authority.json": "6577c7bdafe9d4cae33942d774c10a19b8ec13cc59c54a5a519c12624b6886da",
+      "runtime.log": "960cf487e65a3361a3db2ce9fc43578cd5c3a8a02ee0d8d01d35f13342b85cfd",
+      "runtime.provisioning.survivor.teardown.json": "37ae2c4b6d97169497462ad22a944f754afb7ec8360cfcb2623abeb7c70b7b7b",
+      "runtime.provisioning.teardown.json": "7dbec21ce15aeeaf5e074445784cdf2db291139863cb564097f7fdcd9c333459",
+      "runtime.xml": "614daad33ac6e32ed740154664cb377d30daf42d86a6c45f67827b49792f99ee"
+    },
+    "ownership.json": {
+      "Id": "393feb57fa6f",
+      "Root": "${RUNTIME_TMP}/hexalith-parties-topology-393feb57fa6f",
+      "PrivateEvidence": "${RUNTIME_TMP}/parties-five-memory-runtime-393feb57fa6f",
+      "OwnedTopologyDisposed": true,
+      "SessionDirectoryExists": false,
+      "IsAvailable": true,
+      "UnavailableReason": null,
+      "Phase": "authenticated-workflow-and-erasure-control",
+      "PrimaryFailure": "Shouldly.ShouldAssertException: process.ExitCode\r\n    should be\r\n0\r\n    but was\r\n1\r\n\r\nAdditional Info:\r\n    Exact private runtime evidence: ${RUNTIME_TMP}/parties-five-memory-runtime-393feb57fa6f\n   at Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedRuntimeTests.ExecuteOwnedRuntimeAsync(Boolean focused, CancellationToken token) in ${REPO}/tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs:line 186",
+      "CleanupFailure": null
+    },
+    "executed-identities.json": {
+      "${SCRATCH}/artifacts-current/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll": "13ac9874973667cbf508635bf67fe48469308baffa299a0cab8de49703326420",
+      "${SCRATCH}/artifacts-current/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll": "8a8a32fa79e9ecd6f8beece522da12d3b53caf0b08de29d1099cbdb09fd2b0f2",
+      "${SCRATCH}/artifacts-current/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.deps.json": "749089c2a8ce1b52d1205f151fd3cae843df061eee96ced9b46c7b5920961d73",
+      "${SCRATCH}/artifacts-current/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.runtimeconfig.json": "7a0492ba58957f75c7c30c43200f2d844ddf164235ba0df015ae0ffda7e55561",
+      "${SCRATCH}/artifacts-current/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.dll": "a6ea74feecc7df7662f618670b7c567c3b6efc7d277af3f04b427a6c2e9ad7cb",
+      "${SCRATCH}/artifacts-current/bin/Hexalith.Parties.Tests/release/Hexalith.EventStore.Contracts.dll": "e165e434435170f6b9ec1699cc371c22a3d3b0a4f34b68209c99b564064f76b2",
+      "${SCRATCH}/artifacts-current/bin/Hexalith.Parties.Tests/release/Hexalith.EventStore.Client.dll": "786cbb4bebd8d3720300afd775b0c38ccafdd1a73e8f1c1ccd79ef931ab5cbc2",
+      "${SCRATCH}/artifacts-current/bin/Hexalith.Parties.Tests/release/Hexalith.Memories.Contracts.dll": "d91ffb96fccc78297b0ff243c84d9ff00ce95a1a911abafe3e06a234ea5fa8f9",
+      "${SCRATCH}/artifacts-current/bin/Hexalith.Parties.Tests/release/Hexalith.Memories.Client.Rest.dll": "7964b42d50db42d8d273b68ba55f8c6eea2c5ef79da89a34b9ba470560e6102d"
+    },
+    "endpoint-binding.json": {
+      "Id": "393feb57fa6f",
+      "SidecarHttp": "http://localhost:42449/",
+      "SidecarGrpc": "http://localhost:34239/",
+      "AppHttpPort": "42449",
+      "AppGrpcPort": "34239"
+    },
+    "authentication-negative-controls.json": [
+      {
+        "Control": "missing-sidecar-token",
+        "Status": 401
+      },
+      {
+        "Control": "incorrect-sidecar-token",
+        "Status": 401
+      },
+      {
+        "Control": "missing-workload-assertion-and-principal-proof",
+        "Status": 401,
+        "Body": ""
+      }
+    ],
+    "domain-service-acl-negative-controls.json": [
+      {
+        "Caller": "memories",
+        "Verb": "POST",
+        "Path": "process",
+        "Status": 403,
+        "Diagnostic": "failed to invoke, id: memories-domain-service-393feb57fa6f, err: rpc error: code = PermissionDenied desc = access control policy has denied access to id: spiffe://public/ns/parties-393feb57fa6f/memories-393feb57fa6f operation: process verb: POST"
+      },
+      {
+        "Caller": "eventstore",
+        "Verb": "GET",
+        "Path": "process",
+        "Status": 403,
+        "Diagnostic": "failed to invoke, id: memories-domain-service-393feb57fa6f, err: rpc error: code = PermissionDenied desc = access control policy has denied access to id: spiffe://public/ns/parties-393feb57fa6f/eventstore-393feb57fa6f operation: process verb: GET"
+      },
+      {
+        "Caller": "eventstore",
+        "Verb": "POST",
+        "Path": "health",
+        "Status": 403,
+        "Diagnostic": "failed to invoke, id: memories-domain-service-393feb57fa6f, err: rpc error: code = PermissionDenied desc = access control policy has denied access to id: spiffe://public/ns/parties-393feb57fa6f/eventstore-393feb57fa6f operation: health verb: POST"
+      }
+    ],
+    "authority": {
+      "UnitIds": [
+        "87e5a8ab-f63a-405f-9af6-ed8fc5a7dc84"
+      ],
+      "CanonicalOutputs": [
+        {
+          "Revision": 1,
+          "MemoryUnitId": "87e5a8ab-f63a-405f-9af6-ed8fc5a7dc84"
+        }
+      ],
+      "SurvivorsVerified": false
+    },
+    "requestRevisions": [
+      {
+        "sourceRevisionNumber": 0,
+        "refreshExistingSource": false,
+        "sourceUriSha256": "0d8985106cf0355931cdb855dc174161ee466d2765ae8a7414394f2af01d6556"
+      },
+      {
+        "sourceRevisionNumber": 1,
+        "refreshExistingSource": true,
+        "sourceUriSha256": "1107e1777f1df16edb8994c0573377387f968a6451f320ed27cbc3dfc6bd35d3"
+      },
+      {
+        "sourceRevisionNumber": 2,
+        "refreshExistingSource": true,
+        "sourceUriSha256": "1107e1777f1df16edb8994c0573377387f968a6451f320ed27cbc3dfc6bd35d3"
+      }
+    ]
+  },
+  {
+    "lane": "package-full",
+    "files": {
+      "authentication-negative-controls.json": "faee449dea64192e904f9b0c5551255021f8981a0c999d0d5901c77666cc9602",
+      "authoritative-persistence.json": "5ef8daf602f5e663140e8b7aff57d59db0a7aaa927e1747b900813b5f5276283",
+      "catalog-generation-controls.json": "6bcb7f08d61a6d1c276b53777c850b2c3674444cc8823db786e5e330d9f2e979",
+      "domain-service-acl-negative-controls.json": "2e5557a6ecc37f90f60916b6da53d4d5deea70b95fcccc2c734476badea57745",
+      "endpoint-binding.json": "307dd2db0335a3a18714696b5d5f679e7fd0bca17211cd21aed9e74b4c99f723",
+      "executed-identities.json": "f8c47cb1c8a3bf2ec9eef9e46827a71635ec9bb0f9e12459d870386effcad6f5",
+      "ownership.json": "ecf7ea9094b4e336e3a37e0cbb39562d0cbf7b5fe1cfdb8d51f4213237acc723",
+      "phase.json": "73eb7b1ed7a6f4a4debb2b52b2ed979057b17764ee17bbce4d1088765eae7acf",
+      "runtime.authority.json": "468a29a6abc1b0701aa1e6821c971b00326d72f38b6b5cc09d7d20dddb90d4d5",
+      "runtime.log": "3a873ffb245913d932781a851777b5e74f5183d96647ad116c68585b1b89bc9d",
+      "runtime.provisioning.survivor.teardown.json": "1d9e649eab914232074b9db2413adf077935e172e863f8fb601104da9fb66651",
+      "runtime.provisioning.teardown.json": "b5929f5470237ffcf1e5024e4ffb59c14b1d9442c9d4376d11f05bd650d4061a",
+      "runtime.xml": "47108e69f354967344db288fce13efd4d0f450ea0f95228e16bf9883a059fe7e"
+    },
+    "ownership.json": {
+      "Id": "f8b739a85088",
+      "Root": "${RUNTIME_TMP}/hexalith-parties-topology-f8b739a85088",
+      "PrivateEvidence": "${RUNTIME_TMP}/parties-five-memory-runtime-f8b739a85088",
+      "OwnedTopologyDisposed": true,
+      "SessionDirectoryExists": false,
+      "IsAvailable": true,
+      "UnavailableReason": null,
+      "Phase": "authoritative-stream-and-domain-replay",
+      "PrimaryFailure": null,
+      "CleanupFailure": null
+    },
+    "executed-identities.json": {
+      "${SOURCE_SNAPSHOT}/artifacts/package/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll": "3940cb6fdd5d29c3b42f2b0c01483fb0d2279f855b5554e96c08a71006e4ca65",
+      "${SOURCE_SNAPSHOT}/artifacts/package/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll": "37f9679520ec3239bc41d7b20c79f974acdc50f68bd0f34b9b426361a5efde9f",
+      "${SOURCE_SNAPSHOT}/artifacts/package/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.deps.json": "749089c2a8ce1b52d1205f151fd3cae843df061eee96ced9b46c7b5920961d73",
+      "${SOURCE_SNAPSHOT}/artifacts/package/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.runtimeconfig.json": "7a0492ba58957f75c7c30c43200f2d844ddf164235ba0df015ae0ffda7e55561",
+      "${SOURCE_SNAPSHOT}/artifacts/package/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.dll": "cce593422b8f01418d20efda6d5b052fda71d48c37d0c853d831a3d4fe70e619",
+      "${SOURCE_SNAPSHOT}/artifacts/package/bin/Hexalith.Parties.Tests/release/Hexalith.EventStore.Contracts.dll": "e165e434435170f6b9ec1699cc371c22a3d3b0a4f34b68209c99b564064f76b2",
+      "${SOURCE_SNAPSHOT}/artifacts/package/bin/Hexalith.Parties.Tests/release/Hexalith.EventStore.Client.dll": "786cbb4bebd8d3720300afd775b0c38ccafdd1a73e8f1c1ccd79ef931ab5cbc2",
+      "${SOURCE_SNAPSHOT}/artifacts/package/bin/Hexalith.Parties.Tests/release/Hexalith.Memories.Contracts.dll": "d91ffb96fccc78297b0ff243c84d9ff00ce95a1a911abafe3e06a234ea5fa8f9",
+      "${SOURCE_SNAPSHOT}/artifacts/package/bin/Hexalith.Parties.Tests/release/Hexalith.Memories.Client.Rest.dll": "7964b42d50db42d8d273b68ba55f8c6eea2c5ef79da89a34b9ba470560e6102d"
+    },
+    "endpoint-binding.json": {
+      "Id": "f8b739a85088",
+      "SidecarHttp": "http://localhost:40343/",
+      "SidecarGrpc": "http://localhost:43683/",
+      "AppHttpPort": "40343",
+      "AppGrpcPort": "43683"
+    },
+    "authentication-negative-controls.json": [
+      {
+        "Control": "missing-sidecar-token",
+        "Status": 401
+      },
+      {
+        "Control": "incorrect-sidecar-token",
+        "Status": 401
+      },
+      {
+        "Control": "missing-workload-assertion-and-principal-proof",
+        "Status": 401,
+        "Body": ""
+      }
+    ],
+    "domain-service-acl-negative-controls.json": [
+      {
+        "Caller": "memories",
+        "Verb": "POST",
+        "Path": "process",
+        "Status": 403,
+        "Diagnostic": "failed to invoke, id: memories-domain-service-f8b739a85088, err: rpc error: code = PermissionDenied desc = access control policy has denied access to id: spiffe://public/ns/parties-f8b739a85088/memories-f8b739a85088 operation: process verb: POST"
+      },
+      {
+        "Caller": "eventstore",
+        "Verb": "GET",
+        "Path": "process",
+        "Status": 403,
+        "Diagnostic": "failed to invoke, id: memories-domain-service-f8b739a85088, err: rpc error: code = PermissionDenied desc = access control policy has denied access to id: spiffe://public/ns/parties-f8b739a85088/eventstore-f8b739a85088 operation: process verb: GET"
+      },
+      {
+        "Caller": "eventstore",
+        "Verb": "POST",
+        "Path": "health",
+        "Status": 403,
+        "Diagnostic": "failed to invoke, id: memories-domain-service-f8b739a85088, err: rpc error: code = PermissionDenied desc = access control policy has denied access to id: spiffe://public/ns/parties-f8b739a85088/eventstore-f8b739a85088 operation: health verb: POST"
+      }
+    ],
+    "authoritative-persistence.json": [
+      {
+        "Domain": "memories-tenants",
+        "Aggregate": "parties-recovery-d3f8771b390e4bfe8bf64499e9661708",
+        "Sequence": 1,
+        "EventCount": 3,
+        "NativeProof": true,
+        "Replay": true
+      },
+      {
+        "Domain": "memories-tenants",
+        "Aggregate": "parties-recovery-d3f8771b390e4bfe8bf64499e9661708",
+        "Sequence": 3,
+        "EventCount": 3,
+        "NativeProof": true,
+        "Replay": true
+      },
+      {
+        "Domain": "memories-cases",
+        "Aggregate": "01M7FXD7MGA2N2XM2E2M7M55WD",
+        "Sequence": 1,
+        "EventCount": 2,
+        "NativeProof": true,
+        "Replay": true
+      },
+      {
+        "Domain": "memories-cases",
+        "Aggregate": "01M7FXD7MGA2N2XM2E2M7M55WD",
+        "Sequence": 2,
+        "EventCount": 2,
+        "NativeProof": true,
+        "Replay": true
+      },
+      {
+        "Domain": "memories-memory-units",
+        "Aggregate": "cf974987-430d-4e20-ac7c-031f580f449d",
+        "Sequence": 1,
+        "EventCount": 1,
+        "NativeProof": true,
+        "Replay": true
+      },
+      {
+        "Domain": "memories-memory-units",
+        "Aggregate": "cc309016-3fd7-4507-a5dd-216f85403ae6",
+        "Sequence": 1,
+        "EventCount": 1,
+        "NativeProof": true,
+        "Replay": true
+      }
+    ],
+    "catalog-generation-controls.json": [
+      {
+        "Mode": "missing",
+        "ObservedEpoch": 1,
+        "SentEpoch": null,
+        "Root": "dbeacd61ae27bb89b233e88a889c5bebc89d65a0ce7874f1d7dd7dc6a104fcbb",
+        "Binding": "d5dbca6b19a17ce694e701f766c49af7a1ba0381432e6e55d9f351f7b9d3a9fe",
+        "StateStore": "routing-parties-f8b739a85088-catalog",
+        "StateKey": "parties-f8b739a85088-catalog-authority"
+      },
+      {
+        "Mode": "stale",
+        "ObservedEpoch": 1,
+        "SentEpoch": 0,
+        "Root": "dbeacd61ae27bb89b233e88a889c5bebc89d65a0ce7874f1d7dd7dc6a104fcbb",
+        "Binding": "d5dbca6b19a17ce694e701f766c49af7a1ba0381432e6e55d9f351f7b9d3a9fe",
+        "StateStore": "routing-parties-f8b739a85088-catalog",
+        "StateKey": "parties-f8b739a85088-catalog-authority"
+      },
+      {
+        "Mode": "current",
+        "ObservedEpoch": 1,
+        "SentEpoch": 1,
+        "Root": "dbeacd61ae27bb89b233e88a889c5bebc89d65a0ce7874f1d7dd7dc6a104fcbb",
+        "Binding": "d5dbca6b19a17ce694e701f766c49af7a1ba0381432e6e55d9f351f7b9d3a9fe",
+        "StateStore": "routing-parties-f8b739a85088-catalog",
+        "StateKey": "parties-f8b739a85088-catalog-authority"
+      },
+      {
+        "Mode": "current",
+        "ObservedEpoch": 1,
+        "SentEpoch": 1,
+        "Root": "dbeacd61ae27bb89b233e88a889c5bebc89d65a0ce7874f1d7dd7dc6a104fcbb",
+        "Binding": "d5dbca6b19a17ce694e701f766c49af7a1ba0381432e6e55d9f351f7b9d3a9fe",
+        "StateStore": "routing-parties-f8b739a85088-catalog",
+        "StateKey": "parties-f8b739a85088-catalog-authority"
+      },
+      {
+        "Mode": "current",
+        "ObservedEpoch": 1,
+        "SentEpoch": 1,
+        "Root": "dbeacd61ae27bb89b233e88a889c5bebc89d65a0ce7874f1d7dd7dc6a104fcbb",
+        "Binding": "d5dbca6b19a17ce694e701f766c49af7a1ba0381432e6e55d9f351f7b9d3a9fe",
+        "StateStore": "routing-parties-f8b739a85088-catalog",
+        "StateKey": "parties-f8b739a85088-catalog-authority"
+      },
+      {
+        "Mode": "current",
+        "ObservedEpoch": 1,
+        "SentEpoch": 1,
+        "Root": "dbeacd61ae27bb89b233e88a889c5bebc89d65a0ce7874f1d7dd7dc6a104fcbb",
+        "Binding": "d5dbca6b19a17ce694e701f766c49af7a1ba0381432e6e55d9f351f7b9d3a9fe",
+        "StateStore": "routing-parties-f8b739a85088-catalog",
+        "StateKey": "parties-f8b739a85088-catalog-authority"
+      },
+      {
+        "Mode": "current",
+        "ObservedEpoch": 1,
+        "SentEpoch": 1,
+        "Root": "dbeacd61ae27bb89b233e88a889c5bebc89d65a0ce7874f1d7dd7dc6a104fcbb",
+        "Binding": "d5dbca6b19a17ce694e701f766c49af7a1ba0381432e6e55d9f351f7b9d3a9fe",
+        "StateStore": "routing-parties-f8b739a85088-catalog",
+        "StateKey": "parties-f8b739a85088-catalog-authority"
+      },
+      {
+        "Mode": "current",
+        "ObservedEpoch": 1,
+        "SentEpoch": 1,
+        "Root": "dbeacd61ae27bb89b233e88a889c5bebc89d65a0ce7874f1d7dd7dc6a104fcbb",
+        "Binding": "d5dbca6b19a17ce694e701f766c49af7a1ba0381432e6e55d9f351f7b9d3a9fe",
+        "StateStore": "routing-parties-f8b739a85088-catalog",
+        "StateKey": "parties-f8b739a85088-catalog-authority"
+      },
+      {
+        "Mode": "current",
+        "ObservedEpoch": 1,
+        "SentEpoch": 1,
+        "Root": "dbeacd61ae27bb89b233e88a889c5bebc89d65a0ce7874f1d7dd7dc6a104fcbb",
+        "Binding": "d5dbca6b19a17ce694e701f766c49af7a1ba0381432e6e55d9f351f7b9d3a9fe",
+        "StateStore": "routing-parties-f8b739a85088-catalog",
+        "StateKey": "parties-f8b739a85088-catalog-authority"
+      },
+      {
+        "Mode": "current",
+        "ObservedEpoch": 1,
+        "SentEpoch": 1,
+        "Root": "dbeacd61ae27bb89b233e88a889c5bebc89d65a0ce7874f1d7dd7dc6a104fcbb",
+        "Binding": "d5dbca6b19a17ce694e701f766c49af7a1ba0381432e6e55d9f351f7b9d3a9fe",
+        "StateStore": "routing-parties-f8b739a85088-catalog",
+        "StateKey": "parties-f8b739a85088-catalog-authority"
+      },
+      {
+        "Mode": "current",
+        "ObservedEpoch": 1,
+        "SentEpoch": 1,
+        "Root": "dbeacd61ae27bb89b233e88a889c5bebc89d65a0ce7874f1d7dd7dc6a104fcbb",
+        "Binding": "d5dbca6b19a17ce694e701f766c49af7a1ba0381432e6e55d9f351f7b9d3a9fe",
+        "StateStore": "routing-parties-f8b739a85088-catalog",
+        "StateKey": "parties-f8b739a85088-catalog-authority"
+      },
+      {
+        "Mode": "current",
+        "ObservedEpoch": 1,
+        "SentEpoch": 1,
+        "Root": "dbeacd61ae27bb89b233e88a889c5bebc89d65a0ce7874f1d7dd7dc6a104fcbb",
+        "Binding": "d5dbca6b19a17ce694e701f766c49af7a1ba0381432e6e55d9f351f7b9d3a9fe",
+        "StateStore": "routing-parties-f8b739a85088-catalog",
+        "StateKey": "parties-f8b739a85088-catalog-authority"
+      },
+      {
+        "Mode": "current",
+        "ObservedEpoch": 1,
+        "SentEpoch": 1,
+        "Root": "dbeacd61ae27bb89b233e88a889c5bebc89d65a0ce7874f1d7dd7dc6a104fcbb",
+        "Binding": "d5dbca6b19a17ce694e701f766c49af7a1ba0381432e6e55d9f351f7b9d3a9fe",
+        "StateStore": "routing-parties-f8b739a85088-catalog",
+        "StateKey": "parties-f8b739a85088-catalog-authority"
+      },
+      {
+        "Mode": "current",
+        "ObservedEpoch": 1,
+        "SentEpoch": 1,
+        "Root": "dbeacd61ae27bb89b233e88a889c5bebc89d65a0ce7874f1d7dd7dc6a104fcbb",
+        "Binding": "d5dbca6b19a17ce694e701f766c49af7a1ba0381432e6e55d9f351f7b9d3a9fe",
+        "StateStore": "routing-parties-f8b739a85088-catalog",
+        "StateKey": "parties-f8b739a85088-catalog-authority"
+      },
+      {
+        "Mode": "current",
+        "ObservedEpoch": 1,
+        "SentEpoch": 1,
+        "Root": "dbeacd61ae27bb89b233e88a889c5bebc89d65a0ce7874f1d7dd7dc6a104fcbb",
+        "Binding": "d5dbca6b19a17ce694e701f766c49af7a1ba0381432e6e55d9f351f7b9d3a9fe",
+        "StateStore": "routing-parties-f8b739a85088-catalog",
+        "StateKey": "parties-f8b739a85088-catalog-authority"
+      },
+      {
+        "Mode": "current",
+        "ObservedEpoch": 1,
+        "SentEpoch": 1,
+        "Root": "dbeacd61ae27bb89b233e88a889c5bebc89d65a0ce7874f1d7dd7dc6a104fcbb",
+        "Binding": "d5dbca6b19a17ce694e701f766c49af7a1ba0381432e6e55d9f351f7b9d3a9fe",
+        "StateStore": "routing-parties-f8b739a85088-catalog",
+        "StateKey": "parties-f8b739a85088-catalog-authority"
+      },
+      {
+        "Mode": "current",
+        "ObservedEpoch": 1,
+        "SentEpoch": 1,
+        "Root": "dbeacd61ae27bb89b233e88a889c5bebc89d65a0ce7874f1d7dd7dc6a104fcbb",
+        "Binding": "d5dbca6b19a17ce694e701f766c49af7a1ba0381432e6e55d9f351f7b9d3a9fe",
+        "StateStore": "routing-parties-f8b739a85088-catalog",
+        "StateKey": "parties-f8b739a85088-catalog-authority"
+      },
+      {
+        "Mode": "current",
+        "ObservedEpoch": 1,
+        "SentEpoch": 1,
+        "Root": "dbeacd61ae27bb89b233e88a889c5bebc89d65a0ce7874f1d7dd7dc6a104fcbb",
+        "Binding": "d5dbca6b19a17ce694e701f766c49af7a1ba0381432e6e55d9f351f7b9d3a9fe",
+        "StateStore": "routing-parties-f8b739a85088-catalog",
+        "StateKey": "parties-f8b739a85088-catalog-authority"
+      },
+      {
+        "Mode": "current",
+        "ObservedEpoch": 1,
+        "SentEpoch": 1,
+        "Root": "dbeacd61ae27bb89b233e88a889c5bebc89d65a0ce7874f1d7dd7dc6a104fcbb",
+        "Binding": "d5dbca6b19a17ce694e701f766c49af7a1ba0381432e6e55d9f351f7b9d3a9fe",
+        "StateStore": "routing-parties-f8b739a85088-catalog",
+        "StateKey": "parties-f8b739a85088-catalog-authority"
+      },
+      {
+        "Mode": "current",
+        "ObservedEpoch": 1,
+        "SentEpoch": 1,
+        "Root": "dbeacd61ae27bb89b233e88a889c5bebc89d65a0ce7874f1d7dd7dc6a104fcbb",
+        "Binding": "d5dbca6b19a17ce694e701f766c49af7a1ba0381432e6e55d9f351f7b9d3a9fe",
+        "StateStore": "routing-parties-f8b739a85088-catalog",
+        "StateKey": "parties-f8b739a85088-catalog-authority"
+      },
+      {
+        "Mode": "current",
+        "ObservedEpoch": 1,
+        "SentEpoch": 1,
+        "Root": "dbeacd61ae27bb89b233e88a889c5bebc89d65a0ce7874f1d7dd7dc6a104fcbb",
+        "Binding": "d5dbca6b19a17ce694e701f766c49af7a1ba0381432e6e55d9f351f7b9d3a9fe",
+        "StateStore": "routing-parties-f8b739a85088-catalog",
+        "StateKey": "parties-f8b739a85088-catalog-authority"
+      },
+      {
+        "Mode": "current",
+        "ObservedEpoch": 1,
+        "SentEpoch": 1,
+        "Root": "dbeacd61ae27bb89b233e88a889c5bebc89d65a0ce7874f1d7dd7dc6a104fcbb",
+        "Binding": "d5dbca6b19a17ce694e701f766c49af7a1ba0381432e6e55d9f351f7b9d3a9fe",
+        "StateStore": "routing-parties-f8b739a85088-catalog",
+        "StateKey": "parties-f8b739a85088-catalog-authority"
+      }
+    ],
+    "authority": {
+      "UnitIds": [
+        "cf974987-430d-4e20-ac7c-031f580f449d",
+        "cc309016-3fd7-4507-a5dd-216f85403ae6"
+      ],
+      "CanonicalOutputs": [
+        {
+          "Revision": 1,
+          "MemoryUnitId": "cf974987-430d-4e20-ac7c-031f580f449d"
+        },
+        {
+          "Revision": 2,
+          "MemoryUnitId": "cc309016-3fd7-4507-a5dd-216f85403ae6"
+        }
+      ],
+      "SurvivorsVerified": true
+    },
+    "requestRevisions": [
+      {
+        "sourceRevisionNumber": 0,
+        "refreshExistingSource": false,
+        "sourceUriSha256": "9fcaad7cad2f518b35028b4788679fadd063d8329f3165965bf791f15575a49f"
+      },
+      {
+        "sourceRevisionNumber": 1,
+        "refreshExistingSource": true,
+        "sourceUriSha256": "0f215549800199e7410d98e90ceddb23c4925bc384ff378bbe06e2fd9c1d26f5"
+      },
+      {
+        "sourceRevisionNumber": 2,
+        "refreshExistingSource": true,
+        "sourceUriSha256": "0f215549800199e7410d98e90ceddb23c4925bc384ff378bbe06e2fd9c1d26f5"
+      },
+      {
+        "sourceRevisionNumber": 0,
+        "refreshExistingSource": false,
+        "sourceUriSha256": "91f4a8daa25b386dfd7351563af03858eca73ff5348494bb0fdede54a039f204"
+      },
+      {
+        "sourceRevisionNumber": 0,
+        "refreshExistingSource": false,
+        "sourceUriSha256": "88d8757a639589c172ab8773c00cd46eb51cd81ae3a1f88fea4bf254f3696cde"
+      }
+    ]
+  }
+]

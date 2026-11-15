@@ -1,0 +1,99 @@
+{
+  "baseline": "f45d0f6a6ecaf75eec8dc16b8df83840e880a8c5",
+  "date": "2026-11-15",
+  "cohort": {
+    "EventStore": "5.1.0",
+    "Memories": "4.0.0",
+    "FrontComposer": "6.0.0"
+  },
+  "lanes": {
+    "capabilities": {
+      "total": 55,
+      "Pass": 55,
+      "Fail": 0,
+      "Skip": 0,
+      "rawXmlSha256": "fa1353133dca2f4e12ddd1092447629dbcd382424059ab8c113a6db10ca97cc7",
+      "xml": "capabilities.xml.gz"
+    },
+    "ui": {
+      "total": 465,
+      "Pass": 465,
+      "Fail": 0,
+      "Skip": 0,
+      "rawXmlSha256": "3d82af26bf8827a4dd6cb65d7d49906cbcb3133aabc5814a59a7c31be5b473e9",
+      "xml": "ui.xml.gz"
+    },
+    "admin": {
+      "total": 359,
+      "Pass": 359,
+      "Fail": 0,
+      "Skip": 0,
+      "rawXmlSha256": "ad1f34dbbb7f95099cde7fd4a3be0003e55aeab799e8f0c2286b4d43296235e0",
+      "xml": "admin.xml.gz"
+    },
+    "consumer": {
+      "total": 99,
+      "Pass": 99,
+      "Fail": 0,
+      "Skip": 0,
+      "rawXmlSha256": "c382f8027430049955d53928a0dacbb60441530533e7b1c62a2a5d4c281d2ade",
+      "xml": "consumer.xml.gz"
+    },
+    "memory-history": {
+      "total": 1264,
+      "Pass": 1264,
+      "Fail": 0,
+      "Skip": 0,
+      "rawXmlSha256": "a8580763c5401d71d9790026d23ca8a57664930557de1f9ff40762c1aafa1a87",
+      "xml": "memory-history.xml.gz"
+    },
+    "projections": {
+      "total": 218,
+      "Pass": 218,
+      "Fail": 0,
+      "Skip": 0,
+      "rawXmlSha256": "9b186979797b9c72f8bfd7a5a71f5d072f4d7c9f2b7442bc62cc672e95adf4d5",
+      "xml": "projections.xml.gz"
+    },
+    "default-transport": {
+      "total": 3,
+      "Pass": 3,
+      "Fail": 0,
+      "Skip": 0,
+      "rawXmlSha256": "4e861051a7bca777756425581e85ad40af831192a293ebd9b159af4b9f9325d2",
+      "xml": "default-transport.xml.gz"
+    },
+    "runtime-full-wrapper": {
+      "total": 1,
+      "Pass": 0,
+      "Fail": 1,
+      "Skip": 0,
+      "rawXmlSha256": "17da7c936d5c0e3e72527f9bdebcc084a5389437592c960b831398cb217ced98",
+      "xml": "runtime-full-wrapper.xml.gz"
+    },
+    "runtime-full-child": {
+      "total": 1,
+      "Pass": 0,
+      "Fail": 1,
+      "Skip": 0,
+      "rawXmlSha256": "614daad33ac6e32ed740154664cb377d30daf42d86a6c45f67827b49792f99ee",
+      "xml": "runtime-full-child.xml.gz"
+    },
+    "runtime-package-full-wrapper": {
+      "total": 1,
+      "Pass": 1,
+      "Fail": 0,
+      "Skip": 0,
+      "rawXmlSha256": "967334bc13157b543842cea2afe516a477c5eee925fb805ae7f9eba6d24af3ca",
+      "xml": "runtime-package-full-wrapper.xml.gz"
+    },
+    "runtime-package-full-child": {
+      "total": 1,
+      "Pass": 1,
+      "Fail": 0,
+      "Skip": 0,
+      "rawXmlSha256": "47108e69f354967344db288fce13efd4d0f450ea0f95228e16bf9883a059fe7e",
+      "xml": "runtime-package-full-child.xml.gz"
+    }
+  }
+}

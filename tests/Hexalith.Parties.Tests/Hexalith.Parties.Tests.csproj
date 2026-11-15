@@ -12,6 +12,11 @@
     <NoWarn>$(NoWarn);xUnit1051</NoWarn>
   </PropertyGroup>
 
+  <!-- These hosts execute ASP.NET integration flows; bind restored framework authority to the runtime configuration. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\Hexalith.Parties\Hexalith.Parties.csproj" />
     <ProjectReference Include="..\..\src\Hexalith.Parties.Client\Hexalith.Parties.Client.csproj" />

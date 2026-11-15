@@ -1,0 +1,10 @@
+{
+  "disposableMainJobRemoved": true,
+  "disposableSourceSnapshotRemoved": true,
+  "allOwnedRuntimeTopologiesDisposed": true,
+  "runtimeSessionDirectoriesAbsent": true,
+  "runtimeCleanupFailures": 0,
+  "shortRuntimeJobsCompleted": true,
+  "nestedSubmodulesInitialized": false,
+  "primaryBranchesGitlinksDependenciesChanged": false
+}

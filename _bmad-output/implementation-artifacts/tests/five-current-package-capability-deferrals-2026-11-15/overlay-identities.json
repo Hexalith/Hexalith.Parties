@@ -1,0 +1,65 @@
+{
+  "baseline": "f45d0f6a6ecaf75eec8dc16b8df83840e880a8c5",
+  "files": [
+    {
+      "path": ".gitattributes",
+      "primarySha256": "adfd48780a89e0336efad703efa32c9b58d8105ee113058df12f4384fe2814bc",
+      "snapshotSha256": "adfd48780a89e0336efad703efa32c9b58d8105ee113058df12f4384fe2814bc",
+      "identical": true
+    },
+    {
+      "path": "Directory.Build.targets",
+      "primarySha256": "cc24f97466b1507d252ca06c91dc10cf7ec7d6ebfd199b2267a39f17f533c465",
+      "snapshotSha256": "cc24f97466b1507d252ca06c91dc10cf7ec7d6ebfd199b2267a39f17f533c465",
+      "identical": true
+    },
+    {
+      "path": "tests/Hexalith.Parties.Ci.Tests/AspireRuntimePreparationTests.cs",
+      "primarySha256": "46a180d10ad6821a7c250e39a0a5633740ba548d07b0e81c0bf0e6251223e7f1",
+      "snapshotSha256": "46a180d10ad6821a7c250e39a0a5633740ba548d07b0e81c0bf0e6251223e7f1",
+      "identical": true
+    },
+    {
+      "path": "tests/Hexalith.Parties.Ci.Tests/MemoriesRefreshCompilationTests.cs",
+      "primarySha256": "a528456e5b3a66d2c5829bc195b414b1b9390771bfa0c596db524c1e5ee38020",
+      "snapshotSha256": "a528456e5b3a66d2c5829bc195b414b1b9390771bfa0c596db524c1e5ee38020",
+      "identical": true
+    },
+    {
+      "path": "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "primarySha256": "0802035864023413723301d7394413d2102c36b5d0fb085a04ebd903442bb414",
+      "snapshotSha256": "0802035864023413723301d7394413d2102c36b5d0fb085a04ebd903442bb414",
+      "identical": true
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "primarySha256": "2bf167ba39b494f8d0e7b1f976e42bbf72a88cc6bc33041daf9bfefd3902c5fa",
+      "snapshotSha256": "2bf167ba39b494f8d0e7b1f976e42bbf72a88cc6bc33041daf9bfefd3902c5fa",
+      "identical": true
+    },
+    {
+      "path": "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+      "primarySha256": "a1cbc52becb6b96e0c1810131e68714845ec58baff5ba6f09646ad11b1ca9531",
+      "snapshotSha256": "a1cbc52becb6b96e0c1810131e68714845ec58baff5ba6f09646ad11b1ca9531",
+      "identical": true
+    },
+    {
+      "path": "tests/Hexalith.Parties.UI.Tests/PackageProjectionBarrier.cs",
+      "primarySha256": "d5724d57fb782d2d410c7c379cb60b8a6372d9607116840e64cf7249c29ffd7d",
+      "snapshotSha256": "d5724d57fb782d2d410c7c379cb60b8a6372d9607116840e64cf7249c29ffd7d",
+      "identical": true
+    },
+    {
+      "path": "tests/Hexalith.Parties.UI.Tests/PackageProjectionHub.cs",
+      "primarySha256": "23cb57c1e8cedc3d18bf5cbaecee822e83825aa87c7e9ac7d8c3f8c86d3cd17f",
+      "snapshotSha256": "23cb57c1e8cedc3d18bf5cbaecee822e83825aa87c7e9ac7d8c3f8c86d3cd17f",
+      "identical": true
+    },
+    {
+      "path": "tests/Hexalith.Parties.UI.Tests/ProjectionTransportPackageTests.cs",
+      "primarySha256": "4e57d91959ca2dca005a19226baf8eab2cd22bd9f79d71fbe6c149e1ff148100",
+      "snapshotSha256": "4e57d91959ca2dca005a19226baf8eab2cd22bd9f79d71fbe6c149e1ff148100",
+      "identical": true
+    }
+  ]
+}

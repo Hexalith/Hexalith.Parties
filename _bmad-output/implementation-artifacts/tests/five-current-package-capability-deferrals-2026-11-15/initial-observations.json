@@ -1,0 +1,109 @@
+[
+  {
+    "file": "capabilities.xml",
+    "rawXmlSha256": "9af69d983565280ad2cdcb5add4217e157946688f147aa905e71ab035505c19b",
+    "total": 0,
+    "passing": 0,
+    "failures": [],
+    "qualification": false
+  },
+  {
+    "file": "ui-initial.xml",
+    "rawXmlSha256": "489dbc6d2521f27794927d896de6306f6e2d59c0261f8093f0d2de9be5ac5436",
+    "total": 465,
+    "passing": 464,
+    "failures": [
+      {
+        "name": "Hexalith.Parties.UI.Tests.ProjectionTransportPackageTests.SelectedTransportCancelsAStalledLeaveThroughTheProductionAdapter",
+        "message": "Shouldly.ShouldAssertException : stream.RecoveryGeneration\n    should be\n0L\n    but was\n2L"
+      }
+    ],
+    "qualification": false
+  },
+  {
+    "file": "ui-first-survivor.xml",
+    "rawXmlSha256": "1ffc755c24221495087ad2c693cd1e8e10783303429439bebcdac19e82c7489b",
+    "total": 465,
+    "passing": 464,
+    "failures": [
+      {
+        "name": "Hexalith.Parties.UI.Tests.ProjectionTransportPackageTests.SelectedTransportCancelsAStalledLeaveThroughTheProductionAdapter",
+        "message": "System.TimeoutException : The operation has timed out."
+      }
+    ],
+    "qualification": false
+  },
+  {
+    "file": "default-transport.xml",
+    "rawXmlSha256": "77387ec128e3b625cfb595be0533f2d11d0a242126181494b64956b5b6c34e1b",
+    "total": 3,
+    "passing": 2,
+    "failures": [
+      {
+        "name": "Hexalith.Parties.UI.Tests.ProjectionTransportPackageTests.SelectedTransportCancelsAStalledJoinThroughTheProductionAdapter",
+        "message": "System.TimeoutException : The original projection connection must terminate before membership can resume."
+      }
+    ],
+    "qualification": false
+  },
+  {
+    "file": "default-catalog/ui.xml",
+    "rawXmlSha256": "f8a52eb512773cde6f42355aa625dd54c32396c78079eafebaac5c57fadda5c5",
+    "total": 465,
+    "passing": 465,
+    "qualificationForRequestedCohort": false,
+    "cohort": {
+      "EventStore": "4.2.0",
+      "Memories": "3.0.27",
+      "FrontComposer": "6.0.0"
+    }
+  },
+  {
+    "file": "default-catalog/admin.xml",
+    "rawXmlSha256": "90e572cfe01cb2f4de8a5f34db2e0bee8b8f04992ddacf186372534f7bfca51c",
+    "total": 359,
+    "passing": 359,
+    "qualificationForRequestedCohort": false,
+    "cohort": {
+      "EventStore": "4.2.0",
+      "Memories": "3.0.27",
+      "FrontComposer": "6.0.0"
+    }
+  },
+  {
+    "file": "default-catalog/consumer.xml",
+    "rawXmlSha256": "11f6125043ce1cdfd82052ab3f3c4b90359f60907fd6fb106c6fb6a1a4f3bf3f",
+    "total": 99,
+    "passing": 99,
+    "qualificationForRequestedCohort": false,
+    "cohort": {
+      "EventStore": "4.2.0",
+      "Memories": "3.0.27",
+      "FrontComposer": "6.0.0"
+    }
+  },
+  {
+    "file": "default-catalog/memory-history.xml",
+    "rawXmlSha256": "b948ea69f62b92c0f1f6d3b4abb0316179a2316dd86cde9cc102c4975e46fd5c",
+    "total": 1264,
+    "passing": 1264,
+    "qualificationForRequestedCohort": false,
+    "cohort": {
+      "EventStore": "4.2.0",
+      "Memories": "3.0.27",
+      "FrontComposer": "6.0.0"
+    }
+  },
+  {
+    "file": "default-catalog/projections.xml",
+    "rawXmlSha256": "638989130106e8e452ea878f2d1fca15e41017709c5fa8e543b4b42453472156",
+    "total": 218,
+    "passing": 218,
+    "qualificationForRequestedCohort": false,
+    "cohort": {
+      "EventStore": "4.2.0",
+      "Memories": "3.0.27",
+      "FrontComposer": "6.0.0"
+    }
+  }
+]

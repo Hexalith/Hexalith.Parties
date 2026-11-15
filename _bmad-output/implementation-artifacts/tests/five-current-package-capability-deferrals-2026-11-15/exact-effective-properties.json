@@ -1,0 +1,12 @@
+{
+  "Properties": {
+    "HexalithEventStoreVersion": "5.1.0",
+    "HexalithMemoriesVersion": "4.0.0",
+    "HexalithFrontComposerVersion": "6.0.0",
+    "HexalithEventStoreFromSource": "",
+    "HexalithMemoriesFromSource": "",
+    "HexalithFrontComposerFromSource": "",
+    "DefineConstants": "TRACE;HEXALITH_EVENTSTORE_CATALOG_API;HEXALITH_EVENTSTORE_QUERY_SELECTOR_BINDINGS;HEXALITH_EVENTSTORE_CATALOG_HOSTS;HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY;RELEASE;HES_CANCELLABLE_PROJECTIONS;HFC_SHARED_UI;HFC_SHARED_RECONCILE_READINESS;HEXALITH_MEMORIES_SOURCE_REFRESH",
+    "MemoriesSourceRefreshSupported": "true"
+  }
+}

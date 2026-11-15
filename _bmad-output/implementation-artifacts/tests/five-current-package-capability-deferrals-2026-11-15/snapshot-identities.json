@@ -1,0 +1,52 @@
+[
+  {
+    "owner": "Hexalith.Builds",
+    "commit": "73e60af8a1fcdf3f06726d5d1b6e1199cce778ee",
+    "nestedInitialized": false
+  },
+  {
+    "owner": "Hexalith.EventStore",
+    "commit": "fdb59895975e86a1e234325a01237f259cdbd53b",
+    "nestedInitialized": false
+  },
+  {
+    "owner": "Hexalith.Memories",
+    "commit": "c4ee997702ede948ada5f99eeae7b3782e92003b",
+    "nestedInitialized": false
+  },
+  {
+    "owner": "Hexalith.Tenants",
+    "commit": "2ec938397c5b330cf1e694e8cc442cb4ad022f2b",
+    "nestedInitialized": false
+  },
+  {
+    "owner": "Hexalith.AI.Tools",
+    "commit": "17a37d83db193f0b7494c1b931fd1e82a67c1424",
+    "nestedInitialized": false
+  },
+  {
+    "owner": "Hexalith.Commons",
+    "commit": "fbf4e94233821f6ca336af91a06feaaeb7a16855",
+    "nestedInitialized": false
+  },
+  {
+    "owner": "Hexalith.FrontComposer",
+    "commit": "bca9dff291ce42c57516598732340a80703dfb6d",
+    "nestedInitialized": false
+  },
+  {
+    "owner": "Hexalith.PolymorphicSerializations",
+    "commit": "e97b56930e213f674b64c157551f499b0473ec43",
+    "nestedInitialized": false
+  },
+  {
+    "owner": "Hexalith.McpCli",
+    "commit": "23072f04f423eea3f30456fe5af13d2d382624fe",
+    "nestedInitialized": false
+  },
+  {
+    "owner": "Hexalith.Platform",
+    "commit": "f6f85032598865b9123f16364448bfd02c0ff5b0",
+    "nestedInitialized": false
+  }
+]

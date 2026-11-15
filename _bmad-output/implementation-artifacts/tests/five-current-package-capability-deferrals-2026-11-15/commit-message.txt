@@ -1,0 +1,4 @@
+fix: qualify current package capability boundaries
+
+Enable measured FrontComposer and Memories package branches.
+Retain exact-version guards and qualify five deferred boundaries.

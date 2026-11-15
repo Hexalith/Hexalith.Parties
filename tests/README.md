@@ -964,3 +964,48 @@ are compared across connection recreation. Fixture evidence covers only owned
 synthetic units and excluded fixture writers. Publication/adoption and a real
 operator cutover remain separate external gates. Exact commands, revisions,
 per-test outcomes and cleanup are retained in the dated batch receipt.
+
+
+## Exact current package boundary qualification (2026-11-15)
+
+The explicit EventStore `5.1.0`, Memories `4.0.0` and FrontComposer `6.0.0`
+cohort now enables exact shared UI/reconciliation and revision-aware refresh.
+Unknown, neighboring, prerelease and build-metadata selections remain refused.
+The repository's retained SDK 4.2 catalog view still evaluates EventStore `4.2.0`
+and Memories `3.0.27` unless the exact approved cohort is selected explicitly;
+these qualification commands change no dependency or default version property.
+
+Build individual projects in Release with `-p:HexalithEventStoreVersion=5.1.0`,
+`-p:HexalithMemoriesVersion=4.0.0`, `-p:HexalithFrontComposerVersion=6.0.0` and
+`-p:UseArtifactsOutput=true -p:ArtifactsPath=$TMPDIR/artifacts` through
+`run-with-temp`. Run built xUnit assemblies with single-dash selectors, fresh XML
+and `-failSkips`; require nonzero discovery. The policy controls evaluate
+unqualified selectors without restoring them. Full UI/Admin/Consumer suites,
+`PartyMemory*` consumer classes (excluding opt-in runtime classes), processing
+recovery/query and current generation projection controls retain per-test results.
+
+The transport cancellation control uses evaluated EventStore build metadata.
+Exact 5.1.0 retires an uncertain legacy RPC connection and advances its recovery
+generation; earlier admitted packages retain their original connection/generation
+assertions. Both paths retain the late-acknowledgement cancellation boundary and
+verify revoked callbacks plus a surviving unrelated subscription. The current
+path observes actual server membership after asynchronous recovery before delivery.
+
+The child and wrapper explicitly reference their already-required
+`Microsoft.AspNetCore.App` framework: they execute WebApplicationFactory and
+ASP.NET integration hosts. This makes restored direct framework authority match
+the generated runtime configuration; the strict compiler/cohort/framework guard
+is unchanged. Prepare runtime hosts after test builds, using the same exact
+family properties and `--include-memory-qualification true`. Bind the resulting
+`prepared.json` through `Parties__Testing__PreparedRuntimeManifest` when using
+private artifact paths, then opt into the full owned runtime control.
+
+The retained current Memories source host contains a newer per-unit authority
+contract and cannot qualify the unchanged 4.0.0 implementation: the first full
+mixed-host run refused source refresh. A package-matched nonpackable host must
+use the exact 4.0.0 nuspec source revision in an isolated disposable root-declared
+repository copy. This does not adopt the newer source contract or attest any
+production inventory, older-writer drain, deployment, G4 or owner acceptance.
+See the [dated receipt](../_bmad-output/implementation-artifacts/tests/five-current-package-capability-deferrals-2026-11-15/README.md)
+for final runtime disposition, package/source/assembly identities, commands,
+cleanup, and the five entries' remaining external gates.

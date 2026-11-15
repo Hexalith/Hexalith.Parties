@@ -8,11 +8,17 @@ public sealed class PackageProjectionHub(PackageProjectionBarrier barrier) : Hub
     /// <summary>Defers group admission independently of caller cancellation.</summary>
     public async Task JoinGroup(string projectionType, string tenant)
     {
-        barrier.Entered.TrySetResult();
-        await barrier.Release.Task.ConfigureAwait(false);
+        if (projectionType == "counter")
+        {
+            barrier.Entered.TrySetResult();
+            await barrier.Release.Task.ConfigureAwait(false);
+        }
         await Groups.AddToGroupAsync(Context.ConnectionId, projectionType + ":" + tenant).ConfigureAwait(false);
-        barrier.Finished.TrySetResult();
-        barrier.Joined();
+        if (projectionType == "counter")
+        {
+            barrier.Finished.TrySetResult();
+        }
+        barrier.Joined(projectionType, Context.ConnectionId);
     }
 
     /// <summary>Retains legacy group removal compatibility.</summary>
@@ -22,6 +28,13 @@ public sealed class PackageProjectionHub(PackageProjectionBarrier barrier) : Hub
         await barrier.LeaveRelease.Task.ConfigureAwait(false);
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, projectionType + ":" + tenant).ConfigureAwait(false);
         barrier.LeaveFinished.TrySetResult();
+    }
+
+    /// <inheritdoc/>
+    public override Task OnDisconnectedAsync(Exception? exception)
+    {
+        barrier.Disconnected(Context.ConnectionId);
+        return base.OnDisconnectedAsync(exception);
     }
 
     /// <inheritdoc/>

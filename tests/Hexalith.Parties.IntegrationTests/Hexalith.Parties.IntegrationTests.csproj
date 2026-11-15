@@ -9,6 +9,11 @@
     <RuntimeFrameworkVersion>11.0.0</RuntimeFrameworkVersion>
     <PartiesPublished42ManagedRuntime>true</PartiesPublished42ManagedRuntime>
   </PropertyGroup>
+  <!-- These hosts execute ASP.NET integration flows; bind restored framework authority to the runtime configuration. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
   <ItemGroup>
     <AssemblyMetadata Include="PartiesPublished42ManagedRuntime" Value="$(PartiesPublished42ManagedRuntime)" />
   </ItemGroup>

@@ -1,0 +1,162 @@
+[
+  {
+    "package": "Hexalith.EventStore.Client",
+    "version": "5.1.0",
+    "sha256": "a3d0de6ff9f9d8eaafaa39a5faa9798ee9dd87c8721b9a9445a3a17c2abbdb40",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Hexalith/Hexalith.EventStore",
+      "commit": "49084f66f8d6545cae442875355a7066d5f5e73d"
+    }
+  },
+  {
+    "package": "Hexalith.EventStore.Contracts",
+    "version": "5.1.0",
+    "sha256": "f5edf8e8bea1ac6477eae165dddb27b178236be4437d7e9f3bd2a6c384dc11b0",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Hexalith/Hexalith.EventStore",
+      "commit": "49084f66f8d6545cae442875355a7066d5f5e73d"
+    }
+  },
+  {
+    "package": "Hexalith.EventStore.SignalR",
+    "version": "5.1.0",
+    "sha256": "127f0d70055abf16f916c701878b645a0a180cf8f6f2afff058f6bae18a27220",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Hexalith/Hexalith.EventStore",
+      "commit": "49084f66f8d6545cae442875355a7066d5f5e73d"
+    }
+  },
+  {
+    "package": "Hexalith.FrontComposer.Contracts",
+    "version": "6.0.0",
+    "sha256": "8b8e45c54e27410de95ad333fb52a277852f65b46e54ef8a96a45153f2f39db0",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Hexalith/Hexalith.FrontComposer",
+      "commit": "d7e8f57808b610f7cddf95ecd06db178dfd7592f"
+    }
+  },
+  {
+    "package": "Hexalith.FrontComposer.Contracts.UI",
+    "version": "6.0.0",
+    "sha256": "7eec795d5e3f57839785c3a97acad53add52551ebc7cd90c83de41035c97f876",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Hexalith/Hexalith.FrontComposer",
+      "commit": "d7e8f57808b610f7cddf95ecd06db178dfd7592f"
+    }
+  },
+  {
+    "package": "Hexalith.FrontComposer.Mcp",
+    "version": "6.0.0",
+    "sha256": "a0fad431137363542fe2917fe63913d8300239330e4ab929f64f631a05b89ec0",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Hexalith/Hexalith.FrontComposer",
+      "commit": "d7e8f57808b610f7cddf95ecd06db178dfd7592f"
+    }
+  },
+  {
+    "package": "Hexalith.FrontComposer.Schema",
+    "version": "6.0.0",
+    "sha256": "5b86f9e7f6ae1ef54775b371907988db3da490e547928ecb67558a89d871b695",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Hexalith/Hexalith.FrontComposer",
+      "commit": "d7e8f57808b610f7cddf95ecd06db178dfd7592f"
+    }
+  },
+  {
+    "package": "Hexalith.FrontComposer.Shell",
+    "version": "6.0.0",
+    "sha256": "87591655be1b72b0ed4153900448d0423c8993d3cb423e334d536159589719db",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Hexalith/Hexalith.FrontComposer",
+      "commit": "d7e8f57808b610f7cddf95ecd06db178dfd7592f"
+    }
+  },
+  {
+    "package": "Hexalith.EventStore.Admin.Abstractions",
+    "version": "5.1.0",
+    "sha256": "7a7bc645794e96124d8a2bc7a8e3bba490520e7204258946b546e32eb2e45879",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Hexalith/Hexalith.EventStore",
+      "commit": "49084f66f8d6545cae442875355a7066d5f5e73d"
+    }
+  },
+  {
+    "package": "Hexalith.EventStore.DomainService",
+    "version": "5.1.0",
+    "sha256": "bb4d7dfb5146c1ede107651bd5d657ef2ea2cdddb0d752d6f3f3b8864cf8a8c5",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Hexalith/Hexalith.EventStore",
+      "commit": "49084f66f8d6545cae442875355a7066d5f5e73d"
+    }
+  },
+  {
+    "package": "Hexalith.EventStore.Gateway",
+    "version": "5.1.0",
+    "sha256": "f1ae250c00ab63e5e5450a54189f1ae56c5117cda8d98512596657c52b73697c",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Hexalith/Hexalith.EventStore",
+      "commit": "49084f66f8d6545cae442875355a7066d5f5e73d"
+    }
+  },
+  {
+    "package": "Hexalith.EventStore.Server",
+    "version": "5.1.0",
+    "sha256": "b1377b02198e0a0e3c16b93f5dfff094e2500239c78c9efef37a34a97bc1e5f3",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Hexalith/Hexalith.EventStore",
+      "commit": "49084f66f8d6545cae442875355a7066d5f5e73d"
+    }
+  },
+  {
+    "package": "Hexalith.EventStore.ServiceDefaults",
+    "version": "5.1.0",
+    "sha256": "15167177bb56b305fd9fff459688cd5ffd934794b846672c6286ed7d5f097f62",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Hexalith/Hexalith.EventStore",
+      "commit": "49084f66f8d6545cae442875355a7066d5f5e73d"
+    }
+  },
+  {
+    "package": "Hexalith.EventStore.Testing",
+    "version": "5.1.0",
+    "sha256": "c04a8f8c61beb32f2b103532ef2a773bfecd21aef47f424dadf800968ea32ff0",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Hexalith/Hexalith.EventStore",
+      "commit": "49084f66f8d6545cae442875355a7066d5f5e73d"
+    }
+  },
+  {
+    "package": "Hexalith.Memories.Client.Rest",
+    "version": "4.0.0",
+    "sha256": "c34a01af37981894e66caf4f217ee61527c8cb03116a72dd2f6267cf21ca8ea8",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Hexalith/Hexalith.Memories",
+      "commit": "c4ee997702ede948ada5f99eeae7b3782e92003b"
+    }
+  },
+  {
+    "package": "Hexalith.Memories.Contracts",
+    "version": "4.0.0",
+    "sha256": "c431f690b2890e2cab1101575a8c1ee20dd992afd6c966356d2121e49c50330e",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Hexalith/Hexalith.Memories",
+      "commit": "c4ee997702ede948ada5f99eeae7b3782e92003b"
+    }
+  }
+]

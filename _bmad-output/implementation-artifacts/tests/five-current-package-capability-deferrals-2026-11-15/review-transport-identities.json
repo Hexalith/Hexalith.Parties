@@ -1,0 +1,577 @@
+{
+  "current": {
+    "lane": "current",
+    "buildCommand": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${REVIEW_SCRATCH}/current",
+      "-p:NuGetAudit=false",
+      "-p:MinVerVersionOverride=1.0.0",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0"
+    ],
+    "testCommand": [
+      "dotnet",
+      "${REVIEW_SCRATCH}/current/bin/Hexalith.Parties.UI.Tests/release/Hexalith.Parties.UI.Tests.dll",
+      "-class",
+      "Hexalith.Parties.UI.Tests.ProjectionTransportPackageTests",
+      "-noLogo",
+      "-failSkips",
+      "-parallelMode",
+      "none",
+      "-result-xml",
+      "${PRIVATE_REVIEW}/current.xml"
+    ],
+    "exitCode": 0,
+    "evaluatedProperties": {
+      "Properties": {
+        "HexalithEventStoreVersion": "5.1.0",
+        "HexalithMemoriesVersion": "4.0.0",
+        "HexalithFrontComposerVersion": "6.0.0",
+        "HexalithEventStoreFromSource": "",
+        "TargetFramework": "net11.0"
+      }
+    },
+    "projectAssetsSha256": "ea4b7bb52abf9005128ef1dcbde9ec4668eabee1ceeb8326bbde6c5534c69bca",
+    "rawXmlSha256": "95153a5fcc1fc3fabf17ce64a8f41fbe7a9b4a46fe315af5f70e12cc0a6ebf48",
+    "testSources": [
+      {
+        "path": "tests/Hexalith.Parties.UI.Tests/ProjectionTransportPackageTests.cs",
+        "sha256": "62394a100eb9f85afc9ccde1f8f2d34434c899457344c834b06cc8101872150d"
+      },
+      {
+        "path": "tests/Hexalith.Parties.UI.Tests/PackageProjectionBarrier.cs",
+        "sha256": "ef3a840e366ce53b3081c811be7f2b2a39ff94defa91447ad5a1f8562a786ddb"
+      },
+      {
+        "path": "tests/Hexalith.Parties.UI.Tests/PackageProjectionHub.cs",
+        "sha256": "6d7c35ada38874c6d72f57657676127bc67b45c0cc8dc3d63fef326d2bf0531c"
+      }
+    ],
+    "executedAssemblies": [
+      {
+        "name": "Hexalith.Commons.Http.dll",
+        "sha256": "f205e847c1a11ab643e065e10a7fc65ef1619c4e821dab63a88a76e951d0d76c"
+      },
+      {
+        "name": "Hexalith.Commons.ServiceDefaults.dll",
+        "sha256": "9125c5cec2c7572cbacbdf2432588d1c1db4ff92e66202a2532814abca67bb25"
+      },
+      {
+        "name": "Hexalith.Commons.UniqueIds.dll",
+        "sha256": "1d01a83eab399d61c0e5052246a881a1917730311b125b25be68b4299a99fcfc"
+      },
+      {
+        "name": "Hexalith.EventStore.Client.dll",
+        "sha256": "786cbb4bebd8d3720300afd775b0c38ccafdd1a73e8f1c1ccd79ef931ab5cbc2"
+      },
+      {
+        "name": "Hexalith.EventStore.Contracts.dll",
+        "sha256": "e165e434435170f6b9ec1699cc371c22a3d3b0a4f34b68209c99b564064f76b2"
+      },
+      {
+        "name": "Hexalith.EventStore.SignalR.dll",
+        "sha256": "b16fea61094e0d33e7d1a7994b85c201ea9f33db20000f6cec064fb230d634d0"
+      },
+      {
+        "name": "Hexalith.FrontComposer.Contracts.UI.dll",
+        "sha256": "54deb060d7e1d450c98fba429e1c3ca81164d085d9507ec2eb1b03b60e266902"
+      },
+      {
+        "name": "Hexalith.FrontComposer.Contracts.dll",
+        "sha256": "d1231ed413d81f31ac66b4717f114a7991b9798123333720517f5bcf2ef480b9"
+      },
+      {
+        "name": "Hexalith.FrontComposer.Mcp.dll",
+        "sha256": "6ed8018dd8e364ac48d7e7bd0e74c4c084f313bb962f2ff0acae4798717ec818"
+      },
+      {
+        "name": "Hexalith.FrontComposer.Schema.dll",
+        "sha256": "d7f8169edb977c6d637b8faa0d115a9c8f80539fd9208eece1783cae991c6822"
+      },
+      {
+        "name": "Hexalith.FrontComposer.Shell.dll",
+        "sha256": "2bd42f0eed17483d9a82625b9d1987ef0e298e5bf9ead3cd8a93ab5dd99f5546"
+      },
+      {
+        "name": "Hexalith.McpCli.Abstractions.dll",
+        "sha256": "d84cb2a7e6823756633c374a8cec55ae088962ea1b508be53b7604de7ca13e88"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.dll",
+        "sha256": "0f197929ccf2f2673f9220b66fe4c49ecc5f127518d9e86b4bd6a4dcf5dc6ffc"
+      },
+      {
+        "name": "Hexalith.Parties.Authentication.dll",
+        "sha256": "c50ff54f471fcec4c43d57d2e3e1b9a1e22f9e684911253e527b47175abe0300"
+      },
+      {
+        "name": "Hexalith.Parties.Client.dll",
+        "sha256": "af4c972120521d03036ec2c6d1ea3818d73b54a95107183726aa7fc9669a3906"
+      },
+      {
+        "name": "Hexalith.Parties.ConsumerPortal.dll",
+        "sha256": "f5c815ba216dfd210c9985dea892a322f16bc3b3e4a482a2861bcd72685e7b56"
+      },
+      {
+        "name": "Hexalith.Parties.Contracts.dll",
+        "sha256": "759c473c82c58aa9b593054b237c5dd5468a55ad9a328013d51e9ac1d7674868"
+      },
+      {
+        "name": "Hexalith.Parties.Picker.dll",
+        "sha256": "9fe420a8d37a6a788f7a1e6e90a056af7b8e8d782cccf46bdbf0144f1c5530e9"
+      },
+      {
+        "name": "Hexalith.Parties.UI.Tests.dll",
+        "sha256": "d23bbd44b72c8e499bf23993d79f47ae4aaaea0e08f8b1635f8fdf74652e06ae"
+      },
+      {
+        "name": "Hexalith.Parties.UI.dll",
+        "sha256": "db6004fc95dc19870ac4af1e28afc55356892d929d528457eec2ab1f8f2691ba"
+      },
+      {
+        "name": "Hexalith.Tenants.Client.dll",
+        "sha256": "03cc88d5e4602962012232f20425be5a56966e08e2ad262ec6695df040616c8a"
+      },
+      {
+        "name": "Hexalith.Tenants.Contracts.dll",
+        "sha256": "84ca1ba9b50bb0d03c2e97180c583bc6097ba11337e8da2d6a8ad48df8f74782"
+      }
+    ],
+    "restoredPackages": [
+      {
+        "id": "Hexalith.Commons.Http",
+        "version": "3.0.0",
+        "nupkgSha256": "255334fe93bd38b88c6a8972e4a2937336fe48e95fedb3475058c247b7429ef7",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.Commons",
+          "commit": "1705ebc20195a9f830da066144dd97b6bc4c0ace"
+        }
+      },
+      {
+        "id": "Hexalith.Commons.ServiceDefaults",
+        "version": "3.0.0",
+        "nupkgSha256": "0bb7a2775c11b53d124992605db1b988a0c9e1cab9d87114b6c0aa7f107ab5bc",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.Commons",
+          "commit": "1705ebc20195a9f830da066144dd97b6bc4c0ace"
+        }
+      },
+      {
+        "id": "Hexalith.Commons.UniqueIds",
+        "version": "3.0.0",
+        "nupkgSha256": "ab2f595866caacafd881165be18812d8bf547e5edb059fae085ae8edc0b75773",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.Commons",
+          "commit": "1705ebc20195a9f830da066144dd97b6bc4c0ace"
+        }
+      },
+      {
+        "id": "Hexalith.EventStore.Client",
+        "version": "5.1.0",
+        "nupkgSha256": "a3d0de6ff9f9d8eaafaa39a5faa9798ee9dd87c8721b9a9445a3a17c2abbdb40",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.EventStore",
+          "commit": "49084f66f8d6545cae442875355a7066d5f5e73d"
+        }
+      },
+      {
+        "id": "Hexalith.EventStore.Contracts",
+        "version": "5.1.0",
+        "nupkgSha256": "f5edf8e8bea1ac6477eae165dddb27b178236be4437d7e9f3bd2a6c384dc11b0",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.EventStore",
+          "commit": "49084f66f8d6545cae442875355a7066d5f5e73d"
+        }
+      },
+      {
+        "id": "Hexalith.EventStore.SignalR",
+        "version": "5.1.0",
+        "nupkgSha256": "127f0d70055abf16f916c701878b645a0a180cf8f6f2afff058f6bae18a27220",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.EventStore",
+          "commit": "49084f66f8d6545cae442875355a7066d5f5e73d"
+        }
+      },
+      {
+        "id": "Hexalith.FrontComposer.Contracts",
+        "version": "6.0.0",
+        "nupkgSha256": "8b8e45c54e27410de95ad333fb52a277852f65b46e54ef8a96a45153f2f39db0",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.FrontComposer",
+          "commit": "d7e8f57808b610f7cddf95ecd06db178dfd7592f"
+        }
+      },
+      {
+        "id": "Hexalith.FrontComposer.Contracts.UI",
+        "version": "6.0.0",
+        "nupkgSha256": "7eec795d5e3f57839785c3a97acad53add52551ebc7cd90c83de41035c97f876",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.FrontComposer",
+          "commit": "d7e8f57808b610f7cddf95ecd06db178dfd7592f"
+        }
+      },
+      {
+        "id": "Hexalith.FrontComposer.Mcp",
+        "version": "6.0.0",
+        "nupkgSha256": "a0fad431137363542fe2917fe63913d8300239330e4ab929f64f631a05b89ec0",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.FrontComposer",
+          "commit": "d7e8f57808b610f7cddf95ecd06db178dfd7592f"
+        }
+      },
+      {
+        "id": "Hexalith.FrontComposer.Schema",
+        "version": "6.0.0",
+        "nupkgSha256": "5b86f9e7f6ae1ef54775b371907988db3da490e547928ecb67558a89d871b695",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.FrontComposer",
+          "commit": "d7e8f57808b610f7cddf95ecd06db178dfd7592f"
+        }
+      },
+      {
+        "id": "Hexalith.FrontComposer.Shell",
+        "version": "6.0.0",
+        "nupkgSha256": "87591655be1b72b0ed4153900448d0423c8993d3cb423e334d536159589719db",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.FrontComposer",
+          "commit": "d7e8f57808b610f7cddf95ecd06db178dfd7592f"
+        }
+      },
+      {
+        "id": "Hexalith.McpCli.Abstractions",
+        "version": "3.0.0",
+        "nupkgSha256": "86e42c528f9eda27919e9bd1c9ded01d92fd0c9c177c2a637281d1462373f03a",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.McpCli",
+          "commit": "63df6d2b1e96bda795d2a21fff7813b35b9da947"
+        }
+      },
+      {
+        "id": "Hexalith.Tenants.Client",
+        "version": "8.0.0",
+        "nupkgSha256": "d36d064a86c7249b3ac7d53cb6fb56aed2de31491be0c28f13c32640dd5eaa67",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.Tenants",
+          "commit": "0cfe90e887e4d9d9f0168cba98fca1852cb80313"
+        }
+      },
+      {
+        "id": "Hexalith.Tenants.Contracts",
+        "version": "8.0.0",
+        "nupkgSha256": "b6b35b236b374b887fc4619e8c4afdc1bc87cada0f2bd62ea23e44fe5e22ee7f",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.Tenants",
+          "commit": "0cfe90e887e4d9d9f0168cba98fca1852cb80313"
+        }
+      }
+    ]
+  },
+  "default": {
+    "lane": "default",
+    "buildCommand": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${REVIEW_SCRATCH}/default",
+      "-p:NuGetAudit=false",
+      "-p:MinVerVersionOverride=1.0.0"
+    ],
+    "testCommand": [
+      "dotnet",
+      "${REVIEW_SCRATCH}/default/bin/Hexalith.Parties.UI.Tests/release/Hexalith.Parties.UI.Tests.dll",
+      "-class",
+      "Hexalith.Parties.UI.Tests.ProjectionTransportPackageTests",
+      "-noLogo",
+      "-failSkips",
+      "-parallelMode",
+      "none",
+      "-result-xml",
+      "${PRIVATE_REVIEW}/default.xml"
+    ],
+    "exitCode": 0,
+    "evaluatedProperties": {
+      "Properties": {
+        "HexalithEventStoreVersion": "4.2.0",
+        "HexalithMemoriesVersion": "3.0.27",
+        "HexalithFrontComposerVersion": "6.0.0",
+        "HexalithEventStoreFromSource": "",
+        "TargetFramework": "net11.0"
+      }
+    },
+    "projectAssetsSha256": "c7db3e62135b99015484e62c91231ed612e9d4ed7b672c4c8f1ba0b3d2eccc27",
+    "rawXmlSha256": "bec6a4af8d09fa467d5c942ca5713c1827ab46dd762a166d09e286768ce14f15",
+    "testSources": [
+      {
+        "path": "tests/Hexalith.Parties.UI.Tests/ProjectionTransportPackageTests.cs",
+        "sha256": "62394a100eb9f85afc9ccde1f8f2d34434c899457344c834b06cc8101872150d"
+      },
+      {
+        "path": "tests/Hexalith.Parties.UI.Tests/PackageProjectionBarrier.cs",
+        "sha256": "ef3a840e366ce53b3081c811be7f2b2a39ff94defa91447ad5a1f8562a786ddb"
+      },
+      {
+        "path": "tests/Hexalith.Parties.UI.Tests/PackageProjectionHub.cs",
+        "sha256": "6d7c35ada38874c6d72f57657676127bc67b45c0cc8dc3d63fef326d2bf0531c"
+      }
+    ],
+    "executedAssemblies": [
+      {
+        "name": "Hexalith.Commons.Http.dll",
+        "sha256": "f205e847c1a11ab643e065e10a7fc65ef1619c4e821dab63a88a76e951d0d76c"
+      },
+      {
+        "name": "Hexalith.Commons.ServiceDefaults.dll",
+        "sha256": "9125c5cec2c7572cbacbdf2432588d1c1db4ff92e66202a2532814abca67bb25"
+      },
+      {
+        "name": "Hexalith.Commons.UniqueIds.dll",
+        "sha256": "1d01a83eab399d61c0e5052246a881a1917730311b125b25be68b4299a99fcfc"
+      },
+      {
+        "name": "Hexalith.EventStore.Client.dll",
+        "sha256": "5b184b6c7bc7e83251d4f48edfb6ee446a28ac4fae7c04c381c388ed8cb9cd92"
+      },
+      {
+        "name": "Hexalith.EventStore.Contracts.dll",
+        "sha256": "7e4c8823479a6c59456c5169c95d9082ccbb5d199f403f7cb7c3267c9cf9a44a"
+      },
+      {
+        "name": "Hexalith.EventStore.SignalR.dll",
+        "sha256": "da91efcdc88e8ef8612b26d35115210558d9a30eb3bebc069fc85946aa22ad86"
+      },
+      {
+        "name": "Hexalith.FrontComposer.Contracts.UI.dll",
+        "sha256": "54deb060d7e1d450c98fba429e1c3ca81164d085d9507ec2eb1b03b60e266902"
+      },
+      {
+        "name": "Hexalith.FrontComposer.Contracts.dll",
+        "sha256": "d1231ed413d81f31ac66b4717f114a7991b9798123333720517f5bcf2ef480b9"
+      },
+      {
+        "name": "Hexalith.FrontComposer.Mcp.dll",
+        "sha256": "6ed8018dd8e364ac48d7e7bd0e74c4c084f313bb962f2ff0acae4798717ec818"
+      },
+      {
+        "name": "Hexalith.FrontComposer.Schema.dll",
+        "sha256": "d7f8169edb977c6d637b8faa0d115a9c8f80539fd9208eece1783cae991c6822"
+      },
+      {
+        "name": "Hexalith.FrontComposer.Shell.dll",
+        "sha256": "2bd42f0eed17483d9a82625b9d1987ef0e298e5bf9ead3cd8a93ab5dd99f5546"
+      },
+      {
+        "name": "Hexalith.McpCli.Abstractions.dll",
+        "sha256": "d84cb2a7e6823756633c374a8cec55ae088962ea1b508be53b7604de7ca13e88"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.dll",
+        "sha256": "d83ada5f017b6d501e08a25f34b3d843febbda0a74c2f2b06cacee262eb6f621"
+      },
+      {
+        "name": "Hexalith.Parties.Authentication.dll",
+        "sha256": "2a95c64d7989bb95c50ee904dfa1261e2dde703fee878fd005408115729ecd9e"
+      },
+      {
+        "name": "Hexalith.Parties.Client.dll",
+        "sha256": "5e7624e2cc616f9d7900d080e805bbea11a6e2ff9077ce37ba621b69cc250727"
+      },
+      {
+        "name": "Hexalith.Parties.ConsumerPortal.dll",
+        "sha256": "2d84bc6859b01d9d8fd635e8d85304e391f63dbf6db31fb6083705d47820c8b8"
+      },
+      {
+        "name": "Hexalith.Parties.Contracts.dll",
+        "sha256": "acef791abd204ad2cdbb912506bb0ae568b111403b892506c7baadb30a3ecb2c"
+      },
+      {
+        "name": "Hexalith.Parties.Picker.dll",
+        "sha256": "f26f48e65ceb9dad71ee1ef968d2f086f8ad08f3424d3b84994da27fea43048a"
+      },
+      {
+        "name": "Hexalith.Parties.UI.Tests.dll",
+        "sha256": "b88b7156eeacb76bacca2a9e4a3d1749b8ed83bb6ab45a6a582b6fb9d74e827c"
+      },
+      {
+        "name": "Hexalith.Parties.UI.dll",
+        "sha256": "7c06d67c8e0929b7a2e87b87005c4fabaf36456057fe7fb37f5d8fa57b9120d0"
+      },
+      {
+        "name": "Hexalith.Tenants.Client.dll",
+        "sha256": "48b11bda4eff1e33a8073ee00b5801134a46cbea93cc554ad590ff9cd78fb3df"
+      },
+      {
+        "name": "Hexalith.Tenants.Contracts.dll",
+        "sha256": "680d324c2371838c40d6e9446476cbcb0b10074b860a8ee79114b054290c8624"
+      }
+    ],
+    "restoredPackages": [
+      {
+        "id": "Hexalith.Commons.Http",
+        "version": "3.0.0",
+        "nupkgSha256": "255334fe93bd38b88c6a8972e4a2937336fe48e95fedb3475058c247b7429ef7",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.Commons",
+          "commit": "1705ebc20195a9f830da066144dd97b6bc4c0ace"
+        }
+      },
+      {
+        "id": "Hexalith.Commons.ServiceDefaults",
+        "version": "3.0.0",
+        "nupkgSha256": "0bb7a2775c11b53d124992605db1b988a0c9e1cab9d87114b6c0aa7f107ab5bc",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.Commons",
+          "commit": "1705ebc20195a9f830da066144dd97b6bc4c0ace"
+        }
+      },
+      {
+        "id": "Hexalith.Commons.UniqueIds",
+        "version": "3.0.0",
+        "nupkgSha256": "ab2f595866caacafd881165be18812d8bf547e5edb059fae085ae8edc0b75773",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.Commons",
+          "commit": "1705ebc20195a9f830da066144dd97b6bc4c0ace"
+        }
+      },
+      {
+        "id": "Hexalith.EventStore.Client",
+        "version": "4.2.0",
+        "nupkgSha256": "1482d2b33007e3562783d4f293785ce9944089635bd29b0c12fa8f59eb6f34ba",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.EventStore",
+          "commit": "aa16227bd07f0564a3026d619a5abd973e02656f"
+        }
+      },
+      {
+        "id": "Hexalith.EventStore.Contracts",
+        "version": "4.2.0",
+        "nupkgSha256": "e1a3e80d0c2c999b93d4e27d5b0016ae8048eb1425481e6a1c732bad710b8e6d",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.EventStore",
+          "commit": "aa16227bd07f0564a3026d619a5abd973e02656f"
+        }
+      },
+      {
+        "id": "Hexalith.EventStore.SignalR",
+        "version": "4.2.0",
+        "nupkgSha256": "c8b24ab9813d975672b3a740d7e849fe0d4cfd2b1b8b0cc8a759b543bfca0bf8",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.EventStore",
+          "commit": "aa16227bd07f0564a3026d619a5abd973e02656f"
+        }
+      },
+      {
+        "id": "Hexalith.FrontComposer.Contracts",
+        "version": "6.0.0",
+        "nupkgSha256": "8b8e45c54e27410de95ad333fb52a277852f65b46e54ef8a96a45153f2f39db0",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.FrontComposer",
+          "commit": "d7e8f57808b610f7cddf95ecd06db178dfd7592f"
+        }
+      },
+      {
+        "id": "Hexalith.FrontComposer.Contracts.UI",
+        "version": "6.0.0",
+        "nupkgSha256": "7eec795d5e3f57839785c3a97acad53add52551ebc7cd90c83de41035c97f876",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.FrontComposer",
+          "commit": "d7e8f57808b610f7cddf95ecd06db178dfd7592f"
+        }
+      },
+      {
+        "id": "Hexalith.FrontComposer.Mcp",
+        "version": "6.0.0",
+        "nupkgSha256": "a0fad431137363542fe2917fe63913d8300239330e4ab929f64f631a05b89ec0",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.FrontComposer",
+          "commit": "d7e8f57808b610f7cddf95ecd06db178dfd7592f"
+        }
+      },
+      {
+        "id": "Hexalith.FrontComposer.Schema",
+        "version": "6.0.0",
+        "nupkgSha256": "5b86f9e7f6ae1ef54775b371907988db3da490e547928ecb67558a89d871b695",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.FrontComposer",
+          "commit": "d7e8f57808b610f7cddf95ecd06db178dfd7592f"
+        }
+      },
+      {
+        "id": "Hexalith.FrontComposer.Shell",
+        "version": "6.0.0",
+        "nupkgSha256": "87591655be1b72b0ed4153900448d0423c8993d3cb423e334d536159589719db",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.FrontComposer",
+          "commit": "d7e8f57808b610f7cddf95ecd06db178dfd7592f"
+        }
+      },
+      {
+        "id": "Hexalith.McpCli.Abstractions",
+        "version": "3.0.0",
+        "nupkgSha256": "86e42c528f9eda27919e9bd1c9ded01d92fd0c9c177c2a637281d1462373f03a",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.McpCli",
+          "commit": "63df6d2b1e96bda795d2a21fff7813b35b9da947"
+        }
+      },
+      {
+        "id": "Hexalith.Tenants.Client",
+        "version": "7.0.7",
+        "nupkgSha256": "a28dfa39377f5054436386f621eccfbe0bea6a9f144ba377865064d758be66a1",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.Tenants",
+          "commit": "bcee4b4dbd886b7b718843cfb80419a92d33de15"
+        }
+      },
+      {
+        "id": "Hexalith.Tenants.Contracts",
+        "version": "7.0.7",
+        "nupkgSha256": "6b76ab1d442438fe68dbe5ad88d226874f03fffa2d33433a4a78a8db8e5bb222",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Hexalith/Hexalith.Tenants",
+          "commit": "bcee4b4dbd886b7b718843cfb80419a92d33de15"
+        }
+      }
+    ]
+  }
+}

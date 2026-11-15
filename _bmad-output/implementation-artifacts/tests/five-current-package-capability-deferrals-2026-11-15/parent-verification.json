@@ -1,0 +1,46 @@
+[
+  {
+    "command": [
+      "dotnet",
+      "build",
+      "${REPO}/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${ARTIFACTS}",
+      "-p:NuGetAudit=false",
+      "-p:MinVerVersionOverride=1.0.0",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0"
+    ],
+    "exitCode": 0
+  },
+  {
+    "command": [
+      "dotnet",
+      "${ARTIFACTS}/bin/Hexalith.Parties.UI.Tests/release/Hexalith.Parties.UI.Tests.dll",
+      "-noLogo",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${TMPDIR}/parent-ui.xml"
+    ],
+    "exitCode": 0,
+    "counts": {
+      "Pass": 465,
+      "Fail": 0,
+      "Skip": 0
+    },
+    "rawXmlSha256": "db2e68d1e6ed477d9aa1a0f487987128e5192003154deba470b1a54b45ca2f9e",
+    "assemblySha256": "bc516d7af60d9e34f2164a6e54ea0b3e649e89588db8df46052af2c9fda601b2",
+    "sourceHashes": {
+      "tests/Hexalith.Parties.UI.Tests/ProjectionTransportPackageTests.cs": "62394a100eb9f85afc9ccde1f8f2d34434c899457344c834b06cc8101872150d",
+      "tests/Hexalith.Parties.UI.Tests/PackageProjectionBarrier.cs": "ef3a840e366ce53b3081c811be7f2b2a39ff94defa91447ad5a1f8562a786ddb",
+      "tests/Hexalith.Parties.UI.Tests/PackageProjectionHub.cs": "6d7c35ada38874c6d72f57657676127bc67b45c0cc8dc3d63fef326d2bf0531c"
+    }
+  }
+]

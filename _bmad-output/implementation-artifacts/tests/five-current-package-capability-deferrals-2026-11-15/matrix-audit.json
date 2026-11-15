@@ -1,0 +1,631 @@
+{
+  "reviewer": "parent",
+  "rows": [
+    {
+      "row": "Registered shared implementation",
+      "status": "pass",
+      "coveringTests": [
+        {
+          "lane": "ui",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.RegisteredReconciliationActuallyExecutesTheSelectedSharedAssembly(shared: False)",
+          "result": "Pass",
+          "evidence": "parent-ui.xml.gz"
+        },
+        {
+          "lane": "ui",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.RegisteredReconciliationActuallyExecutesTheSelectedSharedAssembly(shared: True)",
+          "result": "Pass",
+          "evidence": "parent-ui.xml.gz"
+        },
+        {
+          "lane": "ui",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.RegisteredFeedbackWaitsForReadinessAndAcceptanceWithEarlyConfirmation(cancel: False)",
+          "result": "Pass",
+          "evidence": "parent-ui.xml.gz"
+        },
+        {
+          "lane": "ui",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.RegisteredFeedbackWaitsForReadinessAndAcceptanceWithEarlyConfirmation(cancel: True)",
+          "result": "Pass",
+          "evidence": "parent-ui.xml.gz"
+        },
+        {
+          "lane": "ui",
+          "test": "Hexalith.Parties.UI.Tests.ProjectionFreshnessFallbackTests.StrengthenedDriverCatchesGenerationAndRetriesWhileConnectedThenDrainsTimer",
+          "result": "Pass",
+          "evidence": "parent-ui.xml.gz"
+        }
+      ]
+    },
+    {
+      "row": "Unregistered and unknown-package fallback",
+      "status": "pass",
+      "coveringTests": [
+        {
+          "lane": "ui",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.RegisteredReconciliationActuallyExecutesTheSelectedSharedAssembly(shared: False)",
+          "result": "Pass",
+          "evidence": "parent-ui.xml.gz"
+        },
+        {
+          "lane": "ui",
+          "test": "Hexalith.Parties.UI.Tests.OptimisticReconcileTests.RegisteredReconciliationActuallyExecutesTheSelectedSharedAssembly(shared: True)",
+          "result": "Pass",
+          "evidence": "parent-ui.xml.gz"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"4.7.1\\\", source: False, sharedUi: True, readiness: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"\\\", source: False, sharedUi: False, readiness: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"invalid\\\", source: False, sharedUi: False, readiness: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"4.7.6-preview.1\\\", source: False, sharedUi: False, readiness: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"4.8.0\\\", source: False, sharedUi: False, readiness: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"4.7.7\\\", source: False, sharedUi: False, readiness: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"4.7.2\\\", source: False, sharedUi: False, readiness: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"4.7.0\\\", source: False, sharedUi: False, readiness: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"5.0.0-preview.1\\\", source: False, sharedUi: False, readiness: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"6.0.0.0\\\", source: False, sharedUi: False, readiness: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"6.0.0+build.1\\\", source: False, sharedUi: False, readiness: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"6.0.0-preview.1\\\", source: False, sharedUi: False, readiness: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"6.1.0\\\", source: False, sharedUi: False, readiness: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"6.0.1\\\", source: False, sharedUi: False, readiness: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"5.9.9\\\", source: False, sharedUi: False, readiness: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"6.0.0\\\", source: False, sharedUi: True, readiness: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"5.0.1\\\", source: False, sharedUi: False, readiness: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"5.0.0\\\", source: False, sharedUi: True, readiness: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"4.7.6\\\", source: False, sharedUi: True, readiness: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"4.7.5\\\", source: False, sharedUi: True, readiness: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"4.7.4\\\", source: False, sharedUi: True, readiness: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"4.7.3\\\", source: False, sharedUi: True, readiness: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"4.7.0\\\", source: True, sharedUi: True, readiness: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.AspireRuntimePreparationTests.FrontComposerExactSelectionPreservesUiAndReadinessBoundaries(version: \\\"\\\", source: True, sharedUi: True, readiness: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"3.0.3\\\", source: False, supported: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"\\\", source: False, supported: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"invalid\\\", source: False, supported: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"3.0.26-preview.1\\\", source: False, supported: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"3.0.25-preview.1\\\", source: False, supported: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"3.0.24-preview.1\\\", source: False, supported: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"3.0.23-preview.1\\\", source: False, supported: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"3.1.0\\\", source: False, supported: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"3.0.27-preview.1\\\", source: False, supported: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"3.0.28\\\", source: False, supported: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"4.0.0.0\\\", source: False, supported: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"4.0.0+build.1\\\", source: False, supported: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"4.0.0-preview.1\\\", source: False, supported: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"4.1.0\\\", source: False, supported: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"3.0.24\\\", source: True, supported: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"4.0.1\\\", source: False, supported: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"4.0.0\\\", source: False, supported: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"3.0.27\\\", source: False, supported: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"3.0.26\\\", source: False, supported: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"3.0.22\\\", source: False, supported: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"3.0.2\\\", source: False, supported: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"3.0.25\\\", source: False, supported: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"3.0.24\\\", source: False, supported: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"3.0.23\\\", source: False, supported: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"3.0.18\\\", source: False, supported: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"3.0.13\\\", source: False, supported: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"3.0.12\\\", source: False, supported: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"3.0.11\\\", source: False, supported: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"3.0.10\\\", source: False, supported: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"3.9.9\\\", source: False, supported: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "capabilities",
+          "test": "Hexalith.Parties.Ci.Tests.MemoriesRefreshCompilationTests.ExactSelectionControlsSymbolAndAssemblyMetadata(version: \\\"\\\", source: True, supported: True)",
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "row": "Exact4 refresh changed content",
+      "status": "pass",
+      "coveringTests": [
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Search.PartyMemoryRestClientRecoveryTests.SelectedPackageSendsRefreshRevisionAndAdvertisesItsCompiledCapability",
+          "result": "Pass"
+        },
+        {
+          "lane": "runtime-package-full-child",
+          "test": "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests.SelectedMemoriesIngestionAndCleanupPersistAcrossRestart",
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "row": "Empty partial uncertain inventory cleanup",
+      "status": "pass",
+      "coveringTests": [
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests.EmptyLocalStateRequiresExplicitCompleteRemoteCoverage(complete: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests.EmptyLocalStateRequiresExplicitCompleteRemoteCoverage(complete: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests.PartialHistoricalPagesAndPendingProducersSurviveRestartUntilTerminalAbsence",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests.WrongTenantInventoryCannotAuthorizeDeletion",
+          "result": "Pass"
+        },
+        {
+          "lane": "runtime-package-full-child",
+          "test": "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests.SelectedMemoriesIngestionAndCleanupPersistAcrossRestart",
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "row": "Large interrupted scoped processing history",
+      "status": "pass",
+      "coveringTests": [
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.ProcessingBucketPagesProtectScopeAndCompatibilityReadsRemainCompleteAsync(scenario: \\\"continue\\\")",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.ProcessingBucketPagesProtectScopeAndCompatibilityReadsRemainCompleteAsync(scenario: \\\"long-user\\\")",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.ProcessingBucketPagesProtectScopeAndCompatibilityReadsRemainCompleteAsync(scenario: \\\"tenant\\\")",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.ProcessingBucketPagesProtectScopeAndCompatibilityReadsRemainCompleteAsync(scenario: \\\"party\\\")",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.ProcessingBucketPagesProtectScopeAndCompatibilityReadsRemainCompleteAsync(scenario: \\\"user\\\")",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.ProcessingBucketPagesProtectScopeAndCompatibilityReadsRemainCompleteAsync(scenario: \\\"page-size\\\")",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.ProcessingBucketPagesProtectScopeAndCompatibilityReadsRemainCompleteAsync(scenario: \\\"revision\\\")",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.InterruptedLargeMigrationOrDispatcherRebuildResumesPersistedBucketsBeforeAuthorityCutoverAsync(rebuild: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.InterruptedLargeMigrationOrDispatcherRebuildResumesPersistedBucketsBeforeAuthorityCutoverAsync(rebuild: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CompetingAppendOrErasureInvalidatesLargeMigrationOrDispatcherRebuildPromotionAsync(rebuild: False, erase: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CompetingAppendOrErasureInvalidatesLargeMigrationOrDispatcherRebuildPromotionAsync(rebuild: False, erase: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CompetingAppendOrErasureInvalidatesLargeMigrationOrDispatcherRebuildPromotionAsync(rebuild: True, erase: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CompetingAppendOrErasureInvalidatesLargeMigrationOrDispatcherRebuildPromotionAsync(rebuild: True, erase: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.ErasureRetiresSdkPrivateCanonicalManifestAfterCrashBeforeFirstParticipantAsync",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CompetingSelectedBucketAppendRetriesSameDispatchAgainstItsNewSnapshotAsync",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.InvalidInlineHistoryCannotStageOrSelectMigrationAsync(defect: \\\"hole\\\")",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.InvalidInlineHistoryCannotStageOrSelectMigrationAsync(defect: \\\"duplicate\\\")",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.InvalidInlineHistoryCannotStageOrSelectMigrationAsync(defect: \\\"scope\\\")",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CompetingInlineAppendAtCutoverUsesNewSnapshotForStagingAndPromotionAsync",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.UnresolvedAuditRetriesSameDispatchAndResolvesWithoutCheckpointDriftAsync(count: 40)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.UnresolvedAuditRetriesSameDispatchAndResolvesWithoutCheckpointDriftAsync(count: 96)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.InterruptedLegacyAuditErasureResumesItsPersistedGenerationAcrossEraserRecreationAsync",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.AcceptedLargeLegacyAuditMetadataSurvivesErasureConversionWithoutTruncationAsync",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CorruptTouchedBucketCannotAdvanceEitherCanonicalAuthorityAsync(defect: \\\"scope\\\")",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CorruptTouchedBucketCannotAdvanceEitherCanonicalAuthorityAsync(defect: \\\"capacity\\\")",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CorruptTouchedBucketCannotAdvanceEitherCanonicalAuthorityAsync(defect: \\\"order\\\")",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CorruptTouchedBucketCannotAdvanceEitherCanonicalAuthorityAsync(defect: \\\"duplicate\\\")",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CorruptTouchedBucketCannotAdvanceEitherCanonicalAuthorityAsync(defect: \\\"coverage\\\")",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CorruptTouchedBucketCannotAdvanceEitherCanonicalAuthorityAsync(defect: \\\"metadata\\\")",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.RebuildPreservesFailedAuditBeyondCheckpointAndRepairsOnlyWithCompleteUncontendedReplayAsync(bucketed: False, compete: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.RebuildPreservesFailedAuditBeyondCheckpointAndRepairsOnlyWithCompleteUncontendedReplayAsync(bucketed: False, compete: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.RebuildPreservesFailedAuditBeyondCheckpointAndRepairsOnlyWithCompleteUncontendedReplayAsync(bucketed: True, compete: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.RebuildPreservesFailedAuditBeyondCheckpointAndRepairsOnlyWithCompleteUncontendedReplayAsync(bucketed: True, compete: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.RebuildCannotReplaceProcessingCheckpointWhenDetailLagsAsync",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.CommittedLiveRegistrationsSettleAcrossColdRestartsBeforeRedeliveryAndDifferentBucketAppendsAsync",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.TerminalAnchorCrashAfterManifestReclamationAllowsColdRedeliveryAndNewDeliveryAsync(crash: RecoveryManifestReclaimed)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.TerminalAnchorCrashAfterManifestReclamationAllowsColdRedeliveryAndNewDeliveryAsync(crash: RecoveryAnchorCompacted)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.LargeAuditRecoversPendingCanonicalEnvelopesAcrossHandlerRestartAsync(failurePhase: MarkerPrepared)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.LargeAuditRecoversPendingCanonicalEnvelopesAcrossHandlerRestartAsync(failurePhase: AfterInstallOperation)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.LargeAuditRecoversPendingCanonicalEnvelopesAcrossHandlerRestartAsync(failurePhase: BeforeCommit)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.LargeAuditRecoversPendingCanonicalEnvelopesAcrossHandlerRestartAsync(failurePhase: AfterCommit)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.LargeAuditRecoversPendingCanonicalEnvelopesAcrossHandlerRestartAsync(failurePhase: BeforeCompaction)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.RedeliveredValidPrefixRepairsLaggingDetailBeforeAcknowledgementAsync",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.AcceptedLargeLegacyActorMetadataMigratesAndRebuildPreparationRemainsPureAsync(rebuild: False)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.AcceptedLargeLegacyActorMetadataMigratesAndRebuildPreparationRemainsPureAsync(rebuild: True)",
+          "result": "Pass"
+        },
+        {
+          "lane": "memory-history",
+          "test": "Hexalith.Parties.Tests.Projections.PartyProcessingGenerationRecoveryTests.UnqualifiedHistoricalRecoveryRefusesErasureWithEveryPersistedByteUnchangedAsync",
+          "result": "Pass"
+        },
+        {
+          "lane": "projections",
+          "test": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.RetainedProcessingHistoryUsesBoundedBucketsAndPureLargeRebuildAsync",
+          "result": "Pass"
+        }
+      ]
+    }
+  ],
+  "ownedRuntimeCleanupVerified": true,
+  "preReviewAllTenOverlaysMatched": true,
+  "reviewChangedOnlyUiTransportTestInputs": [
+    "tests/Hexalith.Parties.UI.Tests/PackageProjectionBarrier.cs",
+    "tests/Hexalith.Parties.UI.Tests/PackageProjectionHub.cs",
+    "tests/Hexalith.Parties.UI.Tests/ProjectionTransportPackageTests.cs"
+  ],
+  "productionAndOwnedRuntimeInputsStillMatchQualifiedSnapshot": true,
+  "finalUiProof": "parent-ui.xml.gz: 465 pass, 0 fail, 0 skip"
+}
