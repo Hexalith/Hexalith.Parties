@@ -1,0 +1,152 @@
+[
+  {
+    "Name": "parties-release-build",
+    "Arguments": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0",
+      "-p:MinVerVersionOverride=1.0.0",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${JOB}/artifacts"
+    ],
+    "Environment": {},
+    "Log": "parties-release-attempt3.log.gz",
+    "ExitCode": 0
+  },
+  {
+    "Name": "parties-topology-release-build",
+    "Arguments": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0",
+      "-p:MinVerVersionOverride=1.0.0",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${JOB}/artifacts"
+    ],
+    "Environment": {},
+    "Log": "parties-topology-release-build.log.gz",
+    "ExitCode": 0
+  },
+  {
+    "Name": "memories-release-build",
+    "Arguments": [
+      "dotnet",
+      "build",
+      "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Hexalith.Memories.IntegrationTests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0",
+      "-p:MinVerVersionOverride=1.0.0",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${JOB}/artifacts"
+    ],
+    "Environment": {},
+    "Log": "memories-release-attempt7.log.gz",
+    "ExitCode": 0
+  },
+  {
+    "Name": "dependency-versioned-source-owner",
+    "Arguments": [
+      "dotnet",
+      "build",
+      "references/Hexalith.Memories/src/Hexalith.Memories.Server/Hexalith.Memories.Server.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0",
+      "-p:UseArtifactsOutput=true",
+      "-p:Version=4.0.0",
+      "-p:ArtifactsPath=${JOB}/dependency-artifacts"
+    ],
+    "Environment": {},
+    "Log": "dependency-owner-versioned-build.log.gz",
+    "ExitCode": 0,
+    "Scope": "Current owner source, diagnostic assembly version; no package publication/adoption claim"
+  },
+  {
+    "Name": "parties-consumer-controls",
+    "Arguments": [
+      "dotnet",
+      "${JOB}/artifacts/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryProducerRestartProtocolTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryUnitAuthorityRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+      "-method-",
+      "*SelectedMemories*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${RECEIPTS}/parties-consumer-controls.xml"
+    ],
+    "Environment": {},
+    "Log": "parties-consumer-controls.log.gz",
+    "ExitCode": 0
+  },
+  {
+    "Name": "parties-signal-cleanup",
+    "Arguments": [
+      "dotnet",
+      "${JOB}/artifacts/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryProducerRestartSignalTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedCleanupTests",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${RECEIPTS}/parties-signal-cleanup.xml"
+    ],
+    "Environment": {},
+    "Log": "parties-signal-cleanup.log.gz",
+    "ExitCode": 0
+  },
+  {
+    "Name": "dependency-counterexamples",
+    "Arguments": [
+      "dotnet",
+      "${JOB}/artifacts/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll",
+      "-method",
+      "Hexalith.Parties.Tests.Search.PartyMemoryOwnerDependencyTests.ActualOwnerDependencyTraceQualifiesDivergentAssetCounterexamples",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${RECEIPTS}/dependency-attempt4.xml"
+    ],
+    "Environment": {
+      "PARTIES_MEMORY_OWNER_DEPENDENCY_SERVER": "${JOB}/dependency-artifacts/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.dll",
+      "PARTIES_MEMORY_OWNER_DEPENDENCY_REDIS": "${OWNED_REDIS_LOOPBACK_ENDPOINT}",
+      "MEMORIES_ERASURE_RECEIPT_DIR": "${RECEIPTS}/dependency-attempt4"
+    },
+    "Log": "dependency-attempt4.log.gz",
+    "ExitCode": 0
+  }
+]

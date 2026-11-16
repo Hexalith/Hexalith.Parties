@@ -1150,3 +1150,60 @@ for 58 consumer controls, 10 signal/cleanup controls and the live restart/
 cancellation results, exact identities, cleanup and separate source/package
 build blockers. Publication/adoption, deployed custody, historical reconciliation,
 older-writer exclusion and owner acceptance remain external gates.
+
+
+## Five erasure process boundaries (2026-11-16)
+
+`MemoryErasureProcessRestartTests` in the Memories owner is a separate lane from
+its existing algorithm controls and the Parties six-phase workload lane. Its
+parent retains authenticated Dapr, RedisSearch and FalkorDB while private workers
+run the actual built integration-test executable. Inherited anonymous pipes use
+per-incarnation HMAC credentials, monotonic sequences, bounded frames and bounded
+acknowledgements. No control endpoint is exposed. The parent independently checks
+executed assembly hashes, kernel process birth counters, original exit, replacement
+birth, unchanged sidecar lifetime, container IDs and database run IDs. Every path
+reaps owned workers; strict sidecar exit and fixture cleanup are retained.
+
+The matrix covers unit/case legacy-NL migration and both namespaces, original
+nine-field retry histories suspended in description and embedding, modern and
+legacy live/dead queue obligations, actual historical chunk/NL workflow output
+through purge/reuse, and an older producer completing after an actual absent read
+but before ordinary/annotation admission. Fresh independent Redis connections
+compare complete field hashes, scoped queue/payload absence, permanent fences and
+unrelated survivors. A distinct modern retry also progresses. These test workers
+use the existing actual owner activities and fake embedding responses.
+
+Prepare source hooks with the pinned module tool and build the individual owner
+project in Debug. Execute the built assembly with both
+`-class Hexalith.Memories.IntegrationTests.Ingestion.MemoryErasureProcessRestartTests`
+and `-class Hexalith.Memories.IntegrationTests.Ingestion.MemoryErasureProcessProtocolTests`,
+plus `-parallelMode none -failSkips -result-xml <fresh-path>`. The new process lane
+has no prerequisite skips. `MEMORIES_ERASURE_RECEIPT_DIR` optionally retains its
+content-free custody, process and persisted-hash receipts outside `TMPDIR`.
+
+The Parties B7 control is
+`PartyMemoryOwnerDependencyTests.ActualOwnerDependencyTraceQualifiesDivergentAssetCounterexamples`.
+It requires `PARTIES_MEMORY_OWNER_DEPENDENCY_SERVER` naming the explicitly prepared
+current-source owner and `PARTIES_MEMORY_OWNER_DEPENDENCY_REDIS` naming owned Redis.
+Use `-failSkips`; an omitted configuration is an opt-in skip and supplies no proof.
+Its disposable source-owner cohort must satisfy the child's compiled shared-assembly
+versions and retain the original three exact byte guards. The receipt records the
+diagnostic source `Version=4.0.0` preparation separately from package selection.
+Three isolated children execute real owner calls and retain all loaded paths/hashes.
+Options resolves from the selected .NET shared framework; an added divergent peer is
+unselected. The valid divergent private `System.IO.Hashing` candidate remains unloaded
+on these calls. Neither attempt reproduces reachable mismatched dependency reuse,
+so no additional guard is claimed or installed.
+
+The [dated receipt](../_bmad-output/implementation-artifacts/tests/five-process-erasure-boundaries-2026-11-16/README.md)
+keeps failed attempts, exact commands, source/package identities, XML and cleanup
+separate. Existing algorithm evidence is preserved. Package publication/adoption,
+production historical inventory, writer exclusion, deployment and owner acceptance
+remain independent gates.
+
+The reviewed rerun additionally requires positive historical chunk/NL ownership,
+text and embedding fields, nonexpiring tombstones, replacement-worker admission
+bound to the original persisted absence observation, exactly one real scheduling
+attempt and explicit rejection of retained pre-erasure retry input. B7 receipts
+are fresh and nonce/mode/call/birth/exit-bound; private resolver selection is an
+assertion. The final parent gates pass 183 targeted checks with zero skips.

@@ -1885,6 +1885,9 @@ review1_2026_10_25: Review-1 migration rejects incomplete canonical targets with
 resolution_2026_10_25_final: Memories 7b0c8b5692600e293346eea7a84652eb87e4c346 publishes the reviewed atomic legacy migration and both-namespace erasure fixes. Actual persisted-state race/restart/survivor controls pass. Historical orphan qualification and production migration remain external.
 verification_final: `tests/five-processing-and-memories-erasure-2026-10-25/`; spec `spec-five-processing-and-memories-erasure-deferred-items.md`.
 
+qualification_process_2026_11_16: Separate worker processes execute actual migration, replacement, unit/case erasure and late migration. Both victim namespaces stay absent; unknown ownership still refuses and all unrelated hash bytes persist. Existing completed algorithm status and production migration/owner gates are unchanged.
+verification_process_2026_11_16: `tests/five-process-erasure-boundaries-2026-11-16/` maps the exact process variants, persisted hashes, observed exits/births, unchanged backing custody and cleanup.
+
 
 ### DW-197: Qualify erasure of natural-language retry payloads and delayed retry work
 
@@ -1905,6 +1908,9 @@ review1_2026_10_25: Review-1 restores atomically fenced JSON-only live retry pro
 
 resolution_2026_10_25_final: Memories 7b0c8b5692600e293346eea7a84652eb87e4c346 publishes scoped live/dead payload erasure and content-free retry execution. Real unit/case workflow-history, late completion, derived-output and replacement controls pass. Legacy scheduler qualification, tenant-wide cleanup and separately recorded stale retry races remain external.
 verification_final: `tests/five-processing-and-memories-erasure-2026-10-25/`; spec `spec-five-processing-and-memories-erasure-deferred-items.md`.
+
+qualification_process_2026_11_16: Actual original raw retry history is suspended in each content activity before process exit. A distinct upgraded worker erases scoped modern/legacy live/dead queue payloads, history and derived output; another replacement cannot restore them. Complete unrelated same-tenant queue/hash bytes persist and separate modern work progresses. Existing algorithm evidence and external scheduler-drain, publication/adoption, deployment and owner gates remain unchanged.
+verification_process_2026_11_16: `tests/five-process-erasure-boundaries-2026-11-16/` retains activity/history checkpoints, all queue/payload obligations, process identities and strict owned cleanup.
 
 
 ### DW-198: Bound legacy semantic deletion discovery without full Redis keyspace scans
@@ -2598,6 +2604,9 @@ archived: 2026-11-15
   verification_2026_11_15: `tests/five-publisher-catalog-authority-2026-11-15/final-verification.json`; reviewed final source lanes pass with zero targeted skips.
   remaining_gate_2026_11_15: Matching package publication/adoption and a real operator-established generation/writer cutover remain external; disposable source evidence does not attest production exclusion.
 
+  qualification_process_2026_11_16: Real chunk and NL activities complete historical workflows before actual history purge and worker replacement. Same-source and independently complete source-B reuse cannot acquire missing exact-unit authority; actual cleanup refuses with every historical/survivor field hash retained. Production inventory, package/adoption and writer exclusion remain open.
+  verification_process_2026_11_16: `tests/five-process-erasure-boundaries-2026-11-16/`.
+
 
 - source_spec: `spec-five-memories-proof-and-process-observation-deferred-items.md`
   summary: Qualify child-parent membership when a listed PID is reused before the first child birth-identity read.
@@ -2628,6 +2637,9 @@ archived: 2026-11-15
   implementation_2026_11_15: Actual older Dapr producers complete between a real absent lookup and ordinary/annotation admission. Missing exact-unit authority refuses complete erasure and discovery no longer mutates historical hashes before refusal. Configured generation issuance uses the same Redis boundary for ordinary, annotation, directory and event paths.
   verification_2026_11_15: `tests/five-publisher-catalog-authority-2026-11-15/final-verification.json`; reviewed final source lanes pass with zero targeted skips.
   remaining_gate_2026_11_15: Production writer exclusion is an operator-owned external prerequisite; this batch attests only its owned synthetic writers and units.
+
+  qualification_process_2026_11_16: An actual absent lookup precedes completion of the actual older chunk/NL producer. Its observed exit and a distinct replacement precede ordinary/annotation admission. Missing exact-unit authority still blocks complete erasure while all historical and survivor hashes remain unchanged. No production older-writer exclusion is attested.
+  verification_process_2026_11_16: `tests/five-process-erasure-boundaries-2026-11-16/` retains the ordered checkpoints and process/backing identities.
 
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-snapshot-history-and-publish-deferrals.md`
@@ -2674,3 +2686,6 @@ archived: 2026-11-15
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-producer-restart-deferred-items.md`
   summary: Qualify direct-owner runtime dependency reuse beyond the three verified shared boundary assemblies (medium, unverified).
   evidence: Blind review B7 notes that AssemblyLoadContext.Default can reuse already loaded dependencies before Resolving runs. No additional reused owner dependency with different bytes or changed behavior was demonstrated in the exact prepared cohort. Trace all actually resolved owner-call dependencies and their server/test hashes, then construct a reachable mismatch that passes the existing framework/cohort and boundary-byte guards before deciding whether an isolated process is needed.
+
+  qualification_process_2026_11_16: Three disposable children trace actual constructor/IOptions.Value, AdmitAsync, RecordCandidateAsync, ReadAsync and semantic discovery calls. Options is shared-framework-owned and its valid divergent peer is unselected. The resolver-selected valid divergent System.IO.Hashing asset remains unloaded on those calls. No reachable mismatch was reproduced, so no speculative guard or global dependency-safety claim is added.
+  verification_process_2026_11_16: `tests/five-process-erasure-boundaries-2026-11-16/` retains 77 loaded path/hash identities per child and both exact attempted counterexamples. Unexecuted paths and external owner gates remain separate.

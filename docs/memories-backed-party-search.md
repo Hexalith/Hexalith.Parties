@@ -415,3 +415,16 @@ embeddings and disposable resources. It supplies no historical production
 completeness, deployed writer exclusion, published-package certification or
 owner acceptance. The [2026-11-15 restart receipt](../_bmad-output/implementation-artifacts/tests/five-producer-restart-deferred-items-2026-11-15/README.md)
 links the reviewed final rerun, actual outcomes and remaining external gates.
+
+
+The separate [2026-11-16 process-boundary qualification](../_bmad-output/implementation-artifacts/tests/five-process-erasure-boundaries-2026-11-16/README.md)
+retains the owner algorithm controls and the six-phase Parties lane. Parent-held
+Redis/Dapr custody survives observed worker exit and replacement around legacy NL
+migration, both content-bearing retry activities, actual historical workflow purge,
+and the ordered absent-read/older-producer/admission interleaving. Independent
+persisted hashes and queue/history absence establish the owned synthetic outcomes.
+Missing exact-unit authority still refuses complete erasure and retains historical
+and survivor bytes. A direct-owner dependency trace refutes two precise attempted
+mismatches on the executed calls; it certifies no unexecuted dependency path.
+These disposable source controls supply no production completeness, scheduler drain,
+writer exclusion, matching package publication/adoption or external owner approval.

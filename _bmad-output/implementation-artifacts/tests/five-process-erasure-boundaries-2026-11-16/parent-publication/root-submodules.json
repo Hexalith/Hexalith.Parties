@@ -1,0 +1,82 @@
+[
+  {
+    "Path": "references/Hexalith.EventStore",
+    "Commit": "fdb59895975e86a1e234325a01237f259cdbd53b",
+    "IndexCommit": "fdb59895975e86a1e234325a01237f259cdbd53b",
+    "ReachableFromOriginMain": true,
+    "UnpushedCommitCount": 0,
+    "Clean": true
+  },
+  {
+    "Path": "references/Hexalith.Memories",
+    "Commit": "65bfb98dca7f65c005213507b15fbe4ab45f2e19",
+    "IndexCommit": "65bfb98dca7f65c005213507b15fbe4ab45f2e19",
+    "ReachableFromOriginMain": true,
+    "UnpushedCommitCount": 0,
+    "Clean": true
+  },
+  {
+    "Path": "references/Hexalith.FrontComposer",
+    "Commit": "bca9dff291ce42c57516598732340a80703dfb6d",
+    "IndexCommit": "bca9dff291ce42c57516598732340a80703dfb6d",
+    "ReachableFromOriginMain": true,
+    "UnpushedCommitCount": 0,
+    "Clean": true
+  },
+  {
+    "Path": "references/Hexalith.Tenants",
+    "Commit": "2ec938397c5b330cf1e694e8cc442cb4ad022f2b",
+    "IndexCommit": "2ec938397c5b330cf1e694e8cc442cb4ad022f2b",
+    "ReachableFromOriginMain": true,
+    "UnpushedCommitCount": 0,
+    "Clean": true
+  },
+  {
+    "Path": "references/Hexalith.AI.Tools",
+    "Commit": "17a37d83db193f0b7494c1b931fd1e82a67c1424",
+    "IndexCommit": "17a37d83db193f0b7494c1b931fd1e82a67c1424",
+    "ReachableFromOriginMain": true,
+    "UnpushedCommitCount": 0,
+    "Clean": true
+  },
+  {
+    "Path": "references/Hexalith.Commons",
+    "Commit": "fbf4e94233821f6ca336af91a06feaaeb7a16855",
+    "IndexCommit": "fbf4e94233821f6ca336af91a06feaaeb7a16855",
+    "ReachableFromOriginMain": true,
+    "UnpushedCommitCount": 0,
+    "Clean": true
+  },
+  {
+    "Path": "references/Hexalith.Builds",
+    "Commit": "73e60af8a1fcdf3f06726d5d1b6e1199cce778ee",
+    "IndexCommit": "73e60af8a1fcdf3f06726d5d1b6e1199cce778ee",
+    "ReachableFromOriginMain": true,
+    "UnpushedCommitCount": 0,
+    "Clean": true
+  },
+  {
+    "Path": "references/Hexalith.PolymorphicSerializations",
+    "Commit": "e97b56930e213f674b64c157551f499b0473ec43",
+    "IndexCommit": "e97b56930e213f674b64c157551f499b0473ec43",
+    "ReachableFromOriginMain": true,
+    "UnpushedCommitCount": 0,
+    "Clean": true
+  },
+  {
+    "Path": "references/Hexalith.McpCli",
+    "Commit": "23072f04f423eea3f30456fe5af13d2d382624fe",
+    "IndexCommit": "23072f04f423eea3f30456fe5af13d2d382624fe",
+    "ReachableFromOriginMain": true,
+    "UnpushedCommitCount": 0,
+    "Clean": true
+  },
+  {
+    "Path": "references/Hexalith.Platform",
+    "Commit": "f6f85032598865b9123f16364448bfd02c0ff5b0",
+    "IndexCommit": "f6f85032598865b9123f16364448bfd02c0ff5b0",
+    "ReachableFromOriginMain": true,
+    "UnpushedCommitCount": 0,
+    "Clean": true
+  }
+]

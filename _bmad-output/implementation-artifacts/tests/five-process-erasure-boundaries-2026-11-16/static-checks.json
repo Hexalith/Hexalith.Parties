@@ -1,0 +1,31 @@
+[
+  {
+    "Repository": "parties",
+    "Arguments": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "ExitCode": 0,
+    "Output": ""
+  },
+  {
+    "Repository": "memories",
+    "Arguments": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "ExitCode": 0,
+    "Output": ""
+  },
+  {
+    "Repository": "parties",
+    "Arguments": [
+      "bash",
+      "scripts/check-no-warning-override.sh"
+    ],
+    "ExitCode": 0,
+    "Output": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts.\n"
+  }
+]

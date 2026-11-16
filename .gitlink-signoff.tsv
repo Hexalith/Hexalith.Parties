@@ -818,3 +818,6 @@ references/Hexalith.McpCli|85a5437b98d0e126147460ca1ee1fa6a36041a21|validated-ad
 
 # Reviewed generation ownership source; production/package gates remain open.
 references/Hexalith.Memories|7a5c892508700b2e5c71c921cdaeedf68de5f03d|validated-advance|origin/main@7a5c892508700b2e5c71c921cdaeedf68de5f03d|codex-agent|2026-11-15
+
+# Approved 2026-11-16 bmad-build source qualification; package/deployment owner gates remain separate.
+references/Hexalith.Memories|65bfb98dca7f65c005213507b15fbe4ab45f2e19|validated-advance|origin/main@65bfb98dca7f65c005213507b15fbe4ab45f2e19|codex-agent|2026-11-16

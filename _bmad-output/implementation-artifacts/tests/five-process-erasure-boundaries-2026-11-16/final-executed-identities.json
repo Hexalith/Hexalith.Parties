@@ -1,0 +1,27 @@
+{
+  "Hexalith.Memories.IntegrationTests": {
+    "Identity": "Hexalith.Memories.IntegrationTests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+    "Path": "${JOB}/artifacts/bin/Hexalith.Memories.IntegrationTests/debug/Hexalith.Memories.IntegrationTests.dll",
+    "Sha256": "188654c9ba2accdfbbbc75fb77f8692e912927e0e811145e2e10799438c6a590"
+  },
+  "Hexalith.Memories.Server": {
+    "Identity": "Hexalith.Memories.Server, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+    "Path": "${JOB}/artifacts/bin/Hexalith.Memories.IntegrationTests/debug/Hexalith.Memories.Server.dll",
+    "Sha256": "46212aac54bc5fcb9db000b4cf40b043aa982ae986608e76cb64ed5c434f5c51"
+  },
+  "Hexalith.Memories.Contracts": {
+    "Identity": "Hexalith.Memories.Contracts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+    "Path": "${JOB}/artifacts/bin/Hexalith.Memories.IntegrationTests/debug/Hexalith.Memories.Contracts.dll",
+    "Sha256": "0d22fbd897a8d0b4e46a81b703fd0a9f29ddb5556cc0ea5434c2d0d13f902343"
+  },
+  "Dapr.Workflow": {
+    "Identity": "Dapr.Workflow, Version=1.0.0.0, Culture=neutral, PublicKeyToken=a686d5d635c0f0e6",
+    "Path": "${JOB}/artifacts/bin/Hexalith.Memories.IntegrationTests/debug/Dapr.Workflow.dll",
+    "Sha256": "a4381d5b2dc56e2063068c8302bedf24461bbd3356750a16037aea5f1e12897f"
+  },
+  "StackExchange.Redis": {
+    "Identity": "StackExchange.Redis, Version=3.0.0.0, Culture=neutral, PublicKeyToken=c219ff1ca8c2ce46",
+    "Path": "${JOB}/artifacts/bin/Hexalith.Memories.IntegrationTests/debug/StackExchange.Redis.dll",
+    "Sha256": "11fe1c748608a8b9fa5777b80796e3186c5d4c481680c448b736bf10f0f8664e"
+  }
+}

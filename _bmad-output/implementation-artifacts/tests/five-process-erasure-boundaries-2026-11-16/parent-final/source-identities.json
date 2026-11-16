@@ -1,0 +1,62 @@
+{
+  ".": {
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryOwnerDependencyTests.cs": {
+      "WorkingTreeSha256": "418cdd13b726dca7b892d5b4d8f236ea50c9eded883a298610ca2391db39397d",
+      "NormalizedLfSha256": "e00c69ec2f45b1c50dca9b9b1625332497ff79e15052c3c469e66c09092e28b7"
+    },
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryOwnerSourceRuntime.cs": {
+      "WorkingTreeSha256": "a1b41b404b4b17c3891dae803a2b85d7daadf8dacabd666865440a05f66d67da",
+      "NormalizedLfSha256": "a0ba42d8bf4b0d176623b1d92a452f1e0413d75a19c3e3692b78520474421819"
+    }
+  },
+  "references/Hexalith.Memories": {
+    "tests/Hexalith.Memories.IntegrationTests/Fixtures/DaprStateSidecarCollection.cs": {
+      "WorkingTreeSha256": "062f800b595f05f6fb89bdda506b856a01240c34a4491738083e7f9d54282add",
+      "NormalizedLfSha256": "e072a775c258269e7030171a1677d9aef4b783d9dab3dc37104cbbcec544e8a7"
+    },
+    "tests/Hexalith.Memories.IntegrationTests/Fixtures/DaprStateSidecarFixture.cs": {
+      "WorkingTreeSha256": "695e254cf2183d2d7a97f7313fc00f7df597864d8a38b20439287f0dcdb05978",
+      "NormalizedLfSha256": "73240a99476ce78942c4860cba1410526a043f44c8abfedd0804e21f40473ba7"
+    },
+    "tests/Hexalith.Memories.IntegrationTests/Fixtures/FalkorDbCollection.cs": {
+      "WorkingTreeSha256": "aa2e1f52054e4c6f9fbb34ccfab2a3312a13b8347376b8742b76326d278fb3d7",
+      "NormalizedLfSha256": "b5a4685b081dad0e4f3f514fc9fb1308ffd57727effdb547424f25f660258a29"
+    },
+    "tests/Hexalith.Memories.IntegrationTests/Fixtures/FalkorDbFixture.cs": {
+      "WorkingTreeSha256": "cf31bd0e3e54c20761cd41caba4999d1e0af38e76beb056caa4d9a18a37159d2",
+      "NormalizedLfSha256": "cbf9ffc82325570eef80848412cb6ac5a4d05d2e3744fd3fa4bebd67b6fe9f7c"
+    },
+    "tests/Hexalith.Memories.IntegrationTests/Fixtures/MemoryErasureProcessMessage.cs": {
+      "WorkingTreeSha256": "024dc272c64dff2eb6e9a64ebdeb51d059d5f831e7defc03c09643aca096c6c0",
+      "NormalizedLfSha256": "c3012ccefa588c645d3576983bf606c527ae8ab21f9bf6441ab683f35f2e1478"
+    },
+    "tests/Hexalith.Memories.IntegrationTests/Fixtures/MemoryErasureProcessProtocol.cs": {
+      "WorkingTreeSha256": "d17a291efa8e6e9dfa5009dd650546a184e0c99626ced74d487f7ac3b1b05eec",
+      "NormalizedLfSha256": "efabd382d5b024398ddf6092e903a14ef22e80d08058555f51611bc77f25c978"
+    },
+    "tests/Hexalith.Memories.IntegrationTests/Fixtures/MemoryErasureProcessWorker.cs": {
+      "WorkingTreeSha256": "e14b999b99a2f66e17a84d0fdc0929b87582cebe79ffb8165998d97982aa46c3",
+      "NormalizedLfSha256": "740d8e0fe58b56b3fcb21e97799dc5d2b0293964a0a0c06ed88c9f3e8ea17c47"
+    },
+    "tests/Hexalith.Memories.IntegrationTests/Fixtures/RedisStackCollection.cs": {
+      "WorkingTreeSha256": "ac1141b62fe6b7ca2edd42c93f85e539b4eb098b4f7ed6b063b5ed485a0abf9d",
+      "NormalizedLfSha256": "cc4487b642d08337d729572b2291585f1566bcbfe089ea764c2cd34d2923a720"
+    },
+    "tests/Hexalith.Memories.IntegrationTests/Fixtures/RedisStackFixture.cs": {
+      "WorkingTreeSha256": "1fdfafd001ee5b88811e8a9576eb0838bf9ff4e792f037c9695d1641b98c216f",
+      "NormalizedLfSha256": "ba170bbcaf2b944ee9bf74e677d7873d755e7aea4b0072e7f9040b793fea9963"
+    },
+    "tests/Hexalith.Memories.IntegrationTests/Ingestion/HistoricalProcessArtifactWorkflow.cs": {
+      "WorkingTreeSha256": "6ea766954d0a7b27a1d936bfdde2f9c89bd2b227c3b3bee8fc26ec8cf6a64e39",
+      "NormalizedLfSha256": "bc7233d272ad82300bfec9b53db1c58ed34ca5f612f54d7315163b509b7c760a"
+    },
+    "tests/Hexalith.Memories.IntegrationTests/Ingestion/MemoryErasureProcessProtocolTests.cs": {
+      "WorkingTreeSha256": "f6a58e4b38502c7067d9a31538e0efb2531250913494178a0e6123a19e2b9e84",
+      "NormalizedLfSha256": "ed782df0bcb7cdc582d57fa427058ab48ad9cdd45c680bfa52c2dd893c68b7a5"
+    },
+    "tests/Hexalith.Memories.IntegrationTests/Ingestion/MemoryErasureProcessRestartTests.cs": {
+      "WorkingTreeSha256": "46365d4555f652f7309e18ec528edebe9488176b3206a442b3a649d4a68c9114",
+      "NormalizedLfSha256": "aac24b81a3499a9b988fb0e542f361af5c5a6e99a360e01ca869873816a9884e"
+    }
+  }
+}

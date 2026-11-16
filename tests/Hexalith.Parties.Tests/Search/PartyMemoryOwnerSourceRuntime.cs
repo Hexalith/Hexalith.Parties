@@ -154,7 +154,8 @@ internal static class PartyMemoryOwnerSourceRuntime
             await InvokeAsync(Store(owner, connection, config), "ReconcileUnitAsync", [tenant, unit, exact, evidence, expected, token]).ConfigureAwait(false);
         });
 
-    private static async Task WithServerAsync(PartyMemoryRuntimeConfiguration config, Func<Assembly, Task> action)
+    /// <summary>Checks every explicitly shared call-boundary dependency before invoking any owner operation.</summary>
+    internal static async Task WithServerAsync(PartyMemoryRuntimeConfiguration config, Func<Assembly, Task> action)
     {
         string path = config.OwnershipServerAssemblyPath ?? throw new InvalidOperationException("The exact running owner assembly is required.");
         Path.GetFileName(path).ShouldBe("Hexalith.Memories.Server.dll");
@@ -174,7 +175,8 @@ internal static class PartyMemoryOwnerSourceRuntime
         finally { AssemblyLoadContext.Default.Resolving -= Resolve; }
     }
 
-    private static object Store(Assembly owner, IConnectionMultiplexer connection, PartyMemoryRuntimeConfiguration config)
+    /// <summary>Constructs the real owner store with the actual already-loaded options wrapper.</summary>
+    internal static object Store(Assembly owner, IConnectionMultiplexer connection, PartyMemoryRuntimeConfiguration config)
     {
         Type settingsType = owner.GetType("Hexalith.Memories.Server.Ingestion.IngestionSettings", throwOnError: true)!;
         object settings = Activator.CreateInstance(settingsType, nonPublic: true)!;
@@ -186,7 +188,8 @@ internal static class PartyMemoryOwnerSourceRuntime
             [connection, new QueryCursorCodec(new EphemeralDataProtectionProvider(), "OwnedProducerRestart"), options], CultureInfo.InvariantCulture)!;
     }
 
-    private static async Task InvokeAsync(object target, string method, object?[] arguments)
+    /// <summary>Invokes an actual owner seam and preserves its original exception.</summary>
+    internal static async Task InvokeAsync(object target, string method, object?[] arguments)
     {
         Type type = target as Type ?? target.GetType();
         try

@@ -1,0 +1,150 @@
+[
+  {
+    "Test": "Hexalith.Memories.IntegrationTests.Ingestion.MemoryErasureProcessRestartTests.ContentBearingRetryHistoryAndPayloadStayErasedAcrossWorkerReplacement(embeddingPhase: False)",
+    "Result": "Pass",
+    "Receipt": "final-process-receipts/process-550e0404c92b495394cfe9053c24c1d8.json.gz",
+    "Incarnations": 3,
+    "DistinctObservedBirths": true,
+    "AllWorkerExitsObserved": true,
+    "NoMatchingOwnedBirthRemainsInProcfs": true,
+    "UnchangedBackingCustody": true,
+    "SidecarExitObserved": true,
+    "Checkpoints": [
+      "actual-description-suspended",
+      "purged-history-and-late-retry-after-second-replacement"
+    ]
+  },
+  {
+    "Test": "Hexalith.Memories.IntegrationTests.Ingestion.MemoryErasureProcessRestartTests.ContentBearingRetryHistoryAndPayloadStayErasedAcrossWorkerReplacement(embeddingPhase: True)",
+    "Result": "Pass",
+    "Receipt": "final-process-receipts/process-1e801c9fd199446994a4b345df3850f2.json.gz",
+    "Incarnations": 3,
+    "DistinctObservedBirths": true,
+    "AllWorkerExitsObserved": true,
+    "NoMatchingOwnedBirthRemainsInProcfs": true,
+    "UnchangedBackingCustody": true,
+    "SidecarExitObserved": true,
+    "Checkpoints": [
+      "actual-embedding-suspended",
+      "purged-history-and-late-retry-after-second-replacement"
+    ]
+  },
+  {
+    "Test": "Hexalith.Memories.IntegrationTests.Ingestion.MemoryErasureProcessRestartTests.ActualOlderProducerCompletesBetweenAbsentReadAndAdmissionAcrossReplacement(annotation: False)",
+    "Result": "Pass",
+    "Receipt": "final-process-receipts/process-2302770bdda646288649044eea3c9d76.json.gz",
+    "Incarnations": 2,
+    "DistinctObservedBirths": true,
+    "AllWorkerExitsObserved": true,
+    "NoMatchingOwnedBirthRemainsInProcfs": true,
+    "UnchangedBackingCustody": true,
+    "SidecarExitObserved": true,
+    "Checkpoints": [
+      "actual-absent-history-read",
+      "older-producer-completed-and-exited-before-admission",
+      "incomplete-erasure-refused-after-replacement"
+    ]
+  },
+  {
+    "Test": "Hexalith.Memories.IntegrationTests.Ingestion.MemoryErasureProcessRestartTests.ActualOlderProducerCompletesBetweenAbsentReadAndAdmissionAcrossReplacement(annotation: True)",
+    "Result": "Pass",
+    "Receipt": "final-process-receipts/process-4b74e5ef852e457f9151519770e15764.json.gz",
+    "Incarnations": 2,
+    "DistinctObservedBirths": true,
+    "AllWorkerExitsObserved": true,
+    "NoMatchingOwnedBirthRemainsInProcfs": true,
+    "UnchangedBackingCustody": true,
+    "SidecarExitObserved": true,
+    "Checkpoints": [
+      "actual-absent-history-read",
+      "older-producer-completed-and-exited-before-admission",
+      "incomplete-erasure-refused-after-replacement"
+    ]
+  },
+  {
+    "Test": "Hexalith.Memories.IntegrationTests.Ingestion.MemoryErasureProcessRestartTests.PurgedHistoricalIdentityCannotGainCompletenessAfterProcessReplacement(crossSource: False)",
+    "Result": "Pass",
+    "Receipt": "final-process-receipts/process-d7a7b9a29b5342c9b62b0955194ac27f.json.gz",
+    "Incarnations": 2,
+    "DistinctObservedBirths": true,
+    "AllWorkerExitsObserved": true,
+    "NoMatchingOwnedBirthRemainsInProcfs": true,
+    "UnchangedBackingCustody": true,
+    "SidecarExitObserved": true,
+    "Checkpoints": [
+      "actual-completed-history-before-purge",
+      "actual-workflow-purged-before-replacement",
+      "incomplete-erasure-refused-after-replacement"
+    ]
+  },
+  {
+    "Test": "Hexalith.Memories.IntegrationTests.Ingestion.MemoryErasureProcessRestartTests.PurgedHistoricalIdentityCannotGainCompletenessAfterProcessReplacement(crossSource: True)",
+    "Result": "Pass",
+    "Receipt": "final-process-receipts/process-dfb59d53980e4a04883d8b6c01f3ce26.json.gz",
+    "Incarnations": 2,
+    "DistinctObservedBirths": true,
+    "AllWorkerExitsObserved": true,
+    "NoMatchingOwnedBirthRemainsInProcfs": true,
+    "UnchangedBackingCustody": true,
+    "SidecarExitObserved": true,
+    "Checkpoints": [
+      "actual-completed-history-before-purge",
+      "actual-workflow-purged-before-replacement",
+      "incomplete-erasure-refused-after-replacement"
+    ]
+  },
+  {
+    "Test": "Hexalith.Memories.IntegrationTests.Ingestion.MemoryErasureProcessRestartTests.MigratedLegacyNamespacesRemainErasedAcrossWorkerReplacement(caseDeletion: False)",
+    "Result": "Pass",
+    "Receipt": "final-process-receipts/process-efc0b83ff3504822a07013a41c92a1e4.json.gz",
+    "Incarnations": 3,
+    "DistinctObservedBirths": true,
+    "AllWorkerExitsObserved": true,
+    "NoMatchingOwnedBirthRemainsInProcfs": true,
+    "UnchangedBackingCustody": true,
+    "SidecarExitObserved": true,
+    "Checkpoints": [
+      "migration-persisted-before-original-exit",
+      "after-erasure-and-late-migration"
+    ]
+  },
+  {
+    "Test": "Hexalith.Memories.IntegrationTests.Ingestion.MemoryErasureProcessRestartTests.MigratedLegacyNamespacesRemainErasedAcrossWorkerReplacement(caseDeletion: True)",
+    "Result": "Pass",
+    "Receipt": "final-process-receipts/process-fc4fc9dca9de47e39687f5c66e336a1b.json.gz",
+    "Incarnations": 3,
+    "DistinctObservedBirths": true,
+    "AllWorkerExitsObserved": true,
+    "NoMatchingOwnedBirthRemainsInProcfs": true,
+    "UnchangedBackingCustody": true,
+    "SidecarExitObserved": true,
+    "Checkpoints": [
+      "migration-persisted-before-original-exit",
+      "after-erasure-and-late-migration"
+    ]
+  },
+  {
+    "Test": "Hexalith.Memories.IntegrationTests.Ingestion.MemoryErasureProcessProtocolTests.FailedStartReturnsOnlyAfterOwnedWorkerCleanup",
+    "Result": "Pass"
+  },
+  {
+    "Test": "Hexalith.Memories.IntegrationTests.Ingestion.MemoryErasureProcessProtocolTests.MalformedFrameLengthRefusesBeforeBodyRead(length: -1)",
+    "Result": "Pass"
+  },
+  {
+    "Test": "Hexalith.Memories.IntegrationTests.Ingestion.MemoryErasureProcessProtocolTests.MalformedFrameLengthRefusesBeforeBodyRead(length: 1048577)",
+    "Result": "Pass"
+  },
+  {
+    "Test": "Hexalith.Memories.IntegrationTests.Ingestion.MemoryErasureProcessProtocolTests.CancellationBeforeStartupAcknowledgementReapsObservedWorker",
+    "Result": "Pass"
+  },
+  {
+    "Test": "Hexalith.Memories.IntegrationTests.Ingestion.MemoryErasureProcessProtocolTests.ForeignAndReplayedRequestsRefuseWithoutPoisoningValidSequence",
+    "Result": "Pass"
+  },
+  {
+    "Test": "Hexalith.Memories.IntegrationTests.Ingestion.MemoryErasureProcessProtocolTests.CanceledCoordinationStillCompletesOwnedWorkerCleanup",
+    "Result": "Pass"
+  }
+]

@@ -1,0 +1,82 @@
+{
+  "Message": "test: qualify erasure across worker replacement\n\nStory-Key: spec-five-process-erasure-boundaries\n",
+  "MessageSha256": "7b99ce4471e44d822e384c108786cbed90520e5151eecc78e4c6fbb947b89494",
+  "Checks": [
+    {
+      "Arguments": [
+        "node_modules/.bin/commitlint",
+        "--edit",
+        "${JOB}/memories-message.txt"
+      ],
+      "ExitCode": 0,
+      "Output": ""
+    },
+    {
+      "Arguments": [
+        "python3",
+        "tools/check-story-file-scope.py",
+        "--branch-name",
+        "main",
+        "--commit-message-file",
+        "${JOB}/memories-message.txt",
+        "--changed-files-file",
+        "${JOB}/changed.txt"
+      ],
+      "ExitCode": 0,
+      "Output": "Selected story key: spec-five-process-erasure-boundaries\nStory source: trailer\nStory artifact: _bmad-output/implementation-artifacts/spec-five-process-erasure-boundaries.md\nAllowed scope entries:\n  - tests/Hexalith.Memories.IntegrationTests/Fixtures/DaprStateSidecarCollection.cs\n  - tests/Hexalith.Memories.IntegrationTests/Fixtures/DaprStateSidecarFixture.cs\n  - tests/Hexalith.Memories.IntegrationTests/Fixtures/FalkorDbCollection.cs\n  - tests/Hexalith.Memories.IntegrationTests/Fixtures/FalkorDbFixture.cs\n  - tests/Hexalith.Memories.IntegrationTests/Fixtures/MemoryErasureProcessMessage.cs\n  - tests/Hexalith.Memories.IntegrationTests/Fixtures/MemoryErasureProcessProtocol.cs\n  - tests/Hexalith.Memories.IntegrationTests/Fixtures/MemoryErasureProcessWorker.cs\n  - tests/Hexalith.Memories.IntegrationTests/Fixtures/RedisStackCollection.cs\n  - tests/Hexalith.Memories.IntegrationTests/Fixtures/RedisStackFixture.cs\n  - tests/Hexalith.Memories.IntegrationTests/Ingestion/HistoricalProcessArtifactWorkflow.cs\n  - tests/Hexalith.Memories.IntegrationTests/Ingestion/MemoryErasureProcessProtocolTests.cs\n  - tests/Hexalith.Memories.IntegrationTests/Ingestion/MemoryErasureProcessRestartTests.cs\n  - tests/Hexalith.Memories.IntegrationTests/Ingestion/NaturalLanguageErasureIntegrationTests.cs\n  - _bmad-output/implementation-artifacts/spec-five-process-erasure-boundaries.md\nIn-scope changed files:\n  - _bmad-output/implementation-artifacts/spec-five-process-erasure-boundaries.md\n  - tests/Hexalith.Memories.IntegrationTests/Fixtures/DaprStateSidecarCollection.cs\n  - tests/Hexalith.Memories.IntegrationTests/Fixtures/DaprStateSidecarFixture.cs\n  - tests/Hexalith.Memories.IntegrationTests/Fixtures/FalkorDbCollection.cs\n  - tests/Hexalith.Memories.IntegrationTests/Fixtures/FalkorDbFixture.cs\n  - tests/Hexalith.Memories.IntegrationTests/Fixtures/MemoryErasureProcessMessage.cs\n  - tests/Hexalith.Memories.IntegrationTests/Fixtures/MemoryErasureProcessProtocol.cs\n  - tests/Hexalith.Memories.IntegrationTests/Fixtures/MemoryErasureProcessWorker.cs\n  - tests/Hexalith.Memories.IntegrationTests/Fixtures/RedisStackCollection.cs\n  - tests/Hexalith.Memories.IntegrationTests/Fixtures/RedisStackFixture.cs\n  - tests/Hexalith.Memories.IntegrationTests/Ingestion/HistoricalProcessArtifactWorkflow.cs\n  - tests/Hexalith.Memories.IntegrationTests/Ingestion/MemoryErasureProcessProtocolTests.cs\n  - tests/Hexalith.Memories.IntegrationTests/Ingestion/MemoryErasureProcessRestartTests.cs\n  - tests/Hexalith.Memories.IntegrationTests/Ingestion/NaturalLanguageErasureIntegrationTests.cs\nStory file scope validation passed.\n"
+    },
+    {
+      "Arguments": [
+        "python3",
+        "tools/check-tenant-isolation-evidence.py",
+        "--branch-name",
+        "main",
+        "--commit-message-file",
+        "${JOB}/memories-message.txt",
+        "--changed-files-file",
+        "${JOB}/changed.txt"
+      ],
+      "ExitCode": 0,
+      "Output": "No tenant-isolation surface changed; evidence check is a no-op.\n"
+    },
+    {
+      "Arguments": [
+        "python3",
+        "tools/check-story-review-readiness.py",
+        "--branch-name",
+        "main",
+        "--commit-message-file",
+        "${JOB}/memories-message.txt",
+        "--changed-files-file",
+        "${JOB}/changed.txt",
+        "--derive-cumulative"
+      ],
+      "ExitCode": 0,
+      "Output": "Selected story key: spec-five-process-erasure-boundaries\nStory source: trailer\nStory artifact: _bmad-output/implementation-artifacts/spec-five-process-erasure-boundaries.md\nArtifact carries no ledger, File List, or evidence table; check is a no-op.\n"
+    },
+    {
+      "Arguments": [
+        "python3",
+        "tools/check-story-slice-scope.py",
+        "--branch-name",
+        "main",
+        "--commit-message-file",
+        "${JOB}/memories-message.txt",
+        "--changed-files-file",
+        "${JOB}/changed.txt"
+      ],
+      "ExitCode": 0,
+      "Output": "story-slice-scope: no governed story file changed.\n"
+    },
+    {
+      "Arguments": [
+        "git",
+        "diff",
+        "--cached",
+        "--check"
+      ],
+      "ExitCode": 0,
+      "Output": ""
+    }
+  ]
+}

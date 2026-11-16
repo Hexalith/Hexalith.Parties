@@ -1,0 +1,193 @@
+{
+  "ImplementationHandoffComplete": true,
+  "OverallSpecComplete": true,
+  "FinalProcessSource": {
+    "total": 14,
+    "passed": 14,
+    "failed": 0,
+    "skipped": 0
+  },
+  "ExistingOwnerFocusedSource": {
+    "total": 92,
+    "passed": 92,
+    "failed": 0,
+    "skipped": 0
+  },
+  "ExistingOwnerFullInitialAttempt": {
+    "total": 100,
+    "passed": 91,
+    "failed": 9,
+    "skipped": 0
+  },
+  "PartiesConsumer": {
+    "total": 58,
+    "passed": 58,
+    "failed": 0,
+    "skipped": 0
+  },
+  "PartiesSignalCleanup": {
+    "total": 10,
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0
+  },
+  "B7": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0
+  },
+  "ObservedFinalWorkerIncarnations": 20,
+  "DistinctFinalWorkerBirths": 20,
+  "FinalProcessFixtures": 8,
+  "AllFinalWorkerExitsObserved": true,
+  "AllFinalSidecarExitsObserved": true,
+  "NoMatchingFinalWorkerBirthRemainsInProcfs": true,
+  "B7Disposition": "bounded refutation; 77 loaded assemblies per isolated child; no additional guard",
+  "FailedAttemptDisposition": {
+    "runtime-attempt4": "unqualified stale preceding assembly after associated compile failure",
+    "runtime-source-final": "one individual HTTP health timeout; failed, no acceptance",
+    "owner-algorithms-source-attempt1": "eight known existing exact-unit fixture failures plus one bind collision; failed, no acceptance"
+  },
+  "PendingGates": [
+    "package publication/adoption, deployment, production history/exclusion and external owner acceptance"
+  ],
+  "BackingCleanup": {
+    "B7ContainerRemovalExit": 0,
+    "B7PostRemovalInspectionExit": 1,
+    "RuntimeContainers": "exact fixture stop/delete results in each retained log"
+  },
+  "SourceSelectionEnvironmentFile": "final-source-commands.json",
+  "SourceMappingHash": "8e4d6bcbb20f4f057717d57bdd8217975b85a9dc52b8e7ba67a14074e3060d1f",
+  "ParentSourceAcceptance": {
+    "owner-full": {
+      "total": 100,
+      "passed": 100,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0
+    },
+    "process": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0
+    },
+    "ProcessReceipts": [
+      {
+        "Receipt": "process-034dedec9cbe4fdb9c3722f51b8381cb.json.gz",
+        "WorkerCount": 3,
+        "AllExited": true,
+        "BackingCustodyUnchanged": true,
+        "SidecarExited": true
+      },
+      {
+        "Receipt": "process-12c961cf6b9b4017ab841ebeb15c81ff.json.gz",
+        "WorkerCount": 2,
+        "AllExited": true,
+        "BackingCustodyUnchanged": true,
+        "SidecarExited": true
+      },
+      {
+        "Receipt": "process-3800f185dd574288b9f68185ee8946cd.json.gz",
+        "WorkerCount": 2,
+        "AllExited": true,
+        "BackingCustodyUnchanged": true,
+        "SidecarExited": true
+      },
+      {
+        "Receipt": "process-383756449ddd4bdaad6b382bd61126af.json.gz",
+        "WorkerCount": 3,
+        "AllExited": true,
+        "BackingCustodyUnchanged": true,
+        "SidecarExited": true
+      },
+      {
+        "Receipt": "process-6df94a4273a84988b1a133079b3fcff8.json.gz",
+        "WorkerCount": 3,
+        "AllExited": true,
+        "BackingCustodyUnchanged": true,
+        "SidecarExited": true
+      },
+      {
+        "Receipt": "process-9c148608ea164c6a91082b674e96551a.json.gz",
+        "WorkerCount": 2,
+        "AllExited": true,
+        "BackingCustodyUnchanged": true,
+        "SidecarExited": true
+      },
+      {
+        "Receipt": "process-cfeee146db8e4ff09f1e7750d70f8318.json.gz",
+        "WorkerCount": 3,
+        "AllExited": true,
+        "BackingCustodyUnchanged": true,
+        "SidecarExited": true
+      },
+      {
+        "Receipt": "process-e14d9a3b4272485cae086c1f8ae670f4.json.gz",
+        "WorkerCount": 2,
+        "AllExited": true,
+        "BackingCustodyUnchanged": true,
+        "SidecarExited": true
+      }
+    ],
+    "ObservedWorkerBirths": 20,
+    "AllWorkerBirthsAbsent": true,
+    "BackingContainersAbsent": [
+      "0bcecf1444a7dfc1baa389276bbdd37bbfedd66eaeb43b347d05fb34ea1feadb",
+      "df24fd7046aeb82e716df2ccc6604186b2dd01415c655082ef162f8833644609"
+    ],
+    "FrozenIntentPreserved": true
+  },
+  "FinalReviewedAcceptance": {
+    "owner-full": {
+      "total": 100,
+      "passed": 100,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0
+    },
+    "process": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0
+    },
+    "consumer": {
+      "total": 58,
+      "passed": 58,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0
+    },
+    "cleanup": {
+      "total": 10,
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0
+    },
+    "dependency": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0
+    },
+    "MemoriesCommit": "65bfb98dca7f65c005213507b15fbe4ab45f2e19",
+    "SourceMappingHash": "8e4d6bcbb20f4f057717d57bdd8217975b85a9dc52b8e7ba67a14074e3060d1f",
+    "B7ContainerRemoved": true
+  },
+  "OwnerRemoteCommit": "65bfb98dca7f65c005213507b15fbe4ab45f2e19",
+  "Review": {
+    "Layers": 3,
+    "IndividualFindings": 12,
+    "VerifiedPatchGroups": 9,
+    "LowRejected": 1,
+    "NewDeferrals": 0
+  },
+  "IndependentParentReviewComplete": true,
+  "ParentPublicationPendingAtArtifactCreation": true
+}

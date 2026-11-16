@@ -1,0 +1,85 @@
+{
+  "RuntimeWorkers": 20,
+  "B7Children": 3,
+  "AllObservedBirthsAbsent": true,
+  "UnchangedBackingCustody": true,
+  "AllSidecarExitsObserved": true,
+  "BackingContainersAbsent": [
+    "4ebd1ee3f994440744c0116b800b83df7f503b4a88311fe4e46be960389dbfbd",
+    "50dd50e7fac2bf466adce50c0255721818a8737cb4305e6f611c85554bac7110"
+  ],
+  "Cases": [
+    {
+      "Receipt": "process-206beb3eb90a4693af78280f9e59e791.json.gz",
+      "Workers": 3,
+      "Checkpoints": [
+        "actual-description-suspended",
+        "retained-pre-erasure-retry-activity-refused",
+        "purged-history-and-late-retry-after-second-replacement"
+      ]
+    },
+    {
+      "Receipt": "process-c56d36d577df4f83a94af1f8af527861.json.gz",
+      "Workers": 2,
+      "Checkpoints": [
+        "actual-completed-history-before-purge",
+        "actual-workflow-purged-before-replacement",
+        "incomplete-erasure-refused-after-replacement"
+      ]
+    },
+    {
+      "Receipt": "process-31c29ed99d0e4f43a517f16216f2f8e9.json.gz",
+      "Workers": 3,
+      "Checkpoints": [
+        "migration-persisted-before-original-exit",
+        "after-erasure-and-late-migration"
+      ]
+    },
+    {
+      "Receipt": "process-60224475fd84499caa57b90211c74d23.json.gz",
+      "Workers": 2,
+      "Checkpoints": [
+        "actual-absent-history-read",
+        "older-producer-completed-and-exited-before-admission",
+        "replacement-worker-admission-and-real-scheduling",
+        "incomplete-erasure-refused-after-replacement"
+      ]
+    },
+    {
+      "Receipt": "process-0c5b028725064034af4988d7c812d747.json.gz",
+      "Workers": 2,
+      "Checkpoints": [
+        "actual-completed-history-before-purge",
+        "actual-workflow-purged-before-replacement",
+        "incomplete-erasure-refused-after-replacement"
+      ]
+    },
+    {
+      "Receipt": "process-c1e0c5cfb613448580c10295fce05218.json.gz",
+      "Workers": 3,
+      "Checkpoints": [
+        "migration-persisted-before-original-exit",
+        "after-erasure-and-late-migration"
+      ]
+    },
+    {
+      "Receipt": "process-1b0402035e14497a92901caba13697af.json.gz",
+      "Workers": 3,
+      "Checkpoints": [
+        "actual-embedding-suspended",
+        "retained-pre-erasure-retry-activity-refused",
+        "purged-history-and-late-retry-after-second-replacement"
+      ]
+    },
+    {
+      "Receipt": "process-ba06182b8f5441d8a0398466394d4e04.json.gz",
+      "Workers": 2,
+      "Checkpoints": [
+        "actual-absent-history-read",
+        "older-producer-completed-and-exited-before-admission",
+        "replacement-worker-admission-and-real-scheduling",
+        "incomplete-erasure-refused-after-replacement"
+      ]
+    }
+  ]
+}

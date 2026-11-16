@@ -1,0 +1,26 @@
+[
+  {
+    "Repository": "parties",
+    "Purpose": "read-only baseline message tooling validation; terminal candidates remain parent-owned",
+    "Arguments": [
+      "node",
+      "node_modules/@commitlint/cli/cli.js",
+      "--verbose"
+    ],
+    "Message": "test: qualify memories producer restart recovery\n\n",
+    "ExitCode": 0,
+    "Output": "\u29d7   --- input ---\ntest: qualify memories producer restart recovery\n\u2714   found 0 problems, 0 warnings\n"
+  },
+  {
+    "Repository": "memories",
+    "Purpose": "read-only baseline message tooling validation; terminal candidates remain parent-owned",
+    "Arguments": [
+      "node",
+      "node_modules/@commitlint/cli/cli.js",
+      "--verbose"
+    ],
+    "Message": "fix: bind ingestion erasure to unit ownership\n\nReserve generation-scoped units and retain exact ownership proof.\nKeep historical erasure conditional on reconciled per-unit evidence.\n\n",
+    "ExitCode": 0,
+    "Output": "\u29d7   --- input ---\nfix: bind ingestion erasure to unit ownership\n\nReserve generation-scoped units and retain exact ownership proof.\nKeep historical erasure conditional on reconciled per-unit evidence.\n\u2714   found 0 problems, 0 warnings\n"
+  }
+]

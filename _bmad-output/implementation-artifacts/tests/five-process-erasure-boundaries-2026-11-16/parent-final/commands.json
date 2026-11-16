@@ -1,0 +1,250 @@
+[
+  {
+    "Name": "prepare",
+    "Arguments": [
+      "dotnet",
+      "tool",
+      "run",
+      "hexalith-module",
+      "--",
+      "prepare-build",
+      "--manifest",
+      "module/hexalith.module-manifest.v2.json",
+      "--workspace",
+      "${JOB}/mapping",
+      "--mode",
+      "source",
+      "--output",
+      "json"
+    ],
+    "Environment": {},
+    "ExitCode": 0
+  },
+  {
+    "Name": "owner-source-build",
+    "Arguments": [
+      "dotnet",
+      "build",
+      "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Hexalith.Memories.IntegrationTests.csproj",
+      "-c",
+      "Debug",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${JOB}/source"
+    ],
+    "Environment": {
+      "CustomBeforeDirectoryBuildProps": "${JOB}/mapping/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${JOB}/mapping/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${JOB}/mapping/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${JOB}/mapping/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${JOB}/mapping/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "8e4d6bcbb20f4f057717d57bdd8217975b85a9dc52b8e7ba67a14074e3060d1f",
+      "Configuration": "Debug",
+      "MEMORIES_ERASURE_RECEIPT_DIR": "${REPOSITORY}/_bmad-output/implementation-artifacts/tests/five-process-erasure-boundaries-2026-11-16/parent-final/process-receipts"
+    },
+    "ExitCode": 0
+  },
+  {
+    "Name": "owner-full",
+    "Arguments": [
+      "dotnet",
+      "${JOB}/source/bin/Hexalith.Memories.IntegrationTests/debug/Hexalith.Memories.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Memories.IntegrationTests.Ingestion.NaturalLanguageErasureIntegrationTests",
+      "-class",
+      "Hexalith.Memories.IntegrationTests.Ingestion.RetryWorkflowErasureIntegrationTests",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${REPOSITORY}/_bmad-output/implementation-artifacts/tests/five-process-erasure-boundaries-2026-11-16/parent-final/owner-full.xml"
+    ],
+    "Environment": {
+      "CustomBeforeDirectoryBuildProps": "${JOB}/mapping/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${JOB}/mapping/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${JOB}/mapping/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${JOB}/mapping/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${JOB}/mapping/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "8e4d6bcbb20f4f057717d57bdd8217975b85a9dc52b8e7ba67a14074e3060d1f",
+      "Configuration": "Debug",
+      "MEMORIES_ERASURE_RECEIPT_DIR": "${REPOSITORY}/_bmad-output/implementation-artifacts/tests/five-process-erasure-boundaries-2026-11-16/parent-final/process-receipts"
+    },
+    "ExitCode": 0
+  },
+  {
+    "Name": "process",
+    "Arguments": [
+      "dotnet",
+      "${JOB}/source/bin/Hexalith.Memories.IntegrationTests/debug/Hexalith.Memories.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Memories.IntegrationTests.Ingestion.MemoryErasureProcessRestartTests",
+      "-class",
+      "Hexalith.Memories.IntegrationTests.Ingestion.MemoryErasureProcessProtocolTests",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${REPOSITORY}/_bmad-output/implementation-artifacts/tests/five-process-erasure-boundaries-2026-11-16/parent-final/process.xml"
+    ],
+    "Environment": {
+      "CustomBeforeDirectoryBuildProps": "${JOB}/mapping/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${JOB}/mapping/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${JOB}/mapping/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${JOB}/mapping/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${JOB}/mapping/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "8e4d6bcbb20f4f057717d57bdd8217975b85a9dc52b8e7ba67a14074e3060d1f",
+      "Configuration": "Debug",
+      "MEMORIES_ERASURE_RECEIPT_DIR": "${REPOSITORY}/_bmad-output/implementation-artifacts/tests/five-process-erasure-boundaries-2026-11-16/parent-final/process-receipts"
+    },
+    "ExitCode": 0
+  },
+  {
+    "Name": "Hexalith.Parties.Tests-build",
+    "Arguments": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${JOB}/packages",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0",
+      "-p:MinVerVersionOverride=1.0.0"
+    ],
+    "Environment": {},
+    "ExitCode": 0
+  },
+  {
+    "Name": "Hexalith.Parties.IntegrationTests-build",
+    "Arguments": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${JOB}/packages",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0",
+      "-p:MinVerVersionOverride=1.0.0"
+    ],
+    "Environment": {},
+    "ExitCode": 0
+  },
+  {
+    "Name": "consumer",
+    "Arguments": [
+      "dotnet",
+      "${JOB}/packages/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryProducerRestartProtocolTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryUnitAuthorityRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+      "-method-",
+      "*SelectedMemories*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${REPOSITORY}/_bmad-output/implementation-artifacts/tests/five-process-erasure-boundaries-2026-11-16/parent-final/consumer.xml"
+    ],
+    "Environment": {},
+    "ExitCode": 0
+  },
+  {
+    "Name": "cleanup",
+    "Arguments": [
+      "dotnet",
+      "${JOB}/packages/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryProducerRestartSignalTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedCleanupTests",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${REPOSITORY}/_bmad-output/implementation-artifacts/tests/five-process-erasure-boundaries-2026-11-16/parent-final/cleanup.xml"
+    ],
+    "Environment": {},
+    "ExitCode": 0
+  },
+  {
+    "Name": "b7-owner-build",
+    "Arguments": [
+      "dotnet",
+      "build",
+      "references/Hexalith.Memories/src/Hexalith.Memories.Server/Hexalith.Memories.Server.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${JOB}/b7",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0",
+      "-p:Version=4.0.0"
+    ],
+    "Environment": {},
+    "ExitCode": 0
+  },
+  {
+    "Name": "b7-redis-start",
+    "Arguments": [
+      "docker",
+      "run",
+      "-d",
+      "--name",
+      "parties-b7-final-a62b74e870634b0fb8ec655005e09431",
+      "-p",
+      "127.0.0.1::6379",
+      "redis/redis-stack:latest@sha256:880df9c228597cb0d15b585f39a4327d6ee2d8b0d0f155e3f75dba9a761d4ec3"
+    ],
+    "Environment": {},
+    "ExitCode": 0
+  },
+  {
+    "Name": "b7-redis-endpoint",
+    "Arguments": [
+      "docker",
+      "port",
+      "510886a2c345885f193bf0490e8023cd29aee7d8a799f16aaeeb7d95fde86639",
+      "6379/tcp"
+    ],
+    "Environment": {},
+    "ExitCode": 0
+  },
+  {
+    "Name": "dependency",
+    "Arguments": [
+      "dotnet",
+      "${JOB}/packages/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll",
+      "-method",
+      "Hexalith.Parties.Tests.Search.PartyMemoryOwnerDependencyTests.ActualOwnerDependencyTraceQualifiesDivergentAssetCounterexamples",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${REPOSITORY}/_bmad-output/implementation-artifacts/tests/five-process-erasure-boundaries-2026-11-16/parent-final/dependency.xml"
+    ],
+    "Environment": {
+      "PARTIES_MEMORY_OWNER_DEPENDENCY_SERVER": "${JOB}/b7/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.dll",
+      "PARTIES_MEMORY_OWNER_DEPENDENCY_REDIS": "127.0.0.1:50423",
+      "MEMORIES_ERASURE_RECEIPT_DIR": "${REPOSITORY}/_bmad-output/implementation-artifacts/tests/five-process-erasure-boundaries-2026-11-16/parent-final/dependency-receipts"
+    },
+    "ExitCode": 0
+  }
+]

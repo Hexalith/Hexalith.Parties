@@ -1,0 +1,15 @@
+{
+  "Arguments": [
+    "docker",
+    "ps",
+    "--filter",
+    "label=hexalith.process-erasure-owned=true",
+    "--format",
+    "{{.ID}}"
+  ],
+  "ExitCode": 0,
+  "RemainingOwnedB7Containers": [],
+  "AllVerificationJobsExited": true,
+  "FinalObservedWorkerBirths": 20,
+  "FinalMatchingWorkerBirthsRemainingInProcfs": 0
+}

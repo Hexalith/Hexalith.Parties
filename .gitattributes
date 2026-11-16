@@ -91,6 +91,8 @@ tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryProducerRestartRunti
 tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryProducerRestartSignalTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedCleanupTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.Tests/Search/PartyMemoryOwnerSourceRuntime.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Tests/Search/PartyMemoryOwnerDependencyTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+_bmad-output/implementation-artifacts/tests/five-process-erasure-boundaries-2026-11-16/verify-parent.py whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 
 # Preserve the existing CRLF convention in the private native UI boundary.
 tests/Hexalith.Parties.Ci.Tests/NativeAdminUiBuildProfileTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

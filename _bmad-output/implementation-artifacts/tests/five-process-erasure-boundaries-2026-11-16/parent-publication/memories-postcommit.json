@@ -1,0 +1,6 @@
+{
+  "Message": "test: qualify erasure across worker replacement\n\nStory-Key: spec-five-process-erasure-boundaries\n",
+  "ExitCode": 0,
+  "Output": "",
+  "Commit": "293dce74a37764a3483fab75f57ca25f0b12bdfa"
+}

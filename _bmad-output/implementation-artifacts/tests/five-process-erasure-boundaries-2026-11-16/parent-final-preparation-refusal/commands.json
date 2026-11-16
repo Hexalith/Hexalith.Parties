@@ -1,0 +1,23 @@
+[
+  {
+    "Name": "prepare",
+    "Arguments": [
+      "dotnet",
+      "tool",
+      "run",
+      "hexalith-module",
+      "--",
+      "prepare-build",
+      "--manifest",
+      "module/hexalith.module-manifest.v2.json",
+      "--workspace",
+      "${JOB}/mapping",
+      "--mode",
+      "source",
+      "--output",
+      "json"
+    ],
+    "Environment": {},
+    "ExitCode": 2
+  }
+]

@@ -1,0 +1,21 @@
+{
+  ".": {
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryOwnerDependencyTests.cs": "03d71ebe4141f97399be3f86d482cb17f48016616e378d68b95a03664bd9df66",
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryOwnerSourceRuntime.cs": "a1b41b404b4b17c3891dae803a2b85d7daadf8dacabd666865440a05f66d67da"
+  },
+  "references/Hexalith.Memories": {
+    "tests/Hexalith.Memories.IntegrationTests/Fixtures/DaprStateSidecarCollection.cs": "062f800b595f05f6fb89bdda506b856a01240c34a4491738083e7f9d54282add",
+    "tests/Hexalith.Memories.IntegrationTests/Fixtures/DaprStateSidecarFixture.cs": "695e254cf2183d2d7a97f7313fc00f7df597864d8a38b20439287f0dcdb05978",
+    "tests/Hexalith.Memories.IntegrationTests/Fixtures/FalkorDbCollection.cs": "aa2e1f52054e4c6f9fbb34ccfab2a3312a13b8347376b8742b76326d278fb3d7",
+    "tests/Hexalith.Memories.IntegrationTests/Fixtures/FalkorDbFixture.cs": "cf31bd0e3e54c20761cd41caba4999d1e0af38e76beb056caa4d9a18a37159d2",
+    "tests/Hexalith.Memories.IntegrationTests/Fixtures/MemoryErasureProcessMessage.cs": "024dc272c64dff2eb6e9a64ebdeb51d059d5f831e7defc03c09643aca096c6c0",
+    "tests/Hexalith.Memories.IntegrationTests/Fixtures/MemoryErasureProcessProtocol.cs": "d17a291efa8e6e9dfa5009dd650546a184e0c99626ced74d487f7ac3b1b05eec",
+    "tests/Hexalith.Memories.IntegrationTests/Fixtures/MemoryErasureProcessWorker.cs": "9d01c2189abc33a6cb517ddf40c46369cde4b0208993702c94b314fef658202f",
+    "tests/Hexalith.Memories.IntegrationTests/Fixtures/RedisStackCollection.cs": "ac1141b62fe6b7ca2edd42c93f85e539b4eb098b4f7ed6b063b5ed485a0abf9d",
+    "tests/Hexalith.Memories.IntegrationTests/Fixtures/RedisStackFixture.cs": "1fdfafd001ee5b88811e8a9576eb0838bf9ff4e792f037c9695d1641b98c216f",
+    "tests/Hexalith.Memories.IntegrationTests/Ingestion/HistoricalProcessArtifactWorkflow.cs": "6ea766954d0a7b27a1d936bfdde2f9c89bd2b227c3b3bee8fc26ec8cf6a64e39",
+    "tests/Hexalith.Memories.IntegrationTests/Ingestion/MemoryErasureProcessProtocolTests.cs": "f6a58e4b38502c7067d9a31538e0efb2531250913494178a0e6123a19e2b9e84",
+    "tests/Hexalith.Memories.IntegrationTests/Ingestion/MemoryErasureProcessRestartTests.cs": "e1ecfea3a67408f6de25af3d202aaf26f1c31f7944de3f11c8b24d5937e74a41",
+    "tests/Hexalith.Memories.IntegrationTests/Ingestion/NaturalLanguageErasureIntegrationTests.cs": "4f7612b38bcc69f0743fa3a166d2fa5e6432142022d4e0e6fc79bb96edf3d1ad"
+  }
+}

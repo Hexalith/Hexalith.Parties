@@ -1,0 +1,44 @@
+{
+  "Message": "test: qualify deferred erasure process boundaries\n",
+  "MessageSha256": "9f92aaa557bab6954f3bcb36297799b05fdeee6b616f43c75d9250d0536ec03a",
+  "Node": "v26.4.0",
+  "Commitlint": "@commitlint/cli@21.2.4",
+  "Checks": [
+    {
+      "Arguments": [
+        "node_modules/.bin/commitlint",
+        "--edit",
+        "${JOB}/parties-message.txt"
+      ],
+      "ExitCode": 0,
+      "Output": ""
+    },
+    {
+      "Arguments": [
+        "bash",
+        "scripts/gitlink-rc-gate.sh",
+        "--worktree"
+      ],
+      "ExitCode": 0,
+      "Output": "gitlink-rc-gate: working-tree drift check\ngitlink-rc-gate: PASS \u2014 all root gitlinks validated or clean.\n"
+    },
+    {
+      "Arguments": [
+        "git",
+        "diff",
+        "--cached",
+        "--check"
+      ],
+      "ExitCode": 0,
+      "Output": ""
+    },
+    {
+      "Arguments": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "ExitCode": 0,
+      "Output": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts.\n"
+    }
+  ]
+}

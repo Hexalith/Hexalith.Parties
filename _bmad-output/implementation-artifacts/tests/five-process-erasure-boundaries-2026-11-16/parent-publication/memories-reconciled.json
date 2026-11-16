@@ -1,0 +1,18 @@
+{
+  "ReconciledCommit": "65bfb98dca7f65c005213507b15fbe4ab45f2e19",
+  "UpstreamBase": "9d87500eaf4c39ce0cec0cb3a03e5dd62c167106",
+  "Message": "test: qualify erasure across worker replacement\n\nStory-Key: spec-five-process-erasure-boundaries\n",
+  "CommitlintExitCode": 0,
+  "Output": "",
+  "UninitializedNestedSubmodules": [
+    "-17a37d83db193f0b7494c1b931fd1e82a67c1424 references/Hexalith.AI.Tools",
+    "-e2bbbd0893f586e4d447ef8358ff747ea3d34435 references/Hexalith.Builds",
+    "-fbf4e94233821f6ca336af91a06feaaeb7a16855 references/Hexalith.Commons",
+    "-cbb3a867c773a0857001468062c1779ad9755b8d references/Hexalith.EventStore",
+    "-b22be84bdbb23d9263a8835496ad0c95adf1843f references/Hexalith.FrontComposer",
+    "-55f8a02435c7faa7c4073bf22c78a5d04c466929 references/Hexalith.McpCli",
+    "-0c3f55d1c4345f4952cbecbff92014251f484ef2 references/Hexalith.Platform",
+    "-e97b56930e213f674b64c157551f499b0473ec43 references/Hexalith.PolymorphicSerializations",
+    "-7c1747f93fbe988ca8aaa87d636bb6a39563e6b8 references/Hexalith.Tenants"
+  ]
+}

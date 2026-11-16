@@ -1,0 +1,81 @@
+{
+  "owner-full": {
+    "total": 100,
+    "passed": 100,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0
+  },
+  "process": {
+    "total": 14,
+    "passed": 14,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0
+  },
+  "ProcessReceipts": [
+    {
+      "Receipt": "process-034dedec9cbe4fdb9c3722f51b8381cb.json.gz",
+      "WorkerCount": 3,
+      "AllExited": true,
+      "BackingCustodyUnchanged": true,
+      "SidecarExited": true
+    },
+    {
+      "Receipt": "process-12c961cf6b9b4017ab841ebeb15c81ff.json.gz",
+      "WorkerCount": 2,
+      "AllExited": true,
+      "BackingCustodyUnchanged": true,
+      "SidecarExited": true
+    },
+    {
+      "Receipt": "process-3800f185dd574288b9f68185ee8946cd.json.gz",
+      "WorkerCount": 2,
+      "AllExited": true,
+      "BackingCustodyUnchanged": true,
+      "SidecarExited": true
+    },
+    {
+      "Receipt": "process-383756449ddd4bdaad6b382bd61126af.json.gz",
+      "WorkerCount": 3,
+      "AllExited": true,
+      "BackingCustodyUnchanged": true,
+      "SidecarExited": true
+    },
+    {
+      "Receipt": "process-6df94a4273a84988b1a133079b3fcff8.json.gz",
+      "WorkerCount": 3,
+      "AllExited": true,
+      "BackingCustodyUnchanged": true,
+      "SidecarExited": true
+    },
+    {
+      "Receipt": "process-9c148608ea164c6a91082b674e96551a.json.gz",
+      "WorkerCount": 2,
+      "AllExited": true,
+      "BackingCustodyUnchanged": true,
+      "SidecarExited": true
+    },
+    {
+      "Receipt": "process-cfeee146db8e4ff09f1e7750d70f8318.json.gz",
+      "WorkerCount": 3,
+      "AllExited": true,
+      "BackingCustodyUnchanged": true,
+      "SidecarExited": true
+    },
+    {
+      "Receipt": "process-e14d9a3b4272485cae086c1f8ae670f4.json.gz",
+      "WorkerCount": 2,
+      "AllExited": true,
+      "BackingCustodyUnchanged": true,
+      "SidecarExited": true
+    }
+  ],
+  "ObservedWorkerBirths": 20,
+  "AllWorkerBirthsAbsent": true,
+  "BackingContainersAbsent": [
+    "0bcecf1444a7dfc1baa389276bbdd37bbfedd66eaeb43b347d05fb34ea1feadb",
+    "df24fd7046aeb82e716df2ccc6604186b2dd01415c655082ef162f8833644609"
+  ],
+  "FrozenIntentPreserved": true
+}
