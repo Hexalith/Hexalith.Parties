@@ -2,13 +2,23 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    <!-- Keep an alternate caller catalog authoritative; the normal catalog still uses the qualified product default. -->
+    <_PartiesDefaultBuildPackageProps Condition="'$(HexalithBuildsRoot)' != ''">$(HexalithBuildsRoot)/Props/Directory.Packages.props</_PartiesDefaultBuildPackageProps>
+    <_PartiesDefaultBuildPackageProps Condition="'$(HexalithBuildsRoot)' == ''">$(MSBuildThisFileDirectory)references/Hexalith.Builds/Props/Directory.Packages.props</_PartiesDefaultBuildPackageProps>
+    <_PartiesCallerCatalogNormalized Condition="'$(Hexalith1BuildPackageProps)' != ''">$([MSBuild]::NormalizePath('$(Hexalith1BuildPackageProps)'))</_PartiesCallerCatalogNormalized>
+    <_PartiesDefaultCatalogNormalized>$([MSBuild]::NormalizePath('$(_PartiesDefaultBuildPackageProps)'))</_PartiesDefaultCatalogNormalized>
+    <_PartiesUsesDefaultCatalog>false</_PartiesUsesDefaultCatalog>
+    <_PartiesUsesDefaultCatalog Condition="'$(Hexalith2BuildPackageProps)' == '' and '$(Hexalith3BuildPackageProps)' == '' and ('$(Hexalith1BuildPackageProps)' == '' or '$(_PartiesCallerCatalogNormalized)' == '$(_PartiesDefaultCatalogNormalized)')">true</_PartiesUsesDefaultCatalog>
     <!-- Define paths of the Hexalith packages props. -->
-    <Hexalith1BuildPackageProps>$(MSBuildThisFileDirectory)references/Hexalith.Builds/Props/Directory.Packages.props</Hexalith1BuildPackageProps>
+    <Hexalith1BuildPackageProps Condition="'$(HexalithBuildsRoot)' != ''">$(HexalithBuildsRoot)/Props/Directory.Packages.props</Hexalith1BuildPackageProps>
+    <Hexalith1BuildPackageProps Condition="'$(HexalithBuildsRoot)' == ''">$(MSBuildThisFileDirectory)references/Hexalith.Builds/Props/Directory.Packages.props</Hexalith1BuildPackageProps>
     <Hexalith2BuildPackageProps>$(MSBuildThisFileDirectory)../Hexalith.Builds/Props/Directory.Packages.props</Hexalith2BuildPackageProps>
     <Hexalith3BuildPackageProps>$(MSBuildThisFileDirectory)../../Hexalith.Builds/Props/Directory.Packages.props</Hexalith3BuildPackageProps>
     <!-- Standalone family fallbacks defer to an existing caller-selected catalog. -->
-    <!-- User-selected EventStore package family; mapped source builds retain tool authority. -->
-    <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == '' and !Exists('$(Hexalith1BuildPackageProps)') and !Exists('$(Hexalith2BuildPackageProps)') and !Exists('$(Hexalith3BuildPackageProps)')">5.1.0</HexalithEventStoreVersion>
+    <!-- The current product cohort needs the published native descriptor APIs.
+         Select it before the catalog's retained SDK4.2 Parties-role defaults;
+         explicit compatibility-cohort and mapped-source selections retain authority. -->
+    <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true'">5.1.1</HexalithEventStoreVersion>
     <!-- Latest compatible published Tenants family, before the shared catalog defaults. -->
     <HexalithTenantsVersion Condition="'$(HexalithTenantsVersion)' == '' and !Exists('$(Hexalith1BuildPackageProps)') and !Exists('$(Hexalith2BuildPackageProps)') and !Exists('$(Hexalith3BuildPackageProps)')">8.0.0</HexalithTenantsVersion>
     <!-- Shared theme accessibility correction, qualified through the package browser gate. -->
@@ -20,4 +30,8 @@
   <Import Project="$(Hexalith1BuildPackageProps)" Condition="Exists('$(Hexalith1BuildPackageProps)') And '$(HexalithVersionsLoaded)' != 'true'" />
   <Import Project="$(Hexalith2BuildPackageProps)" Condition="Exists('$(Hexalith2BuildPackageProps)') And '$(HexalithVersionsLoaded)' != 'true'" />
   <Import Project="$(Hexalith3BuildPackageProps)" Condition="'$(HexalithVersionsLoaded)' != 'true'" />
+  <ItemGroup>
+    <PackageVersion Include="Aspire.Hosting.Orchestration.linux-x64" Version="13.6.5" />
+    <PackageVersion Include="Aspire.Dashboard.Sdk.linux-x64" Version="13.6.5" />
+  </ItemGroup>
 </Project>

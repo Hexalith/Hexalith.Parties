@@ -120,20 +120,21 @@ public sealed class StandaloneSolutionTests
         program.ShouldContain("builder.AddProject(\"tenants\", tenantsProjectPath)");
     }
 
-    /// <summary>Native profiles remain directly runnable while ordinary solution builds use the pinned published APIs.</summary>
+    /// <summary>The qualified published fixture APIs keep all native suites in the normal build graph.</summary>
     /// <param name="solutionName">The owned solution whose default build graph is checked.</param>
     [Theory]
     [InlineData("Hexalith.Parties.Standalone.slnx")]
     [InlineData("Hexalith.Parties.slnx")]
-    public void DeclaredNativeProjectRequiresExplicitProjectExecution(string solutionName)
+    public void QualifiedNativeProjectsParticipateInTheSolutionBuild(string solutionName)
     {
         ArgumentNullException.ThrowIfNull(solutionName);
         XDocument solution = XDocument.Load(CiTestPaths.RepoFile(solutionName));
-        XElement native = solution.Descendants("Project").Single(project => (string?)project.Attribute("Path") ==
-            "tests/Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj");
-        XElement boundary = native.Elements("Build").ShouldHaveSingleItem();
-        boundary.Attribute("Project")!.Value.ShouldBe("false");
-        boundary.Attribute("Solution").ShouldBeNull();
+        foreach (string suite in new[] { "IntegrationTests", "LifecycleTests", "AttachedLifecycleTests" })
+        {
+            string path = $"tests/Hexalith.Parties.Platform.{suite}/Hexalith.Parties.Platform.{suite}.csproj";
+            XElement native = solution.Descendants("Project").Single(project => (string?)project.Attribute("Path") == path);
+            native.Elements("Build").ShouldBeEmpty();
+        }
     }
 
     private static string NormalizePath(string? path) =>

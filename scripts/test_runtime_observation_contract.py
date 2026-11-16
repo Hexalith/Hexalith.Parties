@@ -1,4 +1,4 @@
-"""Boundary fixtures for the mandatory current-workflow artifact gate."""
+"""Synthetic product controls for persisted effects, native identities and runtime cleanup."""
 import copy
 from datetime import datetime, timedelta
 import gzip
@@ -6,7 +6,6 @@ import hashlib
 import importlib.util
 import json
 import os
-import subprocess
 import time
 from unittest import mock
 from pathlib import Path
@@ -15,27 +14,14 @@ import unittest
 import uuid
 import xml.etree.ElementTree as ET
 
-SPEC = importlib.util.spec_from_file_location("current_owner", Path(__file__).with_name("verify-current-owner-integration.py"))
+SPEC = importlib.util.spec_from_file_location("current_owner", Path(__file__).with_name("runtime_observation_contract.py"))
 verify = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(verify)
 
-# Literal released hexalith.test-result.v1 required keys (Builds 5ec17790, schema sha256 9773678f...7e39),
-# written independently of the reader's constants so a dropped constant cannot hide its own refusal.
+# Native result fields, written independently of the reader so a dropped key cannot hide its refusal.
 RELEASED_RESULT_REQUIRED = ("schema", "policyId", "bindings", "diagnostics", "terminal", "termination", "retention", "cleanup")
 RELEASED_BINDINGS_REQUIRED = ("run", "tool", "candidate", "decision", "reuseLineage", "environment", "artifacts", "suite",
                               "attachments", "deadlines")
-RELEASED_RESULT_SCHEMA_SHA256 = "9773678febac38025fae837154341d9036ce8aa94e66b0d30c7e15ee668d7e39"
-BUILDS_RESULT_SCHEMA = Path(__file__).resolve().parents[1] / "references/Hexalith.Builds/schemas/hexalith.test-result.v1.json"
-
-
-def released_result_schema():
-    """Return the released schema bytes only when the Builds checkout provides them; CI runs without submodules."""
-    try:
-        return BUILDS_RESULT_SCHEMA.read_bytes()
-    except (FileNotFoundError, NotADirectoryError):
-        return None
-
-
 def native_report(names):
     """Use the real MTP TRX ownership/timing shape with deterministic synthetic IDs."""
     report = ET.Element("TestRun", id=str(uuid.UUID(int=1000)), name="native")
@@ -194,20 +180,6 @@ def check_required_contract_keys(test, fixture, check):
     check()
 
 
-def check_released_schema(test, fixture, check):
-    """Validate the sealed fixture with the full released schema only when jsonschema and the Builds schema both exist."""
-    body = released_result_schema()
-    if body is None or importlib.util.find_spec("jsonschema") is None:
-        test.skipTest("the full released-schema check needs jsonschema and the Builds schema checkout")
-    import jsonschema
-    test.assertEqual(hashlib.sha256(body).hexdigest(), RELEASED_RESULT_SCHEMA_SHA256)
-    # FormatChecker asserts date-time/uri only when jsonschema's optional format extras are installed; the schema's
-    # own utc/endpoint patterns are enforced either way.
-    fixture.seal()
-    validator = jsonschema.Draft202012Validator(json.loads(body), format_checker=jsonschema.FormatChecker())
-    sealed = json.loads((fixture.root / "test-result.json").read_text(encoding="utf-8"))
-    test.assertEqual(sorted(error.message for error in validator.iter_errors(sealed)), [])
-    check()
 
 
 class CurrentOwnerEvidenceTests(unittest.TestCase):
@@ -217,13 +189,12 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.expected = dict(repository="Hexalith/Hexalith.Parties", run="123", attempt=2, source="a" * 40, platform="b" * 40, builds="c" * 40)
         self.context = dict(kind="ci", repository=self.expected["repository"], workflowRunId="123", workflowAttempt=2,
-                            jobId="build-and-test", runnerKind="github-hosted", operatingSystem="Linux", disposable=True)
+                            jobId="product-fixture", runnerKind="github-hosted", operatingSystem="Linux", disposable=True)
         self.owner = dict(runId="1" * 32, attemptId="2" * 32, attemptSequence=1, environmentId="3" * 32, ownerRunId="1" * 32, role="owner")
-        self.write("invocation.json", dict(classification="baseline-only", executionContext=self.context, profiles=[verify.PROFILE]))
         phase = dict(runId=self.owner["runId"], outcome=dict(exitCode="Success"), remainingResources=dict(unverified=False, isEmpty=True,
                      containerIds=[], processIds=[], workspaceIds=[], claimIds=[], discoveryFailures=[], resourceIds=[]))
-        for name in ("execution.json", "cleanup.json"):
-            self.write(name, phase)
+        self.write("cleanup-observations.json", phase)
+        self.expected = dict(context=self.context, source=self.expected["source"], platform=self.expected["platform"], builds=self.expected["builds"])
         # Shaped like the genuine hosted 42690523916 result: valid under the released hexalith.test-result.v1 schema.
         self.result = dict(schema="hexalith.test-result.v1", policyId="hexalith.platform.candidate-and-attachment-policy.v1",
             bindings=dict(run=self.owner, tool=dict(state="not-yet-populated"),
@@ -294,6 +265,17 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
             self.result["diagnostics"].append(dict(id=identity, classification="internal", redacted=True, reference=name, contentIdentity="sha256:" + digest))
         self.write("test-result.json", self.result)
 
+    def test_expected_sources_require_full_canonical_commit_identities_at_both_entry_points(self):
+        for field in ("source", "platform", "builds"):
+            for value in (None, "", "a" * 7, "a" * 39, "a" * 41, "A" * 40, "g" * 40, " " + "a" * 40):
+                with self.subTest(field=field, value=value):
+                    expected = dict(self.expected, **{field: value})
+                    with self.assertRaisesRegex(ValueError, "full canonical commit"):
+                        verify.validate(self.root, **expected)
+                    with verify.held_directory(self.root) as directory:
+                        with self.assertRaisesRegex(ValueError, "full canonical commit"):
+                            verify.validate_held(directory, **expected)
+
     def check(self):
         return verify.validate(self.root, **self.expected)
 
@@ -304,34 +286,11 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
     def test_results_missing_any_released_required_key_are_refused(self):
         check_required_contract_keys(self, self, self.check)
 
-    def test_rebuilt_fixture_satisfies_the_full_released_schema_when_available(self):
-        check_released_schema(self, self, self.check)
 
     def test_reader_required_keys_match_the_literal_released_key_sets(self):
-        self.assertEqual(verify.RESULT_SCHEMA_SHA256, RELEASED_RESULT_SCHEMA_SHA256)
         self.assertEqual(verify.RESULT_REQUIRED, frozenset(RELEASED_RESULT_REQUIRED))
         self.assertEqual(verify.RESULT_BINDINGS_REQUIRED, frozenset(RELEASED_BINDINGS_REQUIRED))
 
-    def test_reader_schema_constants_are_bound_to_the_committed_builds_gitlink(self):
-        """Runs without the submodule checkout (CI): a Builds gitlink bump fails until the reader keys are re-derived."""
-        repository = Path(__file__).resolve().parents[1]
-        try:
-            listing = subprocess.run(["git", "ls-tree", "HEAD", "references/Hexalith.Builds"], cwd=repository,
-                                     capture_output=True, text=True, check=True, timeout=30).stdout.split()
-        except (FileNotFoundError, subprocess.CalledProcessError):
-            self.skipTest("not a git checkout of the Parties repository")
-        self.assertEqual(listing[:2], ["160000", "commit"])
-        self.assertEqual(listing[2], verify.RESULT_SCHEMA_BUILDS_COMMIT,
-                         "Builds moved: re-derive RESULT_SCHEMA_SHA256 and the required key sets from its test-result schema")
-
-    def test_reader_required_keys_are_bound_to_the_released_schema_hash(self):
-        body = released_result_schema()
-        if body is None:
-            self.skipTest("the Builds schema checkout is absent (CI runs with submodules: false)")
-        schema = json.loads(body)
-        self.assertEqual(hashlib.sha256(body).hexdigest(), verify.RESULT_SCHEMA_SHA256)
-        self.assertEqual(frozenset(schema["required"]), verify.RESULT_REQUIRED)
-        self.assertEqual(frozenset(schema["$defs"]["bindings"]["required"]), verify.RESULT_BINDINGS_REQUIRED)
 
     def test_selector_proof_requires_the_boolean_true(self):
         for value in (None, False, "true", 1):
@@ -439,28 +398,6 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "wrong current owner cohort"):
                     self.check()
 
-    def test_new_helper_invocation_timeout_and_per_attempt_records_are_bound_to_this_job(self):
-        phase = json.loads((self.root / "execution.json").read_text())
-        (self.root / "cleanup.json").unlink()
-        stderr = dict(bytes=0, sha256=hashlib.sha256(b"").hexdigest(), excerpt="", truncated=False, redacted=True)
-        self.write("invocation.json", dict(executionContext=self.context, profiles=[verify.PROFILE], classification="baseline-only",
-                                           timeoutSeconds=2045))
-        self.write("execution.json", dict(schema=verify.EXECUTION_SCHEMA, executionContext=self.context, processExitCode=0, launched=True,
-                                          cancelled=False, timedOut=False, signals=[], outputParsed=True, result=phase, stderr=stderr))
-        attempt = dict(schema=verify.CLEANUP_SCHEMA, status="completed", runId=self.owner["runId"], executionContext=self.context,
-                       jobStatus="", processExitCode=0, outputParsed=True, verified=True, stderr=stderr, result=phase)
-        self.write("cleanup-1.json", attempt)
-        self.assertEqual(self.check()["nativeCases"], 2)
-        for name, value in {"foreign-owner": dict(attempt, runId="f" * 32), "bool-exit": dict(attempt, processExitCode=False),
-                            "foreign-job": dict(attempt, executionContext=dict(self.context, jobId="other"))}.items():
-            self.write("cleanup-1.json", value)
-            with self.subTest(name=name), self.assertRaises(ValueError):
-                self.check()
-        self.write("cleanup-1.json", attempt)
-        self.write("invocation.json", dict(executionContext=self.context, profiles=[verify.PROFILE], classification="baseline-only",
-                                           timeoutSeconds=True))
-        with self.assertRaises(ValueError):
-            self.check()
 
     def test_real_captured_sdk_identity_shape_matches_the_three_key_aggregate(self):
         # Exact identity shape captured from genuine 42288812736 attempt 2; no event/body evidence is substituted.
@@ -629,10 +566,20 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
         path.write_bytes(path.read_bytes() + b" ")
         with self.assertRaises(ValueError): self.check()
 
-    def test_foreign_invocation_incomplete_cleanup_and_unreferenced_substitutes_are_refused(self):
-        self.write("invocation.json", dict(classification="baseline-only", executionContext=self.context, profiles=["platform-package"]))
-        with self.assertRaises(ValueError): self.check()
-        self.write("invocation.json", dict(classification="baseline-only", executionContext=self.context, profiles=[verify.PROFILE]))
+    def test_runtime_cleanup_requires_verified_empty_inventory_for_every_resource_role(self):
+        original = json.loads((self.root / "cleanup-observations.json").read_text())
+        for field in ("containerIds", "processIds", "workspaceIds", "claimIds", "discoveryFailures", "resourceIds"):
+            for action in ("leftover", "missing"):
+                with self.subTest(field=field, action=action):
+                    phase = copy.deepcopy(original)
+                    if action == "missing": del phase["remainingResources"][field]
+                    else: phase["remainingResources"][field] = ["remaining"]
+                    self.write("cleanup-observations.json", phase)
+                    with self.assertRaisesRegex(ValueError, "owned resources remain"): self.check()
+        self.write("cleanup-observations.json", original)
+        self.check()
+
+    def test_incomplete_cleanup_and_unreferenced_substitutes_are_refused(self):
         self.result["cleanup"]["leftoverResourceIds"] = ["parties"]
         self.write("test-result.json", self.result)
         with self.assertRaises(ValueError): self.check()

@@ -177,7 +177,7 @@ public sealed class PartyMemoryRuntimeTests
         byte[] otherDerivedBefore = await ReadDerivedStateAsync(otherHttp, otherTenant, otherParty, token);
         byte[] survivorCaseBefore = await http.GetByteArrayAsync(MemoriesRoutes.CasePath(tenant, survivorCaseId), token);
         byte[] otherCaseBefore = await otherHttp.GetByteArrayAsync(MemoriesRoutes.CasePath(otherTenant, otherCaseId), token);
-        var entry = PartyMemoryRecoveryTests.Entry() with { Id = party, DisplayName = "oldamber synthetic recovery record" };
+        var entry = PartyMemoryRecoveryFixture.Entry() with { Id = party, DisplayName = "oldamber synthetic recovery record" };
         var context = new PartyMemoryUnitMappingContext(tenant, caseId, "PartyCreated", Timestamp: DateTimeOffset.UnixEpoch, SequenceNumber: 1);
         await InitializeOwnedSourceAsync(http, tenant, party, token);
         var preparedSources = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -469,7 +469,7 @@ public sealed class PartyMemoryRuntimeTests
         if (!string.IsNullOrWhiteSpace(config.AppApiToken)) { lost.DefaultRequestHeaders.Add("dapr-api-token", config.AppApiToken); }
         var client = new MemoriesClient(lost, Options.Create(new MemoriesClientOptions()), NullLogger<MemoriesClient>.Instance);
         var context = new PartyMemoryUnitMappingContext(tenant, caseId, "PartyCreated", SequenceNumber: 1);
-        var entry = PartyMemoryRecoveryTests.Entry() with { Id = party, DisplayName = "synthetic normal lost acknowledgement" };
+        var entry = PartyMemoryRecoveryFixture.Entry() with { Id = party, DisplayName = "synthetic normal lost acknowledgement" };
         PartyMemoryIndexingResult? result = null;
         for (int attempt = 0; attempt < 120; attempt++)
         {
@@ -577,7 +577,7 @@ public sealed class PartyMemoryRuntimeTests
             var indexer = new PartyMemoryIndexingService(client,
                 new PartyMemoryUnitMappingStore(sdk, stateOptions, NullLogger<PartyMemoryUnitMappingStore>.Instance),
                 searchOptions, NullLogger<PartyMemoryIndexingService>.Instance, intents);
-            (await indexer.IndexAsync(PartyMemoryRecoveryTests.Entry() with { Id = party, DisplayName = "synthetic delayed producer" },
+            (await indexer.IndexAsync(PartyMemoryRecoveryFixture.Entry() with { Id = party, DisplayName = "synthetic delayed producer" },
                 new(tenant, caseId, "PartyCreated", Timestamp: DateTimeOffset.UnixEpoch, SequenceNumber: 1), token).ConfigureAwait(true)).ShouldNotBeNull().Indexed.ShouldBeFalse();
             (await intents.GetAsync(tenant, party, token).ConfigureAwait(true)).ShouldHaveSingleItem().WorkflowInstanceId.ShouldBeNull("The actual accepted HTTP acknowledgement was deliberately lost.");
         }
@@ -708,7 +708,7 @@ public sealed class PartyMemoryRuntimeTests
     {
         if (!alreadyQualified) { await InitializeOwnedSourceAsync(http, tenant, party, token).ConfigureAwait(true); }
         PartyMemoryUnit input = PartyMemoryUnitMapper.Map(
-            PartyMemoryRecoveryTests.Entry() with { Id = party, DisplayName = content + " synthetic survivor" },
+            PartyMemoryRecoveryFixture.Entry() with { Id = party, DisplayName = content + " synthetic survivor" },
             new PartyMemoryUnitMappingContext(tenant, caseId, "PartyCreated", Timestamp: DateTimeOffset.UnixEpoch, SequenceNumber: 1))!;
         string workflow = await memories.IngestAsync(tenant, caseId, input.SourceUri, Encoding.UTF8.GetBytes(input.Content),
             "text/plain", "synthetic-survivor", input.Metadata, "survivor-" + party, token).ConfigureAwait(true);
@@ -869,7 +869,7 @@ public sealed class PartyMemoryRuntimeTests
             : remoteAbsent
                 ? new HttpResponseMessage(System.Net.HttpStatusCode.NotFound) { Content = JsonContent.Create(new { code = "TENANT_NOT_FOUND" }) }
                 : new HttpResponseMessage(System.Net.HttpStatusCode.Unauthorized)));
-        using var http = PartyMemoryRecoveryTests.Http(transport);
+        using var http = PartyMemoryRecoveryFixture.Http(transport);
         string diagnosticPath = Path.Combine(Path.GetTempPath(), "parties-teardown-" + Guid.NewGuid().ToString("N") + ".json");
         string receiptPath = Path.ChangeExtension(diagnosticPath, ".teardown.json");
         try
@@ -933,7 +933,7 @@ public sealed class PartyMemoryRuntimeTests
 
             return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.NotFound) { Content = JsonContent.Create(new { code = "TENANT_NOT_FOUND" }) });
         });
-        using var http = PartyMemoryRecoveryTests.Http(transport);
+        using var http = PartyMemoryRecoveryFixture.Http(transport);
         string root = Path.Combine(Path.GetTempPath(), "parties-authority-" + Guid.NewGuid().ToString("N"));
         string diagnosticPath = Path.Combine(root, "runtime.provisioning.json");
         string authorityPath = Path.Combine(root, "runtime.authority.json");

@@ -67,6 +67,8 @@
     <Project Path="references/Hexalith.Tenants/src/Hexalith.Tenants.Testing/Hexalith.Tenants.Testing.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Hexalith.Parties.Runtime.IntegrationTests/Hexalith.Parties.Runtime.IntegrationTests.csproj" />
+    <Project Path="tests/Hexalith.Parties.RuntimeArtifacts/Hexalith.Parties.RuntimeArtifacts.csproj" />
     <Project Path="tests/Hexalith.Parties.Aspire.Tests/Hexalith.Parties.Aspire.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Authentication.Tests/Hexalith.Parties.Authentication.Tests.csproj" />
@@ -80,16 +82,9 @@
     <Project Path="tests/Hexalith.Parties.EventStoreSample.TestHost/Hexalith.Parties.EventStoreSample.TestHost.csproj" />
     <Project Path="tests/Hexalith.Parties.EventStoreSample.Contracts.TestArtifact/Hexalith.Parties.EventStoreSample.Contracts.TestArtifact.csproj" />
     <Project Path="tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj" />
-    <!-- Execute this declared native project directly; the pinned published fixture API is not yet available. -->
-    <Project Path="tests/Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj">
-      <Build Project="false" />
-    </Project>
-    <Project Path="tests/Hexalith.Parties.Platform.LifecycleTests/Hexalith.Parties.Platform.LifecycleTests.csproj">
-      <Build Project="false" />
-    </Project>
-    <Project Path="tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleTests.csproj">
-      <Build Project="false" />
-    </Project>
+    <Project Path="tests/Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj" />
+    <Project Path="tests/Hexalith.Parties.Platform.LifecycleTests/Hexalith.Parties.Platform.LifecycleTests.csproj" />
+    <Project Path="tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleTests.csproj" />
     <Project Path="tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj" />

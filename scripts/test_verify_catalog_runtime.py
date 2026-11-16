@@ -22,7 +22,7 @@ build = pathlib.Path(arguments[arguments.index('--artifacts-path') + 1])
 configuration = arguments[arguments.index('--configuration') + 1]
 assert pathlib.Path.cwd() == root
 assert pathlib.Path(os.environ['PARTIES_TEST_REPOSITORY_ROOT']) == root
-if phase != 'test':
+if phase != 'test' and not os.environ.get('REUSE_PREBUILT'):
     assert build.parent == pathlib.Path(os.environ['TMPDIR']).parent
 if phase in ('build', 'test'):
     assert '-p:HexalithUsePublishedSdkForHostedTests=true' in arguments
@@ -38,7 +38,7 @@ if phase == 'build':
     (build / 'bin').mkdir(parents=True)
     (build / 'bin' / 'generated.dll').write_bytes(b'generated')
 elif phase == 'prepare':
-    receipt.parent.mkdir(parents=True)
+    receipt.parent.mkdir(parents=True, exist_ok=True)
     (receipt.parent / 'host.json').write_text('{"host":"observed"}')
     archives = receipt.parent / 'public-archives'
     archives.mkdir()
@@ -52,7 +52,7 @@ elif phase == 'test':
     assert '--no-build' in arguments and '--no-restore' in arguments
     assert arguments[arguments.index('--filter-method') + 1].endswith('ConcurrentSessions_IsolateStreamsRejectCrossCallsAndSurvivePeerDisposalAsync')
     results = pathlib.Path(arguments[arguments.index('--results-directory') + 1])
-    assert not results.is_relative_to(build.parent)
+    assert os.environ.get('REUSE_PREBUILT') or not results.is_relative_to(build.parent)
     assert pathlib.Path(os.environ['TMPDIR']) == results / 'runtime-custody'
     # SDK11 MTP actually starts the test process in its external output folder.
     os.chdir(build / 'bin')
@@ -126,6 +126,23 @@ class VerifyCatalogRuntimeTests(unittest.TestCase):
         for call in self.calls():
             self.assertIn("Release", call["arguments"])
         self.assert_workspace_removed()
+
+    def test_reuses_prebuilt_outputs_without_building_and_preserves_their_lifetime(self):
+        build = self.root / "prebuilt"
+        (build / "bin").mkdir(parents=True)
+        binary = build / "bin" / "generated.dll"
+        binary.write_bytes(b"generated")
+        result = subprocess.run(
+            self.command() + ["--configuration", "Release", "--reuse-build", "--artifacts-path", str(build)],
+            env=dict(self.environment, REUSE_PREBUILT="true"), capture_output=True, text=True, timeout=20,
+        )
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        calls = self.calls()
+        self.assertEqual(["prepare", "test"], [call["phase"] for call in calls])
+        self.assertIn("--reuse-build", calls[0]["arguments"])
+        self.assertEqual(b"generated", binary.read_bytes())
+        self.assertTrue(json.loads((self.results / "verification.json").read_text())["reusedBuild"])
+        self.assertEqual([], list(self.scratch.iterdir()))
 
     def calls(self):
         return [json.loads(line) for line in (self.root / "calls.jsonl").read_text().splitlines()]
@@ -217,7 +234,7 @@ class VerifyCatalogRuntimeTests(unittest.TestCase):
 import os,pathlib,runpy,sys,time
 script, results, ready = sys.argv[1:]
 module = runpy.run_path(script)
-def hold(*args):
+def hold(*args, **kwargs):
     pathlib.Path(ready).write_text('owned')
     time.sleep(60)
 module['main'].__globals__['verify'] = hold

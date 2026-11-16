@@ -329,7 +329,7 @@ public sealed class PartyMemoryRecoveryTests
 
     private static string Source() => PartyMemoryUrn.Build("tenant", "party");
 
-    internal static PartyIndexEntry Entry() => new() { Id = "party", Type = Hexalith.Parties.Contracts.ValueObjects.PartyType.Person, DisplayName = "private-personal-name", IsActive = true };
+    internal static PartyIndexEntry Entry() => PartyMemoryRecoveryFixture.Entry();
 
     internal static PartyMemoryUnitMappingContext Context() => new("tenant", "case", "PartyCreated", SequenceNumber: 0);
 
@@ -339,7 +339,7 @@ public sealed class PartyMemoryRecoveryTests
 
     internal static PartyMemoryCleanupService Cleanup(PartyMemoryTestReadModelStore state, HttpClient http) => new(http, Mappings(state), NullLogger<PartyMemoryCleanupService>.Instance, Intents(state));
 
-    internal static HttpClient Http(HttpMessageHandler handler) => new(handler) { BaseAddress = new Uri("http://127.0.0.1:1/gateway/") };
+    internal static HttpClient Http(HttpMessageHandler handler) => PartyMemoryRecoveryFixture.Http(handler);
 
     internal static PartyMemoryIndexingService Indexer(PartyMemoryTestReadModelStore state, Hexalith.Memories.Client.Rest.MemoriesClient client, IPartyMemoryUnitMappingStore? mappings = null)
     {

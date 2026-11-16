@@ -1,0 +1,15 @@
+<Project>
+  <!-- Narrow runtime-only roots. Library source selectors remain tool-owned. -->
+  <PropertyGroup>
+    <_PartiesRuntimeRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))</_PartiesRuntimeRoot>
+    <_PartiesRuntimeEventStoreRoot Condition="'$(HexalithEventStoreRoot)' != ''">$(HexalithEventStoreRoot)</_PartiesRuntimeEventStoreRoot>
+    <_PartiesRuntimeEventStoreRoot Condition="'$(_PartiesRuntimeEventStoreRoot)' == ''">$(_PartiesRuntimeRoot)/references/Hexalith.EventStore</_PartiesRuntimeEventStoreRoot>
+    <_PartiesRuntimeTenantsRoot Condition="'$(HexalithTenantsRoot)' != ''">$(HexalithTenantsRoot)</_PartiesRuntimeTenantsRoot>
+    <_PartiesRuntimeTenantsRoot Condition="'$(_PartiesRuntimeTenantsRoot)' == ''">$(_PartiesRuntimeRoot)/references/Hexalith.Tenants</_PartiesRuntimeTenantsRoot>
+    <_PartiesRuntimeMemoriesRoot Condition="'$(HexalithMemoriesRoot)' != ''">$(HexalithMemoriesRoot)</_PartiesRuntimeMemoriesRoot>
+    <_PartiesRuntimeMemoriesRoot Condition="'$(_PartiesRuntimeMemoriesRoot)' == ''">$(_PartiesRuntimeRoot)/references/Hexalith.Memories</_PartiesRuntimeMemoriesRoot>
+    <ShouldUnsetParentConfigurationAndPlatform Condition="'$(UseHexalithProjectReferences)' == 'false'">false</ShouldUnsetParentConfigurationAndPlatform>
+    <OnlyReferenceAndBuildProjectsEnabledInSolutionConfiguration Condition="'$(UseHexalithProjectReferences)' == 'false'">false</OnlyReferenceAndBuildProjectsEnabledInSolutionConfiguration>
+    <_PartiesRuntimeBuildProperties>OnlyReferenceAndBuildProjectsEnabledInSolutionConfiguration=false;ShouldUnsetParentConfigurationAndPlatform=false;Configuration=$(Configuration);UseHexalithProjectReferences=false;UseNuGetDeps=true;HexalithUsePublishedSdkForHostedTests=true;HexalithPartiesRuntimeTargetFramework=$(TargetFramework);CopyLocalLockFileAssemblies=true;HexalithEventStoreVersion=$(HexalithEventStoreVersion);HexalithTenantsVersion=$(HexalithTenantsVersion);HexalithMemoriesVersion=$(HexalithMemoriesVersion);HexalithFrontComposerVersion=$(HexalithFrontComposerVersion);HexalithMcpCliVersion=$(HexalithMcpCliVersion);CustomAfterMicrosoftCommonProps=$(_PartiesRuntimeRoot)/scripts/PartiesHostedRuntime.props</_PartiesRuntimeBuildProperties>
+  </PropertyGroup>
+</Project>

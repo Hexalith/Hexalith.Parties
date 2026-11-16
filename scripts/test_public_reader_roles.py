@@ -4,7 +4,7 @@ import importlib.util
 from pathlib import Path
 import unittest
 
-_spec = importlib.util.spec_from_file_location("public_reader_role_controls", Path(__file__).with_name("verify-public-package-integration.py"))
+_spec = importlib.util.spec_from_file_location("public_reader_role_controls", Path(__file__).with_name("public_runtime_observation_contract.py"))
 public = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(public)
 
@@ -12,7 +12,7 @@ _spec.loader.exec_module(public)
 class PublicReaderRoleTests(unittest.TestCase):
     def setUp(self):
         self.source = "c" * 40
-        self.run = "0" * 32
+        self.output = Path("/product/Release/native-tests")
         self.contracts = "Hexalith.Parties.Contracts"
         self.extensions = "Hexalith.Parties.EventStoreExtensions"
         package = dict(identity=self.contracts + ", Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
@@ -21,11 +21,11 @@ class PublicReaderRoleTests(unittest.TestCase):
         self.observed = dict(loaded=[copy.deepcopy(package)], copied=[copy.deepcopy(package)])
 
     def check(self):
-        return public.public_reader_roles(self.observed, source=self.source, run_id=self.run)
+        return public.public_reader_roles(self.observed, source=self.source, native_output=self.output)
 
     def source_dto(self):
         item = self.observed["loaded"][0]
-        directory = "/unit/g4-workspaces/" + self.run + "/test-builds/bin/Hexalith.Parties.Platform.IntegrationTests/release/"
+        directory = str(self.output) + "/"
         item.update(sha256="4" * 64, informationalVersion="1.0.0+" + self.source,
                     loadedPath=directory + self.contracts + ".dll")
         self.observed["loaded"].append(dict(identity="Hexalith.Parties.Platform.IntegrationTests, Version=1.0.0.0",
@@ -116,7 +116,7 @@ class PublicReaderRoleTests(unittest.TestCase):
     def test_source_dto_requires_this_run_native_release_output(self):
         item = self.source_dto()
         original = item["loadedPath"]
-        for path in (original.replace(self.run, "1" * 32), original.replace("/release/", "/debug/"), "/foreign/Hexalith.Parties.Contracts.dll", original.replace("/unit/", "/unit/../")):
+        for path in (original.replace("/product/", "/foreign/"), original.replace("/Release/", "/Debug/"), "/foreign/Hexalith.Parties.Contracts.dll", original.replace("/product/", "/product/../")):
             with self.subTest(path=path):
                 item["loadedPath"] = path
                 with self.assertRaisesRegex(ValueError, "path"): self.check()

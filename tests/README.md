@@ -376,8 +376,11 @@ The HTTP doubles establish consumer recovery behavior; physical erasure qualific
 requires delayed ingestion and deletion against the selected Memories implementation.
 An unavailable runtime leaves that qualification and its ledger closure unclaimed.
 
+The five live Memories and legacy-backfill workload classes compile in
+`Hexalith.Parties.Runtime.IntegrationTests`, separate from the environment-free
+`Hexalith.Parties.Tests` assembly. Their existing class namespaces are preserved.
 For the owned local runtime qualification, set `PARTIES_MEMORIES_RUNTIME_CONFIG` to a
-private JSON file and invoke `-class Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests`.
+private JSON file and invoke the built runtime integration assembly with `-class Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests`.
 The file supplies `endpoint`, `daprHttpEndpoint`, `daprGrpcEndpoint`, `daprApiToken`,
 `appApiToken`, `jwtIssuer`, `jwtAudience`, `jwtSigningKey`, `tenantClaimName` (default
 `tenant`), `stateStoreName`, `fakeEmbeddingEnabled=true` and `ownedSourceInventoryQualificationEnabled=true`. Keep credentials outside
@@ -1135,9 +1138,10 @@ and bounded cleanup. Unknown production history remains incomplete.
 
 `PartyMemoryProducerRestartProtocolTests` covers foreign/malformed requests,
 replayed nonces, failed replacement, cancellation and evidence failure. Execute
-it alongside `PartyMemoryUnitAuthorityRuntimeTests`, non-opt-in
-`PartyMemoryRuntimeTests`, `PartyMemorySourceInventoryTests` and
+it alongside `PartyMemoryUnitAuthorityRuntimeTests`, `PartyMemorySourceInventoryTests` and
 `PartyMemoryOwnedCleanupTests` and `PartyMemoryProducerRestartSignalTests`.
+The deterministic teardown cases in `PartyMemoryRuntimeTests` remain in the
+runtime integration assembly alongside their live workloads.
 The opt-in `ActualCurrentSourceCanceledRestartCompletesOwnedCleanup` cancels
 coordination after observing the admitted replacement, while Aspire stays
 running, and requires completed owned disposal. Global runner SIGINT remains

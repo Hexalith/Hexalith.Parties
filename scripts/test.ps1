@@ -85,6 +85,7 @@ $unitProjects = @(
 
 $integrationProjects = @(
     "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+    "tests/Hexalith.Parties.Runtime.IntegrationTests/Hexalith.Parties.Runtime.IntegrationTests.csproj",
     "tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj"
 )
 

@@ -115,7 +115,7 @@ See the [Getting Started Guide](docs/getting-started.md) for the full EventStore
 ## Project Structure
 
 The repository contains exactly **15 projects under `src` plus one sample
-project**, **17 runnable .NET test projects plus three support hosts and one contracts artifact**
+project**, **18 runnable .NET test projects plus three support hosts, one contracts artifact and one runtime-artifact graph**
 (`Hexalith.Parties.EventStoreGateway.TestHost`, `Hexalith.Parties.EventStoreAdminUI.TestHost`, `Hexalith.Parties.EventStoreSample.TestHost`
 and `Hexalith.Parties.EventStoreSample.Contracts.TestArtifact`), with Playwright e2e coverage
 alongside them. Adopter-facing packages (left column) are the only modules
@@ -328,8 +328,8 @@ The renderer owns both explicit suite declarations. Package execution requires a
 publications of the migrated EventStore testing packages; Debug source validation grants no package
 acceptance. It also requires Platform's native owner preparation (the synthetic tenant and membership,
 the native scope and the private Memories invocation channel), now enabled for the selected
-Release/package cohort. CI selects the declared package suite through the pinned v2 workflow
-after all fifteen isolated projects pass. Actual native service and cleanup qualification
+Release/package cohort. The central CI migration retains the declared package suite and all isolated product
+projects; [hook and compatibility-cohort qualification](docs/ci.md) is still pending. Actual native service and cleanup qualification
 remain required; source/model/protocol results do not establish hosted lifecycle acceptance. The existing `Hexalith.Parties.IntegrationTests` topology and infrastructure-control tests
 remain a frozen compatibility lane. Unit and isolated integration projects retain their test-only
 doubles and run without Platform/domain servers. `scripts/test.ps1` inventories the new project but

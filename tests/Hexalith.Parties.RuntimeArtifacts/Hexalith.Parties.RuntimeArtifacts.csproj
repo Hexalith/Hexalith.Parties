@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsPublishable>false</IsPublishable>
+    <IsTestProject>false</IsTestProject>
+  </PropertyGroup>
+  <Import Project="../../scripts/PartiesRuntimeGraph.props" />
+  <ItemGroup Condition="'$(UseHexalithProjectReferences)' == 'false'">
+    <!-- Executable owners plus the two nonpackable helpers their composition requires. -->
+    <ProjectReference Include="$(_PartiesRuntimeEventStoreRoot)/src/Hexalith.EventStore.Admin.Server.Host/Hexalith.EventStore.Admin.Server.Host.csproj" />
+    <ProjectReference Include="$(_PartiesRuntimeEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj" />
+    <ProjectReference Include="$(_PartiesRuntimeTenantsRoot)/src/Hexalith.Tenants/Hexalith.Tenants.csproj" />
+    <ProjectReference Include="$(_PartiesRuntimeMemoriesRoot)/src/Hexalith.Memories.Server/Hexalith.Memories.Server.csproj" />
+    <ProjectReference Include="$(_PartiesRuntimeMemoriesRoot)/src/Hexalith.Memories.DomainService/Hexalith.Memories.DomainService.csproj" />
+    <ProjectReference Include="$(_PartiesRuntimeEventStoreRoot)/samples/Hexalith.EventStore.Sample.BlazorUI/Hexalith.EventStore.Sample.BlazorUI.csproj" />
+    <ProjectReference Include="$(_PartiesRuntimeEventStoreRoot)/samples/Hexalith.EventStore.Sample.Contracts/Hexalith.EventStore.Sample.Contracts.csproj" />
+    <ProjectReference Include="$(_PartiesRuntimeMemoriesRoot)/src/Hexalith.Memories.AccessTelemetry.Contracts/Hexalith.Memories.AccessTelemetry.Contracts.csproj" />
+    <ProjectReference Update="@(ProjectReference)" AdditionalProperties="$(_PartiesRuntimeBuildProperties)" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- These published assets belong to restore/build, never a later hook restore. -->
+    <PackageReference Include="Aspire.Hosting.Orchestration.linux-x64" PrivateAssets="all" />
+    <PackageReference Include="Aspire.Dashboard.Sdk.linux-x64" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

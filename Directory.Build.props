@@ -7,6 +7,10 @@
          Require the fixed shared runtime for the UI as well as the central NuGet floor. -->
     <RuntimeFrameworkVersion Condition="'$(MSBuildProjectName)' == 'Hexalith.Parties.UI'">11.0.0</RuntimeFrameworkVersion>
     <TargetFramework>net11.0</TargetFramework>
+    <!-- Only the solution package build consumes the declared runtime graph.
+         Direct legacy source/debug qualification retains its existing boundary. -->
+    <HexalithPartiesReuseRuntimeGraph Condition="'$(BuildingSolutionFile)' == 'true' and '$(UseHexalithProjectReferences)' == 'false' and '$(Configuration)' == 'Release'">true</HexalithPartiesReuseRuntimeGraph>
+    <CopyLocalLockFileAssemblies Condition="'$(UseHexalithProjectReferences)' == 'false' and '$(Configuration)' == 'Release'">true</CopyLocalLockFileAssemblies>
     <!-- Keep the centrally selected closure when retained package dependencies target older frameworks. -->
     <RestoreEnablePackagePruning>false</RestoreEnablePackagePruning>
     <Nullable>enable</Nullable>

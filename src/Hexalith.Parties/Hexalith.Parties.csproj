@@ -4,6 +4,7 @@
     <IsPackable>false</IsPackable>
     <IsPublishable>true</IsPublishable>
     <EnableContainer>true</EnableContainer>
+    <HexalithPublishContainer>true</HexalithPublishContainer>
     <ContainerRepository>parties</ContainerRepository>
   </PropertyGroup>
 
@@ -11,6 +12,7 @@
     <!-- The executable owns its canonical intent adapter in the same real runtime closure. -->
     <ProjectReference Include="../Hexalith.Parties.EventStoreExtensions/Hexalith.Parties.EventStoreExtensions.csproj" />
     <InternalsVisibleTo Include="Hexalith.Parties.Tests" />
+    <InternalsVisibleTo Include="Hexalith.Parties.Runtime.IntegrationTests" />
   </ItemGroup>
 
   <ItemGroup>

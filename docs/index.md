@@ -9,7 +9,7 @@
 - **Architecture:** Event sourcing + CQRS + EventStore SDK domain/projection/query handlers, fronted by the **Hexalith.EventStore** gateway
 - **Orchestration:** .NET Aspire 13.6.5 (`dotnet aspire run --project src/Hexalith.Parties.AppHost`)
 - **Public surface:** EventStore `POST /api/v1/commands` & `/api/v1/queries` (`Domain="party"`); typed .NET client; `parties-mcp` (5 tools)
-- **Scale:** exactly 15 projects under `src` plus one sample project, 17 runnable .NET test projects plus three support hosts and one contracts artifact, and Playwright e2e — roughly 408 source `.cs`, 231 test `.cs`, and 36 `.razor` files (counts as of 2026-08-19; indicative, not gated)
+- **Scale:** exactly 15 projects under `src` plus one sample project, 18 runnable .NET test projects plus three support hosts, one contracts artifact and one runtime-artifact graph, and Playwright e2e — roughly 408 source `.cs`, 231 test `.cs`, and 36 `.razor` files (counts as of 2026-08-19; indicative, not gated)
 
 ## Quick reference
 
@@ -59,7 +59,7 @@
 - [Deployment Guide](./deployment-guide.md) — current runtime ownership boundary
 - [EXT-PARTIES-1 applied assessment direction](./implementation/ext-parties-1-applied-direction-2026-10-29.md) - assess existing OpenBao before implementation; Live remains stopped
 - [EXT-PARTIES-1 pragmatic continuation](./implementation/ext-parties-1-pragmatic-direction-2026-10-29.md) - operational recovery first; independent authority and backup disposal gate full custody
-- [CI](./ci.md) · [Build Gate](./build-gate.md) · [CI Secrets Checklist](./ci-secrets-checklist.md)
+- [CI migration and product checks](./ci.md) · [Release and adoption checklist](../RELEASE-CHECKLIST.md) · [Legacy CI secrets reference](./ci-secrets-checklist.md)
 
 ### Frontend
 - [Embeddable Party Picker](./frontend/party-picker.md) — Blazor / custom-element integration
@@ -79,7 +79,7 @@ Then follow [getting-started.md](./getting-started.md) for auth + first command/
 ## Build and test notes
 
 - Use the solution file for restore/build only. Run tests by lane or by individual project path.
-- For release-blocker diagnosis, use sequential builds with the MinVer override: `dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0`.
+- For release-blocker diagnosis, use sequential builds with the MinVer override: `dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1 -p:MinVerVersionOverride=1.0.0`.
 - For focused xUnit v3 reruns, build the target test project and invoke its executable directly with single-dash filters such as `-class Fully.Qualified.TestClass` or `-method Fully.Qualified.TestClass.TestMethod`.
 - Package compatibility tests may need network access to NuGet signature metadata. A blocked `api.nuget.org:443` connection is a package-validation blocker, not a pass.
 

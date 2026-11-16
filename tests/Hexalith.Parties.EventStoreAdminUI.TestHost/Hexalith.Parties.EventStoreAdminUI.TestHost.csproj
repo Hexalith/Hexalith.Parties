@@ -17,6 +17,11 @@
   </PropertyGroup>
 
 
+  <Import Project="../../scripts/PartiesRuntimeGraph.props" Condition="'$(HexalithPartiesReuseRuntimeGraph)' == 'true'" />
+  <ItemGroup Condition="'$(HexalithPartiesReuseRuntimeGraph)' == 'true'">
+    <ProjectReference Include="../Hexalith.Parties.RuntimeArtifacts/Hexalith.Parties.RuntimeArtifacts.csproj"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
   <ItemGroup>
     <!-- Consume the real UI assembly and public SDK packages; this host owns only private client-only composition. -->
     <PackageReference Include="Hexalith.EventStore.Admin.Abstractions" />
@@ -87,7 +92,7 @@
       <Output TaskParameter="Endpoints" ItemName="StaticWebAssetEndpoint" />
     </DefineStaticWebAssetEndpoints>
   </Target>
-  <Target Name="BuildNativeAdminUiArtifact" BeforeTargets="ResolveAssemblyReferences" DependsOnTargets="ValidateAdminUiSettingsRoot">
+  <Target Name="BuildNativeAdminUiArtifact" BeforeTargets="ResolveAssemblyReferences" DependsOnTargets="ValidateAdminUiSettingsRoot" Condition="'$(HexalithPartiesReuseRuntimeGraph)' != 'true'">
     <PropertyGroup>
       <_NativeAdminUiBuildProperties>Configuration=$(Configuration);HexalithUsePublishedSdkForHostedTests=true;HexalithEventStoreVersion=$(HexalithEventStoreVersion);StaticWebAssetsEnabled=false;CopyLocalLockFileAssemblies=true</_NativeAdminUiBuildProperties>
       <!-- The inherited mapper owns source selectors and reconciles the hosted SDK edges.
@@ -112,6 +117,21 @@
              Condition="'$(_NativeAdminUiPackageBoundary)' != 'true'">
       <Output TaskParameter="TargetOutputs" ItemName="_NativeAdminUiBuiltAssembly" />
     </MSBuild>
+    <ItemGroup>
+      <Reference Include="@(_NativeAdminUiBuiltAssembly)"><Private>true</Private></Reference>
+    </ItemGroup>
+  </Target>
+  <Target Name="ResolvePrebuiltNativeAdminUiArtifact" BeforeTargets="ResolveAssemblyReferences"
+          DependsOnTargets="ValidateAdminUiSettingsRoot" Condition="'$(HexalithPartiesReuseRuntimeGraph)' == 'true'">
+    <PropertyGroup>
+      <_NativeAdminUiBuildProperties>$(_PartiesRuntimeBuildProperties);StaticWebAssetsEnabled=false</_NativeAdminUiBuildProperties>
+    </PropertyGroup>
+    <!-- ProjectReference owns compilation. This query cannot restore or build. -->
+    <MSBuild Projects="$(_AdminUiEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj"
+             Targets="GetTargetPath" Properties="$(_NativeAdminUiBuildProperties)" BuildInParallel="false">
+      <Output TaskParameter="TargetOutputs" ItemName="_NativeAdminUiBuiltAssembly" />
+    </MSBuild>
+    <Error Condition="!Exists('%(_NativeAdminUiBuiltAssembly.Identity)')" Text="The declared native Admin UI output is missing; build the standalone solution first." />
     <ItemGroup>
       <Reference Include="@(_NativeAdminUiBuiltAssembly)"><Private>true</Private></Reference>
     </ItemGroup>

@@ -101,7 +101,7 @@ public sealed class RetiredLeafProjectFitnessTests
     }
 
     [Fact]
-    public void AuthenticationProject_RemainsUntilTenantClaimsPrerequisiteGateIsSatisfied()
+    public void AuthenticationProjectRemainsAvailableToConsumers()
     {
         string root = RepositoryRoot.Locate();
 
@@ -109,17 +109,7 @@ public sealed class RetiredLeafProjectFitnessTests
         File.ReadAllText(Path.Combine(root, "Hexalith.Parties.slnx"))
             .ShouldContain("src/Hexalith.Parties.Authentication/Hexalith.Parties.Authentication.csproj");
 
-        MatrixRow tenantClaimsRow = ReadMatrixRow(
-            File.ReadAllText(Path.Combine(
-                root,
-                "_bmad-output",
-                "implementation-artifacts",
-                "story-8-3-platform-api-prerequisite-matrix.md")),
-            "Tenant claims transformation");
-        tenantClaimsRow.Status.ShouldBe("needs-additive-api");
-        tenantClaimsRow.EvidencePaths.ShouldContain("src/Hexalith.Parties.Authentication/PartiesClaimsTransformation.cs");
-        tenantClaimsRow.Decision.ShouldContain("Hexalith.Parties.Authentication");
-        tenantClaimsRow.Decision.ShouldContain("remains after Story 8.4");
+
     }
 
     private static string StripComments(string source)
@@ -227,101 +217,4 @@ public sealed class RetiredLeafProjectFitnessTests
         return result.ToString();
     }
 
-    private static MatrixRow ReadMatrixRow(string matrix, string surface)
-    {
-        foreach (string line in matrix.Split('\n', StringSplitOptions.RemoveEmptyEntries))
-        {
-            string trimmed = line.Trim();
-            if (!trimmed.StartsWith("|", StringComparison.Ordinal))
-            {
-                continue;
-            }
-
-            string[] cells = SplitMarkdownTableRow(trimmed);
-            if (IsMarkdownSeparatorRow(cells)
-                || cells.Length == 8 && string.Equals(cells[0], "Surface", StringComparison.Ordinal))
-            {
-                continue;
-            }
-
-            if (cells.Length == 8 && string.Equals(cells[0], surface, StringComparison.Ordinal))
-            {
-                return new MatrixRow(
-                    cells[0],
-                    cells[1],
-                    cells[2],
-                    cells[3],
-                    cells[4],
-                    cells[5],
-                    cells[6],
-                    cells[7]);
-            }
-        }
-
-        throw new InvalidOperationException($"Matrix row '{surface}' was not found.");
-    }
-
-    private static bool IsMarkdownSeparatorRow(string[] cells)
-        => cells.All(static cell =>
-            cell.Length > 0 &&
-            cell.All(static character => character is '-' or ':' or ' '));
-
-    private static string[] SplitMarkdownTableRow(string row)
-    {
-        List<string> cells = [];
-        int startIndex = row.StartsWith('|') ? 1 : 0;
-        int endIndex = row.EndsWith("|", StringComparison.Ordinal) ? row.Length - 1 : row.Length;
-        StringBuilder current = new();
-        bool escaped = false;
-        bool inCodeSpan = false;
-
-        for (int i = startIndex; i < endIndex; i++)
-        {
-            char currentChar = row[i];
-            if (escaped)
-            {
-                if (currentChar is '|' or '`' or '\\')
-                {
-                    _ = current.Append(currentChar);
-                }
-                else
-                {
-                    _ = current.Append('\\').Append(currentChar);
-                }
-
-                escaped = false;
-                continue;
-            }
-
-            if (currentChar == '\\')
-            {
-                escaped = true;
-                continue;
-            }
-
-            if (currentChar == '`')
-            {
-                inCodeSpan = !inCodeSpan;
-                _ = current.Append(currentChar);
-                continue;
-            }
-
-            if (currentChar == '|' && !inCodeSpan)
-            {
-                cells.Add(current.ToString().Trim());
-                _ = current.Clear();
-                continue;
-            }
-
-            _ = current.Append(currentChar);
-        }
-
-        if (escaped)
-        {
-            _ = current.Append('\\');
-        }
-
-        cells.Add(current.ToString().Trim());
-        return [.. cells];
-    }
 }

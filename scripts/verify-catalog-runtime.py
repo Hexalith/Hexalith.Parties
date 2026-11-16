@@ -86,7 +86,7 @@ def execute(command, environment, log):
         raise subprocess.CalledProcessError(status, command)
 
 
-def verify(configuration, results):
+def verify(configuration, results, *, reuse_build=False, artifacts=None):
     """Retain compact diagnostics after all consumers finish using the build."""
     workspace = None
     status = 0
@@ -96,7 +96,7 @@ def verify(configuration, results):
     try:
         with tempfile.TemporaryDirectory(prefix="parties-catalog-verify-") as temporary:
             workspace = Path(temporary)
-            build = workspace / "build"
+            build = (artifacts or ROOT / "artifacts") if reuse_build else workspace / "build"
             child_temporary = workspace / "tmp"
             child_temporary.mkdir()
             environment = dict(os.environ, TMPDIR=str(child_temporary),
@@ -107,17 +107,24 @@ def verify(configuration, results):
             environment["Parties__Testing__PreparedRuntimeManifest"] = str(receipts / "prepared.json")
             properties = ["-p:HexalithUsePublishedSdkForHostedTests=true",
                           "-p:CopyLocalLockFileAssemblies=true"]
-            output = ["--configuration", configuration, "--artifacts-path", str(build)]
+            output = ["--configuration", configuration]
+            if not reuse_build or artifacts is not None:
+                output += ["--artifacts-path", str(build)]
             # Keep active jobs out of systemd's age-based cleanup.
             lock = os.open(workspace, os.O_RDONLY)
             try:
                 fcntl.flock(lock, fcntl.LOCK_SH)
                 try:
-                    execute(["dotnet", "build", PROJECT, *output, "--disable-build-servers",
-                             "-m:1", "-warnaserror", *properties], environment, results / "build.log")
-                    execute(["bash", str(ROOT / "scripts/prepare-aspire-runtime-hosts.sh"),
-                             "--configuration", configuration, "--artifacts-path", str(build)],
-                            environment, results / "prepare.log")
+                    if not reuse_build:
+                        execute(["dotnet", "build", PROJECT, *output, "--disable-build-servers",
+                                 "-m:1", "-warnaserror", *properties], environment, results / "build.log")
+                    preparation = ["bash", str(ROOT / "scripts/prepare-aspire-runtime-hosts.sh"),
+                                   "--configuration", configuration]
+                    if not reuse_build or artifacts is not None:
+                        preparation += ["--artifacts-path", str(build)]
+                    if reuse_build:
+                        preparation += ["--reuse-build", "true"]
+                    execute(preparation, environment, results / "prepare.log")
                     if not (receipts / "prepared.json").is_file():
                         raise RuntimeError("Runtime preparation did not produce prepared.json")
                     custody.mkdir(mode=0o700)
@@ -154,7 +161,9 @@ def verify(configuration, results):
             "configuration": configuration, "exitCode": status,
             "workspaceRemoved": workspace is None or not workspace.exists(),
             "runtimeCustodyRetained": custody.exists(),
-            "retainedRuntimeProfile": "historical diagnostics; temporary binaries removed",
+            "reusedBuild": reuse_build,
+            "retainedRuntimeProfile": ("prebuilt solution inputs retained" if reuse_build
+                                       else "historical diagnostics; temporary binaries removed"),
         }, indent=2) + "\n", encoding="utf-8")
 
 
@@ -162,6 +171,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--configuration", choices=("Debug", "Release"), default="Debug")
     parser.add_argument("--results-directory", type=Path)
+    parser.add_argument("--reuse-build", action="store_true",
+                        help="Consume the successfully built standalone runtime graph without building")
+    parser.add_argument("--artifacts-path", type=Path,
+                        help="The exact SDK artifact root used by the solution build")
     args = parser.parse_args()
     results = args.results_directory or ROOT / "TestResults/catalog-runtime" / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
     results = results.resolve()
@@ -185,7 +198,10 @@ def main():
     for event in (signal.SIGINT, signal.SIGTERM):
         signal.signal(event, cancelled)
     try:
-        verify(args.configuration, results)
+        if args.artifacts_path is not None and not args.reuse_build:
+            parser.error("--artifacts-path requires --reuse-build")
+        verify(args.configuration, results, reuse_build=args.reuse_build,
+               artifacts=args.artifacts_path.resolve() if args.artifacts_path else None)
     except subprocess.CalledProcessError as error:
         print(f"Verification failed; inspect {results}", file=sys.stderr)
         return error.returncode if error.returncode > 0 else 128 - error.returncode

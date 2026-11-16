@@ -8,6 +8,18 @@ internal static class CiTestPaths
     {
         get
         {
+            string? selectedRoot = Environment.GetEnvironmentVariable("PARTIES_TEST_REPOSITORY_ROOT");
+            if (!string.IsNullOrWhiteSpace(selectedRoot))
+            {
+                string root = Path.GetFullPath(selectedRoot);
+                if (!File.Exists(Path.Combine(root, "global.json")))
+                {
+                    throw new InvalidOperationException("The selected test repository root has no global.json.");
+                }
+
+                return root;
+            }
+
             DirectoryInfo? directory = new(AppContext.BaseDirectory);
             while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "global.json")))
             {

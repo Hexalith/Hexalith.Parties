@@ -1,0 +1,20 @@
+<Project>
+  <Import Project="Directory.Packages.props" />
+  <!-- SDK 11's NuGet path walk discards ProjectReference.AdditionalProperties.
+       Apply the same closed package profile while it discovers runtime owners.
+       Build uses the explicit metadata on the declared runtime graph edges. -->
+  <Target Name="ConfigurePartiesRuntimeRestore" BeforeTargets="_FilterRestoreGraphProjectInputItems"
+          Condition="'$(UseHexalithProjectReferences)' == 'false' and '$(Configuration)' == 'Release'">
+    <PropertyGroup>
+      <_GenerateRestoreGraphProjectEntryInputProperties>$(_GenerateRestoreGraphProjectEntryInputProperties);HexalithUsePublishedSdkForHostedTests=true;HexalithPartiesReuseRuntimeGraph=true;HexalithPartiesRuntimeTargetFramework=net11.0;HexalithEventStoreVersion=$(HexalithEventStoreVersion);HexalithTenantsVersion=$(HexalithTenantsVersion);HexalithMemoriesVersion=$(HexalithMemoriesVersion);HexalithFrontComposerVersion=$(HexalithFrontComposerVersion);HexalithMcpCliVersion=$(HexalithMcpCliVersion);CustomAfterMicrosoftCommonProps=$(MSBuildThisFileDirectory)scripts/PartiesHostedRuntime.props</_GenerateRestoreGraphProjectEntryInputProperties>
+    </PropertyGroup>
+  </Target>
+  <Target Name="BeginPartiesRuntimeBuild" BeforeTargets="ValidateProjects"
+          Condition="'$(UseHexalithProjectReferences)' == 'false' and '$(Configuration)' == 'Release'">
+    <Exec Command="python3 &quot;$(MSBuildThisFileDirectory)scripts/runtime-build-marker.py&quot; begin --configuration &quot;$(Configuration)&quot; --artifacts-path &quot;$(ArtifactsPath)&quot;" />
+  </Target>
+  <Target Name="CompletePartiesRuntimeBuild" AfterTargets="Build"
+          Condition="'$(UseHexalithProjectReferences)' == 'false' and '$(Configuration)' == 'Release'">
+    <Exec Command="python3 &quot;$(MSBuildThisFileDirectory)scripts/runtime-build-marker.py&quot; complete --configuration &quot;$(Configuration)&quot; --artifacts-path &quot;$(ArtifactsPath)&quot;" />
+  </Target>
+</Project>

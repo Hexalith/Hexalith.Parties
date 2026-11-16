@@ -68,7 +68,7 @@ public sealed class AspireRuntimePreparationTests
         const string PackageHost = "tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj";
         const string NativeHost = "references/Hexalith.EventStore/src/Hexalith.EventStore/Hexalith.EventStore.csproj";
         string configuration = profile == "packaged-debug" ? "Debug" : "Release";
-        string[] qualificationProjects = profile == "packaged-qualification" ? ["tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        string[] qualificationProjects = profile == "packaged-qualification" ? ["tests/Hexalith.Parties.Runtime.IntegrationTests/Hexalith.Parties.Runtime.IntegrationTests.csproj",
             "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj"] : [];
         try
         {
@@ -377,6 +377,8 @@ public sealed class AspireRuntimePreparationTests
             foreach (string argument in new[] { "msbuild", project, $"-target:Validate{kind}SettingsRoot,ComputeRunArguments", "-getItem:Content,Compile",
                 $"-getProperty:_{kind}EventStoreRoot,HexalithEventStoreFromSource,UseHexalithProjectReferences,RunWorkingDirectory,TargetDir" }) { start.ArgumentList.Add(argument); }
             if (layout == "explicit") { start.ArgumentList.Add("-p:HexalithEventStoreRoot=" + selected); }
+            // This isolated copied project has no capability import; select the catalog branch whose source inventory is asserted below.
+            if (sampleHost) { start.ArgumentList.Add("-p:HexalithEventStoreCatalogApiSupported=true"); }
             using Process process = Process.Start(start)!;
             Task<string> output = process.StandardOutput.ReadToEndAsync(TestContext.Current.CancellationToken);
             Task<string> error = process.StandardError.ReadToEndAsync(TestContext.Current.CancellationToken);
@@ -625,7 +627,7 @@ public sealed class AspireRuntimePreparationTests
     [InlineData("4.2.1", false, false, false)]
     [InlineData("5.0.0", false, false, false)]
     [InlineData("5.1.0", false, true, true)]
-    [InlineData("5.1.1", false, false, false)]
+    [InlineData("5.1.1", false, true, true)]
     [InlineData("5.1.0-preview.1", false, false, false)]
     [InlineData("5.1.0+build.1", false, false, false)]
     [InlineData("5.2.0", false, false, false)]
@@ -662,7 +664,7 @@ public sealed class AspireRuntimePreparationTests
             constants.Contains("HEXALITH_EVENTSTORE_CATALOG_HOSTS", StringComparer.Ordinal).ShouldBe(hostsAvailable);
             constants.Contains("HEXALITH_DEVELOPMENT_CATALOG_SOURCE", StringComparer.Ordinal).ShouldBe(source);
             constants.Contains("HEXALITH_EVENTSTORE_QUERY_SELECTOR_BINDINGS", StringComparer.Ordinal)
-                .ShouldBe(source || version is "4.1.0" or "4.2.0" or "5.1.0");
+                .ShouldBe(source || version is "4.1.0" or "4.2.0" or "5.1.0" or "5.1.1");
         }
         finally { Directory.Delete(workspace, recursive: true); }
     }
@@ -701,7 +703,7 @@ public sealed class AspireRuntimePreparationTests
             result.ExitCode.ShouldBe(0, result.Output + result.Error);
             using JsonDocument evaluation = JsonDocument.Parse(result.Output);
             JsonElement properties = evaluation.RootElement.GetProperty("Properties");
-            properties.GetProperty("HexalithEventStoreVersion").GetString().ShouldBe(selection == "fallback" ? "5.1.0" : "5.0.0");
+            properties.GetProperty("HexalithEventStoreVersion").GetString().ShouldBe(selection == "fallback" ? "5.1.1" : "5.0.0");
             properties.GetProperty("HexalithTenantsVersion").GetString().ShouldBe(selection == "fallback" ? "8.0.0" : "7.0.7");
             properties.GetProperty("HexalithMemoriesVersion").GetString().ShouldBe(selection == "fallback" ? "4.0.0" : "3.0.27");
             properties.GetProperty("HexalithFrontComposerVersion").GetString().ShouldBe(selection == "fallback" ? "6.0.0" : "5.0.0");
@@ -724,7 +726,7 @@ public sealed class AspireRuntimePreparationTests
     [InlineData("4.2.1", false, false, false)]
     [InlineData("5.0.0", false, false, false)]
     [InlineData("5.1.0", false, true, true)]
-    [InlineData("5.1.1", false, false, false)]
+    [InlineData("5.1.1", false, true, true)]
     [InlineData("5.1.0-preview.1", false, false, false)]
     [InlineData("5.1.0+build.1", false, false, false)]
     [InlineData("5.2.0", false, false, false)]

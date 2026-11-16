@@ -3,6 +3,7 @@
     <IsPackable>false</IsPackable>
     <IsPublishable>true</IsPublishable>
     <EnableContainer>true</EnableContainer>
+    <HexalithPublishContainer>true</HexalithPublishContainer>
     <ContainerRepository>parties-mcp</ContainerRepository>
   </PropertyGroup>
 

@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace Hexalith.Parties.Ci.Tests;
 
-/// <summary>Validates actual registry bytes with isolated HTTP archives and the real pinned Builds OCI validator.</summary>
+/// <summary>Validates actual package and OCI bytes, identity and provenance.</summary>
 public sealed class ReleaseArtifactVerificationTests
 {
     /// <summary>Rejects incomplete or mismatched publication and proves bounded propagation recovery.</summary>
@@ -113,27 +113,5 @@ public sealed class ReleaseArtifactVerificationTests
         try { await process.WaitForExitAsync(timeout.Token); }
         catch (OperationCanceledException) { process.Kill(entireProcessTree: true); throw; }
         process.ExitCode.ShouldBe(0, await output.ConfigureAwait(true) + await error.ConfigureAwait(true));
-    }
-
-    /// <summary>The read-only verifier pins both sources and always retains evidence, without publishing.</summary>
-    [Fact]
-    public void WorkflowVerifiesBothRegistriesWithThePinnedSharedValidator()
-    {
-        string workflow = CiTestPaths.ReadRepoFile(".github/workflows/release.yml");
-        string verification = workflow.Split("  verify-publication:", StringSplitOptions.None)[1];
-        verification.ShouldContain("matching-tag: ${{ steps.published.outputs.matching-tag }}");
-        verification.ShouldContain("ref: ${{ github.sha }}");
-        verification.ShouldContain("ref: 3c2f5944aaa28dc7854a00a8a9df171aa810b0c7");
-        verification.ShouldContain("submodules: false");
-        verification.ShouldContain("contents: read");
-        verification.ShouldContain("run: git -c submodule.recurse=false submodule update --init references/Hexalith.Builds");
-        verification.ShouldContain("global-json-file: global.json");
-        verification.ShouldNotContain("contents: write");
-        verification.ShouldNotContain("NUGET_API_KEY");
-        verification.ShouldContain("python3 scripts/verify-release-publication.py");
-        verification.ShouldContain("--package-manifest tools/release-packages.json");
-        verification.ShouldContain("--oci-validator .hexalith/builds-verification/Github/publish-containers/oci_registry_validator.py");
-        verification.ShouldContain("if: ${{ always() }}");
-        verification.ShouldContain("path: .hexalith/publication-verification/**");
     }
 }

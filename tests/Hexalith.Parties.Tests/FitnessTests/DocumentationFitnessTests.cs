@@ -62,6 +62,7 @@ public sealed class DocumentationFitnessTests
         "Hexalith.Parties.Mcp.Tests",
         "Hexalith.Parties.Picker.Tests",
         "Hexalith.Parties.Projections.Tests",
+        "Hexalith.Parties.Runtime.IntegrationTests",
         "Hexalith.Parties.Sample.Tests",
         "Hexalith.Parties.Security.Tests",
         "Hexalith.Parties.Server.Tests",
@@ -100,7 +101,7 @@ public sealed class DocumentationFitnessTests
 
         // Assert the exact set, not the count. A bare Length check lets a rename, or an add paired
         // with a removal, pass while the documented inventory silently drifts.
-        string[] expectedTestProjects = [.. ExpectedRunnableProjects, "Hexalith.Parties.Platform.AttachedLifecycleTests", "Hexalith.Parties.Platform.IntegrationTests", "Hexalith.Parties.Platform.LifecycleTests", "Hexalith.Parties.EventStoreGateway.TestHost", "Hexalith.Parties.EventStoreAdminUI.TestHost", "Hexalith.Parties.EventStoreSample.Contracts.TestArtifact", "Hexalith.Parties.EventStoreSample.TestHost"];
+        string[] expectedTestProjects = [.. ExpectedRunnableProjects, "Hexalith.Parties.Platform.AttachedLifecycleTests", "Hexalith.Parties.Platform.IntegrationTests", "Hexalith.Parties.Platform.LifecycleTests", "Hexalith.Parties.EventStoreGateway.TestHost", "Hexalith.Parties.EventStoreAdminUI.TestHost", "Hexalith.Parties.EventStoreSample.Contracts.TestArtifact", "Hexalith.Parties.EventStoreSample.TestHost", "Hexalith.Parties.RuntimeArtifacts"];
         testProjects.ShouldBe([.. expectedTestProjects.Order(StringComparer.Ordinal)]);
 
         string testScript = Read(root, "scripts/test.ps1");
@@ -124,7 +125,7 @@ public sealed class DocumentationFitnessTests
             string normalizedDocumentation = Regex.Replace(documentation, @"\s+", " ", RegexOptions.CultureInvariant);
             normalizedDocumentation.ShouldContain("15 projects under `src`", Case.Insensitive, relativePath);
             normalizedDocumentation.ShouldContain("one sample project", Case.Insensitive, relativePath);
-            documentation.ShouldContain("17 runnable", Case.Insensitive, relativePath);
+            documentation.ShouldContain("18 runnable", Case.Insensitive, relativePath);
             documentation.ShouldContain("Platform", Case.Sensitive, relativePath);
             documentation.ShouldContain("support host", Case.Insensitive, relativePath);
         }

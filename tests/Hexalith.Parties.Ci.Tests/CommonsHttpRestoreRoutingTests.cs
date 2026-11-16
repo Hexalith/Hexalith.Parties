@@ -27,7 +27,10 @@ public sealed class CommonsHttpRestoreRoutingTests
         props.Descendants("HexalithCommonsHttpPackageVersion").ShouldBeEmpty();
         string packages = CiTestPaths.ReadRepoFile("Directory.Packages.props");
         XDocument packageProps = XDocument.Parse(packages);
-        packageProps.Descendants("PackageVersion").ShouldBeEmpty();
+        XElement[] runtimeTools = packageProps.Descendants("PackageVersion").ToArray();
+        runtimeTools.Select(item => (string?)item.Attribute("Include")).ShouldBe(
+            ["Aspire.Hosting.Orchestration.linux-x64", "Aspire.Dashboard.Sdk.linux-x64"]);
+        runtimeTools.ShouldAllBe(item => (string?)item.Attribute("Version") == "13.6.5");
         XDocument buildsPackages = XDocument.Load(CiTestPaths.RepoFile("references/Hexalith.Builds/Props/Directory.Packages.props"));
         XElement contractUiVersion = buildsPackages.Descendants("PackageVersion")
             .Single(element => element.Attribute("Include")?.Value == "Hexalith.FrontComposer.Contracts.UI");

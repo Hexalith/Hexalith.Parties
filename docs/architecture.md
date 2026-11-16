@@ -12,7 +12,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 
 | Attribute | Value |
 |-----------|-------|
-| Repository type | Monolith — single cohesive .NET solution (`Hexalith.Parties.slnx`), exactly 15 projects under `src` plus one sample project + 17 runnable .NET test projects + 3 support hosts + 1 contracts artifact + Playwright e2e |
+| Repository type | Monolith — single cohesive .NET solution (`Hexalith.Parties.slnx`), exactly 15 projects under `src` plus one sample project + 18 runnable .NET test projects + 3 support hosts + 1 contracts artifact + 1 runtime-artifact graph + Playwright e2e |
 | Primary language | C# / **.NET 11** (SDK pinned `11.0.100`) |
 | Architecture style | Event sourcing + CQRS + EventStore SDK domain/projection/query handlers, gateway-fronted (EventStore) |
 | Orchestration | .NET Aspire 13.6.5 (`dotnet aspire run`) |
@@ -62,7 +62,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | MCP | ModelContextProtocol / .AspNetCore | `2.4.0` / `2.4.0` |
 | UI | Microsoft.FluentUI.AspNetCore.Components | `5.0.1` |
 | | Microsoft.AspNetCore.Components.CustomElements | `11.0.0` |
-| Rich search (opt) | Hexalith.Memories.Client.Rest | package `3.0.27` by default |
+| Rich search (opt) | Hexalith.Memories.Client.Rest | package `4.0.0` by default |
 | Observability | OpenTelemetry (exporter/hosting/instrumentation) | `1.21.0` core/hosting/exporter and ASP.NET Core/HTTP/runtime instrumentation |
 | Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `11.0.0` |
 | Versioning | MinVer (git-tag SemVer, prefix `v`) | `8.0.0` |
@@ -333,7 +333,7 @@ scripts/  # local test runner, package validation, and Parties container publish
 
 ## 11. Testing & CI
 
-- Exactly **17 runnable .NET test projects plus three support hosts and one contracts artifact** (`Hexalith.Parties.EventStoreGateway.TestHost`) and the Playwright e2e workspace, uniformly **xUnit v3** for runnable .NET tests (Shouldly + NSubstitute; bunit for Blazor). Lanes via `scripts/test.ps1 -Lane {unit|integration|topology|ci|all|coverage}`. `Hexalith.Parties.IntegrationTests` spins up the **full Aspire topology** (`Aspire.Hosting.Testing`), gracefully skipping when Docker/DAPR is absent; `Hexalith.Parties.Ci.Tests` validates static GitHub Actions publication contracts and executes the release source-gate shell against mocked GitHub API fixtures. Architectural fitness tests pin contract/dependency boundaries.
+- Exactly **18 runnable .NET test projects plus three support hosts, one contracts artifact and one runtime-artifact graph** (`Hexalith.Parties.EventStoreGateway.TestHost`) and the Playwright e2e workspace, uniformly **xUnit v3** for runnable .NET tests (Shouldly + NSubstitute; bunit for Blazor). Lanes via `scripts/test.ps1 -Lane {unit|integration|topology|ci|all|coverage}`. `Hexalith.Parties.IntegrationTests` spins up the **full Aspire topology** (`Aspire.Hosting.Testing`), gracefully skipping when Docker/DAPR is absent; `Hexalith.Parties.Ci.Tests` validates runtime preparation, package/archive bodies, browser fixtures and container provenance. `Hexalith.Parties.Runtime.IntegrationTests` contains the five live provider/workload classes separated from general unit execution. Architectural fitness tests pin contract/dependency boundaries.
 - **CI/CD:** `.github/workflows/ci.yml` delegates restore/build/package-consumer validation and test tiers to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@9ebc31f606bc02f8a0ec2f1ec344127e2468c6b4`; `.github/workflows/release.yml` is a manual caller that requires current `main` and successful exact-source push proof from `ci.yml` before protected approval. Shared preparation and the complete Parties-owned container publisher use one reviewed immutable Hexalith.Builds commit, with caller-owned NuGet trusted publishing. The publication wrapper enforces the same full-CI proof. Submodules are checked out as **root-repository submodules only, never recursive**. See [ci.md](ci.md), [build-gate.md](build-gate.md), [ci-secrets-checklist.md](ci-secrets-checklist.md).
 - **Package API prerequisite:** resolved by published EventStore 3.117.0. The actual DomainService assembly exposes `RequireEventStoreSidecarChannel<TBuilder>`, and the default package-mode Release solution build passes with zero warnings and errors. Security/rebuild calls, package-mode dependencies, and mandatory exact-source full-CI release proof remain intact. The earlier 3.115.0 CS1061 and 3.88.0 rebuild CS0246 failures are historical. See [ci.md](ci.md#required-eventstore-publication) for publication provenance, consumer verification, and the remaining integrated-topology prerequisites.
 

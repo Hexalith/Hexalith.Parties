@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Hexalith.Parties.Tests" />
+    <InternalsVisibleTo Include="Hexalith.Parties.Runtime.IntegrationTests" />
     <InternalsVisibleTo Include="Hexalith.Parties.Projections.Tests" />
   </ItemGroup>
 

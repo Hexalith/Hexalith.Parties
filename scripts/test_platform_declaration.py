@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from unittest.mock import patch
 
@@ -63,7 +64,7 @@ class PlatformDeclarationTests(unittest.TestCase):
                 self.assertNotIn("Assert.Skip", attached)
                 self.assertNotIn("BindCredentials", attached)
                 for solution in ("Hexalith.Parties.slnx", "Hexalith.Parties.Standalone.slnx"):
-                    self.assertIn(f'<Project Path="{attached_entry}">\n      <Build Project="false" />', (renderer.ROOT / solution).read_text())
+                    self.assertIn(f'<Project Path="{attached_entry}" />', (renderer.ROOT / solution).read_text())
             else:
                 self.assertEqual(suite["name"], "lifecycle-package")
                 self.assertIn('<ProjectReference Include="../Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj" />', text)
@@ -200,8 +201,11 @@ class PlatformDeclarationTests(unittest.TestCase):
         root = SCRIPT.parents[1]
         props = (root / "Directory.Build.props").read_text()
         packages = (root / "Directory.Packages.props").read_text()
-        for forbidden in ("FromSource", "UseNuGetDeps", "UseHexalithProjectReferences", "Exists("):
-            self.assertNotIn(forbidden, props)
+        property_names = [node.tag for node in ET.fromstring(props).iter()]
+        self.assertFalse(any(name.endswith("FromSource") for name in property_names))
+        for forbidden in ("UseNuGetDeps", "UseHexalithProjectReferences"):
+            self.assertNotIn(forbidden, property_names)
+        self.assertNotIn("Exists(", props)
         self.assertIn("$(Hexalith1BuildPackageProps)", packages)
         self.assertIn("Exists('$(Hexalith1BuildPackageProps)') And '$(HexalithVersionsLoaded)' != 'true'", packages)
         for name in ("Contracts", "Client"):

@@ -9,7 +9,7 @@
 | .NET SDK | **11.0.100** (pinned in `global.json`, rollForward latestPatch) |
 | .NET 10 SDK | **10.0.404** for retained compatibility fixtures alongside SDK 11 |
 | Docker Desktop | latest (must be running before Aspire) |
-| Node.js | **24.22.1**, with bundled **npm 11.19.1**, for root release tools and `tests/e2e` |
+| Node.js | **24.22.1**, with bundled **npm 11.19.1**, for `tests/e2e` |
 | Git | recent |
 | `jq` | optional (Bash examples) |
 | PowerShell `pwsh` 7+ | local scripts and CI parity commands |
@@ -44,7 +44,7 @@ dotnet build Hexalith.Parties.slnx --configuration Release --no-restore
 For release-blocker triage, prefer a sequential build so the first failing project is visible:
 
 ```bash
-dotnet build Hexalith.Parties.slnx --configuration Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0
+dotnet build Hexalith.Parties.slnx --configuration Release --no-restore -m:1 -p:MinVerVersionOverride=1.0.0
 ```
 
 `TreatWarningsAsErrors=true` is solution-wide. A green build on a fresh clone (root-repository submodules under `references/` only, no warnings override) is the **build gate** — verify parity locally with:
@@ -81,6 +81,13 @@ servers in the Platform reference run above.
 
 ## 4. Test
 
+`Hexalith.Parties.Tests` contains environment-free product checks. The five live
+Memories and legacy-backfill workload classes compile only in
+`Hexalith.Parties.Runtime.IntegrationTests`; their existing namespaces and runtime
+configuration requirements are preserved. The topology wrapper selects that
+prebuilt runtime child and validates its build metadata and producer bytes.
+
+
 Use the **lane runner** (`scripts/test.ps1 -Lane <lane>`, default `unit`, Release) or run individual test projects by path. Do not use solution-level `dotnet test` for this repository; the `.slnx` is for restore/build only.
 
 ```bash
@@ -92,9 +99,9 @@ dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.cs
 | Lane | Scope |
 |------|-------|
 | `unit` | Contracts, Authentication, Client, Server, Projections, Security, AdminPortal, ConsumerPortal, Picker, Mcp, UI |
-| `integration` | Hexalith.Parties.Tests + Sample.Tests |
+| `integration` | General product tests, Sample.Tests and the separate Runtime.IntegrationTests live workloads |
 | `topology` | Hexalith.Parties.IntegrationTests (full Aspire topology — needs Docker/DAPR; skips gracefully if absent) |
-| `ci` | Hexalith.Parties.Ci.Tests (GitHub Actions/Zot publish contract validation) |
+| `ci` | Hexalith.Parties.Ci.Tests (runtime preparation, package/archive, browser-fixture and container product checks) |
 | `all` | all .NET test projects, executed one project at a time |
 | `coverage` | currently blocked under Microsoft.Testing.Platform/xUnit v3 until an MTP-compatible coverage extension is configured |
 
@@ -104,8 +111,8 @@ When the full solution build or `dotnet test` is environment-blocked, do not rec
 
 1. **Focused lane / per-project run** — `scripts/test.ps1 -Lane <lane>` (or `dotnet test <projectPath>`). Never solution-level `dotnet test`.
 2. **Direct xUnit v3 assembly filter** — build the target project, then run its built `.dll` directly with single-dash `-class`/`-method` (project-level `dotnet test --filter` silently runs zero tests under Microsoft.Testing.Platform; see below).
-3. **Serialized `-m:1` build for release-blocker triage** — makes the first failing project visible (`dotnet build … -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0`).
-4. **Property pins for known environment blockers** — `-p:MinVerVersionOverride=1.0.0` (no git tags → version skew), `-p:NuGetAudit=false` (offline audit noise), and the pinned tool source mapping for diagnostic source builds; do not use handwritten source selectors to bypass missing mapped roots.
+3. **Serialized `-m:1` build for release-blocker triage** — makes the first failing project visible (`dotnet build … -m:1 -p:MinVerVersionOverride=1.0.0`).
+4. **Property pins for known environment blockers** — `-p:MinVerVersionOverride=1.0.0` (no git tags → version skew) and the pinned tool source mapping for diagnostic source builds; do not use handwritten source selectors to bypass missing mapped roots.
 5. **Record the exact broad-gate blocker** — package NuGet-network (`api.nuget.org:443`), submodule gitlink drift, UI accessibility, or CI publish-contract validation — with the command, observed result, and required owner/environment. Never weaken a gate to hide a blocker.
 
 The lane runner supports climbing rungs 1, 4, and 5 in one pass so a single run reports every failing project instead of stopping at the first:
@@ -118,7 +125,7 @@ pwsh -NoProfile -File scripts/test.ps1 -Lane all -ContinueOnFailure
 pwsh -NoProfile -File scripts/test.ps1 -Lane all -ContinueOnFailure -ResultsDirectory TestResults
 
 # Forward build/restore properties for a blocked lane (comma-separated; each becomes -p:<value>)
-pwsh -NoProfile -File scripts/test.ps1 -Lane unit -Properties MinVerVersionOverride=1.0.0,NuGetAudit=false
+pwsh -NoProfile -File scripts/test.ps1 -Lane unit -Properties MinVerVersionOverride=1.0.0
 ```
 
 Without `-ContinueOnFailure` the lane keeps its fail-fast behavior and stops at the first failing project. `-ResultsDirectory` accepts a repo-relative path.
@@ -126,7 +133,7 @@ Without `-ContinueOnFailure` the lane keeps its fail-fast behavior and stops at 
 xUnit v3 runs under Microsoft.Testing.Platform here. Project-level `dotnet test --filter` can silently run zero tests, so filter focused reruns by invoking the built test executable directly with xUnit v3 single-dash arguments:
 
 ```bash
-dotnet build tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0
+dotnet build tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --no-restore -m:1 -p:MinVerVersionOverride=1.0.0
 dotnet tests/Hexalith.Parties.Server.Tests/bin/Release/net11.0/Hexalith.Parties.Server.Tests.dll -class Fully.Qualified.TestClass
 dotnet tests/Hexalith.Parties.Server.Tests/bin/Release/net11.0/Hexalith.Parties.Server.Tests.dll -method Fully.Qualified.TestClass.TestMethod
 ```
@@ -156,9 +163,9 @@ CI=true BASE_URL=http://127.0.0.1:5072 PLAYWRIGHT_SKIP_WEBSERVER= npm run test:u
 ```
 
 CI runs the prebuilt UI without restoring or rebuilding in Playwright. This
-fixture does not require Docker, Dapr or Keycloak. The blocking `ui-a11y` job
-uploads browser reports and failure diagnostics as `ui-a11y-results`; see
-[CI documentation](ci.md#ci). The `all` PowerShell lane remains the .NET suite;
+fixture does not require Docker, Dapr or Keycloak. Preserve browser reports and
+failure diagnostics during qualification; shared product-hook routing is pending
+the [CI migration](ci.md). The `all` PowerShell lane remains the .NET suite;
 run the npm lane separately for browser checks.
 
 **Frameworks:** xUnit v3 + Shouldly (assertions) + NSubstitute (mocking); bunit for Blazor components; Playwright + axe for the browser accessibility gate; `Aspire.Hosting.Testing` for the topology lane (it manages the real DAPR/Redis containers); YamlDotNet for manifest validation. Note: `Testcontainers` is in the package manifest but **not referenced by any test project** — don't reach for it. See [component-inventory.md](component-inventory.md) for per-project coverage.
@@ -207,7 +214,7 @@ Read by the `parties-ui` host:
 | Add a read-model field | extend `PartyDetail`/`PartyIndexEntry`, update projection handler, surface via query/client |
 | Add an MCP tool | `Mcp/Tools/PartiesMcpTools.cs` + `PartiesMcpToolNames.cs` |
 | Change local DAPR/topology | `src/Hexalith.Parties.AppHost/` (`Program.cs` + `DaprComponents/`) |
-| Publish Parties containers | GitHub Actions `Publish Parties Containers` ([ci.md](ci.md)) |
+| Publish Parties containers | Central nightly after App adoption ([ci.md](ci.md)) |
 
 ### Projection diagnostics
 

@@ -116,7 +116,7 @@ public sealed class PartyMemoryOwnerDependencyTests(ITestOutputHelper output)
         File.Exists(receipt).ShouldBeFalse("Each child must create a new receipt for this launch.");
         string receiptNonce = Guid.NewGuid().ToString("N");
         using var process = new Process { StartInfo = new ProcessStartInfo("dotnet") { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, WorkingDirectory = child } };
-        process.StartInfo.ArgumentList.Add(Path.Combine(child, "Hexalith.Parties.Tests.dll"));
+        process.StartInfo.ArgumentList.Add(Path.Combine(child, Path.GetFileName(typeof(PartyMemoryOwnerDependencyTests).Assembly.Location)));
         process.StartInfo.ArgumentList.Add("-method"); process.StartInfo.ArgumentList.Add("Hexalith.Parties.Tests.Search.PartyMemoryOwnerDependencyTests.RunDependencyChild");
         process.StartInfo.ArgumentList.Add("-failSkips");
         process.StartInfo.Environment["PARTIES_MEMORY_DEPENDENCY_CHILD_MODE"] = mode;

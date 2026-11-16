@@ -5,6 +5,7 @@
     <PackageId>Hexalith.Parties.UI</PackageId>
     <IsPublishable>true</IsPublishable>
     <EnableContainer>true</EnableContainer>
+    <HexalithPublishContainer>true</HexalithPublishContainer>
     <ContainerRepository>parties-ui</ContainerRepository>
     <InvariantGlobalization>false</InvariantGlobalization>
     <ContainerBaseImage>mcr.microsoft.com/dotnet/aspnet:11.0-alpine-extra</ContainerBaseImage>

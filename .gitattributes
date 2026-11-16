@@ -12,14 +12,14 @@ _bmad-output/implementation-artifacts/tests/five-published-frontcomposer-adoptio
 tests/Hexalith.Parties.Tests/Projections/PartyLegacyBackfillRuntimeFixture.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.Tests/Projections/PartyLegacyBackfillProcessRuntimeTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.Tests/Projections/PartyLegacyBackfillWorkloadManifest.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
-tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Tests/FitnessTests/ExternalRuntimeGraphTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 
 # Accept authored CRLF in toolchain policy whitespace checks.
 Directory.Build.targets whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 Directory.Packages.props whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
-tests/Hexalith.Parties.Ci.Tests/AccessibilityWorkflowTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Ci.Tests/BrowserProductTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.Ci.Tests/MemoriesRefreshCompilationTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
-tests/Hexalith.Parties.Ci.Tests/PartiesContainerPublishWorkflowTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Ci.Tests/ContainerProductTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.Ci.Tests/SignalRSecurityFloorTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 .github/workflows/release.yml whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.Ci.Tests/ReleaseArtifactVerificationTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
@@ -28,9 +28,9 @@ tests/Hexalith.Parties.IntegrationTests/Topology/MemoriesAuthoritativePersistenc
 
 # Preserve authored CRLF in the refreshed current-toolchain guards.
 .github/workflows/release.yml whitespace=cr-at-eol
-tests/Hexalith.Parties.Ci.Tests/PartiesContainerPublishWorkflowTests.cs whitespace=cr-at-eol
+tests/Hexalith.Parties.Ci.Tests/ContainerProductTests.cs whitespace=cr-at-eol
 tests/Hexalith.Parties.Ci.Tests/ReleaseArtifactVerificationTests.cs whitespace=cr-at-eol
-tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs whitespace=cr-at-eol
+tests/Hexalith.Parties.Tests/FitnessTests/ExternalRuntimeGraphTests.cs whitespace=cr-at-eol
 
 # Preserve the existing CRLF byte convention in current browser capability checks.
 tests/Hexalith.Parties.Ci.Tests/AspireRuntimePreparationTests.cs whitespace=cr-at-eol
@@ -109,3 +109,11 @@ tests/Hexalith.Parties.UI.Tests/PackageProjectionHub.cs whitespace=blank-at-eol,
 tests/Hexalith.Parties.UI.Tests/ProjectionTransportPackageTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 
 tests/Hexalith.Parties.Tests/Search/PartyMemoryUnitAuthorityRuntimeTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# Keep the retained product checks in the repository C# CRLF convention.
+tests/Hexalith.Parties.Ci.Tests/PackagePublicationProductTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Tests/FitnessTests/EvaluatedProjectGraph.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+tests/Hexalith.Parties.Ci.Tests/RuntimeTestRoutingTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Tests/Search/PartyMemoryRecoveryFixture.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Tests/Search/PartyMemoryRecoveryTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

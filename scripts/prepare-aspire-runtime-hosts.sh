@@ -8,6 +8,7 @@ gateway_profile="packaged"
 configuration="Release"
 artifacts_path=""
 include_memory_qualification="false"
+reuse_build="false"
 while (( $# > 0 )); do
     if (( $# < 2 )); then
         printf 'Usage: %s [--gateway-profile packaged|native] [--configuration Release|Debug] [--artifacts-path ABSOLUTE_PATH] [--include-memory-qualification true|false]\n' "$0" >&2
@@ -18,6 +19,7 @@ while (( $# > 0 )); do
         --configuration) configuration="$2" ;;
         --artifacts-path) artifacts_path="$2" ;;
         --include-memory-qualification) include_memory_qualification="$2" ;;
+        --reuse-build) reuse_build="$2" ;;
         *) printf 'Unsupported runtime preparation option: %s\n' "$1" >&2; exit 2 ;;
     esac
     shift 2
@@ -31,6 +33,7 @@ output_arguments=()
 if [[ -n "$artifacts_path" ]]; then
     output_arguments=("-p:UseArtifactsOutput=true" "-p:ArtifactsPath=$artifacts_path")
 fi
+case "$reuse_build" in true|false) ;; *) printf 'Unsupported build reuse selection: %s\n' "$reuse_build" >&2; exit 2 ;; esac
 case "$include_memory_qualification" in true|false) ;; *) printf 'Unsupported memory qualification selection: %s\n' "$include_memory_qualification" >&2; exit 2 ;; esac
 case "$gateway_profile" in
     packaged)
@@ -41,11 +44,46 @@ case "$gateway_profile" in
         sample_project=references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample/Hexalith.EventStore.Sample.csproj ;;
     *) printf 'Unsupported gateway profile: %s\n' "$gateway_profile" >&2; exit 2 ;;
 esac
+if [[ "$reuse_build" == true && "$gateway_profile" != packaged ]]; then
+    printf 'Build reuse requires the declared packaged runtime graph.\n' >&2
+    exit 2
+fi
 if [[ "$gateway_profile" == packaged ]]; then
     receipt_directory="${artifacts_path:-$repository_root/artifacts}/runtime-profile/$configuration"
     mkdir -p "$receipt_directory"
     # An earlier completed manifest cannot qualify a failed or only partially completed preparation.
     rm -f -- "$receipt_directory/prepared.json"
+    if [[ "$reuse_build" == true ]]; then
+        completed_build="$receipt_directory/solution-build-completed.json"
+        solution_started_ns="$(python3 - "$completed_build" "$configuration" <<'BUILD_MARKER'
+import json, pathlib, sys, time
+path = pathlib.Path(sys.argv[1])
+started = path.with_name("solution-build-started-ns")
+if not path.is_file() or path.is_symlink() or not started.is_file() or started.is_symlink():
+    raise SystemExit("Build reuse requires a successful complete standalone solution build")
+def unique(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("Duplicate build marker field")
+        result[key] = value
+    return result
+try:
+    if path.stat().st_size > 1024 or started.stat().st_size > 32:
+        raise ValueError("Oversized build marker")
+    marker = json.loads(path.read_text(), object_pairs_hook=unique)
+    begin = int(started.read_text())
+    if (not isinstance(marker, dict) or set(marker) != {"configuration", "buildStartedNs", "completedNs"}
+            or marker["configuration"] != sys.argv[2]
+            or type(marker["buildStartedNs"]) is not int or type(marker["completedNs"]) is not int
+            or not 0 < begin == marker["buildStartedNs"] <= marker["completedNs"] <= time.time_ns()):
+        raise ValueError("Mismatched build marker")
+except (OSError, ValueError, TypeError):
+    raise SystemExit("The completed runtime build marker is invalid")
+print(marker["buildStartedNs"])
+BUILD_MARKER
+)"
+    fi
 fi
 runtime_hosts=(
     "$gateway_project"
@@ -59,7 +97,7 @@ runtime_hosts=(
 )
 
 if [[ "$include_memory_qualification" == true ]]; then
-    runtime_hosts+=(tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj
+    runtime_hosts+=(tests/Hexalith.Parties.Runtime.IntegrationTests/Hexalith.Parties.Runtime.IntegrationTests.csproj
         tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj)
 fi
 
@@ -113,12 +151,19 @@ if [[ "$gateway_profile" == packaged ]]; then
         "-p:HexalithTenantsVersion=$tenants_version" "-p:HexalithMemoriesVersion=$memories_version"
         "-p:HexalithFrontComposerVersion=$frontcomposer_version" "-p:HexalithMcpCliVersion=$mcpcli_version")
 fi
+if [[ "$reuse_build" == true ]]; then
+    cohort_arguments+=("-p:HexalithPartiesReuseRuntimeGraph=true" "-p:BuildingSolutionFile=true")
+fi
 for project in "${runtime_hosts[@]}" "${catalog_artifacts[@]}"; do
     printf 'Preparing Aspire runtime/artifact: %s\n' "$project"
     if [[ "$gateway_profile" == packaged ]]; then
-        started_ns="$(python3 -c 'import time; print(time.time_ns())')"
-        dotnet build "$project" --configuration "$configuration" --disable-build-servers \
-            -t:Rebuild -m:1 -p:BuildInParallel=false -p:CopyLocalLockFileAssemblies=true -warnaserror "${output_arguments[@]}" "${cohort_arguments[@]}"
+        if [[ "$reuse_build" == true ]]; then
+            started_ns="$solution_started_ns"
+        else
+            started_ns="$(python3 -c 'import time; print(time.time_ns())')"
+            dotnet build "$project" --configuration "$configuration" --disable-build-servers \
+                -t:Rebuild -m:1 -p:BuildInParallel=false -p:CopyLocalLockFileAssemblies=true -warnaserror "${output_arguments[@]}" "${cohort_arguments[@]}"
+        fi
         metadata="$(dotnet msbuild "$project" -nologo "-p:Configuration=$configuration" "${output_arguments[@]}" "${cohort_arguments[@]}" \
             -getProperty:TargetPath,ProjectAssetsFile,Configuration,HexalithEventStoreVersion,TargetFramework,HexalithPartiesRuntimeTargetFramework,CustomAfterMicrosoftCommonProps)"
         receipt="$receipt_directory/$(printf '%s' "$project" | sha256sum | cut -d ' ' -f 1).json"

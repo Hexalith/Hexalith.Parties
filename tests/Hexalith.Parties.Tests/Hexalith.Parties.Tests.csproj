@@ -61,4 +61,19 @@
   <ItemGroup>
     <None Include="../../src/Hexalith.Parties/appsettings.json" Link="Configuration/parties-appsettings.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <!-- Live provider/owner workloads execute only in the separate integration assembly. -->
+  <ItemGroup>
+    <Compile Remove="Search/PartyMemoryRuntimeTests.cs" />
+    <Compile Remove="Search/PartyMemoryPersistenceRuntimeTests.cs" />
+    <Compile Remove="Search/PartyMemoryOwnerDependencyTests.cs" />
+    <Compile Remove="Projections/PartyLegacyBackfillProcessRuntimeTests.cs" />
+    <Compile Remove="Projections/PartyLegacyReadModelBackfillRuntimeTests.cs" />
+    <Compile Remove="Search/PartyMemoryRuntimeIngestionObserver.cs" />
+    <Compile Remove="Search/PartyMemoryRuntimeIngestionObservation.cs" />
+    <Compile Remove="Search/MemoriesHealthRuntimeHandler.cs" />
+    <Compile Remove="Search/MemorySearchRuntimeOptionsMonitor.cs" />
+    <Compile Remove="Projections/PartyLegacyBackfillRuntimeConfiguration.cs" />
+    <Compile Remove="Projections/PartyLegacyBackfillRuntimeFixture.cs" />
+    <Compile Remove="Projections/PartyLegacyBackfillWorkloadManifest.cs" />
+  </ItemGroup>
 </Project>

@@ -4,7 +4,7 @@
 
 ```
 Hexalith.Parties/
-├── Hexalith.Parties.slnx              # Solution (15 projects under `src` + one sample project + 17 runnable tests + 3 support hosts + 1 contracts artifact + e2e)
+├── Hexalith.Parties.slnx              # Solution (15 projects under `src` + one sample project + 18 runnable tests + 3 support hosts + 1 contracts artifact + 1 runtime-artifact graph + e2e)
 ├── Directory.Build.props              # net10.0, Nullable, ImplicitUsings, TreatWarningsAsErrors=true, MinVer
 ├── Directory.Build.targets            # shared MSBuild targets
 ├── Directory.Packages.props           # central package versions (ManagePackageVersionsCentrally)
@@ -87,10 +87,10 @@ Hexalith.Parties/
 │   │   │                              #   erasure verification, key-op audit, PartyKeyRetryActor
 │   └── Hexalith.Parties.Testing/      # 🔒 shared test utilities
 │
-├── tests/                             # 17 runnable .NET test projects + 3 support hosts + 1 contracts artifact + Playwright e2e workspace
+├── tests/                             # 18 runnable .NET test projects + 3 support hosts + 1 contracts artifact + 1 runtime-artifact graph + Playwright e2e workspace
 │   ├── Hexalith.Parties.Tests/                 # largest — health, rebuild, search, architectural fitness
 │   ├── Hexalith.Parties.IntegrationTests/      # full Aspire topology E2E (Aspire.Hosting.Testing)
-│   ├── Hexalith.Parties.Ci.Tests/              # GitHub Actions/Zot publication contract validation
+│   ├── Hexalith.Parties.Ci.Tests/              # runtime, package, asset and provenance product checks
 │   ├── Hexalith.Parties.Catalog.Tests/         # unit lane; focused owner route/operation/adapter inventory
 │   ├── Hexalith.Parties.{Contracts,Client,Server,Projections,Security,AdminPortal,ConsumerPortal,Picker,Mcp,UI}.Tests/
 │   ├── Hexalith.Parties.Sample.Tests/          # subscriber integration

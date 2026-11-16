@@ -1,0 +1,90 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <!--
+      xUnit1051 fires when an async test calls a method that accepts CancellationToken
+      without forwarding TestContext.Current.CancellationToken. Many pre-existing tests
+      in this project (controller, MCP, search, projection) predate that lint rule and
+      would need broad refactoring to plumb the token through every helper. Project-wide
+      suppression is documented as deferred work (story 11-4 review item D5); see
+      _bmad-output/implementation-artifacts/deferred-work.md.
+    -->
+    <NoWarn>$(NoWarn);xUnit1051</NoWarn>
+  </PropertyGroup>
+
+  <!-- These hosts execute ASP.NET integration flows; bind restored framework authority to the runtime configuration. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Hexalith.Parties\Hexalith.Parties.csproj" />
+    <ProjectReference Include="..\..\src\Hexalith.Parties.Client\Hexalith.Parties.Client.csproj" />
+    <ProjectReference Include="..\..\src\Hexalith.Parties.Testing\Hexalith.Parties.Testing.csproj" />
+    <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore\Hexalith.EventStore.csproj" Condition="'$(HexalithEventStoreFromSource)' == 'true'">
+      <Aliases>eventstore</Aliases>
+    </ProjectReference>
+    <ProjectReference Include="..\Hexalith.Parties.EventStoreGateway.TestHost\Hexalith.Parties.EventStoreGateway.TestHost.csproj" Condition="'$(HexalithEventStoreFromSource)' != 'true'">
+      <Aliases>eventstore</Aliases>
+    </ProjectReference>
+    <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Testing\Hexalith.EventStore.Testing.csproj" Condition="'$(HexalithEventStoreFromSource)' == 'true'" />
+    <PackageReference Include="Hexalith.EventStore.Testing" Condition="'$(HexalithEventStoreFromSource)' != 'true'" />
+    <ProjectReference Include="$(HexalithCommonsRoot)\src\libraries\Hexalith.Commons.ServiceDefaults\Hexalith.Commons.ServiceDefaults.csproj" Condition="'$(HexalithCommonsServiceDefaultsFromSource)' == 'true'" />
+    <PackageReference Include="Hexalith.Commons.ServiceDefaults" Condition="'$(HexalithCommonsServiceDefaultsFromSource)' != 'true'" />
+    <ProjectReference Include="$(HexalithTenantsRoot)\src\Hexalith.Tenants.Client\Hexalith.Tenants.Client.csproj" Condition="'$(HexalithTenantsFromSource)' == 'true'" />
+    <PackageReference Include="Hexalith.Tenants.Client" Condition="'$(HexalithTenantsFromSource)' != 'true'" />
+    <ProjectReference Include="$(HexalithTenantsRoot)\src\Hexalith.Tenants.Testing\Hexalith.Tenants.Testing.csproj" PrivateAssets="all" ExcludeAssets="analyzers" Condition="'$(HexalithTenantsFromSource)' == 'true'" />
+    <PackageReference Include="Hexalith.Tenants.Testing" PrivateAssets="all" ExcludeAssets="analyzers" Condition="'$(HexalithTenantsFromSource)' != 'true'" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="NSubstitute" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\PackageTests.Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../src/Hexalith.Parties/appsettings.json" Link="Configuration/parties-appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Hexalith.Parties.Tests/Search/PartyMemoryRuntimeTests.cs" Link="Search/PartyMemoryRuntimeTests.cs" />
+    <Compile Include="../Hexalith.Parties.Tests/Search/PartyMemoryPersistenceRuntimeTests.cs" Link="Search/PartyMemoryPersistenceRuntimeTests.cs" />
+    <Compile Include="../Hexalith.Parties.Tests/Search/PartyMemoryOwnerDependencyTests.cs" Link="Search/PartyMemoryOwnerDependencyTests.cs" />
+    <Compile Include="../Hexalith.Parties.Tests/Projections/PartyLegacyBackfillProcessRuntimeTests.cs" Link="Projections/PartyLegacyBackfillProcessRuntimeTests.cs" />
+    <Compile Include="../Hexalith.Parties.Tests/Projections/PartyLegacyReadModelBackfillRuntimeTests.cs" Link="Projections/PartyLegacyReadModelBackfillRuntimeTests.cs" />
+    <Compile Include="../Hexalith.Parties.Tests/Search/PartyMemoryRuntimeConfiguration.cs" Link="Search/PartyMemoryRuntimeConfiguration.cs" />
+    <Compile Include="../Hexalith.Parties.Tests/Search/PartyMemoryOwnerSourceRuntime.cs" Link="Search/PartyMemoryOwnerSourceRuntime.cs" />
+    <Compile Include="../Hexalith.Parties.Tests/Search/PartyMemoryUnitAuthorityRuntime.cs" Link="Search/PartyMemoryUnitAuthorityRuntime.cs" />
+    <Compile Include="../Hexalith.Parties.Tests/Search/PartyMemoryRuntimeIngestionObserver.cs" Link="Search/PartyMemoryRuntimeIngestionObserver.cs" />
+    <Compile Include="../Hexalith.Parties.Tests/Search/PartyMemoryRuntimeIngestionObservation.cs" Link="Search/PartyMemoryRuntimeIngestionObservation.cs" />
+    <Compile Include="../Hexalith.Parties.Tests/Search/MemoriesHealthRuntimeHandler.cs" Link="Search/MemoriesHealthRuntimeHandler.cs" />
+    <Compile Include="../Hexalith.Parties.Tests/Search/MemorySearchRuntimeOptionsMonitor.cs" Link="Search/MemorySearchRuntimeOptionsMonitor.cs" />
+    <Compile Include="../Hexalith.Parties.Tests/Projections/PartyLegacyBackfillRuntimeConfiguration.cs" Link="Projections/PartyLegacyBackfillRuntimeConfiguration.cs" />
+    <Compile Include="../Hexalith.Parties.Tests/Projections/PartyLegacyBackfillRuntimeFixture.cs" Link="Projections/PartyLegacyBackfillRuntimeFixture.cs" />
+    <Compile Include="../Hexalith.Parties.Tests/Projections/PartyLegacyBackfillWorkloadManifest.cs" Link="Projections/PartyLegacyBackfillWorkloadManifest.cs" />
+    <Compile Include="../Hexalith.Parties.Tests/Projections/PartyLegacyBackfillFixture.cs" Link="Projections/PartyLegacyBackfillFixture.cs" />
+    <Compile Include="../Hexalith.Parties.Tests/Projections/PartyLegacyBackfillCompetingWriterStore.cs" Link="Projections/PartyLegacyBackfillCompetingWriterStore.cs" />
+    <Compile Include="../Hexalith.Parties.Tests/Search/PartyMemoryTestOptionsMonitor.cs" Link="Search/PartyMemoryTestOptionsMonitor.cs" />
+    <Compile Include="../Hexalith.Parties.Tests/Search/PartyMemoryLostAcknowledgementHandler.cs" Link="Search/PartyMemoryLostAcknowledgementHandler.cs" />
+    <Compile Include="../Hexalith.Parties.Tests/Search/PartySearchErasureHttpHandler.cs" Link="Search/PartySearchErasureHttpHandler.cs" />
+    <Compile Include="../Hexalith.Parties.Tests/Search/PartyMemoryTestReadModelStore.cs" Link="Search/PartyMemoryTestReadModelStore.cs" />
+    <Compile Include="../Hexalith.Parties.Tests/Search/PartyMemoryInventoryTestWire.cs" Link="Search/PartyMemoryInventoryTestWire.cs" />
+    <Compile Include="../Hexalith.Parties.Tests/Search/PartyMemoryRecoveryFixture.cs" Link="Search/PartyMemoryRecoveryFixture.cs" />
+  </ItemGroup>
+</Project>

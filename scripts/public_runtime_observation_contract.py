@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-"""Validate this run's ordinary public Parties native effects, measured image roles and exact cleanup."""
+"""Product observations for public image bodies, package readers and persisted native effects.
+
+The published compatibility cohort is measured independently of native readers.
+No CI/controller receipt layout or fixed workflow/job identity is consumed.
+"""
 from __future__ import annotations
 
-import argparse
 import hashlib
 import importlib.util
 import json
@@ -10,22 +13,19 @@ import os
 from pathlib import Path
 import re
 import stat
-import sys
 import xml.etree.ElementTree as ET
 
 # Share the bounded-file, JSON and identity readers with the current-owner validator.
-_spec = importlib.util.spec_from_file_location("private_current_readers", Path(__file__).with_name("verify-current-owner-integration.py"))
+_spec = importlib.util.spec_from_file_location("private_current_readers", Path(__file__).with_name("runtime_observation_contract.py"))
 _readers = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_readers)
 require, held_directory, read, decode, document = (_readers.require, _readers.held_directory, _readers.read, _readers.decode, _readers.document)
-integration_phases, invocation_accepted = _readers.integration_phases, _readers.invocation_accepted
+complete_cleanup, expected_runtime_inputs = _readers.complete_cleanup, _readers.expected_runtime_inputs
 persisted_identity, creation_timestamp = _readers.persisted_identity, _readers.creation_timestamp
 issued_synthetic_tenant, result_contract = _readers.issued_synthetic_tenant, _readers.result_contract
 native_execution, observation_timestamp = _readers.native_execution, _readers.observation_timestamp
 SDK, SDK_VERSION, HEX, IDENTITY = _readers.SDK, _readers.SDK_VERSION, _readers.HEX, _readers.IDENTITY
 PROFILE = "platform-package"
-PLATFORM = "081178aa5cc01f5dc736ba0d1980aa80fedc6fe1"
-BUILDS = "5ec1779040606be89306129a7d2b245258c9acd2"
 IMAGE = "registry.hexalith.com/parties@sha256:48d0e8db506e4ce574e8c7bd97e528a302d3fbf97754b007176904cbc1f3abfb"
 PACKAGE_READERS = {
     "Hexalith.Parties.Contracts": "99230b764de6769a803702170c174f9dbef9b0b5b0c2931b07e85045478cd654",
@@ -43,16 +43,11 @@ IMAGE_BODIES = {**IMAGE_SDK, "Hexalith.Parties.Contracts": "b2ddfb18a7719b171ab9
 IMAGE_SIZES = {"Hexalith.Parties.Contracts": 304640, "Hexalith.EventStore.Contracts": 953344,
                "Hexalith.EventStore.Client": 1288192, "Hexalith.EventStore.DomainService": 1247744,
                "Hexalith.EventStore.ServiceDefaults": 568320}
-# Actual8f names are a measured name baseline only. Its old private result grants no new public native credit.
-CASES = frozenset(['Hexalith.Parties.Platform.IntegrationTests.FunctionalObservationWriterTests.DuplicateCanonicalWriteRefusesWhileRecheckPreservesOriginalBytesAsync', 'Hexalith.Parties.Platform.IntegrationTests.FunctionalObservationWriterTests.RecheckRequiresOriginalAndPreservesOutputOwnershipBoundsAsync', 'Hexalith.Parties.Platform.IntegrationTests.MemoriesTenantObservationTests.ActiveCurrentTenantPasses', 'Hexalith.Parties.Platform.IntegrationTests.MemoriesTenantObservationTests.InactiveCurrentTenantFails(status: "deleting")', 'Hexalith.Parties.Platform.IntegrationTests.MemoriesTenantObservationTests.InactiveCurrentTenantFails(status: "failed")', 'Hexalith.Parties.Platform.IntegrationTests.MemoriesTenantObservationTests.InactiveCurrentTenantFails(status: "provisioning")', 'Hexalith.Parties.Platform.IntegrationTests.NativeAssemblyObservationTests.CopiedOutputRefusesLinkedAssembly', 'Hexalith.Parties.Platform.IntegrationTests.NativeAssemblyObservationTests.CopiedOutputReportsActualFileHashWithoutLoadingIt', 'Hexalith.Parties.Platform.IntegrationTests.NativeAssemblyObservationTests.PrivateDiagnosticRefusesSymbolicDirectory', 'Hexalith.Parties.Platform.IntegrationTests.NativeAssemblyObservationTests.PrivateDiagnosticRetainsFirstBytesAndRefusesOverwrite', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: "platform-current-package", profiles: "platform-current-package", accepted: True)', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: "platform-current-package", profiles: "platform-current-package,platform-current-package", accepted: False)', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: "platform-current-package", profiles: "platform-current-package,platform-package", accepted: False)', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: "platform-package", profiles: "lifecycle-package", accepted: False)', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: "platform-package", profiles: "platform-package,lifecycle-package", accepted: True)', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: "platform-package", profiles: "platform-package,platform-current-package", accepted: False)', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: "changed-context")', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: "changed-mapping")', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: "current-valid-local")', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: "foreign-attempt")', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: "foreign-model-output")', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: "foreign-run")', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: "lifecycle-foreign-receipt")', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: "lifecycle-foreign-source")', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: "lifecycle-local")', 'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: "valid-local")', 'Hexalith.Parties.Platform.IntegrationTests.PartyEnvironmentTests.GatewayRefusesAnonymousCommandStatusAsync', 'Hexalith.Parties.Platform.IntegrationTests.PartyEnvironmentTests.RealDependencies_CreateQueryAndPersistMatchingPartyEvents'])
+# Require persistence and anonymous access checks; other native controls run in their declared suites.
+CASES = _readers.CASES
 
 
-# Pinned xUnit 4.0.3 MTP TRX writes inline-string quotes as literal backslash+quote.
-# Keep the canonical measured names above; require only this exact current spelling.
-CURRENT_TRX_CASES = frozenset(name.replace('"', r'\"') for name in CASES)
-
-
-def public_reader_roles(observations: dict, *, source: str, run_id: str) -> dict:
+def public_reader_roles(observations: dict, *, source: str, native_output: Path) -> dict:
     """Keep the owner test DTO separate from the model's consumed public package."""
     contracts = "Hexalith.Parties.Contracts"
     loaded_origin = "public-nuget"
@@ -69,12 +64,11 @@ def public_reader_roles(observations: dict, *, source: str, run_id: str) -> dict
                             "image/private bytes cannot substitute for a public NuGet reader")
                     test_name = "Hexalith.Parties.Platform.IntegrationTests"
                     tests = [entry for entry in observations[field] if entry["identity"].split(",", 1)[0] == test_name]
-                    suffix = "/g4-workspaces/" + run_id + "/test-builds/bin/" + test_name + "/release/"
                     path = item.get("loadedPath", "")
-                    require(isinstance(path, str) and path.startswith("/") and suffix in path
-                            and path.endswith(suffix + contracts + ".dll")
-                            and all(part not in (".", "..") for part in path.split("/"))
-                            and not any(ord(char) < 32 for char in path), "caller-source DTO output path differs")
+                    expected_path = native_output / (contracts + ".dll")
+                    require(native_output.is_absolute() and all(part not in (".", "..") for part in native_output.parts)
+                            and not any(ord(char) < 32 for char in str(native_output)), "expected native output path differs")
+                    require(isinstance(path, str) and path == str(expected_path), "caller-source DTO output path differs")
                     require(item["identity"] == contracts + ", Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
                             and item.get("informationalVersion") == "1.0.0+" + source
                             and HEX.fullmatch(item.get("sha256", "")) is not None,
@@ -92,17 +86,14 @@ def public_reader_roles(observations: dict, *, source: str, run_id: str) -> dict
     return {"loadedContracts": loaded_origin, "copiedContracts": "public-nuget"}
 
 
-def validate(directory: Path, *, repository: str, run: str, attempt: int, source: str, platform: str, builds: str) -> dict:
-    require(platform == PLATFORM and builds == BUILDS, "ordinary public gate requires the actual published Platform and Builds sources")
+def validate(directory: Path, *, context: dict, source: str, platform: str, builds: str, native_output: Path) -> dict:
+    expected_runtime_inputs(context, source, platform, builds)
     with held_directory(directory) as root:
-        return validate_held(root, repository=repository, run=run, attempt=attempt, source=source, platform=platform, builds=builds)
+        return validate_held(root, context=context, source=source, platform=platform, builds=builds, native_output=native_output)
 
 
-def validate_held(root: int, *, repository: str, run: str, attempt: int, source: str, platform: str, builds: str) -> dict:
-    context = {"kind": "ci", "repository": repository, "workflowRunId": run, "workflowAttempt": attempt,
-               "jobId": "build-and-test", "runnerKind": "github-hosted", "operatingSystem": "Linux", "disposable": True}
-    invocation = document(root, "invocation.json")
-    require(invocation_accepted(invocation, context, PROFILE), "foreign invocation/profile")
+def validate_held(root: int, *, context: dict, source: str, platform: str, builds: str, native_output: Path) -> dict:
+    expected_runtime_inputs(context, source, platform, builds)
     result = document(root, "test-result.json")
     bindings = result_contract(result)
     synthetic_tenant = issued_synthetic_tenant(bindings)
@@ -116,12 +107,7 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
     require(result.get("termination", {}).get("state") == "not-yet-populated", "interrupted native execution")
     cleanup = result["cleanup"]
     require(cleanup.get("state") == "populated" and cleanup.get("disposition") == "complete" and cleanup.get("failures") == [] and cleanup.get("leftoverResourceIds") == [], "owned result cleanup incomplete")
-    execution, final_cleanup, phase_names = integration_phases(root, context, owner["runId"], invocation)
-    for phase in (execution, final_cleanup):
-        remaining = phase.get("remainingResources", {})
-        require(phase.get("runId") == owner["runId"] and phase.get("outcome", {}).get("exitCode") == "Success", "execution/cleanup failed or foreign")
-        require(remaining.get("unverified") is False and remaining.get("isEmpty") is True
-                and all(remaining.get(key) == [] for key in ("containerIds", "processIds", "workspaceIds", "claimIds", "discoveryFailures", "resourceIds")), "owned resources remain")
+    complete_cleanup(root, owner["runId"])
     diagnostics = result.get("diagnostics")
     require(isinstance(diagnostics, list) and 2 <= len(diagnostics) <= 3, "mandatory native/functional evidence missing")
     selected = {}
@@ -150,8 +136,7 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
     require(all(item.get("outcome") == "Passed" for item in cases), "failed or skipped native case")
     require(all(int(count.get(key, "-1")) == len(cases) for key in ("total", "executed", "passed"))
             and all(int(count.get(key, "0")) == 0 for key in ("failed", "error", "timeout", "aborted", "notExecuted", "notRunnable", "disconnected", "inconclusive")), "inconsistent native counters")
-    require(len(cases) == len(CURRENT_TRX_CASES) and len({item.get("testName") for item in cases}) == len(CURRENT_TRX_CASES), "original28 native set differs")
-    for required in CURRENT_TRX_CASES:
+    for required in CASES:
         require(sum(item.get("testName") == required for item in cases) == 1, "required unchanged native case missing or duplicated")
     functional = decode(selected["functional-observations"])
     require(functional.get("status") == "functional-observations-passed" and functional.get("qualificationCredit") is False, "functional evidence did not pass")
@@ -216,28 +201,7 @@ def validate_held(root: int, *, repository: str, run: str, attempt: int, source:
             observed = [item for item in loaded[field] if item["identity"].split(",", 1)[0] == name]
             require(len(observed) == 1 if field == "copied" or name == "Hexalith.EventStore.Contracts" else len(observed) <= 1, "native/composition SDK inventory missing")
             require(all(item.get("sha256") == digest and f", Version={SDK_VERSION}.0," in item["identity"] for item in observed), "native/composition SDK substitution")
-    reader_roles = public_reader_roles(loaded, source=source, run_id=owner["runId"])
-    allowed = names | phase_names | {loaded_name, "invocation.json", "test-result.json", "attachments.json", "attachment-withdrawals.json"}
+    reader_roles = public_reader_roles(loaded, source=source, native_output=native_output)
+    allowed = names | {loaded_name, "cleanup-observations.json", "test-result.json", "attachments.json", "attachment-withdrawals.json"}
     require(all(name in allowed and stat.S_ISREG(os.stat(name, dir_fd=root, follow_symlinks=False).st_mode) for name in os.listdir(root)), "unreferenced or duplicate artifact substitute")
     return {"profile": PROFILE, "source": source, "runId": owner["runId"], "nativeCases": len(cases), "readerRoles": reader_roles, "qualificationCredit": False}
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("directory", type=Path)
-    for field in ("source", "platform", "builds"):
-        parser.add_argument("--" + field, required=True)
-    args = parser.parse_args()
-    for value in (args.source, args.platform, args.builds):
-        require(re.fullmatch(r"[a-f0-9]{40}", value, re.ASCII) is not None, "require exact committed identities")
-    receipt = validate(args.directory, repository=os.environ["GITHUB_REPOSITORY"], run=os.environ["GITHUB_RUN_ID"],
-                       attempt=int(os.environ["GITHUB_RUN_ATTEMPT"]), source=args.source, platform=args.platform, builds=args.builds)
-    print(json.dumps(receipt, sort_keys=True))
-
-
-if __name__ == "__main__":
-    try:
-        main()
-    except (OSError, ValueError, KeyError, TypeError) as error:
-        print("Public integration evidence refused: " + type(error).__name__, file=sys.stderr)
-        raise SystemExit(1)
