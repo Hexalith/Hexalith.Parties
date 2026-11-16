@@ -1,0 +1,12 @@
+{
+  "tests/PackageTests.Shared/PartyMemoryProducerRestartProtocol.cs": "2e9e73946826221ef63d0a722570a62af11e6e937c1b63a6a30641d8f51b010d",
+  "tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeTests.cs": "7ff3876fd77c990f06404a570ae40fb11a6600507b6ebef9c948cd98683e3ce4",
+  "tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeConfiguration.cs": "052350119577810b41fb0aca275ebba50d94d45480e910bdf065a6adae8093a9",
+  "tests/Hexalith.Parties.Tests/Search/PartyMemoryOwnerSourceRuntime.cs": "c10cbd0065899cf4d04a2a42fb39be9d8af72adb438ead5988980da9a1ba2358",
+  "tests/Hexalith.Parties.Tests/Search/PartyMemoryProducerRestartProtocolTests.cs": "6d074bd529c5934ef5f2534277ca226c42c315bb413d0f4146672b1737e762b6",
+  "tests/Hexalith.Parties.Tests/Search/PartyMemoryUnitAuthorityRuntime.cs": "c913077c56ebc4f4d2853b2a89816233cb492b6d4d67faa6c5871a5a95741673",
+  "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedCleanupTests.cs": "e71ed9e6b286aba52403c3651b0c317096225f872c4420fe9a9895abd76f09dd",
+  "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs": "47a4871c35ac08fc42202bbf9540316e3f92702875e6ca508d14a45e4ff9ac1a",
+  "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryProducerRestartRuntime.cs": "5b8c9378c0261e7df6ddf97da059a6efdadd55104b34a6303c511c66dfc7a4f6",
+  "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryProducerRestartSignalTests.cs": "6e62063fc3dc3c3c0d4ce101ac04fa052b353b7fc62c71d9ab498884f7b509df"
+}

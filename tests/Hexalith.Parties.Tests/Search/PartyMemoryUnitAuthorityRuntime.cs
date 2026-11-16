@@ -8,6 +8,7 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
 using Hexalith.Memories.Contracts.V1;
+using Hexalith.Parties.Testing;
 
 using Shouldly;
 
@@ -122,6 +123,93 @@ internal static class PartyMemoryUnitAuthorityRuntime
 
     /// <summary>Fault variants include paired foreign records, independently exercising exact tenant/unit validation.</summary>
     internal static IReadOnlyList<string> Faults { get; } = ["missing-unit-authority", "foreign-unit-authority", "paired-foreign-tenant-authority-provenance", "paired-foreign-unit-authority-provenance"];
+
+    /// <summary>Unknown historical key coverage refuses after restart; exact fixture inventory permits bounded cleanup only for its owned unit.</summary>
+    internal static async Task QualifyBoundedLegacyAsync(PartyMemoryRuntimeConfiguration config, HttpClient http, string tenant,
+        string caseId, string source, string unit, Func<Task<bool>> cleanup, Func<Task> assertObligations, List<object> observations, CancellationToken token)
+    {
+        await ValidateAsync(config, token).ConfigureAwait(false);
+        using IConnectionMultiplexer connection = await ConnectAsync(config, token).ConfigureAwait(false);
+        IDatabase db = connection.GetDatabase();
+        string tracked = "publication-keys:" + tenant + ":" + unit;
+        string[] keys = [AuthorityKey(tenant, unit), "publication-key-provenance:" + tenant + ":" + unit];
+        RedisValue[] original = await db.StringGetAsync(keys.Select(key => (RedisKey)key).ToArray()).ConfigureAwait(false);
+        string extra = tenant + ":vec:" + unit + ":47";
+        (await db.KeyExistsAsync(extra).ConfigureAwait(false)).ShouldBeFalse();
+        HashEntry[] artifact = [new("tenantId", tenant), new("memoryUnitId", unit), new("caseId", caseId), new("sourceUri", source),
+            new("text", new byte[] { 0, 255, 128, 13, 10 }), new("vector", new byte[768 * sizeof(float)])];
+        await db.HashSetAsync(extra, artifact).ConfigureAwait(false);
+        string[] exact = (await db.SetMembersAsync(tracked).ConfigureAwait(false)).Select(key => key.ToString()).Append(extra).Distinct().Order(StringComparer.Ordinal).ToArray();
+        exact.Length.ShouldBeInRange(2, 4096);
+        HashEntry[][] before = await Task.WhenAll(exact.Select(key => db.HashGetAllAsync(key))).ConfigureAwait(false);
+        JsonElement inventory = await http.GetFromJsonAsync<JsonElement>("api/v1/tenants/" + Uri.EscapeDataString(tenant)
+            + "/source-inventory?sourceUri=" + Uri.EscapeDataString(source), token).ConfigureAwait(false);
+        string workflow = inventory.GetProperty("entries").EnumerateArray().Single(entry => entry.GetProperty("memoryUnitId").GetString() == unit)
+            .GetProperty("workflowInstanceId").GetString()!;
+        RedisValue[] unknown = [RedisValue.EmptyString, RedisValue.EmptyString];
+        await WithMutationAsync(() => ReplaceAsync(db, keys, original, unknown, reconcile: false),
+            _ => ReplaceAsync(db, keys, original, unknown, reconcile: true), async () =>
+            {
+                await PartyMemoryProducerRestartProtocol.RequestAsync(config.ProducerRestartDirectory!, config.OwnershipSessionId!, config.ProducerRestartSecret!,
+                    "bounded-legacy-discovery", new { tenant, source, workflow, unit, exactKeys = exact }, token).ConfigureAwait(false);
+                (await cleanup().ConfigureAwait(false)).ShouldBeFalse();
+                await assertObligations().ConfigureAwait(false);
+                await AssertDeletionRefusalAsync(config, unit, token).ConfigureAwait(false);
+                (await cleanup().ConfigureAwait(false)).ShouldBeFalse();
+                await assertObligations().ConfigureAwait(false);
+                using IConnectionMultiplexer fresh = await ConnectAsync(config, token).ConfigureAwait(false);
+                for (int index = 0; index < exact.Length; index++)
+                { AssertHash(await fresh.GetDatabase().HashGetAllAsync(exact[index]).ConfigureAwait(false), before[index]); }
+                observations.Add(new { Boundary = "bounded-legacy-discovery", Unit = unit, ExactKeys = exact,
+                    Hashes = before.Select(hash => Digest(JsonSerializer.Serialize(hash.Select(item => new { Name = item.Name.ToString(), Value = Convert.ToBase64String((byte[])item.Value!) })))),
+                    IncompleteCoverageRefused = true, HistoricalBytesRetained = true, ObligationsRetained = true, RefusedAttempts = 2 });
+            }, token).ConfigureAwait(false);
+        // This private fixture knows every writer and exact seeded artifact. Its evidence
+        // is deliberately scoped to this disposable unit; no TAG result grants authority.
+        string fixtureEvidence = "owned-exact-unit-inventory:" + config.OwnershipSessionId + ":" + Digest(JsonSerializer.Serialize(exact));
+        string historical = JsonSerializer.Serialize(new { Kind = "historical-v2", Tenant = tenant, Unit = unit,
+            Generation = config.OwnershipGeneration, ProducerBinding = Digest(JsonSerializer.Serialize(exact)),
+            EvidenceId = fixtureEvidence, WriterExclusionEvidenceId = config.OwnershipWriterExclusionEvidenceId });
+        await PartyMemoryOwnerSourceRuntime.ReconcileUnitAsync(config, tenant, unit, exact, fixtureEvidence, original[0].ToString(), token).ConfigureAwait(false);
+        (await db.StringGetAsync(keys[0]).ConfigureAwait(false)).ToString().ShouldBe(historical);
+        bool cleaned = false;
+        for (int attempt = 0; attempt < 240; attempt++)
+        {
+            cleaned = await cleanup().ConfigureAwait(false);
+            if (cleaned) { break; }
+            await Task.Delay(250, token).ConfigureAwait(false);
+        }
+        cleaned.ShouldBeTrue("Explicit exact-unit fixture authority must allow bounded physical cleanup.");
+        foreach (string key in exact) { (await db.KeyExistsAsync(key).ConfigureAwait(false)).ShouldBeFalse(); }
+        (await db.StringGetAsync(keys[0]).ConfigureAwait(false)).ToString().ShouldBe(historical);
+        (await db.StringGetAsync("source-inventory-deleted:" + Digest(JsonSerializer.Serialize(new[] { tenant, unit }))).ConfigureAwait(false)).ToString().ShouldBe("1");
+        observations.Add(new { Boundary = "bounded-legacy-discovery", Unit = unit, EvidenceId = fixtureEvidence,
+            ExactKeys = exact, ExactKeysAbsent = true, AuthorityRetained = true, DeletionReceiptRetained = true });
+    }
+
+    private static void AssertHash(HashEntry[] actual, HashEntry[] expected)
+        => actual.OrderBy(item => item.Name.ToString(), StringComparer.Ordinal).ShouldBe(expected.OrderBy(item => item.Name.ToString(), StringComparer.Ordinal));
+
+    private static async Task AssertDeletionRefusalAsync(PartyMemoryRuntimeConfiguration config, string unit, CancellationToken token)
+    {
+        using var sidecar = new HttpClient { BaseAddress = new Uri(config.DaprHttpEndpoint), Timeout = TimeSpan.FromSeconds(5) };
+        sidecar.DefaultRequestHeaders.Add("dapr-api-token", config.DaprApiToken);
+        for (int attempt = 0; attempt < 400; attempt++)
+        {
+            using HttpResponseMessage response = await sidecar.GetAsync("v1.0/workflows/dapr/memory-unit-delete-" + Uri.EscapeDataString(unit), token).ConfigureAwait(false);
+            if (response.IsSuccessStatusCode)
+            {
+                string body = await response.Content.ReadAsStringAsync(token).ConfigureAwait(false);
+                using JsonDocument document = JsonDocument.Parse(body);
+                string? state = document.RootElement.GetProperty("runtimeStatus").GetString();
+                if (string.Equals(state, "Failed", StringComparison.OrdinalIgnoreCase))
+                { body.ShouldContain("source-publication-legacy-owner-reconciliation-required"); return; }
+                if (string.Equals(state, "Completed", StringComparison.OrdinalIgnoreCase)) { throw new InvalidOperationException("Incomplete legacy cleanup incorrectly completed."); }
+            }
+            await Task.Delay(100, token).ConfigureAwait(false);
+        }
+        throw new TimeoutException("The actual historical deletion did not expose its authority refusal.");
+    }
 
     /// <summary>Holds one actual deletion workflow at authority refusal, retaining physical contents and consumer obligations.</summary>
     internal static async Task RefuseUnqualifiedCleanupAsync(PartyMemoryRuntimeConfiguration config, HttpClient http,

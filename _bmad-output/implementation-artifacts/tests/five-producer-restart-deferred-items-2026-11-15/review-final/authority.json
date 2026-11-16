@@ -1,0 +1,830 @@
+{
+  "TenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+  "CaseId": "01M7GYJP90SHAJ0B2E3Q3D5EZ3",
+  "UnitIds": [
+    "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+    "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63"
+  ],
+  "CanonicalOutputs": [
+    {
+      "Revision": 1,
+      "MemoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430"
+    },
+    {
+      "Revision": 2,
+      "MemoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63"
+    }
+  ],
+  "UnitAuthorityObservations": [
+    {
+      "Tenant": "parties-recovery-d98b695eff1243909eaad10002944656",
+      "Unit": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+      "Generation": "1c47e804471f4fe9aac6cdbab30b7450",
+      "WriterExclusionEvidenceId": "owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450",
+      "AuthoritySha256": "b558d30afdb6b6f1ee34dd455d0af075376a946f277d0731abd5f792e3530f54",
+      "ProvenanceSha256": "b558d30afdb6b6f1ee34dd455d0af075376a946f277d0731abd5f792e3530f54",
+      "Deleted": false,
+      "DeletionReceipt": "",
+      "Inventory": {
+        "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+        "sourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:party-97d5caa2b1ed405c9c541e14ad9a94f2",
+        "version": "b53306afa1444bd1af5b9da922e61037",
+        "coverageComplete": true,
+        "admissionClosed": false,
+        "permanent": false,
+        "entries": [
+          {
+            "caseId": "01M7GYJP90SHAJ0B2E3Q3D5EZ3",
+            "workflowInstanceId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "idempotencyTokenHash": "e982089ec5aaa6b7be90663268f2c0503724a95d34710f4d24c15b458fc87b3e",
+            "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "state": "Completed",
+            "terminalVerified": true,
+            "schedulingState": "Scheduled",
+            "candidateMemoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "sourcePayloadReference": {
+              "id": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430:sourcebytes:21f86f52b9ee0bf449cd254755f33f29f9387b9a9e74e1511e2f29840e33e8c5:source",
+              "sha256Hash": "21f86f52b9ee0bf449cd254755f33f29f9387b9a9e74e1511e2f29840e33e8c5",
+              "byteLength": 160,
+              "contentKind": 1,
+              "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+              "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430"
+            },
+            "refreshProtocolVersion": "source-refresh-v1",
+            "sourceRevisionNumber": 1,
+            "refreshIdentityDigest": "de70d3e97cbf95ecb7983260bea2bbb93382420f5193c7c8744d9b548d905ef1",
+            "candidateArtifactsDeleted": false,
+            "failedRetryMemoryUnitId": null
+          }
+        ],
+        "nextCursor": null,
+        "incompleteReason": null
+      }
+    },
+    {
+      "Boundary": "cross-source-authority",
+      "Proof": "direct-owner-admission",
+      "Tenant": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2",
+      "Unit": "owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c",
+      "SourceA": "urn:hexalith:parties:parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:party:component-source-a-86a815eac4154c97abe3eb1452a20af5",
+      "SourceB": "urn:hexalith:parties:parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:party:component-source-b-789570c842664f6096308b46d53568e1",
+      "SameTenantUnitAndCase": true,
+      "OriginalProducerBinding": "535014f1a6d479964b2b9d3088c2cc04c9be3331fe0063697776818b72b925b3",
+      "ReusedProducerBinding": "88be9f72f64c79da3fc6225c7f6e31a17a7821d8ad57dbe98c3f58f3d7599c65",
+      "AuthoritySha256": "ea75e67c6ac6222dfc2621437db5e2d195c4f02e0a65c701c7e674739bab1a2d",
+      "AdmissionRefused": true,
+      "OriginalMetadataUnchangedAcrossRestart": true,
+      "BeforeRestartBaseline": {
+        "Tenant": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2",
+        "Case": "01M7GYKJ9TR7DREM3PTBH1D1P0",
+        "UnitA": "owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c",
+        "UnitB": "owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647",
+        "CapturedAtUtc": "2026-11-16T01:12:59.5082265+00:00",
+        "SourceAAuthoritySha256": "ea75e67c6ac6222dfc2621437db5e2d195c4f02e0a65c701c7e674739bab1a2d",
+        "SourceAHashes": [
+          {
+            "Key": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:mu:owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c",
+            "Sha256": "ae680fa9d444318f6fd3986fe87a27f455499cd21c5642418368b970f4f6fcd7"
+          },
+          {
+            "Key": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:vec:owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c:0",
+            "Sha256": "d17a708ee76bbce136f901b0ad6754f3ca1d6bdc6ffaed611a74fbe565ac7c6e"
+          }
+        ],
+        "SourceBHashes": [
+          {
+            "Key": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:mu:owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647",
+            "Sha256": "18e7d796a4631d9009a56ac3729140fc322fa7f8a6112e3f9ef983dab2842bfa"
+          },
+          {
+            "Key": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:vec:owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647:0",
+            "Sha256": "ea8d3a72135df1a72518008e9e41c0349a2931e6621fd5fb6a06274bd10c67b6"
+          }
+        ],
+        "Metadata": [
+          {
+            "Key": "ingestion-unit-authority:759fb67481ab8f9e5d0048911d8bba62c31cfcdee7594a2421258338a112214d",
+            "Value": "{\"Kind\":\"issued-v2\",\"Tenant\":\"parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2\",\"Unit\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c\",\"Generation\":\"1c47e804471f4fe9aac6cdbab30b7450\",\"ProducerBinding\":\"535014f1a6d479964b2b9d3088c2cc04c9be3331fe0063697776818b72b925b3\",\"EvidenceId\":\"service-issuance:1c47e804471f4fe9aac6cdbab30b7450\",\"WriterExclusionEvidenceId\":\"owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450\"}",
+            "Sha256": "ea75e67c6ac6222dfc2621437db5e2d195c4f02e0a65c701c7e674739bab1a2d"
+          },
+          {
+            "Key": "publication-key-provenance:parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c",
+            "Value": "{\"Kind\":\"issued-v2\",\"Tenant\":\"parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2\",\"Unit\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c\",\"Generation\":\"1c47e804471f4fe9aac6cdbab30b7450\",\"ProducerBinding\":\"535014f1a6d479964b2b9d3088c2cc04c9be3331fe0063697776818b72b925b3\",\"EvidenceId\":\"service-issuance:1c47e804471f4fe9aac6cdbab30b7450\",\"WriterExclusionEvidenceId\":\"owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450\"}",
+            "Sha256": "ea75e67c6ac6222dfc2621437db5e2d195c4f02e0a65c701c7e674739bab1a2d"
+          },
+          {
+            "Key": "ingestion-unit-authority:314af7db3c61af41297c49fd64f3ecdff9872328b309cdd484f1043134b0aada",
+            "Value": "{\"Kind\":\"issued-v2\",\"Tenant\":\"parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2\",\"Unit\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647\",\"Generation\":\"1c47e804471f4fe9aac6cdbab30b7450\",\"ProducerBinding\":\"8a88767aa360fd631f956e6b686c5951aa42cd3e2ca2344be44db82867b0b43a\",\"EvidenceId\":\"service-issuance:1c47e804471f4fe9aac6cdbab30b7450\",\"WriterExclusionEvidenceId\":\"owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450\"}",
+            "Sha256": "d6698e742c340c6c1ff914e0e7c3253022254856971baccb09118d0e3491ab84"
+          },
+          {
+            "Key": "publication-key-provenance:parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647",
+            "Value": "{\"Kind\":\"issued-v2\",\"Tenant\":\"parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2\",\"Unit\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647\",\"Generation\":\"1c47e804471f4fe9aac6cdbab30b7450\",\"ProducerBinding\":\"8a88767aa360fd631f956e6b686c5951aa42cd3e2ca2344be44db82867b0b43a\",\"EvidenceId\":\"service-issuance:1c47e804471f4fe9aac6cdbab30b7450\",\"WriterExclusionEvidenceId\":\"owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450\"}",
+            "Sha256": "d6698e742c340c6c1ff914e0e7c3253022254856971baccb09118d0e3491ab84"
+          },
+          {
+            "Key": "source-inventory:b6eef908b8fb8be2d6e96b806cc8c1fee6e8db5812e0a6ccc6c801df71fbbbc3",
+            "Value": "{\"tenantId\":\"parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2\",\"sourceUri\":\"urn:hexalith:parties:parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:party:component-source-a-86a815eac4154c97abe3eb1452a20af5\",\"version\":\"4fc391abdad9456da9c01f33d45991bf\",\"coverageComplete\":true,\"admissionClosed\":false,\"permanent\":false,\"entries\":[{\"caseId\":\"01M7GYKJ9TR7DREM3PTBH1D1P0\",\"workflowInstanceId\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c\",\"idempotencyTokenHash\":\"8469689dd52622e36d8561296e6c9dc4e32176fa751a068f314abaf5d3ac26a4\",\"memoryUnitId\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c\",\"state\":\"Completed\",\"terminalVerified\":true,\"schedulingState\":\"Scheduled\",\"candidateMemoryUnitId\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c\",\"sourcePayloadReference\":{\"id\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c:sourcebytes:124ae83514fe31b851ce779d873f5cc20aa76dec12f2a49a01989cbe6a1ea6fd:source\",\"sha256Hash\":\"124ae83514fe31b851ce779d873f5cc20aa76dec12f2a49a01989cbe6a1ea6fd\",\"byteLength\":172,\"contentKind\":1,\"tenantId\":\"parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2\",\"memoryUnitId\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c\"},\"refreshProtocolVersion\":null,\"sourceRevisionNumber\":null,\"refreshIdentityDigest\":null,\"candidateArtifactsDeleted\":false,\"failedRetryMemoryUnitId\":null}],\"coverageEvidenceId\":\"owned-synthetic-empty-scope:de3e67c9bc13473cbcc89a4bd8755c58\",\"incompleteReason\":null,\"lastReopenedFromVersion\":\"c4e00f451862453db06cea7fcf3e2dcb\",\"freshCandidateWorkflows\":[]}",
+            "Sha256": "5bc2429eb1919f714109f06f3a4fffcb6bbd43d7f85ddc1e7af6fe15c33c420b"
+          },
+          {
+            "Key": "source-inventory:306a719cdf2f9cc125635f19beed3097e5da396af3315cee9aa4becd7c7a217c",
+            "Value": "{\"tenantId\":\"parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2\",\"sourceUri\":\"urn:hexalith:parties:parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:party:component-source-b-789570c842664f6096308b46d53568e1\",\"version\":\"4997bd6aed194f5084abf62341baa4ae\",\"coverageComplete\":true,\"admissionClosed\":false,\"permanent\":false,\"entries\":[{\"caseId\":\"01M7GYKJ9TR7DREM3PTBH1D1P0\",\"workflowInstanceId\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647\",\"idempotencyTokenHash\":\"0be95bf07a80be6fe2dbc149823be5c46fd842a648c19fa731a3fefae9374e7d\",\"memoryUnitId\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647\",\"state\":\"Completed\",\"terminalVerified\":true,\"schedulingState\":\"Scheduled\",\"candidateMemoryUnitId\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647\",\"sourcePayloadReference\":{\"id\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647:sourcebytes:5feef3961fd1aee728cf5d0a01e7dbedef8c39aa3b573cdc1db181f85081b471:source\",\"sha256Hash\":\"5feef3961fd1aee728cf5d0a01e7dbedef8c39aa3b573cdc1db181f85081b471\",\"byteLength\":173,\"contentKind\":1,\"tenantId\":\"parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2\",\"memoryUnitId\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647\"},\"refreshProtocolVersion\":null,\"sourceRevisionNumber\":null,\"refreshIdentityDigest\":null,\"candidateArtifactsDeleted\":false,\"failedRetryMemoryUnitId\":null}],\"coverageEvidenceId\":\"owned-synthetic-empty-scope:b5453701425c4bf4b7f0376f862f8682\",\"incompleteReason\":null,\"lastReopenedFromVersion\":\"3ceb02e6ddc342068144a4b200221880\",\"freshCandidateWorkflows\":[]}",
+            "Sha256": "ebf10d74d5365a6c4016e90e591687ff3ede983a2da76a25129986419c6f9649"
+          }
+        ],
+        "Historical": {
+          "Unit": "unknown-historical-fea535a6697a4cebac5876bfb315ca52",
+          "Source": "https://synthetic.invalid/source-a/unknown-historical-fea535a6697a4cebac5876bfb315ca52",
+          "Keys": [
+            "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:vec:unknown-historical-fea535a6697a4cebac5876bfb315ca52:7",
+            "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:vec:nl:unknown-historical-fea535a6697a4cebac5876bfb315ca52"
+          ],
+          "Hashes": [
+            {
+              "Key": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:vec:unknown-historical-fea535a6697a4cebac5876bfb315ca52:7",
+              "Sha256": "fd0ca1ace54a79fb62c5a583e79e52a1d3d8c51eb9e7ff74da734d7640b74f7e"
+            },
+            {
+              "Key": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:vec:nl:unknown-historical-fea535a6697a4cebac5876bfb315ca52",
+              "Sha256": "fd0ca1ace54a79fb62c5a583e79e52a1d3d8c51eb9e7ff74da734d7640b74f7e"
+            }
+          ],
+          "Provenance": "modern",
+          "AuthorityAbsent": true
+        },
+        "Scope": "isolated owner-contract component; unknown fixture obligation does not affect main-party or survivor API teardown"
+      },
+      "SourceAHashes": [
+        {
+          "Key": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:mu:owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c",
+          "Sha256": "ae680fa9d444318f6fd3986fe87a27f455499cd21c5642418368b970f4f6fcd7"
+        },
+        {
+          "Key": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:vec:owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c:0",
+          "Sha256": "d17a708ee76bbce136f901b0ad6754f3ca1d6bdc6ffaed611a74fbe565ac7c6e"
+        }
+      ],
+      "SourceBHashes": [
+        {
+          "Key": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:mu:owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647",
+          "Sha256": "18e7d796a4631d9009a56ac3729140fc322fa7f8a6112e3f9ef983dab2842bfa"
+        },
+        {
+          "Key": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:vec:owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647:0",
+          "Sha256": "ea8d3a72135df1a72518008e9e41c0349a2931e6621fd5fb6a06274bd10c67b6"
+        }
+      ]
+    },
+    {
+      "Boundary": "cross-source-authority",
+      "Proof": "direct-owner-cleanup-discovery",
+      "Unit": "unknown-historical-fea535a6697a4cebac5876bfb315ca52",
+      "SourceA": "https://synthetic.invalid/source-a/unknown-historical-fea535a6697a4cebac5876bfb315ca52",
+      "SourceB": "urn:hexalith:parties:parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:party:component-source-b-789570c842664f6096308b46d53568e1",
+      "CompleteSourceBCannotCertifyUnit": true,
+      "CleanupDiscoveryRefused": true,
+      "HistoricalBaseline": {
+        "Unit": "unknown-historical-fea535a6697a4cebac5876bfb315ca52",
+        "Source": "https://synthetic.invalid/source-a/unknown-historical-fea535a6697a4cebac5876bfb315ca52",
+        "Keys": [
+          "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:vec:unknown-historical-fea535a6697a4cebac5876bfb315ca52:7",
+          "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:vec:nl:unknown-historical-fea535a6697a4cebac5876bfb315ca52"
+        ],
+        "Hashes": [
+          {
+            "Key": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:vec:unknown-historical-fea535a6697a4cebac5876bfb315ca52:7",
+            "Sha256": "fd0ca1ace54a79fb62c5a583e79e52a1d3d8c51eb9e7ff74da734d7640b74f7e"
+          },
+          {
+            "Key": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:vec:nl:unknown-historical-fea535a6697a4cebac5876bfb315ca52",
+            "Sha256": "fd0ca1ace54a79fb62c5a583e79e52a1d3d8c51eb9e7ff74da734d7640b74f7e"
+          }
+        ],
+        "Provenance": "modern",
+        "AuthorityAbsent": true
+      },
+      "HistoricalHashes": [
+        {
+          "Key": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:vec:unknown-historical-fea535a6697a4cebac5876bfb315ca52:7",
+          "Sha256": "fd0ca1ace54a79fb62c5a583e79e52a1d3d8c51eb9e7ff74da734d7640b74f7e"
+        },
+        {
+          "Key": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:vec:nl:unknown-historical-fea535a6697a4cebac5876bfb315ca52",
+          "Sha256": "fd0ca1ace54a79fb62c5a583e79e52a1d3d8c51eb9e7ff74da734d7640b74f7e"
+        }
+      ],
+      "SourceBHashes": [
+        {
+          "Key": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:mu:owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647",
+          "Sha256": "18e7d796a4631d9009a56ac3729140fc322fa7f8a6112e3f9ef983dab2842bfa"
+        },
+        {
+          "Key": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:vec:owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647:0",
+          "Sha256": "ea8d3a72135df1a72518008e9e41c0349a2931e6621fd5fb6a06274bd10c67b6"
+        }
+      ],
+      "TerminalCompletenessUnclaimed": true,
+      "CleanupScope": "owned backing-resource disposal; unknown fixture obligation retained"
+    },
+    {
+      "Control": "missing-unit-authority",
+      "Operation": "refresh",
+      "Status": 500,
+      "ProducerIdentities": [
+        "{\"Case\":\"01M7GYJP90SHAJ0B2E3Q3D5EZ3\",\"Workflow\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430\",\"Unit\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430\",\"Token\":\"e982089ec5aaa6b7be90663268f2c0503724a95d34710f4d24c15b458fc87b3e\",\"Candidate\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430\",\"Revision\":\"1\",\"RevisionBinding\":\"de70d3e97cbf95ecb7983260bea2bbb93382420f5193c7c8744d9b548d905ef1\",\"RefreshProtocol\":\"source-refresh-v1\"}"
+      ],
+      "UnitSha256": "0dd4789b908caa718794a8e152b2da48e40201d5cc544f3d5a7038120981a026",
+      "ObligationsRetained": true
+    },
+    {
+      "Control": "foreign-unit-authority",
+      "Operation": "refresh",
+      "Status": 500,
+      "ProducerIdentities": [
+        "{\"Case\":\"01M7GYJP90SHAJ0B2E3Q3D5EZ3\",\"Workflow\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430\",\"Unit\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430\",\"Token\":\"e982089ec5aaa6b7be90663268f2c0503724a95d34710f4d24c15b458fc87b3e\",\"Candidate\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430\",\"Revision\":\"1\",\"RevisionBinding\":\"de70d3e97cbf95ecb7983260bea2bbb93382420f5193c7c8744d9b548d905ef1\",\"RefreshProtocol\":\"source-refresh-v1\"}"
+      ],
+      "UnitSha256": "0dd4789b908caa718794a8e152b2da48e40201d5cc544f3d5a7038120981a026",
+      "ObligationsRetained": true
+    },
+    {
+      "Control": "paired-foreign-tenant-authority-provenance",
+      "Operation": "refresh",
+      "Status": 500,
+      "ProducerIdentities": [
+        "{\"Case\":\"01M7GYJP90SHAJ0B2E3Q3D5EZ3\",\"Workflow\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430\",\"Unit\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430\",\"Token\":\"e982089ec5aaa6b7be90663268f2c0503724a95d34710f4d24c15b458fc87b3e\",\"Candidate\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430\",\"Revision\":\"1\",\"RevisionBinding\":\"de70d3e97cbf95ecb7983260bea2bbb93382420f5193c7c8744d9b548d905ef1\",\"RefreshProtocol\":\"source-refresh-v1\"}"
+      ],
+      "UnitSha256": "0dd4789b908caa718794a8e152b2da48e40201d5cc544f3d5a7038120981a026",
+      "ObligationsRetained": true
+    },
+    {
+      "Control": "paired-foreign-unit-authority-provenance",
+      "Operation": "refresh",
+      "Status": 500,
+      "ProducerIdentities": [
+        "{\"Case\":\"01M7GYJP90SHAJ0B2E3Q3D5EZ3\",\"Workflow\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430\",\"Unit\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430\",\"Token\":\"e982089ec5aaa6b7be90663268f2c0503724a95d34710f4d24c15b458fc87b3e\",\"Candidate\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430\",\"Revision\":\"1\",\"RevisionBinding\":\"de70d3e97cbf95ecb7983260bea2bbb93382420f5193c7c8744d9b548d905ef1\",\"RefreshProtocol\":\"source-refresh-v1\"}"
+      ],
+      "UnitSha256": "0dd4789b908caa718794a8e152b2da48e40201d5cc544f3d5a7038120981a026",
+      "ObligationsRetained": true
+    },
+    {
+      "Tenant": "parties-recovery-d98b695eff1243909eaad10002944656",
+      "Unit": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+      "Generation": "1c47e804471f4fe9aac6cdbab30b7450",
+      "WriterExclusionEvidenceId": "owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450",
+      "AuthoritySha256": "b558d30afdb6b6f1ee34dd455d0af075376a946f277d0731abd5f792e3530f54",
+      "ProvenanceSha256": "b558d30afdb6b6f1ee34dd455d0af075376a946f277d0731abd5f792e3530f54",
+      "Deleted": false,
+      "DeletionReceipt": "",
+      "Inventory": {
+        "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+        "sourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:party-97d5caa2b1ed405c9c541e14ad9a94f2",
+        "version": "b53306afa1444bd1af5b9da922e61037",
+        "coverageComplete": true,
+        "admissionClosed": false,
+        "permanent": false,
+        "entries": [
+          {
+            "caseId": "01M7GYJP90SHAJ0B2E3Q3D5EZ3",
+            "workflowInstanceId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "idempotencyTokenHash": "e982089ec5aaa6b7be90663268f2c0503724a95d34710f4d24c15b458fc87b3e",
+            "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "state": "Completed",
+            "terminalVerified": true,
+            "schedulingState": "Scheduled",
+            "candidateMemoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "sourcePayloadReference": {
+              "id": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430:sourcebytes:21f86f52b9ee0bf449cd254755f33f29f9387b9a9e74e1511e2f29840e33e8c5:source",
+              "sha256Hash": "21f86f52b9ee0bf449cd254755f33f29f9387b9a9e74e1511e2f29840e33e8c5",
+              "byteLength": 160,
+              "contentKind": 1,
+              "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+              "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430"
+            },
+            "refreshProtocolVersion": "source-refresh-v1",
+            "sourceRevisionNumber": 1,
+            "refreshIdentityDigest": "de70d3e97cbf95ecb7983260bea2bbb93382420f5193c7c8744d9b548d905ef1",
+            "candidateArtifactsDeleted": false,
+            "failedRetryMemoryUnitId": null
+          }
+        ],
+        "nextCursor": null,
+        "incompleteReason": null
+      }
+    },
+    {
+      "Tenant": "parties-recovery-d98b695eff1243909eaad10002944656",
+      "Unit": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63",
+      "Generation": "1c47e804471f4fe9aac6cdbab30b7450",
+      "WriterExclusionEvidenceId": "owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450",
+      "AuthoritySha256": "827111682455bd16289f4dc810596c04567fb554159abc4145546156b502c013",
+      "ProvenanceSha256": "827111682455bd16289f4dc810596c04567fb554159abc4145546156b502c013",
+      "Deleted": false,
+      "DeletionReceipt": "",
+      "Inventory": {
+        "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+        "sourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:party-97d5caa2b1ed405c9c541e14ad9a94f2",
+        "version": "a4306f6588294d7183fe637244d501da",
+        "coverageComplete": true,
+        "admissionClosed": false,
+        "permanent": false,
+        "entries": [
+          {
+            "caseId": "01M7GYJP90SHAJ0B2E3Q3D5EZ3",
+            "workflowInstanceId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "idempotencyTokenHash": "e982089ec5aaa6b7be90663268f2c0503724a95d34710f4d24c15b458fc87b3e",
+            "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "state": "Completed",
+            "terminalVerified": true,
+            "schedulingState": "Scheduled",
+            "candidateMemoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "sourcePayloadReference": {
+              "id": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430:sourcebytes:21f86f52b9ee0bf449cd254755f33f29f9387b9a9e74e1511e2f29840e33e8c5:source",
+              "sha256Hash": "21f86f52b9ee0bf449cd254755f33f29f9387b9a9e74e1511e2f29840e33e8c5",
+              "byteLength": 160,
+              "contentKind": 1,
+              "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+              "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430"
+            },
+            "refreshProtocolVersion": "source-refresh-v1",
+            "sourceRevisionNumber": 1,
+            "refreshIdentityDigest": "de70d3e97cbf95ecb7983260bea2bbb93382420f5193c7c8744d9b548d905ef1",
+            "candidateArtifactsDeleted": false,
+            "failedRetryMemoryUnitId": null
+          },
+          {
+            "caseId": "01M7GYJP90SHAJ0B2E3Q3D5EZ3",
+            "workflowInstanceId": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63",
+            "idempotencyTokenHash": "dd7daad5024a612696f3213beddf79a116e079d1a4da1e5e90a47b0a6c7df489",
+            "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63",
+            "state": "Completed",
+            "terminalVerified": true,
+            "schedulingState": "Scheduled",
+            "candidateMemoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63",
+            "sourcePayloadReference": {
+              "id": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63:sourcebytes:6c67543d8856223d359b55cf43eecd2ce593e06287833bcd1aeafd9005f3db3e:source",
+              "sha256Hash": "6c67543d8856223d359b55cf43eecd2ce593e06287833bcd1aeafd9005f3db3e",
+              "byteLength": 161,
+              "contentKind": 1,
+              "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+              "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63"
+            },
+            "refreshProtocolVersion": "source-refresh-v1",
+            "sourceRevisionNumber": 2,
+            "refreshIdentityDigest": "f1b56a6300e93bf6f3de0d2b1c1051be47962ce3b2385d551d6e202658da26bc",
+            "candidateArtifactsDeleted": false,
+            "failedRetryMemoryUnitId": null
+          }
+        ],
+        "nextCursor": null,
+        "incompleteReason": null
+      }
+    },
+    {
+      "Tenant": "parties-recovery-d98b695eff1243909eaad10002944656",
+      "Unit": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63",
+      "Generation": "1c47e804471f4fe9aac6cdbab30b7450",
+      "WriterExclusionEvidenceId": "owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450",
+      "AuthoritySha256": "827111682455bd16289f4dc810596c04567fb554159abc4145546156b502c013",
+      "ProvenanceSha256": "827111682455bd16289f4dc810596c04567fb554159abc4145546156b502c013",
+      "Deleted": false,
+      "DeletionReceipt": "",
+      "Inventory": {
+        "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+        "sourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:party-97d5caa2b1ed405c9c541e14ad9a94f2",
+        "version": "a4306f6588294d7183fe637244d501da",
+        "coverageComplete": true,
+        "admissionClosed": false,
+        "permanent": false,
+        "entries": [
+          {
+            "caseId": "01M7GYJP90SHAJ0B2E3Q3D5EZ3",
+            "workflowInstanceId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "idempotencyTokenHash": "e982089ec5aaa6b7be90663268f2c0503724a95d34710f4d24c15b458fc87b3e",
+            "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "state": "Completed",
+            "terminalVerified": true,
+            "schedulingState": "Scheduled",
+            "candidateMemoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "sourcePayloadReference": {
+              "id": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430:sourcebytes:21f86f52b9ee0bf449cd254755f33f29f9387b9a9e74e1511e2f29840e33e8c5:source",
+              "sha256Hash": "21f86f52b9ee0bf449cd254755f33f29f9387b9a9e74e1511e2f29840e33e8c5",
+              "byteLength": 160,
+              "contentKind": 1,
+              "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+              "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430"
+            },
+            "refreshProtocolVersion": "source-refresh-v1",
+            "sourceRevisionNumber": 1,
+            "refreshIdentityDigest": "de70d3e97cbf95ecb7983260bea2bbb93382420f5193c7c8744d9b548d905ef1",
+            "candidateArtifactsDeleted": false,
+            "failedRetryMemoryUnitId": null
+          },
+          {
+            "caseId": "01M7GYJP90SHAJ0B2E3Q3D5EZ3",
+            "workflowInstanceId": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63",
+            "idempotencyTokenHash": "dd7daad5024a612696f3213beddf79a116e079d1a4da1e5e90a47b0a6c7df489",
+            "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63",
+            "state": "Completed",
+            "terminalVerified": true,
+            "schedulingState": "Scheduled",
+            "candidateMemoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63",
+            "sourcePayloadReference": {
+              "id": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63:sourcebytes:6c67543d8856223d359b55cf43eecd2ce593e06287833bcd1aeafd9005f3db3e:source",
+              "sha256Hash": "6c67543d8856223d359b55cf43eecd2ce593e06287833bcd1aeafd9005f3db3e",
+              "byteLength": 161,
+              "contentKind": 1,
+              "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+              "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63"
+            },
+            "refreshProtocolVersion": "source-refresh-v1",
+            "sourceRevisionNumber": 2,
+            "refreshIdentityDigest": "f1b56a6300e93bf6f3de0d2b1c1051be47962ce3b2385d551d6e202658da26bc",
+            "candidateArtifactsDeleted": false,
+            "failedRetryMemoryUnitId": null
+          }
+        ],
+        "nextCursor": null,
+        "incompleteReason": null
+      }
+    },
+    {
+      "Tenant": "parties-recovery-d98b695eff1243909eaad10002944656",
+      "Unit": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+      "Generation": "1c47e804471f4fe9aac6cdbab30b7450",
+      "WriterExclusionEvidenceId": "owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450",
+      "AuthoritySha256": "dc165b1cf2398e52a9b32714b67a0dfb533f7bd35b01190b22643abb073ccace",
+      "ProvenanceSha256": "dc165b1cf2398e52a9b32714b67a0dfb533f7bd35b01190b22643abb073ccace",
+      "Deleted": false,
+      "DeletionReceipt": "",
+      "Inventory": {
+        "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+        "sourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:prepared-e7936acf40a84e46b2bea7c4bd9c69f6",
+        "version": "434e19da2e034172b7a136035b7e33bd",
+        "coverageComplete": true,
+        "admissionClosed": true,
+        "permanent": true,
+        "entries": [
+          {
+            "caseId": "01M7GYJP90SHAJ0B2E3Q3D5EZ3",
+            "workflowInstanceId": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+            "idempotencyTokenHash": "8b730ded61cffebc254065bdee13491d5112121735b88ec86c38ad84d37409f7",
+            "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+            "state": "Completed",
+            "terminalVerified": false,
+            "schedulingState": "Scheduled",
+            "candidateMemoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+            "sourcePayloadReference": {
+              "id": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea:sourcebytes:35ec4f1ec6641586bf074d1f5c2152fe27bbc155f04a5ce631a2db13d2815a7b:source",
+              "sha256Hash": "35ec4f1ec6641586bf074d1f5c2152fe27bbc155f04a5ce631a2db13d2815a7b",
+              "byteLength": 155,
+              "contentKind": 1,
+              "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+              "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea"
+            },
+            "refreshProtocolVersion": "source-refresh-v1",
+            "sourceRevisionNumber": 1,
+            "refreshIdentityDigest": "a1b31d93795a8760f50b42c5fbe6ee2c308b627948d84aff221e188e60d33730",
+            "candidateArtifactsDeleted": false,
+            "failedRetryMemoryUnitId": null
+          }
+        ],
+        "nextCursor": null,
+        "incompleteReason": null
+      }
+    },
+    {
+      "Boundary": "delayed-output-cleanup",
+      "Unit": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+      "DeletionWorkflow": "memory-unit-delete-owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+      "RuntimeStatus": "Completed"
+    },
+    {
+      "Tenant": "parties-recovery-d98b695eff1243909eaad10002944656",
+      "Unit": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+      "Generation": "1c47e804471f4fe9aac6cdbab30b7450",
+      "WriterExclusionEvidenceId": "owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450",
+      "AuthoritySha256": "dc165b1cf2398e52a9b32714b67a0dfb533f7bd35b01190b22643abb073ccace",
+      "ProvenanceSha256": "dc165b1cf2398e52a9b32714b67a0dfb533f7bd35b01190b22643abb073ccace",
+      "Deleted": true,
+      "DeletionReceipt": "1",
+      "Inventory": {
+        "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+        "sourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:prepared-e7936acf40a84e46b2bea7c4bd9c69f6",
+        "version": "f4057733d0dd41ae938c9c462cb04bdd",
+        "coverageComplete": true,
+        "admissionClosed": true,
+        "permanent": true,
+        "entries": [
+          {
+            "caseId": "01M7GYJP90SHAJ0B2E3Q3D5EZ3",
+            "workflowInstanceId": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+            "idempotencyTokenHash": "8b730ded61cffebc254065bdee13491d5112121735b88ec86c38ad84d37409f7",
+            "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+            "state": "Deleted",
+            "terminalVerified": true,
+            "schedulingState": "Scheduled",
+            "candidateMemoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+            "sourcePayloadReference": {
+              "id": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea:sourcebytes:35ec4f1ec6641586bf074d1f5c2152fe27bbc155f04a5ce631a2db13d2815a7b:source",
+              "sha256Hash": "35ec4f1ec6641586bf074d1f5c2152fe27bbc155f04a5ce631a2db13d2815a7b",
+              "byteLength": 155,
+              "contentKind": 1,
+              "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+              "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea"
+            },
+            "refreshProtocolVersion": "source-refresh-v1",
+            "sourceRevisionNumber": 1,
+            "refreshIdentityDigest": "a1b31d93795a8760f50b42c5fbe6ee2c308b627948d84aff221e188e60d33730",
+            "candidateArtifactsDeleted": false,
+            "failedRetryMemoryUnitId": null
+          }
+        ],
+        "nextCursor": null,
+        "incompleteReason": null
+      }
+    },
+    {
+      "Boundary": "bounded-legacy-discovery",
+      "Unit": "owned-1c47e804471f4fe9aac6cdbab30b7450-57b6fd72-167d-4b3f-80bf-fdc4e410a197",
+      "ExactKeys": [
+        "parties-recovery-d98b695eff1243909eaad10002944656:mu:owned-1c47e804471f4fe9aac6cdbab30b7450-57b6fd72-167d-4b3f-80bf-fdc4e410a197",
+        "parties-recovery-d98b695eff1243909eaad10002944656:vec:owned-1c47e804471f4fe9aac6cdbab30b7450-57b6fd72-167d-4b3f-80bf-fdc4e410a197:0",
+        "parties-recovery-d98b695eff1243909eaad10002944656:vec:owned-1c47e804471f4fe9aac6cdbab30b7450-57b6fd72-167d-4b3f-80bf-fdc4e410a197:47"
+      ],
+      "Hashes": [
+        "25fa10959ed807eb9d68ab8edbb1ff932349195c4dfebe29fe8cae071a366926",
+        "935557e74fd26ab55d8612fe15e5dbd795366727cb4871f27ce38404d8016f34",
+        "b062141c45995bddd7a44aebf747fc76acd1653e36b500f7ed377bb15f8e8c32"
+      ],
+      "IncompleteCoverageRefused": true,
+      "HistoricalBytesRetained": true,
+      "ObligationsRetained": true,
+      "RefusedAttempts": 2
+    },
+    {
+      "Boundary": "bounded-legacy-discovery",
+      "Unit": "owned-1c47e804471f4fe9aac6cdbab30b7450-57b6fd72-167d-4b3f-80bf-fdc4e410a197",
+      "EvidenceId": "owned-exact-unit-inventory:4bea754681db:68b3594016ab863c526fcdcfaf598867280b219387d28c461bb8e877e8ba8e16",
+      "ExactKeys": [
+        "parties-recovery-d98b695eff1243909eaad10002944656:mu:owned-1c47e804471f4fe9aac6cdbab30b7450-57b6fd72-167d-4b3f-80bf-fdc4e410a197",
+        "parties-recovery-d98b695eff1243909eaad10002944656:vec:owned-1c47e804471f4fe9aac6cdbab30b7450-57b6fd72-167d-4b3f-80bf-fdc4e410a197:0",
+        "parties-recovery-d98b695eff1243909eaad10002944656:vec:owned-1c47e804471f4fe9aac6cdbab30b7450-57b6fd72-167d-4b3f-80bf-fdc4e410a197:47"
+      ],
+      "ExactKeysAbsent": true,
+      "AuthorityRetained": true,
+      "DeletionReceiptRetained": true
+    },
+    {
+      "Control": "missing-unit-authority",
+      "Operation": "cleanup",
+      "Workflow": "memory-unit-delete-owned-1c47e804471f4fe9aac6cdbab30b7450-05fb43c0-8601-4403-9881-3d2c75e70c2d",
+      "AuthorityRefusalObserved": true,
+      "UnitSha256": "98ecb57483e4849c61a6f4422f87a792bace1af850385dcdaf0c602e63c1c83b",
+      "ObligationsRetained": true
+    },
+    {
+      "Control": "foreign-unit-authority",
+      "Operation": "cleanup",
+      "Workflow": "memory-unit-delete-owned-1c47e804471f4fe9aac6cdbab30b7450-9b99daf0-a2cd-4b96-bd9d-d1375d0b1722",
+      "AuthorityRefusalObserved": true,
+      "UnitSha256": "3f34f984a49edc7ce205e0461512ee63c6c61008d8d0212d9630c98df5ae4627",
+      "ObligationsRetained": true
+    },
+    {
+      "Control": "paired-foreign-tenant-authority-provenance",
+      "Operation": "cleanup",
+      "Workflow": "memory-unit-delete-owned-1c47e804471f4fe9aac6cdbab30b7450-75d047cd-12b8-4a0e-89b1-d4f9fdf104dd",
+      "AuthorityRefusalObserved": true,
+      "UnitSha256": "b0a324473bb91b5860a0c9e82a7c9648d02b23997b3cadf540888752154cdc69",
+      "ObligationsRetained": true
+    },
+    {
+      "Control": "paired-foreign-unit-authority-provenance",
+      "Operation": "cleanup",
+      "Workflow": "memory-unit-delete-owned-1c47e804471f4fe9aac6cdbab30b7450-0ff4dc9b-820c-4de5-af4f-babb9ec93e9a",
+      "AuthorityRefusalObserved": true,
+      "UnitSha256": "c14d2eb62a50196a18213baac451c71ac07d94aeb0e67e6da6e49944e5f6419f",
+      "ObligationsRetained": true
+    },
+    {
+      "Tenant": "parties-recovery-d98b695eff1243909eaad10002944656",
+      "Unit": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+      "Generation": "1c47e804471f4fe9aac6cdbab30b7450",
+      "WriterExclusionEvidenceId": "owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450",
+      "AuthoritySha256": "b558d30afdb6b6f1ee34dd455d0af075376a946f277d0731abd5f792e3530f54",
+      "ProvenanceSha256": "b558d30afdb6b6f1ee34dd455d0af075376a946f277d0731abd5f792e3530f54",
+      "Deleted": true,
+      "DeletionReceipt": "1",
+      "Inventory": {
+        "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+        "sourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:party-97d5caa2b1ed405c9c541e14ad9a94f2",
+        "version": "7ab076e58a1840a89eaf974bc4fbb7ea",
+        "coverageComplete": true,
+        "admissionClosed": true,
+        "permanent": true,
+        "entries": [
+          {
+            "caseId": "01M7GYJP90SHAJ0B2E3Q3D5EZ3",
+            "workflowInstanceId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "idempotencyTokenHash": "e982089ec5aaa6b7be90663268f2c0503724a95d34710f4d24c15b458fc87b3e",
+            "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "state": "Deleted",
+            "terminalVerified": true,
+            "schedulingState": "Scheduled",
+            "candidateMemoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "sourcePayloadReference": {
+              "id": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430:sourcebytes:21f86f52b9ee0bf449cd254755f33f29f9387b9a9e74e1511e2f29840e33e8c5:source",
+              "sha256Hash": "21f86f52b9ee0bf449cd254755f33f29f9387b9a9e74e1511e2f29840e33e8c5",
+              "byteLength": 160,
+              "contentKind": 1,
+              "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+              "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430"
+            },
+            "refreshProtocolVersion": "source-refresh-v1",
+            "sourceRevisionNumber": 1,
+            "refreshIdentityDigest": "de70d3e97cbf95ecb7983260bea2bbb93382420f5193c7c8744d9b548d905ef1",
+            "candidateArtifactsDeleted": false,
+            "failedRetryMemoryUnitId": null
+          },
+          {
+            "caseId": "01M7GYJP90SHAJ0B2E3Q3D5EZ3",
+            "workflowInstanceId": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63",
+            "idempotencyTokenHash": "dd7daad5024a612696f3213beddf79a116e079d1a4da1e5e90a47b0a6c7df489",
+            "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63",
+            "state": "Deleted",
+            "terminalVerified": true,
+            "schedulingState": "Scheduled",
+            "candidateMemoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63",
+            "sourcePayloadReference": {
+              "id": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63:sourcebytes:6c67543d8856223d359b55cf43eecd2ce593e06287833bcd1aeafd9005f3db3e:source",
+              "sha256Hash": "6c67543d8856223d359b55cf43eecd2ce593e06287833bcd1aeafd9005f3db3e",
+              "byteLength": 161,
+              "contentKind": 1,
+              "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+              "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63"
+            },
+            "refreshProtocolVersion": "source-refresh-v1",
+            "sourceRevisionNumber": 2,
+            "refreshIdentityDigest": "f1b56a6300e93bf6f3de0d2b1c1051be47962ce3b2385d551d6e202658da26bc",
+            "candidateArtifactsDeleted": false,
+            "failedRetryMemoryUnitId": null
+          }
+        ],
+        "nextCursor": null,
+        "incompleteReason": null
+      }
+    },
+    {
+      "Tenant": "parties-recovery-d98b695eff1243909eaad10002944656",
+      "Unit": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63",
+      "Generation": "1c47e804471f4fe9aac6cdbab30b7450",
+      "WriterExclusionEvidenceId": "owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450",
+      "AuthoritySha256": "827111682455bd16289f4dc810596c04567fb554159abc4145546156b502c013",
+      "ProvenanceSha256": "827111682455bd16289f4dc810596c04567fb554159abc4145546156b502c013",
+      "Deleted": true,
+      "DeletionReceipt": "1",
+      "Inventory": {
+        "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+        "sourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:party-97d5caa2b1ed405c9c541e14ad9a94f2",
+        "version": "7ab076e58a1840a89eaf974bc4fbb7ea",
+        "coverageComplete": true,
+        "admissionClosed": true,
+        "permanent": true,
+        "entries": [
+          {
+            "caseId": "01M7GYJP90SHAJ0B2E3Q3D5EZ3",
+            "workflowInstanceId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "idempotencyTokenHash": "e982089ec5aaa6b7be90663268f2c0503724a95d34710f4d24c15b458fc87b3e",
+            "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "state": "Deleted",
+            "terminalVerified": true,
+            "schedulingState": "Scheduled",
+            "candidateMemoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "sourcePayloadReference": {
+              "id": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430:sourcebytes:21f86f52b9ee0bf449cd254755f33f29f9387b9a9e74e1511e2f29840e33e8c5:source",
+              "sha256Hash": "21f86f52b9ee0bf449cd254755f33f29f9387b9a9e74e1511e2f29840e33e8c5",
+              "byteLength": 160,
+              "contentKind": 1,
+              "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+              "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430"
+            },
+            "refreshProtocolVersion": "source-refresh-v1",
+            "sourceRevisionNumber": 1,
+            "refreshIdentityDigest": "de70d3e97cbf95ecb7983260bea2bbb93382420f5193c7c8744d9b548d905ef1",
+            "candidateArtifactsDeleted": false,
+            "failedRetryMemoryUnitId": null
+          },
+          {
+            "caseId": "01M7GYJP90SHAJ0B2E3Q3D5EZ3",
+            "workflowInstanceId": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63",
+            "idempotencyTokenHash": "dd7daad5024a612696f3213beddf79a116e079d1a4da1e5e90a47b0a6c7df489",
+            "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63",
+            "state": "Deleted",
+            "terminalVerified": true,
+            "schedulingState": "Scheduled",
+            "candidateMemoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63",
+            "sourcePayloadReference": {
+              "id": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63:sourcebytes:6c67543d8856223d359b55cf43eecd2ce593e06287833bcd1aeafd9005f3db3e:source",
+              "sha256Hash": "6c67543d8856223d359b55cf43eecd2ce593e06287833bcd1aeafd9005f3db3e",
+              "byteLength": 161,
+              "contentKind": 1,
+              "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+              "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63"
+            },
+            "refreshProtocolVersion": "source-refresh-v1",
+            "sourceRevisionNumber": 2,
+            "refreshIdentityDigest": "f1b56a6300e93bf6f3de0d2b1c1051be47962ce3b2385d551d6e202658da26bc",
+            "candidateArtifactsDeleted": false,
+            "failedRetryMemoryUnitId": null
+          }
+        ],
+        "nextCursor": null,
+        "incompleteReason": null
+      }
+    }
+  ],
+  "SurvivorCaseId": "01M7GYJQAK6W9Q994939VJ8BMC",
+  "OtherTenantId": "parties-recovery-survivor-e6fab4cf8939458e899b0ca5ceb76e21",
+  "OtherCaseId": "01M7GYJTY6ZB8WN8MPG0WYJM3P",
+  "SurvivorsVerified": true,
+  "Requests": [
+    {
+      "RefreshExistingSource": false,
+      "SourceRevisionNumber": 0,
+      "SourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:same-tenant-survivor-b2362333abf54f62aaa0fc0906956f1b"
+    },
+    {
+      "RefreshExistingSource": true,
+      "SourceRevisionNumber": 1,
+      "SourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:party-97d5caa2b1ed405c9c541e14ad9a94f2"
+    },
+    {
+      "RefreshExistingSource": true,
+      "SourceRevisionNumber": 2,
+      "SourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:party-97d5caa2b1ed405c9c541e14ad9a94f2"
+    },
+    {
+      "RefreshExistingSource": true,
+      "SourceRevisionNumber": 2,
+      "SourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:party-97d5caa2b1ed405c9c541e14ad9a94f2"
+    },
+    {
+      "RefreshExistingSource": true,
+      "SourceRevisionNumber": 2,
+      "SourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:party-97d5caa2b1ed405c9c541e14ad9a94f2"
+    },
+    {
+      "RefreshExistingSource": true,
+      "SourceRevisionNumber": 2,
+      "SourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:party-97d5caa2b1ed405c9c541e14ad9a94f2"
+    },
+    {
+      "RefreshExistingSource": true,
+      "SourceRevisionNumber": 2,
+      "SourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:party-97d5caa2b1ed405c9c541e14ad9a94f2"
+    },
+    {
+      "RefreshExistingSource": false,
+      "SourceRevisionNumber": 0,
+      "SourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:prepared-dddc0deb501848329ed0b5bc986ddca9"
+    },
+    {
+      "RefreshExistingSource": false,
+      "SourceRevisionNumber": 0,
+      "SourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:prepared-e7936acf40a84e46b2bea7c4bd9c69f6"
+    },
+    {
+      "RefreshExistingSource": false,
+      "SourceRevisionNumber": 0,
+      "SourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:prepared-b42004ce1eed4edba71d3d35cfe2d676"
+    },
+    {
+      "RefreshExistingSource": false,
+      "SourceRevisionNumber": 0,
+      "SourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:prepared-3c944889d3b94f2399d944aac4f8286d"
+    },
+    {
+      "RefreshExistingSource": false,
+      "SourceRevisionNumber": 0,
+      "SourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:prepared-f14121570780493988a4da54d34d3d4e"
+    },
+    {
+      "RefreshExistingSource": false,
+      "SourceRevisionNumber": 0,
+      "SourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:prepared-f19f0d01fe2b4e0981bb915af6274192"
+    },
+    {
+      "RefreshExistingSource": false,
+      "SourceRevisionNumber": 0,
+      "SourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:prepared-fdb26a8dafc047e488f0b1a187cc5088"
+    }
+  ],
+  "OwnerComponent": {
+    "Tenant": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2",
+    "Case": "01M7GYKJ9TR7DREM3PTBH1D1P0",
+    "UnitA": "owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c",
+    "UnitB": "owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647",
+    "Scope": "isolated direct owner-contract fixture; intentionally unknown historical obligation retained until verified owned backing disposal"
+  }
+}

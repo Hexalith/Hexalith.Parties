@@ -1,0 +1,102 @@
+[
+  {
+    "Path": "references/Hexalith.EventStore",
+    "Head": "fdb59895975e86a1e234325a01237f259cdbd53b",
+    "RemoteMain": "eecc0e4da70a0d64aaeff4fb75cdc06f94eb7563",
+    "Clean": true,
+    "AheadOfOriginMain": 0,
+    "BehindOriginMain": 13,
+    "Origin": "https://github.com/Hexalith/Hexalith.EventStore.git",
+    "PinnedCommitAvailableOnFetchedRemoteMain": true
+  },
+  {
+    "Path": "references/Hexalith.Memories",
+    "Head": "7a5c892508700b2e5c71c921cdaeedf68de5f03d",
+    "RemoteMain": "fad5ec5efb286a1b4589869a354895acd3aaf55c",
+    "Clean": true,
+    "AheadOfOriginMain": 0,
+    "BehindOriginMain": 10,
+    "Origin": "https://github.com/Hexalith/Hexalith.Memories.git",
+    "PinnedCommitAvailableOnFetchedRemoteMain": true
+  },
+  {
+    "Path": "references/Hexalith.FrontComposer",
+    "Head": "bca9dff291ce42c57516598732340a80703dfb6d",
+    "RemoteMain": "b34be9245443d21b72a6076cf205bbbc8a8c521f",
+    "Clean": true,
+    "AheadOfOriginMain": 0,
+    "BehindOriginMain": 18,
+    "Origin": "https://github.com/Hexalith/Hexalith.FrontComposer.git",
+    "PinnedCommitAvailableOnFetchedRemoteMain": true
+  },
+  {
+    "Path": "references/Hexalith.Tenants",
+    "Head": "2ec938397c5b330cf1e694e8cc442cb4ad022f2b",
+    "RemoteMain": "8aa6f169b3e27f0a831ad6425c4bc1278ca2c445",
+    "Clean": true,
+    "AheadOfOriginMain": 0,
+    "BehindOriginMain": 15,
+    "Origin": "https://github.com/Hexalith/Hexalith.Tenants.git",
+    "PinnedCommitAvailableOnFetchedRemoteMain": true
+  },
+  {
+    "Path": "references/Hexalith.AI.Tools",
+    "Head": "17a37d83db193f0b7494c1b931fd1e82a67c1424",
+    "RemoteMain": "7ef8166ef87e1365f86d1a1b3aaf0235545177d4",
+    "Clean": true,
+    "AheadOfOriginMain": 0,
+    "BehindOriginMain": 1,
+    "Origin": "https://github.com/Hexalith/Hexalith.AI.Tools.git",
+    "PinnedCommitAvailableOnFetchedRemoteMain": true
+  },
+  {
+    "Path": "references/Hexalith.Commons",
+    "Head": "fbf4e94233821f6ca336af91a06feaaeb7a16855",
+    "RemoteMain": "ab5e92faa3bab1fa43b8ecadd423432dfe652bb2",
+    "Clean": true,
+    "AheadOfOriginMain": 0,
+    "BehindOriginMain": 1,
+    "Origin": "https://github.com/Hexalith/Hexalith.Commons.git",
+    "PinnedCommitAvailableOnFetchedRemoteMain": true
+  },
+  {
+    "Path": "references/Hexalith.Builds",
+    "Head": "73e60af8a1fcdf3f06726d5d1b6e1199cce778ee",
+    "RemoteMain": "801f268cd1b37ecae41d4fb20d115c055b4c5793",
+    "Clean": true,
+    "AheadOfOriginMain": 0,
+    "BehindOriginMain": 11,
+    "Origin": "https://github.com/Hexalith/Hexalith.Builds.git",
+    "PinnedCommitAvailableOnFetchedRemoteMain": true
+  },
+  {
+    "Path": "references/Hexalith.PolymorphicSerializations",
+    "Head": "e97b56930e213f674b64c157551f499b0473ec43",
+    "RemoteMain": "476cfccac3c5ba694a8e0ef11b1157728b9ec093",
+    "Clean": true,
+    "AheadOfOriginMain": 0,
+    "BehindOriginMain": 1,
+    "Origin": "https://github.com/Hexalith/Hexalith.PolymorphicSerializations.git",
+    "PinnedCommitAvailableOnFetchedRemoteMain": true
+  },
+  {
+    "Path": "references/Hexalith.McpCli",
+    "Head": "23072f04f423eea3f30456fe5af13d2d382624fe",
+    "RemoteMain": "89f88902ae40afae1cca94b089f9c9893722ffc2",
+    "Clean": true,
+    "AheadOfOriginMain": 0,
+    "BehindOriginMain": 12,
+    "Origin": "https://github.com/Hexalith/Hexalith.McpCli.git",
+    "PinnedCommitAvailableOnFetchedRemoteMain": true
+  },
+  {
+    "Path": "references/Hexalith.Platform",
+    "Head": "f6f85032598865b9123f16364448bfd02c0ff5b0",
+    "RemoteMain": "17b1f688b332020fafbe1da07a5c04a41886c7bd",
+    "Clean": true,
+    "AheadOfOriginMain": 0,
+    "BehindOriginMain": 26,
+    "Origin": "https://github.com/Hexalith/Hexalith.Platform.git",
+    "PinnedCommitAvailableOnFetchedRemoteMain": true
+  }
+]

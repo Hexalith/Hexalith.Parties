@@ -1,0 +1,29 @@
+{
+  "Tenant": "parties-recovery-oc-c04e686b219c42ac9448e009f38e0162",
+  "Case": "01M7GS155N6BYR9NPHH9ZTSZDH",
+  "UnitA": "owned-17e220e696ed4cfc8b2e6f19eaca5081-c268bf5c-aaee-4d72-aa85-5312e912d5c5",
+  "UnitB": "owned-17e220e696ed4cfc8b2e6f19eaca5081-23df6810-c106-49a9-86bf-fb84f80b9d6b",
+  "CapturedAtUtc": "2026-11-15T23:35:33.5561544+00:00",
+  "SourceAAuthoritySha256": "343f507aae6e0a466432c15d75b6d44e7ecdce6bc70382938a87eda77dbdaedf",
+  "SourceAHashes": [
+    {
+      "Key": "parties-recovery-oc-c04e686b219c42ac9448e009f38e0162:mu:owned-17e220e696ed4cfc8b2e6f19eaca5081-c268bf5c-aaee-4d72-aa85-5312e912d5c5",
+      "Sha256": "80d2fdcb648efaece718b470799d87a72d53fc5d6a7fe4c3720074681ec8676b"
+    },
+    {
+      "Key": "parties-recovery-oc-c04e686b219c42ac9448e009f38e0162:vec:owned-17e220e696ed4cfc8b2e6f19eaca5081-c268bf5c-aaee-4d72-aa85-5312e912d5c5:0",
+      "Sha256": "97031cfbb34ab4df35a384a999a2a630bb209022c653d97ef4cdade1373511de"
+    }
+  ],
+  "SourceBHashes": [
+    {
+      "Key": "parties-recovery-oc-c04e686b219c42ac9448e009f38e0162:mu:owned-17e220e696ed4cfc8b2e6f19eaca5081-23df6810-c106-49a9-86bf-fb84f80b9d6b",
+      "Sha256": "6a54e84b7c672be0fb7183b018056fb492012b1edabb98e9afd60343436fd87d"
+    },
+    {
+      "Key": "parties-recovery-oc-c04e686b219c42ac9448e009f38e0162:vec:owned-17e220e696ed4cfc8b2e6f19eaca5081-23df6810-c106-49a9-86bf-fb84f80b9d6b:0",
+      "Sha256": "4eefac7ce20f89c78c5de984bfb546fa79a9a7a60f75b77b59258bf41f530793"
+    }
+  ],
+  "Scope": "isolated owner-contract component; unknown fixture obligation does not affect main-party or survivor API teardown"
+}

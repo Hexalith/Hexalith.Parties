@@ -1,0 +1,306 @@
+{
+  "SourcePreparation": {
+    "Arguments": [
+      "dotnet",
+      "tool",
+      "run",
+      "hexalith-module",
+      "--",
+      "prepare-build",
+      "--manifest",
+      "module/hexalith.module-manifest.v2.json",
+      "--workspace",
+      "${JOB}/mapping",
+      "--mode",
+      "source",
+      "--output",
+      "json"
+    ],
+    "Outcome": {
+      "exitCode": "Success",
+      "phase": "None",
+      "category": "None",
+      "ruleId": null
+    },
+    "Diagnostics": [
+      {
+        "ruleId": "HXW011",
+        "phase": "Prerequisite",
+        "category": "None",
+        "message": "Platform identity f6f85032598865b9123f16364448bfd02c0ff5b0 has no local v<SemVer> release tag.",
+        "field": "${REPOSITORY}/references/Hexalith.Platform",
+        "hint": "Fetch Platform tags, then retry.",
+        "source": null,
+        "location": null,
+        "row": null
+      },
+      {
+        "ruleId": "HXW010",
+        "phase": "Prerequisite",
+        "category": "None",
+        "message": "Tool version 5.2.2 is outside Platform range [4.44.3, 5.0.0-0) at '${REPOSITORY}/references/Hexalith.Platform/hexalith-platform.json'.",
+        "field": "${REPOSITORY}/references/Hexalith.Platform/hexalith-platform.json",
+        "hint": null,
+        "source": null,
+        "location": null,
+        "row": null
+      }
+    ],
+    "Log": "source-prepare.json.gz"
+  },
+  "BlockedDebugBuilds": [
+    {
+      "Arguments": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--disable-build-servers",
+        "-p:UseArtifactsOutput=true",
+        "-p:ArtifactsPath=${JOB}/debug-artifacts",
+        "-p:NuGetAudit=false",
+        "-p:MinVerVersionOverride=1.0.0"
+      ],
+      "EnvironmentImports": {
+        "CustomBeforeDirectoryBuildProps": "${JOB}/mapping/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "${JOB}/mapping/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "${JOB}/mapping/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "${JOB}/mapping/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "${JOB}/mapping/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "8e4d6bcbb20f4f057717d57bdd8217975b85a9dc52b8e7ba67a14074e3060d1f",
+        "Configuration": "Debug"
+      },
+      "Result": {
+        "Build": "FAILED",
+        "Error": "NU1109",
+        "Errors": 1,
+        "Warnings": 0,
+        "Details": "source Microsoft.AspNetCore.OpenApi >=11.0.0 versus central 10.0.15"
+      },
+      "Log": "Hexalith.Parties.Tests-debug.log.gz"
+    },
+    {
+      "Arguments": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--disable-build-servers",
+        "-p:UseArtifactsOutput=true",
+        "-p:ArtifactsPath=${JOB}/debug-artifacts",
+        "-p:NuGetAudit=false",
+        "-p:MinVerVersionOverride=1.0.0"
+      ],
+      "EnvironmentImports": {
+        "CustomBeforeDirectoryBuildProps": "${JOB}/mapping/source-mapping/SourceMapping.targets",
+        "CustomAfterMicrosoftCommonProps": "${JOB}/mapping/source-mapping/SourceMapping.props",
+        "CustomBeforeDirectoryBuildTargets": "${JOB}/mapping/source-mapping/SourceMapping.before-targets.props",
+        "CustomAfterDirectoryBuildTargets": "${JOB}/mapping/source-mapping/SourceMapping.late.props",
+        "AfterMicrosoftNETSdkTargets": "${JOB}/mapping/source-mapping/SourceMapping.final.targets",
+        "HEXALITH_SOURCE_MAPPING_HASH": "8e4d6bcbb20f4f057717d57bdd8217975b85a9dc52b8e7ba67a14074e3060d1f",
+        "Configuration": "Debug"
+      },
+      "Result": {
+        "Build": "FAILED",
+        "Error": "NU1109",
+        "Errors": 1,
+        "Warnings": 0,
+        "Details": "source Microsoft.AspNetCore.OpenApi >=11.0.0 versus central 10.0.15"
+      },
+      "Log": "Hexalith.Parties.IntegrationTests-debug.log.gz"
+    }
+  ],
+  "PackagePreparation": {
+    "Arguments": [
+      "dotnet",
+      "tool",
+      "run",
+      "hexalith-module",
+      "--",
+      "prepare-build",
+      "--manifest",
+      "module/hexalith.module-manifest.v2.json",
+      "--workspace",
+      "${JOB}/packages",
+      "--mode",
+      "package",
+      "--output",
+      "json"
+    ],
+    "Outcome": {
+      "exitCode": "PrerequisiteUnavailable",
+      "phase": "Prerequisite",
+      "category": "PrerequisiteUnavailable",
+      "ruleId": "HXW011"
+    },
+    "Diagnostics": [
+      {
+        "ruleId": "HXW011",
+        "phase": "Prerequisite",
+        "category": "PrerequisiteUnavailable",
+        "message": "Platform identity f6f85032598865b9123f16364448bfd02c0ff5b0 has no local v<SemVer> release tag.",
+        "field": "${REPOSITORY}/references/Hexalith.Platform",
+        "hint": "Fetch Platform tags, then retry.",
+        "source": null,
+        "location": null,
+        "row": null
+      },
+      {
+        "ruleId": "HXW010",
+        "phase": "Prerequisite",
+        "category": "PrerequisiteUnavailable",
+        "message": "Tool version 5.2.2 is outside Platform range [4.44.3, 5.0.0-0) at '${REPOSITORY}/references/Hexalith.Platform/hexalith-platform.json'.",
+        "field": "${REPOSITORY}/references/Hexalith.Platform/hexalith-platform.json",
+        "hint": null,
+        "source": null,
+        "location": null,
+        "row": null
+      }
+    ],
+    "Log": "package-prepare.json.gz"
+  },
+  "PassingReleaseFallback": [
+    {
+      "Arguments": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "--disable-build-servers",
+        "-p:UseArtifactsOutput=true",
+        "-p:ArtifactsPath=${ARTIFACTS}",
+        "-p:NuGetAudit=false",
+        "-p:MinVerVersionOverride=1.0.0",
+        "-p:HexalithEventStoreVersion=5.1.0",
+        "-p:HexalithMemoriesVersion=4.0.0",
+        "-p:HexalithFrontComposerVersion=6.0.0"
+      ],
+      "EnvironmentImports": {},
+      "Result": {
+        "Build": "succeeded",
+        "Errors": 0,
+        "Warnings": 0
+      },
+      "Log": "Hexalith.Parties.Tests-release.log.gz"
+    },
+    {
+      "Arguments": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "--disable-build-servers",
+        "-p:UseArtifactsOutput=true",
+        "-p:ArtifactsPath=${ARTIFACTS}",
+        "-p:NuGetAudit=false",
+        "-p:MinVerVersionOverride=1.0.0",
+        "-p:HexalithEventStoreVersion=5.1.0",
+        "-p:HexalithMemoriesVersion=4.0.0",
+        "-p:HexalithFrontComposerVersion=6.0.0"
+      ],
+      "EnvironmentImports": {},
+      "Result": {
+        "Build": "succeeded",
+        "Errors": 0,
+        "Warnings": 0
+      },
+      "Log": "Hexalith.Parties.IntegrationTests-release.log.gz"
+    }
+  ],
+  "CommandEvidence": "Exact argv recovered from this run shell-history entries 483,485,490,491; generated source imports retained unchanged. Earlier invalid plural mode was not a package prerequisite attempt.",
+  "RuntimeEnvironment": {
+    "HexalithEventStoreVersion": "5.1.0",
+    "HexalithMemoriesVersion": "4.0.0",
+    "HexalithFrontComposerVersion": "6.0.0",
+    "NuGetAudit": "false",
+    "MinVerVersionOverride": "1.0.0",
+    "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+    "Parties__Testing__PreparedRuntimeManifest": "${ARTIFACTS}/runtime-profile/Release/prepared.json"
+  },
+  "Full": [
+    "dotnet",
+    "${ARTIFACTS}/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+    "-method",
+    "*ActualCurrentSourceMemoriesRestartsAcrossFiveRecoveryBoundaries",
+    "-parallelMode",
+    "none",
+    "-failSkips",
+    "-result-xml",
+    "${PRIVATE}/wrapper.xml"
+  ],
+  "Cancellation": [
+    "dotnet",
+    "${ARTIFACTS}/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+    "-method",
+    "*ActualCurrentSourceCanceledRestartCompletesOwnedCleanup",
+    "-parallelMode",
+    "none",
+    "-failSkips",
+    "-result-xml",
+    "${PRIVATE}/cancellation-control/wrapper.xml"
+  ],
+  "FocusedConsumer": [
+    "dotnet",
+    "${ARTIFACTS}/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll",
+    "-class",
+    "Hexalith.Parties.Tests.Search.PartyMemoryProducerRestartProtocolTests",
+    "-class",
+    "Hexalith.Parties.Tests.Search.PartyMemoryUnitAuthorityRuntimeTests",
+    "-class",
+    "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+    "-class",
+    "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+    "-method-",
+    "*SelectedMemories*",
+    "-parallelMode",
+    "none",
+    "-failSkips",
+    "-result-xml",
+    "${PRIVATE}/focused.xml"
+  ],
+  "FocusedSignalAndCleanup": [
+    "dotnet",
+    "${ARTIFACTS}/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+    "-class",
+    "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedCleanupTests",
+    "-class",
+    "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryProducerRestartSignalTests",
+    "-parallelMode",
+    "none",
+    "-failSkips",
+    "-result-xml",
+    "${PRIVATE}/owned-cleanup.xml"
+  ],
+  "FinalPreparation": [
+    "bash",
+    "scripts/prepare-aspire-runtime-hosts.sh",
+    "--gateway-profile",
+    "packaged",
+    "--configuration",
+    "Release",
+    "--artifacts-path",
+    "${ARTIFACTS}",
+    "--include-memory-qualification",
+    "true"
+  ],
+  "DisposableWorkspace": "run-with-temp; final builds below its TMPDIR; each live selector uses nested short TMPDIR scratch, copied before disposal",
+  "StaticChecks": [
+    [
+      "bash",
+      "scripts/check-no-warning-override.sh"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ]
+}

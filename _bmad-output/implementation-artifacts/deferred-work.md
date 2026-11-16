@@ -633,6 +633,10 @@ verification_interrupted_runtime_2026_11_15: `tests/five-interrupted-runtime-and
 
 review_interrupted_runtime_2026_11_15: Final current-source wrapper/child each pass with13 authority observations; four invalid variants refuse refresh and actual cleanup, preserve obligations/bytes, and recover after exact restoration. Cleanup and unrelated survivors verify. Consumer/custody controls pass42/42. Evidence: `tests/five-interrupted-runtime-and-browser-deferrals-2026-11-15/review-final/`. External gates remain open.
 
+qualification_producer_restart_2026_11_16: The owned current-source lane replaces the actual Memories process after independently observing admitted work with no output or local mapping. While the exact process is stopped, persisted inventory/workflow/authority prove the phase; a raced transition fails. Scoped absence retains unknown-terminal obligations across replacement. Later terminal evidence, physical absence, SDK state and unrelated survivors pass. This supplies no historical completeness.
+remaining_gate_producer_restart_2026_11_16: Status remains open for unknown history, older-writer exclusion, owner completeness/acceptance, current-source publication/adoption, production configuration/custody and deployed qualification. Global runner SIGINT cleanup remains unqualified; the separately passing private coordination-cancellation control keeps Aspire live.
+verification_producer_restart_2026_11_16: `tests/five-producer-restart-deferred-items-2026-11-15/review-final/` binds six distinct observed replacements across all five rows, one passing wrapper/child each, 58 focused consumer and 10 signal/cleanup controls, one passing controlled cancellation and zero targeted skips. Both API teardowns and owned backing disposal complete.
+
 ### DW-83: Persist recovery when mapping and compensating deletion both fail
 
 status: done 2026-10-23
@@ -1297,6 +1301,10 @@ verification_interrupted_runtime_2026_11_15: `tests/five-interrupted-runtime-and
 
 review_interrupted_runtime_2026_11_15: Final current-source wrapper/child each pass with13 authority observations; four invalid variants refuse refresh and actual cleanup, preserve obligations/bytes, and recover after exact restoration. Cleanup and unrelated survivors verify. Consumer/custody controls pass42/42. Evidence: `tests/five-interrupted-runtime-and-browser-deferrals-2026-11-15/review-final/`. External gates remain open.
 
+qualification_producer_restart_2026_11_16: Separate actual Memories replacements interrupt output-known/nonterminal ingestion and an independently running accepted-deletion workflow. Original process exit and distinct healthy replacements preserve exact inventory, authority, deletion receipts, SDK reconciliation and unrelated survivor bytes. Terminal workflow evidence and physical absence are required before empty mappings/intents and changed ETags verify. The replay-safety guard remains enabled; its two five-minute timeout events and exact phase timings are retained.
+remaining_gate_producer_restart_2026_11_16: Production workload/key/trust custody, historical reconciliation, writer drain, current-source publication/adoption, deployment and owner acceptance remain open. This current-source process evidence does not certify published Memories 4.0.0 or global runner SIGINT cleanup.
+verification_producer_restart_2026_11_16: `tests/five-producer-restart-deferred-items-2026-11-15/review-final/`; the final frozen cohort also passes controlled coordination cancellation, with incomplete replacement quiescence before backing removal and completed owned disposal.
+
 ### DW-169: D7 — Use concurrency-aware removal when cleaning a party memory-unit mapping inventory.
 
 status: done 2026-10-18
@@ -1781,6 +1789,10 @@ archived: 2026-10-21
 
   runtime_2026_11_15: The full owned package-matched wrapper and child pass without skips: actual requests refresh revisions 1 and 2 at one source URI, distinct canonical outputs expose changed current content, both outputs are physically erased, unrelated case/tenant bytes survive, and native persisted-stream/domain replay agrees. Exact 4.0.0 source-host revision, package/assembly hashes and completed cleanup are retained; newer source per-unit authority and external gates remain excluded.
 
+  qualification_producer_restart_2026_11_16: Settled revision 1 precedes an observed actual Memories process replacement; revision 2 retains the same canonical URI and persisted request binding while exposing changed current content and a distinct output. Both exact outputs are physically erased; retained receipts, empty SDK mapping/intent state, native stream/domain replay and unrelated case/tenant bytes verify.
+  remaining_gate_producer_restart_2026_11_16: Installed/deployed qualification, unknown historical coverage, older-writer exclusion and named owner acceptance remain open. Current-source process evidence remains separate from package publication/adoption and the unchanged package-matched profile.
+  verification_producer_restart_2026_11_16: `tests/five-producer-restart-deferred-items-2026-11-15/review-final/`; final wrapper/child pass once each, with six observed replacements and no targeted skips.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-memories-recovery-deferred-items.md`
   summary: Qualify whether ingestion-inventory persistence needs a separate health capability probe.
   severity: medium
@@ -1910,6 +1922,10 @@ implementation_2026_10_25: Both deletion paths now share bounded exact-key/nativ
 verification_2026_10_25: `tests/five-processing-and-memories-erasure-2026-10-25/`; source receipt remains separate from package/deployment qualification.
 
 review1_2026_10_25: Review-1 native TAG queries retain discovered obligations without certifying historical coverage. Missing-TAG and unknown legacy coverage require explicit qualified owner reconciliation; old automatic legacy-complete markers are rejected. Modern exact provenance remains supported. Synthetic fixture owners reconcile only their own known inventories; this grants no production completeness. Final executed evidence: `tests/five-processing-and-memories-erasure-2026-10-25/review1-verification.json`.
+
+qualification_producer_restart_2026_11_16: After actual producer replacement, unknown historical exact-unit coverage refuses live HTTP cleanup while the complete known key/hash fixture bytes remain unchanged. The existing owner ReconcileUnitAsync seam conditionally records only this explicitly enumerated disposable inventory under unchanged session generation/exclusion; subsequent bounded cleanup proves every exact key absent and retains authority/deletion receipts. Native TAG visibility never supplies historical completeness.
+remaining_gate_producer_restart_2026_11_16: Existing source implementation status is unchanged. Production historical inventory, independent writer exclusion, owner acceptance, publication/adoption and deployment remain separate; synthetic fixture custody certifies none of them.
+verification_producer_restart_2026_11_16: `tests/five-producer-restart-deferred-items-2026-11-15/review-final/` records the sixth replacement, pre-refusal exact key hashes, SDK obligations retained after both refusals, conditional fixture reconciliation and terminal physical absence.
 
 - source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
   summary: Qualify deterministic replay of the original content-bearing NL retry workflow under upgraded workers (medium, unverified).
@@ -2622,6 +2638,9 @@ archived: 2026-11-15
   verification_2026_11_15: `tests/five-publisher-catalog-authority-2026-11-15/final-verification.json`; reviewed final source lanes pass with zero targeted skips.
   remaining_gate_2026_11_15: A real historical inventory and verified writer exclusion remain open for existing deployments; no production mutation, attestation or deployment was performed.
 
+  qualification_producer_restart_2026_11_16: An isolated owner-component tenant/case captures source-A/source-B exact key hashes, original provenance, both settled inventories and bare historical artifacts before producer replacement. The exact running owner assembly then receives the persisted same-tenant/unit workflow input with only SourceUri changed and refuses admission with unit-ownership-producer-conflict; original authority and both sources' hashes survive. Independently, complete source B cannot grant a bare historical source-A unit exact authority or cleanup completeness. Real owner admission/discovery seams retain that unknown obligation until verified owned backing disposal; this direct contract evidence is distinct from the main lane's live HTTP cleanup.
+  remaining_gate_producer_restart_2026_11_16: Legitimately qualified same-unit cleanup remains allowed under the existing per-unit contract. Real historical inventory, verified old-writer exclusion, source contract publication/adoption, owner acceptance and deployed qualification remain open. The isolated expected refusal does not mask either main-party or unrelated-survivor API teardown.
+  verification_producer_restart_2026_11_16: `tests/five-producer-restart-deferred-items-2026-11-15/review-final/` retains independent original/source-B artifact hashes, exact Server/shared dependency identities and successful main/survivor API teardown plus owned backing disposal.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-sync-release-2026-11-13.md`
   summary: Qualify the exact EventStore 5.0.0 catalog/host/selector capabilities before admitting that current catalog family to Parties runtime gates.
@@ -2650,3 +2669,8 @@ archived: 2026-11-15
   qualification_interrupted_runtime_2026_11_15: Exact6.0.0 now passes measured four-asset served/restored parity and the maintained real Admin export, Consumer JSON export and active-download navigation-cancellation controls (3/3, zero skips/retries). Exact5.0.0 admission is retained;20 configuration controls include unknown/prerelease/build-metadata and byte-mismatch refusal.
   verification_interrupted_runtime_2026_11_15: `tests/five-interrupted-runtime-and-browser-deferrals-2026-11-15/` retains exact asset/package/assembly hashes, attachments, commands and browser XML.
   remaining_gate_interrupted_runtime_2026_11_15: The local VG1 browser blocker is qualified. G4, named owner acceptance and deployment remain separate; this is no current-source FrontComposer qualification.
+
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-producer-restart-deferred-items.md`
+  summary: Qualify direct-owner runtime dependency reuse beyond the three verified shared boundary assemblies (medium, unverified).
+  evidence: Blind review B7 notes that AssemblyLoadContext.Default can reuse already loaded dependencies before Resolving runs. No additional reused owner dependency with different bytes or changed behavior was demonstrated in the exact prepared cohort. Trace all actually resolved owner-call dependencies and their server/test hashes, then construct a reachable mismatch that passes the existing framework/cohort and boundary-byte guards before deciding whether an isolated process is needed.

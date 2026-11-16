@@ -1,0 +1,535 @@
+[
+  {
+    "Phase": "cross-source-authority",
+    "OriginalPid": 544047,
+    "OriginalStart": 6123869,
+    "OriginalExited": true,
+    "StartedAtUtc": "2026-11-16T01:13:10.5125336+00:00",
+    "ReplacementHealthyAtUtc": "2026-11-16T01:13:21.8860025+00:00",
+    "ElapsedMilliseconds": 11374,
+    "ReplacementPid": 568731,
+    "ReplacementStart": 6131726,
+    "Healthy": true,
+    "PreparedManifestSha256": "e3fb0bf07ca658f402c16d737fc613d124b86c625eaec56b26aa005f6a0fb3f3",
+    "ProducerFiles": {
+      "${ARTIFACTS}/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.dll": "dcbe8813e2634e3b6e2b13f840a03a21a07e13ae10eee7d5817cff5527bd7915",
+      "${ARTIFACTS}/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.deps.json": "efcd60d54b9f1f99f57cbcec9b53ad32613a0bb136b1417245e795856e7ab864",
+      "${ARTIFACTS}/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.runtimeconfig.json": "78072be84da805eb63a6bfb51bba6b3f053bf2c31e0f3e400c87c73fe2a3036c"
+    },
+    "Generation": "1c47e804471f4fe9aac6cdbab30b7450",
+    "WriterExclusionEvidenceId": "owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450",
+    "UnchangedCustody": {
+      "fixture-redis": "cd1c9ba5708c61e8d8ffc50d917f845431cd44c8cb79ec2f69e9c2af220563a6|tcp://localhost:39885/",
+      "fixture-memories-search": "dcfd6c8b29b4135f376eb50453f0741aee847a057faf7a4942bd635a62e0ac40|tcp://localhost:40363/",
+      "fixture-memories-graph": "989aa7653ff34ddc7d36ca9e9cfd925cc4d2e58b36ef5548402ec68e30e08388|tcp://localhost:41635/",
+      "eventstore": "543999:6123825",
+      "memories-domain-service": "543965:6123822",
+      "eventstore-dapr-cli": "543881:6123810",
+      "memories-dapr-cli": "543884:6123810",
+      "memories-domain-service-dapr-cli": "543882:6123810"
+    },
+    "PersistedInterruption": {
+      "Inventory": {
+        "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+        "sourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:party-97d5caa2b1ed405c9c541e14ad9a94f2",
+        "version": "b53306afa1444bd1af5b9da922e61037",
+        "coverageComplete": true,
+        "admissionClosed": false,
+        "permanent": false,
+        "entries": [
+          {
+            "caseId": "01M7GYJP90SHAJ0B2E3Q3D5EZ3",
+            "workflowInstanceId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "idempotencyTokenHash": "e982089ec5aaa6b7be90663268f2c0503724a95d34710f4d24c15b458fc87b3e",
+            "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "state": "Completed",
+            "terminalVerified": true,
+            "schedulingState": "Scheduled",
+            "candidateMemoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "sourcePayloadReference": {
+              "id": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430:sourcebytes:21f86f52b9ee0bf449cd254755f33f29f9387b9a9e74e1511e2f29840e33e8c5:source",
+              "sha256Hash": "21f86f52b9ee0bf449cd254755f33f29f9387b9a9e74e1511e2f29840e33e8c5",
+              "byteLength": 160,
+              "contentKind": 1,
+              "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+              "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430"
+            },
+            "refreshProtocolVersion": "source-refresh-v1",
+            "sourceRevisionNumber": 1,
+            "refreshIdentityDigest": "de70d3e97cbf95ecb7983260bea2bbb93382420f5193c7c8744d9b548d905ef1",
+            "candidateArtifactsDeleted": false,
+            "failedRetryMemoryUnitId": null
+          }
+        ],
+        "coverageEvidenceId": "owned-synthetic-empty-scope:11bbd2b9dd9e47a7b4d9d97438b91657",
+        "incompleteReason": null,
+        "lastReopenedFromVersion": "6ee1ddf80989470e99b78944e5c6848c",
+        "freshCandidateWorkflows": []
+      },
+      "Workflow": {
+        "instanceID": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+        "workflowName": "IngestionWorkflow",
+        "createdAt": "2026-11-16T01:12:59.671936581Z",
+        "lastUpdatedAt": "2026-11-16T01:13:09.992816646Z",
+        "runtimeStatus": "COMPLETED"
+      },
+      "Authority": "{\"Kind\":\"issued-v2\",\"Tenant\":\"parties-recovery-d98b695eff1243909eaad10002944656\",\"Unit\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430\",\"Generation\":\"1c47e804471f4fe9aac6cdbab30b7450\",\"ProducerBinding\":\"1d40cba14b027b1225799e2fdc318c3f97d004dfe2baa5cf64672cf250043651\",\"EvidenceId\":\"service-issuance:1c47e804471f4fe9aac6cdbab30b7450\",\"WriterExclusionEvidenceId\":\"owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450\"}",
+      "Provenance": "{\"Kind\":\"issued-v2\",\"Tenant\":\"parties-recovery-d98b695eff1243909eaad10002944656\",\"Unit\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430\",\"Generation\":\"1c47e804471f4fe9aac6cdbab30b7450\",\"ProducerBinding\":\"1d40cba14b027b1225799e2fdc318c3f97d004dfe2baa5cf64672cf250043651\",\"EvidenceId\":\"service-issuance:1c47e804471f4fe9aac6cdbab30b7450\",\"WriterExclusionEvidenceId\":\"owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450\"}",
+      "DeletionWorkflow": null,
+      "DeletionReceiptPresent": null,
+      "MemoryUnitPresent": null
+    },
+    "RequestEvidence": {
+      "tenant": "parties-recovery-d98b695eff1243909eaad10002944656",
+      "source": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:party-97d5caa2b1ed405c9c541e14ad9a94f2",
+      "workflow": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+      "unit": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430"
+    }
+  },
+  {
+    "Phase": "same-uri-refresh",
+    "OriginalPid": 568731,
+    "OriginalStart": 6131726,
+    "OriginalExited": true,
+    "StartedAtUtc": "2026-11-16T01:13:22.3388964+00:00",
+    "ReplacementHealthyAtUtc": "2026-11-16T01:13:33.4166289+00:00",
+    "ElapsedMilliseconds": 11077,
+    "ReplacementPid": 572542,
+    "ReplacementStart": 6132873,
+    "Healthy": true,
+    "PreparedManifestSha256": "e3fb0bf07ca658f402c16d737fc613d124b86c625eaec56b26aa005f6a0fb3f3",
+    "ProducerFiles": {
+      "${ARTIFACTS}/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.dll": "dcbe8813e2634e3b6e2b13f840a03a21a07e13ae10eee7d5817cff5527bd7915",
+      "${ARTIFACTS}/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.deps.json": "efcd60d54b9f1f99f57cbcec9b53ad32613a0bb136b1417245e795856e7ab864",
+      "${ARTIFACTS}/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.runtimeconfig.json": "78072be84da805eb63a6bfb51bba6b3f053bf2c31e0f3e400c87c73fe2a3036c"
+    },
+    "Generation": "1c47e804471f4fe9aac6cdbab30b7450",
+    "WriterExclusionEvidenceId": "owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450",
+    "UnchangedCustody": {
+      "fixture-redis": "cd1c9ba5708c61e8d8ffc50d917f845431cd44c8cb79ec2f69e9c2af220563a6|tcp://localhost:39885/",
+      "fixture-memories-search": "dcfd6c8b29b4135f376eb50453f0741aee847a057faf7a4942bd635a62e0ac40|tcp://localhost:40363/",
+      "fixture-memories-graph": "989aa7653ff34ddc7d36ca9e9cfd925cc4d2e58b36ef5548402ec68e30e08388|tcp://localhost:41635/",
+      "eventstore": "543999:6123825",
+      "memories-domain-service": "543965:6123822",
+      "eventstore-dapr-cli": "543881:6123810",
+      "memories-dapr-cli": "543884:6123810",
+      "memories-domain-service-dapr-cli": "543882:6123810"
+    },
+    "PersistedInterruption": {
+      "Inventory": {
+        "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+        "sourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:party-97d5caa2b1ed405c9c541e14ad9a94f2",
+        "version": "b53306afa1444bd1af5b9da922e61037",
+        "coverageComplete": true,
+        "admissionClosed": false,
+        "permanent": false,
+        "entries": [
+          {
+            "caseId": "01M7GYJP90SHAJ0B2E3Q3D5EZ3",
+            "workflowInstanceId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "idempotencyTokenHash": "e982089ec5aaa6b7be90663268f2c0503724a95d34710f4d24c15b458fc87b3e",
+            "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "state": "Completed",
+            "terminalVerified": true,
+            "schedulingState": "Scheduled",
+            "candidateMemoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+            "sourcePayloadReference": {
+              "id": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430:sourcebytes:21f86f52b9ee0bf449cd254755f33f29f9387b9a9e74e1511e2f29840e33e8c5:source",
+              "sha256Hash": "21f86f52b9ee0bf449cd254755f33f29f9387b9a9e74e1511e2f29840e33e8c5",
+              "byteLength": 160,
+              "contentKind": 1,
+              "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+              "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430"
+            },
+            "refreshProtocolVersion": "source-refresh-v1",
+            "sourceRevisionNumber": 1,
+            "refreshIdentityDigest": "de70d3e97cbf95ecb7983260bea2bbb93382420f5193c7c8744d9b548d905ef1",
+            "candidateArtifactsDeleted": false,
+            "failedRetryMemoryUnitId": null
+          }
+        ],
+        "coverageEvidenceId": "owned-synthetic-empty-scope:11bbd2b9dd9e47a7b4d9d97438b91657",
+        "incompleteReason": null,
+        "lastReopenedFromVersion": "6ee1ddf80989470e99b78944e5c6848c",
+        "freshCandidateWorkflows": []
+      },
+      "Workflow": {
+        "instanceID": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+        "workflowName": "IngestionWorkflow",
+        "createdAt": "2026-11-16T01:12:59.671936581Z",
+        "lastUpdatedAt": "2026-11-16T01:13:09.992816646Z",
+        "runtimeStatus": "COMPLETED"
+      },
+      "Authority": "{\"Kind\":\"issued-v2\",\"Tenant\":\"parties-recovery-d98b695eff1243909eaad10002944656\",\"Unit\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430\",\"Generation\":\"1c47e804471f4fe9aac6cdbab30b7450\",\"ProducerBinding\":\"1d40cba14b027b1225799e2fdc318c3f97d004dfe2baa5cf64672cf250043651\",\"EvidenceId\":\"service-issuance:1c47e804471f4fe9aac6cdbab30b7450\",\"WriterExclusionEvidenceId\":\"owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450\"}",
+      "Provenance": "{\"Kind\":\"issued-v2\",\"Tenant\":\"parties-recovery-d98b695eff1243909eaad10002944656\",\"Unit\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430\",\"Generation\":\"1c47e804471f4fe9aac6cdbab30b7450\",\"ProducerBinding\":\"1d40cba14b027b1225799e2fdc318c3f97d004dfe2baa5cf64672cf250043651\",\"EvidenceId\":\"service-issuance:1c47e804471f4fe9aac6cdbab30b7450\",\"WriterExclusionEvidenceId\":\"owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450\"}",
+      "DeletionWorkflow": null,
+      "DeletionReceiptPresent": null,
+      "MemoryUnitPresent": null
+    },
+    "RequestEvidence": {
+      "tenant": "parties-recovery-d98b695eff1243909eaad10002944656",
+      "source": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:party-97d5caa2b1ed405c9c541e14ad9a94f2",
+      "workflow": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+      "unit": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430"
+    }
+  },
+  {
+    "Phase": "admitted-empty-mappings",
+    "OriginalPid": 572542,
+    "OriginalStart": 6132873,
+    "OriginalExited": true,
+    "StartedAtUtc": "2026-11-16T01:14:23.062093+00:00",
+    "ReplacementHealthyAtUtc": "2026-11-16T01:19:34.0928514+00:00",
+    "ElapsedMilliseconds": 311043,
+    "ReplacementPid": 591466,
+    "ReplacementStart": 6138914,
+    "Healthy": true,
+    "PreparedManifestSha256": "e3fb0bf07ca658f402c16d737fc613d124b86c625eaec56b26aa005f6a0fb3f3",
+    "ProducerFiles": {
+      "${ARTIFACTS}/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.dll": "dcbe8813e2634e3b6e2b13f840a03a21a07e13ae10eee7d5817cff5527bd7915",
+      "${ARTIFACTS}/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.deps.json": "efcd60d54b9f1f99f57cbcec9b53ad32613a0bb136b1417245e795856e7ab864",
+      "${ARTIFACTS}/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.runtimeconfig.json": "78072be84da805eb63a6bfb51bba6b3f053bf2c31e0f3e400c87c73fe2a3036c"
+    },
+    "Generation": "1c47e804471f4fe9aac6cdbab30b7450",
+    "WriterExclusionEvidenceId": "owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450",
+    "UnchangedCustody": {
+      "fixture-redis": "cd1c9ba5708c61e8d8ffc50d917f845431cd44c8cb79ec2f69e9c2af220563a6|tcp://localhost:39885/",
+      "fixture-memories-search": "dcfd6c8b29b4135f376eb50453f0741aee847a057faf7a4942bd635a62e0ac40|tcp://localhost:40363/",
+      "fixture-memories-graph": "989aa7653ff34ddc7d36ca9e9cfd925cc4d2e58b36ef5548402ec68e30e08388|tcp://localhost:41635/",
+      "eventstore": "543999:6123825",
+      "memories-domain-service": "543965:6123822",
+      "eventstore-dapr-cli": "543881:6123810",
+      "memories-dapr-cli": "543884:6123810",
+      "memories-domain-service-dapr-cli": "543882:6123810"
+    },
+    "PersistedInterruption": {
+      "Inventory": {
+        "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+        "sourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:prepared-e7936acf40a84e46b2bea7c4bd9c69f6",
+        "version": "a4f370622de049d280ce0618d9aece36",
+        "coverageComplete": true,
+        "admissionClosed": false,
+        "permanent": false,
+        "entries": [
+          {
+            "caseId": "01M7GYJP90SHAJ0B2E3Q3D5EZ3",
+            "workflowInstanceId": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+            "idempotencyTokenHash": "8b730ded61cffebc254065bdee13491d5112121735b88ec86c38ad84d37409f7",
+            "memoryUnitId": null,
+            "state": "Admitted",
+            "terminalVerified": false,
+            "schedulingState": "Scheduled",
+            "candidateMemoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+            "sourcePayloadReference": {
+              "id": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea:sourcebytes:35ec4f1ec6641586bf074d1f5c2152fe27bbc155f04a5ce631a2db13d2815a7b:source",
+              "sha256Hash": "35ec4f1ec6641586bf074d1f5c2152fe27bbc155f04a5ce631a2db13d2815a7b",
+              "byteLength": 155,
+              "contentKind": 1,
+              "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+              "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea"
+            },
+            "refreshProtocolVersion": "source-refresh-v1",
+            "sourceRevisionNumber": 1,
+            "refreshIdentityDigest": "a1b31d93795a8760f50b42c5fbe6ee2c308b627948d84aff221e188e60d33730",
+            "candidateArtifactsDeleted": false,
+            "failedRetryMemoryUnitId": null
+          }
+        ],
+        "coverageEvidenceId": "owned-synthetic-empty-scope:a46eec3276f04fb7828ed935a9bd5814",
+        "incompleteReason": null,
+        "lastReopenedFromVersion": "19d2c83bc4f740f9b1a9f5d690fe4ab0",
+        "freshCandidateWorkflows": []
+      },
+      "Workflow": {
+        "instanceID": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+        "workflowName": "IngestionWorkflow",
+        "createdAt": "2026-11-16T01:14:23.013881197Z",
+        "lastUpdatedAt": "2026-11-16T01:14:23.019475411Z",
+        "runtimeStatus": "RUNNING"
+      },
+      "Authority": "{\"Kind\":\"issued-v2\",\"Tenant\":\"parties-recovery-d98b695eff1243909eaad10002944656\",\"Unit\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea\",\"Generation\":\"1c47e804471f4fe9aac6cdbab30b7450\",\"ProducerBinding\":\"9d71679879662e44d72dee43835015fb0769084f5f4a8cfc5e0d4a40803ffc6a\",\"EvidenceId\":\"service-issuance:1c47e804471f4fe9aac6cdbab30b7450\",\"WriterExclusionEvidenceId\":\"owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450\"}",
+      "Provenance": "{\"Kind\":\"issued-v2\",\"Tenant\":\"parties-recovery-d98b695eff1243909eaad10002944656\",\"Unit\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea\",\"Generation\":\"1c47e804471f4fe9aac6cdbab30b7450\",\"ProducerBinding\":\"9d71679879662e44d72dee43835015fb0769084f5f4a8cfc5e0d4a40803ffc6a\",\"EvidenceId\":\"service-issuance:1c47e804471f4fe9aac6cdbab30b7450\",\"WriterExclusionEvidenceId\":\"owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450\"}",
+      "DeletionWorkflow": null,
+      "DeletionReceiptPresent": null,
+      "MemoryUnitPresent": null
+    },
+    "RequestEvidence": {
+      "tenant": "parties-recovery-d98b695eff1243909eaad10002944656",
+      "source": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:prepared-e7936acf40a84e46b2bea7c4bd9c69f6",
+      "workflow": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+      "unit": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea"
+    }
+  },
+  {
+    "Phase": "output-known",
+    "OriginalPid": 591466,
+    "OriginalStart": 6138914,
+    "OriginalExited": true,
+    "StartedAtUtc": "2026-11-16T01:19:39.384025+00:00",
+    "ReplacementHealthyAtUtc": "2026-11-16T01:24:51.0768654+00:00",
+    "ElapsedMilliseconds": 311705,
+    "ReplacementPid": 688624,
+    "ReplacementStart": 6170621,
+    "Healthy": true,
+    "PreparedManifestSha256": "e3fb0bf07ca658f402c16d737fc613d124b86c625eaec56b26aa005f6a0fb3f3",
+    "ProducerFiles": {
+      "${ARTIFACTS}/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.dll": "dcbe8813e2634e3b6e2b13f840a03a21a07e13ae10eee7d5817cff5527bd7915",
+      "${ARTIFACTS}/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.deps.json": "efcd60d54b9f1f99f57cbcec9b53ad32613a0bb136b1417245e795856e7ab864",
+      "${ARTIFACTS}/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.runtimeconfig.json": "78072be84da805eb63a6bfb51bba6b3f053bf2c31e0f3e400c87c73fe2a3036c"
+    },
+    "Generation": "1c47e804471f4fe9aac6cdbab30b7450",
+    "WriterExclusionEvidenceId": "owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450",
+    "UnchangedCustody": {
+      "fixture-redis": "cd1c9ba5708c61e8d8ffc50d917f845431cd44c8cb79ec2f69e9c2af220563a6|tcp://localhost:39885/",
+      "fixture-memories-search": "dcfd6c8b29b4135f376eb50453f0741aee847a057faf7a4942bd635a62e0ac40|tcp://localhost:40363/",
+      "fixture-memories-graph": "989aa7653ff34ddc7d36ca9e9cfd925cc4d2e58b36ef5548402ec68e30e08388|tcp://localhost:41635/",
+      "eventstore": "543999:6123825",
+      "memories-domain-service": "543965:6123822",
+      "eventstore-dapr-cli": "543881:6123810",
+      "memories-dapr-cli": "543884:6123810",
+      "memories-domain-service-dapr-cli": "543882:6123810"
+    },
+    "PersistedInterruption": {
+      "Inventory": {
+        "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+        "sourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:prepared-e7936acf40a84e46b2bea7c4bd9c69f6",
+        "version": "48d776523a7648e2830899de103e71fa",
+        "coverageComplete": true,
+        "admissionClosed": true,
+        "permanent": true,
+        "entries": [
+          {
+            "caseId": "01M7GYJP90SHAJ0B2E3Q3D5EZ3",
+            "workflowInstanceId": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+            "idempotencyTokenHash": "8b730ded61cffebc254065bdee13491d5112121735b88ec86c38ad84d37409f7",
+            "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+            "state": "Completed",
+            "terminalVerified": false,
+            "schedulingState": "Scheduled",
+            "candidateMemoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+            "sourcePayloadReference": {
+              "id": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea:sourcebytes:35ec4f1ec6641586bf074d1f5c2152fe27bbc155f04a5ce631a2db13d2815a7b:source",
+              "sha256Hash": "35ec4f1ec6641586bf074d1f5c2152fe27bbc155f04a5ce631a2db13d2815a7b",
+              "byteLength": 155,
+              "contentKind": 1,
+              "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+              "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea"
+            },
+            "refreshProtocolVersion": "source-refresh-v1",
+            "sourceRevisionNumber": 1,
+            "refreshIdentityDigest": "a1b31d93795a8760f50b42c5fbe6ee2c308b627948d84aff221e188e60d33730",
+            "candidateArtifactsDeleted": false,
+            "failedRetryMemoryUnitId": null
+          }
+        ],
+        "coverageEvidenceId": "owned-synthetic-empty-scope:a46eec3276f04fb7828ed935a9bd5814",
+        "incompleteReason": null,
+        "lastReopenedFromVersion": null,
+        "freshCandidateWorkflows": []
+      },
+      "Workflow": {
+        "instanceID": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+        "workflowName": "IngestionWorkflow",
+        "createdAt": "2026-11-16T01:14:23.013881197Z",
+        "lastUpdatedAt": "2026-11-16T01:19:39.366299214Z",
+        "runtimeStatus": "RUNNING"
+      },
+      "Authority": "{\"Kind\":\"issued-v2\",\"Tenant\":\"parties-recovery-d98b695eff1243909eaad10002944656\",\"Unit\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea\",\"Generation\":\"1c47e804471f4fe9aac6cdbab30b7450\",\"ProducerBinding\":\"9d71679879662e44d72dee43835015fb0769084f5f4a8cfc5e0d4a40803ffc6a\",\"EvidenceId\":\"service-issuance:1c47e804471f4fe9aac6cdbab30b7450\",\"WriterExclusionEvidenceId\":\"owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450\"}",
+      "Provenance": "{\"Kind\":\"issued-v2\",\"Tenant\":\"parties-recovery-d98b695eff1243909eaad10002944656\",\"Unit\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea\",\"Generation\":\"1c47e804471f4fe9aac6cdbab30b7450\",\"ProducerBinding\":\"9d71679879662e44d72dee43835015fb0769084f5f4a8cfc5e0d4a40803ffc6a\",\"EvidenceId\":\"service-issuance:1c47e804471f4fe9aac6cdbab30b7450\",\"WriterExclusionEvidenceId\":\"owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450\"}",
+      "DeletionWorkflow": null,
+      "DeletionReceiptPresent": null,
+      "MemoryUnitPresent": null
+    },
+    "RequestEvidence": {
+      "tenant": "parties-recovery-d98b695eff1243909eaad10002944656",
+      "source": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:prepared-e7936acf40a84e46b2bea7c4bd9c69f6",
+      "workflow": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+      "unit": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea"
+    }
+  },
+  {
+    "Phase": "accepted-deletion",
+    "OriginalPid": 688624,
+    "OriginalStart": 6170621,
+    "OriginalExited": true,
+    "StartedAtUtc": "2026-11-16T01:24:56.9307964+00:00",
+    "ReplacementHealthyAtUtc": "2026-11-16T01:25:07.6106202+00:00",
+    "ElapsedMilliseconds": 10679,
+    "ReplacementPid": 786557,
+    "ReplacementStart": 6202309,
+    "Healthy": true,
+    "PreparedManifestSha256": "e3fb0bf07ca658f402c16d737fc613d124b86c625eaec56b26aa005f6a0fb3f3",
+    "ProducerFiles": {
+      "${ARTIFACTS}/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.dll": "dcbe8813e2634e3b6e2b13f840a03a21a07e13ae10eee7d5817cff5527bd7915",
+      "${ARTIFACTS}/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.deps.json": "efcd60d54b9f1f99f57cbcec9b53ad32613a0bb136b1417245e795856e7ab864",
+      "${ARTIFACTS}/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.runtimeconfig.json": "78072be84da805eb63a6bfb51bba6b3f053bf2c31e0f3e400c87c73fe2a3036c"
+    },
+    "Generation": "1c47e804471f4fe9aac6cdbab30b7450",
+    "WriterExclusionEvidenceId": "owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450",
+    "UnchangedCustody": {
+      "fixture-redis": "cd1c9ba5708c61e8d8ffc50d917f845431cd44c8cb79ec2f69e9c2af220563a6|tcp://localhost:39885/",
+      "fixture-memories-search": "dcfd6c8b29b4135f376eb50453f0741aee847a057faf7a4942bd635a62e0ac40|tcp://localhost:40363/",
+      "fixture-memories-graph": "989aa7653ff34ddc7d36ca9e9cfd925cc4d2e58b36ef5548402ec68e30e08388|tcp://localhost:41635/",
+      "eventstore": "543999:6123825",
+      "memories-domain-service": "543965:6123822",
+      "eventstore-dapr-cli": "543881:6123810",
+      "memories-dapr-cli": "543884:6123810",
+      "memories-domain-service-dapr-cli": "543882:6123810"
+    },
+    "PersistedInterruption": {
+      "Inventory": {
+        "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+        "sourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:prepared-e7936acf40a84e46b2bea7c4bd9c69f6",
+        "version": "8b27e13405f14f1eb65a9431ac18f306",
+        "coverageComplete": true,
+        "admissionClosed": true,
+        "permanent": true,
+        "entries": [
+          {
+            "caseId": "01M7GYJP90SHAJ0B2E3Q3D5EZ3",
+            "workflowInstanceId": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+            "idempotencyTokenHash": "8b730ded61cffebc254065bdee13491d5112121735b88ec86c38ad84d37409f7",
+            "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+            "state": "Completed",
+            "terminalVerified": true,
+            "schedulingState": "Scheduled",
+            "candidateMemoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+            "sourcePayloadReference": {
+              "id": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea:sourcebytes:35ec4f1ec6641586bf074d1f5c2152fe27bbc155f04a5ce631a2db13d2815a7b:source",
+              "sha256Hash": "35ec4f1ec6641586bf074d1f5c2152fe27bbc155f04a5ce631a2db13d2815a7b",
+              "byteLength": 155,
+              "contentKind": 1,
+              "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+              "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea"
+            },
+            "refreshProtocolVersion": "source-refresh-v1",
+            "sourceRevisionNumber": 1,
+            "refreshIdentityDigest": "a1b31d93795a8760f50b42c5fbe6ee2c308b627948d84aff221e188e60d33730",
+            "candidateArtifactsDeleted": false,
+            "failedRetryMemoryUnitId": null
+          }
+        ],
+        "coverageEvidenceId": "owned-synthetic-empty-scope:a46eec3276f04fb7828ed935a9bd5814",
+        "incompleteReason": null,
+        "lastReopenedFromVersion": null,
+        "freshCandidateWorkflows": []
+      },
+      "Workflow": {
+        "instanceID": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+        "workflowName": "IngestionWorkflow",
+        "createdAt": "2026-11-16T01:14:23.013881197Z",
+        "lastUpdatedAt": "2026-11-16T01:24:55.873057538Z",
+        "runtimeStatus": "COMPLETED"
+      },
+      "Authority": "{\"Kind\":\"issued-v2\",\"Tenant\":\"parties-recovery-d98b695eff1243909eaad10002944656\",\"Unit\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea\",\"Generation\":\"1c47e804471f4fe9aac6cdbab30b7450\",\"ProducerBinding\":\"9d71679879662e44d72dee43835015fb0769084f5f4a8cfc5e0d4a40803ffc6a\",\"EvidenceId\":\"service-issuance:1c47e804471f4fe9aac6cdbab30b7450\",\"WriterExclusionEvidenceId\":\"owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450\"}",
+      "Provenance": "{\"Kind\":\"issued-v2\",\"Tenant\":\"parties-recovery-d98b695eff1243909eaad10002944656\",\"Unit\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea\",\"Generation\":\"1c47e804471f4fe9aac6cdbab30b7450\",\"ProducerBinding\":\"9d71679879662e44d72dee43835015fb0769084f5f4a8cfc5e0d4a40803ffc6a\",\"EvidenceId\":\"service-issuance:1c47e804471f4fe9aac6cdbab30b7450\",\"WriterExclusionEvidenceId\":\"owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450\"}",
+      "DeletionWorkflow": {
+        "instanceID": "memory-unit-delete-owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+        "workflowName": "MemoryUnitDeletionProjectionWorkflow",
+        "createdAt": "2026-11-16T01:24:56.875212594Z",
+        "lastUpdatedAt": "2026-11-16T01:24:56.893765938Z",
+        "runtimeStatus": "RUNNING"
+      },
+      "DeletionReceiptPresent": false,
+      "MemoryUnitPresent": true
+    },
+    "RequestEvidence": {
+      "tenant": "parties-recovery-d98b695eff1243909eaad10002944656",
+      "source": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:prepared-e7936acf40a84e46b2bea7c4bd9c69f6",
+      "workflow": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea",
+      "unit": "owned-1c47e804471f4fe9aac6cdbab30b7450-49827353-83a1-4b64-abfb-5a90eade32ea"
+    }
+  },
+  {
+    "Phase": "bounded-legacy-discovery",
+    "OriginalPid": 786557,
+    "OriginalStart": 6202309,
+    "OriginalExited": true,
+    "StartedAtUtc": "2026-11-16T01:25:23.3693093+00:00",
+    "ReplacementHealthyAtUtc": "2026-11-16T01:25:34.6423767+00:00",
+    "ElapsedMilliseconds": 11273,
+    "ReplacementPid": 794805,
+    "ReplacementStart": 6205014,
+    "Healthy": true,
+    "PreparedManifestSha256": "e3fb0bf07ca658f402c16d737fc613d124b86c625eaec56b26aa005f6a0fb3f3",
+    "ProducerFiles": {
+      "${ARTIFACTS}/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.dll": "dcbe8813e2634e3b6e2b13f840a03a21a07e13ae10eee7d5817cff5527bd7915",
+      "${ARTIFACTS}/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.deps.json": "efcd60d54b9f1f99f57cbcec9b53ad32613a0bb136b1417245e795856e7ab864",
+      "${ARTIFACTS}/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.runtimeconfig.json": "78072be84da805eb63a6bfb51bba6b3f053bf2c31e0f3e400c87c73fe2a3036c"
+    },
+    "Generation": "1c47e804471f4fe9aac6cdbab30b7450",
+    "WriterExclusionEvidenceId": "owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450",
+    "UnchangedCustody": {
+      "fixture-redis": "cd1c9ba5708c61e8d8ffc50d917f845431cd44c8cb79ec2f69e9c2af220563a6|tcp://localhost:39885/",
+      "fixture-memories-search": "dcfd6c8b29b4135f376eb50453f0741aee847a057faf7a4942bd635a62e0ac40|tcp://localhost:40363/",
+      "fixture-memories-graph": "989aa7653ff34ddc7d36ca9e9cfd925cc4d2e58b36ef5548402ec68e30e08388|tcp://localhost:41635/",
+      "eventstore": "543999:6123825",
+      "memories-domain-service": "543965:6123822",
+      "eventstore-dapr-cli": "543881:6123810",
+      "memories-dapr-cli": "543884:6123810",
+      "memories-domain-service-dapr-cli": "543882:6123810"
+    },
+    "PersistedInterruption": {
+      "Inventory": {
+        "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+        "sourceUri": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:prepared-b42004ce1eed4edba71d3d35cfe2d676",
+        "version": "132d282466854f52a9b6f894721457d4",
+        "coverageComplete": true,
+        "admissionClosed": false,
+        "permanent": false,
+        "entries": [
+          {
+            "caseId": "01M7GYJP90SHAJ0B2E3Q3D5EZ3",
+            "workflowInstanceId": "owned-1c47e804471f4fe9aac6cdbab30b7450-57b6fd72-167d-4b3f-80bf-fdc4e410a197",
+            "idempotencyTokenHash": "5cfa9fdbcefc89f60dab6854d3b844540ce53bb78f767f0ef52738b7a1fed161",
+            "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-57b6fd72-167d-4b3f-80bf-fdc4e410a197",
+            "state": "Completed",
+            "terminalVerified": true,
+            "schedulingState": "Scheduled",
+            "candidateMemoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-57b6fd72-167d-4b3f-80bf-fdc4e410a197",
+            "sourcePayloadReference": {
+              "id": "owned-1c47e804471f4fe9aac6cdbab30b7450-57b6fd72-167d-4b3f-80bf-fdc4e410a197:sourcebytes:a408ce0a37eebe6e6f126743acbc99aeaa5e8a08f3b8171f4e028523c729b5d3:source",
+              "sha256Hash": "a408ce0a37eebe6e6f126743acbc99aeaa5e8a08f3b8171f4e028523c729b5d3",
+              "byteLength": 161,
+              "contentKind": 1,
+              "tenantId": "parties-recovery-d98b695eff1243909eaad10002944656",
+              "memoryUnitId": "owned-1c47e804471f4fe9aac6cdbab30b7450-57b6fd72-167d-4b3f-80bf-fdc4e410a197"
+            },
+            "refreshProtocolVersion": null,
+            "sourceRevisionNumber": null,
+            "refreshIdentityDigest": null,
+            "candidateArtifactsDeleted": false,
+            "failedRetryMemoryUnitId": null
+          }
+        ],
+        "coverageEvidenceId": "owned-synthetic-empty-scope:e4f86583952b4fceb3f7bcfddfef00c1",
+        "incompleteReason": null,
+        "lastReopenedFromVersion": "d52b9fe43b73496ebf3a375d3cefd76b",
+        "freshCandidateWorkflows": []
+      },
+      "Workflow": {
+        "instanceID": "owned-1c47e804471f4fe9aac6cdbab30b7450-57b6fd72-167d-4b3f-80bf-fdc4e410a197",
+        "workflowName": "IngestionWorkflow",
+        "createdAt": "2026-11-16T01:25:12.664351497Z",
+        "lastUpdatedAt": "2026-11-16T01:25:23.157590044Z",
+        "runtimeStatus": "COMPLETED"
+      },
+      "Authority": "",
+      "Provenance": "",
+      "DeletionWorkflow": null,
+      "DeletionReceiptPresent": null,
+      "MemoryUnitPresent": null
+    },
+    "RequestEvidence": {
+      "tenant": "parties-recovery-d98b695eff1243909eaad10002944656",
+      "source": "urn:hexalith:parties:parties-recovery-d98b695eff1243909eaad10002944656:party:prepared-b42004ce1eed4edba71d3d35cfe2d676",
+      "workflow": "owned-1c47e804471f4fe9aac6cdbab30b7450-57b6fd72-167d-4b3f-80bf-fdc4e410a197",
+      "unit": "owned-1c47e804471f4fe9aac6cdbab30b7450-57b6fd72-167d-4b3f-80bf-fdc4e410a197",
+      "exactKeys": [
+        "parties-recovery-d98b695eff1243909eaad10002944656:mu:owned-1c47e804471f4fe9aac6cdbab30b7450-57b6fd72-167d-4b3f-80bf-fdc4e410a197",
+        "parties-recovery-d98b695eff1243909eaad10002944656:vec:owned-1c47e804471f4fe9aac6cdbab30b7450-57b6fd72-167d-4b3f-80bf-fdc4e410a197:0",
+        "parties-recovery-d98b695eff1243909eaad10002944656:vec:owned-1c47e804471f4fe9aac6cdbab30b7450-57b6fd72-167d-4b3f-80bf-fdc4e410a197:47"
+      ]
+    }
+  }
+]

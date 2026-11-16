@@ -1,0 +1,58 @@
+[
+  {
+    "Receipt": "runtime.provisioning.survivor.teardown.json",
+    "TenantId": "parties-recovery-survivor-b956b354a85e4ad48dfca8b2f76ec6e9",
+    "PartyId": "survivor",
+    "CaseId": "01M7GS0DRXJ0548B2DJBRAFZEP",
+    "StateStoreName": "statestore",
+    "MappingKey": "parties:memory-mapping:MsQbc9LbbJrCx4Zr79UZbdrrVyxrBURSzu2TMcI_3QU",
+    "IngestionKey": "parties:memory-ingestion:MsQbc9LbbJrCx4Zr79UZbdrrVyxrBURSzu2TMcI_3QU",
+    "TenantAbsenceObserved": true,
+    "TerminalUnitAbsenceObserved": true,
+    "RemoteTeardownSafe": true,
+    "StateKeysRemoved": true,
+    "OperatorCleanupRequired": false,
+    "Observations": [
+      {
+        "Phase": "case-delete",
+        "HttpStatus": 204
+      },
+      {
+        "Phase": "tenant-delete",
+        "HttpStatus": 202
+      },
+      {
+        "Phase": "synthetic-state-cleanup",
+        "StateKeysRemoved": true
+      }
+    ]
+  },
+  {
+    "Receipt": "runtime.provisioning.teardown.json",
+    "TenantId": "parties-recovery-ff6ee85e9c1b4c02999c9c214d38e43e",
+    "PartyId": "party-97df7acd3fa64b1785ed6558a62b1372",
+    "CaseId": "01M7GS0A7JRMSW3KYJBK4G5ZE4",
+    "StateStoreName": "statestore",
+    "MappingKey": "parties:memory-mapping:9iY7RGJqAXUE3qbd0EmiHI_jMWmQ5FcbwnhoDEwP82g",
+    "IngestionKey": "parties:memory-ingestion:9iY7RGJqAXUE3qbd0EmiHI_jMWmQ5FcbwnhoDEwP82g",
+    "TenantAbsenceObserved": true,
+    "TerminalUnitAbsenceObserved": true,
+    "RemoteTeardownSafe": true,
+    "StateKeysRemoved": true,
+    "OperatorCleanupRequired": false,
+    "Observations": [
+      {
+        "Phase": "case-delete",
+        "HttpStatus": 204
+      },
+      {
+        "Phase": "tenant-delete",
+        "HttpStatus": 202
+      },
+      {
+        "Phase": "synthetic-state-cleanup",
+        "StateKeysRemoved": true
+      }
+    ]
+  }
+]

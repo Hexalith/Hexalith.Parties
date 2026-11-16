@@ -1,0 +1,31 @@
+{
+  "OriginalOwnedTopologyDisposed": false,
+  "ExactSessionWorkersAbsent": true,
+  "BackingContainerIdsAbsent": true,
+  "RemovedControlPlane": [
+    {
+      "Name": "hexalith-parties-dapr-scheduler-905109435504",
+      "Id": "477ead47aa12522c518f2dd19b682c8cda3cb5461bfdbe17e13e2dbaf1a35bf7",
+      "VerifiedStopped": true,
+      "ExactImageAndCertificateMount": true,
+      "Removed": true
+    },
+    {
+      "Name": "hexalith-parties-dapr-placement-905109435504",
+      "Id": "79f5b7f9b17040d1f8fa6f706a89091265e09d6b9c65a8feb0cf141c7601ca51",
+      "VerifiedStopped": true,
+      "ExactImageAndCertificateMount": true,
+      "Removed": true
+    },
+    {
+      "Name": "hexalith-parties-dapr-sentry-905109435504",
+      "Id": "3f00e15e57a5373b1dff7a56a65cdc791c5d56d025ea4494f4b984186a5f3770",
+      "VerifiedStopped": true,
+      "ExactImageAndCertificateMount": true,
+      "Removed": true
+    }
+  ],
+  "RemovedOwnedEmptyNetwork": "b811b5905d20506db3fa6d116ac96110dc7c5bf6843a2c4495008f781bab6800",
+  "SessionDirectoryExists": false,
+  "ReconciliationCompleted": true
+}

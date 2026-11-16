@@ -1,0 +1,82 @@
+{
+  "Qualified": false,
+  "Scope": "global runner SIGINT stops Aspire and freezes snapshots; generic ownership checks remain unchanged",
+  "Attempt5Wrapper": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0,
+    "errors": 0,
+    "not-run": 0
+  },
+  "Attempt5OriginalOwnership": {
+    "OwnedTopologyDisposed": false,
+    "SessionDirectoryExists": true,
+    "PrimaryFailure": "System.Threading.Tasks.TaskCanceledException: A task was canceled.\n   at System.Diagnostics.Process.WaitForExitAsync(CancellationToken cancellationToken)\n   at Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedRuntimeTests.ExecuteOwnedRuntimeAsync(Boolean focused, CancellationToken token, Boolean currentSourceAuthority, Boolean producerRestart) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs:line 242\n   at Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedRuntimeTests.ExecuteOwnedRuntimeAsync(Boolean focused, CancellationToken token, Boolean currentSourceAuthority, Boolean producerRestart) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs:line 260",
+    "CleanupFailure": "System.AggregateException: One or more errors occurred. (The operation was canceled.)\n ---> System.OperationCanceledException: The operation was canceled.\n   at System.Threading.CancellationToken.ThrowOperationCanceledException()\n   at System.Threading.CancellationToken.ThrowIfCancellationRequested()\n   at Hexalith.Parties.IntegrationTests.HealthChecks.PartiesAspireTopologyFixture.QuiesceStartedWorkersAsync(DistributedApplication application, CancellationToken cancellationToken) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs:line 867\n   at Hexalith.Parties.IntegrationTests.HealthChecks.PartiesAspireTopologyFixture.<>c__DisplayClass82_0.<<DisposeApplicationAsync>b__1>d.MoveNext() in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs:line 650\n--- End of stack trace from previous location ---\n   at Hexalith.Parties.IntegrationTests.HealthChecks.PartiesTopologyCleanup.CleanupTopologyAsync(Func`1 stopApplication, Func`1 disposeApplication, Func`1 disposeBuilder, Func`1 cleanupControlPlane) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesTopologyCleanup.cs:line 64\n   at Hexalith.Parties.IntegrationTests.HealthChecks.PartiesTopologyCleanup.CleanupTopologyAsync(Func`1 stopApplication, Func`1 disposeApplication, Func`1 disposeBuilder, Func`1 cleanupControlPlane) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesTopologyCleanup.cs:line 78\n   at Hexalith.Parties.IntegrationTests.HealthChecks.PartiesTopologyCleanup.RunAsync(Func`1 stopApplication, Func`1 disposeApplication, Func`1 disposeBuilder, Func`1 cleanupControlPlane, Func`1 disposeBootstrapHost) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesTopologyCleanup.cs:line 39\n   at Hexalith.Parties.IntegrationTests.HealthChecks.PartiesAspireTopologyFixture.DisposeApplicationAsync() in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs:line 629\n   at Hexalith.Parties.IntegrationTests.HealthChecks.PartiesAspireTopologyFixture.DisposeAsync() in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs:line 479\n   at Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedRuntimeTests.CompleteOwnedRunAsync(Func`1 capture, Func`1 dispose, Func`3 receipt, Exception primaryFailure) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs:line 310\n   --- End of inner exception stack trace ---"
+  },
+  "Attempt4Reconciliation": {
+    "OriginalOwnedTopologyDisposed": false,
+    "ExactSessionWorkersAbsent": true,
+    "BackingContainerIdsAbsent": true,
+    "RemovedControlPlane": [
+      {
+        "Name": "hexalith-parties-dapr-scheduler-905109435504",
+        "Id": "477ead47aa12522c518f2dd19b682c8cda3cb5461bfdbe17e13e2dbaf1a35bf7",
+        "VerifiedStopped": true,
+        "ExactImageAndCertificateMount": true,
+        "Removed": true
+      },
+      {
+        "Name": "hexalith-parties-dapr-placement-905109435504",
+        "Id": "79f5b7f9b17040d1f8fa6f706a89091265e09d6b9c65a8feb0cf141c7601ca51",
+        "VerifiedStopped": true,
+        "ExactImageAndCertificateMount": true,
+        "Removed": true
+      },
+      {
+        "Name": "hexalith-parties-dapr-sentry-905109435504",
+        "Id": "3f00e15e57a5373b1dff7a56a65cdc791c5d56d025ea4494f4b984186a5f3770",
+        "VerifiedStopped": true,
+        "ExactImageAndCertificateMount": true,
+        "Removed": true
+      }
+    ],
+    "RemovedOwnedEmptyNetwork": "b811b5905d20506db3fa6d116ac96110dc7c5bf6843a2c4495008f781bab6800",
+    "SessionDirectoryExists": false,
+    "ReconciliationCompleted": true
+  },
+  "Attempt5Reconciliation": {
+    "RemovedControlPlane": [
+      {
+        "Name": "hexalith-parties-dapr-scheduler-2a3ffd1b618b",
+        "Id": "4f851ac0aca16c5ab9b6b38526bfdc27829739e15c407d4e2f9b5f1b294ae1a2",
+        "ExactImageAndCertificateMount": true,
+        "VerifiedStopped": true,
+        "Removed": true
+      },
+      {
+        "Name": "hexalith-parties-dapr-placement-2a3ffd1b618b",
+        "Id": "141f3ca2959536f883f70dc81bea9a07584b09d0cc7ae861f14d7abc388d9bcc",
+        "ExactImageAndCertificateMount": true,
+        "VerifiedStopped": true,
+        "Removed": true
+      },
+      {
+        "Name": "hexalith-parties-dapr-sentry-2a3ffd1b618b",
+        "Id": "636db8b7a6a9c7452753c7b24f614bc2fcf8ac1724f47a3fd298c58cb044c400",
+        "ExactImageAndCertificateMount": true,
+        "VerifiedStopped": true,
+        "Removed": true
+      }
+    ],
+    "RemovedOwnedEmptyNetwork": "13ea71fb8c5764d2926a46627ee9face978b34c3434803d298b18c806528efb3",
+    "IncompleteReplacementQuiescence": {
+      "Pid": 928432,
+      "Start": 5215224,
+      "Exited": true,
+      "BeforeBackingRemoval": true
+    },
+    "ReconciliationCompleted": true
+  }
+}

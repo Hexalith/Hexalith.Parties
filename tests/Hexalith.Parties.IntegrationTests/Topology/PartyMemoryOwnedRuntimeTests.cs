@@ -11,6 +11,7 @@ using Aspire.Hosting.Testing;
 using CommunityToolkit.Aspire.Hosting.Dapr;
 using Hexalith.EventStore.Aspire;
 using Hexalith.Parties.IntegrationTests.HealthChecks;
+using Hexalith.Parties.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -33,7 +34,19 @@ public sealed class PartyMemoryOwnedRuntimeTests
     public Task ActualCurrentSourceMemoriesRunsAuthorityAndPhysicalErasureControl()
         => ExecuteOwnedRuntimeAsync(focused: false, TestContext.Current.CancellationToken, currentSourceAuthority: true);
 
-    private static async Task ExecuteOwnedRuntimeAsync(bool focused, CancellationToken token, bool currentSourceAuthority = false)
+    /// <summary>Qualifies five recovery boundaries through six observed replacements of the owned producer workload.</summary>
+    [Fact(Timeout = 2100000)]
+    public Task ActualCurrentSourceMemoriesRestartsAcrossFiveRecoveryBoundaries()
+        => ExecuteOwnedRuntimeAsync(focused: false, TestContext.Current.CancellationToken, currentSourceAuthority: true, producerRestart: true);
+
+    /// <summary>Cancels the owned admitted replacement without stopping Aspire's control plane and requires completed cleanup.</summary>
+    [Fact(Timeout = 600000)]
+    public Task ActualCurrentSourceCanceledRestartCompletesOwnedCleanup()
+        => ExecuteOwnedRuntimeAsync(focused: false, TestContext.Current.CancellationToken,
+            currentSourceAuthority: true, producerRestart: true, cancelRestart: true);
+
+    private static async Task ExecuteOwnedRuntimeAsync(bool focused, CancellationToken token, bool currentSourceAuthority = false,
+        bool producerRestart = false, bool cancelRestart = false)
     {
         Assert.SkipUnless(Environment.GetEnvironmentVariable("PARTIES_MEMORIES_OWNED_RUNTIME") == "1",
             "Set PARTIES_MEMORIES_OWNED_RUNTIME=1 to start the owned authenticated source topology.");
@@ -48,6 +61,9 @@ public sealed class PartyMemoryOwnedRuntimeTests
         string proofPublicKey = Convert.ToBase64String(proofKey.ExportSubjectPublicKeyInfo());
         string privateRoot = Path.Combine(Path.GetTempPath(), "parties-five-memory-runtime-" + session.Id);
         Directory.CreateDirectory(privateRoot);
+        string restartDirectory = Path.Combine(privateRoot, "producer-restart");
+        if (producerRestart) { Directory.CreateDirectory(restartDirectory); }
+        string restartSecret = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
         if (!OperatingSystem.IsWindows()) { File.SetUnixFileMode(privateRoot, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute); }
         var fixture = new PartiesAspireTopologyFixture(async (owned, cancellation) =>
         {
@@ -147,13 +163,14 @@ public sealed class PartyMemoryOwnedRuntimeTests
         }, (application, cancellation) => application.StartAsync(cancellation), prepareCiBootstrap: true, session: session, memoriesReadinessScope: true, sidecarApiTokens: new Dictionary<string, string> { ["memories"] = apiToken, ["memories-domain-service"] = apiToken });
         fixture.ObserveInitializationFailureAsync = exception => CaptureTargetFailureAsync(fixture, privateRoot, "target-initialization-before-cleanup", exception);
         Exception? primaryFailure = null;
+        bool controlledCancellationObserved = false;
         string phase = "target-initialization";
         try
         {
             await fixture.InitializeAsync(token).ConfigureAwait(true);
             fixture.IsAvailable.ShouldBeTrue(fixture.UnavailableReason);
             using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
-            deadline.CancelAfter(TimeSpan.FromMinutes(5));
+            deadline.CancelAfter(TimeSpan.FromMinutes(producerRestart ? 27 : 5));
             await fixture.App.ResourceNotifications.WaitForResourceHealthyAsync("memories", deadline.Token).ConfigureAwait(true);
             phase = "authenticated-workflow-and-erasure-control";
             ProjectResource memoriesResource = fixture.App.Services.GetRequiredService<DistributedApplicationModel>().Resources
@@ -204,22 +221,74 @@ public sealed class PartyMemoryOwnedRuntimeTests
                 ownershipSessionId = currentSourceAuthority ? session.Id : null,
                 ownershipCustodyPath = currentSourceAuthority ? custody : null,
                 ownershipRedisEndpoint = currentSourceAuthority ? search.Authority : null,
+                producerRestartDirectory = producerRestart ? restartDirectory : null,
+                producerRestartSecret = producerRestart ? restartSecret : null,
+                ownershipServerAssemblyPath = producerRestart ? PartyMemoryProducerRestartRuntime.ServerAssemblyPath(memoriesState) : null,
             }), token).ConfigureAwait(true);
             string root = ResolveRoot();
             var start = new ProcessStartInfo("dotnet") { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, WorkingDirectory = root };
             string provenance = Path.Combine(privateRoot, "executed-identities.json");
-            await File.WriteAllTextAsync(provenance, JsonSerializer.Serialize(MemoryRuntimeIdentity.Files(typeof(PartyMemoryOwnedRuntimeTests).Assembly, child)), token).ConfigureAwait(true);
+            Dictionary<string, string> identities = MemoryRuntimeIdentity.Files(typeof(PartyMemoryOwnedRuntimeTests).Assembly, child);
+            if (producerRestart)
+            {
+                string ownerAssembly = PartyMemoryProducerRestartRuntime.ServerAssemblyPath(memoriesState);
+                identities.Add(ownerAssembly, MemoryRuntimeIdentity.Hash(ownerAssembly));
+            }
+            await File.WriteAllTextAsync(provenance, JsonSerializer.Serialize(identities), token).ConfigureAwait(true);
             foreach (string argument in new[] { child,
-                "-method", focused ? "*SelectedMemoriesRefreshAndCleanupPersistAcrossClientRecreation" : "*SelectedMemoriesIngestionAndCleanupPersistAcrossRestart",
+                "-method", producerRestart ? "*SelectedMemoriesRecoverAcrossProducerWorkloadRestarts" : focused ? "*SelectedMemoriesRefreshAndCleanupPersistAcrossClientRecreation" : "*SelectedMemoriesIngestionAndCleanupPersistAcrossRestart",
                 "-failSkips", "-parallelMode", "none", "-result-xml", Path.Combine(privateRoot, "runtime.xml") }) { start.ArgumentList.Add(argument); }
             start.Environment["PARTIES_MEMORIES_RUNTIME_CONFIG"] = configPath;
             start.Environment["PARTIES_MEMORIES_RUNTIME_PROVENANCE"] = provenance;
             using Process process = Process.Start(start) ?? throw new InvalidOperationException("The owned runtime qualification process did not start.");
-            Task<string> output = process.StandardOutput.ReadToEndAsync(token), error = process.StandardError.ReadToEndAsync(token);
-            try { await process.WaitForExitAsync(deadline.Token).ConfigureAwait(true); }
-            finally { if (!process.HasExited) { process.Kill(entireProcessTree: true); } }
-            await File.WriteAllTextAsync(Path.Combine(privateRoot, "runtime.log"), (await output.ConfigureAwait(true)) + (await error.ConfigureAwait(true)), token).ConfigureAwait(true);
-            process.ExitCode.ShouldBe(0, "Exact private runtime evidence: " + privateRoot);
+            Task<string> output = process.StandardOutput.ReadToEndAsync(), error = process.StandardError.ReadToEndAsync();
+            using var coordination = CancellationTokenSource.CreateLinkedTokenSource(deadline.Token);
+            var restarts = new PartyMemoryProducerRestartRuntime(fixture, search.Authority, sidecarHttp, apiToken, generation, exclusion, privateRoot)
+            {
+                ReplacementObserved = cancelRestart ? observed =>
+                {
+                    if (observed == "admitted-empty-mappings") { controlledCancellationObserved = true; coordination.Cancel(); }
+                } : null,
+            };
+            Task server = producerRestart ? PartyMemoryProducerRestartProtocol.ServeAsync(restartDirectory, session.Id, restartSecret,
+                restarts.RestartAsync, coordination.Token) : Task.CompletedTask;
+            Exception? childFailure = null;
+            try
+            {
+                Task exited = process.WaitForExitAsync(deadline.Token);
+                if (producerRestart)
+                {
+                    Task completed = await Task.WhenAny(server, exited).ConfigureAwait(true);
+                    if (completed == server) { await server.ConfigureAwait(true); }
+                }
+                await exited.ConfigureAwait(true);
+                if (producerRestart && process.ExitCode == 0) { await server.WaitAsync(TimeSpan.FromSeconds(1), deadline.Token).ConfigureAwait(true); restarts.Count.ShouldBe(6); }
+                process.ExitCode.ShouldBe(0, "Exact private runtime evidence: " + privateRoot);
+            }
+            catch (Exception failure) { childFailure = failure; throw; }
+            finally
+            {
+                await CompleteChildRunAsync(
+                    () => { if (!process.HasExited) { process.Kill(entireProcessTree: true); } return Task.CompletedTask; },
+                    async () =>
+                    {
+                        using var reap = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                        await process.WaitForExitAsync(reap.Token).ConfigureAwait(true);
+                    },
+                    () => coordination.CancelAsync(),
+                    async () =>
+                    {
+                        try { await server.ConfigureAwait(true); }
+                        catch (OperationCanceledException) when (coordination.IsCancellationRequested) { }
+                    },
+                    () => producerRestart ? restarts.QuiesceIncompleteAsync() : Task.CompletedTask,
+                    async () =>
+                    {
+                        if (!process.HasExited) { process.StandardOutput.Dispose(); process.StandardError.Dispose(); }
+                        string[] logs = await Task.WhenAll(output, error).ConfigureAwait(true);
+                        await File.WriteAllTextAsync(Path.Combine(privateRoot, "runtime.log"), logs[0] + logs[1], CancellationToken.None).ConfigureAwait(true);
+                    }, childFailure).ConfigureAwait(true);
+            }
             var executed = System.Xml.Linq.XDocument.Load(Path.Combine(privateRoot, "runtime.xml")).Descendants("assembly").ShouldHaveSingleItem();
             executed.Attribute("total")!.Value.ShouldBe("1");
             executed.Attribute("passed")!.Value.ShouldBe("1");
@@ -230,7 +299,7 @@ public sealed class PartyMemoryOwnedRuntimeTests
         catch (Exception exception)
         {
             primaryFailure = exception;
-            throw;
+            if (!cancelRestart || !controlledCancellationObserved || exception is not OperationCanceledException) { throw; }
         }
         finally
         {
@@ -239,9 +308,11 @@ public sealed class PartyMemoryOwnedRuntimeTests
                 () => fixture.DisposeAsync().AsTask(),
                 (disposed, cleanupFailure) => File.WriteAllTextAsync(Path.Combine(privateRoot, "ownership.json"), JsonSerializer.Serialize(new
                 { session.Id, session.Root, PrivateEvidence = privateRoot, OwnedTopologyDisposed = disposed, SessionDirectoryExists = Directory.Exists(session.Root),
-                    fixture.IsAvailable, fixture.UnavailableReason, Phase = phase, PrimaryFailure = primaryFailure?.ToString(), CleanupFailure = cleanupFailure?.ToString() }), CancellationToken.None),
+                    fixture.IsAvailable, fixture.UnavailableReason, Phase = phase, ControlledCancellation = controlledCancellationObserved,
+                    PrimaryFailure = primaryFailure?.ToString(), CleanupFailure = cleanupFailure?.ToString() }), CancellationToken.None),
                 primaryFailure).ConfigureAwait(true);
         }
+        if (cancelRestart) { controlledCancellationObserved.ShouldBeTrue("The actual admitted replacement must be observed before controlled cancellation."); }
     }
 
     /// <summary>Defers private package-profile custody until full composition has reused the generated SDK binding.</summary>
@@ -253,6 +324,23 @@ public sealed class PartyMemoryOwnedRuntimeTests
             _ = resource.WithEventStoreAppChannelToken(parameter);
         }
         return resource;
+    }
+
+    /// <summary>Settles every child/coordination cleanup step even when termination or reaping fails.</summary>
+    internal static async Task CompleteChildRunAsync(Func<Task> terminate, Func<Task> reap, Func<Task> cancel,
+        Func<Task> settle, Func<Task> quiesce, Func<Task> persist, Exception? primaryFailure)
+    {
+        List<Exception> failures = [];
+        foreach (Func<Task> operation in new[] { terminate, reap, cancel, settle, quiesce, persist })
+        {
+            try { await operation().ConfigureAwait(true); }
+            catch (Exception failure) { failures.Add(failure); }
+        }
+        if (failures.Count != 0)
+        {
+            if (primaryFailure is not null) { failures.Insert(0, primaryFailure); }
+            throw new AggregateException("Owned child qualification or cleanup failed.", failures);
+        }
     }
 
     /// <summary>Always disposes owned resources, retaining primary, capture, disposal and receipt failures.</summary>

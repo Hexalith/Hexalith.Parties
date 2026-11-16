@@ -21,4 +21,7 @@ internal sealed record PartyMemoryRuntimeConfiguration
     public string? OwnershipSessionId { get; init; }
     public string? OwnershipCustodyPath { get; init; }
     public string? OwnershipRedisEndpoint { get; init; }
+    public string? ProducerRestartDirectory { get; init; }
+    public string? ProducerRestartSecret { get; init; }
+    public string? OwnershipServerAssemblyPath { get; init; }
 }

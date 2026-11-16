@@ -1,0 +1,75 @@
+[
+  {
+    "Attempt": 1,
+    "Wrapper": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    "CompletedPhases": [],
+    "Failure": "System.Net.Http.HttpRequestException: Connection refused (localhost:21991)\n ---> System.Net.Sockets.SocketException (111): Connection refused\n   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.CreateException(SocketError error, Boolean forAsyncThrow)\n   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ConnectAsync(Socket socket, CancellationToken cancellationToken)\n   at System.Net.Sockets.Socket.ConnectAsync(EndPoint remoteEP, CancellationToken cancellationToken)\n   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, Int64 connectionId, CancellationToken cancellationToken)\n   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, Boolean isForHttp2, CancellationToken cancellationToken)\n   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)\n   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)\n   at System.Threading.ThreadPoolWorkQueue.Dispatch()\n   at System.Threading.PortableThreadPool.WorkerThread.WorkerDoWork(PortableThreadPool threadPoolInstance)\n   at System.Threading.PortableThreadPool.WorkerThread.WorkerThreadStart()\n   at System.Threading.Thread.StartCallback(Thread* pThread)\n--- End of stack trace from previous location ---\n   at System.Runtime.CompilerServices.AsyncHelpers.TransparentAwait(Task task)\n   at System.Threading.Tasks.Task.FromException(Exception exception)\n   at System.Threading.Tasks.ValueTask.FromException(Exception exception)\n   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ConnectAsync(Socket socket, CancellationToken cancellationToken)\n   at System.Net.Sockets.Socket.ConnectAsync(EndPoint remoteEP, CancellationToken cancellationToken)\n   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, Int64 connectionId, CancellationToken cancellationToken)\n   --- End of inner exception stack trace ---\n   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, Int64 connectionId, CancellationToken cancellationToken)\n   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, Boolean isForHttp2, CancellationToken cancellationToken)\n   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)\n   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)\n   at System.Runtime.CompilerServices.AsyncHelpers.TransparentAwait[T](Task`1 task)\n   at System.Threading.Tasks.TaskCompletionSource`1.get_Task()\n   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)\n   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)\n   at System.Net.Http.HttpConnectionPoolManager.SendAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)\n   at System.Net.Http.HttpMessageHandlerStage.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)\n   at System.Net.Http.HttpMessageHandlerStage.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)\n   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)\n   at System.Net.Http.HttpMessageHandlerStage.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)\n   at System.Net.Http.SocketsHttpHandler.<SendAsync>g__CreateHandlerAndSendAsync|122_0(HttpRequestMessage request, CancellationToken cancellationToken)\n   at System.Net.Http.SocketsHttpHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)\n   at System.Net.Http.HttpClientHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)\n   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)\n   at Hexalith.Parties.IntegrationTests.Topology.PartyMemoryProducerRestartRuntime.RestartAsync(String phase, JsonElement evidence, CancellationToken token) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryProducerRestartRuntime.cs:line 80\n   at Hexalith.Parties.Testing.PartyMemoryProducerRestartProtocol.ServeAsync(String directory, String session, String secret, Func`4 restart, CancellationToken token) in ${REPOSITORY}/tests/PackageTests.Shared/PartyMemoryProducerRestartProtocol.cs:line 42\n   at Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedRuntimeTests.ExecuteOwnedRuntimeAsync(Boolean focused, CancellationToken token, Boolean currentSourceAuthority, Boolean producerRestart) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs:line 250\n   at Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedRuntimeTests.ExecuteOwnedRuntimeAsync(Boolean focused, CancellationToken token, Boolean currentSourceAuthority, Boolean producerRestart) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs:line 254",
+    "OwnedTopologyDisposed": true,
+    "SessionDirectoryExists": false,
+    "CleanupFailure": null
+  },
+  {
+    "Attempt": 2,
+    "Wrapper": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    "CompletedPhases": [
+      "cross-source-authority",
+      "same-uri-refresh"
+    ],
+    "Failure": "System.TimeoutException: The operation has timed out.\n   at Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedRuntimeTests.ExecuteOwnedRuntimeAsync(Boolean focused, CancellationToken token, Boolean currentSourceAuthority, Boolean producerRestart) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs:line 243\n   at Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedRuntimeTests.ExecuteOwnedRuntimeAsync(Boolean focused, CancellationToken token, Boolean currentSourceAuthority, Boolean producerRestart) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs:line 254",
+    "OwnedTopologyDisposed": true,
+    "SessionDirectoryExists": false,
+    "CleanupFailure": null
+  },
+  {
+    "Attempt": 3,
+    "Wrapper": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    "CompletedPhases": [
+      "cross-source-authority",
+      "same-uri-refresh"
+    ],
+    "Failure": "System.Threading.Tasks.TaskCanceledException: A task was canceled.\n ---> System.Threading.Tasks.TaskCanceledException: A task was canceled.\n   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)\n   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)\n   at System.Net.Http.HttpMessageHandlerStage.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)\n   at System.Net.Http.HttpMessageHandlerStage.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)\n   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)\n   at System.Net.Http.HttpMessageHandlerStage.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)\n   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)\n   --- End of inner exception stack trace ---\n   at System.Net.Http.HttpClient.HandleFailure(Exception e, Boolean telemetryStarted, HttpResponseMessage response, CancellationTokenSource cts, CancellationToken cancellationToken, CancellationTokenSource pendingRequestsCts)\n   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)\n   at Hexalith.Parties.IntegrationTests.Topology.PartyMemoryProducerRestartRuntime.RestartAsync(String phase, JsonElement evidence, CancellationToken token) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryProducerRestartRuntime.cs:line 86\n   at Hexalith.Parties.Testing.PartyMemoryProducerRestartProtocol.ServeAsync(String directory, String session, String secret, Func`4 restart, CancellationToken token) in ${REPOSITORY}/tests/PackageTests.Shared/PartyMemoryProducerRestartProtocol.cs:line 42\n   at Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedRuntimeTests.ExecuteOwnedRuntimeAsync(Boolean focused, CancellationToken token, Boolean currentSourceAuthority, Boolean producerRestart) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs:line 250\n   at Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedRuntimeTests.ExecuteOwnedRuntimeAsync(Boolean focused, CancellationToken token, Boolean currentSourceAuthority, Boolean producerRestart) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs:line 254",
+    "OwnedTopologyDisposed": true,
+    "SessionDirectoryExists": false,
+    "CleanupFailure": null
+  },
+  {
+    "Attempt": 4,
+    "Wrapper": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    "CompletedPhases": [
+      "cross-source-authority",
+      "same-uri-refresh"
+    ],
+    "Failure": "System.Threading.Tasks.TaskCanceledException: A task was canceled.\n   at System.Diagnostics.Process.WaitForExitAsync(CancellationToken cancellationToken)\n   at Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedRuntimeTests.ExecuteOwnedRuntimeAsync(Boolean focused, CancellationToken token, Boolean currentSourceAuthority, Boolean producerRestart) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs:line 242\n   at Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedRuntimeTests.ExecuteOwnedRuntimeAsync(Boolean focused, CancellationToken token, Boolean currentSourceAuthority, Boolean producerRestart) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs:line 254",
+    "OwnedTopologyDisposed": false,
+    "SessionDirectoryExists": true,
+    "CleanupFailure": "System.AggregateException: One or more errors occurred. (The operation was canceled.)\n ---> System.OperationCanceledException: The operation was canceled.\n   at System.Threading.CancellationToken.ThrowOperationCanceledException()\n   at System.Threading.CancellationToken.ThrowIfCancellationRequested()\n   at Hexalith.Parties.IntegrationTests.HealthChecks.PartiesAspireTopologyFixture.QuiesceStartedWorkersAsync(DistributedApplication application, CancellationToken cancellationToken) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs:line 867\n   at Hexalith.Parties.IntegrationTests.HealthChecks.PartiesAspireTopologyFixture.<>c__DisplayClass82_0.<<DisposeApplicationAsync>b__1>d.MoveNext() in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs:line 650\n--- End of stack trace from previous location ---\n   at Hexalith.Parties.IntegrationTests.HealthChecks.PartiesTopologyCleanup.CleanupTopologyAsync(Func`1 stopApplication, Func`1 disposeApplication, Func`1 disposeBuilder, Func`1 cleanupControlPlane) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesTopologyCleanup.cs:line 64\n   at Hexalith.Parties.IntegrationTests.HealthChecks.PartiesTopologyCleanup.CleanupTopologyAsync(Func`1 stopApplication, Func`1 disposeApplication, Func`1 disposeBuilder, Func`1 cleanupControlPlane) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesTopologyCleanup.cs:line 78\n   at Hexalith.Parties.IntegrationTests.HealthChecks.PartiesTopologyCleanup.RunAsync(Func`1 stopApplication, Func`1 disposeApplication, Func`1 disposeBuilder, Func`1 cleanupControlPlane, Func`1 disposeBootstrapHost) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesTopologyCleanup.cs:line 39\n   at Hexalith.Parties.IntegrationTests.HealthChecks.PartiesAspireTopologyFixture.DisposeApplicationAsync() in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs:line 629\n   at Hexalith.Parties.IntegrationTests.HealthChecks.PartiesAspireTopologyFixture.DisposeAsync() in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs:line 479\n   at Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedRuntimeTests.CompleteOwnedRunAsync(Func`1 capture, Func`1 dispose, Func`3 receipt, Exception primaryFailure) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs:line 303\n   --- End of inner exception stack trace ---"
+  }
+]

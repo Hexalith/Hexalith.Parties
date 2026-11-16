@@ -1,0 +1,8 @@
+{
+  ".": "762ea76d33af315a87b112abc6730c7ae21b2cb9",
+  "references/Hexalith.Memories": "7a5c892508700b2e5c71c921cdaeedf68de5f03d",
+  "references/Hexalith.EventStore": "fdb59895975e86a1e234325a01237f259cdbd53b",
+  "references/Hexalith.Builds": "73e60af8a1fcdf3f06726d5d1b6e1199cce778ee",
+  "references/Hexalith.Platform": "f6f85032598865b9123f16364448bfd02c0ff5b0",
+  "references/Hexalith.FrontComposer": "bca9dff291ce42c57516598732340a80703dfb6d"
+}

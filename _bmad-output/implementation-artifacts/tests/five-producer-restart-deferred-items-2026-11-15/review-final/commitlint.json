@@ -1,0 +1,13 @@
+{
+  "Command": [
+    "${NODE_BIN}/node",
+    "${REPOSITORY}/node_modules/@commitlint/cli/cli.js",
+    "--config",
+    "${REPOSITORY}/commitlint.config.mjs",
+    "--verbose"
+  ],
+  "ExactMessage": "test: qualify memories producer restart recovery\n",
+  "ExitCode": 0,
+  "Node": "24.22.1",
+  "Commitlint": "21.2.4"
+}

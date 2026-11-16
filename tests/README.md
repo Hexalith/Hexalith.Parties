@@ -1055,3 +1055,98 @@ central catalog pins 10.0.15). Pinned package preparation refuses the retained
 Platform release identity/tool range with HXW011/HXW010. The dated receipt keeps
 these failures separate from the successful direct per-project Release fallback;
 no compiler, cohort, framework, source-mapping or acceptance gate is weakened.
+
+
+## Producer workload restart qualification (2026-11-15)
+
+`ActualCurrentSourceMemoriesRestartsAcrossFiveRecoveryBoundaries` is a separate
+opt-in current-source lane. Prepare the same explicit 5.1.0/4.0.0/6.0.0 runtime
+cohort with `--include-memory-qualification true`, bind its `prepared.json`, and
+invoke this exact method with `PARTIES_MEMORIES_OWNED_RUNTIME=1`,
+`-parallelMode none -failSkips -result-xml`. The child is
+`SelectedMemoriesRecoverAcrossProducerWorkloadRestarts`. The existing package
+profile and client-recreation profiles retain their separate evidence.
+
+Before this opt-in run, provide `python3` 3.9 or newer with both
+[`os.pidfd_open`](https://docs.python.org/3/library/os.html#os.pidfd_open) and
+[`signal.pidfd_send_signal`](https://docs.python.org/3/library/signal.html#signal.pidfd_send_signal).
+The combined minimum is Linux kernel 5.3 (`pidfd_send_signal` itself requires
+5.1); the host must permit both pidfd syscalls and reads of the owned workers'
+`/proc/<pid>/{stat,environ,cmdline,cwd,exe}` entries. Run this harmless preflight
+first: it opens a pidfd for its own Python process and uses signal 0, which
+checks access without sending a signal or interrupting any workload.
+
+```bash
+python3 - <<'PYTHON'
+import os, signal, sys
+assert sys.version_info >= (3, 9)
+fd = os.pidfd_open(os.getpid())
+try:
+    signal.pidfd_send_signal(fd, 0)
+    for name in ("stat", "environ", "cmdline"):
+        with open(f"/proc/{os.getpid()}/{name}", "rb") as stream:
+            stream.read(1)
+    for name in ("cwd", "exe"):
+        os.readlink(f"/proc/{os.getpid()}/{name}")
+finally:
+    os.close(fd)
+print("pidfd preflight passed")
+PYTHON
+```
+
+Every known synthetic source is qualified before the first restart, because
+the owned setup route requires a tenant created after the current startup.
+Later phases use that persisted coverage. The existing replay-safety guard
+remains enabled: active-ingestion restarts allow its documented five-minute
+drain, with six-minute phases/seven-minute acknowledgements. Other phases
+retain 45/60 seconds; child and wrapper retain bounded overall deadlines and
+completed cleanup. Exact guard events/timing belong to the dated receipt.
+
+The private configuration adds `producerRestartDirectory` and
+`producerRestartSecret`, bound to its session custody. Atomic local files carry
+phase acknowledgements; no public control route is added. Six process
+replacements cover source authority, settled revision 1, admitted work with
+empty mappings, output-known nonterminal work, accepted physical deletion, and
+unknown historical discovery. Linux SIGSTOP interrupts the exact owned process
+before fresh Redis/Dapr phase validation. Raced evidence fails qualification.
+Signals use a held Linux pidfd after start-identity verification; recycled
+numeric PIDs cannot redirect STOP or CONT. Cancellation and evidence failure
+resume the owned incarnation before return, with real-process tests requiring
+resume and completed child reaping. Pending starts settle under a separate
+cleanup deadline even if phase cancellation precedes PID observation; termination
+failures cannot skip coordination cancellation, settlement or quiescence.
+The wrapper requires original PID/start
+exit, a distinct healthy incarnation,
+unchanged backing container IDs/endpoints and sidecar lifetimes, unchanged
+prepared producer bytes, and retained generation/exclusion reservation.
+
+The child independently rereads persisted SDK obligations, exact authority,
+terminal receipts, actual content and derived absence. A direct call to the exact running owner assembly rejects issued same-unit
+admission when only SourceUri changes. Separate unknown historical artifacts
+in an isolated component tenant remain incomplete under complete source B;
+the actual owner cleanup-discovery seam refuses with original/source-B hashes
+retained. Historical hashes, original provenance and both settled inventories
+are captured before replacement and compared afterward. This direct component proof is separate from live HTTP deletion,
+and valid exact-unit authority remains usable across source scope. The historical fixture records every known
+key and complete hash before withholding authority; incomplete discovery must
+refuse with all bytes retained. Only that disposable fixture's exact unit/key
+inventory and excluded writers permit conditional historical-v2 attestation
+and bounded cleanup. Unknown production history remains incomplete.
+
+`PartyMemoryProducerRestartProtocolTests` covers foreign/malformed requests,
+replayed nonces, failed replacement, cancellation and evidence failure. Execute
+it alongside `PartyMemoryUnitAuthorityRuntimeTests`, non-opt-in
+`PartyMemoryRuntimeTests`, `PartyMemorySourceInventoryTests` and
+`PartyMemoryOwnedCleanupTests` and `PartyMemoryProducerRestartSignalTests`.
+The opt-in `ActualCurrentSourceCanceledRestartCompletesOwnedCleanup` cancels
+coordination after observing the admitted replacement, while Aspire stays
+running, and requires completed owned disposal. Global runner SIGINT remains
+separate: retained diagnostics required exact resource reconciliation and do
+not qualify that interruption path. The wrapper awaits child exit and coordination
+on every path before owned topology disposal; failures retain private evidence.
+See the [dated receipt](../_bmad-output/implementation-artifacts/tests/five-producer-restart-deferred-items-2026-11-15/README.md)
+and its [reviewed final rerun](../_bmad-output/implementation-artifacts/tests/five-producer-restart-deferred-items-2026-11-15/review-final/README.md)
+for 58 consumer controls, 10 signal/cleanup controls and the live restart/
+cancellation results, exact identities, cleanup and separate source/package
+build blockers. Publication/adoption, deployed custody, historical reconciliation,
+older-writer exclusion and owner acceptance remain external gates.

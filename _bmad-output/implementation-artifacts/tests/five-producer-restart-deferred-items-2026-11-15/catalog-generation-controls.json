@@ -1,0 +1,200 @@
+[
+  {
+    "Mode": "missing",
+    "ObservedEpoch": 1,
+    "SentEpoch": null,
+    "Root": "73f4790ff58d3070d28c2032b5b583479c8084874b3c4637931effaf1fcd9baa",
+    "Binding": "4d2979f568874b23ef39affe3ce411e1eb430b490c88771669cc634e85050361",
+    "StateStore": "routing-parties-8584eb45eee4-catalog",
+    "StateKey": "parties-8584eb45eee4-catalog-authority"
+  },
+  {
+    "Mode": "stale",
+    "ObservedEpoch": 1,
+    "SentEpoch": 0,
+    "Root": "73f4790ff58d3070d28c2032b5b583479c8084874b3c4637931effaf1fcd9baa",
+    "Binding": "4d2979f568874b23ef39affe3ce411e1eb430b490c88771669cc634e85050361",
+    "StateStore": "routing-parties-8584eb45eee4-catalog",
+    "StateKey": "parties-8584eb45eee4-catalog-authority"
+  },
+  {
+    "Mode": "current",
+    "ObservedEpoch": 1,
+    "SentEpoch": 1,
+    "Root": "73f4790ff58d3070d28c2032b5b583479c8084874b3c4637931effaf1fcd9baa",
+    "Binding": "4d2979f568874b23ef39affe3ce411e1eb430b490c88771669cc634e85050361",
+    "StateStore": "routing-parties-8584eb45eee4-catalog",
+    "StateKey": "parties-8584eb45eee4-catalog-authority"
+  },
+  {
+    "Mode": "current",
+    "ObservedEpoch": 1,
+    "SentEpoch": 1,
+    "Root": "73f4790ff58d3070d28c2032b5b583479c8084874b3c4637931effaf1fcd9baa",
+    "Binding": "4d2979f568874b23ef39affe3ce411e1eb430b490c88771669cc634e85050361",
+    "StateStore": "routing-parties-8584eb45eee4-catalog",
+    "StateKey": "parties-8584eb45eee4-catalog-authority"
+  },
+  {
+    "Mode": "current",
+    "ObservedEpoch": 1,
+    "SentEpoch": 1,
+    "Root": "73f4790ff58d3070d28c2032b5b583479c8084874b3c4637931effaf1fcd9baa",
+    "Binding": "4d2979f568874b23ef39affe3ce411e1eb430b490c88771669cc634e85050361",
+    "StateStore": "routing-parties-8584eb45eee4-catalog",
+    "StateKey": "parties-8584eb45eee4-catalog-authority"
+  },
+  {
+    "Mode": "current",
+    "ObservedEpoch": 1,
+    "SentEpoch": 1,
+    "Root": "73f4790ff58d3070d28c2032b5b583479c8084874b3c4637931effaf1fcd9baa",
+    "Binding": "4d2979f568874b23ef39affe3ce411e1eb430b490c88771669cc634e85050361",
+    "StateStore": "routing-parties-8584eb45eee4-catalog",
+    "StateKey": "parties-8584eb45eee4-catalog-authority"
+  },
+  {
+    "Mode": "current",
+    "ObservedEpoch": 1,
+    "SentEpoch": 1,
+    "Root": "73f4790ff58d3070d28c2032b5b583479c8084874b3c4637931effaf1fcd9baa",
+    "Binding": "4d2979f568874b23ef39affe3ce411e1eb430b490c88771669cc634e85050361",
+    "StateStore": "routing-parties-8584eb45eee4-catalog",
+    "StateKey": "parties-8584eb45eee4-catalog-authority"
+  },
+  {
+    "Mode": "current",
+    "ObservedEpoch": 1,
+    "SentEpoch": 1,
+    "Root": "73f4790ff58d3070d28c2032b5b583479c8084874b3c4637931effaf1fcd9baa",
+    "Binding": "4d2979f568874b23ef39affe3ce411e1eb430b490c88771669cc634e85050361",
+    "StateStore": "routing-parties-8584eb45eee4-catalog",
+    "StateKey": "parties-8584eb45eee4-catalog-authority"
+  },
+  {
+    "Mode": "current",
+    "ObservedEpoch": 1,
+    "SentEpoch": 1,
+    "Root": "73f4790ff58d3070d28c2032b5b583479c8084874b3c4637931effaf1fcd9baa",
+    "Binding": "4d2979f568874b23ef39affe3ce411e1eb430b490c88771669cc634e85050361",
+    "StateStore": "routing-parties-8584eb45eee4-catalog",
+    "StateKey": "parties-8584eb45eee4-catalog-authority"
+  },
+  {
+    "Mode": "current",
+    "ObservedEpoch": 1,
+    "SentEpoch": 1,
+    "Root": "73f4790ff58d3070d28c2032b5b583479c8084874b3c4637931effaf1fcd9baa",
+    "Binding": "4d2979f568874b23ef39affe3ce411e1eb430b490c88771669cc634e85050361",
+    "StateStore": "routing-parties-8584eb45eee4-catalog",
+    "StateKey": "parties-8584eb45eee4-catalog-authority"
+  },
+  {
+    "Mode": "current",
+    "ObservedEpoch": 1,
+    "SentEpoch": 1,
+    "Root": "73f4790ff58d3070d28c2032b5b583479c8084874b3c4637931effaf1fcd9baa",
+    "Binding": "4d2979f568874b23ef39affe3ce411e1eb430b490c88771669cc634e85050361",
+    "StateStore": "routing-parties-8584eb45eee4-catalog",
+    "StateKey": "parties-8584eb45eee4-catalog-authority"
+  },
+  {
+    "Mode": "current",
+    "ObservedEpoch": 1,
+    "SentEpoch": 1,
+    "Root": "73f4790ff58d3070d28c2032b5b583479c8084874b3c4637931effaf1fcd9baa",
+    "Binding": "4d2979f568874b23ef39affe3ce411e1eb430b490c88771669cc634e85050361",
+    "StateStore": "routing-parties-8584eb45eee4-catalog",
+    "StateKey": "parties-8584eb45eee4-catalog-authority"
+  },
+  {
+    "Mode": "current",
+    "ObservedEpoch": 1,
+    "SentEpoch": 1,
+    "Root": "73f4790ff58d3070d28c2032b5b583479c8084874b3c4637931effaf1fcd9baa",
+    "Binding": "4d2979f568874b23ef39affe3ce411e1eb430b490c88771669cc634e85050361",
+    "StateStore": "routing-parties-8584eb45eee4-catalog",
+    "StateKey": "parties-8584eb45eee4-catalog-authority"
+  },
+  {
+    "Mode": "current",
+    "ObservedEpoch": 1,
+    "SentEpoch": 1,
+    "Root": "73f4790ff58d3070d28c2032b5b583479c8084874b3c4637931effaf1fcd9baa",
+    "Binding": "4d2979f568874b23ef39affe3ce411e1eb430b490c88771669cc634e85050361",
+    "StateStore": "routing-parties-8584eb45eee4-catalog",
+    "StateKey": "parties-8584eb45eee4-catalog-authority"
+  },
+  {
+    "Mode": "current",
+    "ObservedEpoch": 1,
+    "SentEpoch": 1,
+    "Root": "73f4790ff58d3070d28c2032b5b583479c8084874b3c4637931effaf1fcd9baa",
+    "Binding": "4d2979f568874b23ef39affe3ce411e1eb430b490c88771669cc634e85050361",
+    "StateStore": "routing-parties-8584eb45eee4-catalog",
+    "StateKey": "parties-8584eb45eee4-catalog-authority"
+  },
+  {
+    "Mode": "current",
+    "ObservedEpoch": 1,
+    "SentEpoch": 1,
+    "Root": "73f4790ff58d3070d28c2032b5b583479c8084874b3c4637931effaf1fcd9baa",
+    "Binding": "4d2979f568874b23ef39affe3ce411e1eb430b490c88771669cc634e85050361",
+    "StateStore": "routing-parties-8584eb45eee4-catalog",
+    "StateKey": "parties-8584eb45eee4-catalog-authority"
+  },
+  {
+    "Mode": "current",
+    "ObservedEpoch": 1,
+    "SentEpoch": 1,
+    "Root": "73f4790ff58d3070d28c2032b5b583479c8084874b3c4637931effaf1fcd9baa",
+    "Binding": "4d2979f568874b23ef39affe3ce411e1eb430b490c88771669cc634e85050361",
+    "StateStore": "routing-parties-8584eb45eee4-catalog",
+    "StateKey": "parties-8584eb45eee4-catalog-authority"
+  },
+  {
+    "Mode": "current",
+    "ObservedEpoch": 1,
+    "SentEpoch": 1,
+    "Root": "73f4790ff58d3070d28c2032b5b583479c8084874b3c4637931effaf1fcd9baa",
+    "Binding": "4d2979f568874b23ef39affe3ce411e1eb430b490c88771669cc634e85050361",
+    "StateStore": "routing-parties-8584eb45eee4-catalog",
+    "StateKey": "parties-8584eb45eee4-catalog-authority"
+  },
+  {
+    "Mode": "current",
+    "ObservedEpoch": 1,
+    "SentEpoch": 1,
+    "Root": "73f4790ff58d3070d28c2032b5b583479c8084874b3c4637931effaf1fcd9baa",
+    "Binding": "4d2979f568874b23ef39affe3ce411e1eb430b490c88771669cc634e85050361",
+    "StateStore": "routing-parties-8584eb45eee4-catalog",
+    "StateKey": "parties-8584eb45eee4-catalog-authority"
+  },
+  {
+    "Mode": "current",
+    "ObservedEpoch": 1,
+    "SentEpoch": 1,
+    "Root": "73f4790ff58d3070d28c2032b5b583479c8084874b3c4637931effaf1fcd9baa",
+    "Binding": "4d2979f568874b23ef39affe3ce411e1eb430b490c88771669cc634e85050361",
+    "StateStore": "routing-parties-8584eb45eee4-catalog",
+    "StateKey": "parties-8584eb45eee4-catalog-authority"
+  },
+  {
+    "Mode": "current",
+    "ObservedEpoch": 1,
+    "SentEpoch": 1,
+    "Root": "73f4790ff58d3070d28c2032b5b583479c8084874b3c4637931effaf1fcd9baa",
+    "Binding": "4d2979f568874b23ef39affe3ce411e1eb430b490c88771669cc634e85050361",
+    "StateStore": "routing-parties-8584eb45eee4-catalog",
+    "StateKey": "parties-8584eb45eee4-catalog-authority"
+  },
+  {
+    "Mode": "current",
+    "ObservedEpoch": 1,
+    "SentEpoch": 1,
+    "Root": "73f4790ff58d3070d28c2032b5b583479c8084874b3c4637931effaf1fcd9baa",
+    "Binding": "4d2979f568874b23ef39affe3ce411e1eb430b490c88771669cc634e85050361",
+    "StateStore": "routing-parties-8584eb45eee4-catalog",
+    "StateKey": "parties-8584eb45eee4-catalog-authority"
+  }
+]

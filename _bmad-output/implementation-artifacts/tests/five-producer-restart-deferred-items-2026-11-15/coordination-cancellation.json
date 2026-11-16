@@ -1,0 +1,34 @@
+{
+  "Tests": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "not-run": 0
+  },
+  "SameExecutedIdentitiesAsFullRun": true,
+  "ExecutedIdentities": {
+    "${ARTIFACTS}/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll": "d2414a2902cb67d0f7e200840459ecf7a8e03d9ebd40547f286076c0f784aba8",
+    "${ARTIFACTS}/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll": "1e261d224ccafe438009ea24bfd61cdb4be5466a58039591ad218949fcc0561a",
+    "${ARTIFACTS}/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.deps.json": "749089c2a8ce1b52d1205f151fd3cae843df061eee96ced9b46c7b5920961d73",
+    "${ARTIFACTS}/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.runtimeconfig.json": "7a0492ba58957f75c7c30c43200f2d844ddf164235ba0df015ae0ffda7e55561",
+    "${ARTIFACTS}/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.dll": "1b779b633443fa1fbd837756daaee266f8ea459e15cbcb628a2d8b05fdc19ce6",
+    "${ARTIFACTS}/bin/Hexalith.Parties.Tests/release/Hexalith.EventStore.Contracts.dll": "e165e434435170f6b9ec1699cc371c22a3d3b0a4f34b68209c99b564064f76b2",
+    "${ARTIFACTS}/bin/Hexalith.Parties.Tests/release/Hexalith.EventStore.Client.dll": "786cbb4bebd8d3720300afd775b0c38ccafdd1a73e8f1c1ccd79ef931ab5cbc2",
+    "${ARTIFACTS}/bin/Hexalith.Parties.Tests/release/Hexalith.Memories.Contracts.dll": "d91ffb96fccc78297b0ff243c84d9ff00ce95a1a911abafe3e06a234ea5fa8f9",
+    "${ARTIFACTS}/bin/Hexalith.Parties.Tests/release/Hexalith.Memories.Client.Rest.dll": "7964b42d50db42d8d273b68ba55f8c6eea2c5ef79da89a34b9ba470560e6102d",
+    "${ARTIFACTS}/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.dll": "41ea5ad28137891a681002586738948e39069f2ee56e1bdf1ef6248fb4d02680"
+  },
+  "ControlledCancellation": true,
+  "OwnedTopologyDisposed": true,
+  "SessionDirectoryExists": false,
+  "CleanupFailure": null,
+  "Quiescence": {
+    "Pid": 2690057,
+    "Start": 5535922,
+    "Exited": true,
+    "BeforeBackingRemoval": true
+  },
+  "Scope": "private coordination cancellation with live Aspire; global SIGINT remains unqualified"
+}

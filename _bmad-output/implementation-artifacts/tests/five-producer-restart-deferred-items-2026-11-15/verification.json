@@ -1,0 +1,62 @@
+{
+  "Commands": [
+    "dotnet",
+    "${ARTIFACTS}/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+    "-method",
+    "*ActualCurrentSourceMemoriesRestartsAcrossFiveRecoveryBoundaries",
+    "-parallelMode",
+    "none",
+    "-failSkips",
+    "-result-xml",
+    "${PRIVATE}/wrapper.xml"
+  ],
+  "Wrapper": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "not-run": 0
+  },
+  "Child": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "not-run": 0
+  },
+  "FocusedConsumer": {
+    "total": 51,
+    "passed": 51,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "not-run": 0
+  },
+  "FocusedSignalAndCleanup": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "not-run": 0
+  },
+  "ObservedReplacements": 6,
+  "ControlledCancellation": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "not-run": 0
+  },
+  "PreparedManifestSha256": "c870bf54a91540bc45a1b3fcb334b1edf38b06b147447581a110215d55dc5cf4",
+  "SameFrozenOutputsForRuntimeCancellationAndFocusedChecks": true,
+  "ReplaySafetyEnabled": true,
+  "Cleanup": {
+    "OwnedTopologyDisposed": true,
+    "SessionDirectoryExists": false,
+    "CleanupFailure": null
+  }
+}

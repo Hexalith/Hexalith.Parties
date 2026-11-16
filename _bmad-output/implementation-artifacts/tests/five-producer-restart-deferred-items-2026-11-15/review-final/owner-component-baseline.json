@@ -1,0 +1,81 @@
+{
+  "Tenant": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2",
+  "Case": "01M7GYKJ9TR7DREM3PTBH1D1P0",
+  "UnitA": "owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c",
+  "UnitB": "owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647",
+  "CapturedAtUtc": "2026-11-16T01:12:59.5082265+00:00",
+  "SourceAAuthoritySha256": "ea75e67c6ac6222dfc2621437db5e2d195c4f02e0a65c701c7e674739bab1a2d",
+  "SourceAHashes": [
+    {
+      "Key": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:mu:owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c",
+      "Sha256": "ae680fa9d444318f6fd3986fe87a27f455499cd21c5642418368b970f4f6fcd7"
+    },
+    {
+      "Key": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:vec:owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c:0",
+      "Sha256": "d17a708ee76bbce136f901b0ad6754f3ca1d6bdc6ffaed611a74fbe565ac7c6e"
+    }
+  ],
+  "SourceBHashes": [
+    {
+      "Key": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:mu:owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647",
+      "Sha256": "18e7d796a4631d9009a56ac3729140fc322fa7f8a6112e3f9ef983dab2842bfa"
+    },
+    {
+      "Key": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:vec:owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647:0",
+      "Sha256": "ea8d3a72135df1a72518008e9e41c0349a2931e6621fd5fb6a06274bd10c67b6"
+    }
+  ],
+  "Metadata": [
+    {
+      "Key": "ingestion-unit-authority:759fb67481ab8f9e5d0048911d8bba62c31cfcdee7594a2421258338a112214d",
+      "Value": "{\"Kind\":\"issued-v2\",\"Tenant\":\"parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2\",\"Unit\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c\",\"Generation\":\"1c47e804471f4fe9aac6cdbab30b7450\",\"ProducerBinding\":\"535014f1a6d479964b2b9d3088c2cc04c9be3331fe0063697776818b72b925b3\",\"EvidenceId\":\"service-issuance:1c47e804471f4fe9aac6cdbab30b7450\",\"WriterExclusionEvidenceId\":\"owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450\"}",
+      "Sha256": "ea75e67c6ac6222dfc2621437db5e2d195c4f02e0a65c701c7e674739bab1a2d"
+    },
+    {
+      "Key": "publication-key-provenance:parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c",
+      "Value": "{\"Kind\":\"issued-v2\",\"Tenant\":\"parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2\",\"Unit\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c\",\"Generation\":\"1c47e804471f4fe9aac6cdbab30b7450\",\"ProducerBinding\":\"535014f1a6d479964b2b9d3088c2cc04c9be3331fe0063697776818b72b925b3\",\"EvidenceId\":\"service-issuance:1c47e804471f4fe9aac6cdbab30b7450\",\"WriterExclusionEvidenceId\":\"owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450\"}",
+      "Sha256": "ea75e67c6ac6222dfc2621437db5e2d195c4f02e0a65c701c7e674739bab1a2d"
+    },
+    {
+      "Key": "ingestion-unit-authority:314af7db3c61af41297c49fd64f3ecdff9872328b309cdd484f1043134b0aada",
+      "Value": "{\"Kind\":\"issued-v2\",\"Tenant\":\"parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2\",\"Unit\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647\",\"Generation\":\"1c47e804471f4fe9aac6cdbab30b7450\",\"ProducerBinding\":\"8a88767aa360fd631f956e6b686c5951aa42cd3e2ca2344be44db82867b0b43a\",\"EvidenceId\":\"service-issuance:1c47e804471f4fe9aac6cdbab30b7450\",\"WriterExclusionEvidenceId\":\"owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450\"}",
+      "Sha256": "d6698e742c340c6c1ff914e0e7c3253022254856971baccb09118d0e3491ab84"
+    },
+    {
+      "Key": "publication-key-provenance:parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647",
+      "Value": "{\"Kind\":\"issued-v2\",\"Tenant\":\"parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2\",\"Unit\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647\",\"Generation\":\"1c47e804471f4fe9aac6cdbab30b7450\",\"ProducerBinding\":\"8a88767aa360fd631f956e6b686c5951aa42cd3e2ca2344be44db82867b0b43a\",\"EvidenceId\":\"service-issuance:1c47e804471f4fe9aac6cdbab30b7450\",\"WriterExclusionEvidenceId\":\"owned-disposable-session:4bea754681db:1c47e804471f4fe9aac6cdbab30b7450\"}",
+      "Sha256": "d6698e742c340c6c1ff914e0e7c3253022254856971baccb09118d0e3491ab84"
+    },
+    {
+      "Key": "source-inventory:b6eef908b8fb8be2d6e96b806cc8c1fee6e8db5812e0a6ccc6c801df71fbbbc3",
+      "Value": "{\"tenantId\":\"parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2\",\"sourceUri\":\"urn:hexalith:parties:parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:party:component-source-a-86a815eac4154c97abe3eb1452a20af5\",\"version\":\"4fc391abdad9456da9c01f33d45991bf\",\"coverageComplete\":true,\"admissionClosed\":false,\"permanent\":false,\"entries\":[{\"caseId\":\"01M7GYKJ9TR7DREM3PTBH1D1P0\",\"workflowInstanceId\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c\",\"idempotencyTokenHash\":\"8469689dd52622e36d8561296e6c9dc4e32176fa751a068f314abaf5d3ac26a4\",\"memoryUnitId\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c\",\"state\":\"Completed\",\"terminalVerified\":true,\"schedulingState\":\"Scheduled\",\"candidateMemoryUnitId\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c\",\"sourcePayloadReference\":{\"id\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c:sourcebytes:124ae83514fe31b851ce779d873f5cc20aa76dec12f2a49a01989cbe6a1ea6fd:source\",\"sha256Hash\":\"124ae83514fe31b851ce779d873f5cc20aa76dec12f2a49a01989cbe6a1ea6fd\",\"byteLength\":172,\"contentKind\":1,\"tenantId\":\"parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2\",\"memoryUnitId\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-3c03f311-703b-4503-9350-3ad5515b3f8c\"},\"refreshProtocolVersion\":null,\"sourceRevisionNumber\":null,\"refreshIdentityDigest\":null,\"candidateArtifactsDeleted\":false,\"failedRetryMemoryUnitId\":null}],\"coverageEvidenceId\":\"owned-synthetic-empty-scope:de3e67c9bc13473cbcc89a4bd8755c58\",\"incompleteReason\":null,\"lastReopenedFromVersion\":\"c4e00f451862453db06cea7fcf3e2dcb\",\"freshCandidateWorkflows\":[]}",
+      "Sha256": "5bc2429eb1919f714109f06f3a4fffcb6bbd43d7f85ddc1e7af6fe15c33c420b"
+    },
+    {
+      "Key": "source-inventory:306a719cdf2f9cc125635f19beed3097e5da396af3315cee9aa4becd7c7a217c",
+      "Value": "{\"tenantId\":\"parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2\",\"sourceUri\":\"urn:hexalith:parties:parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:party:component-source-b-789570c842664f6096308b46d53568e1\",\"version\":\"4997bd6aed194f5084abf62341baa4ae\",\"coverageComplete\":true,\"admissionClosed\":false,\"permanent\":false,\"entries\":[{\"caseId\":\"01M7GYKJ9TR7DREM3PTBH1D1P0\",\"workflowInstanceId\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647\",\"idempotencyTokenHash\":\"0be95bf07a80be6fe2dbc149823be5c46fd842a648c19fa731a3fefae9374e7d\",\"memoryUnitId\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647\",\"state\":\"Completed\",\"terminalVerified\":true,\"schedulingState\":\"Scheduled\",\"candidateMemoryUnitId\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647\",\"sourcePayloadReference\":{\"id\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647:sourcebytes:5feef3961fd1aee728cf5d0a01e7dbedef8c39aa3b573cdc1db181f85081b471:source\",\"sha256Hash\":\"5feef3961fd1aee728cf5d0a01e7dbedef8c39aa3b573cdc1db181f85081b471\",\"byteLength\":173,\"contentKind\":1,\"tenantId\":\"parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2\",\"memoryUnitId\":\"owned-1c47e804471f4fe9aac6cdbab30b7450-8ff8fdd9-dc10-49e7-a769-27f062c53647\"},\"refreshProtocolVersion\":null,\"sourceRevisionNumber\":null,\"refreshIdentityDigest\":null,\"candidateArtifactsDeleted\":false,\"failedRetryMemoryUnitId\":null}],\"coverageEvidenceId\":\"owned-synthetic-empty-scope:b5453701425c4bf4b7f0376f862f8682\",\"incompleteReason\":null,\"lastReopenedFromVersion\":\"3ceb02e6ddc342068144a4b200221880\",\"freshCandidateWorkflows\":[]}",
+      "Sha256": "ebf10d74d5365a6c4016e90e591687ff3ede983a2da76a25129986419c6f9649"
+    }
+  ],
+  "Historical": {
+    "Unit": "unknown-historical-fea535a6697a4cebac5876bfb315ca52",
+    "Source": "https://synthetic.invalid/source-a/unknown-historical-fea535a6697a4cebac5876bfb315ca52",
+    "Keys": [
+      "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:vec:unknown-historical-fea535a6697a4cebac5876bfb315ca52:7",
+      "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:vec:nl:unknown-historical-fea535a6697a4cebac5876bfb315ca52"
+    ],
+    "Hashes": [
+      {
+        "Key": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:vec:unknown-historical-fea535a6697a4cebac5876bfb315ca52:7",
+        "Sha256": "fd0ca1ace54a79fb62c5a583e79e52a1d3d8c51eb9e7ff74da734d7640b74f7e"
+      },
+      {
+        "Key": "parties-recovery-oc-6a2b6cde0aeb480d9f13e03c2fe0a2f2:vec:nl:unknown-historical-fea535a6697a4cebac5876bfb315ca52",
+        "Sha256": "fd0ca1ace54a79fb62c5a583e79e52a1d3d8c51eb9e7ff74da734d7640b74f7e"
+      }
+    ],
+    "Provenance": "modern",
+    "AuthorityAbsent": true
+  },
+  "Scope": "isolated owner-contract component; unknown fixture obligation does not affect main-party or survivor API teardown"
+}

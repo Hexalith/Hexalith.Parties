@@ -1,0 +1,49 @@
+{
+  "Scope": "compile compatibility only; no default runtime qualification",
+  "EffectiveVersions": {
+    "HexalithEventStoreVersion": "4.2.0",
+    "HexalithMemoriesVersion": "3.0.27",
+    "HexalithFrontComposerVersion": "6.0.0"
+  },
+  "Results": [
+    {
+      "project": "Hexalith.Parties.Tests",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "--disable-build-servers",
+        "-p:UseArtifactsOutput=true",
+        "-p:ArtifactsPath=${COMPATIBILITY_TMPDIR}/artifacts",
+        "-p:NuGetAudit=false",
+        "-p:MinVerVersionOverride=1.0.0"
+      ],
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "project": "Hexalith.Parties.IntegrationTests",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "--disable-build-servers",
+        "-p:UseArtifactsOutput=true",
+        "-p:ArtifactsPath=${COMPATIBILITY_TMPDIR}/artifacts",
+        "-p:NuGetAudit=false",
+        "-p:MinVerVersionOverride=1.0.0"
+      ],
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    }
+  ],
+  "DisposableWorkspaceRemoved": true
+}

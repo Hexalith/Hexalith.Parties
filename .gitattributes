@@ -84,6 +84,14 @@ tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeTests.cs whitespace=blank-
 tests/Hexalith.Parties.Tests/Search/PartyMemoryUnitAuthorityRuntime.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.Tests/Search/PartyMemoryUnitAuthorityRuntimeTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 
+# Preserve authored CRLF in private producer-restart coordination and evidence.
+tests/PackageTests.Shared/PartyMemoryProducerRestartProtocol.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Tests/Search/PartyMemoryProducerRestartProtocolTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryProducerRestartRuntime.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryProducerRestartSignalTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedCleanupTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Tests/Search/PartyMemoryOwnerSourceRuntime.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
 # Preserve the existing CRLF convention in the private native UI boundary.
 tests/Hexalith.Parties.Ci.Tests/NativeAdminUiBuildProfileTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

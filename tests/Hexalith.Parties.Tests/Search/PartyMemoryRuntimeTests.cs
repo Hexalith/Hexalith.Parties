@@ -14,6 +14,7 @@ using Hexalith.Memories.Client.Rest;
 using Hexalith.Memories.Contracts.V1;
 using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.Search;
+using Hexalith.Parties.Testing;
 
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -27,6 +28,7 @@ namespace Hexalith.Parties.Tests.Search;
 public sealed class PartyMemoryRuntimeTests
 {
     private bool _includeProducerControls = true;
+    private bool _producerRestarts;
     /// <summary>Observes durable canonical identities and terminal remote absence across fresh clients.</summary>
     [Fact(Timeout = 360000)]
     public async Task SelectedMemoriesIngestionAndCleanupPersistAcrossRestart()
@@ -34,7 +36,7 @@ public sealed class PartyMemoryRuntimeTests
         string? path = Environment.GetEnvironmentVariable("PARTIES_MEMORIES_RUNTIME_CONFIG");
         Assert.SkipUnless(!string.IsNullOrWhiteSpace(path), "Set PARTIES_MEMORIES_RUNTIME_CONFIG to an owned local runtime's private JSON configuration.");
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
-        deadline.CancelAfter(TimeSpan.FromMinutes(5));
+        deadline.CancelAfter(TimeSpan.FromMinutes(_producerRestarts ? 24 : 5));
         CancellationToken token = deadline.Token;
         PartyMemoryRuntimeConfiguration config = JsonSerializer.Deserialize<PartyMemoryRuntimeConfiguration>(
             await File.ReadAllTextAsync(path!, token), new JsonSerializerOptions(JsonSerializerDefaults.Web))
@@ -51,6 +53,12 @@ public sealed class PartyMemoryRuntimeTests
         }
         config.OwnedSourceInventoryQualificationEnabled.ShouldBeTrue("Enable the explicit non-Production owned source-inventory protocol and both controlled delays.");
         await PartyMemoryUnitAuthorityRuntime.ValidateAsync(config, token);
+        if (_producerRestarts)
+        {
+            config.ProducerRestartDirectory.ShouldNotBeNullOrWhiteSpace();
+            config.ProducerRestartSecret.ShouldNotBeNullOrWhiteSpace();
+            config.OwnershipGeneration.ShouldNotBeNullOrWhiteSpace();
+        }
         PartyMemoryIndexingService.SupportsExplicitSourceRefresh.ShouldBeTrue("The actual loaded Parties assembly must support revision-aware source refresh.");
         typeof(PartyMemoryIndexingService).Assembly.GetCustomAttributes<System.Reflection.AssemblyMetadataAttribute>()
             .Single(attribute => attribute.Key == "HexalithMemoriesSourceRefresh").Value.ShouldBe("true");
@@ -87,6 +95,7 @@ public sealed class PartyMemoryRuntimeTests
         bool terminalUnitAbsenceObserved = false;
         bool survivorsVerified = false;
         bool qualificationCompleted = false;
+        (string Tenant, string Case, string PartyA, string UnitA, string PartyB, string UnitB)? ownerComponent = null;
         string diagnosticPath = Path.ChangeExtension(Path.GetFullPath(path!), ".provisioning.json");
         try
         {
@@ -171,6 +180,21 @@ public sealed class PartyMemoryRuntimeTests
         var entry = PartyMemoryRecoveryTests.Entry() with { Id = party, DisplayName = "oldamber synthetic recovery record" };
         var context = new PartyMemoryUnitMappingContext(tenant, caseId, "PartyCreated", Timestamp: DateTimeOffset.UnixEpoch, SequenceNumber: 1);
         await InitializeOwnedSourceAsync(http, tenant, party, token);
+        var preparedSources = new Dictionary<string, string>(StringComparer.Ordinal);
+        if (_producerRestarts)
+        {
+            // The owner endpoint requires a tenant born after this server startup.
+            // Establish every exact synthetic scope before replacing that startup;
+            // later phases consume persisted coverage rather than reattesting it.
+            foreach (string control in new[] { "lost-index", "failed", "race", "bounded-legacy" }
+                .Concat(PartyMemoryUnitAuthorityRuntime.Faults.Select(fault => "authority-cleanup:" + fault)))
+            {
+                string prepared = "prepared-" + Guid.NewGuid().ToString("N");
+                await InitializeOwnedSourceAsync(http, tenant, prepared, token);
+                preparedSources.Add(control, prepared);
+            }
+            ownerComponent = await PrepareOwnerComponentAsync(config, token);
+        }
         IOptions<PartyMemoryUnitMappingStoreOptions> stateOptions = Options.Create(new PartyMemoryUnitMappingStoreOptions { StateStoreName = config.StateStoreName });
         var searchOptions = new PartyMemoryTestOptionsMonitor(new PartyMemorySearchOptions { Endpoint = http.BaseAddress, ApiToken = bearer, CaseId = caseId });
         PartyMemoryIndexingResult? indexed = null;
@@ -209,6 +233,14 @@ public sealed class PartyMemoryRuntimeTests
         producerWorkflows[canonical!] = indexed.WorkflowInstanceId!;
         issuedAuthorities[canonical!] = await PartyMemoryUnitAuthorityRuntime.InspectAsync(config, http, tenant, caseId,
             firstSource, indexed.WorkflowInstanceId!, canonical!, deleted: false, unitAuthorities, token);
+        await RestartProducerAsync(config, "cross-source-authority", tenant, firstSource, indexed.WorkflowInstanceId!, canonical!, token);
+        if (_producerRestarts)
+        {
+            var component = ownerComponent!.Value;
+            await PartyMemoryOwnerSourceRuntime.CrossSourceAsync(config, component.Tenant, component.Case,
+                PartyMemoryUrn.Build(component.Tenant, component.PartyA), component.UnitA,
+                PartyMemoryUrn.Build(component.Tenant, component.PartyB), component.UnitB, unitAuthorities, token);
+        }
         await PartyMemoryUnitAuthorityRuntime.RefuseUnqualifiedRefreshAsync(config, http, tenant, caseId, firstSource, canonical!, async () =>
         {
             using DaprClient negativeClient = Dapr(config);
@@ -218,6 +250,9 @@ public sealed class PartyMemoryRuntimeTests
             (await new PartyMemoryIngestionIntentStore(negativeSdk, stateOptions).GetAsync(tenant, party, token).ConfigureAwait(true))
                 .ShouldHaveSingleItem().MemoryUnitId.ShouldBe(firstCanonical);
         }, unitAuthorities, token);
+        await RestartProducerAsync(config, "same-uri-refresh", tenant, firstSource, indexed.WorkflowInstanceId!, canonical!, token);
+        (await PartyMemoryUnitAuthorityRuntime.InspectAsync(config, http, tenant, caseId, firstSource,
+            indexed.WorkflowInstanceId!, canonical!, deleted: false, unitAuthorities, token)).ShouldBe(issuedAuthorities[canonical!]);
         // A new canonical projection revision must refresh the same source URI.
         using (DaprClient refreshDapr = Dapr(config))
         {
@@ -272,20 +307,39 @@ public sealed class PartyMemoryRuntimeTests
 
         if (_includeProducerControls)
         {
-            await QualifyCanonicalLostAcknowledgementAsync(config, http, tenant, caseId, stateOptions, searchOptions, token);
-            await QualifyFailedProducerCleanupAsync(config, http, memories, tenant, caseId, stateOptions, token);
-            await QualifyLostAcknowledgementAndDelayedCleanupAsync(config, http, tenant, caseId, stateOptions, searchOptions, token);
+            await QualifyCanonicalLostAcknowledgementAsync(config, http, tenant, caseId, stateOptions, searchOptions, preparedSources.GetValueOrDefault("lost-index"), token);
+            await QualifyFailedProducerCleanupAsync(config, http, memories, tenant, caseId, stateOptions, preparedSources.GetValueOrDefault("failed"), token);
+            await QualifyLostAcknowledgementAndDelayedCleanupAsync(config, http, tenant, caseId, stateOptions, searchOptions, preparedSources.GetValueOrDefault("race"), unitAuthorities, token);
         }
         await AssertDerivedStateAsync(http, tenant, party, populated: true, token);
 
         if (config.OwnershipGeneration is not null)
         {
+            if (_producerRestarts)
+            {
+                string legacyParty = preparedSources["bounded-legacy"];
+                string legacyUnit = await PopulateSurvivorAsync(http, memories, tenant, caseId, legacyParty, "boundedlegacy", token, alreadyQualified: true);
+                await mappings.RecordMappingAsync(tenant, legacyParty, legacyUnit, PartyMemoryUrn.Build(tenant, legacyParty), caseId, token);
+                await PartyMemoryUnitAuthorityRuntime.QualifyBoundedLegacyAsync(config, http, tenant, caseId,
+                    PartyMemoryUrn.Build(tenant, legacyParty), legacyUnit,
+                    async () => (await new PartyMemoryCleanupService(http, mappings, NullLogger<PartyMemoryCleanupService>.Instance, intents)
+                        .DeleteByPartyAsync(tenant, caseId, legacyParty, token).ConfigureAwait(true)).Cleaned,
+                    async () =>
+                    {
+                        (await mappings.GetMappingsAsync(tenant, legacyParty, token).ConfigureAwait(true))
+                            .ShouldContain(item => item.MemoryUnitId == legacyUnit);
+                        (await intents.GetAsync(tenant, legacyParty, token).ConfigureAwait(true))
+                            .ShouldContain(item => item.MemoryUnitId == legacyUnit && !item.CleanupSettled);
+                    }, unitAuthorities, token);
+                (await mappings.GetMappingsAsync(tenant, legacyParty, token)).ShouldBeEmpty();
+                (await intents.GetAsync(tenant, legacyParty, token)).ShouldBeEmpty();
+            }
             // Dedicated sources keep these destructive cleanup faults after the
             // main refresh proof and independent of each other and its obligations.
             foreach (string control in PartyMemoryUnitAuthorityRuntime.Faults)
             {
-                string negativeParty = "authority-cleanup-" + Guid.NewGuid().ToString("N");
-                string negativeUnit = await PopulateSurvivorAsync(http, memories, tenant, caseId, negativeParty, "retainedauthority", token);
+                string negativeParty = preparedSources.GetValueOrDefault("authority-cleanup:" + control) ?? "authority-cleanup-" + Guid.NewGuid().ToString("N");
+                string negativeUnit = await PopulateSurvivorAsync(http, memories, tenant, caseId, negativeParty, "retainedauthority", token, alreadyQualified: _producerRestarts);
                 string negativeSource = PartyMemoryUrn.Build(tenant, negativeParty);
                 await mappings.RecordMappingAsync(tenant, negativeParty, negativeUnit, negativeSource, caseId, token);
                 async Task<bool> AttemptCleanupAsync() => (await new PartyMemoryCleanupService(http, mappings,
@@ -367,7 +421,9 @@ public sealed class PartyMemoryRuntimeTests
                 () => JsonSerializer.Serialize(new
                 { TenantId = tenant, CaseId = caseId, UnitIds = authorityUnitIds.Distinct().ToArray(), CanonicalOutputs = canonicalOutputs,
                     UnitAuthorityObservations = unitAuthorities, SurvivorCaseId = survivorCaseId, OtherTenantId = otherTenant,
-                    OtherCaseId = otherCaseId, SurvivorsVerified = survivorsVerified, Requests = ingestionRequests.Observations }),
+                    OtherCaseId = otherCaseId, SurvivorsVerified = survivorsVerified, Requests = ingestionRequests.Observations,
+                    OwnerComponent = ownerComponent is { } component ? new { component.Tenant, component.Case, component.UnitA, component.UnitB,
+                        Scope = "isolated direct owner-contract fixture; intentionally unknown historical obligation retained until verified owned backing disposal" } : null }),
                 qualificationCompleted,
                 () => TeardownAsync(config, http, tenant, party, caseId, mappingKey, intentKey,
                     terminalUnitAbsenceObserved, diagnosticPath),
@@ -386,12 +442,27 @@ public sealed class PartyMemoryRuntimeTests
         await SelectedMemoriesIngestionAndCleanupPersistAcrossRestart();
     }
 
+    /// <summary>Runs all five boundaries with actual owned producer replacement at each persisted interruption phase.</summary>
+    [Fact(Timeout = 1500000)]
+    public async Task SelectedMemoriesRecoverAcrossProducerWorkloadRestarts()
+    {
+        TestContext.Current.CancellationToken.ThrowIfCancellationRequested();
+        _producerRestarts = true;
+        await SelectedMemoriesIngestionAndCleanupPersistAcrossRestart();
+    }
+
+    private static Task RestartProducerAsync(PartyMemoryRuntimeConfiguration config, string phase,
+        string tenant, string source, string workflow, string unit, CancellationToken token)
+        => config.ProducerRestartDirectory is null ? Task.CompletedTask
+            : PartyMemoryProducerRestartProtocol.RequestAsync(config.ProducerRestartDirectory, config.OwnershipSessionId!,
+                config.ProducerRestartSecret!, phase, new { tenant, source, workflow, unit }, token);
+
     private static async Task QualifyCanonicalLostAcknowledgementAsync(PartyMemoryRuntimeConfiguration config, HttpClient owner,
         string tenant, string caseId, IOptions<PartyMemoryUnitMappingStoreOptions> stateOptions,
-        IOptionsMonitor<PartyMemorySearchOptions> searchOptions, CancellationToken token)
+        IOptionsMonitor<PartyMemorySearchOptions> searchOptions, string? preparedParty, CancellationToken token)
     {
-        string party = "lost-index-" + Guid.NewGuid().ToString("N");
-        await InitializeOwnedSourceAsync(owner, tenant, party, token).ConfigureAwait(true);
+        string party = preparedParty ?? "lost-index-" + Guid.NewGuid().ToString("N");
+        if (preparedParty is null) { await InitializeOwnedSourceAsync(owner, tenant, party, token).ConfigureAwait(true); }
         var lostHandler = new PartyMemoryLostAcknowledgementHandler(new HttpClientHandler());
         using var lost = new HttpClient(lostHandler) { BaseAddress = new Uri(config.Endpoint), Timeout = TimeSpan.FromSeconds(15) };
         lost.DefaultRequestHeaders.Authorization = owner.DefaultRequestHeaders.Authorization;
@@ -428,11 +499,11 @@ public sealed class PartyMemoryRuntimeTests
     }
 
     private static async Task QualifyFailedProducerCleanupAsync(PartyMemoryRuntimeConfiguration config, HttpClient owner, MemoriesClient client,
-        string tenant, string caseId, IOptions<PartyMemoryUnitMappingStoreOptions> stateOptions, CancellationToken token)
+        string tenant, string caseId, IOptions<PartyMemoryUnitMappingStoreOptions> stateOptions, string? preparedParty, CancellationToken token)
     {
-        string party = "failed-" + Guid.NewGuid().ToString("N");
+        string party = preparedParty ?? "failed-" + Guid.NewGuid().ToString("N");
         string source = PartyMemoryUrn.Build(tenant, party);
-        await InitializeOwnedSourceAsync(owner, tenant, party, token).ConfigureAwait(true);
+        if (preparedParty is null) { await InitializeOwnedSourceAsync(owner, tenant, party, token).ConfigureAwait(true); }
         string workflow = await client.IngestAsync(tenant, caseId, source, Encoding.UTF8.GetBytes("this is not a PDF document"),
             "application/pdf", "synthetic-failure-control", metadata: null, idempotencyToken: "failed-extraction-" + party, ct: token).ConfigureAwait(true);
         IngestionWorkflowStatus? status = null;
@@ -489,11 +560,11 @@ public sealed class PartyMemoryRuntimeTests
 
     private static async Task QualifyLostAcknowledgementAndDelayedCleanupAsync(PartyMemoryRuntimeConfiguration config, HttpClient owner,
         string tenant, string caseId, IOptions<PartyMemoryUnitMappingStoreOptions> stateOptions,
-        IOptionsMonitor<PartyMemorySearchOptions> searchOptions, CancellationToken token)
+        IOptionsMonitor<PartyMemorySearchOptions> searchOptions, string? preparedParty, List<object> observations, CancellationToken token)
     {
-        string party = "race-" + Guid.NewGuid().ToString("N");
+        string party = preparedParty ?? "race-" + Guid.NewGuid().ToString("N");
         string source = PartyMemoryUrn.Build(tenant, party);
-        await InitializeOwnedSourceAsync(owner, tenant, party, token).ConfigureAwait(true);
+        if (preparedParty is null) { await InitializeOwnedSourceAsync(owner, tenant, party, token).ConfigureAwait(true); }
         using var lost = new HttpClient(new PartyMemoryLostAcknowledgementHandler(new HttpClientHandler()))
         { BaseAddress = new Uri(config.Endpoint), Timeout = TimeSpan.FromSeconds(15) };
         lost.DefaultRequestHeaders.Authorization = owner.DefaultRequestHeaders.Authorization;
@@ -532,21 +603,32 @@ public sealed class PartyMemoryRuntimeTests
             absent.StatusCode.ShouldBe(System.Net.HttpStatusCode.NotFound);
             (await absent.Content.ReadFromJsonAsync<JsonElement>(token).ConfigureAwait(true)).GetProperty("code").GetString().ShouldBe("MEMORY_UNIT_NOT_FOUND");
         }
+        (await mappings.GetMappingsAsync(tenant, party, token).ConfigureAwait(true)).ShouldBeEmpty();
+        await RestartProducerAsync(config, "admitted-empty-mappings", tenant, source, admittedWorkflow!, admittedWorkflow!, token).ConfigureAwait(true);
         (await cleanup.DeleteByPartyAsync(tenant, caseId, party, token).ConfigureAwait(true)).Cleaned.ShouldBeFalse("A scoped 404 cannot retire an admitted producer that has not materialized its output.");
         (await intentsAfterRestart.GetAsync(tenant, party, token).ConfigureAwait(true)).ShouldHaveSingleItem().WorkflowInstanceId.ShouldBe(admittedWorkflow);
         (await mappings.GetMappingsAsync(tenant, party, token).ConfigureAwait(true)).ShouldBeEmpty();
         bool pausedOutputObserved = false;
+        string? outputUnit = null;
         for (int attempt = 0; attempt < 120; attempt++)
         {
             JsonElement inventory = await owner.GetFromJsonAsync<JsonElement>(inventoryRoute, token).ConfigureAwait(true);
             JsonElement[] entries = inventory.GetProperty("entries").EnumerateArray().ToArray();
             pausedOutputObserved = entries.Any(entry => entry.TryGetProperty("memoryUnitId", out JsonElement unit) && unit.ValueKind == JsonValueKind.String
                 && (!entry.TryGetProperty("terminalVerified", out JsonElement proof) || !proof.GetBoolean()));
-            if (pausedOutputObserved) { break; }
+            if (pausedOutputObserved)
+            {
+                outputUnit = entries.Single(entry => entry.GetProperty("workflowInstanceId").GetString() == admittedWorkflow).GetProperty("memoryUnitId").GetString();
+                break;
+            }
             await Task.Delay(100, token).ConfigureAwait(true);
         }
         pausedOutputObserved.ShouldBeTrue("The real producer must pause after output persistence and before terminal workflow acknowledgement.");
         await AssertDerivedStateAsync(owner, tenant, party, populated: true, token).ConfigureAwait(true);
+        outputUnit.ShouldNotBeNullOrWhiteSpace();
+        string? outputAuthority = await PartyMemoryUnitAuthorityRuntime.InspectAsync(config, owner, tenant, caseId, source,
+            admittedWorkflow!, outputUnit!, deleted: false, observations, token).ConfigureAwait(true);
+        await RestartProducerAsync(config, "output-known", tenant, source, admittedWorkflow!, outputUnit!, token).ConfigureAwait(true);
         (await cleanup.DeleteByPartyAsync(tenant, caseId, party, token).ConfigureAwait(true)).Cleaned.ShouldBeFalse("Output-known evidence cannot retire a still-running producer.");
         (await mappings.GetMappingsAsync(tenant, party, token).ConfigureAwait(true)).ShouldBeEmpty();
         (await intentsAfterRestart.GetAsync(tenant, party, token).ConfigureAwait(true)).ShouldHaveSingleItem().WorkflowInstanceId.ShouldNotBeNullOrWhiteSpace();
@@ -565,19 +647,66 @@ public sealed class PartyMemoryRuntimeTests
             final = await new PartyMemoryCleanupService(owner, mappings, NullLogger<PartyMemoryCleanupService>.Instance, intentsAfterRestart)
                 .DeleteByPartyAsync(tenant, caseId, party, token).ConfigureAwait(true);
             if (final.Cleaned) { break; }
-            delayedDeletionObserved |= (await intentsAfterRestart.GetAsync(tenant, party, token).ConfigureAwait(true)).Any(intent => intent.MemoryUnitId is not null && !intent.RequiresTerminalEvidence);
+            bool acceptedDeletion = (await intentsAfterRestart.GetAsync(tenant, party, token).ConfigureAwait(true)).Any(intent => intent.MemoryUnitId is not null && !intent.RequiresTerminalEvidence);
+            if (acceptedDeletion && !delayedDeletionObserved)
+            {
+                if (config.ProducerRestartDirectory is not null)
+                {
+                    using var deletionClient = new HttpClient { BaseAddress = new Uri(config.DaprHttpEndpoint), Timeout = TimeSpan.FromSeconds(5) };
+                    deletionClient.DefaultRequestHeaders.Add("dapr-api-token", config.DaprApiToken);
+                    using HttpResponseMessage observed = await deletionClient.GetAsync("v1.0/workflows/dapr/memory-unit-delete-" + Uri.EscapeDataString(outputUnit!), token).ConfigureAwait(true);
+                    if (!observed.IsSuccessStatusCode) { await Task.Delay(50, token).ConfigureAwait(true); continue; }
+                    JsonElement deletion = await observed.Content.ReadFromJsonAsync<JsonElement>(token).ConfigureAwait(true);
+                    if (!string.Equals(deletion.GetProperty("runtimeStatus").GetString(), "Running", StringComparison.OrdinalIgnoreCase))
+                    { await Task.Delay(50, token).ConfigureAwait(true); continue; }
+                }
+                using HttpResponseMessage readable = await owner.GetAsync(MemoriesRoutes.CaseMemoryUnitPath(tenant, caseId, outputUnit!), token).ConfigureAwait(true);
+                readable.EnsureSuccessStatusCode();
+                await RestartProducerAsync(config, "accepted-deletion", tenant, source, admittedWorkflow!, outputUnit!, token).ConfigureAwait(true);
+                delayedDeletionObserved = true;
+            }
             await Task.Delay(250, token).ConfigureAwait(true);
         }
         delayedDeletionObserved.ShouldBeTrue("DELETE acceptance must remain incomplete while the actual derived-store deletion is delayed.");
         final.ShouldNotBeNull().Cleaned.ShouldBeTrue();
+        using (var deletionClient = new HttpClient { BaseAddress = new Uri(config.DaprHttpEndpoint), Timeout = TimeSpan.FromSeconds(5) })
+        {
+            deletionClient.DefaultRequestHeaders.Add("dapr-api-token", config.DaprApiToken);
+            await WaitForDeletionTerminalAsync(deletionClient, outputUnit!, TimeSpan.FromSeconds(30), token).ConfigureAwait(true);
+            observations.Add(new { Boundary = "delayed-output-cleanup", Unit = outputUnit,
+                DeletionWorkflow = "memory-unit-delete-" + outputUnit, RuntimeStatus = "Completed" });
+        }
+        (await PartyMemoryUnitAuthorityRuntime.InspectAsync(config, owner, tenant, caseId, source,
+            admittedWorkflow!, outputUnit!, deleted: true, observations, token).ConfigureAwait(true)).ShouldBe(outputAuthority);
         await AssertDerivedStateAsync(owner, tenant, party, populated: false, token).ConfigureAwait(true);
+        (await mappings.GetMappingsAsync(tenant, party, token).ConfigureAwait(true)).ShouldBeEmpty();
         (await intentsAfterRestart.GetAsync(tenant, party, token).ConfigureAwait(true)).ShouldBeEmpty();
     }
 
-    private static async Task<string> PopulateSurvivorAsync(HttpClient http,
-        MemoriesClient memories, string tenant, string caseId, string party, string content, CancellationToken token)
+    private static async Task WaitForDeletionTerminalAsync(HttpClient http, string unit, TimeSpan limit, CancellationToken token)
     {
-        await InitializeOwnedSourceAsync(http, tenant, party, token).ConfigureAwait(true);
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
+        deadline.CancelAfter(limit);
+        try
+        {
+            while (true)
+            {
+                JsonElement state = await http.GetFromJsonAsync<JsonElement>("v1.0/workflows/dapr/memory-unit-delete-" + Uri.EscapeDataString(unit), deadline.Token).ConfigureAwait(true);
+                string status = state.GetProperty("runtimeStatus").GetString()!;
+                if (string.Equals(status, "Completed", StringComparison.OrdinalIgnoreCase)) { return; }
+                if (status.ToUpperInvariant() is "FAILED" or "TERMINATED" or "CANCELED" or "CANCELLED")
+                { throw new InvalidOperationException("Exact deletion workflow for " + unit + " ended with " + status + "."); }
+                await Task.Delay(100, deadline.Token).ConfigureAwait(true);
+            }
+        }
+        catch (OperationCanceledException failure) when (deadline.IsCancellationRequested && !token.IsCancellationRequested)
+        { throw new TimeoutException("Exact deletion workflow for " + unit + " did not reach Completed within its deadline.", failure); }
+    }
+
+    private static async Task<string> PopulateSurvivorAsync(HttpClient http,
+        MemoriesClient memories, string tenant, string caseId, string party, string content, CancellationToken token, bool alreadyQualified = false)
+    {
+        if (!alreadyQualified) { await InitializeOwnedSourceAsync(http, tenant, party, token).ConfigureAwait(true); }
         PartyMemoryUnit input = PartyMemoryUnitMapper.Map(
             PartyMemoryRecoveryTests.Entry() with { Id = party, DisplayName = content + " synthetic survivor" },
             new PartyMemoryUnitMappingContext(tenant, caseId, "PartyCreated", Timestamp: DateTimeOffset.UnixEpoch, SequenceNumber: 1))!;
@@ -595,6 +724,37 @@ public sealed class PartyMemoryRuntimeTests
         (await memories.GetMemoryUnitAsync(tenant, caseId, unit!, token).ConfigureAwait(true)).Content.ShouldContain(content);
         await AssertDerivedStateAsync(http, tenant, party, populated: true, token).ConfigureAwait(true);
         return unit!;
+    }
+
+    private static async Task<(string Tenant, string Case, string PartyA, string UnitA, string PartyB, string UnitB)> PrepareOwnerComponentAsync(
+        PartyMemoryRuntimeConfiguration config, CancellationToken token)
+    {
+        string tenant = "parties-recovery-oc-" + Guid.NewGuid().ToString("N");
+        using var http = new HttpClient { BaseAddress = new Uri(config.Endpoint), Timeout = TimeSpan.FromSeconds(15) };
+        http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Bearer(config, tenant));
+        http.DefaultRequestHeaders.Add("dapr-api-token", config.AppApiToken);
+        await File.WriteAllTextAsync(Path.ChangeExtension(Environment.GetEnvironmentVariable("PARTIES_MEMORIES_RUNTIME_CONFIG")!, ".owner-component.json"),
+            JsonSerializer.Serialize(new { Tenant = tenant, Scope = "isolated direct owner-contract fixture; disposal owns all backing resources" }), token).ConfigureAwait(true);
+        using (HttpResponseMessage provision = await http.PostAsJsonAsync(MemoriesRoutes.TenantsPath(),
+            new { tenantId = tenant, displayName = "Owned source-contract component", vectorDimensions = 768 }, token).ConfigureAwait(true))
+        { provision.EnsureSuccessStatusCode(); }
+        var memories = new MemoriesClient(http, Options.Create(new MemoriesClientOptions()), NullLogger<MemoriesClient>.Instance);
+        bool active = false;
+        for (int attempt = 0; attempt < 120; attempt++)
+        {
+            if ((await memories.GetTenantAsync(tenant, token).ConfigureAwait(true))?.Status == TenantStatus.Active) { active = true; break; }
+            await Task.Delay(500, token).ConfigureAwait(true);
+        }
+        active.ShouldBeTrue();
+#pragma warning disable HXL001 // Exact disposable owner-component case; never production tenant reconciliation.
+        string caseId = (await memories.CreateCaseAsync(tenant, "Owned source-contract component", null, token).ConfigureAwait(true)).Id;
+#pragma warning restore HXL001
+        string first = "component-source-a-" + Guid.NewGuid().ToString("N"), second = "component-source-b-" + Guid.NewGuid().ToString("N");
+        string unitA = await PopulateSurvivorAsync(http, memories, tenant, caseId, first, "componentamber", token).ConfigureAwait(true);
+        string unitB = await PopulateSurvivorAsync(http, memories, tenant, caseId, second, "componentcobalt", token).ConfigureAwait(true);
+        await PartyMemoryOwnerSourceRuntime.CaptureBaselineAsync(config, http, tenant, caseId,
+            PartyMemoryUrn.Build(tenant, first), unitA, PartyMemoryUrn.Build(tenant, second), unitB, token).ConfigureAwait(true);
+        return (tenant, caseId, first, unitA, second, unitB);
     }
 
     private static Task<byte[]> ReadDerivedStateAsync(HttpClient http, string tenant, string party, CancellationToken token)
@@ -625,6 +785,60 @@ public sealed class PartyMemoryRuntimeTests
             else { count.ShouldBe(0, backend + " must have persisted/derived end-state absence"); }
         }
         if (!populated) { state.GetProperty("naturalLanguage").GetInt32().ShouldBe(0); }
+    }
+
+    [Fact]
+    public async Task DeletionTerminalWaitObservesCompletedAfterRunning()
+    {
+        int requests = 0;
+        using var transport = new PartySearchErasureHttpHandler((request, _) =>
+        {
+            request.RequestUri!.AbsolutePath.ShouldBe("/v1.0/workflows/dapr/memory-unit-delete-exact-output");
+            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+                { Content = JsonContent.Create(new { runtimeStatus = ++requests == 1 ? "RUNNING" : "COMPLETED" }) });
+        });
+        using var http = new HttpClient(transport) { BaseAddress = new Uri("http://127.0.0.1:1/") };
+        await WaitForDeletionTerminalAsync(http, "exact-output", TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        requests.ShouldBe(2);
+    }
+
+    [Theory]
+    [InlineData("Failed")]
+    [InlineData("Terminated")]
+    [InlineData("Canceled")]
+    [InlineData("Cancelled")]
+    public async Task DeletionTerminalWaitRejectsFailedOrTerminatedWorkflows(string status)
+    {
+        int requests = 0;
+        using var transport = new PartySearchErasureHttpHandler((_, _) =>
+        {
+            requests++;
+            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK) { Content = JsonContent.Create(new { runtimeStatus = status }) });
+        });
+        using var http = new HttpClient(transport) { BaseAddress = new Uri("http://127.0.0.1:1/") };
+        (await Should.ThrowAsync<InvalidOperationException>(() => WaitForDeletionTerminalAsync(http, "exact-output", TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken)))
+            .Message.ShouldContain(status);
+        requests.ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task DeletionTerminalWaitIsBoundedAndHonorsCancellation(bool cancelCaller)
+    {
+        using var caller = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        int requests = 0;
+        using var transport = new PartySearchErasureHttpHandler((_, _) =>
+        {
+            requests++;
+            if (cancelCaller) { caller.CancelAfter(TimeSpan.FromMilliseconds(20)); }
+            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK) { Content = JsonContent.Create(new { runtimeStatus = "Running" }) });
+        });
+        using var http = new HttpClient(transport) { BaseAddress = new Uri("http://127.0.0.1:1/") };
+        Task waiting = WaitForDeletionTerminalAsync(http, "exact-output", cancelCaller ? TimeSpan.FromSeconds(2) : TimeSpan.FromMilliseconds(40), caller.Token);
+        if (cancelCaller) { await Should.ThrowAsync<OperationCanceledException>(waiting); }
+        else { await Should.ThrowAsync<TimeoutException>(waiting); }
+        requests.ShouldBe(1);
     }
 
     /// <summary>Private handles survive incomplete teardown; only proven safe synthetic state is erased.</summary>
@@ -1079,7 +1293,7 @@ public sealed class PartyMemoryRuntimeTests
         var signing = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.JwtSigningKey)), SecurityAlgorithms.HmacSha256);
         var jwt = new JwtSecurityToken(config.JwtIssuer, config.JwtAudience,
             [new Claim(PartiesClaimTypes.Subject, "synthetic-recovery-qualification"), new Claim(config.TenantClaimName, tenant), new Claim("owned_source_inventory_test", "true")],
-            DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow.AddMinutes(10), signing);
+            DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow.AddMinutes(config.ProducerRestartDirectory is null ? 10 : 30), signing);
         return new JwtSecurityTokenHandler().WriteToken(jwt);
     }
 }

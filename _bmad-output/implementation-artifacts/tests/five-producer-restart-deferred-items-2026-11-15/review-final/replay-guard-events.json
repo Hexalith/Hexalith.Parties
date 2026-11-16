@@ -1,0 +1,734 @@
+[
+  {
+    "AtUtc": "2026-11-16T01:14:33.4270000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:14:38.4330000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:14:43.4430000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:14:48.4450000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:14:53.4520000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:14:58.4560000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:15:03.4600000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:15:08.4630000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:15:13.4670000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:15:18.4720000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:15:23.4740000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:15:28.4810000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:15:33.4830000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:15:38.4880000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:15:43.4890000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:15:48.4990000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:15:53.5040000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:15:58.5090000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:16:03.5140000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:16:08.5180000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:16:13.5210000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:16:18.5230000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:16:23.5220000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:16:28.5280000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:16:33.5320000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:16:38.5390000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:16:43.5440000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:16:48.5480000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:16:53.5490000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:16:58.5500000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:17:03.5540000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:17:08.5580000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:17:13.5640000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:17:18.5650000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:17:23.5700000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:17:28.5770000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:17:33.5810000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:17:38.5860000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:17:43.5990000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:17:48.6000000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:17:53.6030000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:17:58.6080000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:18:03.6120000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:18:08.6170000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:18:13.6220000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:18:18.6240000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:18:23.6320000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:18:28.6340000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:18:33.6400000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:18:38.6420000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:18:43.6480000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:18:48.6500000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:18:53.6520000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:18:58.6560000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:19:03.6600000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:19:08.6650000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:19:13.6680000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:19:18.6740000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:19:23.6750000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:19:28.6810000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:19:33.6840000Z",
+    "Phase": "admitted-empty-mappings",
+    "EventId": 9172,
+    "Message": "Replay-safety gate: timed out with 1 instance(s) still active \u2014 proceeding anyway (event 9172)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:19:50.4310000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:19:55.4360000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:20:00.4410000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:20:05.4450000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:20:10.4540000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:20:15.4590000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:20:20.4640000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:20:25.4660000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:20:30.4700000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:20:35.4740000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:20:40.4810000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:20:45.4880000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:20:50.4940000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:20:55.4970000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:21:00.5010000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:21:05.5070000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:21:10.5190000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:21:15.5210000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:21:20.5260000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:21:25.5290000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:21:30.5330000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:21:35.5350000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:21:40.5410000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:21:45.5460000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:21:50.5530000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:21:55.5570000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:22:00.5630000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:22:05.5690000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:22:10.5770000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:22:15.5800000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:22:20.5830000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:22:25.5860000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:22:30.5930000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:22:35.5960000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:22:40.6020000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:22:45.6050000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:22:50.6120000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:22:55.6180000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:23:00.6200000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:23:05.6240000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:23:10.6290000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:23:15.6320000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:23:20.6360000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:23:25.6390000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:23:30.6480000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:23:35.6500000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:23:40.6560000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:23:45.6590000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:23:50.6650000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:23:55.6670000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:24:00.6700000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:24:05.6740000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:24:10.6780000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:24:15.6810000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:24:20.6850000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:24:25.6900000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:24:30.6960000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:24:35.7000000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:24:40.7040000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:24:45.7080000Z",
+    "Phase": "output-known",
+    "EventId": 9171,
+    "Message": "Replay-safety gate: 1 in-flight IngestionWorkflow instance(s) detected \u2014 delaying startup (event 9171)."
+  },
+  {
+    "AtUtc": "2026-11-16T01:24:50.7140000Z",
+    "Phase": "output-known",
+    "EventId": 9172,
+    "Message": "Replay-safety gate: timed out with 1 instance(s) still active \u2014 proceeding anyway (event 9172)."
+  }
+]

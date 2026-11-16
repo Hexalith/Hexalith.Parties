@@ -1,0 +1,19 @@
+{
+  "RawXmlVerified": {
+    "Wrapper": 1,
+    "Child": 1,
+    "Cancellation": 1,
+    "Consumer": 51,
+    "SignalAndCleanup": 7
+  },
+  "AllNonzeroPassingWithZeroFailuresSkipsErrorsNotRun": true,
+  "AllSixDistinctReplacementPairsVerified": true,
+  "UnbrokenProcessIncarnationChain": true,
+  "UnchangedCustodyEntries": 8,
+  "MatchingExecutedIdentityHashes": 10,
+  "MatchingCancellationAndFullIdentities": true,
+  "MainAndSurvivorApiTeardownsVerified": 2,
+  "NativePersistenceObservations": 6,
+  "CatalogGenerationControls": 22,
+  "FullAndControlledCancellationOwnedDisposalVerified": true
+}

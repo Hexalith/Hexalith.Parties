@@ -1,0 +1,36 @@
+[
+  {
+    "Arguments": [
+      "bash",
+      "scripts/check-no-warning-override.sh"
+    ],
+    "ExitCode": 0,
+    "Output": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts.\n"
+  },
+  {
+    "Arguments": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "ExitCode": 0,
+    "Output": ""
+  },
+  {
+    "Arguments": [
+      "git",
+      "diff",
+      "--no-index",
+      "--check",
+      "--",
+      "/dev/null",
+      "${UNTRACKED_FILE}"
+    ],
+    "CheckedFiles": 40,
+    "ExitCodes": {
+      "1": 40
+    },
+    "WhitespaceDiagnostics": 0,
+    "Result": "pass; no-index difference exit 1 is expected for a new file"
+  }
+]

@@ -1,0 +1,24 @@
+[
+  {
+    "Tests": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    "SameExecutedIdentitiesAsFullRun": true,
+    "ControlledCancellation": true,
+    "OwnedTopologyDisposed": true,
+    "SessionDirectoryExists": false,
+    "CleanupFailure": null,
+    "Quiescence": {
+      "Pid": 528907,
+      "Start": 6119527,
+      "Exited": true,
+      "BeforeBackingRemoval": true
+    },
+    "Scope": "private coordination cancellation with live Aspire; global SIGINT remains unqualified"
+  }
+]

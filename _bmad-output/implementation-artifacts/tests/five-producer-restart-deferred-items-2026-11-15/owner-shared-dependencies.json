@@ -1,0 +1,20 @@
+{
+  "Hexalith.Memories.Contracts.dll": {
+    "Child": "${ARTIFACTS}/bin/Hexalith.Parties.Tests/release/Hexalith.Memories.Contracts.dll",
+    "ObservedServerPeer": "${ARTIFACTS}/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Contracts.dll",
+    "Sha256": "d91ffb96fccc78297b0ff243c84d9ff00ce95a1a911abafe3e06a234ea5fa8f9",
+    "Equal": true
+  },
+  "Hexalith.EventStore.Client.dll": {
+    "Child": "${ARTIFACTS}/bin/Hexalith.Parties.Tests/release/Hexalith.EventStore.Client.dll",
+    "ObservedServerPeer": "${ARTIFACTS}/bin/Hexalith.Memories.Server/release/Hexalith.EventStore.Client.dll",
+    "Sha256": "786cbb4bebd8d3720300afd775b0c38ccafdd1a73e8f1c1ccd79ef931ab5cbc2",
+    "Equal": true
+  },
+  "StackExchange.Redis.dll": {
+    "Child": "${ARTIFACTS}/bin/Hexalith.Parties.Tests/release/StackExchange.Redis.dll",
+    "ObservedServerPeer": "${ARTIFACTS}/bin/Hexalith.Memories.Server/release/StackExchange.Redis.dll",
+    "Sha256": "11fe1c748608a8b9fa5777b80796e3186c5d4c481680c448b736bf10f0f8664e",
+    "Equal": true
+  }
+}

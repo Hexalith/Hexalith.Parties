@@ -1,0 +1,13 @@
+{
+  "Id": "4bea754681db",
+  "Root": "${FULL_JOB}/hexalith-parties-topology-4bea754681db",
+  "PrivateEvidence": "${FULL_RUNTIME}",
+  "OwnedTopologyDisposed": true,
+  "SessionDirectoryExists": false,
+  "IsAvailable": true,
+  "UnavailableReason": null,
+  "Phase": "authoritative-stream-and-domain-replay",
+  "ControlledCancellation": false,
+  "PrimaryFailure": null,
+  "CleanupFailure": null
+}

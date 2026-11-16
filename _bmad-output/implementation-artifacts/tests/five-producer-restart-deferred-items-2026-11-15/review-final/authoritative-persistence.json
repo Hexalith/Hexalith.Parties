@@ -1,0 +1,50 @@
+[
+  {
+    "Domain": "memories-tenants",
+    "Aggregate": "parties-recovery-d98b695eff1243909eaad10002944656",
+    "Sequence": 1,
+    "EventCount": 3,
+    "NativeProof": true,
+    "Replay": true
+  },
+  {
+    "Domain": "memories-tenants",
+    "Aggregate": "parties-recovery-d98b695eff1243909eaad10002944656",
+    "Sequence": 3,
+    "EventCount": 3,
+    "NativeProof": true,
+    "Replay": true
+  },
+  {
+    "Domain": "memories-cases",
+    "Aggregate": "01M7GYJP90SHAJ0B2E3Q3D5EZ3",
+    "Sequence": 1,
+    "EventCount": 2,
+    "NativeProof": true,
+    "Replay": true
+  },
+  {
+    "Domain": "memories-cases",
+    "Aggregate": "01M7GYJP90SHAJ0B2E3Q3D5EZ3",
+    "Sequence": 2,
+    "EventCount": 2,
+    "NativeProof": true,
+    "Replay": true
+  },
+  {
+    "Domain": "memories-memory-units",
+    "Aggregate": "owned-1c47e804471f4fe9aac6cdbab30b7450-c9edc02d-8dcb-479c-8016-508407b3b430",
+    "Sequence": 1,
+    "EventCount": 1,
+    "NativeProof": true,
+    "Replay": true
+  },
+  {
+    "Domain": "memories-memory-units",
+    "Aggregate": "owned-1c47e804471f4fe9aac6cdbab30b7450-b200ee72-5818-4a62-bbf6-a732d09d4d63",
+    "Sequence": 1,
+    "EventCount": 1,
+    "NativeProof": true,
+    "Replay": true
+  }
+]

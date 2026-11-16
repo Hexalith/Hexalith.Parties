@@ -381,3 +381,37 @@ Review-loop 3 (2026-10-24): every late materialization of a publication-managed 
 Admission uses the existing authorization bound of 128 tenant characters, 4096 source characters, and 512 case/workflow/candidate/predecessor characters, rejecting control characters before preparation or durable admission. Accepted boundary identities are read through the actual public SDK. Superseded refresh compensation records its deleted output for independent terminal proof; mutation receipt reads use one bounded multi-get. Graph publication overlap returns retryable 503 with error telemetry, and raw cleanup inventory reads retain the configured total HTTP deadline through body completion. The original public constructor signatures remain available, with production DI choosing the tenant-aware adapters.
 
 Unknown historic coverage remains incomplete. DW-196, DW-197 and DW-198 retain the pre-existing legacy NL migration, queued NL retry erasure and sparse-keyspace deletion-discovery follow-ups. Matching package publication/adoption, deployment of the workload topology and production qualification remain separate gates. Earlier receipts are historical after these corrections; final loop3 results are recorded in the bounded batch receipt.
+
+
+## Owned producer workload restart boundary
+
+The distinct current-source restart qualification replaces the session-owned
+Memories workload at six independently observed phases across DW-82, DW-168,
+same-URI refresh, cross-source unit authority and bounded legacy discovery.
+Its private file rendezvous does not establish the phase alone: the wrapper
+freezes the exact Linux process, rereads persisted inventory/workflow state,
+and refuses raced phase evidence before replacement. Each acknowledged restart
+requires old-incarnation exit, a distinct healthy process, unchanged backing
+containers/sidecars and prepared binaries, and the same authority generation.
+
+The child retains SDK obligations through admitted/output-known work and
+accepted deletion until independent terminal evidence and physical absence
+settle them. Settled revision 1 precedes process replacement and revision 2
+publishes changed content at the same URI. The exact owner admission seam rejects an issued tenant/unit/case when only
+SourceUri changes. A separate isolated owner component proves that complete
+source-B coverage cannot certify unknown source-A historical units; actual
+cleanup discovery refuses with all original/source-B hash bytes retained.
+Historical bytes, provenance and both settled source inventories are captured
+before replacement and compared afterward.
+These direct component calls do not stand in for live HTTP deletion, and valid
+exact-unit authority remains valid independently of source scope. An explicitly enumerated
+private historical fixture must retain exact key/hash bytes through incomplete
+discovery refusal; only its own conditional exact-unit evidence permits bounded
+cleanup. Final checks include both revision outputs, content-free deletion
+receipts, empty fenced SDK inventories and byte-preserved unrelated survivors.
+
+This lane qualifies the selected current-source process boundary with fake
+embeddings and disposable resources. It supplies no historical production
+completeness, deployed writer exclusion, published-package certification or
+owner acceptance. The [2026-11-15 restart receipt](../_bmad-output/implementation-artifacts/tests/five-producer-restart-deferred-items-2026-11-15/README.md)
+links the reviewed final rerun, actual outcomes and remaining external gates.

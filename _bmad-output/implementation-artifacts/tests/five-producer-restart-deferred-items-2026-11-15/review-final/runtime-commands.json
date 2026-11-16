@@ -1,0 +1,36 @@
+{
+  "Full": [
+    "dotnet",
+    "${ARTIFACTS}/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+    "-method",
+    "*ActualCurrentSourceMemoriesRestartsAcrossFiveRecoveryBoundaries",
+    "-parallelMode",
+    "none",
+    "-failSkips",
+    "-result-xml",
+    "${PRIVATE}/full/wrapper.xml"
+  ],
+  "Cancellation": [
+    [
+      "dotnet",
+      "${ARTIFACTS}/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-method",
+      "*ActualCurrentSourceCanceledRestartCompletesOwnedCleanup",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE}/cancellation-0/wrapper.xml"
+    ]
+  ],
+  "Environment": {
+    "HexalithEventStoreVersion": "5.1.0",
+    "HexalithMemoriesVersion": "4.0.0",
+    "HexalithFrontComposerVersion": "6.0.0",
+    "NuGetAudit": "false",
+    "MinVerVersionOverride": "1.0.0",
+    "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+    "Parties__Testing__PreparedRuntimeManifest": "${ARTIFACTS}/runtime-profile/Release/prepared.json"
+  },
+  "Scratch": "run-with-temp; outer artifacts under TMPDIR; nested short runtime scratch; evidence copied before disposal"
+}

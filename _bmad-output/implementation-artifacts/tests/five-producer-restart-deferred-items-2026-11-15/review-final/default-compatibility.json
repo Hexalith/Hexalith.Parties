@@ -1,0 +1,13 @@
+{
+  "Scope": "compile-only; no default-runtime qualification",
+  "EventStore": "4.2.0",
+  "Memories": "3.0.27",
+  "FrontComposer": "6.0.0",
+  "Projects": [
+    "Hexalith.Parties.Tests",
+    "Hexalith.Parties.IntegrationTests"
+  ],
+  "Warnings": 0,
+  "Errors": 0,
+  "SameCurrentImplementation": true
+}

@@ -1,0 +1,54 @@
+{
+  "Results": {
+    "Full": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    "Child": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    "Focused": {
+      "total": 58,
+      "passed": 58,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    "SignalAndCleanup": {
+      "total": 10,
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    "CancellationMethods": [
+      "ActualCurrentSourceCanceledRestartCompletesOwnedCleanup"
+    ],
+    "SameRuntimeAndCancellationIdentities": true
+  },
+  "ObservedReplacements": 6,
+  "PreparedManifestSha256": "e3fb0bf07ca658f402c16d737fc613d124b86c625eaec56b26aa005f6a0fb3f3",
+  "ReplaySafetyEnabled": true,
+  "APIteardowns": 2,
+  "AuthorityObservations": 21,
+  "ReviewFixes": {
+    "DelayedOutputTerminalAndOwnAuthorityReceipt": true,
+    "AcceptedDeletionObservationsRetained": true,
+    "HistoricalBytesAndSettledMetadataCapturedBeforeRestart": true,
+    "LegacySDKObligationsRetainedOnBothRefusals": true,
+    "PendingStartAndUnconditionalCleanupControls": "owned-cleanup.xml.gz"
+  },
+  "SourceAndPackagePreparationBlockers": "../commands.json (earlier exact attempts, unchanged dependency gates)",
+  "GlobalSIGINT": "unqualified; original diagnostics and reconciliation retained in parent packet"
+}

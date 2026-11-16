@@ -1,0 +1,191 @@
+{
+  "Runs": [
+    {
+      "Run": "full",
+      "RunnerPid": 539824,
+      "RunnerExited": true,
+      "SessionId": "4bea754681db",
+      "SessionDirectoryAbsent": true,
+      "OwnedProcessIncarnations": [
+        {
+          "Pid": 543881,
+          "Start": 6123810,
+          "CurrentStart": null,
+          "OriginalIncarnationAbsent": true
+        },
+        {
+          "Pid": 543882,
+          "Start": 6123810,
+          "CurrentStart": null,
+          "OriginalIncarnationAbsent": true
+        },
+        {
+          "Pid": 543884,
+          "Start": 6123810,
+          "CurrentStart": null,
+          "OriginalIncarnationAbsent": true
+        },
+        {
+          "Pid": 543965,
+          "Start": 6123822,
+          "CurrentStart": null,
+          "OriginalIncarnationAbsent": true
+        },
+        {
+          "Pid": 543999,
+          "Start": 6123825,
+          "CurrentStart": null,
+          "OriginalIncarnationAbsent": true
+        },
+        {
+          "Pid": 544047,
+          "Start": 6123869,
+          "CurrentStart": null,
+          "OriginalIncarnationAbsent": true
+        },
+        {
+          "Pid": 568731,
+          "Start": 6131726,
+          "CurrentStart": null,
+          "OriginalIncarnationAbsent": true
+        },
+        {
+          "Pid": 572542,
+          "Start": 6132873,
+          "CurrentStart": null,
+          "OriginalIncarnationAbsent": true
+        },
+        {
+          "Pid": 591466,
+          "Start": 6138914,
+          "CurrentStart": null,
+          "OriginalIncarnationAbsent": true
+        },
+        {
+          "Pid": 688624,
+          "Start": 6170621,
+          "CurrentStart": null,
+          "OriginalIncarnationAbsent": true
+        },
+        {
+          "Pid": 786557,
+          "Start": 6202309,
+          "CurrentStart": null,
+          "OriginalIncarnationAbsent": true
+        },
+        {
+          "Pid": 794805,
+          "Start": 6205014,
+          "CurrentStart": null,
+          "OriginalIncarnationAbsent": true
+        }
+      ],
+      "BackingContainers": [
+        {
+          "Resource": "fixture-redis",
+          "Id": "cd1c9ba5708c61e8d8ffc50d917f845431cd44c8cb79ec2f69e9c2af220563a6",
+          "Absent": true
+        },
+        {
+          "Resource": "fixture-memories-search",
+          "Id": "dcfd6c8b29b4135f376eb50453f0741aee847a057faf7a4942bd635a62e0ac40",
+          "Absent": true
+        },
+        {
+          "Resource": "fixture-memories-graph",
+          "Id": "989aa7653ff34ddc7d36ca9e9cfd925cc4d2e58b36ef5548402ec68e30e08388",
+          "Absent": true
+        }
+      ],
+      "AnySessionNamedContainerRemaining": false,
+      "RuntimeScratchAbsent": true
+    },
+    {
+      "Run": "cancellation-0",
+      "RunnerPid": 475263,
+      "RunnerExited": true,
+      "SessionId": "bfbbbe6957e1",
+      "SessionDirectoryAbsent": true,
+      "OwnedProcessIncarnations": [
+        {
+          "Pid": 479096,
+          "Start": 6104625,
+          "CurrentStart": null,
+          "OriginalIncarnationAbsent": true
+        },
+        {
+          "Pid": 479100,
+          "Start": 6104626,
+          "CurrentStart": null,
+          "OriginalIncarnationAbsent": true
+        },
+        {
+          "Pid": 479101,
+          "Start": 6104626,
+          "CurrentStart": null,
+          "OriginalIncarnationAbsent": true
+        },
+        {
+          "Pid": 479203,
+          "Start": 6104636,
+          "CurrentStart": null,
+          "OriginalIncarnationAbsent": true
+        },
+        {
+          "Pid": 479205,
+          "Start": 6104636,
+          "CurrentStart": null,
+          "OriginalIncarnationAbsent": true
+        },
+        {
+          "Pid": 479658,
+          "Start": 6104686,
+          "CurrentStart": null,
+          "OriginalIncarnationAbsent": true
+        },
+        {
+          "Pid": 506967,
+          "Start": 6112471,
+          "CurrentStart": null,
+          "OriginalIncarnationAbsent": true
+        },
+        {
+          "Pid": 510340,
+          "Start": 6113524,
+          "CurrentStart": null,
+          "OriginalIncarnationAbsent": true
+        },
+        {
+          "Pid": 528907,
+          "Start": 6119527,
+          "CurrentStart": null,
+          "OriginalIncarnationAbsent": true
+        }
+      ],
+      "BackingContainers": [
+        {
+          "Resource": "fixture-redis",
+          "Id": "00f65c84ded6db3eeb23f9c3469f66d957c709006a380b267b26117528839911",
+          "Absent": true
+        },
+        {
+          "Resource": "fixture-memories-search",
+          "Id": "24366ea499eb289753858b7bf691db5389194fcd4ec7edcd925af6af1adbaf32",
+          "Absent": true
+        },
+        {
+          "Resource": "fixture-memories-graph",
+          "Id": "6647e658ae3a8cc209d18dd053fc42100e02c3c6120edc44ab038721de4e73fa",
+          "Absent": true
+        }
+      ],
+      "AnySessionNamedContainerRemaining": false,
+      "RuntimeScratchAbsent": true
+    }
+  ],
+  "DisposableScratch": {
+    "OuterJobAbsent": true,
+    "ExitCode": 0,
+    "ChildWorkCompletedBeforeRemoval": true
+  }
+}

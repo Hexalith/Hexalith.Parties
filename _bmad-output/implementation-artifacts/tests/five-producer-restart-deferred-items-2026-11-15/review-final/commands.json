@@ -1,0 +1,150 @@
+[
+  {
+    "Label": "Hexalith.Parties.Tests-build",
+    "Arguments": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${ARTIFACTS}",
+      "-p:NuGetAudit=false",
+      "-p:MinVerVersionOverride=1.0.0",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0"
+    ],
+    "ExitCode": 0
+  },
+  {
+    "Label": "Hexalith.Parties.IntegrationTests-build",
+    "Arguments": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${ARTIFACTS}",
+      "-p:NuGetAudit=false",
+      "-p:MinVerVersionOverride=1.0.0",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0"
+    ],
+    "ExitCode": 0
+  },
+  {
+    "Label": "prepare-hosts",
+    "Arguments": [
+      "bash",
+      "scripts/prepare-aspire-runtime-hosts.sh",
+      "--gateway-profile",
+      "packaged",
+      "--configuration",
+      "Release",
+      "--artifacts-path",
+      "${ARTIFACTS}",
+      "--include-memory-qualification",
+      "true"
+    ],
+    "ExitCode": 0
+  },
+  {
+    "Label": "focused",
+    "Arguments": [
+      "dotnet",
+      "${ARTIFACTS}/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryProducerRestartProtocolTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryUnitAuthorityRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+      "-method-",
+      "*SelectedMemories*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE}/focused.xml"
+    ],
+    "ExitCode": 0
+  },
+  {
+    "Label": "owned-cleanup",
+    "Arguments": [
+      "dotnet",
+      "${ARTIFACTS}/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryProducerRestartSignalTests",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE}/owned-cleanup.xml"
+    ],
+    "ExitCode": 0
+  },
+  {
+    "Label": "runtime-ActualCurrentSourceCanceledRestartCompletesOwnedCleanup",
+    "Arguments": [
+      "run-with-temp",
+      "python3",
+      "${INITIAL_PRIVATE}/run-runtime.py"
+    ],
+    "ExitCode": 0
+  },
+  {
+    "Label": "runtime-full",
+    "Arguments": [
+      "run-with-temp",
+      "python3",
+      "${INITIAL_PRIVATE}/run-runtime.py"
+    ],
+    "ExitCode": 0
+  },
+  {
+    "Label": "Hexalith.Parties.Tests-default-build",
+    "Arguments": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${JOB}/default-artifacts",
+      "-p:NuGetAudit=false",
+      "-p:MinVerVersionOverride=1.0.0"
+    ],
+    "ExitCode": 0
+  },
+  {
+    "Label": "Hexalith.Parties.IntegrationTests-default-build",
+    "Arguments": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${JOB}/default-artifacts",
+      "-p:NuGetAudit=false",
+      "-p:MinVerVersionOverride=1.0.0"
+    ],
+    "ExitCode": 0
+  }
+]

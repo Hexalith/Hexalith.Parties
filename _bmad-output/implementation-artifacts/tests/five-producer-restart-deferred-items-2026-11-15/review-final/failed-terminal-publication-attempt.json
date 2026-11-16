@@ -1,0 +1,226 @@
+{
+  "Outcome": "failed; retained separately from passing qualification",
+  "Cause": "Exact deletion workflow still RUNNING after physical cleanup; immediate terminal assertion refused",
+  "CompletedReplacementPhases": [
+    "cross-source-authority",
+    "same-uri-refresh",
+    "admitted-empty-mappings",
+    "output-known",
+    "accepted-deletion"
+  ],
+  "FailedImplementationSha256": {
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeTests.cs": "c46da85312e7068068f5b69148e4ff1bcf88c9fb7cefc5221e3e70568037705d"
+  },
+  "ExactWrapperCommand": [
+    "dotnet",
+    "${FAILED_ARTIFACTS}/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+    "-method",
+    "*ActualCurrentSourceMemoriesRestartsAcrossFiveRecoveryBoundaries",
+    "-parallelMode",
+    "none",
+    "-failSkips",
+    "-result-xml",
+    "${PRIVATE}/full/wrapper.xml"
+  ],
+  "ExecutedIdentities": {
+    "${FAILED_ARTIFACTS}/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll": "6ec4e78b4d0fe8461f5ac13d6e97390d2297ed79b12c3f5c4c1635726542ddff",
+    "${FAILED_ARTIFACTS}/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll": "df22d7a80a3621be9f0f344ad2c1f8d1bdf73b4dea8609363cfdd22a85e5c5d7",
+    "${FAILED_ARTIFACTS}/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.deps.json": "749089c2a8ce1b52d1205f151fd3cae843df061eee96ced9b46c7b5920961d73",
+    "${FAILED_ARTIFACTS}/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.runtimeconfig.json": "7a0492ba58957f75c7c30c43200f2d844ddf164235ba0df015ae0ffda7e55561",
+    "${FAILED_ARTIFACTS}/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.dll": "f8897bdc2b63fb55c1ca51e894c772b26188ea8b50b2c30ccdb6b3ecd5c509db",
+    "${FAILED_ARTIFACTS}/bin/Hexalith.Parties.Tests/release/Hexalith.EventStore.Contracts.dll": "e165e434435170f6b9ec1699cc371c22a3d3b0a4f34b68209c99b564064f76b2",
+    "${FAILED_ARTIFACTS}/bin/Hexalith.Parties.Tests/release/Hexalith.EventStore.Client.dll": "786cbb4bebd8d3720300afd775b0c38ccafdd1a73e8f1c1ccd79ef931ab5cbc2",
+    "${FAILED_ARTIFACTS}/bin/Hexalith.Parties.Tests/release/Hexalith.Memories.Contracts.dll": "d91ffb96fccc78297b0ff243c84d9ff00ce95a1a911abafe3e06a234ea5fa8f9",
+    "${FAILED_ARTIFACTS}/bin/Hexalith.Parties.Tests/release/Hexalith.Memories.Client.Rest.dll": "7964b42d50db42d8d273b68ba55f8c6eea2c5ef79da89a34b9ba470560e6102d",
+    "${FAILED_ARTIFACTS}/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.dll": "3081f8e436374797cadb16700e5fc98603d38f8679a7421402aa08cb3cbc7684"
+  },
+  "OwnedTopologyDisposed": true,
+  "SessionDirectoryExists": false,
+  "CleanupFailure": null,
+  "IndependentProcessClosure": {
+    "Runs": [
+      {
+        "Run": "full",
+        "RunnerPid": 46452,
+        "RunnerExited": true,
+        "SessionId": "0de90dd793e1",
+        "SessionDirectoryAbsent": true,
+        "OwnedProcessIncarnations": [
+          {
+            "Pid": 50606,
+            "Start": 5972721,
+            "CurrentStart": null,
+            "OriginalIncarnationAbsent": true
+          },
+          {
+            "Pid": 50607,
+            "Start": 5972721,
+            "CurrentStart": null,
+            "OriginalIncarnationAbsent": true
+          },
+          {
+            "Pid": 50609,
+            "Start": 5972721,
+            "CurrentStart": null,
+            "OriginalIncarnationAbsent": true
+          },
+          {
+            "Pid": 50711,
+            "Start": 5972731,
+            "CurrentStart": null,
+            "OriginalIncarnationAbsent": true
+          },
+          {
+            "Pid": 50737,
+            "Start": 5972732,
+            "CurrentStart": null,
+            "OriginalIncarnationAbsent": true
+          },
+          {
+            "Pid": 51139,
+            "Start": 5972780,
+            "CurrentStart": null,
+            "OriginalIncarnationAbsent": true
+          },
+          {
+            "Pid": 75799,
+            "Start": 5980622,
+            "CurrentStart": null,
+            "OriginalIncarnationAbsent": true
+          },
+          {
+            "Pid": 79372,
+            "Start": 5981675,
+            "CurrentStart": null,
+            "OriginalIncarnationAbsent": true
+          },
+          {
+            "Pid": 99333,
+            "Start": 5987713,
+            "CurrentStart": null,
+            "OriginalIncarnationAbsent": true
+          },
+          {
+            "Pid": 197566,
+            "Start": 6019211,
+            "CurrentStart": null,
+            "OriginalIncarnationAbsent": true
+          },
+          {
+            "Pid": 293604,
+            "Start": 6051032,
+            "CurrentStart": null,
+            "OriginalIncarnationAbsent": true
+          }
+        ],
+        "BackingContainers": [
+          {
+            "Resource": "fixture-redis",
+            "Id": "6a0bf70a832e5dcc57db3d1c811f30092d8fa5e72f28009f761486675c90d246",
+            "Absent": true
+          },
+          {
+            "Resource": "fixture-memories-search",
+            "Id": "335e603584cd16b921702146e7c2d7f24c734f79e887ae37455792fd1f141b62",
+            "Absent": true
+          },
+          {
+            "Resource": "fixture-memories-graph",
+            "Id": "cdbb2b8028275a0e93885079c2e7cb90c0d34f9126176726a4d90efb729c758b",
+            "Absent": true
+          }
+        ],
+        "AnySessionNamedContainerRemaining": false,
+        "RuntimeScratchAbsent": true
+      },
+      {
+        "Run": "cancellation-0",
+        "RunnerPid": 4178800,
+        "RunnerExited": true,
+        "SessionId": "5f0ce47ee5ba",
+        "SessionDirectoryAbsent": true,
+        "OwnedProcessIncarnations": [
+          {
+            "Pid": 13468,
+            "Start": 5961561,
+            "CurrentStart": null,
+            "OriginalIncarnationAbsent": true
+          },
+          {
+            "Pid": 16859,
+            "Start": 5962659,
+            "CurrentStart": null,
+            "OriginalIncarnationAbsent": true
+          },
+          {
+            "Pid": 36649,
+            "Start": 5968815,
+            "CurrentStart": null,
+            "OriginalIncarnationAbsent": true
+          },
+          {
+            "Pid": 4183370,
+            "Start": 5953804,
+            "CurrentStart": null,
+            "OriginalIncarnationAbsent": true
+          },
+          {
+            "Pid": 4183372,
+            "Start": 5953804,
+            "CurrentStart": null,
+            "OriginalIncarnationAbsent": true
+          },
+          {
+            "Pid": 4183373,
+            "Start": 5953804,
+            "CurrentStart": null,
+            "OriginalIncarnationAbsent": true
+          },
+          {
+            "Pid": 4183472,
+            "Start": 5953815,
+            "CurrentStart": null,
+            "OriginalIncarnationAbsent": true
+          },
+          {
+            "Pid": 4183496,
+            "Start": 5953816,
+            "CurrentStart": null,
+            "OriginalIncarnationAbsent": true
+          },
+          {
+            "Pid": 4183551,
+            "Start": 5953858,
+            "CurrentStart": null,
+            "OriginalIncarnationAbsent": true
+          }
+        ],
+        "BackingContainers": [
+          {
+            "Resource": "fixture-redis",
+            "Id": "6bacd5c1f7529997e132a3e2330abfa8da8cfe7f0856546ffe9c5fb571e23cf7",
+            "Absent": true
+          },
+          {
+            "Resource": "fixture-memories-search",
+            "Id": "2aa08709e611d14b761194303c97bfd4ba6f0c1e1f0d210d3e1292fa936b8c28",
+            "Absent": true
+          },
+          {
+            "Resource": "fixture-memories-graph",
+            "Id": "fe6bc454005a6f0c14ad6d2aeccbd826c179e579106fc7bc38aefa93e7a9e898",
+            "Absent": true
+          }
+        ],
+        "AnySessionNamedContainerRemaining": false,
+        "RuntimeScratchAbsent": true
+      }
+    ],
+    "DisposableScratch": {
+      "OuterJobAbsent": true,
+      "ExitCode": 1,
+      "ChildWorkCompletedBeforeRemoval": true
+    }
+  },
+  "Correction": "bounded cancellation-aware wait for exact workflow Completed; RUNNING is never accepted as terminal"
+}

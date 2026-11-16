@@ -1,0 +1,32 @@
+[
+  {
+    "Attempt": "cancellation-control-prefix-refusal",
+    "Wrapper": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    "PrimaryFailure": "Shouldly.ShouldAssertException: process.ExitCode\r\n    should be\r\n0\r\n    but was\r\n1\r\n\r\nAdditional Info:\r\n    Exact private runtime evidence: ${CANCELLATION_CONTROL_PREFIX_REFUSAL_RUNTIME}\n   at Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedRuntimeTests.ExecuteOwnedRuntimeAsync(Boolean focused, CancellationToken token, Boolean currentSourceAuthority, Boolean producerRestart, Boolean cancelRestart) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs:line 285",
+    "OwnedTopologyDisposed": true,
+    "SessionDirectoryExists": false,
+    "CleanupFailure": null
+  },
+  {
+    "Attempt": "cancellation-control-length-refusal",
+    "Wrapper": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    "PrimaryFailure": "Shouldly.ShouldAssertException: process.ExitCode\r\n    should be\r\n0\r\n    but was\r\n1\r\n\r\nAdditional Info:\r\n    Exact private runtime evidence: ${CANCELLATION_CONTROL_LENGTH_REFUSAL_RUNTIME}\n   at Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedRuntimeTests.ExecuteOwnedRuntimeAsync(Boolean focused, CancellationToken token, Boolean currentSourceAuthority, Boolean producerRestart, Boolean cancelRestart) in ${REPOSITORY}/tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs:line 285",
+    "OwnedTopologyDisposed": true,
+    "SessionDirectoryExists": false,
+    "CleanupFailure": null
+  }
+]

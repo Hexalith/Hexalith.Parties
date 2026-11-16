@@ -1,0 +1,43 @@
+{
+  "DW-82": {
+    "PassedChildControls": 1,
+    "ObservedReplacementPhases": [
+      "admitted-empty-mappings"
+    ],
+    "ObservedReplacements": 1,
+    "TargetedSkips": 0
+  },
+  "DW-168": {
+    "PassedChildControls": 1,
+    "ObservedReplacementPhases": [
+      "output-known",
+      "accepted-deletion"
+    ],
+    "ObservedReplacements": 2,
+    "TargetedSkips": 0
+  },
+  "same-uri-refresh": {
+    "PassedChildControls": 1,
+    "ObservedReplacementPhases": [
+      "same-uri-refresh"
+    ],
+    "ObservedReplacements": 1,
+    "TargetedSkips": 0
+  },
+  "cross-source-authority": {
+    "PassedChildControls": 1,
+    "ObservedReplacementPhases": [
+      "cross-source-authority"
+    ],
+    "ObservedReplacements": 1,
+    "TargetedSkips": 0
+  },
+  "bounded-legacy-discovery": {
+    "PassedChildControls": 1,
+    "ObservedReplacementPhases": [
+      "bounded-legacy-discovery"
+    ],
+    "ObservedReplacements": 1,
+    "TargetedSkips": 0
+  }
+}
