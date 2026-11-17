@@ -22,6 +22,155 @@ spec.loader.exec_module(cohort)
 
 
 class RuntimeReceiptCases(unittest.TestCase):
+    def test_native_ui_source_inventory_refuses_added_removed_and_changed_inputs(self):
+        directory = self.root / "native-ui"
+        directory.mkdir()
+        source = directory / "App.razor"
+        source.write_text("<p>Actual owner application</p>")
+        proof = self.output / "native-admin-ui-artifact.tsv"
+        proof.write_text("nativeSourceDirectory|" + str(directory) + "\n" + str(source) + "|" + cohort.digest(source) + "\n")
+        receipt = self.prepare()
+        self.assertIn(str(source), receipt["files"])
+        extra = directory / "Added.razor"
+        extra.write_text("<p>Uncompiled component</p>")
+        with self.assertRaisesRegex(ValueError, "complete source inventory drifted"):
+            cohort.verify_receipt(receipt, self.project, "Release", "3.129.1", self.families)
+        extra.unlink()
+        source.unlink()
+        with self.assertRaises(FileNotFoundError):
+            cohort.verify_receipt(receipt, self.project, "Release", "3.129.1", self.families)
+        source.write_text("<p>Changed owner application</p>")
+        with self.assertRaisesRegex(ValueError, "drifted"):
+            cohort.verify_receipt(receipt, self.project, "Release", "3.129.1", self.families)
+
+    def test_native_ui_source_inventory_excludes_outputs_and_rejects_linked_inputs(self):
+        directory = self.root / "native-ui"
+        directory.mkdir()
+        source = directory / "Program.cs"
+        source.write_text("// actual owner")
+        for excluded in ("bin", "obj"):
+            output = directory / excluded
+            output.mkdir()
+            (output / "Generated.cs").write_text("// generated output")
+        generated = directory / ".artifacts/ui-test-obj/Debug/Generated.cs"
+        generated.parent.mkdir(parents=True)
+        generated.write_text("// private test build output")
+        (directory / "Native.csproj.lscache").write_text("language server cache")
+        asset = directory / "wwwroot/css/app.css"
+        asset.parent.mkdir(parents=True)
+        asset.write_text("actual owner CSS")
+        genuine = directory / ".artifacts/owner-source/Retained.razor"
+        genuine.parent.mkdir(parents=True)
+        genuine.write_text("<p>genuine source outside the known generated directory</p>")
+        self.assertEqual({source, asset, genuine}, cohort.native_ui_owner_sources(directory))
+        (directory / "Linked.cs").symlink_to(source)
+        with self.assertRaisesRegex(ValueError, "Linked native Admin UI sources"):
+            cohort.native_ui_owner_sources(directory)
+
+    def test_native_ui_private_boundary_requires_bound_completed_evidence(self):
+        source = self.root / "Program.cs"
+        source.write_text("// original native owner")
+        manifest = self.root / "missing-preparation.json"
+        proof = self.output / "native-admin-ui-artifact.tsv"
+        proof.write_text("nativeBoundaryManifest|" + str(manifest) + "\n" + str(source) + "|" + cohort.digest(source) + "\n")
+        with self.assertRaisesRegex(ValueError, "boundary manifest is not bound"):
+            self.prepare()
+        cohort.write(manifest, {"completed": False})
+        proof.write_text("nativeBoundaryManifest|" + str(manifest) + "\nsourceProject|" + str(self.project)
+                         + "\nconfiguration|Release\nsdkVersion|3.129.1\ntargetFramework|net10.0\n"
+                         + str(manifest) + "|" + cohort.digest(manifest) + "\n" + str(source) + "|" + cohort.digest(source) + "\n")
+        with self.assertRaisesRegex(ValueError, "preparation did not complete"):
+            self.prepare()
+
+    def native_boundary(self, name="native-owner", configuration="Release", version="3.129.1", framework="net10.0"):
+        """Complete a separately named native owner with real package/archive/receipt checks."""
+        directory = self.root / name
+        source = directory / "src/Hexalith.EventStore.Admin.UI"
+        source.mkdir(parents=True)
+        project = source / "Hexalith.EventStore.Admin.UI.csproj"
+        project.write_text("<Project />")
+        (source / "Program.cs").write_text("// original owner source")
+        asset = source / "wwwroot/css/app.css"
+        asset.parent.mkdir(parents=True)
+        asset.write_text("actual owner asset")
+        output = directory / "bin"
+        output.mkdir()
+        target = output / "Hexalith.EventStore.Admin.UI.dll"
+        target.write_bytes(b"actual compiled native owner")
+        (output / "wwwroot/css").mkdir(parents=True)
+        shutil.copyfile(asset, output / "wwwroot/css/app.css")
+        libraries, packages = {}, {}
+        for package in sorted(cohort.CORE_IDS):
+            self.add_package(package, version, libraries, packages, output)
+        assets = directory / "project.assets.json"
+        assets.write_text(json.dumps({"project": {"frameworks": {framework: {}}}, "libraries": libraries,
+                                      "targets": {framework: packages}, "packageFolders": {str(self.cache): {}}}))
+        target.with_suffix(".deps.json").write_text(json.dumps({"libraries": libraries, "targets": {framework: packages},
+                                                               "runtimeTarget": {"name": framework}}))
+        target.with_suffix(".runtimeconfig.json").write_text(json.dumps({"runtimeOptions": {"tfm": framework,
+            "framework": {"name": "Microsoft.NETCore.App", "version": framework.removeprefix("net") + ".0"}}}))
+        (output / "native-admin-ui-artifact.tsv").write_text("nativeSourceDirectory|" + str(source) + "\n" + "\n".join(
+            str(path) + "|" + cohort.digest(path) for path in sorted(cohort.native_ui_owner_sources(source))) + "\n")
+        metadata = {"Properties": {"TargetPath": str(target), "ProjectAssetsFile": str(assets), "Configuration": configuration,
+            "HexalithEventStoreVersion": version, "TargetFramework": framework, "HexalithPartiesRuntimeTargetFramework": framework,
+            "CustomAfterMicrosoftCommonProps": str(cohort.RUNTIME_PROFILE)}}
+        receipt = directory / "receipt.json"
+        cohort.write(receipt, cohort.record(metadata, project, configuration, version, 0, "runtime", {}))
+        manifest = directory / "prepared.json"
+        with patch.object(cohort, "public_archive", side_effect=self.official_archive):
+            cohort.write(manifest, cohort.complete([receipt], configuration, version, [], self.cache, {}, framework))
+        cohort.verify_manifest(manifest, project, configuration, version, {}, framework)
+        return {"project": project, "target": target, "manifest": manifest, "configuration": configuration,
+                "version": version, "framework": framework}
+
+    def attach_native_boundary(self, owner):
+        """Produce the wrapper provenance emitted by the real private host build target."""
+        shutil.copyfile(owner["target"], self.output / "Hexalith.EventStore.Admin.UI.dll")
+        self.deps["libraries"]["Hexalith.EventStore.Admin.UI/1.0.0.0"] = {"type": "reference"}
+        self.target.with_suffix(".deps.json").write_text(json.dumps(self.deps))
+        manifest = owner["manifest"]
+        (self.output / "native-admin-ui-artifact.tsv").write_text(
+            "nativeBoundaryManifest|" + str(manifest) + "\nsourceProject|" + str(owner["project"])
+            + "\nconfiguration|" + owner["configuration"] + "\nsdkVersion|" + owner["version"]
+            + "\ntargetFramework|" + owner["framework"] + "\n" + str(manifest) + "|" + cohort.digest(manifest) + "\n")
+
+    def test_completed_native_owner_and_wrapper_provenance_qualify_together(self):
+        owner = self.native_boundary()
+        self.attach_native_boundary(owner)
+        with patch.object(cohort, "PRIVATE_ADMIN_UI_PROJECT", self.project):
+            receipt = self.prepare()
+            cohort.verify_manifest(self.manifest, self.project, "Release", "3.129.1", self.families, "net10.0")
+        self.assertNotEqual(self.project, owner["project"])
+        self.assertIn(str(owner["project"]), receipt["files"])
+        self.assertIn(str(owner["target"].parent / "wwwroot/css/app.css"), receipt["files"])
+
+    def test_changed_native_dll_before_wrapper_recording_refuses(self):
+        owner = self.native_boundary()
+        self.attach_native_boundary(owner)
+        (self.output / "Hexalith.EventStore.Admin.UI.dll").write_bytes(b"different native artifact before wrapper recording")
+        with patch.object(cohort, "PRIVATE_ADMIN_UI_PROJECT", self.project), \
+                self.assertRaisesRegex(ValueError, "differs from its qualified native owner"):
+            self.prepare()
+        self.assertFalse(self.manifest.exists())
+
+    def test_completed_native_boundary_context_must_match_outer_record_and_readback(self):
+        for selection in ({"configuration": "Debug"}, {"version": "4.2.0"}, {"framework": "net11.0"}):
+            for phase in ("record", "readback"):
+                with self.subTest(selection=selection, phase=phase):
+                    self.tearDown(); self.setUp()
+                    with patch.object(cohort, "PRIVATE_ADMIN_UI_PROJECT", self.project):
+                        if phase == "readback":
+                            self.attach_native_boundary(self.native_boundary())
+                            receipt = self.prepare()
+                        self.attach_native_boundary(self.native_boundary("foreign-context", **selection))
+                        with self.assertRaisesRegex(ValueError, "expected outer host context"):
+                            if phase == "record":
+                                self.prepare()
+                            else:
+                                proof = self.output / "native-admin-ui-artifact.tsv"
+                                receipt["files"][str(proof)] = cohort.digest(proof)
+                                cohort.verify_receipt(receipt, self.project, "Release", "3.129.1", self.families, "net10.0")
+
     def test_native_ui_wrapper_exception_requires_exact_project_type_and_bound_owner(self):
         reference = {"Hexalith.EventStore.Admin.UI/4.2.0.0": {"type": "reference"}}
         for project, bound, kind in [(cohort.MEMORY_QUALIFICATION_PROJECT, False, "reference"),
@@ -97,13 +246,13 @@ class RuntimeReceiptCases(unittest.TestCase):
         self.receipt_path = self.root / "receipt.json"
         self.manifest = self.root / "prepared.json"
 
-    def add_package(self, package, version, libraries, packages):
+    def add_package(self, package, version, libraries, packages, output=None):
         relative = package.lower() + "/" + version
         folder = self.cache / relative
-        folder.mkdir(parents=True)
+        folder.mkdir(parents=True, exist_ok=True)
         entry = "lib/net10.0/" + package + ".dll"
         contents = ("actual archive runtime:" + package + "/" + version).encode()
-        (self.output / (package + ".dll")).write_bytes(contents)
+        ((output or self.output) / (package + ".dll")).write_bytes(contents)
         archive = folder / (package.lower() + "." + version + ".nupkg")
         owner = next(name for name in ("Hexalith.EventStore", "Hexalith.FrontComposer", "Hexalith.McpCli") if package.startswith(name + "."))
         nuspec = ('<package><metadata><id>' + package + '</id><version>' + version + '</version>'
@@ -123,14 +272,15 @@ class RuntimeReceiptCases(unittest.TestCase):
     def prepare(self):
         receipt = cohort.record(self.metadata, self.project, "Release", "3.129.1", 0, "runtime", self.families)
         cohort.write(self.receipt_path, receipt)
-        def official(package, cache):
-            package_id, version = package.split("=", 1)
-            archive = self.official / (package_id.lower() + "." + version + ".nupkg")
-            owner = next(name for name in ("Hexalith.EventStore", "Hexalith.FrontComposer", "Hexalith.McpCli") if package_id.startswith(name + "."))
-            return cohort.archive_identity(archive, package_id, version, "https://github.com/Hexalith/" + owner)
-        with patch.object(cohort, "public_archive", side_effect=official):
+        with patch.object(cohort, "public_archive", side_effect=self.official_archive):
             cohort.write(self.manifest, cohort.complete([self.receipt_path], "Release", "3.129.1", [], self.cache, self.families))
         return receipt
+
+    def official_archive(self, package, cache):
+        package_id, version = package.split("=", 1)
+        archive = self.official / (package_id.lower() + "." + version + ".nupkg")
+        owner = next(name for name in ("Hexalith.EventStore", "Hexalith.FrontComposer", "Hexalith.McpCli") if package_id.startswith(name + "."))
+        return cohort.archive_identity(archive, package_id, version, "https://github.com/Hexalith/" + owner)
 
     def test_evaluated_framework_must_match_the_explicit_preparation_profile(self):
         with self.assertRaisesRegex(ValueError, "Evaluated runtime target framework"):

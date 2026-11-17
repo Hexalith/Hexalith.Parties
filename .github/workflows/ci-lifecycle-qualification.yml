@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   baseline:
-    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@9ebc31f606bc02f8a0ec2f1ec344127e2468c6b4
+    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@02ed624aa19781cac75d2c9112940e9bd830441a
     with:
       solution: Hexalith.Parties.Standalone.slnx
       additional-sdk-version: '10.0.404'
@@ -211,6 +211,10 @@ jobs:
         env:
           DOCKER_CONFIG: ${{ runner.temp }}/hexalith-lifecycle-registry.reader
         run: python3 -B scripts/qualify-disposable-ci.py start-cancellation --phase startup
+      # Proof branch only: metadata, signal and container observation; suites are unchanged.
+      - name: Start the Story 2.8 proof event observer
+        if: ${{ inputs.scenario == 'cancel-execution' }}
+        run: setsid nohup python3 -B scripts/story-2-8-proof-observer.py lifecycle >/dev/null 2>&1 </dev/null &
       - name: Observe actual execution cancellation readiness and active hold
         if: ${{ inputs.scenario == 'cancel-execution' }}
         env:
@@ -221,7 +225,9 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: lifecycle-cancellation-ready
-          path: TestResults/ci-lifecycle
+          path: |
+            TestResults/ci-lifecycle
+            TestResults/story-2-8-proof-observer
           if-no-files-found: error
           retention-days: 14
       # The runner signals only this step's own process; exec keeps the controller as that process.
@@ -248,4 +254,19 @@ jobs:
           name: ci-lifecycle-observations
           path: TestResults/ci-lifecycle
           if-no-files-found: warn
+          retention-days: 14
+      - name: Wait for the Story 2.8 proof observer flush
+        if: ${{ always() && inputs.scenario == 'cancel-execution' }}
+        run: |
+          for _ in $(seq 1 40); do
+            if ! pgrep -f 'story-2-8-proof-observer.py lifecycle' > /dev/null; then break; fi
+            sleep 0.5
+          done
+      - name: Retain the Story 2.8 proof event observations
+        if: ${{ always() && inputs.scenario == 'cancel-execution' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: story-2-8-proof-observer
+          path: TestResults/story-2-8-proof-observer
+          if-no-files-found: error
           retention-days: 14
