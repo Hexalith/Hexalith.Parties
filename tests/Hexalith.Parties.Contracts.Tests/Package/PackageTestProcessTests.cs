@@ -10,7 +10,6 @@ namespace Hexalith.Parties.Contracts.Tests.Package;
 
 public sealed class PackageTestProcessTests
 {
-
     /// <summary>Bounded direct and carried dotnet commands evaluate in a worker owned by their exact invocation.</summary>
     [Theory]
     [InlineData(false)]
@@ -63,8 +62,7 @@ public sealed class PackageTestProcessTests
             result.ExitCode.ShouldBe(0, result.Diagnostic);
             using JsonDocument observed = JsonDocument.Parse(File.ReadAllText(marker));
             observed.RootElement.GetProperty("pid").GetInt32().ShouldBeGreaterThan(1);
-            // Read actual Linux worker argv from the target's ancestry; MSBuild's
-            // Environment.CommandLine property can report the client's context.
+            // Bind the actual Linux SDK worker argv through this controlled target's ancestry.
             string worker = observed.RootElement.GetProperty("commandLine").GetString()!;
             worker.ShouldContain(project);
             worker.ShouldNotContain("nodemode:");

@@ -168,7 +168,7 @@ internal static class PackageTestProcess
         }
         // Every bounded child owns and reaps its descendants, including dotnet
         // reached through a Python/shell carrier. A shared SDK 11 worker can be
-        // reaped by another probe, so keep all such evaluations in this process.
+        // reaped by another probe, so keep each evaluation in its own process.
         startInfo.Environment["DOTNET_CLI_USE_MSBUILD_SERVER"] = "false";
         startInfo.Environment["MSBUILDUSESERVER"] = "0";
         startInfo.WorkingDirectory = workingDirectory;
