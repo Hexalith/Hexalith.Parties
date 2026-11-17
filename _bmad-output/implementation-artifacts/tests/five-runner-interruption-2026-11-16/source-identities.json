@@ -1,0 +1,14 @@
+{
+  "PartiesBaseline": "a575021fc97a8eda664711089270b60f5e570ded",
+  "References": {
+    "Hexalith.Memories": "65bfb98dca7f65c005213507b15fbe4ab45f2e19",
+    "Hexalith.EventStore": "fdb59895975e86a1e234325a01237f259cdbd53b",
+    "Hexalith.FrontComposer": "bca9dff291ce42c57516598732340a80703dfb6d",
+    "Hexalith.Builds": "73e60af8a1fcdf3f06726d5d1b6e1199cce778ee",
+    "Hexalith.Platform": "f6f85032598865b9123f16364448bfd02c0ff5b0"
+  },
+  "ConfigurationHashes": {
+    ".config/dotnet-tools.json": "9da4af0af015284fd7411755b37b71a958747caf055baeef0918db1f0737c838",
+    "module/hexalith.module-manifest.v2.json": "dfb03b6e397944c4f24737f4ac9278fba033399a0efa30a80447c9112709efee"
+  }
+}

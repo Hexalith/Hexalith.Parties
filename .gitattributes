@@ -117,3 +117,18 @@ tests/Hexalith.Parties.Tests/FitnessTests/EvaluatedProjectGraph.cs whitespace=bl
 tests/Hexalith.Parties.Ci.Tests/RuntimeTestRoutingTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.Tests/Search/PartyMemoryRecoveryFixture.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.Tests/Search/PartyMemoryRecoveryTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# Preserve authored CRLF in private runner-interruption custody and controls.
+tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryRunnerInterruption*.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesTopologyLifetime.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesTopologySession.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.IntegrationTests/Topology/PartiesAspireTopologyFixtureTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.IntegrationTests/Topology/PartiesTopologyCleanupTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.IntegrationTests/Topology/PartiesMarkedConsumerCleanupTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.IntegrationTests/Topology/PartiesDisposalTrackingBuilder.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# Preserve CRLF in active adopted-child reaping and direct-status controls.
+tests/PackageTests.Shared/PackageTestProcessSupervisor.cs text eol=crlf whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.Contracts.Tests/Package/PackageTestProcessTests.cs text eol=crlf whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+tests/Hexalith.Parties.IntegrationTests/Topology/PartiesConfigurationTestingBuilder.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

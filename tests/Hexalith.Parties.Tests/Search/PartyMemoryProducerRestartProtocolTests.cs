@@ -9,6 +9,38 @@ namespace Hexalith.Parties.Tests.Search;
 public sealed class PartyMemoryProducerRestartProtocolTests
 {
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ObservationOnlyNeverAttestsAReplacementAndRefusesModeMismatch(bool mismatch)
+    {
+        string directory = CreateDirectory();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        bool entered = false;
+        Task server = PartyMemoryProducerRestartProtocol.ServeAsync(directory, "owned", "private", (_, _, _) =>
+        { entered = true; return Task.CompletedTask; }, deadline.Token, observationOnly: !mismatch);
+        Task client = PartyMemoryProducerRestartProtocol.RequestAsync(directory, "owned", "private", "cross-source-authority",
+            new { persisted = true }, deadline.Token, observationOnly: true);
+        try
+        {
+            if (mismatch)
+            {
+                await Should.ThrowAsync<InvalidDataException>(server);
+                entered.ShouldBeFalse();
+                File.Exists(Path.Combine(directory, "cross-source-authority.ack.json")).ShouldBeFalse();
+            }
+            else
+            {
+                await client.ConfigureAwait(true);
+                using JsonDocument acknowledgement = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(directory, "cross-source-authority.ack.json"), deadline.Token));
+                acknowledgement.RootElement.GetProperty("observed").GetBoolean().ShouldBeTrue();
+                acknowledgement.RootElement.TryGetProperty("replaced", out _).ShouldBeFalse();
+                entered.ShouldBeTrue();
+            }
+        }
+        finally { deadline.Cancel(); await SettleAsync(server); await SettleAsync(client); Directory.Delete(directory, recursive: true); }
+    }
+
+    [Theory]
     [InlineData("session")]
     [InlineData("secret")]
     [InlineData("phase")]

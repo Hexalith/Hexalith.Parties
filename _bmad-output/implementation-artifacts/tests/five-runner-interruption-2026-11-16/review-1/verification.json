@@ -1,0 +1,238 @@
+{
+  "ImplementationComplete": true,
+  "IndependentParentReviewPending": true,
+  "PublicationPerformedByImplementation": false,
+  "AuthoritativeSource": "source.json",
+  "AuthoritativeMatrix": "matrix.json",
+  "FinalMainCases": 6,
+  "FinalMainEmergencyRecoveries": 0,
+  "AllSixSelectedMainRowsPassed": true,
+  "RetainedFailedCurrentSourceBatchRows": 0,
+  "SameUnchangedFinalCohort": true,
+  "Lanes": {
+    "focused-cleanup": {
+      "Xml": "55-final-controls.xml.gz",
+      "Counts": {
+        "total": 80,
+        "passed": 80,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "AllowRetainedFailure": false
+    },
+    "focused-consumer": {
+      "Xml": "56-final-consumer.xml.gz",
+      "Counts": {
+        "total": 60,
+        "passed": 60,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "AllowRetainedFailure": false
+    },
+    "same-uri-main": {
+      "Xml": "final-same-uri/tests.xml.gz",
+      "Counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "AllowRetainedFailure": false
+    },
+    "remaining-five-main": {
+      "Xml": "final-matrix/tests.xml.gz",
+      "Counts": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "AllowRetainedFailure": false
+    },
+    "ordinary-wrapper": {
+      "Xml": "ordinary-restart/tests.xml.gz",
+      "Counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "AllowRetainedFailure": false
+    },
+    "ordinary-child": {
+      "Xml": "ordinary-restart/parties-five-memory-runtime-ccbff544cddf/runtime.xml.gz",
+      "Counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "AllowRetainedFailure": false
+    },
+    "coordination-cancellation": {
+      "Xml": "controlled-cancellation/tests.xml.gz",
+      "Counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "AllowRetainedFailure": false
+    },
+    "live-shutdown": {
+      "Xml": "live-shutdown/tests.xml.gz",
+      "Counts": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "AllowRetainedFailure": false
+    }
+  },
+  "ComponentCoverage": {
+    "Kind": "Real Python runner / Docker containment, separate from Aspire integration",
+    "FinalCases": 2,
+    "Folder": "early-controls-final-admission/",
+    "FixtureProgressAndFailingObserver": "55-final-controls.xml.gz",
+    "NeverQualifiesAMainCheckpoint": true
+  },
+  "HistoricalVariants": [
+    {
+      "Folder": "pre-bounded-signal-matrix/",
+      "Source": "source-pre-bounded-signal.json.gz",
+      "MainPasses": 6,
+      "CurrentSourceAcceptance": false
+    },
+    {
+      "Folder": "pre-inner-drain-matrix/",
+      "Source": "source-pre-inner-drain.json.gz",
+      "MainPasses": 5,
+      "MainFailures": 1,
+      "CurrentSourceAcceptance": false
+    },
+    {
+      "Folder": "pre-consumer-guard/",
+      "Source": "source-pre-consumer-guard.json.gz",
+      "MainPasses": 6,
+      "AdditionalFailedStartupRows": 1,
+      "OrdinaryWrapperPasses": 1,
+      "CoordinationCancellationPasses": 1,
+      "CurrentSourceAcceptance": false
+    }
+  ],
+  "RetainedFailedPreviousCohortStartup": {
+    "Folder": "pre-consumer-guard/final-matrix/",
+    "Phase": "cross-source-authority",
+    "Facts": "startup-blocker-analysis.json.gz",
+    "ExternalClosure": true,
+    "MainQualification": false
+  },
+  "RetainedFailedAspireStartup": {
+    "Folder": "pre-inner-drain-matrix/",
+    "Phase": "same-uri-refresh",
+    "Cause": "Unestablished; sidecar-eventstore readiness timed out before checkpoint",
+    "FixtureDisposed": true,
+    "ExternalClosure": true,
+    "MainQualification": false,
+    "InitialV1ColdStartCauseEstablished": false
+  },
+  "RetainedFailedComponentControls": {
+    "Xml": "09-controls.xml.gz",
+    "Failed": 2,
+    "Cause": "Raw pretty/compact Docker volume JSON identity comparison",
+    "Reconciliation": "14-reconcile-failed-early.log.gz",
+    "OriginalWorkerLaunchBirthUnavailable": true,
+    "Qualified": false
+  },
+  "BuildBlockers": {
+    "MappedDebug": "NU1109: source OpenAPI 11.0.0 versus central 10.0.15",
+    "PinnedPackagePreparation": [
+      "HXW011",
+      "HXW010"
+    ]
+  },
+  "StartupAdmissionControls": {
+    "Xml": "54-startup-ordering-controls.xml.gz",
+    "Passed": 5,
+    "BothAdmissionOrderings": true,
+    "ExactConfiguredDaprMethod": true,
+    "TraceOptIn": true
+  },
+  "RetainedFailedSdkDisposalControls": {
+    "Xml": [
+      "47-final-controls.xml.gz",
+      "49-configured-path-diagnostic.xml.gz",
+      "51-configured-path-trace.xml.gz"
+    ],
+    "Facts": "startup-disposal-race.json.gz",
+    "Qualified": false
+  },
+  "MarkerGuardControls": {
+    "Xml": "55-final-controls.xml.gz",
+    "Class": "PartiesMarkedConsumerCleanupTests",
+    "Passed": 3,
+    "IncludedInFinalFocusedCount": true,
+    "PreFormattingFocusedRetry": "45-consumer-gate-controls.xml.gz",
+    "Folder": "early-controls-final-admission/",
+    "ActualFixtureApplicationAndBuilderRetention": true,
+    "ExactMarkerFinalPlaneRefresh": true
+  },
+  "RetainedFailedMarkerControl": {
+    "Xml": "43-consumer-gate-controls.xml.gz",
+    "Failed": 3,
+    "FactsAndClosure": "consumer-gate-first-attempt.json.gz",
+    "Qualified": false
+  },
+  "FailedFocusedOriginalCustody": {
+    "Commands": [
+      "47-final-controls",
+      "49-configured-path-diagnostic",
+      "51-configured-path-trace"
+    ],
+    "Accounting": "failed-focused-closure-accounting.json.gz",
+    "OriginalWorkerBirthsMarkersAndResourceIdsNotPersisted": true,
+    "AuthenticatedClosureEstablished": false,
+    "PresentStateObservationOnly": "present-state.json.gz",
+    "NoRecoveryAuthorizedByPresentState": true
+  },
+  "FinalSourceCallGraphAudit": "finite-cleanup-audit.json.gz",
+  "AllJobsAwaited": true,
+  "AllFinalChildrenAndHelpersAwaited": true,
+  "ScratchRemoved": true,
+  "FrontComposerReadOnly": true,
+  "RootDeclaredSubmodulesUnchanged": true,
+  "ExternalGatesRemainOpen": [
+    "publication/adoption",
+    "historical production inventory",
+    "older-writer exclusion",
+    "deployment/workload/key/trust custody",
+    "owner acceptance"
+  ],
+  "JobClosure": "job-closure.json.gz",
+  "ParentIndependentAudits": [
+    "parent-matrix-audit.json.gz",
+    "parent-ordinary-audit.json.gz",
+    "parent-cancellation-audit.json.gz",
+    "parent-live-shutdown-audit.json.gz"
+  ],
+  "CredentialAudit": "credential-audit-final.json.gz",
+  "PacketIntegrity": "packet-integrity-result.json.gz"
+}

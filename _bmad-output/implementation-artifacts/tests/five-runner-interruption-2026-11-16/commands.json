@@ -1,0 +1,306 @@
+[
+  {
+    "Label": "source-prepare",
+    "Arguments": [
+      "dotnet",
+      "tool",
+      "run",
+      "hexalith-module",
+      "--",
+      "prepare-build",
+      "--manifest",
+      "module/hexalith.module-manifest.v2.json",
+      "--workspace",
+      "${JOB}/mapping",
+      "--mode",
+      "source",
+      "--output",
+      "json"
+    ],
+    "Outcome": "Success"
+  },
+  {
+    "Label": "Hexalith.Parties.Tests-debug",
+    "Arguments": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "-c",
+      "Debug",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${JOB}/debug",
+      "-p:NuGetAudit=false",
+      "-p:MinVerVersionOverride=1.0.0"
+    ],
+    "EnvironmentFrom": "decoded source-prepare.json.gz:buildPreparation.environment",
+    "ExitCode": 1,
+    "Failure": "NU1109"
+  },
+  {
+    "Label": "Hexalith.Parties.IntegrationTests-debug",
+    "Arguments": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "-c",
+      "Debug",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${JOB}/debug",
+      "-p:NuGetAudit=false",
+      "-p:MinVerVersionOverride=1.0.0"
+    ],
+    "EnvironmentFrom": "decoded source-prepare.json.gz:buildPreparation.environment",
+    "ExitCode": 1,
+    "Failure": "NU1109"
+  },
+  {
+    "Label": "package-prepare",
+    "Arguments": [
+      "dotnet",
+      "tool",
+      "run",
+      "hexalith-module",
+      "--",
+      "prepare-build",
+      "--manifest",
+      "module/hexalith.module-manifest.v2.json",
+      "--workspace",
+      "${JOB}/package-mapping",
+      "--mode",
+      "package",
+      "--output",
+      "json"
+    ],
+    "Failure": [
+      "HXW011",
+      "HXW010"
+    ]
+  },
+  {
+    "Label": "Hexalith.Parties.Tests-release",
+    "Arguments": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${JOB}/a"
+    ],
+    "Environment": {
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "NuGetAudit": "false",
+      "MinVerVersionOverride": "1.0.0"
+    },
+    "Logs": [
+      "Hexalith.Parties.Tests-release.log.gz"
+    ]
+  },
+  {
+    "Label": "Hexalith.Parties.IntegrationTests-release",
+    "Arguments": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${JOB}/a"
+    ],
+    "Environment": {
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "NuGetAudit": "false",
+      "MinVerVersionOverride": "1.0.0"
+    },
+    "Logs": [
+      "Hexalith.Parties.IntegrationTests-release.log.gz",
+      "compile-2.log.gz"
+    ]
+  },
+  {
+    "Label": "prepare-runtime",
+    "Arguments": [
+      "bash",
+      "scripts/prepare-aspire-runtime-hosts.sh",
+      "--gateway-profile",
+      "packaged",
+      "--configuration",
+      "Release",
+      "--artifacts-path",
+      "${JOB}/a",
+      "--include-memory-qualification",
+      "true"
+    ],
+    "Environment": {
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "NuGetAudit": "false",
+      "MinVerVersionOverride": "1.0.0"
+    },
+    "ExitCode": 0
+  },
+  {
+    "Label": "focused-rebuild-and-revalidation",
+    "Arguments": [
+      "python3",
+      "${PRIVATE}/rebind.py"
+    ],
+    "Environment": {
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "NuGetAudit": "false",
+      "MinVerVersionOverride": "1.0.0",
+      "QUAL_ARTIFACTS": "${JOB}/a"
+    },
+    "ExactExecutedHelperSha256": "98909fa12cf494a6a34f034a5fda2929831c04aae7fb22cb70b74905463639fc",
+    "RetainedHelper": "rebuild-and-revalidate.py",
+    "Logs": [
+      "rebind-baseline.log.gz",
+      "rebind-baseline-2.log.gz",
+      "rebind-baseline-3.log.gz",
+      "rebind-fixed-1.log.gz",
+      "rebind-final.log.gz",
+      "rebind-final-2.log.gz",
+      "rebind-readiness-fix.log.gz"
+    ]
+  },
+  {
+    "Label": "final-consumer",
+    "Arguments": [
+      "run-with-temp",
+      "dotnet",
+      "${JOB}/a/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryProducerRestartProtocolTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryUnitAuthorityRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+      "-method-",
+      "*SelectedMemories*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE}/final-consumer.xml"
+    ]
+  },
+  {
+    "Label": "review-custody-cleanup",
+    "Arguments": [
+      "run-with-temp",
+      "dotnet",
+      "${JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryProducerRestartSignalTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "-method-",
+      "*LiveShutdown*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE}/review-custody-cleanup.xml"
+    ]
+  },
+  {
+    "Label": "runtime-lanes",
+    "ActualArguments": "Each lane command.json retains the exact direct xUnit argv; the wrapper is run-with-temp python3 ${PRIVATE}/run-runtime.py <results> <assembly> <method>.",
+    "Environment": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "${JOB}/a/runtime-profile/Release/prepared.json",
+      "TMPDIR": "fresh private short runtime root supplied by run-with-temp",
+      "TMP": "same private root",
+      "TEMP": "same private root"
+    },
+    "DriverBeforeAdditionalSelectorsSha256": "6509dba11c0066149ac034625f5016401c1749ca30229931cf273527fe54b71a",
+    "DriverWithAdditionalSelectorsSha256": "2179579c996c8e16241ccb1eb5a37538e0cda540c773993fcba7d565d87bde57",
+    "FinalCaseCommands": [
+      "pending-replacement-preflight/command.json",
+      "final-matrix/command.json"
+    ],
+    "LiveShutdownEnvironment": {
+      "PARTIES_MTLS_TOPOLOGY_TESTS": "true",
+      "PARTIES_MTLS_ISOLATED_IDENTITIES": "true"
+    },
+    "DriverWithFailedSessionCustodyRetentionSha256": "af31a367db9e0ff54e66576f359b16420a487b317738280ab20e092358ac23dc",
+    "CanceledRetryEnvironment": {
+      "PARTIES_MTLS_TOPOLOGY_TESTS": "true",
+      "PARTIES_MTLS_ISOLATED_IDENTITIES": "true",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "NuGetAudit": "false",
+      "MinVerVersionOverride": "1.0.0",
+      "Parties__Testing__PreparedRuntimeManifest": "${JOB}/a/runtime-profile/Release/prepared.json"
+    },
+    "CanceledRowSelection": "-preEnumerateTheories plus exact discovered -displayName; one non-skipped case"
+  },
+  {
+    "Label": "frozen-cleanup",
+    "Arguments": [
+      "run-with-temp",
+      "dotnet",
+      "${JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryProducerRestartSignalTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "-method-",
+      "*LiveShutdown*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE}/frozen-cleanup.xml"
+    ]
+  },
+  {
+    "Label": "frozen-consumer",
+    "Arguments": [
+      "run-with-temp",
+      "dotnet",
+      "${JOB}/a/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryProducerRestartProtocolTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryUnitAuthorityRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+      "-method-",
+      "*SelectedMemories*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE}/frozen-consumer.xml"
+    ]
+  }
+]

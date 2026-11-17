@@ -156,6 +156,20 @@ internal sealed class PackageTestProcessSupervisor : IDisposable
             except OSError:
                 pass
 
+        def reap_exited_adopted_children():
+            # Orphaned SDK daemons can monitor an exited parent's PID. Leaving
+            # that adopted parent as a zombie until the whole command ends
+            # prevents its monitors from completing their normal shutdown.
+            children = pathlib.Path('/proc/self/task/' + str(os.getpid()) + '/children').read_text().split()
+            for pid in children:
+                if int(pid) == child.pid:
+                    # Popen owns the direct command's exit status.
+                    continue
+                try:
+                    os.waitpid(int(pid), os.WNOHANG)
+                except ChildProcessError:
+                    pass
+
         def cleanup():
             deadline = time.monotonic() + cleanup_seconds
             try:
@@ -189,6 +203,7 @@ internal sealed class PackageTestProcessSupervisor : IDisposable
                 sys.exit(128 + termination_signal if termination_signal is not None else 124)
             child = subprocess.Popen(sys.argv[5:], start_new_session=True)
             while child.poll() is None and not (directory / 'stop').exists() and termination_signal is None and caller_alive():
+                reap_exited_adopted_children()
                 if not directory.is_dir():
                     raise OSError('supervisor state directory disappeared')
                 time.sleep(0.005)

@@ -1,0 +1,8 @@
+{
+  "Authority": "Unchanged isolated current-layout wrapper/prepared/runtime-child cohort",
+  "Files": {
+    "PreparedSha256": "5071bca4152c5b5b13d426b1c76688bd2afa589e91cda252756d938579223f41",
+    "WrapperSha256": "aecbe48c3fca6b131de1116ff59f48fa5daa57420169389e3b62d211094f848b",
+    "ChildSha256": "f22caf7af5725616def9d1216316d62bbc358f58a42caf5ff4490faf50edf0d1"
+  }
+}

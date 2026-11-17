@@ -2,6 +2,7 @@ extern alias apphost;
 
 using System.Diagnostics;
 using System.Net;
+using System.Reflection;
 using System.Text.Json;
 
 using Aspire.Hosting;
@@ -16,6 +17,7 @@ using Hexalith.Parties.TestInfrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
 using Shouldly;
@@ -26,6 +28,46 @@ namespace Hexalith.Parties.IntegrationTests.Topology;
 [Collection("Non-parallel")]
 public sealed class PartiesAspireTopologyFixtureTests
 {
+    /// <summary>Cleanup permanently closes admission, retaining the fact of any already admitted startup.</summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task StartupAdmissionAndCleanupPreserveBothOrderings(bool startupFirst)
+    {
+        var fixture = new PartiesAspireTopologyFixture();
+        await using var lifetime = fixture.ConfigureAwait(true);
+        if (startupFirst) { fixture.AdmitStartup(); }
+        await fixture.DisposeAsync().ConfigureAwait(true);
+        Should.Throw<InvalidOperationException>(() => fixture.AdmitStartup()).Message.ShouldContain("no late startup was admitted");
+        ((bool)typeof(PartiesAspireTopologyFixture).GetField("_startupScheduled", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(fixture)!).ShouldBe(startupFirst);
+    }
+
+    /// <summary>Ownership precedes model creation and a failing failure-observer cannot abandon partial startup disposal.</summary>
+    [Fact]
+    public async Task OwnershipProgressPrecedesCreationAndFailureObservationCannotSkipDisposal()
+    {
+        var phases = new List<string>();
+        var fixture = new PartiesAspireTopologyFixture(
+            (session, cancellation) =>
+            {
+                phases.ShouldContain("not-started");
+                return DistributedApplicationTestingBuilder.CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>(
+                    [.. session.Arguments(false, false), "--Parties:Testing:UsePackagedGateway=false"], cancellation);
+            }, (_, _) => throw new InvalidOperationException("owned startup failed"));
+        fixture.ObserveOwnershipProgressAsync = () => { phases.Add(fixture.InitializationPhase); return Task.CompletedTask; };
+        fixture.ObserveInitializationFailureAsync = _ => throw new IOException("failure custody writer failed");
+        try
+        {
+            await fixture.InitializeAsync().ConfigureAwait(true);
+            fixture.IsAvailable.ShouldBeFalse();
+            fixture.UnavailableReason.ShouldNotBeNull().ShouldContain("owned startup failed");
+            fixture.UnavailableReason.ShouldContain("failure custody writer failed");
+            fixture.CurrentApplication.ShouldBeNull("Failed observation must not skip disposal of the built application.");
+            phases.ShouldContain("start-application");
+        }
+        finally { await fixture.DisposeAsync().ConfigureAwait(true); }
+    }
+
     /// <summary>Sidecar probes resolve actual secret parameters and respect a later fixture credential override.</summary>
     [Theory]
     [InlineData(false)]
@@ -76,16 +118,27 @@ public sealed class PartiesAspireTopologyFixtureTests
     {
         string? previousEnvironment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
         int startAttempts = 0;
+        IServiceCollection? modeledServices = null;
         var fixture = new PartiesAspireTopologyFixture(
-            (session, cancellationToken) => failsDuringStartup
-                ? DistributedApplicationTestingBuilder.CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>(
-                    [.. session.Arguments(false, false), "--Parties:Testing:UsePackagedGateway=false"], cancellationToken)
-                : Task.FromException<IDistributedApplicationTestingBuilder>(new FileNotFoundException("missing test infrastructure")),
+            async (session, cancellationToken) =>
+            {
+                if (!failsDuringStartup) { throw new FileNotFoundException("missing test infrastructure"); }
+                IDistributedApplicationTestingBuilder builder = await CreateConfigurationBuilderAsync(session, cancellationToken).ConfigureAwait(false);
+                modeledServices = builder.Services;
+                return builder;
+            },
             (_, _) =>
             {
                 startAttempts++;
+                using ServiceProvider services = modeledServices!.BuildServiceProvider();
+                services.GetRequiredService<IHostLifetime>().ShouldBeOfType<PartiesTopologyLifetime>();
                 throw new InvalidOperationException("test topology startup failed");
             });
+        fixture.ObserveInitializationFailureAsync = failure =>
+        {
+            TestContext.Current.TestOutputHelper?.WriteLine(failure.ToString());
+            return Task.CompletedTask;
+        };
         try
         {
             await fixture.InitializeAsync().ConfigureAwait(true);
@@ -95,6 +148,9 @@ public sealed class PartiesAspireTopologyFixtureTests
                 ? "InvalidOperationException: test topology startup failed"
                 : "FileNotFoundException: missing test infrastructure");
             startAttempts.ShouldBe(failsDuringStartup ? 1 : 0);
+            ((bool)typeof(PartiesAspireTopologyFixture).GetField("_startupScheduled", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(fixture)!)
+                .ShouldBeFalse("Configuration inspection must not initiate the testing factory's SDK startup.");
+            fixture.CurrentApplication.ShouldBeNull("Controlled initialization failure must complete unstarted-model disposal.");
             Should.Throw<InvalidOperationException>(() => fixture.EventStoreClient).Message
                 .ShouldContain(fixture.UnavailableReason!);
         }
@@ -104,6 +160,26 @@ public sealed class PartiesAspireTopologyFixtureTests
         }
 
         Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT").ShouldBe(previousEnvironment);
+    }
+
+    /// <summary>Builds the configuration fixture's model without a background AppHost Run call.</summary>
+    private static Task<IDistributedApplicationTestingBuilder> CreateConfigurationBuilderAsync(PartiesTopologySession session, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var model = new PartiesConfigurationTestingBuilder(new DistributedApplicationOptions
+        {
+            Args = [.. session.Arguments(false, false), "--Parties:Testing:UsePackagedGateway=false"],
+            DisableDashboard = true,
+        });
+        model.AddDapr();
+        IResourceBuilder<IDaprComponentResource> state = model.AddDaprComponent("statestore", "state.redis");
+        IResourceBuilder<IDaprComponentResource> pubsub = model.AddDaprComponent("pubsub", "pubsub.redis");
+        foreach (string name in new[] { "eventstore", "eventstore-admin", "parties", "parties-mcp", "tenants" })
+        {
+            _ = model.AddResource(new ProjectResource(name)).WithHttpEndpoint()
+                .WithDaprSidecar(sidecar => sidecar.WithReference(state).WithReference(pubsub));
+        }
+        return Task.FromResult<IDistributedApplicationTestingBuilder>(model);
     }
 
     /// <summary>The fixture wraps only an ordinary CLI in its subreaper launcher, once, and removes it on disposal.</summary>
@@ -118,28 +194,72 @@ public sealed class PartiesAspireTopologyFixtureTests
         string configuredPath = Path.Combine(Path.GetTempPath(), $"parties-dapr-path-{Guid.NewGuid():N}", configured);
         string? effective = null;
         string? launcherBody = null;
+        IServiceCollection? modeledServices = null;
         var fixture = new PartiesAspireTopologyFixture(
             async (session, cancellationToken) =>
             {
-                IDistributedApplicationTestingBuilder builder = await DistributedApplicationTestingBuilder.CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>(
-                    [.. session.Arguments(false, false), "--Parties:Testing:UsePackagedGateway=false"], cancellationToken).ConfigureAwait(false);
+                IDistributedApplicationTestingBuilder builder = await CreateConfigurationBuilderAsync(session, cancellationToken).ConfigureAwait(false);
                 builder.Services.Configure<DaprOptions>(options => options.DaprPath = configuredPath);
+                modeledServices = builder.Services;
                 return builder;
             },
-            (application, _) =>
+            (_, _) =>
             {
-                effective = application.Services.GetRequiredService<IOptions<DaprOptions>>().Value.DaprPath;
+                // Inspect the actual configured registrations. The directly built model
+                // has no background AppHost entrypoint that can independently call Run.
+                using ServiceProvider services = modeledServices!.BuildServiceProvider();
+                effective = services.GetRequiredService<IOptions<DaprOptions>>().Value.DaprPath;
                 launcherBody = effective is not null && File.Exists(effective) ? File.ReadAllText(effective) : null;
                 throw new InvalidOperationException("controlled startup failure after reading the Dapr options");
             });
+        fixture.ObserveInitializationFailureAsync = failure =>
+        {
+            TestContext.Current.TestOutputHelper?.WriteLine(failure.ToString());
+            return Task.CompletedTask;
+        };
+        var trace = new List<string>();
+        using var traceCancellation = new CancellationTokenSource();
+        Task traceTask = Environment.GetEnvironmentVariable("PARTIES_FIXTURE_DISPOSAL_DIAGNOSTICS") == "1" ? TraceAsync() : Task.CompletedTask;
+        async Task TraceAsync()
+        {
+            var elapsed = Stopwatch.StartNew();
+            string? previous = null;
+            try
+            {
+                while (true)
+                {
+                    DistributedApplication? app = fixture.CurrentApplication;
+                    // Record state without resolving or constructing additional services.
+                    bool Flag(string name) => (bool)typeof(PartiesAspireTopologyFixture).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(fixture)!;
+                    string state = $"quiesced={Flag("_workersQuiesced")}; startupScheduled={Flag("_startupScheduled")}; appPresent={app is not null}";
+                    if (state != previous) { trace.Add($"{elapsed.Elapsed.TotalSeconds:F3}s {state}"); previous = state; }
+                    await Task.Delay(10, traceCancellation.Token).ConfigureAwait(false);
+                }
+            }
+            catch (OperationCanceledException) when (traceCancellation.IsCancellationRequested) { }
+        }
         try
         {
             await fixture.InitializeAsync().ConfigureAwait(true);
             fixture.UnavailableReason.ShouldNotBeNull().ShouldContain("controlled startup failure after reading the Dapr options");
+            ((bool)typeof(PartiesAspireTopologyFixture).GetField("_startupScheduled", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(fixture)!)
+                .ShouldBeFalse("Configuration inspection must not initiate the testing factory's SDK startup.");
+            fixture.CurrentApplication.ShouldBeNull("The unstarted model must complete its actual fixture disposal.");
         }
         finally
         {
-            await fixture.DisposeAsync().ConfigureAwait(true);
+            if (Environment.GetEnvironmentVariable("PARTIES_FIXTURE_DISPOSAL_DIAGNOSTICS") == "1")
+            { TestContext.Current.TestOutputHelper?.WriteLine("Initial auto-cleanup receipt before explicit disposal: " + fixture.UnavailableReason); }
+            try { await fixture.DisposeAsync().ConfigureAwait(true); }
+            finally
+            {
+                await traceCancellation.CancelAsync().ConfigureAwait(true);
+                await traceTask.ConfigureAwait(true);
+                if (trace.Count != 0)
+                {
+                    TestContext.Current.TestOutputHelper?.WriteLine(string.Join("\n", trace));
+                }
+            }
         }
 
         if (configured == "dapr")

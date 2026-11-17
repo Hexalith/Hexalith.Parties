@@ -1,0 +1,2170 @@
+[
+  {
+    "Label": "01-source-prepare",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "dotnet",
+      "hexalith-module",
+      "prepare-build",
+      "--manifest",
+      "module/hexalith.module-manifest.v2.json",
+      "--workspace",
+      "${RUNTIME}/mapping",
+      "--mode",
+      "source",
+      "--output",
+      "json"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 61.092055601999164,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1135060,
+        "Start": "12162316",
+        "State": "${RUNTIME}/job-supervisor-2ae468a64e72f116",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "02-package-prepare",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "dotnet",
+      "hexalith-module",
+      "prepare-build",
+      "--manifest",
+      "module/hexalith.module-manifest.v2.json",
+      "--workspace",
+      "${RUNTIME}/package",
+      "--mode",
+      "package",
+      "--output",
+      "json"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 2,
+      "CommandExitCode": 2,
+      "TimedOut": false,
+      "Seconds": 1.7870796760107623,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1186559,
+        "Start": "12168425",
+        "State": "${RUNTIME}/job-supervisor-16962b67de4713c6",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "03-debug-consumer",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "-c",
+      "Debug",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${RUNTIME}/source-output"
+    ],
+    "Env": {
+      "CustomBeforeDirectoryBuildProps": "${RUNTIME}/mapping/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${RUNTIME}/mapping/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${RUNTIME}/mapping/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${RUNTIME}/mapping/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${RUNTIME}/mapping/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "8e4d6bcbb20f4f057717d57bdd8217975b85a9dc52b8e7ba67a14074e3060d1f",
+      "Configuration": "Debug"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "CommandExitCode": 1,
+      "TimedOut": false,
+      "Seconds": 6.490400550013874,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1251892,
+        "Start": "12175397",
+        "State": "${RUNTIME}/job-supervisor-671cae28e554cc42",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "04-debug-wrapper",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "-c",
+      "Debug",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${RUNTIME}/source-output"
+    ],
+    "Env": {
+      "CustomBeforeDirectoryBuildProps": "${RUNTIME}/mapping/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${RUNTIME}/mapping/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${RUNTIME}/mapping/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${RUNTIME}/mapping/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${RUNTIME}/mapping/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "8e4d6bcbb20f4f057717d57bdd8217975b85a9dc52b8e7ba67a14074e3060d1f",
+      "Configuration": "Debug"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "CommandExitCode": 1,
+      "TimedOut": false,
+      "Seconds": 14.33795443100098,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1258573,
+        "Start": "12176046",
+        "State": "${RUNTIME}/job-supervisor-0b2ea5d178b0d6c7",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "05-release-wrapper",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${RUNTIME}/a",
+      "-p:HexalithPartiesRuntimeTargetFramework=net11.0",
+      "-p:CustomAfterMicrosoftCommonProps=${REPOSITORY}/scripts/PartiesHostedRuntime.props",
+      "-p:HexalithUsePublishedSdkForHostedTests=true",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0",
+      "-p:BuildInParallel=false",
+      "-p:CopyLocalLockFileAssemblies=true"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 67.8235019309941,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1187352,
+        "Start": "12168604",
+        "State": "${RUNTIME}/job-supervisor-10e175e1734c45b9",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "07-rebuild-controls",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${RUNTIME}/a",
+      "-p:HexalithPartiesRuntimeTargetFramework=net11.0",
+      "-p:CustomAfterMicrosoftCommonProps=${REPOSITORY}/scripts/PartiesHostedRuntime.props",
+      "-p:HexalithUsePublishedSdkForHostedTests=true",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0",
+      "-p:BuildInParallel=false",
+      "-p:CopyLocalLockFileAssemblies=true",
+      "-t:Rebuild"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 78.2737788939994,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1274507,
+        "Start": "12177490",
+        "State": "${RUNTIME}/job-supervisor-2d7203edf5237bfa",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "08-driver-controls",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/test-driver.py"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 1.1775216379901394,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1360311,
+        "Start": "12185328",
+        "State": "${RUNTIME}/job-supervisor-290c7bc1c997d6a4",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "09-new-controls",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "dotnet",
+      "${RUNTIME}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionControlTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionDiscoveryTests",
+      "-method-",
+      "*ChangedPersistedStateRefusesRunnerSignal",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/09-new-controls.xml"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/new-controls"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 28.915996173993335,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1377395,
+        "Start": "12187133",
+        "State": "${RUNTIME}/job-supervisor-3d85785c7c66b995",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "10-prepare-runtime",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "bash",
+      "scripts/prepare-aspire-runtime-hosts.sh",
+      "--configuration",
+      "Release",
+      "--artifacts-path",
+      "${RUNTIME}/a",
+      "--include-memory-qualification",
+      "true"
+    ],
+    "Env": {
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "Version": "1.0.0"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 364.03394904299057,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1409185,
+        "Start": "12190024",
+        "State": "${RUNTIME}/job-supervisor-86452d0a0c235928",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "11-driver-controls-final",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/test-driver.py"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 0.8751967870048247,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1797793,
+        "Start": "12226438",
+        "State": "${RUNTIME}/job-supervisor-0452220bb466961c",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "12-adopt-final-driver",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/driver.py"
+    ],
+    "Env": {
+      "PARTIES_QUEUE_SKIP": "12-adopt-final-driver"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 375.4182567370008,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1798781,
+        "Start": "12226525",
+        "State": "${RUNTIME}/job-supervisor-ac9a774332336bcd",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "13-rebind-final",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/rebind.py"
+    ],
+    "Env": {
+      "QUAL_ARTIFACTS": "{JOB}/a",
+      "Version": "1.0.0"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 142.4373649879999,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1798811,
+        "Start": "12226530",
+        "State": "${RUNTIME}/job-supervisor-95a3df7c686c1555",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "13b-freeze-cohort",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "-c",
+      "import hashlib,json,sys; from pathlib import Path; p=Path(sys.argv[1]); root=Path.cwd(); source=json.loads((p/'source-final.json').read_text()); assert all(hashlib.sha256((root/name).read_bytes()).hexdigest()==expected for name,expected in source.items()); a=Path(sys.argv[2]); paths={'PreparedSha256':a/'runtime-profile/Release/prepared.json','WrapperSha256':a/'bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll','ChildSha256':a/'bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll'}; result={key:hashlib.sha256(path.read_bytes()).hexdigest() for key,path in paths.items()}; (p/'cohort-final.json').write_text(json.dumps(result,indent=2)); print(json.dumps(result))",
+      "${PRIVATE_V3}",
+      "${RUNTIME}/a"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 0.11495307100994978,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1921939,
+        "Start": "12240774",
+        "State": "${RUNTIME}/job-supervisor-c14f3b70278dc726",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "14-final-controls",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "dotnet",
+      "${RUNTIME}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionDiscoveryTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesMarkedConsumerCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionControlTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryProducerRestartSignalTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "-method-",
+      "*LiveShutdown*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/14-final-controls.xml",
+      "-method-",
+      "*ChangedPersistedStateRefusesRunnerSignal"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-final"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "CommandExitCode": 1,
+      "TimedOut": false,
+      "Seconds": 106.135570154991,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1922169,
+        "Start": "12240786",
+        "State": "${RUNTIME}/job-supervisor-35f2c229f221c9a7",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "15-final-consumer",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "dotnet",
+      "${RUNTIME}/a/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryProducerRestartProtocolTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryUnitAuthorityRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+      "-method-",
+      "*SelectedMemories*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/15-final-consumer.xml"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 42.09945255999628,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2035842,
+        "Start": "12251399",
+        "State": "${RUNTIME}/job-supervisor-45411e93448ee538",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "15b-startup-ordering-controls",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "dotnet",
+      "${RUNTIME}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-method",
+      "*ConfiguredDaprPath_WrapsOnlyAnOrdinaryCliInTheFixtureSubreaper",
+      "-method",
+      "*StartupAdmissionAndCleanupPreserveBothOrderings",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/15b-startup-ordering-controls.xml"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-final",
+      "PARTIES_FIXTURE_DISPOSAL_DIAGNOSTICS": "1"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "CommandExitCode": 1,
+      "TimedOut": false,
+      "Seconds": 1.8937670420127688,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2074223,
+        "Start": "12255609",
+        "State": "${RUNTIME}/job-supervisor-a5c23c2dede11159",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "15c-driver-controls-frozen",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/test-driver.py"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 0.8712495549989399,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2108838,
+        "Start": "12258045",
+        "State": "${RUNTIME}/job-supervisor-2bdaa6787b5650cc",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "16-persisted-state-refusal",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": true,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/retain-runtime-diagnostics.py",
+      "${PRIVATE_V3}/persisted-state-refusal",
+      "${RUNTIME}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*ChangedPersistedStateRefusesRunnerSignal"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "CommandExitCode": 1,
+      "TimedOut": false,
+      "Seconds": 3.7653085439960705,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2076258,
+        "Start": "12255799",
+        "State": "${RUNTIME}/job-supervisor-92ebb803c8e2b324",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "17-final-matrix",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": true,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/retain-runtime-diagnostics.py",
+      "${PRIVATE_V3}/final-matrix",
+      "${RUNTIME}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*SigintAt*"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "CommandExitCode": 1,
+      "TimedOut": false,
+      "Seconds": 15.774359675007872,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2079558,
+        "Start": "12256175",
+        "State": "${RUNTIME}/job-supervisor-1e6ff19dc03d12ae",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "18-ordinary-restart",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": true,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/retain-runtime-diagnostics.py",
+      "${PRIVATE_V3}/ordinary-restart",
+      "${RUNTIME}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*ActualCurrentSourceMemoriesRestartsAcrossFiveRecoveryBoundaries"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "CommandExitCode": 1,
+      "TimedOut": false,
+      "Seconds": 0.768644445008249,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2103158,
+        "Start": "12257753",
+        "State": "${RUNTIME}/job-supervisor-b07d6e8cffb67a2c",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "19-controlled-cancellation",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": true,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/retain-runtime-diagnostics.py",
+      "${PRIVATE_V3}/controlled-cancellation",
+      "${RUNTIME}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*ActualCurrentSourceCanceledRestartCompletesOwnedCleanup"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "CommandExitCode": 1,
+      "TimedOut": false,
+      "Seconds": 0.8735564580128994,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2104834,
+        "Start": "12257830",
+        "State": "${RUNTIME}/job-supervisor-38d88adb62aaba8f",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "20-live-shutdown",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": true,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/retain-runtime-diagnostics.py",
+      "${PRIVATE_V3}/live-shutdown",
+      "${RUNTIME}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0",
+      "PARTIES_MTLS_TOPOLOGY_TESTS": "true",
+      "PARTIES_MTLS_ISOLATED_IDENTITIES": "true"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "CommandExitCode": 1,
+      "TimedOut": false,
+      "Seconds": 1.1773885959992185,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2106587,
+        "Start": "12257917",
+        "State": "${RUNTIME}/job-supervisor-4bb9d34bea279d36",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "30-release-wrapper",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${HISTORICAL_JOB}/a",
+      "-p:HexalithPartiesRuntimeTargetFramework=net11.0",
+      "-p:CustomAfterMicrosoftCommonProps=${REPOSITORY}/scripts/PartiesHostedRuntime.props",
+      "-p:HexalithUsePublishedSdkForHostedTests=true",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0",
+      "-p:BuildInParallel=false",
+      "-p:CopyLocalLockFileAssemblies=true"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 90.65170833699813,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2298288,
+        "Start": "12272854",
+        "State": "${HISTORICAL_JOB}/job-supervisor-b7e1436b90776549",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "31-prepare-runtime",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "bash",
+      "scripts/prepare-aspire-runtime-hosts.sh",
+      "--configuration",
+      "Release",
+      "--artifacts-path",
+      "${HISTORICAL_JOB}/a",
+      "--include-memory-qualification",
+      "true"
+    ],
+    "Env": {
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "Version": "1.0.0"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 430.2498953979957,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2371587,
+        "Start": "12281920",
+        "State": "${HISTORICAL_JOB}/job-supervisor-7870fc0aa355079f",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "32-rebind-final",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/rebind.py"
+    ],
+    "Env": {
+      "QUAL_ARTIFACTS": "{JOB}/a",
+      "Version": "1.0.0"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 170.02848160799476,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2822772,
+        "Start": "12324945",
+        "State": "${HISTORICAL_JOB}/job-supervisor-255d2069a21a8f1f",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "33-freeze-cohort",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "-c",
+      "import hashlib,json,sys; from pathlib import Path; p=Path(sys.argv[1]); root=Path.cwd(); source=json.loads((p/'source-final.json').read_text()); assert all(hashlib.sha256((root/name).read_bytes()).hexdigest()==expected for name,expected in source.items()); a=Path(sys.argv[2]); paths={'PreparedSha256':a/'runtime-profile/Release/prepared.json','WrapperSha256':a/'bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll','ChildSha256':a/'bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll'}; result={key:hashlib.sha256(path.read_bytes()).hexdigest() for key,path in paths.items()}; (p/'cohort-final.json').write_text(json.dumps(result,indent=2)); print(json.dumps(result))",
+      "${PRIVATE_V3}",
+      "${HISTORICAL_JOB}/a"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 0.3261843390064314,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2986165,
+        "Start": "12341948",
+        "State": "${HISTORICAL_JOB}/job-supervisor-54cf1b71a3f16488",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "34-final-controls",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "dotnet",
+      "${HISTORICAL_JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionDiscoveryTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesMarkedConsumerCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionControlTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryProducerRestartSignalTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "-method-",
+      "*LiveShutdown*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/34-final-controls.xml",
+      "-method-",
+      "*ChangedPersistedStateRefusesRunnerSignal"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-final"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 165.02064646300278,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2986380,
+        "Start": "12341981",
+        "State": "${HISTORICAL_JOB}/job-supervisor-f71525efb96fe043",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "35-final-consumer",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "dotnet",
+      "${HISTORICAL_JOB}/a/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryProducerRestartProtocolTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryUnitAuthorityRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+      "-method-",
+      "*SelectedMemories*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/35-final-consumer.xml"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 89.5767489860009,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3148002,
+        "Start": "12358484",
+        "State": "${HISTORICAL_JOB}/job-supervisor-1c9d67b21c095d94",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "35b-startup-ordering-controls",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "dotnet",
+      "${HISTORICAL_JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-method",
+      "*ConfiguredDaprPath_WrapsOnlyAnOrdinaryCliInTheFixtureSubreaper",
+      "-method",
+      "*StartupAdmissionAndCleanupPreserveBothOrderings",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/35b-startup-ordering-controls.xml"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-final",
+      "PARTIES_FIXTURE_DISPOSAL_DIAGNOSTICS": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 19.209233144996688,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3235128,
+        "Start": "12367441",
+        "State": "${HISTORICAL_JOB}/job-supervisor-4735d4f9bedc19f3",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "35c-driver-controls",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/test-driver.py"
+    ],
+    "Env": {
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 1.4447450199950254,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3252371,
+        "Start": "12369363",
+        "State": "${HISTORICAL_JOB}/job-supervisor-b39d4b189d01b8f8",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "36-persisted-state-refusal",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": true,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/runtime-gate.py",
+      "env",
+      "-u",
+      "TMPDIR",
+      "-u",
+      "TMP",
+      "-u",
+      "TEMP",
+      "run-with-temp",
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/supervised-runtime.py",
+      "${PRIVATE_V3}/persisted-state-refusal",
+      "${HISTORICAL_JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*ChangedPersistedStateRefusesRunnerSignal"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0",
+      "PARTIES_RUNTIME_JOB_TIMEOUT": "900",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "CommandExitCode": 1,
+      "TimedOut": false,
+      "Seconds": 222.6272264339932,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3254338,
+        "Start": "12369507",
+        "State": "${HISTORICAL_JOB}/job-supervisor-d07a0069ef2b0302",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "37-final-matrix",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": true,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/runtime-gate.py",
+      "env",
+      "-u",
+      "TMPDIR",
+      "-u",
+      "TMP",
+      "-u",
+      "TEMP",
+      "run-with-temp",
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/supervised-runtime.py",
+      "${PRIVATE_V3}/final-matrix",
+      "${HISTORICAL_JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*SigintAt*"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0",
+      "PARTIES_RUNTIME_JOB_TIMEOUT": "4200",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "CommandExitCode": 1,
+      "TimedOut": false,
+      "Seconds": 1415.3137031030055,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3533125,
+        "Start": "12391770",
+        "State": "${HISTORICAL_JOB}/job-supervisor-a1b164cfa6fe3481",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "38-ordinary-restart",
+    "Kind": "DeferredBeforeRuntime",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/runtime-gate.py",
+      "env",
+      "-u",
+      "TMPDIR",
+      "-u",
+      "TMP",
+      "-u",
+      "TEMP",
+      "run-with-temp",
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/supervised-runtime.py",
+      "${PRIVATE_V3}/ordinary-restart",
+      "${HISTORICAL_JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*ActualCurrentSourceMemoriesRestartsAcrossFiveRecoveryBoundaries"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0",
+      "PARTIES_RUNTIME_JOB_TIMEOUT": "2400",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 3,
+      "CommandExitCode": 3,
+      "TimedOut": false,
+      "Seconds": 0.11483567200775724,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 542166,
+        "Start": "12533301",
+        "State": "${HISTORICAL_JOB}/job-supervisor-1d63c8f303da2197",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "39-controlled-cancellation",
+    "Kind": "DeferredBeforeRuntime",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/runtime-gate.py",
+      "env",
+      "-u",
+      "TMPDIR",
+      "-u",
+      "TMP",
+      "-u",
+      "TEMP",
+      "run-with-temp",
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/supervised-runtime.py",
+      "${PRIVATE_V3}/controlled-cancellation",
+      "${HISTORICAL_JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*ActualCurrentSourceCanceledRestartCompletesOwnedCleanup"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0",
+      "PARTIES_RUNTIME_JOB_TIMEOUT": "2400",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 3,
+      "CommandExitCode": 3,
+      "TimedOut": false,
+      "Seconds": 0.11554903900832869,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 542201,
+        "Start": "12533313",
+        "State": "${HISTORICAL_JOB}/job-supervisor-5d637c296b17e612",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "40-live-shutdown",
+    "Kind": "DeferredBeforeRuntime",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/runtime-gate.py",
+      "env",
+      "-u",
+      "TMPDIR",
+      "-u",
+      "TMP",
+      "-u",
+      "TEMP",
+      "run-with-temp",
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/supervised-runtime.py",
+      "${PRIVATE_V3}/live-shutdown",
+      "${HISTORICAL_JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0",
+      "PARTIES_RUNTIME_JOB_TIMEOUT": "2400",
+      "PARTIES_MTLS_TOPOLOGY_TESTS": "true",
+      "PARTIES_MTLS_ISOLATED_IDENTITIES": "true",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 3,
+      "CommandExitCode": 3,
+      "TimedOut": false,
+      "Seconds": 0.11508011999831069,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 542221,
+        "Start": "12533325",
+        "State": "${HISTORICAL_JOB}/job-supervisor-9054a089878750e6",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "41-outside-attempt-closure",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/audit-outside-attempt.py"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 0.7679761209874414,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 542240,
+        "Start": "12533346",
+        "State": "${HISTORICAL_JOB}/job-supervisor-b93e2822fb6aa08c",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "44-archive-pre-live-reaping",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "-c",
+      "from pathlib import Path; import json,shutil; p=Path(__import__('sys').argv[1]); a=p/'pre-live-reaping'; a.mkdir(exist_ok=True); names=['persisted-state-refusal','final-matrix','early-controls-final']; [(shutil.move(str(p/name),str(a/name))) for name in names if (p/name).exists()]; (p/'defer-runtime').unlink(missing_ok=True); (p/'focused-release.json').write_text(json.dumps({'RequiredResults':['48-package-process-controls','49-final-controls','50-final-consumer','51-startup-ordering-controls','52-driver-controls']})); print('Preserved all pre-live-reaping failures; corrected-cohort admission remains gated')",
+      "${PRIVATE_V3}"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 0.06510439999692608,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 542769,
+        "Start": "12533423",
+        "State": "${HISTORICAL_JOB}/job-supervisor-248fefb703dbed70",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "45-contracts-build",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": "shared-helper-owner-build",
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${HISTORICAL_JOB}/a",
+      "-p:HexalithPartiesRuntimeTargetFramework=net11.0",
+      "-p:CustomAfterMicrosoftCommonProps=${REPOSITORY}/scripts/PartiesHostedRuntime.props",
+      "-p:HexalithUsePublishedSdkForHostedTests=true",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0",
+      "-p:BuildInParallel=false",
+      "-p:CopyLocalLockFileAssemblies=true"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 10.999179155987804,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 542782,
+        "Start": "12533430",
+        "State": "${HISTORICAL_JOB}/job-supervisor-0fd4051c23b74395",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "46-rebind-live-reaping",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": "final-rebuild",
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/rebind.py"
+    ],
+    "Env": {
+      "QUAL_ARTIFACTS": "{JOB}/a",
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 84.4261009079928,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 548057,
+        "Start": "12534530",
+        "State": "${HISTORICAL_JOB}/job-supervisor-ae812dd39a3ac632",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "47-freeze-cohort",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": "cohort-freeze",
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "-c",
+      "import hashlib,json,sys; from pathlib import Path; p=Path(sys.argv[1]); root=Path.cwd(); source=json.loads((p/'source-final.json').read_text()); assert all(hashlib.sha256((root/name).read_bytes()).hexdigest()==expected for name,expected in source.items()); a=Path(sys.argv[2]); paths={'PreparedSha256':a/'runtime-profile/Release/prepared.json','WrapperSha256':a/'bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll','ChildSha256':a/'bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll'}; result={key:hashlib.sha256(path.read_bytes()).hexdigest() for key,path in paths.items()}; (p/'cohort-final.json').write_text(json.dumps(result,indent=2)); print(json.dumps(result))",
+      "${PRIVATE_V3}",
+      "${HISTORICAL_JOB}/a"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 0.11952252899936866,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 592428,
+        "Start": "12542973",
+        "State": "${HISTORICAL_JOB}/job-supervisor-ebe326b5b0fab68c",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "48-package-process-controls",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": "shared-process-regressions",
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "dotnet",
+      "${HISTORICAL_JOB}/a/bin/Hexalith.Parties.Contracts.Tests/release/Hexalith.Parties.Contracts.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/48-package-process-controls.xml"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 12.706956369002,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 592511,
+        "Start": "12542985",
+        "State": "${HISTORICAL_JOB}/job-supervisor-2689ef7ecfac6c23",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "49-final-controls",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": "focused-cleanup",
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "dotnet",
+      "${HISTORICAL_JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionDiscoveryTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesMarkedConsumerCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionControlTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryProducerRestartSignalTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "-method-",
+      "*LiveShutdown*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/49-final-controls.xml",
+      "-method-",
+      "*ChangedPersistedStateRefusesRunnerSignal"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-final"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 117.21536327000649,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 599309,
+        "Start": "12544257",
+        "State": "${HISTORICAL_JOB}/job-supervisor-393947b4fa10cdc0",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "50-final-consumer",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": "focused-consumer",
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "dotnet",
+      "${HISTORICAL_JOB}/a/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryProducerRestartProtocolTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryUnitAuthorityRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+      "-method-",
+      "*SelectedMemories*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/50-final-consumer.xml"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 51.6134491420089,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 659499,
+        "Start": "12555978",
+        "State": "${HISTORICAL_JOB}/job-supervisor-06c72361abe79bbf",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "51-startup-ordering-controls",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": "startup-ordering",
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "dotnet",
+      "${HISTORICAL_JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-method",
+      "*ConfiguredDaprPath_WrapsOnlyAnOrdinaryCliInTheFixtureSubreaper",
+      "-method",
+      "*StartupAdmissionAndCleanupPreserveBothOrderings",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/51-startup-ordering-controls.xml"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-final",
+      "PARTIES_FIXTURE_DISPOSAL_DIAGNOSTICS": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 1.57412381299946,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 684192,
+        "Start": "12561141",
+        "State": "${HISTORICAL_JOB}/job-supervisor-2734e62cd527683f",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "52-driver-controls",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": "queue-containment",
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/test-driver.py"
+    ],
+    "Env": {
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 0.9166609169915318,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 684984,
+        "Start": "12561298",
+        "State": "${HISTORICAL_JOB}/job-supervisor-f7c480e6ba463292",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "53-persisted-state-refusal",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": true,
+    "HistoricalRole": "real-persisted-state-refusal",
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/runtime-gate.py",
+      "env",
+      "-u",
+      "TMPDIR",
+      "-u",
+      "TMP",
+      "-u",
+      "TEMP",
+      "run-with-temp",
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/supervised-runtime.py",
+      "${PRIVATE_V3}/persisted-state-refusal",
+      "${HISTORICAL_JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*ChangedPersistedStateRefusesRunnerSignal"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0",
+      "PARTIES_RUNTIME_JOB_TIMEOUT": "900",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 125.99929692699516,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 685290,
+        "Start": "12561390",
+        "State": "${HISTORICAL_JOB}/job-supervisor-d2dc2e6b2281a624",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "54-final-matrix",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": true,
+    "HistoricalRole": "original-five-pass-one-refusal-matrix",
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/runtime-gate.py",
+      "env",
+      "-u",
+      "TMPDIR",
+      "-u",
+      "TMP",
+      "-u",
+      "TEMP",
+      "run-with-temp",
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/supervised-runtime.py",
+      "${PRIVATE_V3}/final-matrix",
+      "${HISTORICAL_JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*SigintAt*"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0",
+      "PARTIES_RUNTIME_JOB_TIMEOUT": "4200",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "CommandExitCode": 1,
+      "TimedOut": false,
+      "Seconds": 1027.4016253739974,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 759096,
+        "Start": "12573990",
+        "State": "${HISTORICAL_JOB}/job-supervisor-951dbbe8e4c85c4e",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "55-ordinary-restart",
+    "Kind": "DeferredBeforeRuntime",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/runtime-gate.py",
+      "env",
+      "-u",
+      "TMPDIR",
+      "-u",
+      "TMP",
+      "-u",
+      "TEMP",
+      "run-with-temp",
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/supervised-runtime.py",
+      "${PRIVATE_V3}/ordinary-restart",
+      "${HISTORICAL_JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*ActualCurrentSourceMemoriesRestartsAcrossFiveRecoveryBoundaries"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0",
+      "PARTIES_RUNTIME_JOB_TIMEOUT": "2400",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 3,
+      "CommandExitCode": 3,
+      "TimedOut": false,
+      "Seconds": 0.11482509499182925,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1381249,
+        "Start": "12676731",
+        "State": "${HISTORICAL_JOB}/job-supervisor-1a1006bbb694c6c7",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "56-controlled-cancellation",
+    "Kind": "DeferredBeforeRuntime",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/runtime-gate.py",
+      "env",
+      "-u",
+      "TMPDIR",
+      "-u",
+      "TMP",
+      "-u",
+      "TEMP",
+      "run-with-temp",
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/supervised-runtime.py",
+      "${PRIVATE_V3}/controlled-cancellation",
+      "${HISTORICAL_JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*ActualCurrentSourceCanceledRestartCompletesOwnedCleanup"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0",
+      "PARTIES_RUNTIME_JOB_TIMEOUT": "2400",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 3,
+      "CommandExitCode": 3,
+      "TimedOut": false,
+      "Seconds": 0.11449060100130737,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1381270,
+        "Start": "12676742",
+        "State": "${HISTORICAL_JOB}/job-supervisor-7677034b0e2ecbad",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "57-live-shutdown",
+    "Kind": "DeferredBeforeRuntime",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/runtime-gate.py",
+      "env",
+      "-u",
+      "TMPDIR",
+      "-u",
+      "TMP",
+      "-u",
+      "TEMP",
+      "run-with-temp",
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/supervised-runtime.py",
+      "${PRIVATE_V3}/live-shutdown",
+      "${HISTORICAL_JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0",
+      "PARTIES_RUNTIME_JOB_TIMEOUT": "2400",
+      "PARTIES_MTLS_TOPOLOGY_TESTS": "true",
+      "PARTIES_MTLS_ISOLATED_IDENTITIES": "true",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 3,
+      "CommandExitCode": 3,
+      "TimedOut": false,
+      "Seconds": 0.11485614899720531,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1381435,
+        "Start": "12676754",
+        "State": "${HISTORICAL_JOB}/job-supervisor-c020f17775bcade2",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "58-release-isolated-retry",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "-c",
+      "from pathlib import Path; import json,sys; p=Path(sys.argv[1]); (p/'defer-runtime').unlink(missing_ok=True); (p/'focused-release.json').write_text(json.dumps({'RequiredResults':['48-package-process-controls', '49-final-controls', '50-final-consumer', '51-startup-ordering-controls', '52-driver-controls', '53-persisted-state-refusal']})); print('Release unchanged-cohort isolated retry; original failed matrix remains retained')",
+      "${PRIVATE_V3}"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 0.06562899200071115,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1381583,
+        "Start": "12676775",
+        "State": "${HISTORICAL_JOB}/job-supervisor-1cc021ea3257bdcb",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "59-isolated-cross-source",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": true,
+    "HistoricalRole": "isolated-sixth-selected-case",
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/runtime-gate.py",
+      "env",
+      "-u",
+      "TMPDIR",
+      "-u",
+      "TMP",
+      "-u",
+      "TEMP",
+      "run-with-temp",
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/supervised-runtime.py",
+      "${PRIVATE_V3}/final-cross-source",
+      "${HISTORICAL_JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*SigintAtCrossSourceAuthority"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0",
+      "PARTIES_RUNTIME_JOB_TIMEOUT": "900",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 107.56629193900153,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1381686,
+        "Start": "12676782",
+        "State": "${HISTORICAL_JOB}/job-supervisor-08c5e5d778e7ecc0",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "59b-require-isolated-retry",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "-c",
+      "from pathlib import Path; import json,sys; p=Path(sys.argv[1]); (p/'focused-release.json').write_text(json.dumps({'RequiredResults':['48-package-process-controls', '49-final-controls', '50-final-consumer', '51-startup-ordering-controls', '52-driver-controls', '53-persisted-state-refusal', '59-isolated-cross-source']})); print('Long runtime admission requires the isolated retry to pass')",
+      "${PRIVATE_V3}"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 0.06883383600506932,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1448871,
+        "Start": "12687539",
+        "State": "${HISTORICAL_JOB}/job-supervisor-2994e63584b47d05",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "60-ordinary-restart",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": true,
+    "HistoricalRole": "ordinary-wrapper-and-child",
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/runtime-gate.py",
+      "env",
+      "-u",
+      "TMPDIR",
+      "-u",
+      "TMP",
+      "-u",
+      "TEMP",
+      "run-with-temp",
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/supervised-runtime.py",
+      "${PRIVATE_V3}/ordinary-restart",
+      "${HISTORICAL_JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*ActualCurrentSourceMemoriesRestartsAcrossFiveRecoveryBoundaries"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0",
+      "PARTIES_RUNTIME_JOB_TIMEOUT": "2400",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 1206.5522062759992,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1448875,
+        "Start": "12687546",
+        "State": "${HISTORICAL_JOB}/job-supervisor-bd6c2309fa668baf",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "61-controlled-cancellation",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": true,
+    "HistoricalRole": "coordination-cancellation",
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/runtime-gate.py",
+      "env",
+      "-u",
+      "TMPDIR",
+      "-u",
+      "TMP",
+      "-u",
+      "TEMP",
+      "run-with-temp",
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/supervised-runtime.py",
+      "${PRIVATE_V3}/controlled-cancellation",
+      "${HISTORICAL_JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*ActualCurrentSourceCanceledRestartCompletesOwnedCleanup"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0",
+      "PARTIES_RUNTIME_JOB_TIMEOUT": "2400",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "CommandExitCode": 1,
+      "TimedOut": false,
+      "Seconds": 11.833081149001373,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2365733,
+        "Start": "12808201",
+        "State": "${HISTORICAL_JOB}/job-supervisor-7f94f0c4f1ddab74",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "62-live-shutdown",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": true,
+    "HistoricalRole": "four-live-modes",
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/runtime-gate.py",
+      "env",
+      "-u",
+      "TMPDIR",
+      "-u",
+      "TMP",
+      "-u",
+      "TEMP",
+      "run-with-temp",
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/supervised-runtime.py",
+      "${PRIVATE_V3}/live-shutdown",
+      "${HISTORICAL_JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0",
+      "PARTIES_RUNTIME_JOB_TIMEOUT": "2400",
+      "PARTIES_MTLS_TOPOLOGY_TESTS": "true",
+      "PARTIES_MTLS_ISOLATED_IDENTITIES": "true",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "CommandExitCode": 1,
+      "TimedOut": false,
+      "Seconds": 35.697171892999904,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2375621,
+        "Start": "12809385",
+        "State": "${HISTORICAL_JOB}/job-supervisor-4ee82698f8008885",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "adopted-parent-green",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "run-with-temp",
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/test-driver.py"
+    ],
+    "Env": {},
+    "AcceptanceRole": "Focused active-adoption regression",
+    "Result": {
+      "ExitCode": 0,
+      "DescendantsReaped": true,
+      "PassedControls": 5
+    }
+  },
+  {
+    "Label": "adopted-parent-red",
+    "Kind": "ExecutedCommand",
+    "RuntimeLaneExecuted": false,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "Args": [
+      "run-with-temp",
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-2/test-driver.py",
+      "DriverControls.test_active_command_reaps_adopted_parent_before_its_monitor_can_exit"
+    ],
+    "Env": {},
+    "AcceptanceRole": "Focused active-adoption regression",
+    "Result": {
+      "ExitCode": 1,
+      "DescendantsReaped": true,
+      "ExpectedFailure": true,
+      "ObservedAdoptedParentState": "Z"
+    }
+  }
+]

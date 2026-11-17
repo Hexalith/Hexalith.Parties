@@ -1,0 +1,70 @@
+{
+  "Authority": "Only these six final cases qualify corrected source",
+  "Cases": [
+    {
+      "Phase": "admitted-empty-mappings",
+      "Xml": "final-matrix/tests.xml.gz",
+      "Result": "final-matrix/admitted-empty-mappings-result.json.gz",
+      "Checkpoint": "final-matrix/admitted-empty-mappings-checkpoint.json.gz",
+      "Configuration": "final-matrix/admitted-empty-mappings-configuration.json.gz",
+      "ExternalCustody": "final-matrix/admitted-empty-mappings-external-custody.json.gz",
+      "RuntimePrefix": "final-matrix/parties-five-memory-runtime-4f7d4ca6532f",
+      "ElapsedMilliseconds": 181136
+    },
+    {
+      "Phase": "output-known",
+      "Xml": "final-matrix/tests.xml.gz",
+      "Result": "final-matrix/output-known-result.json.gz",
+      "Checkpoint": "final-matrix/output-known-checkpoint.json.gz",
+      "Configuration": "final-matrix/output-known-configuration.json.gz",
+      "ExternalCustody": "final-matrix/output-known-external-custody.json.gz",
+      "RuntimePrefix": "final-matrix/parties-five-memory-runtime-3527339466db",
+      "ElapsedMilliseconds": 175323
+    },
+    {
+      "Phase": "accepted-deletion",
+      "Xml": "final-matrix/tests.xml.gz",
+      "Result": "final-matrix/accepted-deletion-result.json.gz",
+      "Checkpoint": "final-matrix/accepted-deletion-checkpoint.json.gz",
+      "Configuration": "final-matrix/accepted-deletion-configuration.json.gz",
+      "ExternalCustody": "final-matrix/accepted-deletion-external-custody.json.gz",
+      "RuntimePrefix": "final-matrix/parties-five-memory-runtime-fdde6110c41a",
+      "ElapsedMilliseconds": 178420
+    },
+    {
+      "Phase": "same-uri-refresh",
+      "Xml": "final-same-uri/tests.xml.gz",
+      "Result": "final-same-uri/same-uri-refresh-result.json.gz",
+      "Checkpoint": "final-same-uri/same-uri-refresh-checkpoint.json.gz",
+      "Configuration": "final-same-uri/same-uri-refresh-configuration.json.gz",
+      "ExternalCustody": "final-same-uri/same-uri-refresh-external-custody.json.gz",
+      "RuntimePrefix": "final-same-uri/parties-five-memory-runtime-9910cf5408f9",
+      "ElapsedMilliseconds": 123482
+    },
+    {
+      "Phase": "cross-source-authority",
+      "Xml": "final-matrix/tests.xml.gz",
+      "Result": "final-matrix/cross-source-authority-result.json.gz",
+      "Checkpoint": "final-matrix/cross-source-authority-checkpoint.json.gz",
+      "Configuration": "final-matrix/cross-source-authority-configuration.json.gz",
+      "ExternalCustody": "final-matrix/cross-source-authority-external-custody.json.gz",
+      "RuntimePrefix": "final-matrix/parties-five-memory-runtime-2bf5613677e1",
+      "ElapsedMilliseconds": 108288
+    },
+    {
+      "Phase": "bounded-legacy-discovery",
+      "Xml": "final-matrix/tests.xml.gz",
+      "Result": "final-matrix/bounded-legacy-discovery-result.json.gz",
+      "Checkpoint": "final-matrix/bounded-legacy-discovery-checkpoint.json.gz",
+      "Configuration": "final-matrix/bounded-legacy-discovery-configuration.json.gz",
+      "ExternalCustody": "final-matrix/bounded-legacy-discovery-external-custody.json.gz",
+      "RuntimePrefix": "final-matrix/parties-five-memory-runtime-0f699d10e62f",
+      "ElapsedMilliseconds": 200749
+    }
+  ],
+  "SameUnchangedCohort": {
+    "PreparedSha256": "fca934e9a7e9fa827660462cda8a52939a8997e401aff86aef5efea2b2d9fd84",
+    "WrapperSha256": "c36a0ab3d115e31ef01c04fcc26bc0e74d45db46360db2369aa020f428f7f809",
+    "ChildSha256": "1cc7082f0bd3e38db3e93e8f1b15d477353f1d741db89e310b600d171afb7a02"
+  }
+}

@@ -66,5 +66,6 @@
   <ItemGroup>
     <Compile Include="..\TestInfrastructure.Shared\*.cs" Link="TestInfrastructure\%(Filename)%(Extension)" />
     <Compile Include="../PackageTests.Shared/PartyMemoryProducerRestartProtocol.cs" Link="TestInfrastructure/PartyMemoryProducerRestartProtocol.cs" />
+    <Compile Include="../PackageTests.Shared/PackageTestProcessSupervisor.cs" Link="TestInfrastructure/PackageTestProcessSupervisor.cs" />
   </ItemGroup>
 </Project>

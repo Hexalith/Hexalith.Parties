@@ -720,12 +720,12 @@ public sealed class PartiesTopologyCleanupTests
         string directory = Path.Combine(Path.GetTempPath(), $"parties-wrapper-control-{Guid.NewGuid():N}");
         Directory.CreateDirectory(directory);
         const string wrapperScript = "import os,pathlib,subprocess,sys; child=subprocess.Popen(['sleep','3600'],start_new_session=sys.argv[2]=='True'); pathlib.Path(sys.argv[1]).write_text(str(os.getpid())+' '+str(child.pid)); sys.stdin.readline()";
-        const string controllerScript = "import ctypes,os,subprocess,sys; ctypes.CDLL(None).prctl(36,1,0,0,0); wrapper=subprocess.Popen([sys.executable,'-c',sys.argv[1],sys.argv[2],sys.argv[3]]); wrapper.wait(); os.waitpid(-1,0)";
+        const string controllerScript = "import ctypes,os,subprocess,sys; ctypes.CDLL(None).prctl(36,1,0,0,0); env=os.environ.copy(); env['PARTIES_TEST_TOPOLOGY_OWNER']=sys.argv[4]; wrapper=subprocess.Popen([sys.executable,'-c',sys.argv[1],sys.argv[2],sys.argv[3]],env=env); wrapper.wait(); os.waitpid(-1,0)";
         var fixture = new PartiesAspireTopologyFixture();
         await using var fixtureLifetime = fixture.ConfigureAwait(true);
         var start = new ProcessStartInfo("python3") { RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
-        start.Environment[PartiesAspireTopologyFixture.WorkerOwnershipVariable] = fixture.WorkerOwnershipMarker;
-        foreach (string argument in new[] { "-c", controllerScript, wrapperScript, Path.Combine(directory, "ready"), separateSession.ToString() }) { start.ArgumentList.Add(argument); }
+        // The dedicated test reaper stays outside the fixture; only its wrapper/runtime carry worker authority.
+        foreach (string argument in new[] { "-c", controllerScript, wrapperScript, Path.Combine(directory, "ready"), separateSession.ToString(), fixture.WorkerOwnershipMarker }) { start.ArgumentList.Add(argument); }
         using Process controller = Process.Start(start).ShouldNotBeNull();
         using Process unrelated = Process.Start(new ProcessStartInfo("sleep") { ArgumentList = { "3600" }, UseShellExecute = false }).ShouldNotBeNull();
         int runtimeId = 0;
@@ -837,6 +837,7 @@ public sealed class PartiesTopologyCleanupTests
             },
             async (application, token) =>
             {
+                application.Services.GetRequiredService<IHostLifetime>().ShouldBeOfType<PartiesTopologyLifetime>();
                 hostShutdown = application.Services.GetRequiredService<IOptions<HostOptions>>().Value.ShutdownTimeout;
                 hostShutdown.ShouldBeGreaterThan(TimeSpan.Zero);
                 hostShutdown.ShouldBeLessThanOrEqualTo(TimeSpan.FromSeconds(30));

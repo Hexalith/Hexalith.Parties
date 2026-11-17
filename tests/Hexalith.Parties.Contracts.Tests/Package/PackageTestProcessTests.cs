@@ -9,6 +9,66 @@ namespace Hexalith.Parties.Contracts.Tests.Package;
 
 public sealed class PackageTestProcessTests
 {
+    /// <summary>Reaps an exited adopted daemon while its PID monitor and the direct command remain active.</summary>
+    /// <param name="exitCode">The direct command's expected exit status.</param>
+    [Theory]
+    [InlineData(0)]
+    [InlineData(7)]
+    public void RunReapsAdoptedExitsWithoutConsumingTheActiveDirectCommandStatus(int exitCode)
+    {
+        Assert.SkipUnless(OperatingSystem.IsLinux(), "The adopted-child supervisor requires Linux procfs.");
+        string directory = Path.Combine(Path.GetTempPath(), "active-adoption-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var scripts = new Dictionary<string, string>
+        {
+            ["monitor.py"] = """
+                import pathlib,sys,time
+                root=pathlib.Path(sys.argv[1]);pid=int(sys.argv[2])
+                while pathlib.Path('/proc',str(pid)).exists():time.sleep(.005)
+                (root/'monitor-done').touch()
+                """,
+            ["orphan.py"] = """
+                import json,os,pathlib,subprocess,sys,time
+                root=pathlib.Path(sys.argv[1]);original=os.getppid()
+                subprocess.Popen([sys.executable,str(root/'monitor.py'),str(root),str(os.getpid())])
+                (root/'orphan-ready').touch()
+                while os.getppid()==original:time.sleep(.005)
+                (root/'adopted').touch()
+                while not (root/'exit').exists():time.sleep(.005)
+                os._exit(19)
+                """,
+            ["intermediate.py"] = """
+                import os,pathlib,subprocess,sys,time
+                root=pathlib.Path(sys.argv[1])
+                subprocess.Popen([sys.executable,str(root/'orphan.py'),str(root)])
+                while not (root/'orphan-ready').exists():time.sleep(.005)
+                os._exit(11)
+                """,
+            ["active.py"] = """
+                import pathlib,subprocess,sys,time
+                root=pathlib.Path(sys.argv[1])
+                child=subprocess.Popen([sys.executable,str(root/'intermediate.py'),str(root)]);child.wait()
+                deadline=time.monotonic()+5
+                while not (root/'adopted').exists() and time.monotonic()<deadline:time.sleep(.005)
+                if not (root/'adopted').exists():sys.exit(24)
+                (root/'exit').touch()
+                while not (root/'monitor-done').exists() and time.monotonic()<deadline:time.sleep(.005)
+                if not (root/'monitor-done').exists():sys.exit(23)
+                sys.exit(int(sys.argv[2]))
+                """,
+        };
+        try
+        {
+            foreach ((string name, string script) in scripts) { File.WriteAllText(Path.Combine(directory, name), script); }
+            PackageTestProcessResult result = PackageTestProcess.Run("python3",
+                [Path.Combine(directory, "active.py"), directory, exitCode.ToString(System.Globalization.CultureInfo.InvariantCulture)],
+                Directory.GetCurrentDirectory(), processTimeoutMilliseconds: 10_000);
+            result.ExitCode.ShouldBe(exitCode, "Adopted exits 11 and 19 must not replace the direct command's status.");
+            File.Exists(Path.Combine(directory, "monitor-done")).ShouldBeTrue("The monitor must observe the adopted PID disappear before the active command finishes.");
+        }
+        finally { Directory.Delete(directory, recursive: true); }
+    }
+
     /// <summary>The real supervised child receives caller-scoped environment changes instead of ambient source imports.</summary>
     [Fact]
     public async Task SupervisorPreservesExplicitEnvironmentAssignmentsAndRemovals()

@@ -11,12 +11,14 @@ internal sealed class PartiesTopologySession
     private static readonly Lock PortAllocationLock = new();
     private static readonly HashSet<int> AllocatedPorts = [];
     private static readonly string[] SidecarNames = ["eventstore", "eventstore-admin", "eventstore-admin-ui", "memories", "parties", "sample", "sample-blazor-ui", "tenants"];
-    private PartiesTopologySession(bool isolatedIdentities)
+    private PartiesTopologySession(bool isolatedIdentities, string? authorizedId = null, string? authorizedRoot = null)
     {
-        Id = Guid.NewGuid().ToString("N")[..12];
+        Id = authorizedId ?? Guid.NewGuid().ToString("N")[..12];
+        if (Id.Length != 12 || !Id.All(char.IsAsciiHexDigit)) { throw new InvalidDataException("Invalid authorized topology identity."); }
         AppIdSuffix = isolatedIdentities ? Id : string.Empty;
         Namespace = isolatedIdentities ? "parties-" + Id : "default";
         Root = Path.Combine(Path.GetTempPath(), "hexalith-parties-topology-" + Id);
+        if (authorizedRoot is not null && authorizedRoot != Root) { throw new InvalidDataException("Authorized topology root differs from this private scratch root."); }
         CertificateDirectory = Path.Combine(Root, "certificates");
         ConfigurationDirectory = Path.Combine(Root, "configuration");
         // Released listener probes must not be reused as automatic outbound client ports.
@@ -122,6 +124,9 @@ internal sealed class PartiesTopologySession
 
     /// <summary>Creates a distinct session without changing the process environment.</summary>
     internal static PartiesTopologySession Create(bool isolatedIdentities = false) => new(isolatedIdentities);
+
+    /// <summary>Consumes session custody issued externally before the runner can create resources.</summary>
+    internal static PartiesTopologySession CreateAuthorized(string id, string root) => new(true, id, root);
 
     /// <summary>Maps a logical resource name to its literal Dapr identity.</summary>
     internal string AppId(string name) => AppIdSuffix.Length == 0 ? name : name + "-" + AppIdSuffix;

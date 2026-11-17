@@ -1,0 +1,3223 @@
+[
+  {
+    "Label": "01-source-prepare",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "dotnet",
+      "hexalith-module",
+      "prepare-build",
+      "--manifest",
+      "module/hexalith.module-manifest.v2.json",
+      "--workspace",
+      "${CURRENT_REPOSITORY}/artifacts/verification/mapping",
+      "--mode",
+      "source",
+      "--output",
+      "json"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 76.56496365201019,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3708548,
+        "Start": "12946880",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-dc1dc1cbad63e91f",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "02-package-prepare",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "dotnet",
+      "hexalith-module",
+      "prepare-build",
+      "--manifest",
+      "module/hexalith.module-manifest.v2.json",
+      "--workspace",
+      "${CURRENT_REPOSITORY}/artifacts/verification/package",
+      "--mode",
+      "package",
+      "--output",
+      "json"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 2,
+      "CommandExitCode": 2,
+      "TimedOut": false,
+      "Seconds": 1.3801383309910307,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3793894,
+        "Start": "12954537",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-7e1f2a025c3f4df8",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "03-debug-unit",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/debug-build.py",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "${CURRENT_REPOSITORY}/artifacts/verification/source-output"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 235.6160985549941,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3796533,
+        "Start": "12954676",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-cab4fe2682b78e70",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "04-debug-runtime",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/debug-build.py",
+      "tests/Hexalith.Parties.Runtime.IntegrationTests/Hexalith.Parties.Runtime.IntegrationTests.csproj",
+      "${CURRENT_REPOSITORY}/artifacts/verification/source-output"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 47.669312515005004,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 4026399,
+        "Start": "12978238",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-4165cdc1a67d46e0",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "05-debug-wrapper",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/debug-build.py",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "${CURRENT_REPOSITORY}/artifacts/verification/source-output"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 360.8765568210074,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 4078142,
+        "Start": "12983005",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-4d4f0c1a5423f73f",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "06-release-contracts",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "mapped-native-debug-runtime-preparation",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/debug-prepare.py",
+      "${CURRENT_REPOSITORY}/artifacts/verification/source-output"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 404.1245390330005,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 243574,
+        "Start": "13019094",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-7b4fe7dac5780e8b",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "07-release-unit",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "source-versus-fallback-queue-decision",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/after-debug-decision.py"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 37.380940860995906,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 645232,
+        "Start": "13059506",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-104de5b7204a1d73",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "08-prepare-runtime",
+    "Kind": "SupersededBeforeBuildOrTest",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "-c",
+      "import sys; print(\"Superseded before execution: preferred source/Debug path is being qualified; the planned Release build/test was not run\"); sys.exit(3)"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 3,
+      "CommandExitCode": 3,
+      "TimedOut": false,
+      "Seconds": 0.06649328798812348,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 702441,
+        "Start": "13063244",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-88acfb7138d77076",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "09-freeze-cohort",
+    "Kind": "SupersededBeforeBuildOrTest",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "-c",
+      "import sys; print(\"Superseded before execution: preferred source/Debug path is being qualified; the planned Release build/test was not run\"); sys.exit(3)"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 3,
+      "CommandExitCode": 3,
+      "TimedOut": false,
+      "Seconds": 0.06449836899992079,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 702670,
+        "Start": "13063262",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-a90c2c2510f3b160",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "10-package-process-controls",
+    "Kind": "SupersededBeforeBuildOrTest",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "-c",
+      "import sys; print(\"Superseded before execution: preferred source/Debug path is being qualified; the planned Release build/test was not run\"); sys.exit(3)"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 3,
+      "CommandExitCode": 3,
+      "TimedOut": false,
+      "Seconds": 0.06975890399189666,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 702750,
+        "Start": "13063269",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-2b10e3ed87652c46",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "11-final-controls",
+    "Kind": "SupersededBeforeBuildOrTest",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "-c",
+      "import sys; print(\"Superseded before execution: preferred source/Debug path is being qualified; the planned Release build/test was not run\"); sys.exit(3)"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 3,
+      "CommandExitCode": 3,
+      "TimedOut": false,
+      "Seconds": 0.06625328300287947,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 702791,
+        "Start": "13063276",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-cbdfee35e5e42ca1",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "12-consumer-unit",
+    "Kind": "SupersededBeforeBuildOrTest",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "-c",
+      "import sys; print(\"Superseded before execution: preferred source/Debug path is being qualified; the planned Release build/test was not run\"); sys.exit(3)"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 3,
+      "CommandExitCode": 3,
+      "TimedOut": false,
+      "Seconds": 0.06814259200473316,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 702835,
+        "Start": "13063282",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-8b9e68cd70bf3b29",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "13-consumer-runtime",
+    "Kind": "SupersededBeforeBuildOrTest",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "-c",
+      "import sys; print(\"Superseded before execution: preferred source/Debug path is being qualified; the planned Release build/test was not run\"); sys.exit(3)"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 3,
+      "CommandExitCode": 3,
+      "TimedOut": false,
+      "Seconds": 0.0660070129961241,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 702876,
+        "Start": "13063289",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-b85efb365617ac2d",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "14-startup-ordering-controls",
+    "Kind": "SupersededBeforeBuildOrTest",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "-c",
+      "import sys; print(\"Superseded before execution: preferred source/Debug path is being qualified; the planned Release build/test was not run\"); sys.exit(3)"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 3,
+      "CommandExitCode": 3,
+      "TimedOut": false,
+      "Seconds": 0.06965843299985863,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 702917,
+        "Start": "13063296",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-d56003b392f9c9be",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "15-driver-controls",
+    "Kind": "SupersededBeforeBuildOrTest",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "-c",
+      "import sys; print(\"Superseded before execution: preferred source/Debug path is being qualified; the planned Release build/test was not run\"); sys.exit(3)"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 3,
+      "CommandExitCode": 3,
+      "TimedOut": false,
+      "Seconds": 0.11709459699341096,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 702967,
+        "Start": "13063303",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-3b301c19635ef392",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "16-debug-contracts",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "source-debug-shared-process-owner-build",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/debug-build.py",
+      "tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj",
+      "${CURRENT_REPOSITORY}/artifacts/verification/source-output"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 70.79576377199555,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 703030,
+        "Start": "13063315",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-82f89083b3010f26",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "17-freeze-native-cohort",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "current-source-debug-cohort-freeze",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/freeze-native-cohort.py",
+      "${CURRENT_REPOSITORY}/artifacts/verification/source-output"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 70.31565535500704,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 762703,
+        "Start": "13070395",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-7725c7cfa7c084cc",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "18-validate-native-cohort",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "full-source-input-and-output-closure-validation",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/validate-native-cohort.py"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 5.4550018750014715,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 834184,
+        "Start": "13077427",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-a07e6ecd915382e4",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "19-package-process-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "32-shared-process-controls",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "18-validate-native-cohort",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/source-output/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.Parties.Contracts.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/19-package-process-controls.xml"
+    ],
+    "Env": {
+      "CustomBeforeDirectoryBuildProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "f9ee540275c9ffead1862f794511dd6f9556cd6c0020ef227648412d5687db04",
+      "Configuration": "Debug",
+      "UseArtifactsOutput": "true",
+      "ArtifactsPath": "{JOB}/source-output",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/source-output/runtime-profile/Debug/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-final",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 17.960439297996345,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 841114,
+        "Start": "13077972",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-ea2db7a5e02cbe43",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "20-final-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "88-cleanup-discovery-signal-fixture-controls",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "18-validate-native-cohort",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/source-output/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionDiscoveryTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesMarkedConsumerCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionControlTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryProducerRestartSignalTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "-method-",
+      "*LiveShutdown*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/20-final-controls.xml",
+      "-method-",
+      "*ChangedPersistedStateRefusesRunnerSignal"
+    ],
+    "Env": {
+      "CustomBeforeDirectoryBuildProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "f9ee540275c9ffead1862f794511dd6f9556cd6c0020ef227648412d5687db04",
+      "Configuration": "Debug",
+      "UseArtifactsOutput": "true",
+      "ArtifactsPath": "{JOB}/source-output",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/source-output/runtime-profile/Debug/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-final",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "CommandExitCode": 1,
+      "TimedOut": false,
+      "Seconds": 139.6992900490004,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 863414,
+        "Start": "13079769",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-8e3bc2f4fea6a77a",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "21-consumer-unit",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "38-unit-focused-methods",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "18-validate-native-cohort",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/source-output/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryProducerRestartProtocolTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryUnitAuthorityRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/21-consumer-unit.xml"
+    ],
+    "Env": {
+      "CustomBeforeDirectoryBuildProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "f9ee540275c9ffead1862f794511dd6f9556cd6c0020ef227648412d5687db04",
+      "Configuration": "Debug",
+      "UseArtifactsOutput": "true",
+      "ArtifactsPath": "{JOB}/source-output",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/source-output/runtime-profile/Debug/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-final",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 57.30818158701004,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1010413,
+        "Start": "13093739",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-e06ed1e2c938dc1f",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "22-consumer-runtime",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "22-runtime-assembly-non-live-focused-methods",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "18-validate-native-cohort",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/source-output/bin/Hexalith.Parties.Runtime.IntegrationTests/debug/Hexalith.Parties.Runtime.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+      "-method-",
+      "*SelectedMemories*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/22-consumer-runtime.xml"
+    ],
+    "Env": {
+      "CustomBeforeDirectoryBuildProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "f9ee540275c9ffead1862f794511dd6f9556cd6c0020ef227648412d5687db04",
+      "Configuration": "Debug",
+      "UseArtifactsOutput": "true",
+      "ArtifactsPath": "{JOB}/source-output",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/source-output/runtime-profile/Debug/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-final",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 0.9327630620100535,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1077776,
+        "Start": "13099470",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-2a38899d7ccbac12",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "23-startup-ordering-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "5-startup-controls",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "18-validate-native-cohort",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/source-output/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Parties.IntegrationTests.dll",
+      "-method",
+      "*ConfiguredDaprPath_WrapsOnlyAnOrdinaryCliInTheFixtureSubreaper",
+      "-method",
+      "*StartupAdmissionAndCleanupPreserveBothOrderings",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/23-startup-ordering-controls.xml"
+    ],
+    "Env": {
+      "CustomBeforeDirectoryBuildProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "f9ee540275c9ffead1862f794511dd6f9556cd6c0020ef227648412d5687db04",
+      "Configuration": "Debug",
+      "UseArtifactsOutput": "true",
+      "ArtifactsPath": "{JOB}/source-output",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/source-output/runtime-profile/Debug/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-final",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PARTIES_FIXTURE_DISPOSAL_DIAGNOSTICS": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 21.58925640200323,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1079256,
+        "Start": "13099563",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-5222a632d3f5b04d",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "24-driver-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "5-queue-controls",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "18-validate-native-cohort",
+      "python3",
+      "${PRIVATE_V3}/current-layout/test-driver.py"
+    ],
+    "Env": {
+      "CustomBeforeDirectoryBuildProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "f9ee540275c9ffead1862f794511dd6f9556cd6c0020ef227648412d5687db04",
+      "Configuration": "Debug",
+      "UseArtifactsOutput": "true",
+      "ArtifactsPath": "{JOB}/source-output",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/source-output/runtime-profile/Debug/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-final",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 1.0268644919997314,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1110047,
+        "Start": "13101723",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-9646aba899a54888",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "25-debug-wrapper-test-correction",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "intermediate-configuration-control-build",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/debug-build.py",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "${CURRENT_REPOSITORY}/artifacts/verification/source-output"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 131.568172476982,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1438504,
+        "Start": "13131990",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-6e6a1ef1cfacb3e4",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "26-debug-wrapper-final-assertions",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "final-source-debug-wrapper-build",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/debug-build.py",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "${CURRENT_REPOSITORY}/artifacts/verification/source-output"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 160.79514271899825,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1761644,
+        "Start": "13153501",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-3b90e177781c7a63",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "27-configuration-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "7-configuration-and-startup-controls",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "26-debug-wrapper-final-assertions",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/source-output/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Parties.IntegrationTests.dll",
+      "-method",
+      "*ConfiguredDaprPath_WrapsOnlyAnOrdinaryCliInTheFixtureSubreaper",
+      "-method",
+      "*InitializationFailure_ReportsActualReasonAndRestoresEnvironmentOnDisposal",
+      "-method",
+      "*StartupAdmissionAndCleanupPreserveBothOrderings",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/27-configuration-controls.xml"
+    ],
+    "Env": {
+      "CustomBeforeDirectoryBuildProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "f9ee540275c9ffead1862f794511dd6f9556cd6c0020ef227648412d5687db04",
+      "Configuration": "Debug",
+      "UseArtifactsOutput": "true",
+      "ArtifactsPath": "{JOB}/source-output",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/source-output/runtime-profile/Debug/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-final",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PARTIES_FIXTURE_DISPOSAL_DIAGNOSTICS": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 1.6735261139983777,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1959825,
+        "Start": "13169591",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-6cebb123c34cbd10",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "28-freeze-native-cohort",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "final-source-debug-cohort-freeze",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/freeze-native-cohort.py",
+      "${CURRENT_REPOSITORY}/artifacts/verification/source-output"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 47.08429959000205,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1962428,
+        "Start": "13169758",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-355181b58f2f352f",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "29-validate-native-cohort",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "full-final-source-and-output-closure-validation",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/validate-native-cohort.py"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 3.84614972100826,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2026128,
+        "Start": "13174467",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-f4b585160be8e880",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "30-package-process-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "32-final-shared-process-controls",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "29-validate-native-cohort",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/source-output/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.Parties.Contracts.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/30-package-process-controls.xml"
+    ],
+    "Env": {
+      "CustomBeforeDirectoryBuildProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "f9ee540275c9ffead1862f794511dd6f9556cd6c0020ef227648412d5687db04",
+      "Configuration": "Debug",
+      "UseArtifactsOutput": "true",
+      "ArtifactsPath": "{JOB}/source-output",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/source-output/runtime-profile/Debug/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-final",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 12.146486903016921,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2031851,
+        "Start": "13174852",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-a3118ce884e214ce",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "31-final-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "88-final-cleanup-discovery-signal-fixture-controls",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "29-validate-native-cohort",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/source-output/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionDiscoveryTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesMarkedConsumerCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionControlTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryProducerRestartSignalTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "-method-",
+      "*LiveShutdown*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/31-final-controls.xml",
+      "-method-",
+      "*ChangedPersistedStateRefusesRunnerSignal"
+    ],
+    "Env": {
+      "CustomBeforeDirectoryBuildProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "f9ee540275c9ffead1862f794511dd6f9556cd6c0020ef227648412d5687db04",
+      "Configuration": "Debug",
+      "UseArtifactsOutput": "true",
+      "ArtifactsPath": "{JOB}/source-output",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/source-output/runtime-profile/Debug/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-final",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 110.6845101529907,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2046197,
+        "Start": "13176066",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-1f76d030f89e0de3",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "32-consumer-unit",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "38-final-unit-focused-methods",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "29-validate-native-cohort",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/source-output/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryProducerRestartProtocolTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryUnitAuthorityRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/32-consumer-unit.xml"
+    ],
+    "Env": {
+      "CustomBeforeDirectoryBuildProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "f9ee540275c9ffead1862f794511dd6f9556cd6c0020ef227648412d5687db04",
+      "Configuration": "Debug",
+      "UseArtifactsOutput": "true",
+      "ArtifactsPath": "{JOB}/source-output",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/source-output/runtime-profile/Debug/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-final",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 55.50732947100187,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2222960,
+        "Start": "13187135",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-1202276d5bed0285",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "33-consumer-runtime",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "22-final-runtime-assembly-focused-methods",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "29-validate-native-cohort",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/source-output/bin/Hexalith.Parties.Runtime.IntegrationTests/debug/Hexalith.Parties.Runtime.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+      "-method-",
+      "*SelectedMemories*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/33-consumer-runtime.xml"
+    ],
+    "Env": {
+      "CustomBeforeDirectoryBuildProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "f9ee540275c9ffead1862f794511dd6f9556cd6c0020ef227648412d5687db04",
+      "Configuration": "Debug",
+      "UseArtifactsOutput": "true",
+      "ArtifactsPath": "{JOB}/source-output",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/source-output/runtime-profile/Debug/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-final",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 0.9750512109894771,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2300901,
+        "Start": "13192686",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-009ee2d402624647",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "34-startup-ordering-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "5-final-startup-controls",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "29-validate-native-cohort",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/source-output/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Parties.IntegrationTests.dll",
+      "-method",
+      "*ConfiguredDaprPath_WrapsOnlyAnOrdinaryCliInTheFixtureSubreaper",
+      "-method",
+      "*StartupAdmissionAndCleanupPreserveBothOrderings",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/34-startup-ordering-controls.xml"
+    ],
+    "Env": {
+      "CustomBeforeDirectoryBuildProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "f9ee540275c9ffead1862f794511dd6f9556cd6c0020ef227648412d5687db04",
+      "Configuration": "Debug",
+      "UseArtifactsOutput": "true",
+      "ArtifactsPath": "{JOB}/source-output",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/source-output/runtime-profile/Debug/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-final",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PARTIES_FIXTURE_DISPOSAL_DIAGNOSTICS": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 1.9244931970024481,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2302125,
+        "Start": "13192783",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-dc2d7a0342577903",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "35-driver-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "5-final-queue-controls",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "29-validate-native-cohort",
+      "python3",
+      "${PRIVATE_V3}/current-layout/test-driver.py"
+    ],
+    "Env": {
+      "CustomBeforeDirectoryBuildProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "f9ee540275c9ffead1862f794511dd6f9556cd6c0020ef227648412d5687db04",
+      "Configuration": "Debug",
+      "UseArtifactsOutput": "true",
+      "ArtifactsPath": "{JOB}/source-output",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/source-output/runtime-profile/Debug/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-final",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 1.0227459740126505,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2304585,
+        "Start": "13192976",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-4094987ead9edac5",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "36-persisted-state-refusal",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "real-persisted-state-refusal-after-full-focused-gates",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": true,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/runtime-gate.py",
+      "env",
+      "-u",
+      "TMPDIR",
+      "-u",
+      "TMP",
+      "-u",
+      "TEMP",
+      "run-with-temp",
+      "python3",
+      "${PRIVATE_V3}/current-layout/supervised-runtime.py",
+      "${PRIVATE_V3}/current-layout/persisted-state-refusal",
+      "${CURRENT_REPOSITORY}/artifacts/verification/source-output/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Parties.IntegrationTests.dll",
+      "*ChangedPersistedStateRefusesRunnerSignal"
+    ],
+    "Env": {
+      "CustomBeforeDirectoryBuildProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${CURRENT_REPOSITORY}/artifacts/verification/mapping/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "f9ee540275c9ffead1862f794511dd6f9556cd6c0020ef227648412d5687db04",
+      "Configuration": "Debug",
+      "UseArtifactsOutput": "true",
+      "ArtifactsPath": "{JOB}/source-output",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/source-output/runtime-profile/Debug/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-final",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PARTIES_RUNTIME_JOB_TIMEOUT": "900"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "CommandExitCode": 1,
+      "TimedOut": false,
+      "Seconds": 337.2491743499995,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2333400,
+        "Start": "13195045",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-fd202d159419d33c",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "37-native-runtime-blocker-audit",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": "failed-native-runtime-closure-and-full-input-drift-audit",
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/audit-native-attempt.py"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 4.460229912016075,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3187421,
+        "Start": "13259386",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-72e073773fd4f5d3",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "38-release-contracts",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": "explicit-release-fallback-process-owner-build",
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${CURRENT_REPOSITORY}/artifacts/verification/release-output",
+      "-p:HexalithPartiesRuntimeTargetFramework=net11.0",
+      "-p:CustomAfterMicrosoftCommonProps=${CURRENT_REPOSITORY}/scripts/PartiesHostedRuntime.props",
+      "-p:HexalithUsePublishedSdkForHostedTests=true",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0",
+      "-p:BuildInParallel=false",
+      "-p:CopyLocalLockFileAssemblies=true"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 13.602166612981819,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3235763,
+        "Start": "13264481",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-472897fe1d07448e",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "39-release-unit",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": "explicit-release-fallback-unit-build",
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${CURRENT_REPOSITORY}/artifacts/verification/release-output",
+      "-p:HexalithPartiesRuntimeTargetFramework=net11.0",
+      "-p:CustomAfterMicrosoftCommonProps=${CURRENT_REPOSITORY}/scripts/PartiesHostedRuntime.props",
+      "-p:HexalithUsePublishedSdkForHostedTests=true",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0",
+      "-p:BuildInParallel=false",
+      "-p:CopyLocalLockFileAssemblies=true"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 24.59751868501189,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3248001,
+        "Start": "13265841",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-299923cbcacc6b17",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "40-release-wrapper",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": "explicit-release-fallback-wrapper-and-runtime-child-build",
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${CURRENT_REPOSITORY}/artifacts/verification/release-output",
+      "-p:HexalithPartiesRuntimeTargetFramework=net11.0",
+      "-p:CustomAfterMicrosoftCommonProps=${CURRENT_REPOSITORY}/scripts/PartiesHostedRuntime.props",
+      "-p:HexalithUsePublishedSdkForHostedTests=true",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0",
+      "-p:BuildInParallel=false",
+      "-p:CopyLocalLockFileAssemblies=true"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 29.815256910020253,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3266856,
+        "Start": "13268301",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-8864ef4c877e03f0",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "41-release-runtime-preparation",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": "serialized-explicit-release-runtime-preparation",
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "bash",
+      "scripts/prepare-aspire-runtime-hosts.sh",
+      "--configuration",
+      "Release",
+      "--artifacts-path",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output",
+      "--include-memory-qualification",
+      "true"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 149.78197140499833,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3285645,
+        "Start": "13271282",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-e41d7282aa4a7a56",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "42-freeze-release-cohort",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": "final-package-release-cohort-freeze",
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/freeze-cohort.py",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 2.8831705180054996,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3385620,
+        "Start": "13286271",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-dc0b7c2c2ee0e8e5",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "43-validate-release-cohort",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": "complete-prepared-package-closure-validation",
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/validate-release-cohort.py"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 1.620237430994166,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3387757,
+        "Start": "13286560",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-ec699db6bfe0602d",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "44-package-process-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": "32-current-release-process-controls",
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "43-validate-release-cohort",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output/bin/Hexalith.Parties.Contracts.Tests/release/Hexalith.Parties.Contracts.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/44-package-process-controls.xml"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 11.332001828006469,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3388779,
+        "Start": "13286722",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-20096f936036e179",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "45-final-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": "88-current-release-cleanup-controls",
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "43-validate-release-cohort",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionDiscoveryTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesMarkedConsumerCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionControlTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryProducerRestartSignalTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "-method-",
+      "*LiveShutdown*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/45-final-controls.xml",
+      "-method-",
+      "*ChangedPersistedStateRefusesRunnerSignal"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "CommandExitCode": 1,
+      "TimedOut": false,
+      "Seconds": 104.63670713899774,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3395579,
+        "Start": "13287855",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-ae12dabbfeccf017",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "46-consumer-unit",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": "38-current-release-unit-controls",
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "43-validate-release-cohort",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryProducerRestartProtocolTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryUnitAuthorityRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/46-consumer-unit.xml"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 33.959947524999734,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3456571,
+        "Start": "13298319",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-ae3834f1d8c9eee2",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "47-consumer-runtime",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": "22-current-release-runtime-controls",
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "43-validate-release-cohort",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output/bin/Hexalith.Parties.Runtime.IntegrationTests/release/Hexalith.Parties.Runtime.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+      "-method-",
+      "*SelectedMemories*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/47-consumer-runtime.xml"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 0.666212666023057,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3471789,
+        "Start": "13301715",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-e6eaa81e31533dcb",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "48-startup-ordering-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": "5-current-release-startup-controls",
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "43-validate-release-cohort",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-method",
+      "*ConfiguredDaprPath_WrapsOnlyAnOrdinaryCliInTheFixtureSubreaper",
+      "-method",
+      "*StartupAdmissionAndCleanupPreserveBothOrderings",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/48-startup-ordering-controls.xml"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final",
+      "PARTIES_FIXTURE_DISPOSAL_DIAGNOSTICS": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 1.4695760929898825,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3472318,
+        "Start": "13301782",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-68d3ad929385d029",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "49-driver-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": "5-current-release-queue-controls",
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "43-validate-release-cohort",
+      "python3",
+      "${PRIVATE_V3}/current-layout/test-driver.py"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 0.8665151149907615,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3472860,
+        "Start": "13301929",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-9f885f70c06ae14c",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "49b-configuration-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": "7-current-release-passive-configuration-controls",
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "43-validate-release-cohort",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-method",
+      "*ConfiguredDaprPath_WrapsOnlyAnOrdinaryCliInTheFixtureSubreaper",
+      "-method",
+      "*InitializationFailure_ReportsActualReasonAndRestoresEnvironmentOnDisposal",
+      "-method",
+      "*StartupAdmissionAndCleanupPreserveBothOrderings",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/49b-configuration-controls.xml"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final",
+      "PARTIES_FIXTURE_DISPOSAL_DIAGNOSTICS": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 2.0703191419888753,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3514294,
+        "Start": "13309876",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-3ece006a4d3d8641",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "50-release-direct-model-build",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": "historical-unqualified-proxy-adapter-build",
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${CURRENT_REPOSITORY}/artifacts/verification/release-output",
+      "-p:HexalithPartiesRuntimeTargetFramework=net11.0",
+      "-p:CustomAfterMicrosoftCommonProps=${CURRENT_REPOSITORY}/scripts/PartiesHostedRuntime.props",
+      "-p:HexalithUsePublishedSdkForHostedTests=true",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0",
+      "-p:BuildInParallel=false",
+      "-p:CopyLocalLockFileAssemblies=true"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 30.349296189000597,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3906454,
+        "Start": "13371333",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-0abb9ecc6ada26f0",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "51-direct-model-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": "historical-proxy-generic-constraint-refusal",
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "50-release-direct-model-build",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-method",
+      "*ConfiguredDaprPath_WrapsOnlyAnOrdinaryCliInTheFixtureSubreaper",
+      "-method",
+      "*InitializationFailure_ReportsActualReasonAndRestoresEnvironmentOnDisposal",
+      "-method",
+      "*StartupAdmissionAndCleanupPreserveBothOrderings",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/51-direct-model-controls.xml"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final",
+      "PARTIES_FIXTURE_DISPOSAL_DIAGNOSTICS": "1"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "CommandExitCode": 1,
+      "TimedOut": false,
+      "Seconds": 1.2192499329976272,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3926728,
+        "Start": "13374368",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-efd5c165f929401a",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "52-direct-model-diagnostic-build",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": "historical-proxy-stack-diagnostic-build",
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${CURRENT_REPOSITORY}/artifacts/verification/release-output",
+      "-p:HexalithPartiesRuntimeTargetFramework=net11.0",
+      "-p:CustomAfterMicrosoftCommonProps=${CURRENT_REPOSITORY}/scripts/PartiesHostedRuntime.props",
+      "-p:HexalithUsePublishedSdkForHostedTests=true",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0",
+      "-p:BuildInParallel=false",
+      "-p:CopyLocalLockFileAssemblies=true"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 15.77193283798988,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 4121639,
+        "Start": "13406828",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-e27228c53f484164",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "53-direct-model-diagnostics",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": "exact-generated-generic-method-constraint-diagnosis",
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "52-direct-model-diagnostic-build",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-method",
+      "*ConfiguredDaprPath_WrapsOnlyAnOrdinaryCliInTheFixtureSubreaper",
+      "-method",
+      "*InitializationFailure_ReportsActualReasonAndRestoresEnvironmentOnDisposal",
+      "-method",
+      "*StartupAdmissionAndCleanupPreserveBothOrderings",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/53-direct-model-diagnostics.xml"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final",
+      "PARTIES_FIXTURE_DISPOSAL_DIAGNOSTICS": "1"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "CommandExitCode": 1,
+      "TimedOut": false,
+      "Seconds": 1.2208561250008643,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 4130869,
+        "Start": "13408405",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-dd9d322036862184",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "54-concrete-configuration-builder-build",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": "concrete-adapter-build",
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${CURRENT_REPOSITORY}/artifacts/verification/release-output",
+      "-p:HexalithPartiesRuntimeTargetFramework=net11.0",
+      "-p:CustomAfterMicrosoftCommonProps=${CURRENT_REPOSITORY}/scripts/PartiesHostedRuntime.props",
+      "-p:HexalithUsePublishedSdkForHostedTests=true",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0",
+      "-p:BuildInParallel=false",
+      "-p:CopyLocalLockFileAssemblies=true"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 12.644701584009454,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 404774,
+        "Start": "13442419",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-439985a81ca558fc",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "55-concrete-configuration-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": "incomplete-model-Redis-declarations-refusal",
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "54-concrete-configuration-builder-build",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-method",
+      "*ConfiguredDaprPath_WrapsOnlyAnOrdinaryCliInTheFixtureSubreaper",
+      "-method",
+      "*InitializationFailure_ReportsActualReasonAndRestoresEnvironmentOnDisposal",
+      "-method",
+      "*StartupAdmissionAndCleanupPreserveBothOrderings",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/55-concrete-configuration-controls.xml"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final",
+      "PARTIES_FIXTURE_DISPOSAL_DIAGNOSTICS": "1"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "CommandExitCode": 1,
+      "TimedOut": false,
+      "Seconds": 1.4571563010104,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 424183,
+        "Start": "13443684",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-1a004f4ea500cf46",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "56-configuration-components-build",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": "final-concrete-configuration-model-build",
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${CURRENT_REPOSITORY}/artifacts/verification/release-output",
+      "-p:HexalithPartiesRuntimeTargetFramework=net11.0",
+      "-p:CustomAfterMicrosoftCommonProps=${CURRENT_REPOSITORY}/scripts/PartiesHostedRuntime.props",
+      "-p:HexalithUsePublishedSdkForHostedTests=true",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0",
+      "-p:BuildInParallel=false",
+      "-p:CopyLocalLockFileAssemblies=true"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 15.691294340998866,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 603182,
+        "Start": "13456703",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-bf36068f61bceb7d",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "57-configuration-component-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": "7-deterministic-config-and-ordering-controls",
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "56-configuration-components-build",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-method",
+      "*ConfiguredDaprPath_WrapsOnlyAnOrdinaryCliInTheFixtureSubreaper",
+      "-method",
+      "*InitializationFailure_ReportsActualReasonAndRestoresEnvironmentOnDisposal",
+      "-method",
+      "*StartupAdmissionAndCleanupPreserveBothOrderings",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/57-configuration-component-controls.xml"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final",
+      "PARTIES_FIXTURE_DISPOSAL_DIAGNOSTICS": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 1.8888620840152726,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 627904,
+        "Start": "13458272",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-bbab3d4f8e740338",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "58-final-release-runtime-preparation",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": "completed-final-serialized-preparation",
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "bash",
+      "scripts/prepare-aspire-runtime-hosts.sh",
+      "--configuration",
+      "Release",
+      "--artifacts-path",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output",
+      "--include-memory-qualification",
+      "true"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 389.8033939480083,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 793156,
+        "Start": "13472090",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-750ef5a785a198af",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "59-freeze-final-cohort",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": "final-source39-wrapper-prepared-child-freeze",
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/freeze-cohort.py",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 10.121309731010115,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1210167,
+        "Start": "13511071",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-df245e81e09cde76",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "60-validate-final-cohort",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": "full-final-prepared-cohort-validation",
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/validate-release-cohort.py"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 3.3355198580247816,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1221556,
+        "Start": "13512083",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-47ed33f85d313ab0",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "61-package-process-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": "32-final-process-controls",
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "60-validate-final-cohort",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output/bin/Hexalith.Parties.Contracts.Tests/release/Hexalith.Parties.Contracts.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/61-package-process-controls.xml"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 25.454236429010052,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1225052,
+        "Start": "13512417",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-5db487b1153b798a",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "62-final-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": "88-final-cleanup-controls",
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "60-validate-final-cohort",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionDiscoveryTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesMarkedConsumerCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionControlTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryProducerRestartSignalTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "-method-",
+      "*LiveShutdown*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/62-final-controls.xml",
+      "-method-",
+      "*ChangedPersistedStateRefusesRunnerSignal"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 204.96809742299956,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1251652,
+        "Start": "13514963",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-bdb559df685603f0",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "63-consumer-unit",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": "38-final-unit-consumer-controls",
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "60-validate-final-cohort",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryProducerRestartProtocolTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryUnitAuthorityRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/63-consumer-unit.xml"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 125.36741671100026,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1440458,
+        "Start": "13535460",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-f9415b32c8d1c0c1",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "64-consumer-runtime",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": "22-final-runtime-consumer-controls",
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "60-validate-final-cohort",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output/bin/Hexalith.Parties.Runtime.IntegrationTests/release/Hexalith.Parties.Runtime.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+      "-method-",
+      "*SelectedMemories*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/64-consumer-runtime.xml"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 1.6811067730013747,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1560417,
+        "Start": "13547997",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-e181cdcd9d99e010",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "65-startup-ordering-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": "5-final-startup-controls",
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "60-validate-final-cohort",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-method",
+      "*ConfiguredDaprPath_WrapsOnlyAnOrdinaryCliInTheFixtureSubreaper",
+      "-method",
+      "*StartupAdmissionAndCleanupPreserveBothOrderings",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/65-startup-ordering-controls.xml"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final",
+      "PARTIES_FIXTURE_DISPOSAL_DIAGNOSTICS": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 10.357918080000672,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1562344,
+        "Start": "13548165",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-c215152ab32c8cf3",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "66-driver-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": "historical-unadmitted-timeout-control-4pass-1error",
+    "CurrentAcceptanceRole": null,
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "60-validate-final-cohort",
+      "python3",
+      "${PRIVATE_V3}/current-layout/test-driver.py"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "CommandExitCode": 1,
+      "TimedOut": false,
+      "Seconds": 2.1930769640021026,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1574537,
+        "Start": "13549201",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-db3628252d5a1847",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "67-configuration-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": "7-final-configuration-controls",
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "60-validate-final-cohort",
+      "dotnet",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-method",
+      "*ConfiguredDaprPath_WrapsOnlyAnOrdinaryCliInTheFixtureSubreaper",
+      "-method",
+      "*InitializationFailure_ReportsActualReasonAndRestoresEnvironmentOnDisposal",
+      "-method",
+      "*StartupAdmissionAndCleanupPreserveBothOrderings",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V3}/current-layout/67-configuration-controls.xml"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final",
+      "PARTIES_FIXTURE_DISPOSAL_DIAGNOSTICS": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 10.111253456998384,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1577011,
+        "Start": "13549420",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-ad6b5f5b68c1731e",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "68-admitted-queue-controls",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": "5-final-queue-controls-with-actual-child-admission",
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/require-pass.py",
+      "60-validate-final-cohort",
+      "python3",
+      "${PRIVATE_V3}/current-layout/test-driver.py"
+    ],
+    "Env": {
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 1.858408934000181,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 1872073,
+        "Start": "13574065",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-d743e66fe2456577",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "69-persisted-state-refusal",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": "first-actual-runtime-after-parent-source39-input-helper-anchor",
+    "RuntimeLaneExecuted": true,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/runtime-gate.py",
+      "env",
+      "-u",
+      "TMPDIR",
+      "-u",
+      "TMP",
+      "-u",
+      "TEMP",
+      "run-with-temp",
+      "python3",
+      "${PRIVATE_V3}/current-layout/supervised-runtime.py",
+      "${PRIVATE_V3}/current-layout/package-persisted-state-refusal",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*ChangedPersistedStateRefusesRunnerSignal"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final",
+      "PARTIES_RUNTIME_JOB_TIMEOUT": "900"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 154.46058056200854,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2077653,
+        "Start": "13590409",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-70378d43e03cbc35",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "70-final-matrix",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": "six-fresh-main-real-SIGINT-cases-after-real-mutation-pass",
+    "RuntimeLaneExecuted": true,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/runtime-gate.py",
+      "env",
+      "-u",
+      "TMPDIR",
+      "-u",
+      "TMP",
+      "-u",
+      "TEMP",
+      "run-with-temp",
+      "python3",
+      "${PRIVATE_V3}/current-layout/supervised-runtime.py",
+      "${PRIVATE_V3}/current-layout/package-final-matrix",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*SigintAt*"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final",
+      "PARTIES_RUNTIME_JOB_TIMEOUT": "4200"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 986.250532207021,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 2300205,
+        "Start": "13609550",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-e6fd5f4a614c1a2b",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "71-ordinary-restart",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": "ordinary-six-restart-wrapper-and-actual-child",
+    "RuntimeLaneExecuted": true,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/runtime-gate.py",
+      "env",
+      "-u",
+      "TMPDIR",
+      "-u",
+      "TMP",
+      "-u",
+      "TEMP",
+      "run-with-temp",
+      "python3",
+      "${PRIVATE_V3}/current-layout/supervised-runtime.py",
+      "${PRIVATE_V3}/current-layout/package-ordinary-restart",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*ActualCurrentSourceMemoriesRestartsAcrossFiveRecoveryBoundaries"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final",
+      "PARTIES_RUNTIME_JOB_TIMEOUT": "2400"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 1066.378499473998,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3343258,
+        "Start": "13712491",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-8295a25cccc1f28c",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "72-controlled-cancellation",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": "coordination-cancellation",
+    "RuntimeLaneExecuted": true,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/runtime-gate.py",
+      "env",
+      "-u",
+      "TMPDIR",
+      "-u",
+      "TMP",
+      "-u",
+      "TEMP",
+      "run-with-temp",
+      "python3",
+      "${PRIVATE_V3}/current-layout/supervised-runtime.py",
+      "${PRIVATE_V3}/current-layout/package-controlled-cancellation",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*ActualCurrentSourceCanceledRestartCompletesOwnedCleanup"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final",
+      "PARTIES_RUNTIME_JOB_TIMEOUT": "2400"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 192.62377658998594,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 4133963,
+        "Start": "13823549",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-0462f0665a89bb4e",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "73-live-shutdown",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": "four-actual-live-disposal-modes",
+    "RuntimeLaneExecuted": true,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/runtime-gate.py",
+      "env",
+      "-u",
+      "TMPDIR",
+      "-u",
+      "TMP",
+      "-u",
+      "TEMP",
+      "run-with-temp",
+      "python3",
+      "${PRIVATE_V3}/current-layout/supervised-runtime.py",
+      "${PRIVATE_V3}/current-layout/package-live-shutdown",
+      "${CURRENT_REPOSITORY}/artifacts/verification/release-output/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync"
+    ],
+    "Env": {
+      "Version": "1.0.0",
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0",
+      "MSBUILDDISABLENODEREUSE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/release-output/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-package-final",
+      "PARTIES_RUNTIME_JOB_TIMEOUT": "2400",
+      "PARTIES_MTLS_TOPOLOGY_TESTS": "true",
+      "PARTIES_MTLS_ISOLATED_IDENTITIES": "true"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 167.22601097097504,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 180056,
+        "Start": "13852264",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-ec45e396618e3ab6",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  {
+    "Label": "74-final-post-runtime-validation",
+    "Kind": "ExecutedCommand",
+    "HistoricalNativeRole": null,
+    "HistoricalRole": null,
+    "CurrentAcceptanceRole": "full-post-runtime-prepared-input-and-cohort-readback",
+    "RuntimeLaneExecuted": false,
+    "Args": [
+      "python3",
+      "${PRIVATE_V3}/current-layout/validate-release-cohort.py"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 1.4200202520005405,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 368163,
+        "Start": "13874330",
+        "State": "${CURRENT_REPOSITORY}/artifacts/verification/job-supervisor-8d3f6448bfcd85e1",
+        "ExclusiveSubreaper": true
+      }
+    }
+  }
+]

@@ -5,6 +5,10 @@ set -euo pipefail
 script_directory="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repository_root="$(cd -- "${script_directory}/.." && pwd)"
 session_id="${DAPR_MTLS_SESSION_ID:-}"
+owned_labels=()
+if [[ -n "${DAPR_MTLS_OWNERSHIP_MARKER:-}" ]]; then
+    owned_labels=(--label "hexalith.parties.test.owner=${DAPR_MTLS_OWNERSHIP_MARKER}" --label "hexalith.parties.test.session=${session_id}")
+fi
 certificate_directory="${DAPR_MTLS_CERTIFICATE_DIRECTORY:-${XDG_STATE_HOME:-${HOME}/.local/state}/hexalith-parties/dapr-certs${session_id:+-${session_id}}}"
 namespace="${DAPR_MTLS_NAMESPACE:-default}"
 name_suffix="${session_id:+-${session_id}}"
@@ -255,7 +259,7 @@ fi
 
 install -d -m 0700 -- "${certificate_directory}"
 if ! docker network inspect "${control_plane_network}" >/dev/null 2>&1; then
-    docker network create --driver bridge \
+    docker network create --driver bridge "${owned_labels[@]}" \
         --label hexalith.parties.dapr.role=control-plane-v1 \
         "${control_plane_network}" >/dev/null
     touch "${certificate_directory}/.owned-control-plane-network"
@@ -298,7 +302,7 @@ if docker container inspect "${sentry_container}" >/dev/null 2>&1; then
         docker container start "${sentry_container}" >/dev/null
     fi
 else
-    docker run --detach \
+    docker run --detach "${owned_labels[@]}" \
         --name "${sentry_container}" \
         --network "${control_plane_network}" \
         --publish "${sentry_grpc_binding}:50001" \
@@ -355,7 +359,7 @@ if docker container inspect "${placement_container}" >/dev/null 2>&1; then
         "${placement_health_binding}"
     start_if_stopped "${placement_container}"
 else
-    docker run --detach \
+    docker run --detach "${owned_labels[@]}" \
         --name "${placement_container}" \
         --network "${control_plane_network}" \
         --label "hexalith.parties.dapr.role=placement-v1" \
@@ -386,7 +390,7 @@ if docker container inspect "${scheduler_container}" >/dev/null 2>&1; then
         "${scheduler_health_binding}"
     start_if_stopped "${scheduler_container}"
 else
-    docker run --detach \
+    docker run --detach "${owned_labels[@]}" \
         --name "${scheduler_container}" \
         --network "${control_plane_network}" \
         --label "hexalith.parties.dapr.role=scheduler-v2" \

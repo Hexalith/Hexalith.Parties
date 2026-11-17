@@ -1,0 +1,116 @@
+{
+  "ImplementationComplete": true,
+  "IndependentParentReviewPending": true,
+  "FinalMatrixCases": 6,
+  "FinalMatrixSkipped": 0,
+  "FinalMatrixEmergencyRecoveries": 0,
+  "AllFinalCasesShareWrapperAndPreparedBytes": true,
+  "Lanes": {
+    "frozen-consumer": {
+      "total": 60,
+      "passed": 60,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    "frozen-cleanup": {
+      "total": 60,
+      "passed": 60,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    "pending-replacement-preflight": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    "final-matrix": {
+      "total": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    "live-shutdown-canceled-rerun": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    "ordinary-restart": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    "controlled-cancellation": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    "ordinary-actual-child": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    }
+  },
+  "LiveShutdownFinalCoverage": {
+    "normal": "live-shutdown/tests.xml.gz",
+    "failed": "live-shutdown/tests.xml.gz",
+    "cleanup-failed": "live-shutdown/tests.xml.gz",
+    "canceled": "live-shutdown-canceled-rerun/tests.xml.gz"
+  },
+  "LiveShutdownInitialAttempt": {
+    "total": 4,
+    "passed": 3,
+    "failed": 1,
+    "skipped": 0,
+    "errors": 0,
+    "not-run": 0
+  },
+  "RetainedFailures": [
+    "baseline/",
+    "baseline-3/",
+    "aborted-before-recovery-fix/",
+    "failed-stale-readiness/",
+    "live-shutdown-initial-attempt.json.gz",
+    "live-shutdown-canceled-wrong-environment/"
+  ],
+  "BroadStartupTimeoutCauseEstablished": false,
+  "FailedBroadAttemptOriginalBirthCustodyComplete": false,
+  "FailedBroadReconciliationDoesNotQualifySuccess": true,
+  "BuildBlockers": {
+    "MappedDebug": "NU1109: source Microsoft.AspNetCore.OpenApi 11.0.0 vs central 10.0.15",
+    "PinnedPackagePreparation": [
+      "HXW011",
+      "HXW010"
+    ]
+  },
+  "AllChildrenAndHelpersAwaited": true,
+  "RuntimeAndBuildScratchRemoved": true,
+  "PublicationPerformedByImplementationAgent": false,
+  "ExternalGatesRemainOpen": [
+    "publication/adoption",
+    "historical production inventory",
+    "older-writer exclusion",
+    "deployment/workload/key/trust custody",
+    "owner acceptance"
+  ]
+}

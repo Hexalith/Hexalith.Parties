@@ -9,6 +9,20 @@ namespace Hexalith.Parties.IntegrationTests.Topology;
 public sealed class PartyMemoryProducerRestartSignalTests
 {
     [Fact]
+    public async Task ForeignStartIdentityCannotInterruptAnUnrelatedIncarnation()
+    {
+        Assert.SkipUnless(OperatingSystem.IsLinux(), "Runner interruption requires Linux pidfd support.");
+        using Process child = StartChild();
+        long start = PartiesAspireTopologyFixture.ReadWorkerStartIdentity(child.Id)!.Value;
+        try
+        {
+            await Should.ThrowAsync<InvalidOperationException>(() => PartyMemoryProducerRestartRuntime.SignalAsync(child.Id, start + 1, "INT", TestContext.Current.CancellationToken));
+            PartiesAspireTopologyFixture.IsWorkerRunning(child.Id, start).ShouldBeTrue();
+        }
+        finally { await ReapAsync(child).ConfigureAwait(true); }
+    }
+
+    [Fact]
     public async Task ForeignStartIdentityCannotSignalTheOwnedNumericPid()
     {
         Assert.SkipUnless(OperatingSystem.IsLinux(), "The private producer restart lane requires Linux pidfd support.");
@@ -90,7 +104,15 @@ public sealed class PartyMemoryProducerRestartSignalTests
                 {
                     await PartyMemoryProducerRestartRuntime.SignalAsync(child.Id, start, signal, token).ConfigureAwait(true);
                     if (signal != "STOP") { return; }
-                    State(child.Id).ShouldBe('T');
+                    using var stopped = CancellationTokenSource.CreateLinkedTokenSource(token);
+                    stopped.CancelAfter(TimeSpan.FromSeconds(2));
+                    while (State(child.Id) is not ('T' or 't'))
+                    {
+                        PartiesAspireTopologyFixture.ReadWorkerStartIdentity(child.Id).ShouldBe(start);
+                        await Task.Delay(10, stopped.Token).ConfigureAwait(true);
+                    }
+                    stopped.Token.ThrowIfCancellationRequested();
+                    PartiesAspireTopologyFixture.ReadWorkerStartIdentity(child.Id).ShouldBe(start);
                     var command = new ProcessStartInfo("python3") { UseShellExecute = false, RedirectStandardError = true };
                     command.ArgumentList.Add("-c");
                     command.ArgumentList.Add("import time; time.sleep(120)");

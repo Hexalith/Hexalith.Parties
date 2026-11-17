@@ -1,0 +1,79 @@
+{
+  "Scope": "runner interruption and owned resource cleanup; business execution remains interrupted",
+  "Cases": [
+    {
+      "Phase": "accepted-deletion",
+      "Qualified": true,
+      "InterruptedExecution": true,
+      "OwnedResourcesClosed": true,
+      "ForeignSentinelUnaffected": true,
+      "EmergencyRecovery": false,
+      "ElapsedMilliseconds": 162942,
+      "PendingReplacementVerified": false,
+      "Receipt": "final-matrix/accepted-deletion-result.json.gz",
+      "Checkpoint": "final-matrix/accepted-deletion-checkpoint.json.gz"
+    },
+    {
+      "Phase": "admitted-empty-mappings",
+      "Qualified": true,
+      "InterruptedExecution": true,
+      "OwnedResourcesClosed": true,
+      "ForeignSentinelUnaffected": true,
+      "EmergencyRecovery": false,
+      "ElapsedMilliseconds": 163521,
+      "PendingReplacementVerified": true,
+      "Receipt": "pending-replacement-preflight/admitted-empty-mappings-result.json.gz",
+      "Checkpoint": "pending-replacement-preflight/admitted-empty-mappings-checkpoint.json.gz"
+    },
+    {
+      "Phase": "bounded-legacy-discovery",
+      "Qualified": true,
+      "InterruptedExecution": true,
+      "OwnedResourcesClosed": true,
+      "ForeignSentinelUnaffected": true,
+      "EmergencyRecovery": false,
+      "ElapsedMilliseconds": 183222,
+      "PendingReplacementVerified": false,
+      "Receipt": "final-matrix/bounded-legacy-discovery-result.json.gz",
+      "Checkpoint": "final-matrix/bounded-legacy-discovery-checkpoint.json.gz"
+    },
+    {
+      "Phase": "cross-source-authority",
+      "Qualified": true,
+      "InterruptedExecution": true,
+      "OwnedResourcesClosed": true,
+      "ForeignSentinelUnaffected": true,
+      "EmergencyRecovery": false,
+      "ElapsedMilliseconds": 100504,
+      "PendingReplacementVerified": false,
+      "Receipt": "final-matrix/cross-source-authority-result.json.gz",
+      "Checkpoint": "final-matrix/cross-source-authority-checkpoint.json.gz"
+    },
+    {
+      "Phase": "output-known",
+      "Qualified": true,
+      "InterruptedExecution": true,
+      "OwnedResourcesClosed": true,
+      "ForeignSentinelUnaffected": true,
+      "EmergencyRecovery": false,
+      "ElapsedMilliseconds": 157361,
+      "PendingReplacementVerified": false,
+      "Receipt": "final-matrix/output-known-result.json.gz",
+      "Checkpoint": "final-matrix/output-known-checkpoint.json.gz"
+    },
+    {
+      "Phase": "same-uri-refresh",
+      "Qualified": true,
+      "InterruptedExecution": true,
+      "OwnedResourcesClosed": true,
+      "ForeignSentinelUnaffected": true,
+      "EmergencyRecovery": false,
+      "ElapsedMilliseconds": 103851,
+      "PendingReplacementVerified": false,
+      "Receipt": "final-matrix/same-uri-refresh-result.json.gz",
+      "Checkpoint": "final-matrix/same-uri-refresh-checkpoint.json.gz"
+    }
+  ],
+  "OneFrozenWrapperSha256": "88c0fd71f1ac16d7ccf53d3636d4fc9ab67925ff76ffe00e31c06388543a153d",
+  "OnePreparedManifestSha256": "f7a8df01dd4f5d8f053b4fb8835a7fbb67a328caaba52738a2eba4d0cd3d3418"
+}

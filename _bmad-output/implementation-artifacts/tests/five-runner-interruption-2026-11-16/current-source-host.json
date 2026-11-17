@@ -1,0 +1,17 @@
+{
+  "Scope": "current source nonpackable host; separate from Memories 4.0.0 consumer packages",
+  "SourceCommit": "65bfb98dca7f65c005213507b15fbe4ab45f2e19",
+  "SourceProject": "${REPOSITORY}/references/Hexalith.Memories/src/Hexalith.Memories.Server/Hexalith.Memories.Server.csproj",
+  "ExecutedAssembly": "${JOB}/a/bin/Hexalith.Memories.Server/release/Hexalith.Memories.Server.dll",
+  "DepsHostVersion": "1.0.0",
+  "AssemblySha256": "b0552b1217f8306eacecf266c67204287920c8883f6c70a9031ea2ad4713107a",
+  "DepsSha256": "efcd60d54b9f1f99f57cbcec9b53ad32613a0bb136b1417245e795856e7ab864",
+  "RuntimeConfigSha256": "78072be84da805eb63a6bfb51bba6b3f053bf2c31e0f3e400c87c73fe2a3036c",
+  "Configuration": "Release",
+  "FamilyVersions": {
+    "HexalithTenantsVersion": "8.0.0",
+    "HexalithMemoriesVersion": "4.0.0",
+    "HexalithFrontComposerVersion": "6.0.0",
+    "HexalithMcpCliVersion": "3.0.0"
+  }
+}

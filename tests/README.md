@@ -331,8 +331,10 @@ subreaper and owns a fresh command session. On normal or early parent exit and
 on timeout it terminates and reaps that command's descendants, including adopted
 children that created separate sessions; inherited output streams drain under
 the existing finite deadlines. No process-name lookup or runner-wide reaping is
-used. Literal argument lists and the legacy string overload retain .NET runtime
-argument parsing. Controls assert that an unrelated worker remains alive.
+used. While the direct command is active, the exclusive supervisor also reaps
+already-exited adopted children so daemon PID monitors can finish naturally; it
+reserves the direct command's exit status to its own poll/wait path. Literal
+argument lists and the legacy string overload retain .NET runtime argument parsing. Controls assert that an unrelated worker remains alive.
 Windows and macOS retain the prior bounded runner and its exited-parent
 containment limitation; this evidence does not qualify descendant reaping there.
 
@@ -1144,9 +1146,8 @@ The deterministic teardown cases in `PartyMemoryRuntimeTests` remain in the
 runtime integration assembly alongside their live workloads.
 The opt-in `ActualCurrentSourceCanceledRestartCompletesOwnedCleanup` cancels
 coordination after observing the admitted replacement, while Aspire stays
-running, and requires completed owned disposal. Global runner SIGINT remains
-separate: retained diagnostics required exact resource reconciliation and do
-not qualify that interruption path. The wrapper awaits child exit and coordination
+running, and requires completed owned disposal. External runner SIGINT is qualified separately below; the earlier packet's
+reconciliation diagnostics do not qualify that interruption path. The wrapper awaits child exit and coordination
 on every path before owned topology disposal; failures retain private evidence.
 See the [dated receipt](../_bmad-output/implementation-artifacts/tests/five-producer-restart-deferred-items-2026-11-15/README.md)
 and its [reviewed final rerun](../_bmad-output/implementation-artifacts/tests/five-producer-restart-deferred-items-2026-11-15/review-final/README.md)
@@ -1211,3 +1212,162 @@ bound to the original persisted absence observation, exactly one real scheduling
 attempt and explicit rejection of retained pre-erasure retry input. B7 receipts
 are fresh and nonce/mode/call/birth/exit-bound; private resolver selection is an
 assertion. The final parent gates pass 183 targeted checks with zero skips.
+
+
+## External runner interruption qualification (2026-11-16)
+
+`PartyMemoryRunnerInterruptionTests` owns six fresh real integration runners and
+interrupts each through a verified held Linux pidfd. It uses the same prepared
+current-source Memories host and explicit EventStore 5.1.0 / Memories 4.0.0 /
+FrontComposer 6.0.0 consumer cohort as the successful producer-restart lane.
+Source-host evidence remains separate from published-package qualification.
+Prepare the runtime after the individual test builds, including
+`--include-memory-qualification true`, and bind its exact `prepared.json`.
+
+```bash
+PARTIES_MEMORIES_OWNED_RUNTIME=1 \
+Parties__Testing__PreparedRuntimeManifest=<prepared.json> \
+dotnet <built-Hexalith.Parties.IntegrationTests.dll> \
+  -class Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionTests \
+  -parallelMode none -failSkips -result-xml <fresh-results.xml>
+```
+
+The six checkpoints are admitted work with empty mappings, output-known
+nonterminal ingestion, accepted asynchronous deletion, settled revision 1 under
+an unchanged URI, cross-source authority, and incomplete bounded legacy discovery.
+Earlier private checkpoints acknowledge observation only; they never attest an
+unperformed replacement. At the admitted checkpoint, the original producer exits
+and a distinct owned replacement is observed before healthy startup. Its replay
+guard remains enabled. The replacement is frozen and the same actual persisted
+phase and backing custody are independently rechecked before interruption.
+The other five cases freeze their original producer at the verified checkpoint.
+
+The supervisor issues the session/root and separate inherited runner-lineage and
+worker markers before launching the runner. The fixture consumes that authority
+before initialization, labels fresh SDK and control-plane containers/networks
+before creation, and publishes incremental and failed-start custody while it
+still owns observations. DCP/helpers inherit the runner lineage; the runtime
+consumer receives its worker marker before `Process.Start`. Recovery can therefore
+identify owned creation even before the first complete startup receipt. Discovery
+uses exact inherited markers and ownership labels, never similar resource names.
+
+Direct consumer and bootstrap launches enter the fixture's existing worker
+registry before their callers can proceed. Teardown refreshes exact-marker orphan
+custody before both SDK removal calls and final control-plane cleanup, using the
+same cumulative thirty-second budget. A failed fresh check revokes earlier
+quiescence, retaining the application and builder. Periodic model observation
+continues to follow captured process trees without a full process-table scan.
+Startup admission and cleanup closing are decided atomically. Cleanup closes
+admission before awaited failure diagnostics, so SDK factory disposal cannot
+start a previously unstarted model after its quiescence proof. An already
+admitted startup retains the existing pending-start and ownership checks.
+
+The fixture leaves console cancellation to xUnit, retaining Aspire observations
+until its explicit worker-quiescence and disposal sequence completes. After
+Docker and executed-byte audits, the supervisor freshly rereads the frozen
+persisted phase, including both existing source/authority/hash baselines at the
+cross-source checkpoint. Held-pidfd delivery rechecks the current producer birth,
+worker marker, kernel stopped state and server-issued phase expiry immediately
+before signaling the bound runner. Admitted work requires non-null distinct
+replacement proof and its matching pre-backing-removal quiescence receipt.
+
+Independent closure checks every recorded incarnation, late marker-bound worker,
+container, owned network, implicit anonymous image volume and session directory.
+Live backing running state and network attachments are checked separately from
+immutable recovery identity, so stopped backing refuses qualification while
+remaining recoverable. Named and unrelated volumes survive. An unrelated process
+sentinel must survive. Stale/foreign evidence, unavailable signaling and failed
+cleanup fail qualification. Exact-custody emergency reconciliation is recorded
+separately and can never turn a failed case into a pass.
+
+`PartyMemoryRunnerInterruptionControlTests` covers absent/null replacement proof,
+wrong/resumed/expired producers, real Python-runner/Docker pre-receipt crash and
+cancellation, an orphaned consumer, failed helper termination, inherited output
+handles, stopped backing
+and anonymous-volume cleanup with named-volume survival. Its Docker controls use
+the same explicit owned-runtime opt-in. These component controls are separate
+from actual Aspire/DCP integration in the six main cases and four live fixture
+modes; they do not establish the earlier cold-start timeout cause. The audit
+helper reuses the shared scoped
+Linux subreaper; Docker execution, reaping and stream draining have separate
+10-second, 5-second and 3-second budgets. Termination/reaping failures cannot skip
+recovery, log disposal, sentinel disposal or receipts. Default unsupported-platform
+signal controls skip consistently; strict Linux qualification uses `-failSkips`.
+
+`PartiesMarkedConsumerCleanupTests` retains a real orphan, Docker backing/network
+and foreign process across failed consumer termination. Its application controls
+exercise the fixture's actual disposal and builder-retention path, then retry
+only after the exact marked lifetime has exited. The final control-plane refresh
+also has a separate focused failure control.
+
+Use `run-with-temp` for the disposable runtime and copy useful sanitized receipts
+outside its `TMPDIR` before the wrapper exits. The
+[dated packet](../_bmad-output/implementation-artifacts/tests/five-runner-interruption-2026-11-16/README.md)
+versions the original evidence as historical v1. Its `review-1/` indexes preserve the prior corrected source, unchanged prepared
+cohort, six-case matrix and verification as historical evidence. Review-loop 2
+qualification belongs only to the separately frozen `review-2/` cohort.
+Original failures, preparation blockers and separate emergency reconciliations
+remain retained and cannot supply current-source acceptance.
+The historical review-loop 1 cohort passes six actual SIGINT cases, 80 cleanup/fixture/
+signal controls and 60 consumer controls, the ordinary wrapper and actual child,
+controlled cancellation and all four live disposal modes. All targeted skips are
+zero. Its 322 captured main lifetimes, 36 containers, six networks and twelve
+anonymous volumes are absent; all jobs were awaited and disposable scratch removed.
+Failed legacy fixture diagnostics 47/49/51 did not retain original worker custody;
+their authenticated SDK-worker closure remains unestablished. Separate read-only
+current observations show no remaining Parties ownership labels/worker markers or
+processes tied to the exact driver scratch, and supply no recovery authority.
+ Interrupted business work
+remains incomplete; removing disposable backing resources supplies no physical
+business-erasure or historical-completeness claim. Publication/adoption, real
+historical inventory, writer exclusion, deployment and owner acceptance remain open.
+
+
+Review-loop 2 publishes each authenticated process birth, container, network and
+anonymous-volume identity before subsequent fallible inspection. Already captured
+identities survive later discovery failures and exact object disappearance. A fresh
+exact absence query resolves list/inspect races; other inspection failures remain
+failures. Recovery still quiesces known workers during a discovery outage, and
+backing removal requires a fresh inventory after established quiescence.
+
+The admitted replacement retains an independent live `/ready` sample. At the
+stopped, birth-bound boundary, procfs additionally proves that the producer owns
+no listening TCP socket. A process that begins listening after a negative readiness
+sample refuses the startup attestation. All discovery and live audits pass linked
+readiness cancellation through supervised commands under a thirty-second aggregate
+scan budget; execution cleanup, reaping and output draining keep their independent
+deadlines and are awaited.
+
+`PartyMemoryRunnerInterruptionDiscoveryTests` exercises partial discovery followed
+by failure, disappeared versus still-present objects, cancellation during a real
+slow command and worker quiescence during Docker discovery failure. The real
+`ChangedPersistedStateRefusesRunnerSignal` control mutates its owned Redis inventory
+after checkpoint publication, requires the specific final persisted-state rejection
+and a still-live runner, restores exact bytes, then completes owned disposal.
+
+The review-2 evidence queue reuses the shared exclusive Linux subreaper for every
+job, including detached descendants and original-caller disappearance. It awaits
+bounded termination/reaping before later work or scratch release, and blocks both
+if containment fails. The retained diagnostic helper uses its included dependency.
+Packet verification requires semantic final closure with empty remaining collections
+and exactly the six selected sessions; integrity hashes alone cannot attest closure.
+Review-loop 2 source 39 passes six actual SIGINT cases from one isolated current-layout
+Release wrapper/prepared/runtime-child cohort. All 32 process, 88 cleanup, 60 exact
+consumer rows across 38 unit and 22 runtime tests, 5 startup, 7 configuration and 5 queue
+controls pass with zero targeted skips. The real changed-state refusal, ordinary
+six-restart wrapper/actual child, coordination cancellation and four live modes pass.
+Independent closure finds 325 captured lifetimes, 36 containers, 6 networks and 12
+anonymous volumes absent, with no selected zombies or main emergency recoveries.
+All final jobs were awaited and their scratch removed. Both integrity-rehashed false-closure
+and wrong-session packet mutations are rejected.
+
+Configuration-only controls build a direct model without an AppHost entrypoint;
+real live/SIGINT paths retain generic AppHost startup and actual lifetime checks.
+The exclusive supervisor reaps exited adopted children during active commands,
+preserving direct exit status. Timeout verification requires real child admission.
+The preferred mapped Debug builds passed; its actual native runtime refused before
+a checkpoint with observed MSB4018 build contention and later readiness cancellation.
+It drifted 71 of 100,387 frozen inputs/outputs and remains unqualified. The explicit
+serialized Release fallback passed. Source 27 and all other failed/intermediate
+cohorts remain historical; the original SDK-custody limits and external gates remain
+open. Current details and exact commands are in the review-2 packet.

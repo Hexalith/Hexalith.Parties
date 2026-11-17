@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Net;
 using System.Net.Http.Json;
+using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -28,6 +30,39 @@ internal sealed class PartyMemoryProducerRestartRuntime(PartiesAspireTopologyFix
 
     /// <summary>Provides a private controlled cancellation boundary after exact replacement observation.</summary>
     internal Action<string>? ReplacementObserved { get; init; }
+
+    /// <summary>Gets the private runner checkpoint that interrupts an observed replacement before healthy startup.</summary>
+    internal Func<JsonElement, CancellationToken, Task>? PendingRunnerInterruptionCheckpoint { get; init; }
+
+    /// <summary>Freezes the actual producer and validates a private runner-interruption checkpoint without replacing it.</summary>
+    internal async Task ObserveInterruptionAsync(string phase, JsonElement evidence, Func<JsonElement, CancellationToken, Task> checkpoint, CancellationToken token, object? pendingReplacement = null)
+    {
+        ResourceEvent original = State("memories");
+        int pid = Pid(original);
+        long started = PartiesAspireTopologyFixture.ReadWorkerStartIdentity(pid)
+            ?? throw new InvalidOperationException("The checkpoint producer identity is unavailable.");
+        File.ReadAllText($"/proc/{pid}/environ").Split('\0').ShouldContain(PartiesAspireTopologyFixture.WorkerOwnershipVariable + "=" + fixture.WorkerOwnershipMarker);
+        await WhileStoppedAsync(pid, started, async () =>
+        {
+            JsonElement? startup = pendingReplacement is null ? null
+                : await ObserveBeforeHealthyAsync(pid, started, fixture.WorkerOwnershipMarker, token).ConfigureAwait(false);
+            JsonElement? pending = pendingReplacement is null ? null : JsonSerializer.SerializeToElement(JsonSerializer.SerializeToElement(pendingReplacement)
+                .EnumerateObject().ToDictionary(property => property.Name, property => (object?)property.Value.Clone(), StringComparer.Ordinal)
+                .Append(new KeyValuePair<string, object?>("BeforeHealthyStartup", startup!.Value.GetProperty("OwnedListeningSocketsAbsent").GetBoolean()))
+                .ToDictionary(item => item.Key, item => item.Value, StringComparer.Ordinal));
+            JsonElement persisted = await AssertPersistedPhaseAsync(phase, evidence, token).ConfigureAwait(false);
+            token.ThrowIfCancellationRequested();
+            await checkpoint(JsonSerializer.SerializeToElement(new
+            {
+                Phase = phase, ProducerPid = pid, ProducerStart = started, ObservedAtUtc = DateTimeOffset.UtcNow,
+                ExpiresAtUtc = evidence.GetProperty("_PhaseExpiresUtc").GetDateTimeOffset(),
+                RequestEvidence = evidence, PersistedInterruption = persisted, Custody = Custody(), ProducerFiles = ProducerFiles(pid),
+                PendingReplacement = pending, FrozenStartupProof = startup,
+            }), token).ConfigureAwait(false);
+            await Task.Delay(Timeout.InfiniteTimeSpan, token).ConfigureAwait(false);
+            return true;
+        }, token).ConfigureAwait(false);
+    }
 
     /// <summary>Requires old-process exit, a distinct healthy replacement, and unchanged backing and authority custody.</summary>
     internal async Task RestartAsync(string phase, JsonElement evidence, CancellationToken token)
@@ -81,6 +116,32 @@ internal sealed class PartyMemoryProducerRestartRuntime(PartiesAspireTopologyFix
         while (replacementStart is null || Pid(current) == pid && replacementStart == started);
         fixture.CaptureOwnedWorkers(fixture.App);
         ReplacementObserved?.Invoke(phase);
+        if (phase == "admitted-empty-mappings" && PendingRunnerInterruptionCheckpoint is not null)
+        {
+            PartiesAspireTopologyFixture.IsWorkerRunning(pid, started).ShouldBeFalse();
+            PartiesAspireTopologyFixture.ReadWorkerStartIdentity(Pid(current)).ShouldBe(replacementStart);
+            Custody().OrderBy(item => item.Key).ShouldBe(custody.OrderBy(item => item.Key));
+            JsonElement replacementReadiness = await ObservePendingReadinessAsync(token).ConfigureAwait(false);
+            PartiesAspireTopologyFixture.ReadWorkerStartIdentity(Pid(current)).ShouldBe(replacementStart);
+            Custody().OrderBy(item => item.Key).ShouldBe(custody.OrderBy(item => item.Key));
+            await ObserveInterruptionAsync(phase, evidence, async (observation, cancellation) =>
+            {
+                PartiesAspireTopologyFixture.IsWorkerRunning(pid, started).ShouldBeFalse();
+                PartiesAspireTopologyFixture.ReadWorkerStartIdentity(Pid(current)).ShouldBe(replacementStart);
+                Custody().OrderBy(item => item.Key).ShouldBe(custody.OrderBy(item => item.Key));
+                ProducerFiles(Pid(current)).OrderBy(item => item.Key).ShouldBe(binaries.OrderBy(item => item.Key));
+                MemoryRuntimeIdentity.Hash(manifest).ShouldBe(preparedHash);
+                replacementReadiness.GetProperty("ObservedAtUtc").GetDateTimeOffset().ShouldBeLessThanOrEqualTo(observation.GetProperty("ObservedAtUtc").GetDateTimeOffset());
+                await PendingRunnerInterruptionCheckpoint(observation, cancellation).ConfigureAwait(false);
+            }, token, new
+            {
+                OriginalPid = pid, OriginalStart = started, OriginalExited = true,
+                ReplacementPid = Pid(current), ReplacementStart = replacementStart,
+                ReplacementState = current.Snapshot.State?.Text, SnapshotHealth = current.Snapshot.HealthStatus?.ToString(),
+                ReplacementReadiness = replacementReadiness,
+                UnchangedBackingCustody = true, PreparedManifestSha256 = preparedHash,
+            }).ConfigureAwait(false);
+        }
         token.ThrowIfCancellationRequested();
         await fixture.App.ResourceNotifications.WaitForResourceHealthyAsync("memories", token).ConfigureAwait(false);
         using var health = new HttpClient { BaseAddress = fixture.App.GetEndpoint("memories", "http"), Timeout = TimeSpan.FromSeconds(5) };
@@ -126,6 +187,62 @@ internal sealed class PartyMemoryProducerRestartRuntime(PartiesAspireTopologyFix
     {
         var replacement = await fixture.App.ResourceCommands.ExecuteCommandAsync("memories", KnownResourceCommands.StartCommand, token).ConfigureAwait(false);
         replacement.Success.ShouldBeTrue("The owned producer replacement command must succeed.");
+    }
+
+    private async Task<JsonElement> ObservePendingReadinessAsync(CancellationToken token)
+    {
+        Uri endpoint = fixture.App.GetEndpoint("memories", "http");
+        endpoint.IsLoopback.ShouldBeTrue();
+        using var http = new HttpClient { BaseAddress = endpoint, Timeout = TimeSpan.FromSeconds(2) };
+        try
+        {
+            using HttpResponseMessage response = await http.GetAsync("ready", HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
+            response.StatusCode.ShouldBeOneOf(HttpStatusCode.BadGateway, HttpStatusCode.ServiceUnavailable);
+            return JsonSerializer.SerializeToElement(new { Route = "ready", Status = (int)response.StatusCode, ObservedAtUtc = DateTimeOffset.UtcNow });
+        }
+        catch (HttpRequestException failure) when (failure.InnerException is SocketException socket && socket.SocketErrorCode == SocketError.ConnectionRefused)
+        {
+            return JsonSerializer.SerializeToElement(new { Route = "ready", ConnectionRefused = true, ObservedAtUtc = DateTimeOffset.UtcNow });
+        }
+    }
+
+    /// <summary>Conservatively proves the birth-bound stopped producer owns no listening TCP socket.</summary>
+    internal static async Task<JsonElement> ObserveBeforeHealthyAsync(int pid, long birth, string marker, CancellationToken token)
+    {
+        const string script = """
+            import datetime,json,os,pathlib,sys
+            pid,birth=int(sys.argv[1]),int(sys.argv[2]); marker=sys.argv[3]
+            root=pathlib.Path('/proc')/str(pid)
+            fd=os.pidfd_open(pid)
+            def identity():
+                raw=(root/'stat').read_text(); fields=raw[raw.rfind(')')+2:].split()
+                if fields[0] not in ('T','t') or int(fields[19])!=birth:
+                    raise RuntimeError('exact stopped startup incarnation required')
+                if ('PARTIES_TEST_TOPOLOGY_OWNER='+marker).encode() not in (root/'environ').read_bytes().split(b'\0'):
+                    raise RuntimeError('startup ownership marker mismatch')
+            try:
+                identity()
+                sockets=set()
+                for entry in (root/'fd').iterdir():
+                    target=os.readlink(entry)
+                    if target.startswith('socket:['): sockets.add(target[8:-1])
+                listeners=[]
+                for name in ('tcp','tcp6'):
+                    for line in (root/'net'/name).read_text().splitlines()[1:]:
+                        fields=line.split()
+                        if fields[3]=='0A' and fields[9] in sockets: listeners.append(fields[9])
+                identity()
+                if listeners: raise RuntimeError('producer began listening before the frozen startup boundary')
+                print(json.dumps({'Pid':pid,'Start':birth,'KernelStopped':True,'OwnedListeningSocketsAbsent':True,
+                    'ObservedAtUtc':datetime.datetime.now(datetime.timezone.utc).isoformat()}))
+            finally:
+                os.close(fd)
+            """;
+        var command = new ProcessStartInfo("python3") { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true };
+        foreach (string argument in new[] { "-c", script, pid.ToString(CultureInfo.InvariantCulture), birth.ToString(CultureInfo.InvariantCulture), marker })
+        { command.ArgumentList.Add(argument); }
+        string output = await PartyMemoryRunnerInterruptionProcess.RunAsync(command, TimeSpan.FromSeconds(5), token: token).ConfigureAwait(false);
+        return JsonSerializer.Deserialize<JsonElement>(output);
     }
 
     /// <summary>Stops an incomplete replacement before ordinary fixture cleanup waits on its replay-gate startup.</summary>
@@ -208,24 +325,53 @@ internal sealed class PartyMemoryProducerRestartRuntime(PartiesAspireTopologyFix
         while (PartiesAspireTopologyFixture.IsWorkerRunning(pid, start)) { await Task.Delay(25, deadline.Token).ConfigureAwait(false); }
     }
 
-    private async Task<JsonElement> AssertPersistedPhaseAsync(string phase, JsonElement evidence, CancellationToken token)
+    private Task<JsonElement> AssertPersistedPhaseAsync(string phase, JsonElement evidence, CancellationToken token)
+        => ReadPersistedPhaseAsync(phase, evidence, redisEndpoint, sidecar, apiToken, generation, exclusion, evidenceDirectory, token);
+
+    /// <summary>Independently rereads frozen business state after slow backing and executed-byte audits.</summary>
+    internal static async Task<JsonElement> ReadPersistedPhaseAsync(string phase, JsonElement evidence, string redisEndpoint, Uri sidecar,
+        string apiToken, string generation, string exclusion, string evidenceDirectory, CancellationToken token)
     {
+        token.ThrowIfCancellationRequested();
         string tenant = evidence.GetProperty("tenant").GetString()!;
         string source = evidence.GetProperty("source").GetString()!;
         string workflow = evidence.GetProperty("workflow").GetString()!;
         string unit = evidence.GetProperty("unit").GetString()!;
         using IConnectionMultiplexer connection = await ConnectionMultiplexer.ConnectAsync(redisEndpoint).ConfigureAwait(false);
+        token.ThrowIfCancellationRequested();
         IDatabase db = connection.GetDatabase();
         string inventory = (await db.StringGetAsync("source-inventory:" + Digest(JsonSerializer.Serialize(new[] { tenant, source }))).ConfigureAwait(false)).ToString();
+        token.ThrowIfCancellationRequested();
         using JsonDocument document = JsonDocument.Parse(inventory);
+        document.RootElement.GetProperty("tenantId").GetString().ShouldBe(tenant);
+        document.RootElement.GetProperty("sourceUri").GetString().ShouldBe(source);
         JsonElement entry = document.RootElement.GetProperty("entries").EnumerateArray()
             .Single(item => item.GetProperty("workflowInstanceId").GetString() == workflow);
         string authority = (await db.StringGetAsync("ingestion-unit-authority:" + Digest(JsonSerializer.Serialize(new[] { tenant, unit }))).ConfigureAwait(false)).ToString();
+        token.ThrowIfCancellationRequested();
         string provenance = (await db.StringGetAsync("publication-key-provenance:" + tenant + ":" + unit).ConfigureAwait(false)).ToString();
+        var legacyArtifacts = new List<object>();
         if (phase == "bounded-legacy-discovery")
         {
             authority.ShouldBeEmpty();
             provenance.ShouldBeEmpty();
+            string[] exact = evidence.GetProperty("exactKeys").EnumerateArray().Select(key => key.GetString()!).ToArray();
+            exact.Length.ShouldBeInRange(2, 4096);
+            exact.Distinct(StringComparer.Ordinal).Count().ShouldBe(exact.Length);
+            foreach (string key in exact)
+            {
+                token.ThrowIfCancellationRequested();
+                key.StartsWith(tenant + ":", StringComparison.Ordinal).ShouldBeTrue();
+                key.Contains(unit, StringComparison.Ordinal).ShouldBeTrue();
+                HashEntry[] hash = await db.HashGetAllAsync(key).ConfigureAwait(false);
+                hash.ShouldNotBeEmpty("Every explicitly scoped legacy artifact must still exist at interruption.");
+                string bytes = JsonSerializer.Serialize(hash.OrderBy(field => field.Name.ToString(), StringComparer.Ordinal)
+                    .Select(field => new { Name = field.Name.ToString(), Value = Convert.ToBase64String((byte[])field.Value!) }));
+                legacyArtifacts.Add(new { Key = key, Fields = hash.Length, CompleteFieldSha256 = Digest(bytes) });
+            }
+            string historical = tenant + ":vec:" + unit + ":47";
+            exact.ShouldContain(historical);
+            (await db.SetContainsAsync("publication-keys:" + tenant + ":" + unit, historical).ConfigureAwait(false)).ShouldBeFalse();
         }
         else
         {
@@ -273,8 +419,46 @@ internal sealed class PartyMemoryProducerRestartRuntime(PartiesAspireTopologyFix
                 .ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.Ordinal));
         }
         else { runtime.ShouldBe("Completed", StringCompareShould.IgnoreCase); }
+        if (phase == "same-uri-refresh") { entry.GetProperty("sourceRevisionNumber").GetInt64().ShouldBe(1); }
+        JsonElement? baselines = phase == "cross-source-authority"
+            ? await ReadOwnerBaselinesAsync(db, Path.Combine(evidenceDirectory, "runtime.owner-component.json"), token).ConfigureAwait(false) : null;
+        token.ThrowIfCancellationRequested();
         return JsonSerializer.SerializeToElement(new { Inventory = document.RootElement.Clone(), Workflow = state, Authority = authority, Provenance = provenance,
-            DeletionWorkflow = deletionWorkflow, DeletionReceiptPresent = deletionReceiptPresent, MemoryUnitPresent = memoryUnitPresent });
+            OwnerSourceBaselines = baselines,
+            DeletionWorkflow = deletionWorkflow, DeletionReceiptPresent = deletionReceiptPresent, MemoryUnitPresent = memoryUnitPresent,
+            UnknownLegacyAuthority = phase == "bounded-legacy-discovery", LegacyArtifacts = legacyArtifacts });
+    }
+
+    /// <summary>Freshly binds both pre-existing owned source hash, authority and metadata sets to Redis.</summary>
+    internal static async Task<JsonElement> ReadOwnerBaselinesAsync(IDatabase db, string path, CancellationToken token)
+    {
+        JsonElement baseline = PartyMemoryRunnerInterruptionHandoff.ReadBounded(path);
+        var hashes = new List<object>();
+        foreach (string source in new[] { "SourceAHashes", "SourceBHashes" })
+        {
+            foreach (JsonElement item in baseline.GetProperty(source).EnumerateArray())
+            {
+                token.ThrowIfCancellationRequested();
+                string key = item.GetProperty("Key").GetString()!;
+                HashEntry[] hash = await db.HashGetAllAsync(key).ConfigureAwait(false);
+                hash.ShouldNotBeEmpty();
+                string digest = Digest(JsonSerializer.Serialize(hash.OrderBy(field => field.Name.ToString(), StringComparer.Ordinal)
+                    .Select(field => new { Name = field.Name.ToString(), Value = Convert.ToBase64String((byte[])field.Value!) })));
+                digest.ShouldBe(item.GetProperty("Sha256").GetString());
+                hashes.Add(new { Source = source, Key = key, Sha256 = digest });
+            }
+        }
+        foreach (JsonElement item in baseline.GetProperty("Metadata").EnumerateArray())
+        {
+            token.ThrowIfCancellationRequested();
+            string key = item.GetProperty("Key").GetString()!;
+            string value = (await db.StringGetAsync(key).ConfigureAwait(false)).ToString();
+            value.ShouldBe(item.GetProperty("Value").GetString());
+            Digest(value).ShouldBe(item.GetProperty("Sha256").GetString());
+        }
+        token.ThrowIfCancellationRequested();
+        return JsonSerializer.SerializeToElement(new { BaselineSha256 = MemoryRuntimeIdentity.Hash(path), Baseline = baseline, Hashes = hashes,
+            BothOwnedSourceSetsVerified = true, ObservedAtUtc = DateTimeOffset.UtcNow });
     }
 
     private Dictionary<string, string> Custody()
@@ -375,7 +559,7 @@ internal sealed class PartyMemoryProducerRestartRuntime(PartiesAspireTopologyFix
         (int exitCode, string error) = await RunSignalHelperAsync(command, TimeSpan.FromSeconds(5)).ConfigureAwait(false);
         if (exitCode != 0 && PartiesAspireTopologyFixture.IsWorkerRunning(pid, start))
         { throw new InvalidOperationException("Owned pidfd signal failed: " + error); }
-        if (exitCode != 0 && signal == "STOP") { throw new InvalidOperationException("The producer incarnation changed before its pidfd signal."); }
+        if (exitCode != 0 && signal is "STOP" or "INT") { throw new InvalidOperationException("The process incarnation changed before its pidfd signal: " + error); }
         token.ThrowIfCancellationRequested();
     }
 
@@ -386,37 +570,37 @@ internal sealed class PartyMemoryProducerRestartRuntime(PartiesAspireTopologyFix
         using Process process = Process.Start(command) ?? throw new InvalidOperationException("The owned pidfd helper did not start.");
         using var deadline = new CancellationTokenSource(limit);
         Task<string> error = process.StandardError.ReadToEndAsync(deadline.Token);
-        Exception? primary = null;
+        var failures = new List<Exception>();
+        string diagnostic = string.Empty;
         try
         {
             observePid?.Invoke(process.Id);
             await process.WaitForExitAsync(deadline.Token).ConfigureAwait(false);
-            return (process.ExitCode, await error.ConfigureAwait(false));
+            diagnostic = await error.ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (deadline.IsCancellationRequested)
+        { failures.Add(new TimeoutException("The owned pidfd helper exceeded its independent execution/output deadline.")); }
+        catch (Exception failure) { failures.Add(failure); }
+        // A termination error cannot skip the independent reap or stream-disposal stages.
+        try { if (!process.HasExited) { process.Kill(entireProcessTree: true); } }
+        catch (Exception failure) { failures.Add(failure); }
+        try
         {
-            var failure = new TimeoutException("The owned pidfd helper exceeded its independent deadline.");
-            primary = failure;
-            throw failure;
+            using var reap = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            await process.WaitForExitAsync(reap.Token).ConfigureAwait(false);
         }
-        catch (Exception failure) { primary = failure; throw; }
+        catch (Exception failure) { failures.Add(failure); }
         finally
         {
-            try
-            {
-                if (!process.HasExited) { process.Kill(entireProcessTree: true); }
-                await process.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
-            }
-            catch (Exception reap) when (primary is not null)
-            { throw new AggregateException("Owned pidfd helper and reaping failed.", primary, reap); }
-            finally
-            {
-                deadline.Cancel();
-                process.StandardError.Dispose();
-                try { _ = await error.ConfigureAwait(false); }
-                catch (Exception failure) when (failure is OperationCanceledException or ObjectDisposedException or IOException) { }
-            }
+            deadline.Cancel();
+            process.StandardError.Dispose();
+            try { _ = await error.WaitAsync(TimeSpan.FromSeconds(1)).ConfigureAwait(false); }
+            catch (Exception failure) when (failure is OperationCanceledException or ObjectDisposedException or IOException) { }
+            catch (Exception failure) { failures.Add(failure); }
         }
+        if (failures.Count == 1) { System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw(); }
+        if (failures.Count > 1) { throw new AggregateException("Owned pidfd execution, reaping or output cleanup failed.", failures); }
+        return (process.ExitCode, diagnostic);
     }
 
     private static string Digest(string value) => Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(value)));

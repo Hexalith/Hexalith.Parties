@@ -1,0 +1,32 @@
+{
+  "Authority": "Corrected review-loop-1 source; root-level v1 evidence is historical only",
+  "Files": {
+    "scripts/aspire-start-mtls.sh": "32dee91dcd34dd5d63bd5fcf990d6f89ffcf3034f9dbe645233402d12021be83",
+    "tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs": "5a7e6a31caef4aa53b605358fdfdf1986a4510f42031bb6c314a06b852663bd5",
+    "tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesTopologyLifetime.cs": "d9764d92cfe73abab468bc76f05b47c3fb26f48a7f71870f364cf41351209874",
+    "tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesTopologySession.cs": "81b0d62eec9118162371511e5242b325a67d4438284210f455b1e5d4a52f2157",
+    "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj": "b6efe44b7bab52e373dabc130b09912e149d05a461dafb996d02a1bb624fd254",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartiesAspireTopologyFixtureTests.cs": "bf91c5af9291860ba5635f5aaabfd99032fb0364702f755d8612e3faa0919eb5",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartiesTopologyCleanupTests.cs": "45f4864d75e3be67bbc751cb3950ea7bcdc6cee12e6842b84b2ff8544b72061a",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedCleanupTests.cs": "bace9da4987ba55ba33ec0216f59a75df0a4e1cf4ce6d32960438d9aed5ff70c",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs": "54858bf6c11c7a9350c1bfbd7a20e0a64ce2399c7998370e2613ee94acd2f5b3",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryProducerRestartRuntime.cs": "af5ae7263963ae84ff65ae5f949da93ca88b480488cda58cc2c1b412ac214946",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryProducerRestartSignalTests.cs": "fcf30b51fac052dcbf895fb4a51a0af6c35c3a207a85c77c044fbf95401a993b",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryRunnerInterruptionAudit.cs": "fbc299ff271f2c5cc3cf13b34b47f0be95f707beab4455a4372083d4f6e9330a",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryRunnerInterruptionControlTests.cs": "1e6743fedf6a14f6fc72dcdd5d9b3f010f28c913038bf04cf4debd6053655b59",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryRunnerInterruptionCustody.cs": "8dcd13a49e0267b867c9cd090b46bcff80dd8063ce2a470463b281faaaecee40",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryRunnerInterruptionHandoff.cs": "9eadd3ce03c1879308c39385f99b472eea27ca4388c676842dbea6a6c00e194d",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryRunnerInterruptionProcess.cs": "43fdd1964932ef27f4625fe18c2700d46590449a6bc225aef8d6d6dc79903ea5",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryRunnerInterruptionTests.cs": "44969412808c9ef0e96412534fc324b8efc38e4a77c17fc720cf831d7d9ce3d6",
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryOwnerSourceRuntime.cs": "a1b41b404b4b17c3891dae803a2b85d7daadf8dacabd666865440a05f66d67da",
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryProducerRestartProtocolTests.cs": "97014a90a00c71844b6bc899aa494cdb131f41f1454da83a38d11eac9ecce05c",
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryRuntimeTests.cs": "7ff3876fd77c990f06404a570ae40fb11a6600507b6ebef9c948cd98683e3ce4",
+    "tests/PackageTests.Shared/PackageTestProcessSupervisor.cs": "6d6b20a5abc3e4ea4322a71d21d5ec693653cae9112f85e71a55e209c92a58df",
+    "tests/PackageTests.Shared/PartyMemoryProducerRestartProtocol.cs": "2c755c21f6dff179e6199630f1e02c024285ec05bc9d3b93ba4041ccdefc2fb9"
+  },
+  "Cohort": {
+    "PreparedSha256": "fce502fd9047c38add50542ab7bf1fee668171783ace109fcff8f032bc20c97a",
+    "WrapperSha256": "18f66ac3af0ed1cdb16ecd16dac418dd36288035cf3780a2726f74f63b34a583",
+    "ChildSha256": "1cc7082f0bd3e38db3e93e8f1b15d477353f1d741db89e310b600d171afb7a02"
+  }
+}

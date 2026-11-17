@@ -1,0 +1,281 @@
+{
+  "ImplementationComplete": true,
+  "IndependentParentReviewPending": true,
+  "PublicationPerformedByImplementation": false,
+  "AuthoritativeSource": "source.json",
+  "AuthoritativeMatrix": "matrix.json",
+  "AuthoritativeClosure": "closure.json.gz",
+  "QualificationHead": "0f261ccd3b461102dcac35da2e074d15a195ebb4",
+  "CanonicalBaseline": "a575021fc97a8eda664711089270b60f5e570ded",
+  "BuildMode": "serialized-release-package-profile",
+  "Configuration": "Release",
+  "PublicConsumerArchivesBound": true,
+  "CurrentSourceHostSeparate": true,
+  "PublishedPackageQualification": false,
+  "IsolatedLocalClone": true,
+  "RootReferenceGitlinksFrozen": true,
+  "FinalMainCases": 6,
+  "FinalMainEmergencyRecoveries": 0,
+  "MainSuitePassedAsAggregate": true,
+  "SameUnchangedFinalCohort": true,
+  "Lanes": {
+    "package-process-controls": {
+      "Xml": "current-layout/61-package-process-controls.xml.gz",
+      "Counts": {
+        "total": 32,
+        "passed": 32,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      }
+    },
+    "focused-cleanup": {
+      "Xml": "current-layout/62-final-controls.xml.gz",
+      "Counts": {
+        "total": 88,
+        "passed": 88,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      }
+    },
+    "focused-consumer-unit": {
+      "Xml": "current-layout/63-consumer-unit.xml.gz",
+      "Counts": {
+        "total": 38,
+        "passed": 38,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      }
+    },
+    "focused-consumer-runtime": {
+      "Xml": "current-layout/64-consumer-runtime.xml.gz",
+      "Counts": {
+        "total": 22,
+        "passed": 22,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      }
+    },
+    "startup-ordering": {
+      "Xml": "current-layout/65-startup-ordering-controls.xml.gz",
+      "Counts": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      }
+    },
+    "persisted-state-refusal": {
+      "Xml": "current-layout/package-persisted-state-refusal/tests.xml.gz",
+      "Counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      }
+    },
+    "ordinary-wrapper": {
+      "Xml": "current-layout/package-ordinary-restart/tests.xml.gz",
+      "Counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      }
+    },
+    "coordination-cancellation": {
+      "Xml": "current-layout/package-controlled-cancellation/tests.xml.gz",
+      "Counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      }
+    },
+    "live-shutdown": {
+      "Xml": "current-layout/package-live-shutdown/tests.xml.gz",
+      "Counts": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      }
+    },
+    "ordinary-child": {
+      "Xml": "current-layout/package-ordinary-restart/parties-five-memory-runtime-c3fe720409ab/runtime.xml.gz",
+      "Counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      }
+    }
+  },
+  "FocusedConsumerControls": {
+    "Total": 60,
+    "ExactHistoricalMethodSetReexecuted": true,
+    "Receipt": "current-layout/consumer-method-set.json.gz"
+  },
+  "ConfigurationOnlyControls": {
+    "Xml": "current-layout/67-configuration-controls.xml.gz",
+    "Passed": 7,
+    "ModeledRegistrations": true,
+    "PassiveDiagnostics": true,
+    "NoStartupAdmissionAsserted": true,
+    "DirectCoreModelWithoutEntryPoint": true
+  },
+  "StartupAdmissionControls": {
+    "Xml": "current-layout/65-startup-ordering-controls.xml.gz",
+    "Passed": 5,
+    "BothAdmissionOrderings": true,
+    "ExactConfiguredDaprMethod": true
+  },
+  "QueueControls": {
+    "Passed": 5,
+    "Log": "current-layout/68-admitted-queue-controls.log.gz",
+    "DetachedDescendants": true,
+    "OriginalCallerDisappearance": true,
+    "TimeoutCleanupAwaited": true,
+    "AdmissionReceipt": "current-layout/timeout-admission-control.json.gz",
+    "OriginalUnadmittedControl": "current-layout/queue-control-before-admission/status.json.gz",
+    "ContainmentFailureBlocksLaterJobsAndScratchRelease": true
+  },
+  "FalseClosureMutationRejected": true,
+  "FalseClosureAndWrongSessionControls": "packet-mutation-controls.json.gz",
+  "ChangedPersistedStateControl": {
+    "Xml": "current-layout/package-persisted-state-refusal/tests.xml.gz",
+    "ActualOwnedRedisAndDaprCheckpoint": true,
+    "RunnerSurvivedRejectedSignal": true,
+    "ExactBytesRestored": true,
+    "FinalCleanupQualified": true
+  },
+  "MappedDebugResults": {
+    "03-debug-unit": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 235.6160985549941,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 3796533,
+        "Start": "12954676",
+        "State": "/tmp/hexalith-job.NVe9Ut4s/repo/artifacts/verification/job-supervisor-cab4fe2682b78e70",
+        "ExclusiveSubreaper": true
+      }
+    },
+    "04-debug-runtime": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 47.669312515005004,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 4026399,
+        "Start": "12978238",
+        "State": "/tmp/hexalith-job.NVe9Ut4s/repo/artifacts/verification/job-supervisor-4165cdc1a67d46e0",
+        "ExclusiveSubreaper": true
+      }
+    },
+    "05-debug-wrapper": {
+      "ExitCode": 0,
+      "CommandExitCode": 0,
+      "TimedOut": false,
+      "Seconds": 360.8765568210074,
+      "DescendantsReaped": true,
+      "Supervisor": {
+        "Pid": 4078142,
+        "Start": "12983005",
+        "State": "/tmp/hexalith-job.NVe9Ut4s/repo/artifacts/verification/job-supervisor-4d4f0c1a5423f73f",
+        "ExclusiveSubreaper": true
+      }
+    }
+  },
+  "PinnedPackagePreparation": {
+    "ExitCode": 2,
+    "Rules": [
+      "HXW011",
+      "HXW010"
+    ],
+    "Command": "commands-current-layout.json"
+  },
+  "RetainedHistoricalCohorts": [
+    {
+      "Status": "current-layout/pre-direct-configuration-model/status.json.gz",
+      "Source": "current-layout/pre-direct-configuration-model/source.json",
+      "Cohort": "current-layout/pre-direct-configuration-model/cohort-final.json.gz",
+      "CurrentAcceptance": false,
+      "Reason": "Generic AppHost factory auto-Run race reproduced45 despite positive48/49b; direct model required"
+    },
+    {
+      "Status": "current-layout/native-debug-attempt/status.json.gz",
+      "Source": "current-layout/native-debug-attempt/source.json",
+      "Cohort": "current-layout/native-debug-attempt/cohort-final.json.gz",
+      "CurrentAcceptance": false,
+      "Blocker": "current-layout/native-runtime-blocker.json.gz",
+      "ExpectedCurrentDriftCount": 71
+    },
+    {
+      "Status": "current-layout/pre-configured-control/status.json.gz",
+      "Source": "current-layout/pre-configured-control/source.json",
+      "Cohort": "current-layout/pre-configured-control/cohort-final.json.gz",
+      "CurrentAcceptance": false,
+      "Reason": "Generic testing factory releases the background AppHost Build-then-Run entrypoint; original20 has87pass/1refusal and unchanged23 has5pass",
+      "EarlierServiceGetterAssessmentSupersededBy": "current-layout/testing-factory-startup-diagnosis.json.gz"
+    },
+    {
+      "Source": "pre-current-layout/source.json",
+      "Cohort": "pre-current-layout/cohort.json",
+      "Status": "pre-current-layout/status.json.gz",
+      "CurrentAcceptance": false,
+      "Cause": "Concurrent0f migration changed completed-build inputs; later lanes refused before live workers"
+    },
+    {
+      "Source": "source-before-live-reaping.json.gz",
+      "Cohort": "cohort-before-live-reaping.json.gz",
+      "Folder": "pre-live-reaping/",
+      "CurrentAcceptance": false
+    },
+    {
+      "Facts": "outside-repository-attempt.json.gz",
+      "Cohort": "cohort-outside-repository.json.gz",
+      "Root": "outside-repository-attempt/",
+      "CurrentAcceptance": false
+    }
+  ],
+  "PostRuntimeInputValidation": {
+    "CommandLabel": "74-final-post-runtime-validation",
+    "IndependentParentPostReadback": "independent-parent/parent-final-cohort-post-audit.json.gz"
+  },
+  "AllJobsAwaited": true,
+  "AllFinalChildrenAndHelpersAwaited": true,
+  "ScratchRemoved": true,
+  "ExternalGatesRemainOpen": [
+    "publication/adoption",
+    "historical production inventory",
+    "older-writer exclusion",
+    "deployment/workload/key/trust custody",
+    "owner acceptance"
+  ],
+  "CompletionReceipt": "handoff-completion.json.gz",
+  "ParentPostExecutionReadback": "independent-parent/parent-final-cohort-post-audit.json.gz",
+  "MarkerGuardSelection": "current-controls-selection.json.gz"
+}

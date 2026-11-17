@@ -1,0 +1,4 @@
+{
+  "CurrentPrivateHelperSha256": "af31a367db9e0ff54e66576f359b16420a487b317738280ab20e092358ac23dc",
+  "FailedSessionRetention": "copies private session files/control inspection and waits for release-scratch after exact reconciliation; credentials remain private"
+}

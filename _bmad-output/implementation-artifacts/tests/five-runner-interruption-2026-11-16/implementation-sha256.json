@@ -1,0 +1,11 @@
+{
+  "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryRunnerInterruptionTests.cs": "1ee46468ca268f28b08492a9f759c9f96d183282f8f2302eed44ed860dc48bf4",
+  "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryRunnerInterruptionAudit.cs": "a540b28cae424ffd1e847efaecaab4f9c51f40e78a6142f0a169d9335b85f318",
+  "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryRunnerInterruptionHandoff.cs": "6a9a10ea8b976c38918364d5046a97f92fc52ea7a5c092ed1d379dc3ac3510c8",
+  "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryRunnerInterruptionCustody.cs": "8048ec5a140a7536861b82de5a9a685ff3c1ed4009d873a9ca13e89c803fc99f",
+  "tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesTopologyLifetime.cs": "d9764d92cfe73abab468bc76f05b47c3fb26f48a7f71870f364cf41351209874",
+  "tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs": "da5431361caab2922d8723f7cffbcc4658d31be7091eeb0c165db9ac0f84aabb",
+  "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryOwnedRuntimeTests.cs": "c124b174bb72afe96ebb64c56f33f1fefe6a946927db2f0f1a71943db1ed82d1",
+  "tests/Hexalith.Parties.IntegrationTests/Topology/PartyMemoryProducerRestartRuntime.cs": "55de6a66fbb07dc3687da08858af54cf88729ff8b9c6ff1bc8b2f79e2d7201c3",
+  "tests/PackageTests.Shared/PartyMemoryProducerRestartProtocol.cs": "b0d486112e8518efec9be4f36d7395cf9dab6f0615fb62fcefe606a9dee2274a"
+}

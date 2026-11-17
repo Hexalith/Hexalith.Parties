@@ -20,10 +20,13 @@ using Hexalith.EventStore.Aspire;
 using Hexalith.EventStore.Contracts.Identity;
 using Hexalith.EventStore.Server.Events;
 using Hexalith.Parties.Contracts.Authorization;
+using Hexalith.Parties.IntegrationTests.Topology;
 
 using StackExchange.Redis;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -68,7 +71,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     internal const string WorkerOwnershipVariable = "PARTIES_TEST_TOPOLOGY_OWNER";
 
     /// <summary>Gets this fixture lifetime's unguessable inherited ownership marker.</summary>
-    internal string WorkerOwnershipMarker { get; } = Guid.NewGuid().ToString("N");
+    internal string WorkerOwnershipMarker { get; }
 
     private readonly ConcurrentDictionary<int, long> _ownedWorkers = [];
     // Forwarded CLI termination may outlast daprd's default five-second graceful shutdown before children are killed.
@@ -80,6 +83,8 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     private readonly HashSet<string> _stoppedWorkerNames = new(StringComparer.Ordinal);
     private bool _workersQuiesced;
     private bool _startupScheduled;
+    private readonly object _startupGate = new();
+    private bool _cleanupStarted;
     private Exception? _initializationFailure;
     private readonly TaskCompletionSource _beforeStart = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -88,6 +93,9 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
 
     /// <summary>Captures private startup evidence before owned partial-startup teardown.</summary>
     internal Func<Exception, Task>? ObserveInitializationFailureAsync { get; set; }
+
+    /// <summary>Publishes authenticated creation progress before startup and before partial-startup disposal.</summary>
+    internal Func<Task>? ObserveOwnershipProgressAsync { get; set; }
 
     /// <summary>Gets the exact bounded initialization step for private failure evidence.</summary>
     internal string InitializationPhase { get; private set; } = "not-started";
@@ -120,9 +128,11 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         bool completeMtlsProfile = false,
         PartiesTopologySession? session = null,
         bool memoriesReadinessScope = false,
-        IReadOnlyDictionary<string, string>? sidecarApiTokens = null)
+        IReadOnlyDictionary<string, string>? sidecarApiTokens = null,
+        string? workerOwnershipMarker = null)
     {
         Session = session ?? PartiesTopologySession.Create();
+        WorkerOwnershipMarker = workerOwnershipMarker ?? Guid.NewGuid().ToString("N");
         _createBuilder = createBuilder;
         _startApplication = startApplication;
         _prepareCiBootstrap = prepareCiBootstrap;
@@ -171,6 +181,9 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     /// <summary>Gets this fixture's immutable private topology configuration.</summary>
     internal PartiesTopologySession Session { get; }
 
+    /// <summary>Gets partial-startup custody without requiring healthy initialization.</summary>
+    internal DistributedApplication? CurrentApplication => _app;
+
     /// <summary>Gets the controlled in-process host used to inspect production tenant-access effects.</summary>
     internal PartiesTenantBootstrapHost? TenantBootstrapHost { get; private set; }
 
@@ -186,6 +199,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     {
         try
         {
+            if (ObserveOwnershipProgressAsync is not null) { await ObserveOwnershipProgressAsync().ConfigureAwait(false); }
             // Check the finite published-4.2 profile before control-plane or application effects.
             InitializationPhase = "managed-runtime-preflight";
             await PartiesPublished42ManagedRuntime.RequireAsync(cancellationToken).ConfigureAwait(false);
@@ -199,10 +213,16 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             {
                 InitializationPhase = "owned-control-plane-bootstrap";
                 await PrepareCiDaprMtlsAsync(cts.Token).ConfigureAwait(false);
+                if (ObserveOwnershipProgressAsync is not null) { await ObserveOwnershipProgressAsync().ConfigureAwait(false); }
             }
 
             InitializationPhase = "create-builder";
             _builder = await _createBuilder(Session, cts.Token).ConfigureAwait(false);
+            // The runner owns console cancellation. A competing ConsoleLifetime
+            // stops Aspire notifications before the runner's finally can settle
+            // pending starts and quiesce workers against live backing services.
+            // Explicit fixture StopAsync/DisposeAsync still owns host shutdown.
+            _builder.Services.Replace(ServiceDescriptor.Singleton<IHostLifetime, PartiesTopologyLifetime>());
             if (OperatingSystem.IsLinux())
             {
                 // The mTLS session launcher already execs daprd in place. Run every ordinary CLI under this
@@ -312,6 +332,12 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 }
             }
 
+            foreach (ContainerResource container in _builder.Resources.OfType<ContainerResource>())
+            {
+                _ = _builder.CreateResourceBuilder(container).WithContainerRuntimeArgs("--label", "hexalith.parties.test.owner=" + WorkerOwnershipMarker,
+                    "--label", "hexalith.parties.test.session=" + Session.Id);
+            }
+
             _builder.Services.AddLogging(logging =>
             {
                 logging.SetMinimumLevel(LogLevel.Debug);
@@ -321,7 +347,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
 
             _builder.Eventing.Subscribe<BeforeStartEvent>((_, _) =>
             {
-                _startupScheduled = true;
+                AdmitStartup();
                 _beforeStart.TrySetResult();
                 if (_app is not null && !_workersQuiesced && _workerObservation is null)
                 {
@@ -339,6 +365,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
 #endif
             InitializationPhase = "build-application";
             _app = await _builder.BuildAsync(cts.Token).ConfigureAwait(false);
+            if (ObserveOwnershipProgressAsync is not null) { await ObserveOwnershipProgressAsync().ConfigureAwait(false); }
             InitializationPhase = "start-application";
             await PartiesCatalogParticipantStartup.StartAsync(_builder, _app, _startApplication, _beforeStart.Task,
                 legacyComplete: _completeMtlsProfile && !_memoriesReadinessScope, cts.Token).ConfigureAwait(false);
@@ -445,14 +472,22 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         }
         catch (Exception ex)
         {
+            BeginCleanup();
             IsAvailable = false;
             _initializationFailure = ex;
             UnavailableReason = $"{InitializationPhase}: {ex.GetType().Name}: {ex.Message}";
             UnavailableReason += await PartiesStartupFailureDiagnostics.DescribeAsync(_app).ConfigureAwait(false);
-            if (ObserveInitializationFailureAsync is not null)
+            Exception? observationFailure = null;
+            try
             {
-                await ObserveInitializationFailureAsync(ex).ConfigureAwait(false);
+                if (ObserveOwnershipProgressAsync is not null) { await ObserveOwnershipProgressAsync().ConfigureAwait(false); }
+                if (ObserveInitializationFailureAsync is not null)
+                {
+                    await ObserveInitializationFailureAsync(ex).ConfigureAwait(false);
+                }
             }
+            catch (Exception failure) { observationFailure = failure; UnavailableReason += "; ownership observation: " + failure.Message; }
+            if (observationFailure is not null) { _initializationFailure = new AggregateException(ex, observationFailure); }
             // Tear down partial startup immediately; no test can use an unavailable fixture.
             try
             {
@@ -621,6 +656,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
 
     private async Task DisposeApplicationAsync()
     {
+        BeginCleanup();
         _partiesClient?.Dispose();
         _eventStoreClient?.Dispose();
         // One cumulative worker-quiescence budget spans host/sidecar stop commands,
@@ -632,6 +668,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 if (_app is not null)
                 {
                     if (!_workersQuiesced) { await QuiesceOwnedWorkersAsync(_app, quiescence.Token).ConfigureAwait(false); }
+                    await ConfirmOwnedWorkersStoppedAsync(quiescence.Token).ConfigureAwait(false);
                     // Stop all workers and sidecars before the testing host removes owned Redis.
                     // Aspire.Hosting.Testing 13.6.1 delegates StopAsync to its factory disposal:
                     // HostOptions.ShutdownTimeout bounds that path and DCP waits for resource
@@ -648,6 +685,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                     // A failed stop must not let testing-factory disposal remove infrastructure
                     // while owned workers remain active. Retry quiescence before starting disposal.
                     if (!_workersQuiesced) { await QuiesceOwnedWorkersAsync(_app, quiescence.Token).ConfigureAwait(false); }
+                    await ConfirmOwnedWorkersStoppedAsync(quiescence.Token).ConfigureAwait(false);
                     await _app.DisposeAsync().ConfigureAwait(false);
                     _app = null;
                     _stoppedWorkerNames.Clear();
@@ -712,6 +750,26 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                     TenantBootstrapHost = null;
                 }
             }).ConfigureAwait(false);
+    }
+
+    /// <summary>Enrolls a directly launched consumer/bootstrap lifetime through the existing birth and marker checks.</summary>
+    internal void CaptureOwnedWorker(int processId)
+    {
+        _workersQuiesced = false;
+        if (ReadWorkerStartIdentity(processId) is long started) { CaptureOwnedProcessTree(processId, started); }
+    }
+
+    // This is deliberately a teardown refresh, not work for the ten-millisecond model observer.
+    private void RefreshMarkedWorkers(CancellationToken cancellationToken)
+    {
+        if (!OperatingSystem.IsLinux()) { return; }
+        foreach (string directory in Directory.EnumerateDirectories("/proc"))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!int.TryParse(Path.GetFileName(directory), out int pid) || pid == Environment.ProcessId) { continue; }
+            if (ReadLinuxWorkerIdentity(pid) is { } identity && IsOwnedLifetime(pid, identity.Started))
+            { CaptureOwnedProcessTree(pid, identity.Started); }
+        }
     }
 
     internal void CaptureOwnedWorkers(DistributedApplication application)
@@ -831,6 +889,24 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         catch (UnauthorizedAccessException) { return null; }
     }
 
+    /// <summary>Atomically admits an SDK start before cleanup can grant an unstarted-model proof.</summary>
+    internal void AdmitStartup()
+    {
+        lock (_startupGate)
+        {
+            if (_cleanupStarted)
+            {
+                throw new InvalidOperationException("Owned topology startup was refused because cleanup already began; no late startup was admitted.");
+            }
+            _startupScheduled = true;
+        }
+    }
+
+    private void BeginCleanup()
+    {
+        lock (_startupGate) { _cleanupStarted = true; }
+    }
+
     private Task QuiesceOwnedWorkersAsync(DistributedApplication application, CancellationToken cancellationToken)
     {
         // A constructed model whose SDK StartAsync was never entered has no queued
@@ -845,6 +921,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     internal async Task QuiesceStartedWorkersAsync(DistributedApplication application, CancellationToken cancellationToken)
     {
         _workersQuiesced = false;
+        RefreshMarkedWorkers(cancellationToken);
         if (_workerObservation is { IsFaulted: true }) { await _workerObservation.ConfigureAwait(false); }
         ResourceCommandService commands = application.Services.GetRequiredService<ResourceCommandService>();
         DistributedApplicationModel model = application.Services.GetRequiredService<DistributedApplicationModel>();
@@ -1011,21 +1088,34 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         }
     }
 
-    private async Task ConfirmOwnedWorkersStoppedAsync(CancellationToken cancellationToken)
+    /// <summary>Refreshes exact-marker orphan custody before either SDK or final control-plane removal.</summary>
+    internal async Task ConfirmOwnedWorkersStoppedAsync(CancellationToken cancellationToken)
     {
         using var observations = new PeriodicTimer(TimeSpan.FromMilliseconds(50));
         try
         {
             // A fresh Process instance can share .NET's cached non-child wait state.
             // Compare kernel identities on Linux; a reused PID cannot match its start.
-            while (_ownedWorkers.Any(worker => IsWorkerRunning(worker.Key, worker.Value)))
+            do
             {
-                await observations.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false);
+                RefreshMarkedWorkers(cancellationToken);
+                while (_ownedWorkers.Any(worker => IsWorkerRunning(worker.Key, worker.Value)))
+                {
+                    await observations.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false);
+                }
+                // A parent may exit after the first refresh. Discover its marker-bound orphans before granting removal.
+                RefreshMarkedWorkers(cancellationToken);
             }
+            while (_ownedWorkers.Any(worker => IsWorkerRunning(worker.Key, worker.Value)));
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        catch (Exception failure)
         {
-            throw new InvalidOperationException("Owned topology workers have not exited; control-plane ownership was retained.");
+            // A failed fresh process check revokes the earlier quiescence proof at every disposal gate.
+            // Never grant quiescence here: pending-start/resource guards belong to QuiesceStartedWorkersAsync.
+            _workersQuiesced = false;
+            if (failure is OperationCanceledException && cancellationToken.IsCancellationRequested)
+            { throw new InvalidOperationException("Owned topology workers have not exited; control-plane ownership was retained.", failure); }
+            throw;
         }
     }
 
@@ -1188,23 +1278,35 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         start.ArgumentList.Add(script);
         start.ArgumentList.Add(option);
         Session.ConfigureBootstrapEnvironment(start.Environment);
+        start.Environment["DAPR_MTLS_OWNERSHIP_MARKER"] = WorkerOwnershipMarker;
+        start.Environment[WorkerOwnershipVariable] = WorkerOwnershipMarker;
 
         using Process process = Process.Start(start)
             ?? throw new InvalidOperationException("The CI Dapr mTLS bootstrap could not start.");
-        Task<string> output = process.StandardOutput.ReadToEndAsync(cancellationToken);
-        Task<string> error = process.StandardError.ReadToEndAsync(cancellationToken);
+        CaptureOwnedWorker(process.Id);
+        using var outputCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        Task<string> output = process.StandardOutput.ReadToEndAsync(outputCancellation.Token);
+        Task<string> error = process.StandardError.ReadToEndAsync(outputCancellation.Token);
+        var failures = new List<Exception>();
+        try { await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false); }
+        catch (Exception failure) { failures.Add(failure); }
+        try { if (!process.HasExited) { process.Kill(entireProcessTree: true); } }
+        catch (Exception failure) { failures.Add(failure); }
         try
         {
-            await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+            using var reap = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            await process.WaitForExitAsync(reap.Token).ConfigureAwait(false);
         }
-        finally
+        catch (Exception failure) { failures.Add(failure); }
+        try
         {
-            if (!process.HasExited)
-            {
-                process.Kill(entireProcessTree: true);
-            }
+            _ = await PartyMemoryRunnerInterruptionProcess.DrainAsync(process, output, error, outputCancellation, TimeSpan.FromSeconds(3)).ConfigureAwait(false);
         }
-
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested && failures.FirstOrDefault() is OperationCanceledException)
+        { /* Both canceled readers are settled; preserve the original startup cancellation. */ }
+        catch (Exception failure) { failures.Add(failure); }
+        if (failures.Count == 1) { System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw(); }
+        if (failures.Count > 1) { throw new AggregateException("Owned mTLS bootstrap execution, reaping or output cleanup failed.", failures); }
         string stdout = await output.ConfigureAwait(false);
         string stderr = await error.ConfigureAwait(false);
         if (process.ExitCode != 0)

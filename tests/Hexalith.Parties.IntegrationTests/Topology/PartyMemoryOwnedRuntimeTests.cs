@@ -51,7 +51,8 @@ public sealed class PartyMemoryOwnedRuntimeTests
         Assert.SkipUnless(Environment.GetEnvironmentVariable("PARTIES_MEMORIES_OWNED_RUNTIME") == "1",
             "Set PARTIES_MEMORIES_OWNED_RUNTIME=1 to start the owned authenticated source topology.");
         string child = MemoryRuntimeIdentity.SelectChild(typeof(PartyMemoryOwnedRuntimeTests).Assembly);
-        PartiesTopologySession session = PartiesTopologySession.Create(isolatedIdentities: true);
+        PartyMemoryRunnerInterruptionHandoff? interruption = producerRestart ? PartyMemoryRunnerInterruptionHandoff.Read() : null;
+        PartiesTopologySession session = interruption?.CreateSession() ?? PartiesTopologySession.Create(isolatedIdentities: true);
         string generation = Guid.NewGuid().ToString("N");
         string exclusion = "owned-disposable-session:" + session.Id + ":" + generation;
         string appToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
@@ -160,7 +161,8 @@ public sealed class PartyMemoryOwnedRuntimeTests
                 }
             }
             return builder;
-        }, (application, cancellation) => application.StartAsync(cancellation), prepareCiBootstrap: true, session: session, memoriesReadinessScope: true, sidecarApiTokens: new Dictionary<string, string> { ["memories"] = apiToken, ["memories-domain-service"] = apiToken });
+        }, (application, cancellation) => application.StartAsync(cancellation), prepareCiBootstrap: true, session: session, memoriesReadinessScope: true, sidecarApiTokens: new Dictionary<string, string> { ["memories"] = apiToken, ["memories-domain-service"] = apiToken }, workerOwnershipMarker: interruption?.WorkerMarker);
+        fixture.ObserveOwnershipProgressAsync = interruption is null ? null : () => interruption.PublishCustodyAsync(fixture, privateRoot);
         fixture.ObserveInitializationFailureAsync = exception => CaptureTargetFailureAsync(fixture, privateRoot, "target-initialization-before-cleanup", exception);
         Exception? primaryFailure = null;
         bool controlledCancellationObserved = false;
@@ -233,25 +235,57 @@ public sealed class PartyMemoryOwnedRuntimeTests
             {
                 string ownerAssembly = PartyMemoryProducerRestartRuntime.ServerAssemblyPath(memoriesState);
                 identities.Add(ownerAssembly, MemoryRuntimeIdentity.Hash(ownerAssembly));
+                if (interruption is not null)
+                {
+                    foreach (string file in new[] { Path.ChangeExtension(typeof(PartyMemoryOwnedRuntimeTests).Assembly.Location, ".deps.json"),
+                        Path.ChangeExtension(typeof(PartyMemoryOwnedRuntimeTests).Assembly.Location, ".runtimeconfig.json"),
+                        Environment.GetEnvironmentVariable("Parties__Testing__PreparedRuntimeManifest")
+                            ?? throw new InvalidOperationException("Runner interruption requires an exact prepared manifest.") })
+                    { identities.Add(file, MemoryRuntimeIdentity.Hash(file)); }
+                }
             }
             await File.WriteAllTextAsync(provenance, JsonSerializer.Serialize(identities), token).ConfigureAwait(true);
+            if (interruption is not null)
+            {
+                await interruption.PublishCustodyAsync(fixture, privateRoot).ConfigureAwait(true);
+            }
             foreach (string argument in new[] { child,
                 "-method", producerRestart ? "*SelectedMemoriesRecoverAcrossProducerWorkloadRestarts" : focused ? "*SelectedMemoriesRefreshAndCleanupPersistAcrossClientRecreation" : "*SelectedMemoriesIngestionAndCleanupPersistAcrossRestart",
                 "-failSkips", "-parallelMode", "none", "-result-xml", Path.Combine(privateRoot, "runtime.xml") }) { start.ArgumentList.Add(argument); }
             start.Environment["PARTIES_MEMORIES_RUNTIME_CONFIG"] = configPath;
             start.Environment["PARTIES_MEMORIES_RUNTIME_PROVENANCE"] = provenance;
+            if (interruption is not null) { start.Environment[PartyMemoryProducerRestartProtocol.ObservationOnlyVariable] = "1"; }
+            start.Environment[PartiesAspireTopologyFixture.WorkerOwnershipVariable] = fixture.WorkerOwnershipMarker;
             using Process process = Process.Start(start) ?? throw new InvalidOperationException("The owned runtime qualification process did not start.");
-            Task<string> output = process.StandardOutput.ReadToEndAsync(), error = process.StandardError.ReadToEndAsync();
+            fixture.CaptureOwnedWorker(process.Id);
+            using var outputCancellation = new CancellationTokenSource();
+            Task<string> output = process.StandardOutput.ReadToEndAsync(outputCancellation.Token), error = process.StandardError.ReadToEndAsync(outputCancellation.Token);
             using var coordination = CancellationTokenSource.CreateLinkedTokenSource(deadline.Token);
             var restarts = new PartyMemoryProducerRestartRuntime(fixture, search.Authority, sidecarHttp, apiToken, generation, exclusion, privateRoot)
             {
+                PendingRunnerInterruptionCheckpoint = interruption?.Phase == "admitted-empty-mappings"
+                    ? (observation, cancellation) => interruption.PublishAsync(fixture, privateRoot, observation, token: cancellation) : null,
                 ReplacementObserved = cancelRestart ? observed =>
                 {
                     if (observed == "admitted-empty-mappings") { controlledCancellationObserved = true; coordination.Cancel(); }
                 } : null,
             };
             Task server = producerRestart ? PartyMemoryProducerRestartProtocol.ServeAsync(restartDirectory, session.Id, restartSecret,
-                restarts.RestartAsync, coordination.Token) : Task.CompletedTask;
+                async (checkpoint, evidence, cancellation) =>
+                {
+                    if (interruption is null) { await restarts.RestartAsync(checkpoint, evidence, cancellation).ConfigureAwait(false); }
+                    else if (checkpoint == interruption.Phase)
+                    {
+                        if (checkpoint == "admitted-empty-mappings") { await restarts.RestartAsync(checkpoint, evidence, cancellation).ConfigureAwait(false); }
+                        else
+                        {
+                            await restarts.ObserveInterruptionAsync(checkpoint, evidence,
+                                (observation, phaseToken) => interruption.PublishAsync(fixture, privateRoot, observation, token: phaseToken), cancellation).ConfigureAwait(false);
+                        }
+                    }
+                    // Earlier authenticated workload checkpoints advance without replacements;
+                    // the target remains frozen until actual runner SIGINT cancels execution.
+                }, coordination.Token, observationOnly: interruption is not null) : Task.CompletedTask;
             Exception? childFailure = null;
             try
             {
@@ -284,9 +318,8 @@ public sealed class PartyMemoryOwnedRuntimeTests
                     () => producerRestart ? restarts.QuiesceIncompleteAsync() : Task.CompletedTask,
                     async () =>
                     {
-                        if (!process.HasExited) { process.StandardOutput.Dispose(); process.StandardError.Dispose(); }
-                        string[] logs = await Task.WhenAll(output, error).ConfigureAwait(true);
-                        await File.WriteAllTextAsync(Path.Combine(privateRoot, "runtime.log"), logs[0] + logs[1], CancellationToken.None).ConfigureAwait(true);
+                        string stdout = await PartyMemoryRunnerInterruptionProcess.DrainAsync(process, output, error, outputCancellation, TimeSpan.FromSeconds(3)).ConfigureAwait(true);
+                        await File.WriteAllTextAsync(Path.Combine(privateRoot, "runtime.log"), stdout + await error.ConfigureAwait(true), CancellationToken.None).ConfigureAwait(true);
                     }, childFailure).ConfigureAwait(true);
             }
             var executed = System.Xml.Linq.XDocument.Load(Path.Combine(privateRoot, "runtime.xml")).Descendants("assembly").ShouldHaveSingleItem();

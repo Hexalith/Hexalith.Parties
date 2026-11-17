@@ -1,0 +1,8 @@
+{
+  "Authority": "Historical f472/8ad/f3e4 cohort; full later lanes refused upstream input drift",
+  "Files": {
+    "PreparedSha256": "8ad071e7cc1dd51249b8a0e7cd015e333c88a1a6f419625a0a506417d12b6a2c",
+    "WrapperSha256": "f4724665396cb5ed45fd7a75cdfbbffebe528b2dfa90e4be185a45ee8a4be04e",
+    "ChildSha256": "f3e4604cade5762d01fcb86a939ffdde7537a17f7c09d8f3983a8dcc2f2bc851"
+  }
+}

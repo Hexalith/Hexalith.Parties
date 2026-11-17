@@ -1,0 +1,751 @@
+[
+  {
+    "Label": "01-source-prepare",
+    "Args": [
+      "dotnet",
+      "hexalith-module",
+      "prepare-build",
+      "--manifest",
+      "module/hexalith.module-manifest.v2.json",
+      "--workspace",
+      "${JOB}/mapping",
+      "--mode",
+      "source",
+      "--output",
+      "json"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 39.141735495999455
+    }
+  },
+  {
+    "Label": "02-package-prepare",
+    "Args": [
+      "dotnet",
+      "hexalith-module",
+      "prepare-build",
+      "--manifest",
+      "module/hexalith.module-manifest.v2.json",
+      "--workspace",
+      "${JOB}/package",
+      "--mode",
+      "package",
+      "--output",
+      "json"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 2,
+      "Seconds": 1.1194878230016911
+    }
+  },
+  {
+    "Label": "03-debug-consumer",
+    "Args": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "-c",
+      "Debug",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${JOB}/source-output"
+    ],
+    "Env": {
+      "CustomBeforeDirectoryBuildProps": "${JOB}/mapping/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${JOB}/mapping/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${JOB}/mapping/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${JOB}/mapping/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${JOB}/mapping/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "8e4d6bcbb20f4f057717d57bdd8217975b85a9dc52b8e7ba67a14074e3060d1f",
+      "Configuration": "Debug"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "Seconds": 5.517606427005376
+    }
+  },
+  {
+    "Label": "04-debug-wrapper",
+    "Args": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "-c",
+      "Debug",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${JOB}/source-output"
+    ],
+    "Env": {
+      "CustomBeforeDirectoryBuildProps": "${JOB}/mapping/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${JOB}/mapping/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${JOB}/mapping/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${JOB}/mapping/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${JOB}/mapping/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "8e4d6bcbb20f4f057717d57bdd8217975b85a9dc52b8e7ba67a14074e3060d1f",
+      "Configuration": "Debug"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "Seconds": 14.54429691300902
+    }
+  },
+  {
+    "Label": "05-release-wrapper",
+    "Args": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=${JOB}/a",
+      "-p:HexalithPartiesRuntimeTargetFramework=net11.0",
+      "-p:CustomAfterMicrosoftCommonProps=${REPOSITORY}/scripts/PartiesHostedRuntime.props",
+      "-p:HexalithUsePublishedSdkForHostedTests=true",
+      "-p:HexalithEventStoreVersion=5.1.0",
+      "-p:HexalithMemoriesVersion=4.0.0",
+      "-p:HexalithFrontComposerVersion=6.0.0",
+      "-p:BuildInParallel=false",
+      "-p:CopyLocalLockFileAssemblies=true"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 1,
+      "Seconds": 58.788546188996406
+    }
+  },
+  {
+    "Label": "06-prepare-runtime",
+    "Args": [
+      "bash",
+      "scripts/prepare-aspire-runtime-hosts.sh",
+      "--configuration",
+      "Release",
+      "--artifacts-path",
+      "${JOB}/a",
+      "--include-memory-qualification",
+      "true"
+    ],
+    "Env": {
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "HexalithUsePublishedSdkForHostedTests": "true",
+      "HexalithPartiesRuntimeTargetFramework": "net11.0",
+      "CustomAfterMicrosoftCommonProps": "{ROOT}/scripts/PartiesHostedRuntime.props",
+      "Version": "1.0.0"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 158.1251188239985
+    }
+  },
+  {
+    "Label": "07-rebind",
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/rebind.py"
+    ],
+    "Env": {
+      "QUAL_ARTIFACTS": "{JOB}/a",
+      "Version": "1.0.0"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 76.28111806399829
+    }
+  },
+  {
+    "Label": "08-rebind-final-preflight",
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/rebind.py"
+    ],
+    "Env": {
+      "QUAL_ARTIFACTS": "{JOB}/a",
+      "Version": "1.0.0"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 58.483139539006515
+    }
+  },
+  {
+    "Label": "09-controls",
+    "Args": [
+      "dotnet",
+      "${JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionControlTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryProducerRestartSignalTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "-method-",
+      "*LiveShutdown*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V2}/09-controls.xml"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "Seconds": 12.460386809994816
+    }
+  },
+  {
+    "Label": "10-consumer",
+    "Args": [
+      "dotnet",
+      "${JOB}/a/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryProducerRestartProtocolTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryUnitAuthorityRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+      "-method-",
+      "*SelectedMemories*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V2}/10-consumer.xml"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 38.818377023009816
+    }
+  },
+  {
+    "Label": "11-reconcile-failed-early",
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-1/reconcile-failed-early.py"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 1,
+      "Seconds": 0.1149169959971914
+    }
+  },
+  {
+    "Label": "12-rebind-corrected-volume",
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/rebind.py"
+    ],
+    "Env": {
+      "QUAL_ARTIFACTS": "{JOB}/a",
+      "Version": "1.0.0"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 59.29767946599168
+    }
+  },
+  {
+    "Label": "13-controls",
+    "Args": [
+      "dotnet",
+      "${JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionControlTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryProducerRestartSignalTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "-method-",
+      "*LiveShutdown*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V2}/13-controls.xml"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 15.457453187991632
+    }
+  },
+  {
+    "Label": "14-reconcile-failed-early",
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/review-1/reconcile-failed-early-v2.py"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 2.1481903539970517
+    }
+  },
+  {
+    "Label": "15-controls",
+    "Args": [
+      "dotnet",
+      "${JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionControlTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryProducerRestartSignalTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "-method-",
+      "*LiveShutdown*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V2}/15-controls.xml"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 16.58847411899478
+    }
+  },
+  {
+    "Label": "16-final-matrix",
+    "Args": [
+      "run-with-temp",
+      "python3",
+      "artifacts/runner-interruption-private-20261116/run-runtime.py",
+      "${PRIVATE_V2}/final-matrix",
+      "${JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*SigintAt*"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "TMPDIR": "/tmp",
+      "TMP": "/tmp",
+      "TEMP": "/tmp",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 921.9078251539904
+    }
+  },
+  {
+    "Label": "17-final-consumer",
+    "Args": [
+      "dotnet",
+      "${JOB}/a/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryProducerRestartProtocolTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryUnitAuthorityRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+      "-method-",
+      "*SelectedMemories*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V2}/17-final-consumer.xml"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 37.173186550993705
+    }
+  },
+  {
+    "Label": "18-ordinary-restart",
+    "Args": [
+      "python3",
+      "-c",
+      "print(\"Deferred final lane until bounded shared signal-helper rebuild\")"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 0.023507092002546415
+    }
+  },
+  {
+    "Label": "19-controlled-cancellation",
+    "Args": [
+      "python3",
+      "-c",
+      "print(\"Deferred final lane until bounded shared signal-helper rebuild\")"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 0.04090529998939019
+    }
+  },
+  {
+    "Label": "20-live-shutdown",
+    "Args": [
+      "python3",
+      "-c",
+      "print(\"Deferred final lane until bounded shared signal-helper rebuild\")"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 0.03333670199208427
+    }
+  },
+  {
+    "Label": "21-rebind-bounded-signal",
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/rebind.py"
+    ],
+    "Env": {
+      "QUAL_ARTIFACTS": "{JOB}/a",
+      "Version": "1.0.0"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 73.33161446401209
+    }
+  },
+  {
+    "Label": "22-final-controls",
+    "Args": [
+      "dotnet",
+      "${JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionControlTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryProducerRestartSignalTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "-method-",
+      "*LiveShutdown*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V2}/22-final-controls.xml"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-final"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 17.380799135004054
+    }
+  },
+  {
+    "Label": "23-final-consumer",
+    "Args": [
+      "dotnet",
+      "${JOB}/a/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryProducerRestartProtocolTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryUnitAuthorityRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+      "-method-",
+      "*SelectedMemories*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V2}/23-final-consumer.xml"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 35.336275720997946
+    }
+  },
+  {
+    "Label": "24-final-matrix",
+    "Args": [
+      "run-with-temp",
+      "python3",
+      "artifacts/runner-interruption-private-20261116/run-runtime.py",
+      "${PRIVATE_V2}/final-matrix",
+      "${JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*SigintAt*"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "TMPDIR": "/tmp",
+      "TMP": "/tmp",
+      "TEMP": "/tmp",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0"
+    },
+    "Result": {
+      "ExitCode": 1,
+      "Seconds": 1145.7528228619922
+    }
+  },
+  {
+    "Label": "25-ordinary-restart",
+    "Args": [
+      "python3",
+      "-c",
+      "print(\"Deferred final lane until bounded runtime-consumer drain rebuild\")"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 0.016394033998949453
+    }
+  },
+  {
+    "Label": "26-controlled-cancellation",
+    "Args": [
+      "python3",
+      "-c",
+      "print(\"Deferred final lane until bounded runtime-consumer drain rebuild\")"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 0.016459325997857377
+    }
+  },
+  {
+    "Label": "27-live-shutdown",
+    "Args": [
+      "python3",
+      "-c",
+      "print(\"Deferred final lane until bounded runtime-consumer drain rebuild\")"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 0.016506934000062756
+    }
+  },
+  {
+    "Label": "28-rebind-bounded-inner-drain",
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/rebind.py"
+    ],
+    "Env": {
+      "QUAL_ARTIFACTS": "{JOB}/a",
+      "Version": "1.0.0"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 60.00794001099712
+    }
+  },
+  {
+    "Label": "29-final-controls",
+    "Args": [
+      "dotnet",
+      "${JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionControlTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryProducerRestartSignalTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "-method-",
+      "*LiveShutdown*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V2}/29-final-controls.xml"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-authoritative"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 16.697990882996237
+    }
+  },
+  {
+    "Label": "30-definitive-rebuild",
+    "Args": [
+      "python3",
+      "artifacts/runner-interruption-private-20261116/rebind.py"
+    ],
+    "Env": {
+      "QUAL_ARTIFACTS": "{JOB}/a",
+      "Version": "1.0.0"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 61.304498063007486
+    }
+  },
+  {
+    "Label": "31-final-controls",
+    "Args": [
+      "dotnet",
+      "${JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryRunnerInterruptionControlTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryProducerRestartSignalTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "-method-",
+      "*LiveShutdown*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V2}/31-final-controls.xml"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "PARTIES_MEMORY_RUNNER_CONTROL_EVIDENCE": "{PRIVATE}/early-controls-definitive"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 17.593935519995284
+    }
+  },
+  {
+    "Label": "32-final-consumer",
+    "Args": [
+      "dotnet",
+      "${JOB}/a/bin/Hexalith.Parties.Tests/release/Hexalith.Parties.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryProducerRestartProtocolTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryUnitAuthorityRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+      "-class",
+      "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests",
+      "-method-",
+      "*SelectedMemories*",
+      "-parallelMode",
+      "none",
+      "-failSkips",
+      "-result-xml",
+      "${PRIVATE_V2}/32-final-consumer.xml"
+    ],
+    "Env": {},
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 40.282523558998946
+    }
+  },
+  {
+    "Label": "33-final-same-uri",
+    "Args": [
+      "run-with-temp",
+      "python3",
+      "artifacts/runner-interruption-private-20261116/run-runtime.py",
+      "${PRIVATE_V2}/final-same-uri",
+      "${JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*SigintAtSameUriRefresh"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "TMPDIR": "/tmp",
+      "TMP": "/tmp",
+      "TEMP": "/tmp",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0"
+    },
+    "Result": {
+      "ExitCode": 0,
+      "Seconds": 108.82086597700254
+    }
+  },
+  {
+    "Label": "34-final-five-cases",
+    "Args": [
+      "run-with-temp",
+      "python3",
+      "artifacts/runner-interruption-private-20261116/run-runtime.py",
+      "${PRIVATE_V2}/final-matrix",
+      "${JOB}/a/bin/Hexalith.Parties.IntegrationTests/release/Hexalith.Parties.IntegrationTests.dll",
+      "*SigintAt*",
+      "-method-",
+      "*SigintAtSameUriRefresh"
+    ],
+    "Env": {
+      "PARTIES_MEMORIES_OWNED_RUNTIME": "1",
+      "Parties__Testing__PreparedRuntimeManifest": "{JOB}/a/runtime-profile/Release/prepared.json",
+      "TMPDIR": "/tmp",
+      "TMP": "/tmp",
+      "TEMP": "/tmp",
+      "HexalithEventStoreVersion": "5.1.0",
+      "HexalithMemoriesVersion": "4.0.0",
+      "HexalithFrontComposerVersion": "6.0.0",
+      "Version": "1.0.0"
+    },
+    "Result": null
+  }
+]

@@ -1,0 +1,25 @@
+[
+  {
+    "Command": [
+      "bash",
+      "scripts/check-no-warning-override.sh"
+    ],
+    "ExitCode": 0,
+    "Output": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts."
+  },
+  {
+    "Command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "ExitCode": 0,
+    "Output": ""
+  },
+  {
+    "FrozenIntentNormalizedLfSha256": "32dd99db14de87d32d72d7f40fcf6bd605dfe40aa3e1f424076e8ce852fc9da5"
+  },
+  {
+    "Commitlint": "parent validates exact candidate during independent review and terminal publication; implementation agent does not stage/commit/push"
+  }
+]

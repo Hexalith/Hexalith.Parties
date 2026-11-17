@@ -1,0 +1,96 @@
+{
+  "Authority": "Only these six current-layout cases qualify final review-loop-2 source",
+  "Cases": [
+    {
+      "Phase": "admitted-empty-mappings",
+      "Xml": "current-layout/package-final-matrix/tests.xml.gz",
+      "Result": "current-layout/package-final-matrix/admitted-empty-mappings-result.json.gz",
+      "Checkpoint": "current-layout/package-final-matrix/admitted-empty-mappings-checkpoint.json.gz",
+      "Configuration": "current-layout/package-final-matrix/admitted-empty-mappings-configuration.json.gz",
+      "ExternalCustody": "current-layout/package-final-matrix/admitted-empty-mappings-external-custody.json.gz",
+      "RuntimePrefix": "current-layout/package-final-matrix/parties-five-memory-runtime-6025407ae275",
+      "ElapsedMilliseconds": 182373
+    },
+    {
+      "Phase": "output-known",
+      "Xml": "current-layout/package-final-matrix/tests.xml.gz",
+      "Result": "current-layout/package-final-matrix/output-known-result.json.gz",
+      "Checkpoint": "current-layout/package-final-matrix/output-known-checkpoint.json.gz",
+      "Configuration": "current-layout/package-final-matrix/output-known-configuration.json.gz",
+      "ExternalCustody": "current-layout/package-final-matrix/output-known-external-custody.json.gz",
+      "RuntimePrefix": "current-layout/package-final-matrix/parties-five-memory-runtime-950feb4dca9e",
+      "ElapsedMilliseconds": 175403
+    },
+    {
+      "Phase": "accepted-deletion",
+      "Xml": "current-layout/package-final-matrix/tests.xml.gz",
+      "Result": "current-layout/package-final-matrix/accepted-deletion-result.json.gz",
+      "Checkpoint": "current-layout/package-final-matrix/accepted-deletion-checkpoint.json.gz",
+      "Configuration": "current-layout/package-final-matrix/accepted-deletion-configuration.json.gz",
+      "ExternalCustody": "current-layout/package-final-matrix/accepted-deletion-external-custody.json.gz",
+      "RuntimePrefix": "current-layout/package-final-matrix/parties-five-memory-runtime-61fa9d58c5dc",
+      "ElapsedMilliseconds": 187468
+    },
+    {
+      "Phase": "same-uri-refresh",
+      "Xml": "current-layout/package-final-matrix/tests.xml.gz",
+      "Result": "current-layout/package-final-matrix/same-uri-refresh-result.json.gz",
+      "Checkpoint": "current-layout/package-final-matrix/same-uri-refresh-checkpoint.json.gz",
+      "Configuration": "current-layout/package-final-matrix/same-uri-refresh-configuration.json.gz",
+      "ExternalCustody": "current-layout/package-final-matrix/same-uri-refresh-external-custody.json.gz",
+      "RuntimePrefix": "current-layout/package-final-matrix/parties-five-memory-runtime-cb6f3a01bf73",
+      "ElapsedMilliseconds": 121987
+    },
+    {
+      "Phase": "cross-source-authority",
+      "Xml": "current-layout/package-final-matrix/tests.xml.gz",
+      "Result": "current-layout/package-final-matrix/cross-source-authority-result.json.gz",
+      "Checkpoint": "current-layout/package-final-matrix/cross-source-authority-checkpoint.json.gz",
+      "Configuration": "current-layout/package-final-matrix/cross-source-authority-configuration.json.gz",
+      "ExternalCustody": "current-layout/package-final-matrix/cross-source-authority-external-custody.json.gz",
+      "RuntimePrefix": "current-layout/package-final-matrix/parties-five-memory-runtime-bc754c717572",
+      "ElapsedMilliseconds": 113011
+    },
+    {
+      "Phase": "bounded-legacy-discovery",
+      "Xml": "current-layout/package-final-matrix/tests.xml.gz",
+      "Result": "current-layout/package-final-matrix/bounded-legacy-discovery-result.json.gz",
+      "Checkpoint": "current-layout/package-final-matrix/bounded-legacy-discovery-checkpoint.json.gz",
+      "Configuration": "current-layout/package-final-matrix/bounded-legacy-discovery-configuration.json.gz",
+      "ExternalCustody": "current-layout/package-final-matrix/bounded-legacy-discovery-external-custody.json.gz",
+      "RuntimePrefix": "current-layout/package-final-matrix/parties-five-memory-runtime-e992afe108f2",
+      "ElapsedMilliseconds": 203442
+    }
+  ],
+  "SameUnchangedCohort": {
+    "PreparedSha256": "5071bca4152c5b5b13d426b1c76688bd2afa589e91cda252756d938579223f41",
+    "WrapperSha256": "aecbe48c3fca6b131de1116ff59f48fa5daa57420169389e3b62d211094f848b",
+    "ChildSha256": "f22caf7af5725616def9d1216316d62bbc358f58a42caf5ff4490faf50edf0d1"
+  },
+  "Suite": {
+    "Xml": "current-layout/package-final-matrix/tests.xml.gz",
+    "Counts": {
+      "total": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    "PassedAsAggregate": true
+  },
+  "HistoricalPreMigrationSuite": {
+    "Xml": "final-matrix/tests.xml.gz",
+    "Counts": {
+      "total": 6,
+      "passed": 5,
+      "failed": 1,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    "PassedAsAggregate": false,
+    "IsolatedRetry": "final-cross-source/tests.xml.gz",
+    "CurrentAcceptance": false
+  }
+}
