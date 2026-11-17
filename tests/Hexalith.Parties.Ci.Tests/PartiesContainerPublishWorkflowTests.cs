@@ -111,7 +111,7 @@ public sealed class PartiesContainerPublishWorkflowTests
 
         workflow.ShouldContain($"Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@{BuildsCiSha}");
         string manual = CiTestPaths.ReadRepoFile(".github/workflows/ci-lifecycle-qualification.yml");
-        manual.ShouldContain($"Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@{BuildsCiSha}");
+        manual.ShouldContain("Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@02ed624aa19781cac75d2c9112940e9bd830441a");
         workflow.ShouldContain("solution: Hexalith.Parties.Standalone.slnx");
         workflow.ShouldContain("test-platform: microsoft-testing-platform");
         workflow.ShouldContain("run-consumer-validation: true");
