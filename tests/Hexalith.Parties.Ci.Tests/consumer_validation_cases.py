@@ -103,6 +103,76 @@ class SupportVersions(unittest.TestCase):
                                                 frozenset({package_id}), 'FrontComposer')
 
 
+class ConsumerTargets(unittest.TestCase):
+    """Select consumers from real archive targets and reject ambiguous cohorts."""
+
+    def write_cohort(self, feed, framework):
+        for package_id in CONSUMER.PACKAGE_IDS:
+            path = write_package(feed, package_id, '1.2.3', '1.2.3')
+            with zipfile.ZipFile(path, 'a') as package:
+                package.writestr(f'lib/{framework}/{package_id}.dll', b'fixture assembly')
+
+    def test_generated_consumers_use_the_common_runtime_package_target(self):
+        for framework in ('net10.0', 'net11.0'):
+            with self.subTest(framework=framework), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                feed = root / 'packages'
+                self.write_cohort(feed, framework)
+                CONSUMER.package_versions(feed)
+                selected = CONSUMER.package_target_framework(feed)
+                self.assertEqual(selected, framework)
+                for writer in (CONSUMER.write_client_consumer, CONSUMER.write_portal_consumer):
+                    project = writer(root / 'work', '1.2.3', selected)
+                    xml = ElementTree.parse(project).getroot()
+                    self.assertEqual(xml.findtext('./PropertyGroup/TargetFramework'), framework)
+                    self.assertEqual(xml.findall('.//ProjectReference'), [])
+                    self.assertGreaterEqual(len(xml.findall('.//PackageReference')), 3)
+
+    def test_cohort_rejects_missing_duplicate_mixed_and_unsupported_targets(self):
+        cases = ('missing-package', 'duplicate-package', 'missing-target', 'multiple-targets',
+                 'mixed-targets', 'reference-target', 'unsupported-target', 'malformed-target')
+        for case in cases:
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as temp:
+                feed = Path(temp)
+                self.write_cohort(feed, 'net11.0')
+                package_id = CONSUMER.PACKAGE_IDS[0]
+                path = feed / f'{package_id}.1.2.3.nupkg'
+                if case == 'missing-package':
+                    path.unlink()
+                elif case == 'duplicate-package':
+                    shutil.copyfile(path, feed / 'duplicate.nupkg')
+                else:
+                    with zipfile.ZipFile(path) as package:
+                        entries = [(name, package.read(name)) for name in package.namelist()]
+                    own_asset = f'lib/net11.0/{package_id}.dll'
+                    if case == 'missing-target':
+                        entries = [(name, body) for name, body in entries if name != own_asset]
+                    elif case == 'multiple-targets':
+                        entries.append((f'lib/net10.0/{package_id}.dll', b'second target'))
+                    elif case == 'reference-target':
+                        entries.append((f'ref/net10.0/{package_id}.dll', b'different reference target'))
+                    else:
+                        framework = {'mixed-targets': 'net10.0', 'unsupported-target': 'netstandard2.0',
+                                     'malformed-target': 'net11.0-windows'}[case]
+                        entries = [(f'lib/{framework}/{package_id}.dll' if name == own_asset else name, body)
+                                   for name, body in entries]
+                    with zipfile.ZipFile(path, 'w') as package:
+                        for name, body in entries:
+                            package.writestr(name, body)
+                with self.assertRaises(ValueError):
+                    CONSUMER.package_target_framework(feed)
+
+    def test_invalid_target_cannot_create_a_consumer_or_inject_project_markup(self):
+        for framework in ('', 'net11.0;net10.0', 'net11.0</TargetFramework><ProjectReference Include="source" />',
+                          ' net11.0', 'net11.0\n', 'netstandard2.0'):
+            for writer in (CONSUMER.write_client_consumer, CONSUMER.write_portal_consumer):
+                with self.subTest(framework=framework, writer=writer.__name__), tempfile.TemporaryDirectory() as temp:
+                    work = Path(temp) / 'work'
+                    with self.assertRaises(ValueError):
+                        writer(work, '1.2.3', framework)
+                    self.assertFalse(work.exists())
+
+
 class RestoredVersions(unittest.TestCase):
     """Qualify family selections before building either generated consumer."""
 
