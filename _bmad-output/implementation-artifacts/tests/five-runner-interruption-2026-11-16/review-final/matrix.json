@@ -1,0 +1,75 @@
+{
+  "Cases": [
+    {
+      "Phase": "accepted-deletion",
+      "Xml": "current-layout/package-final-matrix/tests.xml.gz",
+      "Result": "current-layout/package-final-matrix/accepted-deletion-result.json.gz",
+      "Checkpoint": "current-layout/package-final-matrix/accepted-deletion-checkpoint.json.gz",
+      "Configuration": "current-layout/package-final-matrix/accepted-deletion-configuration.json.gz",
+      "ExternalCustody": "current-layout/package-final-matrix/accepted-deletion-external-custody.json.gz",
+      "RuntimePrefix": "current-layout/package-final-matrix/parties-five-memory-runtime-d107d40297ce"
+    },
+    {
+      "Phase": "bounded-legacy-discovery",
+      "Xml": "current-layout/package-final-matrix/tests.xml.gz",
+      "Result": "current-layout/package-final-matrix/bounded-legacy-discovery-result.json.gz",
+      "Checkpoint": "current-layout/package-final-matrix/bounded-legacy-discovery-checkpoint.json.gz",
+      "Configuration": "current-layout/package-final-matrix/bounded-legacy-discovery-configuration.json.gz",
+      "ExternalCustody": "current-layout/package-final-matrix/bounded-legacy-discovery-external-custody.json.gz",
+      "RuntimePrefix": "current-layout/package-final-matrix/parties-five-memory-runtime-91c97cf60684"
+    },
+    {
+      "Phase": "output-known",
+      "Xml": "current-layout/package-final-matrix/tests.xml.gz",
+      "Result": "current-layout/package-final-matrix/output-known-result.json.gz",
+      "Checkpoint": "current-layout/package-final-matrix/output-known-checkpoint.json.gz",
+      "Configuration": "current-layout/package-final-matrix/output-known-configuration.json.gz",
+      "ExternalCustody": "current-layout/package-final-matrix/output-known-external-custody.json.gz",
+      "RuntimePrefix": "current-layout/package-final-matrix/parties-five-memory-runtime-624d3579acb6"
+    },
+    {
+      "Phase": "cross-source-authority",
+      "Xml": "current-layout/package-final-matrix/tests.xml.gz",
+      "Result": "current-layout/package-final-matrix/cross-source-authority-result.json.gz",
+      "Checkpoint": "current-layout/package-final-matrix/cross-source-authority-checkpoint.json.gz",
+      "Configuration": "current-layout/package-final-matrix/cross-source-authority-configuration.json.gz",
+      "ExternalCustody": "current-layout/package-final-matrix/cross-source-authority-external-custody.json.gz",
+      "RuntimePrefix": "current-layout/package-final-matrix/parties-five-memory-runtime-d3ad06826f2b"
+    },
+    {
+      "Phase": "admitted-empty-mappings",
+      "Xml": "current-layout/package-final-matrix/tests.xml.gz",
+      "Result": "current-layout/package-final-matrix/admitted-empty-mappings-result.json.gz",
+      "Checkpoint": "current-layout/package-final-matrix/admitted-empty-mappings-checkpoint.json.gz",
+      "Configuration": "current-layout/package-final-matrix/admitted-empty-mappings-configuration.json.gz",
+      "ExternalCustody": "current-layout/package-final-matrix/admitted-empty-mappings-external-custody.json.gz",
+      "RuntimePrefix": "current-layout/package-final-matrix/parties-five-memory-runtime-6e644c819ce2"
+    },
+    {
+      "Phase": "same-uri-refresh",
+      "Xml": "current-layout/package-final-matrix/tests.xml.gz",
+      "Result": "current-layout/package-final-matrix/same-uri-refresh-result.json.gz",
+      "Checkpoint": "current-layout/package-final-matrix/same-uri-refresh-checkpoint.json.gz",
+      "Configuration": "current-layout/package-final-matrix/same-uri-refresh-configuration.json.gz",
+      "ExternalCustody": "current-layout/package-final-matrix/same-uri-refresh-external-custody.json.gz",
+      "RuntimePrefix": "current-layout/package-final-matrix/parties-five-memory-runtime-eb16e14b5d53"
+    }
+  ],
+  "SameUnchangedCohort": {
+    "PreparedSha256": "c4c689b31aa7dbe922cb7eb48daf52edabeae16493c6f93b92336e940f519b65",
+    "WrapperSha256": "c1490371399fcfe680c49542103161c833f8b7608fe37af6b452356ff574dcad",
+    "ChildSha256": "c4aab4a523ec102a7eec7e8dbf9cde3dc5b2e2b0f24e50194bd8eac74584d5c1"
+  },
+  "Suite": {
+    "Xml": "current-layout/package-final-matrix/tests.xml.gz",
+    "Counts": {
+      "total": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    "PassedAsAggregate": true
+  }
+}

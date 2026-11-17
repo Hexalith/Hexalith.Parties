@@ -1,0 +1,51 @@
+{
+  "CurrentAuthority": "Only source.json/cohort.json/matrix.json/verification.json select this final compatible cohort",
+  "EarlierPublicEvidenceBytesModified": false,
+  "ActiveRootMetadataMayBeVersionedOnlyWithExactHistoricalCopies": [
+    "README.md",
+    "artifact-index.json.gz",
+    "SHA256SUMS.gz"
+  ],
+  "EarlierPublicPackets": [
+    "../review-2/README.md",
+    "../review-1/README.md",
+    "../README.md"
+  ],
+  "UnqualifiedAttempts": [
+    {
+      "Path": "historical-prerequisites/",
+      "Outcome": "Both complete101-row suites fail the original pre-helper STOP assertion (100pass/1fail); no runtime admitted; original source/cohort and retired job closure retained"
+    },
+    {
+      "Path": "native-d0-attempt/",
+      "Outcome": "Current-d0 source/Debug builds and focused controls pass, then actual native runtime fails before checkpoint/mutation/SIGINT; writer-lease cancellation and IServiceProvider disposal failure; three executed hashes match but41/105880 inputs/outputs drift; exact emergency closure is unqualified"
+    },
+    {
+      "Path": "release-default-tenants-attempt/",
+      "Outcome": "NU1109 for current default Tenants8.0.1 requiring SDK5.1.1 against the compatible comparison SDK5.1.0; no current-default adoption"
+    },
+    {
+      "Path": "pre-manifest-gated-controls/",
+      "Outcome": "Code3 before corrected compatible preparation completed; no tests/runtime executed"
+    },
+    {
+      "Path": "../review-2/",
+      "Outcome": "All older0f/source variants, native MSB4018/readiness attempts, ancestry/adopted-zombie/configuration/proxy failures and earlier selected outcomes remain historical for these corrected d0 bytes"
+    },
+    {
+      "Path": "historical-context/original-sdk-custody-limit.json.gz",
+      "Outcome": "Original47/49/51 SDK worker custody/closure remains unestablished; present-state observations grant no recovery authority"
+    },
+    {
+      "Path": "packaging-diagnostics/first-positive-baseline-refusal.json.gz",
+      "Outcome": "First private semantic baseline refused a native physical-volume field-name mismatch; exact refusal/source retained, corrected to actual schema without runtime/source changes"
+    }
+  ],
+  "ExternalGatesRemainOpen": [
+    "publication/adoption",
+    "historical production inventory",
+    "older-writer exclusion",
+    "deployment/workload/key/trust custody",
+    "owner acceptance"
+  ]
+}

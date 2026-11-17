@@ -1,7 +1,36 @@
-# Runner interruption evidence
+# Runner interruption qualification evidence
 
-Current source 39 qualification is [review-2/README.md](review-2/README.md). Its source/cohort, six-case matrix, verification and semantic closure indexes select the final isolated current-layout Release cohort. Earlier source variants supply historical evidence only; original failures remain failures.
+The current qualification is [review-final](review-final/README.md), measured on
+isolated main d0a01fba with source 39 and one unchanged explicit Release cohort.
+All six actual SIGINT cases, the supporting controls, ordinary six-replacement
+wrapper and actual child, controlled cancellation and four live disposal modes
+pass. Independent pre/post input readback and exact process/backing closure pass;
+all final command descendants were reaped and disposable scratch was removed.
 
-The complete [review-1](review-1/README.md) packet and its own integrity indexes remain unchanged. Original v1 evidence stays at the dated root. Exact previous dated-root README, artifact-index and SHA256SUMS are archived under [review-2/historical-root](review-2/historical-root/). Active root checksum indexes cover the current complete tree; archived indexes describe their original snapshots.
+The explicit invocation retains SDK 5.1.0, Tenants 8.0.0, Memories 4.0.0,
+FrontComposer 6.0.0 and McpCli 3.0.0. It separately identifies the actual current
+source Memories host. It does not qualify current-default dependency adoption
+or published packages. Native Debug runtime refusal, dependency/preparation
+refusals and every prior failed or superseded cohort remain historical.
 
-Detailed receipts use deterministic gzip; decode with `gzip -cd FILE.gz`. Current integrity hashes establish bytes; review-2 semantic verification separately requires truthful final closure and exact selected sessions. Private raw credentials/logs remain outside this public packet. External production/owner gates remain open.
+The root v1, review-1 and review-2 evidence bytes are unchanged. Exact preceding
+root README, artifact index and checksums are archived in
+[review-final/historical-root](review-final/historical-root/). Each archived index
+describes its original snapshot; current root indexes cover the complete packet.
+Run the portable semantic and rehashed tamper checks with:
+
+```bash
+run-with-temp python3 review-final/verify-review.py review-final
+run-with-temp python3 review-final/test-packet-verifier.py review-final
+```
+
+Run those commands from this directory. Detailed receipts use deterministic gzip;
+`gzip -cd FILE.gz` decodes them. The complete root index and SHA256SUMS establish
+integrity, while review-final binds actual source, methods, phases and closure.
+
+Interrupted business work remains incomplete. Disposable backing removal does
+not certify physical business erasure or historical completeness. Publication
+and adoption, historical production inventory, older-writer exclusion,
+deployment/workload/key/trust custody and owner acceptance remain OPEN. Original
+failed diagnostics 47/49/51 still lack authenticated original SDK custody;
+current absence cannot reconstruct that authority.

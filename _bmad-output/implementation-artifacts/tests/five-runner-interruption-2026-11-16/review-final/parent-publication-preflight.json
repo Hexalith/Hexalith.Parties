@@ -1,0 +1,12 @@
+{
+  "ObservedAtUtc": "2026-11-17T01:34:10.891541+00:00",
+  "ExactMessageSha256": "f17ca3dfeec4fe54be128cda779399f44145d194f2afb69986980ed72416caf6",
+  "Command": "node references/Hexalith.Builds/node_modules/@commitlint/cli/cli.js --config commitlint.config.mjs --edit artifacts/runner-interruption-private-20261116/parent-commit-message.txt",
+  "PinnedLockVersion": "21.2.4",
+  "InstalledVersion": "21.2.4",
+  "ExitCode": 0,
+  "HexalithStrictPolicyPassed": true,
+  "ExactValidatedMessage": "test: qualify runner interruption cleanup\n",
+  "StaticWarningOverrideCheckExitCode": 0,
+  "DiffCheckExitCode": 0
+}

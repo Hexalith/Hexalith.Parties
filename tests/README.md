@@ -1305,7 +1305,7 @@ outside its `TMPDIR` before the wrapper exits. The
 [dated packet](../_bmad-output/implementation-artifacts/tests/five-runner-interruption-2026-11-16/README.md)
 versions the original evidence as historical v1. Its `review-1/` indexes preserve the prior corrected source, unchanged prepared
 cohort, six-case matrix and verification as historical evidence. Review-loop 2
-qualification belongs only to the separately frozen `review-2/` cohort.
+qualification remains historical in its separately frozen `review-2/` cohort.
 Original failures, preparation blockers and separate emergency reconciliations
 remain retained and cannot supply current-source acceptance.
 The historical review-loop 1 cohort passes six actual SIGINT cases, 80 cleanup/fixture/
@@ -1371,3 +1371,23 @@ It drifted 71 of 100,387 frozen inputs/outputs and remains unqualified. The expl
 serialized Release fallback passed. Source 27 and all other failed/intermediate
 cohorts remain historical; the original SDK-custody limits and external gates remain
 open. Current details and exact commands are in the review-2 packet.
+
+The [final qualification packet](../_bmad-output/implementation-artifacts/tests/five-runner-interruption-2026-11-16/review-final/README.md)
+binds current d0a01fba/source 39 and one unchanged explicit Release cohort. All
+six actual SIGINT cases pass, along with 32 process, 101 cleanup, 38 unit plus 22
+runtime consumer, 5 startup, 7 configuration and 5 queue controls, real state
+refusal/restoration, ordinary six-replacement wrapper/actual child, controlled
+cancellation and all four live disposal modes. The final regressions cover all
+12 recovery disappearance/present-error combinations and real zombie rejection
+until parent reaping. The signal-helper control waits for the same birth to
+reach T/t before exercising the actual hung helper, timeout, reap and resume.
+
+Independent closure finds 320 captured lifetimes, 36 containers, 6 networks and
+12 anonymous volumes absent. Complete pre/post readback confirms unchanged
+executed files, prepared inputs and helpers. All final jobs and their scratch
+are closed. The actual native d0 pre-checkpoint writer-lease/disposal failure
+and its 41/105,880 input drifts remain unqualified; prior MSB4018 and missing
+SDK custody remain historical. Invocation pins explicitly retain SDK 5.1.0,
+Tenants 8.0.0, Memories 4.0.0, FrontComposer 6.0.0 and McpCli 3.0.0, with the
+separate current-source host. Current-default adoption and all existing external
+business and owner gates remain open.

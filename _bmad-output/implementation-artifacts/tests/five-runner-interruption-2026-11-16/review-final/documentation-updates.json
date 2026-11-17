@@ -1,0 +1,9 @@
+{
+  "ApplyOnlyAfterParentCandidateAudit": true,
+  "ChangeFrozenIntent": false,
+  "HistoricalPublicBytesMustRemainUnchanged": true,
+  "TestsReadmeAddition": "Latest qualification is tests/five-runner-interruption-2026-11-16/review-final/README.md: current d0/source 39, one compatible Release cohort, six actual SIGINT cases,32 process/101 cleanup/38 + 22 consumer/5 startup/7 configuration/5 queue rows, real state refusal/restoration, ordinary wrapper/actual child, cancellation and four live modes pass. All prior outcomes remain historical; native d0 writer-lease/disposal failure and41/105880 drifts are unqualified. Compatible invocation pins do not adopt current defaults. Final jobs/scratch are closed; external business/owner gates remain open.",
+  "FiveExistingLedgerMappings": "Append the final review-final packet link and same qualified scope to the existing five mappings; retain every original production, historical-inventory, writer-exclusion, deployment and owner-acceptance gate as OPEN. Do not create replacement deferred entries or remove historical receipts.",
+  "SpecUnfrozenNote": "Final current d0/source 39 qualification uses unchanged explicit compatible Release inputs and the separately identified68a current-source host. Both101-row pre-signal-repair suites and the actual native d0 pre-checkpoint failure stay unqualified. All6 current SIGINT cases and required supporting lanes pass; pre/post full readback, exact closure and actual driver/scratch completion are retained. The approved frozen intent and canonical a575 baseline remain unchanged; parent owns final review/publication.",
+  "AppliedByParent": true
+}

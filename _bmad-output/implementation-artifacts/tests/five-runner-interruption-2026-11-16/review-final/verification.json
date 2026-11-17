@@ -1,0 +1,184 @@
+{
+  "CanonicalBaseline": "a575021fc97a8eda664711089270b60f5e570ded",
+  "QualificationHead": "d0a01fbadc5c6d9df56a39e6b1e4e831df9bdfd1",
+  "Configuration": "Release",
+  "PublishedPackageQualification": false,
+  "ReviewFindingsFixed": [
+    "R3-E1",
+    "R3-E2",
+    "bounded-stopped-state-verification-prerequisite"
+  ],
+  "Lanes": {
+    "package-process-controls": {
+      "Xml": "current-layout/61-package-process-controls.xml.gz",
+      "Counts": {
+        "total": 32,
+        "passed": 32,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      }
+    },
+    "focused-cleanup": {
+      "Xml": "current-layout/62-final-controls.xml.gz",
+      "Counts": {
+        "total": 101,
+        "passed": 101,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      }
+    },
+    "focused-consumer-unit": {
+      "Xml": "current-layout/63-consumer-unit.xml.gz",
+      "Counts": {
+        "total": 38,
+        "passed": 38,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      }
+    },
+    "focused-consumer-runtime": {
+      "Xml": "current-layout/64-consumer-runtime.xml.gz",
+      "Counts": {
+        "total": 22,
+        "passed": 22,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      }
+    },
+    "startup-ordering": {
+      "Xml": "current-layout/65-startup-ordering-controls.xml.gz",
+      "Counts": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      }
+    },
+    "configuration": {
+      "Xml": "current-layout/67-configuration-controls.xml.gz",
+      "Counts": {
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      }
+    },
+    "persisted-state-refusal": {
+      "Xml": "current-layout/package-persisted-state-refusal/tests.xml.gz",
+      "Counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      }
+    },
+    "ordinary-wrapper": {
+      "Xml": "current-layout/package-ordinary-restart/tests.xml.gz",
+      "Counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      }
+    },
+    "coordination-cancellation": {
+      "Xml": "current-layout/package-controlled-cancellation/tests.xml.gz",
+      "Counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      }
+    },
+    "live-shutdown": {
+      "Xml": "current-layout/package-live-shutdown/tests.xml.gz",
+      "Counts": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      }
+    },
+    "ordinary-child": {
+      "Xml": "current-layout/package-ordinary-restart/parties-five-memory-runtime-8cbd9c3cef91/runtime.xml.gz",
+      "Counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      }
+    }
+  },
+  "QueueControlCommand": "68-admitted-queue-controls",
+  "CleanupSelection": "current-layout/current-cleanup-selection.json.gz",
+  "RetainedFocusedFailure": "historical-prerequisites/signal-control-retry-diagnosis.json.gz",
+  "QueueAdmission": "current-layout/timeout-admission-control.json.gz",
+  "QueueControls": {
+    "Passed": 5,
+    "AdmissionReceipt": "current-layout/timeout-admission-control.json.gz"
+  },
+  "ConfigurationOnlyControls": {
+    "Xml": "current-layout/67-configuration-controls.xml.gz"
+  },
+  "StartupAdmissionControls": {
+    "Xml": "current-layout/65-startup-ordering-controls.xml.gz"
+  },
+  "IsolatedLocalClone": true,
+  "RootReferenceGitlinksFrozen": true,
+  "ImplementationComplete": true,
+  "AllJobsAwaited": true,
+  "ScratchRemoved": true,
+  "CompletionReceipt": "current-layout/handoff-completion.json.gz",
+  "PostRuntimeInputValidation": {
+    "CommandLabel": "74-final-post-runtime-validation"
+  },
+  "FalseClosureMutationRejected": true,
+  "FalseClosureAndWrongSessionControls": "packet-mutation-controls.json.gz",
+  "ExternalGatesRemainOpen": [
+    "publication/adoption",
+    "historical production inventory",
+    "older-writer exclusion",
+    "deployment/workload/key/trust custody",
+    "owner acceptance"
+  ],
+  "ExplicitFallbackProfile": {
+    "EventStore": "5.1.0",
+    "Tenants": "8.0.0",
+    "Memories": "4.0.0",
+    "FrontComposer": "6.0.0",
+    "McpCli": "3.0.0",
+    "Configuration": "Release",
+    "TrackedDependencyFilesChanged": false,
+    "Purpose": "Retain the previously approved compatible qualification profile after external default drift; published current-default adoption remains open"
+  },
+  "CurrentDefaultDependencyAdoptionQualified": false,
+  "CurrentSourceHostSeparate": true,
+  "ExplicitProfileInvocationOnly": true,
+  "HistoricalContext": "historical-context/original-sdk-custody-limit.json.gz",
+  "IndependentFinalArtifactReviewPending": false,
+  "PublicationPerformedByImplementation": false,
+  "IndependentParentCredentialScanPassed": true,
+  "IndependentParentSourceFilesMatched": 39
+}
