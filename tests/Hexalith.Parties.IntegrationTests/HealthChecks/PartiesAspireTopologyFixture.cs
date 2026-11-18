@@ -388,7 +388,8 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 string selectedCommit = await ProjectionDeliveryWriterProtocolTestLease
                     .ReadExactSourceCommitAsync(FindRepositoryRoot(), cts.Token).ConfigureAwait(false);
                 await ProjectionDeliveryWriterProtocolTestLease.ActivateAsync(
-                    $"{_redis.GetEndpoint("tcp").Host}:{_redis.GetEndpoint("tcp").Port}", _eventStoreClient, CreateAdministratorToken(),
+                    $"{_redis.GetEndpoint("tcp").Host}:{_redis.GetEndpoint("tcp").Port}",
+                    await GetRedisPasswordAsync(cts.Token).ConfigureAwait(false), _eventStoreClient, CreateAdministratorToken(),
                     selectedCommit, "disposable-memories-workflow-fixture-backup", cts.Token).ConfigureAwait(false);
                 InitializationPhase = "eventstore-resource-health";
                 await _app.ResourceNotifications.WaitForResourceHealthyAsync("eventstore", cts.Token).ConfigureAwait(false);
@@ -439,6 +440,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 .ConfigureAwait(false);
             await ProjectionDeliveryWriterProtocolTestLease.ActivateAsync(
                 $"{_redis.GetEndpoint("tcp").Host}:{_redis.GetEndpoint("tcp").Port}",
+                await GetRedisPasswordAsync(cts.Token).ConfigureAwait(false),
                 _eventStoreClient,
                 CreateAdministratorToken(),
                 sourceCommit,
@@ -575,10 +577,20 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         using IConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync(new ConfigurationOptions
         {
             EndPoints = { $"{_redis.GetEndpoint("tcp").Host}:{_redis.GetEndpoint("tcp").Port}" },
+            Password = await GetRedisPasswordAsync(cancellationToken).ConfigureAwait(false),
             ConnectTimeout = 5000, SyncTimeout = 5000, AbortOnConnectFail = true, AllowAdmin = false,
         }).WaitAsync(cancellationToken).ConfigureAwait(false);
         RedisValue value = await redis.GetDatabase().HashGetAsync(key, "data").WaitAsync(cancellationToken).ConfigureAwait(false);
         return value.IsNull ? null : value.ToString();
+    }
+
+    private async Task<string> GetRedisPasswordAsync(CancellationToken cancellationToken)
+    {
+        IResourceBuilder<ContainerResource> redis = _redis ?? throw new InvalidOperationException("The session has no owned Redis.");
+        ParameterResource password = redis.ApplicationBuilder.Resources.OfType<ParameterResource>()
+            .Single(parameter => parameter.Name == PartiesTestRedis.PasswordParameterName);
+        return await password.GetValueAsync(cancellationToken).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("The session has no owned Redis password.");
     }
 
     /// <summary>Reads actor-owned metadata and every exact event key independently of command status.</summary>

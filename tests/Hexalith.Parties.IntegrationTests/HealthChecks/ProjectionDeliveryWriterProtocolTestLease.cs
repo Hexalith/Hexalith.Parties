@@ -68,18 +68,20 @@ internal static class ProjectionDeliveryWriterProtocolTestLease
     /// </summary>
     internal static async Task ActivateAsync(
         string redisEndpoint,
+        string redisPassword,
         HttpClient eventStoreClient,
         string administratorToken,
         string sourceCommit,
         string backupReference,
         CancellationToken cancellationToken) {
         ArgumentException.ThrowIfNullOrWhiteSpace(redisEndpoint);
+        ArgumentException.ThrowIfNullOrWhiteSpace(redisPassword);
         ArgumentNullException.ThrowIfNull(eventStoreClient);
         ArgumentException.ThrowIfNullOrWhiteSpace(administratorToken);
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceCommit);
         ArgumentException.ThrowIfNullOrWhiteSpace(backupReference);
 
-        using IConnectionMultiplexer redis = await ConnectRedisAsync(redisEndpoint).ConfigureAwait(false);
+        using IConnectionMultiplexer redis = await ConnectRedisAsync(redisEndpoint, redisPassword).ConfigureAwait(false);
         IDatabase database = redis.GetDatabase();
         string lastDiagnostic = "No activation attempt completed.";
 
@@ -167,10 +169,11 @@ internal static class ProjectionDeliveryWriterProtocolTestLease
         }
     }
 
-    private static async Task<IConnectionMultiplexer> ConnectRedisAsync(string redisEndpoint)
+    private static async Task<IConnectionMultiplexer> ConnectRedisAsync(string redisEndpoint, string redisPassword)
         => await ConnectionMultiplexer.ConnectAsync(new ConfigurationOptions
         {
             EndPoints = { redisEndpoint },
+            Password = redisPassword,
             ConnectTimeout = 5_000,
             SyncTimeout = 5_000,
             AbortOnConnectFail = false,

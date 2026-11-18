@@ -24,6 +24,9 @@ tests/Hexalith.Parties.Ci.Tests/SignalRSecurityFloorTests.cs whitespace=blank-at
 .github/workflows/release.yml whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.Ci.Tests/ReleaseArtifactVerificationTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesTestRedis.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.IntegrationTests/HealthChecks/ProjectionDeliveryWriterProtocolTestLease.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/Hexalith.Parties.IntegrationTests/Topology/PartiesTestRedisTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/Hexalith.Parties.IntegrationTests/Topology/MemoriesAuthoritativePersistenceTests.cs whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 
 # Preserve authored CRLF in the refreshed current-toolchain guards.

@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 
@@ -8,6 +10,9 @@ namespace Hexalith.Parties.IntegrationTests.HealthChecks;
 /// <summary>Routes every test sidecar to fresh, session-owned Redis before the application starts.</summary>
 internal static class PartiesTestRedis
 {
+    /// <summary>The secret parameter shared by the owned Redis server and its clients.</summary>
+    internal const string PasswordParameterName = "fixture-redis-password";
+
     /// <summary>Creates a nonpersistent Redis container and replaces all state/pubsub Redis endpoints.</summary>
     /// <param name="builder">The unstarted test application model.</param>
     /// <returns>The owned Redis resource, whose allocated endpoint is also used to verify activation.</returns>
@@ -50,20 +55,19 @@ internal static class PartiesTestRedis
             throw new InvalidOperationException("The disposable topology requires modelled Redis state and pub/sub components.");
         }
 
+        // Aspire requires a value for the secret parameter used by the Toolkit secret store.
+        IResourceBuilder<ParameterResource> password = builder.AddParameter(
+            PasswordParameterName, Convert.ToHexString(RandomNumberGenerator.GetBytes(32)), secret: true);
         IResourceBuilder<ContainerResource> redis = builder
             .AddContainer("fixture-redis", "docker.io/library/redis")
             // Aspire adds the sha256: prefix when resolving the complete image name.
             .WithImageSHA256("ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf")
-            .WithArgs("redis-server", "--save", string.Empty, "--appendonly", "no")
+            .WithArgs("redis-server", "--save", string.Empty, "--appendonly", "no", "--requirepass", password.Resource)
             .WithEndpoint(name: "tcp", targetPort: 6379, scheme: "tcp");
         EndpointReference endpoint = redis.GetEndpoint("tcp");
         ReferenceExpression address = ReferenceExpression.Create(
             $"{endpoint.Property(EndpointProperty.Host)}:{endpoint.Property(EndpointProperty.Port)}");
-        // The Toolkit's value-provider overload emits secretKeyRef metadata but only its
-        // secret-parameter overload binds auth.secretStore. Keep the empty password in
-        // that supported path so redisHost resolves instead of falling back to localhost.
-        IResourceBuilder<ParameterResource> password = builder.AddParameter(
-            "fixture-redis-password", string.Empty, secret: true);
+        // The Toolkit's secret-parameter overload binds auth.secretStore for both metadata values.
         foreach (DaprComponentResource component in components)
         {
             _ = builder.CreateResourceBuilder<IDaprComponentResource>(component.Name)
@@ -85,7 +89,7 @@ internal static class PartiesTestRedis
             sidecar.Sidecar.Annotations.Add(new EnvironmentCallbackAnnotation(context =>
             {
                 context.EnvironmentVariables["REDIS_HOST"] = address;
-                context.EnvironmentVariables["REDIS_PASSWORD"] = string.Empty;
+                context.EnvironmentVariables["REDIS_PASSWORD"] = password.Resource;
             }));
         }
 

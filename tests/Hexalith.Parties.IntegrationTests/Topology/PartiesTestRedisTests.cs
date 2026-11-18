@@ -39,6 +39,10 @@ public sealed class PartiesTestRedisTests
                 .Select(sidecar => sidecar.Sidecar.Name).ToArray();
             statelessSidecars.ShouldContain("eventstore-admin-ui-dapr");
             IResourceBuilder<ContainerResource> redis = PartiesTestRedis.Configure(builder);
+            ParameterResource redisPassword = builder.Resources.OfType<ParameterResource>()
+                .Single(parameter => parameter.Name == PartiesTestRedis.PasswordParameterName);
+            string? passwordValue = await redisPassword.GetValueAsync(TestContext.Current.CancellationToken);
+            passwordValue.ShouldNotBeNullOrWhiteSpace();
             ResourceExtensions.TryGetContainerImageName(redis.Resource, out string? image).ShouldBeTrue();
             image.ShouldBe("docker.io/library/redis@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf");
             EndpointAnnotation endpoint = redis.Resource.Annotations.OfType<EndpointAnnotation>().Single();
@@ -62,7 +66,7 @@ public sealed class PartiesTestRedisTests
 
                 var address = (IValueProvider)context.EnvironmentVariables["REDIS_HOST"];
                 (await address.GetValueAsync(TestContext.Current.CancellationToken)).ShouldBe("127.0.0.1:46379");
-                context.EnvironmentVariables["REDIS_PASSWORD"].ShouldBe(string.Empty);
+                context.EnvironmentVariables["REDIS_PASSWORD"].ShouldBeSameAs(redisPassword);
             }
 
             // Run the SDK's rendering hook without starting containers or sidecars. Inspect
@@ -141,7 +145,7 @@ public sealed class PartiesTestRedisTests
                     YamlNode password = metadata.Children.Single(item => item["name"].ToString() == "redisPassword");
                     string passwordVariable = password["secretKeyRef"]["name"].ToString();
                     password["secretKeyRef"]["key"].ToString().ShouldBe(passwordVariable);
-                    environment.EnvironmentVariables[passwordVariable].ShouldBe(string.Empty);
+                    Equals(environment.EnvironmentVariables[passwordVariable], passwordValue).ShouldBeTrue();
                     if (store["spec"]["type"].ToString() == "state.redis")
                     {
                         metadata.Children.Single(item => item["name"].ToString() == "keyPrefix")["value"]
