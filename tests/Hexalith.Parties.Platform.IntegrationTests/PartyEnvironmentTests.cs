@@ -25,10 +25,13 @@ public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, IT
     };
 
     /// <summary>Exercises the full real persistence path and writes its canonical observation once.</summary>
-    /// <returns>The bounded real-service assertions and single canonical observation.</returns>
+    /// <returns>The bounded real-service assertions, optional controller hold, and single canonical observation.</returns>
     [Fact]
-    public Task RealDependencies_CreateQueryAndPersistMatchingPartyEvents() =>
-        ExerciseRealDependenciesAsync(recordCanonicalObservation: true, TestContext.Current.CancellationToken);
+    public async Task RealDependencies_CreateQueryAndPersistMatchingPartyEvents()
+    {
+        await ExerciseRealDependenciesAsync(recordCanonicalObservation: true, TestContext.Current.CancellationToken).ConfigureAwait(true);
+        await CiLifecycleHold.AfterPersistenceAsync(fixture, output, TestContext.Current.CancellationToken).ConfigureAwait(true);
+    }
 
     /// <summary>Runs initial persistence under the owning lifecycle operation's deadline.</summary>
     /// <param name="cancellationToken">The caller's remaining operation lifetime.</param>

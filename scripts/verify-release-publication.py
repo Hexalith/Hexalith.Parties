@@ -20,8 +20,8 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-BUILDS_SHA = "11a3a79cfac4bba9548c6364a17a01ee9b561370"
-VALIDATOR_SHA256 = "1913f75bdf39c494c5723bca5c04fcb2e6dc0474ad2d86c22e63aae96b9e850c"
+BUILDS_SHA = "7afc4981e21bc2fcce687199a3fd2c61fe87336e"
+VALIDATOR_SHA256 = "3f54edb036642551e64c180b4708a954d84bd55cac381a4459c3f75448488608"
 IMAGES = ("parties", "parties-mcp", "parties-ui")
 # A timed-out resolver cannot be interrupted. Its daemon worker retains one
 # shared lease until resolution, candidate attempts and late socket cleanup settle.

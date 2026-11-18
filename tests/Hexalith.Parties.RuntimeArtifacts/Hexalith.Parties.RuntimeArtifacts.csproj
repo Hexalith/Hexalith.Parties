@@ -5,8 +5,9 @@
     <IsTestProject>false</IsTestProject>
   </PropertyGroup>
   <Import Project="../../scripts/PartiesRuntimeGraph.props" />
-  <ItemGroup Condition="'$(UseHexalithProjectReferences)' == 'false'">
-    <!-- Executable owners plus the two nonpackable helpers their composition requires. -->
+  <ItemGroup Condition="'$(UseHexalithProjectReferences)' == 'false' and '$(HexalithSourceMappingMode)' != 'package'">
+    <!-- Executable owners plus the two nonpackable helpers their composition requires.
+         Package mapping cannot convert these nonpackable source edges (HXW006). -->
     <ProjectReference Include="$(_PartiesRuntimeEventStoreRoot)/src/Hexalith.EventStore.Admin.Server.Host/Hexalith.EventStore.Admin.Server.Host.csproj" />
     <ProjectReference Include="$(_PartiesRuntimeEventStoreRoot)/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj" />
     <ProjectReference Include="$(_PartiesRuntimeTenantsRoot)/src/Hexalith.Tenants/Hexalith.Tenants.csproj" />

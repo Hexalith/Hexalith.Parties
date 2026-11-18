@@ -60,13 +60,13 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `11.0.0` |
 | API docs | Microsoft.AspNetCore.OpenApi / Swashbuckle.SwaggerUI | `10.0.15` / `11.0.1` |
 | MCP | ModelContextProtocol / .AspNetCore | `2.4.0` / `2.4.0` |
-| UI | Microsoft.FluentUI.AspNetCore.Components | `5.0.1` |
+| UI | Microsoft.FluentUI.AspNetCore.Components | `5.1.0` |
 | | Microsoft.AspNetCore.Components.CustomElements | `11.0.0` |
-| Rich search (opt) | Hexalith.Memories.Client.Rest | package `4.0.0` by default |
+| Rich search (opt) | Hexalith.Memories.Client.Rest | package `3.0.27` by default |
 | Observability | OpenTelemetry (exporter/hosting/instrumentation) | `1.21.0` core/hosting/exporter and ASP.NET Core/HTTP/runtime instrumentation |
 | Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `11.0.0` |
 | Versioning | MinVer (git-tag SemVer, prefix `v`) | `8.0.0` |
-| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `4.0.3` / `4.3.0` / `6.2.0` / `2.15.2` / `4.16.0`† / `18.1.0` |
+| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `4.0.3` / `4.3.0` / `6.2.0` / `2.15.2` / `4.17.0`† / `18.1.0` |
 
 The earlier Tenants source identity `fcdcb4205a3f6e46f736cdd3e6f2b20ca2f241df`
 (`v5.7.0-180-gfcdcb420`), recorded at Parties
