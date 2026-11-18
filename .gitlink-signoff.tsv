@@ -837,3 +837,10 @@ references/Hexalith.PolymorphicSerializations|df1a0e5c21ac97d3519fd5acd3059aa3f6
 references/Hexalith.Tenants|2ff5f54c3b7e7e30e40bfee23aabd8695e7777fd|validated-advance|origin/main@2ff5f54c3b7e7e30e40bfee23aabd8695e7777fd|codex-agent|2026-11-18
 references/Hexalith.Platform|c5f5eab3af4605daeed547d3519b194faf4f0845|validated-advance|v2.2.0@c5f5eab3af4605daeed547d3519b194faf4f0845|codex-agent|2026-11-18
 references/Hexalith.Builds|38e038d1179b1c829ba47a45bfa0a4683ea5e2a5|validated-advance|v6.3.2@38e038d1179b1c829ba47a45bfa0a4683ea5e2a5|codex-agent|2026-11-18
+
+# User-delegated source selection verified on each owning remote.
+references/Hexalith.CiCd|736fcd48c2e1123b705e55879349671b48c9532a|validated-advance|origin/main@736fcd48c2e1123b705e55879349671b48c9532a|codex-agent|2026-11-18
+references/Hexalith.EventStore|82657b3d3b9f3ede3e711ab72dc67fea836e3029|validated-advance|origin/main@82657b3d3b9f3ede3e711ab72dc67fea836e3029|codex-agent|2026-11-18
+references/Hexalith.FrontComposer|76195272d07a0dd8c73ac3d8ffeb7a6b9a60d825|validated-advance|origin/main@76195272d07a0dd8c73ac3d8ffeb7a6b9a60d825|codex-agent|2026-11-18
+references/Hexalith.Memories|0856785c7c764a0dc305af058227d6485b65c697|validated-advance|origin/main@0856785c7c764a0dc305af058227d6485b65c697|codex-agent|2026-11-18
+references/Hexalith.Tenants|30b233026648488ca71fe5904fd218b7af934aed|validated-advance|origin/main@30b233026648488ca71fe5904fd218b7af934aed|codex-agent|2026-11-18
