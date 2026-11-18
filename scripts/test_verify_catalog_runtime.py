@@ -32,7 +32,8 @@ receipt = build / 'runtime-profile' / configuration / 'prepared.json'
 assert os.environ['Parties__Testing__PreparedRuntimeManifest'] == str(receipt)
 assert os.environ['PARTIES_MTLS_TOPOLOGY_TESTS'] == 'true'
 with (root / 'calls.jsonl').open('a') as log:
-    log.write(json.dumps({'phase': phase, 'arguments': arguments, 'build': str(build), 'pid': os.getpid()}) + chr(10))
+    log.write(json.dumps({'phase': phase, 'arguments': arguments, 'build': str(build), 'pid': os.getpid(),
+                          'sdk': os.environ.get('HexalithEventStoreVersion')}) + chr(10))
 print('Synthetic diagnostic for ' + phase, flush=True)
 if phase == 'build':
     (build / 'bin').mkdir(parents=True)
@@ -107,6 +108,7 @@ class VerifyCatalogRuntimeTests(unittest.TestCase):
             FIXTURE_ROOT=str(self.root), FAKE_PYTHON=sys.executable,
             FAKE_TOOL=str(self.fake), TMPDIR=str(self.scratch),
         )
+        self.environment.pop("HexalithEventStoreVersion", None)
 
     def command(self):
         return [sys.executable, "-B", str(self.runner), "--results-directory", str(self.results)]
@@ -125,7 +127,13 @@ class VerifyCatalogRuntimeTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         for call in self.calls():
             self.assertIn("Release", call["arguments"])
+            self.assertEqual("5.1.1", call["sdk"])
         self.assert_workspace_removed()
+
+    def test_preserves_an_explicit_runtime_sdk(self):
+        result = self.run_driver(HexalithEventStoreVersion="4.2.0")
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual(["4.2.0"] * 3, [call["sdk"] for call in self.calls()])
 
     def test_reuses_prebuilt_outputs_without_building_and_preserves_their_lifetime(self):
         build = self.root / "prebuilt"
@@ -139,6 +147,7 @@ class VerifyCatalogRuntimeTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         calls = self.calls()
         self.assertEqual(["prepare", "test"], [call["phase"] for call in calls])
+        self.assertEqual([None, None], [call["sdk"] for call in calls])
         self.assertIn("--reuse-build", calls[0]["arguments"])
         self.assertEqual(b"generated", binary.read_bytes())
         self.assertTrue(json.loads((self.results / "verification.json").read_text())["reusedBuild"])

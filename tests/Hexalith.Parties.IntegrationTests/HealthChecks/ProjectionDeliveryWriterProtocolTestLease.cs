@@ -23,10 +23,13 @@ internal static class ProjectionDeliveryWriterProtocolTestLease
 
 
     /// <summary>Resolves the exact Git commit containing the running test code.</summary>
-    internal static async Task<string> ReadExactSourceCommitAsync(CancellationToken cancellationToken) {
+    /// <param name="repositoryRoot">The Parties source checkout used to build the test.</param>
+    /// <param name="cancellationToken">The token used to cancel the Git command.</param>
+    /// <returns>The full commit SHA.</returns>
+    internal static async Task<string> ReadExactSourceCommitAsync(string repositoryRoot, CancellationToken cancellationToken) {
         var startInfo = new ProcessStartInfo {
             FileName = "git",
-            WorkingDirectory = Directory.GetCurrentDirectory(),
+            WorkingDirectory = repositoryRoot,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,

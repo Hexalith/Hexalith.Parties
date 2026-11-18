@@ -385,7 +385,8 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 _eventStoreClient.Timeout = TimeSpan.FromSeconds(60);
                 await WaitForEndpointAsync(_eventStoreClient, "/alive", [HttpStatusCode.OK], TimeSpan.FromMinutes(2), TimeSpan.FromSeconds(3), cts.Token).ConfigureAwait(false);
                 InitializationPhase = "writer-protocol-activation";
-                string selectedCommit = await ProjectionDeliveryWriterProtocolTestLease.ReadExactSourceCommitAsync(cts.Token).ConfigureAwait(false);
+                string selectedCommit = await ProjectionDeliveryWriterProtocolTestLease
+                    .ReadExactSourceCommitAsync(FindRepositoryRoot(), cts.Token).ConfigureAwait(false);
                 await ProjectionDeliveryWriterProtocolTestLease.ActivateAsync(
                     $"{_redis.GetEndpoint("tcp").Host}:{_redis.GetEndpoint("tcp").Port}", _eventStoreClient, CreateAdministratorToken(),
                     selectedCommit, "disposable-memories-workflow-fixture-backup", cts.Token).ConfigureAwait(false);
@@ -434,7 +435,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             // The disposable topology starts with no v2 writer cutover. Activate through
             // EventStore's operator API; shared developer Redis is never contacted.
             string sourceCommit = await ProjectionDeliveryWriterProtocolTestLease
-                .ReadExactSourceCommitAsync(cts.Token)
+                .ReadExactSourceCommitAsync(FindRepositoryRoot(), cts.Token)
                 .ConfigureAwait(false);
             await ProjectionDeliveryWriterProtocolTestLease.ActivateAsync(
                 $"{_redis.GetEndpoint("tcp").Host}:{_redis.GetEndpoint("tcp").Port}",
@@ -1202,6 +1203,17 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             return;
         }
 
+        string script = Path.Combine(FindRepositoryRoot(), "scripts", "aspire-start-mtls.sh");
+
+        string certificateDirectory = Session.CertificateDirectory;
+        _ciMtlsCertificateDirectory = certificateDirectory;
+        _ciMtlsBootstrapScript = script;
+        await RunCiDaprBootstrapScriptAsync(script, certificateDirectory, "--prepare-only", cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    private static string FindRepositoryRoot()
+    {
         DirectoryInfo? repository = null;
         string? configuredRoot = Environment.GetEnvironmentVariable("PARTIES_TEST_REPOSITORY_ROOT");
         if (configuredRoot is not null)
@@ -1229,16 +1241,8 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             }
         }
 
-        string repositoryRoot = repository?.FullName
+        return repository?.FullName
             ?? throw new FileNotFoundException("The CI Dapr mTLS bootstrap script was not found above the test output directory.");
-        string script = Path.Combine(repositoryRoot, "scripts", "aspire-start-mtls.sh");
-
-        string certificateDirectory = Session.CertificateDirectory;
-        _ciMtlsCertificateDirectory = certificateDirectory;
-        _ciMtlsBootstrapScript = script;
-        await RunCiDaprBootstrapScriptAsync(script, certificateDirectory, "--prepare-only", cancellationToken)
-            .ConfigureAwait(false);
-
     }
 
     private async Task CleanupCiDaprMtlsAsync()
