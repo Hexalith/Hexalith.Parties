@@ -821,3 +821,17 @@ references/Hexalith.Memories|7a5c892508700b2e5c71c921cdaeedf68de5f03d|validated-
 
 # Approved 2026-11-16 bmad-build source qualification; package/deployment owner gates remain separate.
 references/Hexalith.Memories|65bfb98dca7f65c005213507b15fbe4ab45f2e19|validated-advance|origin/main@65bfb98dca7f65c005213507b15fbe4ab45f2e19|codex-agent|2026-11-16
+
+# User-delegated source selection, verified against each owning remote.
+# Platform v2.1.11 authenticates the Builds v6.3.0 catalog for package CI.
+references/Hexalith.AI.Tools|2a1784bec7d249d815cbd166e01b29fd9ad1f451|validated-advance|origin/main@2a1784bec7d249d815cbd166e01b29fd9ad1f451|codex-agent|2026-11-18
+references/Hexalith.Builds|7afc4981e21bc2fcce687199a3fd2c61fe87336e|validated-advance|v6.3.0@7afc4981e21bc2fcce687199a3fd2c61fe87336e|codex-agent|2026-11-18
+references/Hexalith.CiCd|dc931eafa9f50c68f847650ea0d7aa60c8bfce0e|validated-advance|origin/main@dc931eafa9f50c68f847650ea0d7aa60c8bfce0e|codex-agent|2026-11-18
+references/Hexalith.Commons|cb53158b77707794560d4589844fd18189d5b8b4|validated-advance|origin/main@cb53158b77707794560d4589844fd18189d5b8b4|codex-agent|2026-11-18
+references/Hexalith.EventStore|def48eb38f87ad4a0e0be832d0e7f5a6ffca6866|validated-advance|origin/main@def48eb38f87ad4a0e0be832d0e7f5a6ffca6866|codex-agent|2026-11-18
+references/Hexalith.FrontComposer|9cdcdd85a07cf3b556721ae1a0968128a87f6ac9|validated-advance|origin/main@9cdcdd85a07cf3b556721ae1a0968128a87f6ac9|codex-agent|2026-11-18
+references/Hexalith.McpCli|a8f674b2553fb8bb870b5ca82146417c60f26d42|validated-advance|origin/main@a8f674b2553fb8bb870b5ca82146417c60f26d42|codex-agent|2026-11-18
+references/Hexalith.Memories|2b30558be1739549f1e6e5d7343bd3a65526209e|validated-advance|origin/main@2b30558be1739549f1e6e5d7343bd3a65526209e|codex-agent|2026-11-18
+references/Hexalith.Platform|bb8c7915ae67e427f3629427550c96ca1e74bc14|validated-advance|v2.1.11@bb8c7915ae67e427f3629427550c96ca1e74bc14|codex-agent|2026-11-18
+references/Hexalith.PolymorphicSerializations|df1a0e5c21ac97d3519fd5acd3059aa3f63f656a|validated-advance|origin/main@df1a0e5c21ac97d3519fd5acd3059aa3f63f656a|codex-agent|2026-11-18
+references/Hexalith.Tenants|2ff5f54c3b7e7e30e40bfee23aabd8695e7777fd|validated-advance|origin/main@2ff5f54c3b7e7e30e40bfee23aabd8695e7777fd|codex-agent|2026-11-18
