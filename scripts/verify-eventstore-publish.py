@@ -258,10 +258,10 @@ def run_private(command, directory, environment, timeout):
     return output
 
 
-def owner_assembly(project, environment):
+def owner_assembly(project, environment, build_properties=BUILD_PROPERTIES):
     """Evaluate the selected owner's actual output using the same build properties."""
     output = run_private(["dotnet", "msbuild", str(project), "-nologo", "-nr:false", "-m:1",
-                          *BUILD_PROPERTIES, "-getProperty:TargetPath,AssemblyName"], ROOT, environment, 60)
+                          *build_properties, "-getProperty:TargetPath,AssemblyName"], ROOT, environment, 60)
     require(isinstance(output, bytes) and 0 < len(output) <= 4096,
             "evaluated owner AppHost target path invalid")
     try:
@@ -298,10 +298,16 @@ def emitted_manifests(project=DEFAULT_PROJECT, build=True):
                    and key not in {"PUBLISH_TARGET", "DOTNET_ENVIRONMENT", "ASPNETCORE_ENVIRONMENT"}}
     environment.update({"DOTNET_ENVIRONMENT": "Production", "ASPNETCORE_ENVIRONMENT": "Production",
                         "SKIP_PREREQUISITE_CHECK": "true"})
+    build_properties = BUILD_PROPERTIES
+    catalog = environment.pop("PARTIES_EVENTSTORE_OWNER_CATALOG", None)
+    if catalog is not None:
+        catalog = Path(catalog)
+        require(catalog.is_absolute() and catalog.is_file(), "EventStore owner Builds catalog missing")
+        build_properties = (*build_properties, f"-p:HexalithBuildPackageVersions1={catalog}")
     if build:
         run_private(["dotnet", "build", str(project), "--disable-build-servers", "-m:1",
-                     *BUILD_PROPERTIES], ROOT, environment, 300)
-    assembly = owner_assembly(project, environment)
+                     *build_properties], ROOT, environment, 300)
+    assembly = owner_assembly(project, environment, build_properties)
     environment.update({"Authentication__JwtBearer__Authority": AUTHORITY, "Authentication__JwtBearer__Issuer": AUTHORITY,
                         "Authentication__JwtBearer__Audience": AUDIENCES[0],
                         "Authentication__JwtBearer__ValidAudiences__0": AUDIENCES[1],

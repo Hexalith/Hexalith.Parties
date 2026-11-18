@@ -175,6 +175,8 @@ class EvaluatedOwnerPathTests(unittest.TestCase):
             assembly = project.parent / "redirected/Release/net11.0/Owner.dll"
             assembly.parent.mkdir(parents=True)
             assembly.touch()
+            catalog = project.parent / "Directory.Packages.props"
+            catalog.touch()
             commands = []
 
             def run(command, directory, environment, timeout):
@@ -184,7 +186,8 @@ class EvaluatedOwnerPathTests(unittest.TestCase):
                 if "--output-path" in command:
                     raise publisher.QualificationError("fixture stops before publisher execution")
 
-            with mock.patch.object(publisher, "run_private", side_effect=run):
+            with mock.patch.object(publisher, "run_private", side_effect=run), \
+                 mock.patch.dict(os.environ, {"PARTIES_EVENTSTORE_OWNER_CATALOG": str(catalog)}):
                 with self.assertRaisesRegex(publisher.QualificationError, "fixture stops"):
                     with publisher.emitted_manifests(project):
                         self.fail("fixture publisher must not complete")
@@ -193,7 +196,7 @@ class EvaluatedOwnerPathTests(unittest.TestCase):
             for command in commands[:2]:
                 self.assertIn(str(project), command)
                 self.assertEqual([argument for argument in command if argument.startswith("-p:")],
-                                 list(publisher.BUILD_PROPERTIES))
+                                 [*publisher.BUILD_PROPERTIES, f"-p:HexalithBuildPackageVersions1={catalog}"])
                 self.assertFalse(any("NuGetAudit=false" in argument for argument in command))
             self.assertEqual(commands[2][1], str(assembly))
 

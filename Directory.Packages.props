@@ -15,6 +15,9 @@
     <Hexalith2BuildPackageProps>$(MSBuildThisFileDirectory)../Hexalith.Builds/Props/Directory.Packages.props</Hexalith2BuildPackageProps>
     <Hexalith3BuildPackageProps>$(MSBuildThisFileDirectory)../../Hexalith.Builds/Props/Directory.Packages.props</Hexalith3BuildPackageProps>
     <!-- Standalone family fallbacks defer to an existing caller-selected catalog. -->
+    <!-- Unmapped builds can use current packages while Platform package mode uses its signed catalog. -->
+    <HexalithCommonsVersion Condition="'$(HexalithCommonsVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true' and '$(HexalithSourceMappingMode)' != 'package'">3.0.1</HexalithCommonsVersion>
+    <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true' and '$(HexalithSourceMappingMode)' != 'package' and '$(MSBuildProjectName)' == 'Hexalith.Parties.Runtime.IntegrationTests'">5.3.1</HexalithEventStoreVersion>
     <!-- Keep the published product EventStore pin only when no Builds catalog is present.
          A present catalog selects SDK 4.2 for Parties-role projects (HXW012). -->
     <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == '' and !Exists('$(Hexalith1BuildPackageProps)') and !Exists('$(Hexalith2BuildPackageProps)') and !Exists('$(Hexalith3BuildPackageProps)')">5.1.1</HexalithEventStoreVersion>
@@ -29,13 +32,15 @@
   <Import Project="$(Hexalith1BuildPackageProps)" Condition="Exists('$(Hexalith1BuildPackageProps)') And '$(HexalithVersionsLoaded)' != 'true'" />
   <Import Project="$(Hexalith2BuildPackageProps)" Condition="Exists('$(Hexalith2BuildPackageProps)') And '$(HexalithVersionsLoaded)' != 'true'" />
   <Import Project="$(Hexalith3BuildPackageProps)" Condition="'$(HexalithVersionsLoaded)' != 'true'" />
-  <PropertyGroup>
+  <PropertyGroup Condition="'$(HexalithSourceMappingMode)' != 'package'">
     <HexalithAspireAppHostSdkVersion>17.0.0</HexalithAspireAppHostSdkVersion>
     <HexalithAspireHostingDaprVersion>17.0.0-beta.1052</HexalithAspireHostingDaprVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Aspire.Hosting.Orchestration.linux-x64" Version="17.0.0" />
-    <PackageVersion Include="Aspire.Dashboard.Sdk.linux-x64" Version="17.0.0" />
+    <PackageVersion Include="Aspire.Hosting.Orchestration.linux-x64" Version="$(HexalithAspireAppHostSdkVersion)" Condition="'@(PackageVersion->WithMetadataValue('Identity', 'Aspire.Hosting.Orchestration.linux-x64'))' == ''" />
+    <PackageVersion Include="Aspire.Dashboard.Sdk.linux-x64" Version="$(HexalithAspireAppHostSdkVersion)" Condition="'@(PackageVersion->WithMetadataValue('Identity', 'Aspire.Dashboard.Sdk.linux-x64'))' == ''" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(HexalithSourceMappingMode)' != 'package'">
     <PackageVersion Update="Aspire.Azure.Messaging.ServiceBus" Version="17.0.0" />
     <PackageVersion Update="Aspire.Azure.Security.KeyVault" Version="17.0.0" />
     <PackageVersion Update="Aspire.Azure.Storage.Blobs" Version="17.0.0" />

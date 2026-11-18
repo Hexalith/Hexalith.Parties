@@ -323,11 +323,31 @@ jobs:
           dotnet-version: '10.0.404'
       - name: Initialize owner publisher build dependencies
         run: git -c submodule.recurse=false submodule update --init references/Hexalith.EventStore references/Hexalith.Builds
+      - name: Resolve the EventStore owner's Builds catalog
+        id: owner-builds
+        shell: bash
+        run: |
+          set -euo pipefail
+          entry="$(git -C references/Hexalith.EventStore ls-tree HEAD -- references/Hexalith.Builds)"
+          read -r mode type revision path <<< "$entry"
+          [[ "$mode" == 160000 && "$type" == commit && "$path" == references/Hexalith.Builds && "$revision" =~ ^[0-9a-f]{40}$ ]]
+          printf 'revision=%s\n' "$revision" >> "$GITHUB_OUTPUT"
+      - name: Check out the EventStore owner's Builds catalog
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: Hexalith/Hexalith.Builds
+          ref: ${{ steps.owner-builds.outputs.revision }}
+          path: .hexalith/eventstore-owner-builds
+          sparse-checkout: Props
+          submodules: false
+          persist-credentials: false
       - name: Install Dapr CLI for manifest publisher
         uses: dapr/setup-dapr@8d980918fd43a2765c143ce7f687665b2d46a6b9 # v2
         with:
           version: '1.18.0'
       - name: Qualify actual owner manifests and rejection controls
+        env:
+          PARTIES_EVENTSTORE_OWNER_CATALOG: ${{ github.workspace }}/.hexalith/eventstore-owner-builds/Props/Directory.Packages.props
         run: python3 -B -m unittest scripts.test_verify_eventstore_publish -v
 
   ui-a11y:

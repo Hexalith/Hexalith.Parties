@@ -176,11 +176,11 @@ public sealed class DocumentationFitnessTests
     public void MaintainedTechnologyTablesMatchCentralPackageCatalog()
     {
         string root = RepositoryRoot.Locate();
-        IReadOnlyDictionary<string, string> versions = EffectivePackageVersions.ReadPackages(root);
+        IReadOnlyDictionary<string, string> versions = EffectivePackageVersions.ReadPackages(root, isolateEnvironment: true);
         string Version(string packageId) => versions[packageId];
         string aspire = Version("Aspire.Hosting");
         XDocument appHost = XDocument.Parse(Read(root, "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj"));
-        appHost.Root!.Attribute("Sdk")!.Value.ShouldBe($"Aspire.AppHost.Sdk/{aspire}");
+        appHost.Root!.Elements("PropertyGroup").Elements("HexalithPartiesAppHostSdkVersion").Single().Value.ShouldBe(aspire);
         foreach (string package in new[] { "Aspire.Hosting.Azure.AppContainers", "Aspire.Hosting.Docker", "Aspire.Hosting.Redis", "Aspire.Hosting.Testing" })
         {
             Version(package).ShouldBe(aspire, package);
