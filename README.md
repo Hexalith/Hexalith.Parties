@@ -45,7 +45,7 @@ dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manif
 ```
 
 The repository pins module tool **6.3.0** alongside aspirate and uses Aspire CLI
-**13.6.5**. From this independent checkout, `debug` resolves direct references
+**17.0.0**. From this independent checkout, `debug` resolves direct references
 once, builds the selected
 source projects in Debug, and waits for exactly `parties`, `eventstore`, `tenants`,
 `tenants-api`, `memories`, `memories-access-telemetry-clock`, and `memories-access-telemetry`.

@@ -16,7 +16,7 @@ Public command and query traffic goes through **Hexalith.EventStore**; the `part
 | **Style** | Event sourcing + CQRS + EventStore SDK domain/projection/query handlers, fronted by the EventStore gateway |
 | **Repository** | Monolith - exactly 15 projects under `src` plus one sample project, 18 runnable .NET test projects plus three support hosts, one contracts artifact and one runtime-artifact graph, and Playwright e2e |
 | **Language / runtime** | C# / **.NET 11** (SDK `11.0.100`) |
-| **Orchestration** | .NET Aspire 13.6.5 (`dotnet aspire run`) |
+| **Orchestration** | .NET Aspire 17.0.0 (`dotnet aspire run`) |
 | **Eventing** | DAPR pub/sub — CloudEvents 1.0 on `{tenant}.parties.events` (Redis local; Kafka/RabbitMQ/Service Bus in prod) |
 | **Integration** | Typed .NET client · `parties-ui` Blazor Server BFF · `parties-mcp` (AI tools, 5) · DAPR event subscription · Blazor Picker, AdminPortal & ConsumerPortal |
 | **License** | MIT |
@@ -39,7 +39,7 @@ Public command and query traffic goes through **Hexalith.EventStore**; the `part
 | Category | Technology | Version |
 |----------|-----------|---------|
 | Runtime | .NET | net11.0 (SDK 11.0.100) |
-| Orchestration | .NET Aspire | 13.6.5 |
+| Orchestration | .NET Aspire | 17.0.0 |
 | Actors / pub-sub | DAPR | 1.19.1 |
 | Validation | FluentValidation | 12.2.0 |
 | Mediation | MediatR | 14.2.0 |

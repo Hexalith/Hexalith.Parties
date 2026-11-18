@@ -16,6 +16,9 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Aspire 17 marks AddProject and Aspire.AppHost.Sdk obsolete; EventStore.Aspire
+         and the Parties AppHost still use the staged ProjectResource APIs. -->
+    <NoWarn Condition="'$(MSBuildProjectName)' == 'Hexalith.Parties.AppHost' or '$(MSBuildProjectName)' == 'Hexalith.Parties.Aspire' or '$(MSBuildProjectName)' == 'Hexalith.Parties.Aspire.Tests' or '$(MSBuildProjectName)' == 'Hexalith.Parties.IntegrationTests' or '$(MSBuildProjectName)' == 'Hexalith.EventStore.Aspire'">$(NoWarn);CS0618;ASPIRE012</NoWarn>
     <!-- In-tree pack noise from submodule generator/library packages: NU5118 fires because this
          repo's README and a submodule's own README both pack to "\" when the submodule builds
          under our Directory.Build.props chain; NU5128 is the expected "analyzer package has no

@@ -45,7 +45,7 @@ The current tool manifest selects published module CLI **5.2.2**,
 within the qualified Platform source's `[5.2.2, 6.0.0-0)` prerequisite. The
 immutable reusable workflow restores that exact manifest. The repository pins
 .NET SDK **11.0.100** with current Parties targets at `net11.0`; the active
-AppHost SDK, package preparation and Aspire CLI expectations use **13.6.5**.
+AppHost SDK, package preparation and Aspire CLI expectations use **17.0.0**.
 The earlier Builds v4.47.0 at
 `5ec1779040606be89306129a7d2b245258c9acd2` passes source CI `42661065183`
 and release `42664680297`; both official tool archives, their source metadata,

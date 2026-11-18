@@ -29,8 +29,26 @@
   <Import Project="$(Hexalith1BuildPackageProps)" Condition="Exists('$(Hexalith1BuildPackageProps)') And '$(HexalithVersionsLoaded)' != 'true'" />
   <Import Project="$(Hexalith2BuildPackageProps)" Condition="Exists('$(Hexalith2BuildPackageProps)') And '$(HexalithVersionsLoaded)' != 'true'" />
   <Import Project="$(Hexalith3BuildPackageProps)" Condition="'$(HexalithVersionsLoaded)' != 'true'" />
+  <PropertyGroup>
+    <HexalithAspireAppHostSdkVersion>17.0.0</HexalithAspireAppHostSdkVersion>
+    <HexalithAspireHostingDaprVersion>17.0.0-beta.1052</HexalithAspireHostingDaprVersion>
+  </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Aspire.Hosting.Orchestration.linux-x64" Version="13.6.5" />
-    <PackageVersion Include="Aspire.Dashboard.Sdk.linux-x64" Version="13.6.5" />
+    <PackageVersion Include="Aspire.Hosting.Orchestration.linux-x64" Version="17.0.0" />
+    <PackageVersion Include="Aspire.Dashboard.Sdk.linux-x64" Version="17.0.0" />
+    <PackageVersion Update="Aspire.Azure.Messaging.ServiceBus" Version="17.0.0" />
+    <PackageVersion Update="Aspire.Azure.Security.KeyVault" Version="17.0.0" />
+    <PackageVersion Update="Aspire.Azure.Storage.Blobs" Version="17.0.0" />
+    <PackageVersion Update="Aspire.Azure.Storage.Queues" Version="17.0.0" />
+    <PackageVersion Update="Aspire.Hosting" Version="17.0.0" />
+    <PackageVersion Update="Aspire.Hosting.Azure.AppContainers" Version="17.0.0" />
+    <PackageVersion Update="Aspire.Hosting.Azure.CosmosDB" Version="17.0.0" />
+    <PackageVersion Update="Aspire.Hosting.Docker" Version="17.0.0" />
+    <PackageVersion Update="Aspire.Hosting.Keycloak" Version="17.0.0-preview.1.26567.5" />
+    <PackageVersion Update="Aspire.Hosting.Kubernetes" Version="17.0.0" />
+    <PackageVersion Update="Aspire.Hosting.Redis" Version="17.0.0" />
+    <PackageVersion Update="Aspire.Hosting.Testing" Version="17.0.0" />
+    <PackageVersion Update="Aspire.Microsoft.Azure.Cosmos" Version="17.0.0" />
+    <PackageVersion Update="CommunityToolkit.Aspire.Hosting.Dapr" Version="17.0.0-beta.1052" />
   </ItemGroup>
 </Project>
