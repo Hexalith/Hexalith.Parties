@@ -33,8 +33,15 @@ fail() {
   fail "GITHUB_SHA must identify the exact workflow source commit."
 [[ "$source_branch" = "main" ]] ||
   fail "HEXALITH_RELEASE_SOURCE_BRANCH must be exactly main."
-[[ "$source_ci_workflow" = "ci.yml" ]] ||
-  fail "HEXALITH_RELEASE_SOURCE_CI_WORKFLOW must be exactly ci.yml."
+case "$source_ci_workflow" in
+  ci.yml) ;;
+  release-qualification.yml)
+    [[ "$version" = "4.0.0" &&
+       "$(git rev-list --parents -n 1 HEAD)" = "$source_sha e68f6e52b98fc1c496950631dc060daed5b37558" ]] ||
+      fail "The Platform HXP020 exception applies only to the authorized Parties 4.0.0 source."
+    ;;
+  *) fail "Unknown Parties release qualification workflow." ;;
+esac
 [[ "$package_manifest" = "tools/release-packages.json" ]] ||
   fail "HEXALITH_RELEASE_PACKAGE_MANIFEST must identify the authoritative manifest."
 [[ "$release_environment" = "production" ]] ||

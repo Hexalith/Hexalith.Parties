@@ -2,10 +2,15 @@ name: Release
 
 # Publication is an explicit operator action. The unprotected preflight proves the
 # dispatch selected the current main tip and that exact source already has a successful
-# push CI run and independent main-push range signoff before approval. Ordinary
+# qualification run and independent main-push range signoff before publication. Ordinary
 # pushes and pull requests run CI only (see Hexalith.Builds ci-cd-standards.md, "Release Gates").
 on:
   workflow_dispatch:
+    inputs:
+      waive_platform_hxp020:
+        description: 'Use the administrator-authorized Platform HXP020 exception for Parties 4.0.0'
+        type: boolean
+        default: false
 
 concurrency:
   group: release-production
@@ -20,17 +25,22 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       release-floor-tag: ${{ steps.registry-floor.outputs.release-floor-tag }}
+      source-ci-workflow: ${{ steps.source.outputs.source-ci-workflow }}
     permissions:
       actions: read
       contents: read
     steps:
-      - name: Require current main with successful exact-source CI and range proof
+      - name: Require current main with exact-source qualification and range proof
+        id: source
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
           DISPATCH_REF: ${{ github.ref }}
           DISPATCH_SHA: ${{ github.sha }}
+          WAIVE_PLATFORM_HXP020: ${{ inputs.waive_platform_hxp020 }}
+          RELEASE_ACTOR: ${{ github.actor }}
+          TRIGGERING_ACTOR: ${{ github.triggering_actor }}
         run: |
           set -euo pipefail
           if [ "$DISPATCH_REF" != "refs/heads/main" ]; then
@@ -54,7 +64,14 @@ jobs:
 
           # Resolve both fixed workflow identities before accepting run evidence. A successful
           # run from another workflow or event cannot substitute for either independent gate.
-          ci_workflow="$(gh api "repos/${REPOSITORY}/actions/workflows/ci.yml")"
+          ci_file=ci.yml
+          if [[ "$WAIVE_PLATFORM_HXP020" == true ]]; then
+            [[ "$REPOSITORY" == Hexalith/Hexalith.Parties && "$RELEASE_ACTOR" == jpiquot && "$TRIGGERING_ACTOR" == jpiquot ]]
+            gh api "repos/${REPOSITORY}/commits/${DISPATCH_SHA}" |
+              jq -e '(.parents | map(.sha)) == ["e68f6e52b98fc1c496950631dc060daed5b37558"]' >/dev/null
+            ci_file=release-qualification.yml
+          fi
+          ci_workflow="$(gh api "repos/${REPOSITORY}/actions/workflows/$ci_file")"
           rc_workflow="$(gh api "repos/${REPOSITORY}/actions/workflows/rc-gate.yml")"
           workflow_identity() {
             jq -er --arg path ".github/workflows/$1" '
@@ -63,7 +80,7 @@ jobs:
               then .id | if . > 0 and . == floor then . else error("invalid workflow id") end
               else error("invalid workflow identity") end'
           }
-          if ! ci_id="$(printf '%s\n' "$ci_workflow" | workflow_identity ci.yml)" ||
+          if ! ci_id="$(printf '%s\n' "$ci_workflow" | workflow_identity "$ci_file")" ||
              ! rc_id="$(printf '%s\n' "$rc_workflow" | workflow_identity rc-gate.yml)" ||
              [ "$ci_id" = "$rc_id" ]; then
             echo "The independent CI and range-proof workflow identities could not be validated safely." >&2
@@ -88,14 +105,14 @@ jobs:
               else false end'
           }
           ci_runs="$(gh api --method GET \
-            "repos/${REPOSITORY}/actions/workflows/ci.yml/runs" \
+            "repos/${REPOSITORY}/actions/workflows/$ci_file/runs" \
             -f branch=main \
             -f event=push \
             -f head_sha="$DISPATCH_SHA" \
             -f status=success \
             -f per_page=100)"
           if ! printf '%s\n' "$ci_runs" | require_push_run "$ci_id" >/dev/null; then
-            echo "No successful push ci.yml run exists for the exact current main SHA." >&2
+            echo "No successful push $ci_file run exists for the exact current main SHA." >&2
             exit 1
           fi
 
@@ -110,6 +127,7 @@ jobs:
             echo "No successful push rc-gate.yml range proof exists for the exact current main SHA." >&2
             exit 1
           fi
+          printf 'source-ci-workflow=%s\n' "$ci_file" >> "$GITHUB_OUTPUT"
 
       - name: Require registry versions at or below the release tag floor
         id: registry-floor
@@ -327,7 +345,7 @@ jobs:
           node-version: '26.13.1'
           builds-execution-sha: 3c2f5944aaa28dc7854a00a8a9df171aa810b0c7
           source-branch: main
-          source-ci-workflow: ci.yml
+          source-ci-workflow: ${{ needs.verify-source.outputs.source-ci-workflow }}
           package-manifest: tools/release-packages.json
           expected-package-count: 11
           publication-flag: ${{ vars.HEXALITH_RELEASE_PUBLISH_ENABLED }}
@@ -370,6 +388,9 @@ jobs:
         uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
         with:
           user: ${{ vars.NUGET_USER }}
+      - name: Record the administrator's runtime integration exception
+        if: ${{ steps.prepare.outputs.publish-enabled == 'true' && needs.verify-source.outputs.source-ci-workflow == 'release-qualification.yml' }}
+        run: echo '::warning title=Parties 4.0.0 release exception::Native Platform integration was waived by the repository administrator after HXP020. See the exact-source qualification run.'
       - name: Semantic Release
         if: ${{ steps.prepare.outputs.publish-enabled == 'true' }}
         env:
@@ -385,7 +406,7 @@ jobs:
           HEXALITH_BUILDS_EXECUTION_SHA: 3c2f5944aaa28dc7854a00a8a9df171aa810b0c7
           HEXALITH_RELEASE_ENVIRONMENT: production
           HEXALITH_RELEASE_SOURCE_BRANCH: main
-          HEXALITH_RELEASE_SOURCE_CI_WORKFLOW: ci.yml
+          HEXALITH_RELEASE_SOURCE_CI_WORKFLOW: ${{ needs.verify-source.outputs.source-ci-workflow }}
           HEXALITH_RELEASE_PACKAGE_MANIFEST: tools/release-packages.json
           HEXALITH_RELEASE_EXPECTED_PACKAGE_COUNT: '11'
           HEXALITH_RELEASE_RESERVED_VERSION: ''
