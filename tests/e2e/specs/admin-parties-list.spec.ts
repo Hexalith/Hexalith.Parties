@@ -860,9 +860,10 @@ const gotoAdmin = async (page: Page): Promise<void> => {
 const chooseOption = async (page: Page, label: string, option: string): Promise<void> => {
   const control = page.getByRole('combobox', { name: label, exact: true });
   await control.click();
-  const popup = page.getByRole('listbox', { name: label, exact: true });
+  await expect(control).toHaveAttribute('aria-controls', /\S/);
+  const popupId = await control.getAttribute('aria-controls');
+  const popup = page.getByRole('listbox').and(page.locator(`[id=${JSON.stringify(popupId)}]`));
   await expect(popup).toBeVisible();
-  await expect(popup).toHaveAttribute('id', await control.getAttribute('aria-controls') ?? '');
   await popup.getByRole('option', { name: option, exact: true }).click();
 };
 

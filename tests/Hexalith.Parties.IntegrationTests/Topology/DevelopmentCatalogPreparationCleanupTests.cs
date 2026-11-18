@@ -179,6 +179,8 @@ public sealed class DevelopmentCatalogPreparationCleanupTests
             ?? throw new InvalidOperationException("The executing test assembly configuration is required.");
         string path = Path.Combine(Path.GetTempPath(), "parties-catalog-generation-" + Guid.NewGuid().ToString("N"));
         const string Owner = "split-source-control";
+        const string PublishedPartiesVersion = "3.1.1";
+        const string PublishedSdkVersion = "4.2.0";
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         deadline.CancelAfter(TimeSpan.FromMinutes(3));
         CancellationToken token = deadline.Token;
@@ -209,6 +211,7 @@ public sealed class DevelopmentCatalogPreparationCleanupTests
                 };
                 foreach (string argument in new[] { "build", project, "-c", configuration, "-m:1", "--disable-build-servers", "-nr:false",
                     "-p:UseSharedCompilation=false", "-p:UseHexalithProjectReferences=false", "-p:CentralPackageVersionsFileImported=true",
+                    $"-p:HexalithPartiesVersion={PublishedPartiesVersion}", $"-p:HexalithEventStoreVersion={PublishedSdkVersion}",
                     "--output", output, "--nologo", "-warnaserror" })
                 {
                     start.ArgumentList.Add(argument);
@@ -220,10 +223,10 @@ public sealed class DevelopmentCatalogPreparationCleanupTests
                     .Where(library => library.Name.StartsWith("Hexalith.EventStore.", StringComparison.Ordinal)).ToArray();
                 sdk.ShouldNotBeEmpty();
                 sdk.ShouldAllBe(library => library.Value.GetProperty("type").GetString() == "package");
-                string sdkVersion = sdk.Select(library => library.Name[(library.Name.LastIndexOf('/') + 1)..]).Distinct(StringComparer.Ordinal).ShouldHaveSingleItem();
+                sdk.ShouldAllBe(library => library.Name.EndsWith("/" + PublishedSdkVersion, StringComparison.Ordinal));
                 string contracts = Path.Combine(output, "Hexalith.Parties.Contracts.dll");
                 string adapter = Path.Combine(output, "Hexalith.Parties.EventStoreExtensions.dll");
-                using JsonDocument receipt = await CatalogTool.GenerateAsync(root, path, Owner, "eventstore", sdkVersion,
+                using JsonDocument receipt = await CatalogTool.GenerateAsync(root, path, Owner, "eventstore", PublishedSdkVersion,
                     [(contracts, adapter, "parties")], token).ConfigureAwait(false);
                 receipt.RootElement.GetProperty("instanceId").GetString().ShouldBe(Owner);
                 receipt.RootElement.GetProperty("rootDigest").GetString().ShouldNotBeNullOrWhiteSpace();

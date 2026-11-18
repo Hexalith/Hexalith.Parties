@@ -64,7 +64,9 @@ class PlatformDeclarationTests(unittest.TestCase):
                 self.assertNotIn("Assert.Skip", attached)
                 self.assertNotIn("BindCredentials", attached)
                 for solution in ("Hexalith.Parties.slnx", "Hexalith.Parties.Standalone.slnx"):
-                    self.assertIn(f'<Project Path="{attached_entry}" />', (renderer.ROOT / solution).read_text())
+                    projects = ET.parse(renderer.ROOT / solution).iter("Project")
+                    self.assertEqual([project.get("Path") for project in projects if project.get("Path") == attached_entry],
+                                     [attached_entry])
             else:
                 self.assertEqual(suite["name"], "lifecycle-package")
                 self.assertIn('<ProjectReference Include="../Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj" />', text)
