@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Product observations for public image bodies, package readers and persisted native effects.
+"""Product observations for the platform-package Release owner, its launched images and native effects.
 
-The published compatibility cohort is measured independently of native readers.
-No CI/controller receipt layout or fixed workflow/job identity is consumed.
+Platform builds the mapped Parties owner in Release and launches dependency images by the
+digest it resolved from their catalog tags. Owner, SDK and image identities are read from
+that evidence and cross-checked; no image or package body is pinned here. No CI/controller
+receipt layout or fixed workflow/job identity is consumed.
 """
 from __future__ import annotations
 
@@ -15,7 +17,7 @@ import re
 import stat
 import xml.etree.ElementTree as ET
 
-# Share the bounded-file, JSON and identity readers with the current-owner validator.
+# Share the bounded-file, JSON, identity and Release-owner readers with the helper-less validator.
 _spec = importlib.util.spec_from_file_location("private_current_readers", Path(__file__).with_name("runtime_observation_contract.py"))
 _readers = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_readers)
@@ -24,65 +26,38 @@ complete_cleanup, expected_runtime_inputs = _readers.complete_cleanup, _readers.
 persisted_identity, creation_timestamp = _readers.persisted_identity, _readers.creation_timestamp
 issued_synthetic_tenant, result_contract = _readers.issued_synthetic_tenant, _readers.result_contract
 native_execution, observation_timestamp = _readers.native_execution, _readers.observation_timestamp
-SDK, SDK_VERSION, HEX, IDENTITY = _readers.SDK, _readers.SDK_VERSION, _readers.HEX, _readers.IDENTITY
-PROFILE = "platform-package"
-IMAGE = "registry.hexalith.com/parties@sha256:205e374548d3cac33457551f9c6f7b5f213db804ca58ae185332522833fe83c8"
-PACKAGE_READERS = {
-    "Hexalith.Parties.Contracts": "3de20e490c7e1f42209d067caae4749369cf2c22ff982d29d698d97bf838cab5",
-    "Hexalith.Parties.EventStoreExtensions": "d5e8963120f881ca0b812d3f69b023a00e3676dd8e289160b2b870f8d36b4b55",
-}
-# Measured independently from the released Linux/amd64 Parties 3.1.1 image.
-IMAGE_SDK = {
-    "Hexalith.EventStore.Contracts": "7e4c8823479a6c59456c5169c95d9082ccbb5d199f403f7cb7c3267c9cf9a44a",
-    "Hexalith.EventStore.ServiceDefaults": "3b618387d1adc3b98cef9823d629edace174c2bc9a8272a501e979f972fcad12",
-    "Hexalith.EventStore.Client": "5b184b6c7bc7e83251d4f48edfb6ee446a28ac4fae7c04c381c388ed8cb9cd92",
-    "Hexalith.EventStore.DomainService": "d1593c5a2b93e0a6cb8d84d946a94223403bf38c02bb7e30987f1f188ff13646",
-}
-IMAGE_BODIES = {**IMAGE_SDK, "Hexalith.Parties.Contracts": "4591cc733ba296a3043c449f615a4fb09b42213f7435276890a565c8ea3309d7"}
-IMAGE_SIZES = {"Hexalith.Parties.Contracts": 304640, "Hexalith.EventStore.Contracts": 1011200,
-               "Hexalith.EventStore.Client": 1288704, "Hexalith.EventStore.DomainService": 1254912,
-               "Hexalith.EventStore.ServiceDefaults": 603648}
+current_owner, native_inventory, hex_digest = _readers.current_owner, _readers.native_inventory, _readers.hex_digest
+HEX, IDENTITY, PROFILE = _readers.HEX, _readers.IDENTITY, _readers.PROFILE
 # Require persistence and anonymous access checks; other native controls run in their declared suites.
 CASES = _readers.CASES
 
 
 def public_reader_roles(observations: dict, *, source: str, native_output: Path) -> dict:
-    """Keep the owner test DTO separate from the model's consumed public package."""
-    contracts = "Hexalith.Parties.Contracts"
-    loaded_origin = "public-nuget"
-    for field in ("loaded", "copied"):
-        for name, digest in PACKAGE_READERS.items():
-            observed = [item for item in observations[field] if item["identity"].split(",", 1)[0] == name]
-            # The published composition consumes Contracts, not EventStoreExtensions.
-            require(len(observed) == 1 if name == contracts else len(observed) <= 1, "public package reader inventory missing")
-            for item in observed:
-                if name == contracts and field == "loaded" and item.get("sha256") != digest:
-                    # Genuine module preparation always builds its active owner from source.
-                    # This is test-side DTO provenance; it never admits a public package body.
-                    require(item.get("sha256") not in set(IMAGE_BODIES.values()) | set(PACKAGE_READERS.values()),
-                            "image/private bytes cannot substitute for a public NuGet reader")
-                    test_name = "Hexalith.Parties.Platform.IntegrationTests"
-                    tests = [entry for entry in observations[field] if entry["identity"].split(",", 1)[0] == test_name]
-                    path = item.get("loadedPath", "")
-                    expected_path = native_output / (contracts + ".dll")
-                    require(native_output.is_absolute() and all(part not in (".", "..") for part in native_output.parts)
-                            and not any(ord(char) < 32 for char in str(native_output)), "expected native output path differs")
-                    require(isinstance(path, str) and path == str(expected_path), "caller-source DTO output path differs")
-                    require(item["identity"] == contracts + ", Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
-                            and item.get("informationalVersion") == "1.0.0+" + source
-                            and HEX.fullmatch(item.get("sha256", "")) is not None,
-                            "caller-source DTO provenance differs; it is not a public NuGet reader")
-                    require(len(tests) == 1 and tests[0].get("informationalVersion") == item["informationalVersion"]
-                            and tests[0].get("loadedPath") == path.removesuffix(contracts + ".dll") + test_name + ".dll",
-                            "caller-source DTO and native test source/output differ")
-                    loaded_origin = "caller-source-test-dto"
-                else:
-                    require(item.get("sha256") == digest, "image/private bytes cannot substitute for a public NuGet reader")
-                    if name == contracts:
-                        require(item["identity"] == contracts + ", Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
-                                and item.get("informationalVersion") == "1.0.0+84e3df796ac977041a21ec7bd8e5789bdc44241a",
-                                "public NuGet Contracts assembly metadata differs")
-    return {"loadedContracts": loaded_origin, "copiedContracts": "public-nuget"}
+    """Keep the native test's caller-source DTO separate from the Contracts the composition consumed."""
+    contracts, test_name = "Hexalith.Parties.Contracts", "Hexalith.Parties.Platform.IntegrationTests"
+
+    def named(field, name):
+        return [item for item in observations[field] if item["identity"].split(",", 1)[0] == name]
+
+    copied = named("copied", contracts)
+    # The published composition consumes Contracts, not EventStoreExtensions; its bytes are measured, not pinned.
+    require(len(copied) == 1 and hex_digest(copied[0].get("sha256")), "composition Contracts inventory missing")
+    loaded = named("loaded", contracts)
+    require(len(loaded) == 1, "caller-source DTO inventory missing")
+    item = loaded[0]
+    tests = named("loaded", test_name)
+    path = item.get("loadedPath", "")
+    expected_path = native_output / (contracts + ".dll")
+    require(native_output.is_absolute() and all(part not in (".", "..") for part in native_output.parts)
+            and not any(ord(char) < 32 for char in str(native_output)), "expected native output path differs")
+    require(isinstance(path, str) and path == str(expected_path), "caller-source DTO output path differs")
+    require(item["identity"] == contracts + ", Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+            and item.get("informationalVersion") == "1.0.0+" + source
+            and hex_digest(item.get("sha256")), "caller-source DTO provenance differs")
+    require(len(tests) == 1 and tests[0].get("informationalVersion") == item["informationalVersion"]
+            and tests[0].get("loadedPath") == path.removesuffix(contracts + ".dll") + test_name + ".dll",
+            "caller-source DTO and native test source/output differ")
+    return {"loadedContracts": "caller-source-test-dto", "copiedContracts": "composition-output"}
 
 
 def validate(directory: Path, *, context: dict, source: str, platform: str, builds: str, release_tag: str, native_output: Path) -> dict:
@@ -112,99 +87,8 @@ def verify_cleanup_termination(result, owner_id, diagnostic):
                 "post-test termination is out of order or differs from the owned diagnostic")
 
 
-def verify_public_runtime(functional, owner, context, source, platform, builds, release_tag, persistence_start, observed):
-    """Check the retained compatibility suite that runs the published Parties image."""
-    require("currentOwner" in functional and functional["currentOwner"] is None, "ordinary evidence cannot promote a private current-owner proof")
-    runtime = functional.get("publicRuntime")
-    require(isinstance(runtime, dict) and set(runtime) == {"kind", "profile", "ownerRunId", "ownerAttemptId", "environmentId", "revision", "mappingHash", "executionContext", "platform", "image", "bodies", "measuredAtUtc", "qualificationCredit"}, "measured ordinary runtime evidence missing or unknown")
-    require(runtime["kind"] == "running-owned-public-parties-image" and runtime["qualificationCredit"] is False, "wrong runtime observation role")
-    for field, expected in (("profile", PROFILE), ("ownerRunId", owner["runId"]), ("ownerAttemptId", owner["attemptId"]),
-                            ("environmentId", owner["environmentId"]), ("revision", source), ("mappingHash", functional["mappingHash"]), ("executionContext", context)):
-        require(runtime.get(field) == expected, "running image owner/source/job differs")
-    require(runtime["platform"] == {"commit": platform, "compositionCommit": platform, "checkoutCommit": platform,
-                                   "catalogCommit": builds, "releaseTag": release_tag}, "running image public Platform/catalog differs")
-    image = runtime["image"]
-    require(isinstance(image, dict) and set(image) == {"containerId", "runId", "imageReference", "imageContentId", "running", "startedAt"}, "unknown running image identity")
-    require(HEX.fullmatch(image.get("containerId", "")) is not None and image.get("runId") == owner["runId"]
-            and image.get("imageReference") == IMAGE and image.get("running") is True
-            and re.fullmatch(r"sha256:[a-f0-9]{64}", image.get("imageContentId", ""), re.ASCII) is not None, "foreign, mutable or stopped public image")
-    require(isinstance(image.get("startedAt"), str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z", image["startedAt"], re.ASCII) is not None,
-            "running image start timestamp is unavailable")
-    measured = observation_timestamp(runtime["measuredAtUtc"])
-    require(persistence_start <= measured <= observed, "running image measurement lies outside observed execution")
-    require(observation_timestamp(image["startedAt"]) <= measured, "running image started after its measurement")
-    bodies = runtime["bodies"]
-    require(isinstance(bodies, dict) and set(bodies) == set(IMAGE_BODIES), "running image body set is incomplete or unknown")
-    for name, digest in IMAGE_BODIES.items():
-        require(isinstance(bodies[name], dict) and type(bodies[name].get("bytes")) is int, "running image byte count must be an integer")
-        require(bodies[name] == {"role": "running-public-image-file", "path": "/app/" + name + ".dll", "bytes": IMAGE_SIZES[name], "sha256": digest},
-                "actual running image body differs from its measured public role")
-
-
-def verify_current_runtime(functional, platform, builds, release_tag):
-    """Bind the running Release owner and every loaded dependency image to the native report."""
-    require("publicRuntime" not in functional, "historical image evidence cannot qualify a current owner run")
-    current = functional["currentOwner"]
-    require(isinstance(current, dict), "running Parties owner evidence is missing")
-    for key in ("runId", "attemptId", "environmentId", "revision", "mappingHash", "profile"):
-        require(current.get(key) == functional[key], "running Parties owner lineage differs")
-    require(current.get("configuration") == "Release" and current.get("qualificationCredit") is False
-            and current.get("committedCatalogValidated") is True and current.get("sdkVersion") == SDK_VERSION,
-            "running Parties owner did not use the qualified Release catalog")
-    identity = current["platform"]
-    require(all(identity.get(key) == platform for key in ("commit", "compositionCommit", "checkoutCommit"))
-            and identity.get("catalogCommit") == builds and identity.get("releaseTag") == release_tag
-            and identity.get("isPlatformRepository") is False, "running Parties Platform/catalog differs")
-    require(current.get("sdkBodies") == SDK, "running Parties SDK bytes differ")
-    require(HEX.fullmatch(current.get("routingCatalogRoot", "")) is not None, "committed routing catalog is missing")
-
-    contracts = "Hexalith.Parties.Contracts"
-    extensions = "Hexalith.Parties.EventStoreExtensions"
-    archives = current["packageArchives"]
-    archive_names = [re.fullmatch(r"(Hexalith\.Parties\.(?:Contracts|EventStoreExtensions))\.([0-9]+\.[0-9]+\.[0-9]+)\.nupkg", name)
-                     for name in archives]
-    require(len(archive_names) == 2 and all(archive_names)
-            and {name[1] for name in archive_names} == {contracts, extensions}
-            and len({name[2] for name in archive_names}) == 1, "measured owner package archive set differs")
-    runtime, catalog = current["runtimeBodies"], current["catalogBodies"]
-    require(set(runtime) == {"Hexalith.Parties", contracts, "Hexalith.Parties.Projections",
-                             "Hexalith.Parties.Authentication", "Hexalith.Parties.Security"}
-            and set(catalog) == {contracts, extensions}
-            and all(isinstance(body, str) and HEX.fullmatch(body) for body in (*archives.values(), *runtime.values(), *catalog.values())),
-            "running Parties owner body inventory differs")
-    require(runtime[contracts] == catalog[contracts] and runtime[contracts] not in {PACKAGE_READERS[contracts], IMAGE_BODIES[contracts]},
-            "running Parties Contracts differs from its committed catalog body")
-    executable = [digest for name, digest in current["observedExecutableOwners"].items()
-                  if name.split(",", 1)[0] == "Hexalith.Parties"]
-    require(executable == [runtime["Hexalith.Parties"]], "committed catalog executable differs from the running Parties body")
-
-    expected_versions = {"tenants": current["tenantsVersion"], "tenants-api": current["tenantsVersion"]}
-    expected_versions.update(dict.fromkeys(("memories", "memories-domain-service", "memories-access-telemetry-clock",
-                                           "memories-access-telemetry"), current["memoriesVersion"]))
-    images = functional["dependencyImages"]
-    require(isinstance(images, list) and len(images) == len(expected_versions) and images == current.get("dependencyImages")
-            and {image["resourceId"] for image in images} == expected_versions.keys(),
-            "released dependency image inventory differs from the running owner receipt")
-    containers = set()
-    for image in images:
-        resource = image["resourceId"]
-        version = expected_versions[resource]
-        require(re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version) is not None, "dependency image version is not released")
-        repository = f"registry.hexalith.com/{resource}"
-        tag = f"{repository}:{version}"
-        manifest = image["expectedManifestDigest"]
-        config = image["expectedConfigDigest"]
-        container = image["containerId"]
-        require(all(digest.startswith("sha256:") and HEX.fullmatch(digest[7:]) for digest in (manifest, config))
-                and HEX.fullmatch(container) is not None and container not in containers
-                and image["catalogImage"] == tag and image["expectedReference"] == f"{repository}@{manifest}"
-                and image["observedReference"] in (f"{repository}@{manifest}", f"{tag}@{manifest}")
-                and image["observedImageId"] in (manifest, config), "released dependency image identity differs")
-        containers.add(container)
-
-
 def validate_held(root: int, *, context: dict, source: str, platform: str, builds: str, release_tag: str, native_output: Path, helper_files: frozenset[str] | None = None,
-                  required_cases: frozenset[str] | None = None, current_owner: bool = False) -> dict:
+                  required_cases: frozenset[str] | None = None) -> dict:
     expected_runtime_inputs(context, source, platform, builds)
     result = document(root, "test-result.json")
     bindings = result_contract(result)
@@ -287,26 +171,11 @@ def validate_held(root: int, *, context: dict, source: str, platform: str, build
     require(len(created) == 1 and creation_timestamp(created[0].get("timestamp")) == creation_timestamp(functional["projection"].get("createdAt")), "PartyCreated/projection timestamp mismatch")
     require(functional.get("tenantsNativeQueryObserved") is True and functional.get("memoriesRegistryObserved") is True, "real reference-owner assertions absent")
     require(functional.get("selectorCompatibilityObserved") is True, "SDK selector compatibility assertions absent")
-    persistence_start, observed = native_execution(report, cases, result, functional)
-    if current_owner:
-        verify_current_runtime(functional, platform, builds, release_tag)
-    else:
-        verify_public_runtime(functional, owner, context, source, platform, builds, release_tag, persistence_start, observed)
+    native_execution(report, cases, result, functional)
+    current = current_owner(functional, platform=platform, builds=builds, release_tag=release_tag)
     loaded_name = "loaded-assemblies-" + owner["runId"] + ".json"
     loaded = document(root, loaded_name)
-    require(loaded.get("kind") == "real-native-sdk-assemblies" and loaded.get("profile") == PROFILE
-            and loaded.get("ownerRunId") == owner["runId"] and loaded.get("ownerAttemptId") == owner["attemptId"]
-            and loaded.get("environmentId") == owner["environmentId"] and loaded.get("revision") == source
-            and loaded.get("mappingHash") == functional["mappingHash"] and loaded.get("executionContext") == context, "native source observation differs")
-    for field in ("loaded", "copied"):
-        require(isinstance(loaded.get(field), list) and 0 < len(loaded[field]) <= 64, "native assembly inventory is empty or oversized")
-        require(all(item.get("scope") == ("loaded-native-test-process" if field == "loaded" else "copied-native-composition-output") for item in loaded[field]), "native assembly role differs")
-        identities = [item["identity"].split(",", 1)[0] for item in loaded[field]]
-        require(len(identities) == len(set(identities)), "duplicate observed assemblies")
-        for name, digest in SDK.items():
-            observed = [item for item in loaded[field] if item["identity"].split(",", 1)[0] == name]
-            require(len(observed) == 1 if field == "copied" or name == "Hexalith.EventStore.Contracts" else len(observed) <= 1, "native/composition SDK inventory missing")
-            require(all(item.get("sha256") == digest and f", Version={SDK_VERSION}.0," in item["identity"] for item in observed), "native/composition SDK substitution")
+    native_inventory(loaded, owner=owner, source=source, context=context, mapping_hash=functional["mappingHash"], current=current)
     reader_roles = public_reader_roles(loaded, source=source, native_output=native_output)
     allowed = names | {loaded_name, "test-result.json", "attachments.json", "attachment-withdrawals.json"}
     allowed |= {"cleanup-observations.json"} if helper_files is None else helper_files

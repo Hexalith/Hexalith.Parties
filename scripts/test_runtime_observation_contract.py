@@ -22,6 +22,74 @@ SPEC.loader.exec_module(verify)
 RELEASED_RESULT_REQUIRED = ("schema", "policyId", "bindings", "diagnostics", "terminal", "termination", "retention", "cleanup")
 RELEASED_BINDINGS_REQUIRED = ("run", "tool", "candidate", "decision", "reuseLineage", "environment", "artifacts", "suite",
                               "attachments", "deadlines")
+# Synthetic Release-owner cohort: the readers compare the evidence with itself, never with these values.
+SDK_VERSION = "4.2.0"
+SDK_BODIES = {name: hashlib.sha256(name.encode()).hexdigest() for name in verify.SDK_ASSEMBLIES}
+
+
+def dependency_images():
+    """Released-image receipts in every form the native reader accepts, including a registry port."""
+    def image(resource, repository, tag, seed, tagged, by_config):
+        manifest, config = "sha256:" + seed[0] * 64, "sha256:" + seed[1] * 64
+        return dict(resourceId=resource, catalogImage=repository + ":" + tag, expectedReference=repository + "@" + manifest,
+                    expectedManifestDigest=manifest, expectedConfigDigest=config,
+                    observedReference=(repository + ":" + tag if tagged else repository) + "@" + manifest,
+                    observedImageId=config if by_config else manifest, containerId=seed[2] * 64)
+    return [image("tenants", "registry.hexalith.com/tenants", "7.0.7", "abc", False, True),
+            image("memories", "registry.hexalith.com/memories", "3.0.25", "def", True, False),
+            image("memories-admin", "localhost:5000/memories-admin", "3.0.25", "123", True, True)]
+
+
+def platform_identity(platform, builds):
+    """The verified mapping's complete Platform identity, as the producer serializes it."""
+    return dict(commit=platform, compositionCommit=platform, checkoutCommit=platform, platformPath="/product/platform", releaseTag="v1.9.0",
+                catalogCommit=builds, toolVersionRange="[6.3.2,7.0.0)", recordPath="/product/platform/.hexalith/platform-identity.json",
+                isPlatformRepository=False)
+
+
+def check_dependency_image_refusals(test, fixture, check):
+    """Reseal tampered dependency images through each reader; the functional copy must equal the owner's."""
+    original = copy.deepcopy(fixture.functional)
+    def tamper(mutation, images):
+        image = images[0]
+        manifest = image["expectedManifestDigest"]
+        if mutation == "empty": images.clear()
+        if mutation == "unknown-field": image["unexpected"] = "value"
+        if mutation == "missing-field": del image["containerId"]
+        if mutation == "non-string": image["containerId"] = None
+        if mutation == "duplicate-resource": images.append(dict(image, containerId="9" * 64))
+        if mutation == "unnamed-resource": image["resourceId"] = " "
+        if mutation == "untagged-catalog": image["catalogImage"] = "registry.hexalith.com:5000/tenants"
+        if mutation == "foreign-repository":
+            image.update(expectedReference="registry.hexalith.com/parties@" + manifest, observedReference="registry.hexalith.com/parties@" + manifest)
+        if mutation == "unresolved-manifest":
+            image.update(expectedManifestDigest="latest", expectedReference="registry.hexalith.com/tenants@latest",
+                         observedReference="registry.hexalith.com/tenants@latest")
+        if mutation == "unresolved-config": image["expectedConfigDigest"] = "sha256:" + "B" * 64
+        if mutation == "mutable-launch": image["observedReference"] = image["catalogImage"]
+        if mutation == "substituted-reference": image["observedReference"] = "registry.hexalith.com/tenants@sha256:" + "0" * 64
+        if mutation == "substituted-image-id": image["observedImageId"] = "sha256:" + "0" * 64
+        if mutation == "foreign-container": image["containerId"] = "--option"
+    for mutation in ("empty", "unknown-field", "missing-field", "non-string", "duplicate-resource", "unnamed-resource", "untagged-catalog",
+                     "foreign-repository", "unresolved-manifest", "unresolved-config", "mutable-launch", "substituted-reference",
+                     "substituted-image-id", "foreign-container", "diverged", "absent", "not-a-list"):
+        with test.subTest(dependencyImages=mutation):
+            fixture.functional = copy.deepcopy(original)
+            current = fixture.functional["currentOwner"]
+            if mutation == "diverged": fixture.functional["dependencyImages"] = fixture.functional["dependencyImages"][1:]
+            elif mutation == "absent":
+                del current["dependencyImages"]
+                del fixture.functional["dependencyImages"]
+            elif mutation == "not-a-list": current["dependencyImages"] = fixture.functional["dependencyImages"] = {"images": []}
+            else:
+                for images in (current["dependencyImages"], fixture.functional["dependencyImages"]): tamper(mutation, images)
+            fixture.seal()
+            with test.assertRaisesRegex(ValueError, "dependency image"): check()
+    fixture.functional = original
+    fixture.seal()
+    check()
+
+
 def native_report(names):
     """Use the real MTP TRX ownership/timing shape with deterministic synthetic IDs."""
     report = ET.Element("TestRun", id=str(uuid.UUID(int=1000)), name="native")
@@ -232,16 +300,19 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
             snapshotKey="g4t-fixture:party:party1:snapshot", pipelineKeyPrefix="g4t-fixture:party:party1:pipeline:",
             pubSubTopic="g4t-fixture.party.events", queueSession="g4t-fixture:party:party1"), sequenceNumber=1, correlationId="command1", causationId="command1", userId="g4-native-tests",
             serializationFormat="json", eventTypeName="Hexalith.Parties.Contracts.Events.PartyCreated", timestamp="2026-11-05T10:00:00Z")]
-        self.functional["currentOwner"] = dict(**{key: self.functional[key] for key in ("runId", "attemptId", "environmentId", "revision", "mappingHash", "profile")},
-            configuration="Release", qualificationCredit=False, committedCatalogValidated=True, sdkVersion=verify.SDK_VERSION, tenantsVersion="7.0.5",
-            platform=dict(commit=self.expected["platform"], compositionCommit=self.expected["platform"], checkoutCommit=self.expected["platform"], catalogCommit=self.expected["builds"]),
-            sdkBodies=verify.SDK.copy(), runtimeBodies={name: str(index) * 64 for index, name in enumerate(("Hexalith.Parties", "Hexalith.Parties.Contracts", "Hexalith.Parties.Projections", "Hexalith.Parties.Authentication", "Hexalith.Parties.Security"), 1)},
-            packageArchives={"Hexalith.Parties.Contracts.3.1.0.nupkg": "7" * 64, "Hexalith.Parties.EventStoreExtensions.3.1.0.nupkg": "8" * 64},
+        self.functional["dependencyImages"] = dependency_images()
+        # Shaped like the Platform PlatformCurrentOwnerObservation receipt (web naming).
+        self.functional["currentOwner"] = dict(**{key: self.functional[key] for key in ("profile", "runId", "attemptId", "environmentId", "revision", "mappingHash")},
+            configuration="Release", qualificationCredit=False, platform=platform_identity(self.expected["platform"], self.expected["builds"]),
+            sdkVersion=SDK_VERSION, tenantsVersion="7.0.7", memoriesVersion="3.0.25", routingCatalogRoot="e" * 64,
+            packageArchives={"Hexalith.Parties.Contracts.3.2.0.nupkg": "7" * 64, "Hexalith.Parties.EventStoreExtensions.3.2.0.nupkg": "8" * 64},
+            runtimeBodies={name: str(index) * 64 for index, name in enumerate(("Hexalith.Parties", "Hexalith.Parties.Contracts", "Hexalith.Parties.Projections", "Hexalith.Parties.Authentication", "Hexalith.Parties.Security"), 1)},
             catalogBodies={"Hexalith.Parties.Contracts": "2" * 64, "Hexalith.Parties.EventStoreExtensions": "6" * 64},
-            observedExecutableOwners={"Hexalith.Parties, Version=1.0.0.0": "1" * 64}, routingCatalogRoot="e" * 64)
+            sdkBodies=SDK_BODIES.copy(), dependencyImages=dependency_images(),
+            observedExecutableOwners={"Hexalith.Parties, Version=1.0.0.0": "1" * 64}, committedCatalogValidated=True)
         self.loaded = dict(kind="real-native-sdk-assemblies", profile=verify.PROFILE, ownerRunId=self.owner["runId"], ownerAttemptId=self.owner["attemptId"],
             environmentId=self.owner["environmentId"], revision=self.expected["source"], mappingHash="d" * 64, executionContext=self.context)
-        assemblies = [dict(identity=name + f", Version={verify.SDK_VERSION}.0, Culture=neutral, PublicKeyToken=null", sha256=digest) for name, digest in verify.SDK.items()]
+        assemblies = [dict(identity=name + f", Version={SDK_VERSION}.0, Culture=neutral, PublicKeyToken=null", sha256=digest) for name, digest in SDK_BODIES.items()]
         self.loaded.update(loaded=[dict(item, scope="loaded-native-test-process") for item in assemblies],
                            copied=[dict(item, scope="copied-native-composition-output") for item in assemblies])
         self.write("loaded-assemblies-" + self.owner["runId"] + ".json", self.loaded)
@@ -381,22 +452,50 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
         self.write("loaded-assemblies-" + self.owner["runId"] + ".json", self.loaded)
         self.check()
 
-    def test_historical_private_package_version_cannot_claim_the_current_sdk_cohort(self):
+    def test_package_archives_require_both_owner_packages_at_one_measured_version(self):
         archives = self.functional["currentOwner"]["packageArchives"]
-        self.functional["currentOwner"]["packageArchives"] = {
-            name.replace("3.1.0", "3.0.0"): digest for name, digest in archives.items()
-        }
+        contracts, extensions = sorted(archives)
+        for changed in ({contracts.replace("3.2.0", "3.0.0"): "7" * 64, extensions: "8" * 64}, {contracts: "7" * 64},
+                        {**archives, contracts.replace("3.2.0", "3.0.0"): "9" * 64}, {contracts: "7" * 64, "Hexalith.Parties.Client.3.2.0.nupkg": "8" * 64},
+                        {contracts.replace("3.2.0", "v3.2"): "7" * 64, extensions.replace("3.2.0", "v3.2"): "8" * 64},
+                        {contracts: "7" * 64, extensions: "not-measured"}, {}, None):
+            with self.subTest(archives=changed):
+                self.functional["currentOwner"]["packageArchives"] = changed
+                self.seal()
+                with self.assertRaisesRegex(ValueError, "private source packages were not measured"):
+                    self.check()
+        # No package version is pinned: any one catalog-selected version is accepted.
+        self.functional["currentOwner"]["packageArchives"] = {name.replace("3.2.0", "4.0.0-rc.1"): digest for name, digest in archives.items()}
         self.seal()
-        with self.assertRaisesRegex(ValueError, "private source packages were not measured"):
-            self.check()
+        self.check()
 
-    def test_historical_sdk_version_cannot_claim_the_current_owner_cohort(self):
-        for version in ("4.1.0", "4.2.1", "4.2.0-preview.1"):
+    def test_sdk_version_must_be_a_release_carried_by_the_native_inventory(self):
+        for version, message in (("4.1.0", "SDK substitution"), ("4.2.1", "SDK substitution"), ("4.2.0-preview.1", "wrong current owner cohort"),
+                                 ("4.2", "wrong current owner cohort"), (None, "wrong current owner cohort")):
             with self.subTest(version=version):
                 self.functional["currentOwner"]["sdkVersion"] = version
                 self.seal()
+                with self.assertRaisesRegex(ValueError, message):
+                    self.check()
+        self.functional["currentOwner"]["sdkVersion"] = SDK_VERSION
+        for version in ("7.0", "", None):
+            with self.subTest(tenantsVersion=version):
+                self.functional["currentOwner"]["tenantsVersion"] = version
+                self.seal()
                 with self.assertRaisesRegex(ValueError, "wrong current owner cohort"):
                     self.check()
+
+    def test_release_owner_observation_and_its_dependency_images_are_required(self):
+        for value in (None, "missing", []):
+            with self.subTest(currentOwner=value):
+                original = copy.deepcopy(self.functional)
+                if value == "missing": del self.functional["currentOwner"]
+                else: self.functional["currentOwner"] = value
+                self.seal()
+                with self.assertRaisesRegex(ValueError, "Release owner observation is absent"):
+                    self.check()
+                self.functional = original
+        check_dependency_image_refusals(self, self, self.check)
 
 
     def test_real_captured_sdk_identity_shape_matches_the_three_key_aggregate(self):
@@ -468,25 +567,31 @@ class CurrentOwnerEvidenceTests(unittest.TestCase):
         with self.assertRaises(ValueError): self.check()
 
     def test_changed_semantic_boundaries_are_refused_after_valid_content_hashes(self):
-        for mutation in ("profile", "source", "run", "attempt", "sdk", "runtime", "public", "projection", "event", "memories", "platform", "builds", "catalog", "archives"):
+        for mutation in ("profile", "source", "run", "attempt", "sdk", "runtime", "catalog-body", "executable", "route", "closure", "configuration",
+                         "credit", "projection", "event", "memories", "platform", "composition", "checkout", "builds", "catalog", "archives"):
             with self.subTest(mutation=mutation):
                 original = copy.deepcopy(self.functional)
-                if mutation == "profile": self.functional["profile"] = "platform-package"
+                current = self.functional["currentOwner"]
+                if mutation == "profile": self.functional["profile"] = "platform-current-package"
                 if mutation == "source": self.functional["revision"] = "f" * 40
                 if mutation == "run": self.functional["runId"] = "4" * 32
                 if mutation == "attempt": self.functional["attemptId"] = "4" * 32
-                if mutation == "sdk": self.functional["currentOwner"]["sdkBodies"]["Hexalith.EventStore.Contracts"] = "f" * 64
-                if mutation == "runtime": self.functional["currentOwner"]["runtimeBodies"]["Hexalith.Parties.Contracts"] = "f" * 64
-                if mutation == "public":
-                    self.functional["currentOwner"]["runtimeBodies"]["Hexalith.Parties.Contracts"] = verify.PUBLIC_PARTIES_CONTRACTS
-                    self.functional["currentOwner"]["catalogBodies"]["Hexalith.Parties.Contracts"] = verify.PUBLIC_PARTIES_CONTRACTS
+                if mutation == "sdk": current["sdkBodies"]["Hexalith.EventStore.Contracts"] = "f" * 64
+                if mutation == "runtime": current["runtimeBodies"]["Hexalith.Parties.Contracts"] = "f" * 64
+                if mutation == "catalog-body": current["catalogBodies"]["Hexalith.Parties.Contracts"] = "f" * 64
+                if mutation == "executable": current["observedExecutableOwners"] = {"Hexalith.Parties, Version=1.0.0.0": "f" * 64}
+                if mutation == "route": current["routingCatalogRoot"] = "not-a-root"
+                if mutation == "closure": del current["runtimeBodies"]["Hexalith.Parties.Security"]
+                if mutation == "configuration": current["configuration"] = "Debug"
+                if mutation == "credit": current["qualificationCredit"] = True
                 if mutation == "projection": self.functional["projection"]["id"] = "other"
                 if mutation == "event": self.functional["events"][0]["causationId"] = "other"
                 if mutation == "memories": self.functional["memoriesRegistryObserved"] = False
-                if mutation in ("platform", "builds"):
-                    self.functional["currentOwner"]["platform"]["commit" if mutation == "platform" else "catalogCommit"] = "f" * 40
-                if mutation == "archives": self.functional["currentOwner"]["packageArchives"] = {}
-                if mutation == "catalog": self.functional["currentOwner"]["committedCatalogValidated"] = False
+                if mutation in ("platform", "composition", "checkout", "builds"):
+                    field = {"platform": "commit", "composition": "compositionCommit", "checkout": "checkoutCommit", "builds": "catalogCommit"}[mutation]
+                    current["platform"][field] = "f" * 40
+                if mutation == "archives": current["packageArchives"] = {}
+                if mutation == "catalog": current["committedCatalogValidated"] = False
                 self.seal()
                 with self.assertRaises(ValueError): self.check()
                 self.functional = original

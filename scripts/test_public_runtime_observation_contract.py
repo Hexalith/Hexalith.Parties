@@ -1,7 +1,5 @@
 """Synthetic artifact/byte controls only; no GitHub identity, Docker, native run or qualification credit."""
 import copy
-from datetime import datetime, timedelta
-import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -20,7 +18,8 @@ public = load("public_package_controls", "public_runtime_observation_contract.py
 private_fixture = load("unchanged_private_controls", "test_runtime_observation_contract.py")
 
 
-# Literal xUnit 4.0.3 MTP TRX snapshot, independent of the validator's name sets.
+# Literal xUnit v3 MTP TRX names, written independently of the validator's name sets with the quoting
+# captured from xUnit 4.0.3 reports; the hosted adapter test adds the attached lifecycle hold controls.
 XUNIT_403_TRX_CASE_NAMES = (
     r'Hexalith.Parties.Platform.IntegrationTests.FunctionalObservationWriterTests.DuplicateCanonicalWriteRefusesWhileRecheckPreservesOriginalBytesAsync',
     r'Hexalith.Parties.Platform.IntegrationTests.FunctionalObservationWriterTests.RecheckRequiresOriginalAndPreservesOutputOwnershipBoundsAsync',
@@ -32,24 +31,39 @@ XUNIT_403_TRX_CASE_NAMES = (
     r'Hexalith.Parties.Platform.IntegrationTests.NativeAssemblyObservationTests.CopiedOutputReportsActualFileHashWithoutLoadingIt',
     r'Hexalith.Parties.Platform.IntegrationTests.NativeAssemblyObservationTests.PrivateDiagnosticRefusesSymbolicDirectory',
     r'Hexalith.Parties.Platform.IntegrationTests.NativeAssemblyObservationTests.PrivateDiagnosticRetainsFirstBytesAndRefusesOverwrite',
-    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: \"platform-current-package\", profiles: \"platform-current-package,platform-current-package\", accepted: False)',
-    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: \"platform-current-package\", profiles: \"platform-current-package,platform-package\", accepted: False)',
-    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: \"platform-current-package\", profiles: \"platform-current-package\", accepted: True)',
-    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: \"platform-package\", profiles: \"lifecycle-package\", accepted: False)',
-    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: \"platform-package\", profiles: \"platform-package,lifecycle-package\", accepted: True)',
-    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(profile: \"platform-package\", profiles: \"platform-package,platform-current-package\", accepted: False)',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.HeldIntegrationInvocationRoutesToTheLifecycleJournal(held: False)',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.HeldIntegrationInvocationRoutesToTheLifecycleJournal(held: True)',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationRequiresTheDeclaredIntegrationProfileOnce(profile: \"platform-package\", profiles: \"lifecycle-package\", accepted: False)',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationRequiresTheDeclaredIntegrationProfileOnce(profile: \"platform-package\", profiles: \"platform-package,lifecycle-package\", accepted: True)',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationRequiresTheDeclaredIntegrationProfileOnce(profile: \"platform-package\", profiles: \"platform-package,platform-package\", accepted: False)',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationRequiresTheDeclaredIntegrationProfileOnce(profile: \"platform-package\", profiles: \"platform-package,platform-source\", accepted: False)',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationRequiresTheDeclaredIntegrationProfileOnce(profile: \"platform-package\", profiles: \"platform-package\", accepted: True)',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.InvocationRequiresTheDeclaredIntegrationProfileOnce(profile: \"platform-package\", profiles: \"unknown-package,platform-package\", accepted: False)',
     r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \"changed-context\")',
     r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \"changed-mapping\")',
-    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \"current-valid-local\")',
     r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \"foreign-attempt\")',
     r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \"foreign-model-output\")',
     r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \"foreign-run\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \"held-platform-package\")',
     r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \"lifecycle-foreign-receipt\")',
     r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \"lifecycle-foreign-source\")',
     r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \"lifecycle-local\")',
     r'Hexalith.Parties.Platform.IntegrationTests.NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \"valid-local\")',
     r'Hexalith.Parties.Platform.IntegrationTests.PartyEnvironmentTests.GatewayRefusesAnonymousCommandStatusAsync',
     r'Hexalith.Parties.Platform.IntegrationTests.PartyEnvironmentTests.RealDependencies_CreateQueryAndPersistMatchingPartyEvents',
+    r'Hexalith.Parties.Platform.IntegrationTests.PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \"accepted-immutable-config\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \"accepted-tagged-manifest\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \"duplicate-resource\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \"empty-images\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \"foreign-attempt\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \"foreign-environment\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \"foreign-mapping\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \"foreign-repository\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \"foreign-run\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \"platform-source\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \"qualification-credit\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \"substituted-image-id\")',
+    r'Hexalith.Parties.Platform.IntegrationTests.PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \"substituted-reference\")',
 )
 
 
@@ -59,26 +73,17 @@ class PublicPackageEvidenceTests(unittest.TestCase):
         self.fixture.setUp()
         self.addCleanup(self.fixture.doCleanups)
         f = self.fixture
-        self.expected = {**f.expected, "platform": "081178aa5cc01f5dc736ba0d1980aa80fedc6fe1", "builds": "5ec1779040606be89306129a7d2b245258c9acd2"}
-        self.expected["release_tag"] = "v1.9.0"
-        self.expected["native_output"] = Path("/product/Release/native-tests")
-        f.functional.update(profile=public.PROFILE, currentOwner=None, selectorCompatibilityObserved=True)
-        platform = dict(commit="081178aa5cc01f5dc736ba0d1980aa80fedc6fe1", compositionCommit="081178aa5cc01f5dc736ba0d1980aa80fedc6fe1", checkoutCommit="081178aa5cc01f5dc736ba0d1980aa80fedc6fe1",
-                        catalogCommit="5ec1779040606be89306129a7d2b245258c9acd2", releaseTag="v1.9.0")
-        now = datetime.fromisoformat("2026-11-05T10:00:05+00:00")
-        f.functional["publicRuntime"] = dict(kind="running-owned-public-parties-image", profile=public.PROFILE,
-            ownerRunId=f.owner["runId"], ownerAttemptId=f.owner["attemptId"], environmentId=f.owner["environmentId"],
-            revision=self.expected["source"], mappingHash=f.functional["mappingHash"], executionContext=f.context,
-            platform=platform, image=dict(containerId="e" * 64, runId=f.owner["runId"], imageReference=public.IMAGE,
-            imageContentId="sha256:" + "f" * 64, running=True, startedAt=(now - timedelta(seconds=2)).isoformat().replace("+00:00", "Z")),
-            bodies={name: dict(role="running-public-image-file", path="/app/" + name + ".dll", bytes=public.IMAGE_SIZES[name], sha256=digest)
-                    for name, digest in public.IMAGE_BODIES.items()}, measuredAtUtc=now.isoformat(), qualificationCredit=False)
+        self.expected = {**f.expected, "release_tag": "v1.9.0", "native_output": Path("/product/Release/native-tests")}
+        f.functional.update(profile=public.PROFILE, selectorCompatibilityObserved=True)
         f.loaded["profile"] = public.PROFILE
-        for name, digest in public.PACKAGE_READERS.items():
-            item = dict(identity=name + ", Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", sha256=digest,
-                        informationalVersion="1.0.0+84e3df796ac977041a21ec7bd8e5789bdc44241a")
-            f.loaded["copied"].append(item)
-            if name == "Hexalith.Parties.Contracts": f.loaded["loaded"].append(item.copy())
+        # The native test process loads its caller-source DTO; the composition output carries its consumed Contracts.
+        directory = str(self.expected["native_output"]) + "/"
+        dto = dict(identity="Hexalith.Parties.Contracts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", sha256="4" * 64,
+                   informationalVersion="1.0.0+" + self.expected["source"], loadedPath=directory + "Hexalith.Parties.Contracts.dll")
+        f.loaded["loaded"] += [dto, dict(identity="Hexalith.Parties.Platform.IntegrationTests, Version=1.0.0.0", sha256="5" * 64,
+                                         informationalVersion=dto["informationalVersion"], loadedPath=directory + "Hexalith.Parties.Platform.IntegrationTests.dll")]
+        f.loaded["copied"].append(dict(identity="Hexalith.Parties.Contracts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", sha256="6" * 64,
+                                       informationalVersion="1.0.0+" + "9" * 40, copiedPath="/product/workspaces/run/hosts/platform-model/Hexalith.Parties.Contracts.dll"))
         for field in ("loaded", "copied"):
             for item in f.loaded[field]: item["scope"] = "loaded-native-test-process" if field == "loaded" else "copied-native-composition-output"
         f.write("loaded-assemblies-" + f.owner["runId"] + ".json", f.loaded)
@@ -101,8 +106,9 @@ class PublicPackageEvidenceTests(unittest.TestCase):
 
     def test_separate_public_roles_accept_a_complete_native_report_as_a_unit_fixture_only(self):
         result = self.check()
-        self.assertEqual(result["nativeCases"], 28)
+        self.assertEqual(result["nativeCases"], 43)
         self.assertEqual(result["profile"], "platform-package")
+        self.assertEqual(result["readerRoles"], dict(loadedContracts="caller-source-test-dto", copiedContracts="composition-output"))
         self.assertFalse(result["qualificationCredit"])
 
     def test_results_missing_any_released_required_key_are_refused(self):
@@ -123,7 +129,7 @@ class PublicPackageEvidenceTests(unittest.TestCase):
                     with self.assertRaisesRegex(ValueError, "persisted sequence|event identity"): self.check()
             target[field] = 1
         f.seal()
-        self.assertEqual(self.check()["nativeCases"], 28)
+        self.assertEqual(self.check()["nativeCases"], 43)
 
     def test_native_times_and_execution_identities_are_bound_after_resealing(self):
         private_fixture.check_native_refusals(self, self.fixture, self.check)
@@ -131,41 +137,19 @@ class PublicPackageEvidenceTests(unittest.TestCase):
     def test_precise_execution_boundaries_deadline_shapes_and_report_processing(self):
         private_fixture.check_execution_boundaries(self, self.fixture, self.check)
 
-    def test_image_measurement_occurs_inside_persistence_even_for_an_earlier_image_start(self):
-        f = self.fixture
-        runtime = f.functional["publicRuntime"]
-        runtime["image"]["startedAt"] = "2026-11-05T10:00:00Z"
-        runtime["measuredAtUtc"] = "2026-11-05T10:00:01Z"
-        f.seal()
-        with self.assertRaisesRegex(ValueError, "measurement lies outside"): self.check()
-        runtime["measuredAtUtc"] = "2026-11-05T10:00:06.0000001Z"
-        f.seal()
-        with self.assertRaisesRegex(ValueError, "measurement lies outside"): self.check()
-        runtime["measuredAtUtc"] = "2026-11-05T10:00:05.0000000Z"
-        runtime["image"]["startedAt"] = "2026-11-05T10:00:05.000000001Z"
-        f.seal()
-        with self.assertRaisesRegex(ValueError, "started after its measurement"): self.check()
-
-    def test_public_observations_are_inside_the_issued_execution_and_ordered(self):
+    def test_functional_observation_is_inside_the_issued_execution(self):
         f = self.fixture
         original = copy.deepcopy(f.functional)
-        for field in ("observedAtUtc", "measuredAtUtc"):
-            for value in (None, "1900-01-01T00:00:00Z", "2999-01-01T00:00:00Z", "2026-11-05T10:00:10Z",
-                          "2026-11-05T10:00:01Z", "2026-11-05T10:00:05", "not-a-time"):
-                with self.subTest(field=field, value=value):
-                    f.functional = copy.deepcopy(original)
-                    target = f.functional if field == "observedAtUtc" else f.functional["publicRuntime"]
-                    target[field] = value
-                    f.seal()
-                    with self.assertRaises(ValueError): self.check()
-        f.functional = copy.deepcopy(original)
-        f.functional["publicRuntime"]["measuredAtUtc"] = "2026-11-05T10:00:06.000001Z"
-        f.seal()
-        with self.assertRaises(ValueError): self.check()
+        for value in (None, "1900-01-01T00:00:00Z", "2999-01-01T00:00:00Z", "2026-11-05T10:00:10Z",
+                      "2026-11-05T10:00:01Z", "2026-11-05T10:00:05", "not-a-time"):
+            with self.subTest(value=value):
+                f.functional = copy.deepcopy(original)
+                f.functional["observedAtUtc"] = value
+                f.seal()
+                with self.assertRaises(ValueError): self.check()
         f.functional = original
         f.seal()
         self.check()
-
 
     def test_historical_tuple_cannot_qualify_selected_sources(self):
         with self.assertRaises(ValueError):
@@ -173,10 +157,16 @@ class PublicPackageEvidenceTests(unittest.TestCase):
                 "platform": "0f4e27f1f78310bd731c10c19dc51bb1e0345d44",
                 "builds": "3c8096180ecf2aa539ac454815efbfceb8a92822"})
 
-    def test_private_current_owner_proof_cannot_be_promoted(self):
-        self.fixture.functional["currentOwner"] = {"profile": "platform-current-package"}
+    def test_ordinary_evidence_requires_the_measured_release_owner(self):
+        for value in (None, {"profile": "platform-current-package"}):
+            with self.subTest(currentOwner=value):
+                original = copy.deepcopy(self.fixture.functional)
+                self.fixture.functional["currentOwner"] = value
+                self.fixture.seal()
+                with self.assertRaisesRegex(ValueError, "Release owner observation is absent|current owner lineage"): self.check()
+                self.fixture.functional = original
         self.fixture.seal()
-        with self.assertRaisesRegex(ValueError, "private current-owner"): self.check()
+        self.check()
 
     def test_missing_or_false_selector_compatibility_observation_refuses(self):
         for value in (None, False, "true", 1):
@@ -188,82 +178,59 @@ class PublicPackageEvidenceTests(unittest.TestCase):
                 self.fixture.seal()
                 with self.assertRaisesRegex(ValueError, "selector compatibility"): self.check()
 
-    def test_role_substitution_and_actual_body_tampering_refuse_after_resealing(self):
+    def test_substituted_owner_bodies_refuse_after_resealing(self):
         f = self.fixture
         baseline = copy.deepcopy(f.functional)
-        for name in public.IMAGE_BODIES:
-            with self.subTest(name=name):
+        for group, name, message in (("runtimeBodies", "Hexalith.Parties.Contracts", "stale or swapped"),
+                                     ("catalogBodies", "Hexalith.Parties.Contracts", "stale or swapped"),
+                                     ("runtimeBodies", "Hexalith.Parties", "executable/route proof"),
+                                     ("runtimeBodies", "Hexalith.Parties.Security", "owner bodies"),
+                                     ("sdkBodies", "Hexalith.EventStore.Client", "SDK substitution"),
+                                     ("sdkBodies", "Hexalith.EventStore.Contracts", "SDK substitution")):
+            with self.subTest(group=group, name=name):
                 f.functional = copy.deepcopy(baseline)
-                f.functional["publicRuntime"]["bodies"][name]["sha256"] = public.PACKAGE_READERS.get(name, "a" * 64)
+                f.functional["currentOwner"][group][name] = "a" * 64 if group != "runtimeBodies" or name != "Hexalith.Parties.Security" else "substituted"
                 f.seal()
-                with self.assertRaisesRegex(ValueError, "running image body"): self.check()
+                with self.assertRaisesRegex(ValueError, message): self.check()
         f.functional = baseline
         f.seal()
+        # The native inventory carries the owner's SDK bodies: a coherent substitution in both still refuses at the other reader.
         for field in ("loaded", "copied"):
-            for item in f.loaded[field]:
-                name = item["identity"].split(",", 1)[0]
-                if name != "Hexalith.Parties.Contracts": continue
-                with self.subTest(field=field):
-                    saved = item["sha256"]
-                    item["sha256"] = public.IMAGE_BODIES[name]
-                    f.write("loaded-assemblies-" + f.owner["runId"] + ".json", f.loaded)
-                    with self.assertRaisesRegex(ValueError, "public NuGet reader"): self.check()
-                    item["sha256"] = saved
+            item = next(item for item in f.loaded[field] if item["identity"].startswith("Hexalith.EventStore.Contracts,"))
+            with self.subTest(inventory=field):
+                saved = item["sha256"]
+                item["sha256"] = "a" * 64
+                f.write("loaded-assemblies-" + f.owner["runId"] + ".json", f.loaded)
+                with self.assertRaisesRegex(ValueError, "SDK substitution"): self.check()
+                item["sha256"] = saved
         f.write("loaded-assemblies-" + f.owner["runId"] + ".json", f.loaded)
+        self.check()
 
-    def test_foreign_runtime_source_owner_job_attempt_mapping_or_public_source_refuse(self):
+    def test_foreign_owner_run_source_mapping_or_platform_refuse(self):
         f = self.fixture
         baseline = copy.deepcopy(f.functional)
-        changes = [(name, "x") for name in ("profile", "ownerRunId", "ownerAttemptId", "environmentId", "revision", "mappingHash")]
-        changes += [("executionContext", {**f.context, "jobId": "foreign"}), ("qualificationCredit", True), ("kind", "copied-static-image"), ("unexpected", True)]
-        for field, value in changes:
+        for field in ("profile", "runId", "attemptId", "environmentId", "revision", "mappingHash"):
             with self.subTest(field=field):
                 f.functional = copy.deepcopy(baseline)
-                f.functional["publicRuntime"][field] = value
+                f.functional["currentOwner"][field] = "x"
                 f.seal()
-                with self.assertRaises(ValueError): self.check()
+                with self.assertRaisesRegex(ValueError, "lineage"): self.check()
         for field in ("commit", "compositionCommit", "checkoutCommit", "catalogCommit", "releaseTag"):
             with self.subTest(platformField=field):
                 f.functional = copy.deepcopy(baseline)
-                f.functional["publicRuntime"]["platform"][field] = "foreign"
+                f.functional["currentOwner"]["platform"][field] = "f" * 40 if field != "releaseTag" else "v1.8.0"
                 f.seal()
-                with self.assertRaises(ValueError): self.check()
+                with self.assertRaisesRegex(ValueError, "foreign Platform/catalog"): self.check()
+        # A mapping without a local release tag still binds the selected Platform and catalog commits.
+        f.functional = copy.deepcopy(baseline)
+        f.functional["currentOwner"]["platform"]["releaseTag"] = None
+        f.seal()
+        self.check()
+        f.functional = baseline
+        f.seal()
 
-    def test_unknown_unpinned_stopped_or_foreign_image_and_body_shapes_refuse(self):
-        f = self.fixture
-        baseline = copy.deepcopy(f.functional)
-        changes = [("containerId", "--option"), ("runId", "f" * 32), ("imageReference", "registry.hexalith.com/parties:3.1.0"),
-                   ("imageContentId", "latest"), ("running", False), ("startedAt", "unknown"), ("unexpected", True)]
-        for field, value in changes:
-            with self.subTest(field=field):
-                f.functional = copy.deepcopy(baseline)
-                f.functional["publicRuntime"]["image"][field] = value
-                f.seal()
-                with self.assertRaises(ValueError): self.check()
-        for mutation in ("missing-body", "unknown-body", "copied-role", "wrong-size", "foreign-path"):
-            with self.subTest(body=mutation):
-                f.functional = copy.deepcopy(baseline)
-                bodies = f.functional["publicRuntime"]["bodies"]
-                name = "Hexalith.Parties.Contracts"
-                if mutation == "missing-body": del bodies[name]
-                if mutation == "unknown-body": bodies["foreign"] = bodies[name].copy()
-                if mutation == "copied-role": bodies[name]["role"] = "copied-native-composition-output"
-                if mutation == "wrong-size": bodies[name]["bytes"] += 1
-                if mutation == "foreign-path": bodies[name]["path"] = "/foreign/" + name + ".dll"
-                f.seal()
-                with self.assertRaises(ValueError): self.check()
-
-    def test_equal_sdk_bytes_still_require_running_image_provenance(self):
-        f = self.fixture
-        for name, digest in public.SDK.items():
-            with self.subTest(name=name):
-                self.assertEqual(digest, public.IMAGE_SDK[name])
-                body = f.functional["publicRuntime"]["bodies"][name]
-                body["role"] = "copied-native-composition-output"
-                f.seal()
-                with self.assertRaisesRegex(ValueError, "measured public role"):
-                    self.check()
-                body["role"] = "running-public-image-file"
+    def test_tampered_dependency_images_refuse(self):
+        private_fixture.check_dependency_image_refusals(self, self.fixture, self.check)
 
     def test_missing_renamed_duplicate_or_skipped_original_native_cases_refuse(self):
         f = self.fixture
@@ -322,17 +289,11 @@ class PublicPackageEvidenceTests(unittest.TestCase):
         path.write_bytes(path.read_bytes() + b" ")
         with self.assertRaisesRegex(ValueError, "changed diagnostic"): self.check()
         f.seal()
-        f.write("unreferenced-runtime.json", f.functional["publicRuntime"])
+        f.write("unreferenced-runtime.json", f.functional["currentOwner"])
         with self.assertRaisesRegex(ValueError, "unreferenced"): self.check()
 
-    def test_noninteger_byte_counts_and_relabelled_loaded_or_copied_scopes_refuse(self):
+    def test_relabelled_loaded_or_copied_scopes_refuse(self):
         f = self.fixture
-        body = f.functional["publicRuntime"]["bodies"]["Hexalith.Parties.Contracts"]
-        body["bytes"] = float(body["bytes"])
-        f.seal()
-        with self.assertRaisesRegex(ValueError, "integer"): self.check()
-        body["bytes"] = int(body["bytes"])
-        f.seal()
         for field in ("loaded", "copied"):
             item = f.loaded[field][0]
             saved = item["scope"]

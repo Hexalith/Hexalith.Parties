@@ -5,6 +5,7 @@ using System.Text.Json;
 using Shouldly;
 
 /// <summary>Uses the actual published mapping and explicitly local metadata controls, never a simulated CI owner.</summary>
+[Collection(CiLifecycleHoldTests.ProcessHandoffCollection)]
 public sealed class NativeDiagnosticBindingTests
 {
     /// <summary>Checks the surviving caller route and immutable cross-document refusals with GitHub variables absent.</summary>
@@ -19,6 +20,7 @@ public sealed class NativeDiagnosticBindingTests
     [InlineData("lifecycle-local")]
     [InlineData("lifecycle-foreign-receipt")]
     [InlineData("lifecycle-foreign-source")]
+    [InlineData("held-platform-package")]
     public void PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(string mutation)
     {
         ArgumentNullException.ThrowIfNull(mutation);
@@ -32,6 +34,10 @@ public sealed class NativeDiagnosticBindingTests
         string workspace = Directory.CreateDirectory(Path.Combine(control, "workspace")).FullName;
         string state = Directory.CreateDirectory(Path.Combine(control, "state")).FullName;
         string run = Guid.NewGuid().ToString("N"), attempt = Guid.NewGuid().ToString("N"), environment = Guid.NewGuid().ToString("N");
+        bool lifecycle = mutation.StartsWith("lifecycle-", StringComparison.Ordinal), held = mutation == "held-platform-package";
+        string? previousRun = Environment.GetEnvironmentVariable("HEXALITH_G4_RUN_ID");
+        string? previousHold = Environment.GetEnvironmentVariable(CiLifecycleHold.VariableName);
+        string hold = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "hexalith-builds", "ci-qualification", run);
         string? retained = null;
         try
         {
@@ -51,7 +57,7 @@ public sealed class NativeDiagnosticBindingTests
                 schema = "hexalith.g4-run-plan.v1", runId = run, workspace, resourceClaimStateDirectory = state,
                 attemptId = mutation == "foreign-attempt" ? Guid.NewGuid().ToString("N") : attempt, environmentId = environment,
                 sourceMappingHash = hash, sourceMapping = new { root = caller, contentHash = hash },
-                selectedTest = new { name = mutation.StartsWith("lifecycle-", StringComparison.Ordinal) ? "lifecycle-package" : "platform-package" },
+                selectedTest = new { name = lifecycle ? "lifecycle-package" : "platform-package" },
                 platformModelAssemblyPath = Path.Combine(workspace, "hosts", mutation == "foreign-model-output" ? "unbound-output" : "platform-model", "Hexalith.Platform.Composition.dll"),
             }));
             File.WriteAllText(Path.Combine(state, run + ".json"), JsonSerializer.Serialize(new
@@ -68,17 +74,31 @@ public sealed class NativeDiagnosticBindingTests
                 ["HEXALITH_G4_SOURCE_MAPPING_PATH"] = Path.Combine(workspace, "source-mapping", "mapping.json"),
                 ["HEXALITH_SOURCE_MAPPING_HASH"] = mutation == "changed-mapping" ? new string('0', 64) : hash,
             };
-            if (mutation != "valid-local" && !mutation.StartsWith("lifecycle-", StringComparison.Ordinal))
+            if (mutation != "valid-local" && !lifecycle && !held)
             {
                 Should.Throw<InvalidDataException>(() => NativeDiagnosticBinding.Read(run, handoff));
                 return;
             }
+            if (held)
+            {
+                // Builds 6.3.x forwards no hold variable: only the controller's wait control for this run signals the hold.
+                Environment.SetEnvironmentVariable(CiLifecycleHold.VariableName, null);
+                Environment.SetEnvironmentVariable("HEXALITH_G4_RUN_ID", run);
+                Directory.CreateDirectory(hold);
+                File.WriteAllText(Path.Combine(hold, "control.json"), JsonSerializer.Serialize(new { runId = run, action = "wait" }));
+            }
             NativeDiagnosticBinding binding = NativeDiagnosticBinding.Read(run, handoff);
+            if (held)
+            {
+                Environment.SetEnvironmentVariable("HEXALITH_G4_RUN_ID", previousRun);
+                Environment.SetEnvironmentVariable(CiLifecycleHold.VariableName, previousHold);
+                binding.LifecycleInvocation.ShouldBeTrue();
+            }
             binding.CallerRoot.ShouldBe(caller);
             binding.OwnerWorkspace.ShouldBe(workspace);
             JsonElement.DeepEquals(binding.PlatformIdentity, mapping.RootElement.GetProperty("PlatformIdentity")).ShouldBeTrue();
             binding.ExecutionContext.GetProperty("kind").GetString().ShouldBe("local");
-            if (mutation.StartsWith("lifecycle-", StringComparison.Ordinal))
+            if (lifecycle || held)
             {
                 binding.ArtifactDirectory.ShouldBe(Path.Combine(caller, "TestResults", "ci-lifecycle"));
                 string role = Directory.CreateDirectory(Path.Combine(control, "hexalith-ci-qualification", "passing")).FullName;
@@ -97,14 +117,15 @@ public sealed class NativeDiagnosticBindingTests
                     mappingHash = hash, executionContext = new { kind = "local" },
                     owners = new[] { new { label = "passing", receipt } },
                 }));
-                if (mutation != "lifecycle-local")
+                if (mutation is not ("lifecycle-local" or "held-platform-package"))
                 {
                     Should.Throw<InvalidDataException>(() => binding.VerifyLifecycleArtifact(journal));
                     return;
                 }
                 binding.VerifyLifecycleArtifact(journal);
             }
-            else binding.ArtifactDirectory.ShouldBe(Path.Combine(caller, "TestResults", "module-integration"));
+            // An outer controller hold of this real native run reroutes the ordinary entry as well.
+            else binding.ArtifactDirectory.ShouldBe(Path.Combine(caller, "TestResults", binding.LifecycleInvocation ? "ci-lifecycle" : "module-integration"));
             Directory.CreateDirectory(binding.ArtifactDirectory);
             NativeAssemblyObservations.WritePrivateObservation(binding.ArtifactDirectory, "local-control-" + run, "{\"scope\":\"local-handoff-io-only\"}");
             retained = Path.Combine(binding.ArtifactDirectory, "loaded-assemblies-local-control-" + run + ".json");
@@ -114,10 +135,54 @@ public sealed class NativeDiagnosticBindingTests
         }
         finally
         {
+            if (held)
+            {
+                Environment.SetEnvironmentVariable("HEXALITH_G4_RUN_ID", previousRun);
+                Environment.SetEnvironmentVariable(CiLifecycleHold.VariableName, previousHold);
+            }
+            if (Directory.Exists(hold)) Directory.Delete(hold, recursive: true);
             if (retained is not null) File.Delete(retained);
             Directory.Delete(control, recursive: true);
         }
     }
+
+    /// <summary>A held integration entry uses its lifecycle journal and never requires the ordinary caller invocation.</summary>
+    /// <param name="held">Whether the owner invocation runs under the controller hold.</param>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void HeldIntegrationInvocationRoutesToTheLifecycleJournal(bool held)
+    {
+        string directory = Directory.CreateTempSubdirectory("parties-local-held-invocation-").FullName;
+        try
+        {
+            using JsonDocument context = JsonDocument.Parse("{\"kind\":\"local\"}");
+            var binding = new NativeDiagnosticBinding(new string('1', 32), new string('2', 32), new string('3', 32), directory,
+                directory, new string('a', 40), new string('b', 64), context.RootElement.Clone(), directory, "local-model", "platform-package")
+            {
+                LifecycleInvocation = held,
+            };
+            binding.ArtifactDirectory.ShouldBe(Path.Combine(directory, "TestResults", held ? "ci-lifecycle" : "module-integration"));
+            string journal = Directory.CreateDirectory(Path.Combine(directory, "TestResults", "ci-lifecycle")).FullName;
+            string receipt = Path.Combine(Directory.CreateDirectory(Path.Combine(directory, "hexalith-ci-qualification", "passing")).FullName, "receipt.json");
+            File.WriteAllBytes(receipt, JsonSerializer.SerializeToUtf8Bytes(new
+            {
+                schema = "hexalith.module.ci-owner-receipt.v1", runId = binding.RunId, attemptId = binding.AttemptId,
+                environmentId = binding.EnvironmentId, stateDirectory = directory, executionContext = context.RootElement,
+            }));
+            File.WriteAllBytes(Path.Combine(journal, "observations.json"), JsonSerializer.SerializeToUtf8Bytes(new
+            {
+                schema = "hexalith.ci-lifecycle-qualification.v1", classification = "baseline-only", source = binding.Revision,
+                mappingHash = binding.MappingHash, executionContext = context.RootElement, owners = new[] { new { label = "passing", receipt } },
+            }));
+
+            // No invocation.json exists: only the ordinary, unheld entry requires it.
+            if (held) binding.VerifyCallerArtifact();
+            else Should.Throw<InvalidDataException>(binding.VerifyCallerArtifact);
+        }
+        finally { Directory.Delete(directory, recursive: true); }
+    }
+
     /// <summary>Compatible declared package batches admit the integration entry once.</summary>
     [Theory]
     [InlineData("platform-package", "platform-package,lifecycle-package", true)]

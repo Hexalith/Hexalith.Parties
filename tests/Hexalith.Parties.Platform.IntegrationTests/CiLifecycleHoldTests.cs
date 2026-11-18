@@ -5,8 +5,12 @@ using Shouldly;
 namespace Hexalith.Parties.Platform.IntegrationTests;
 
 /// <summary>Local control/marker contracts without a real-platform fixture or hosted qualification credit.</summary>
+[Collection(ProcessHandoffCollection)]
 public sealed class CiLifecycleHoldTests
 {
+    /// <summary>Serializes tests that replace, or read, the process-wide native handoff variables.</summary>
+    internal const string ProcessHandoffCollection = "Native process handoff";
+
     /// <summary>Ordinary native execution must not wait on a controller that is not present.</summary>
     /// <returns>A completed no-op when the hold flag is unset.</returns>
     [Fact]

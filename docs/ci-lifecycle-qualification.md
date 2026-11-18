@@ -28,13 +28,15 @@ publisher `42438005017` qualify the genuine signed public `4.44.13` tools.
 Every caller still needs its own new-source hosted results, native execution
 and complete owned cleanup; producer success supplies no caller or manual credit.
 
-The ordinary `platform-package` profile selects the complete measured public
-Parties 3.1.0, SDK 4.1.0, Tenants 7.0.5, Memories 3.0.25 and McpCli 2.0.1 cohort.
-The separate private `platform-current-package` profile and its strict validator
-retain their existing contracts and cannot substitute for ordinary public proof.
-The ordinary artifact gate requires all original 28 native cases, exact persisted
-identity/sequence/projection and reference-owner effects, anonymous 401 responses, declared
-diagnostic hashes, and verified empty owned inventories after teardown.
+The `platform-package` profile has Platform build, seal and run the mapped Parties
+owner in Release, and launch its dependency images by the immutable Linux/amd64
+digests resolved from their catalog tags. The former private
+`platform-current-package` profile is retired. The artifact gate requires the exact
+native case inventory, exact persisted identity/sequence/projection and
+reference-owner effects, anonymous 401 responses, the Release-owner observation
+bound to the selected Platform and Builds commits, the dependency images as
+launched, declared diagnostic hashes, and verified empty owned inventories after
+teardown. It pins no image or package body.
 
 Historical Platform `v1.7.0` source `52bc7986170f268afaef6227d0519a1d662af256`
 selected Builds `v4.44.12` / `b4703ec2247321f867f14cd9caca43fa00190feb`.

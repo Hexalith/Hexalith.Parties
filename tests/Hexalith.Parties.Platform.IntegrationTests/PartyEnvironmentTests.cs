@@ -17,6 +17,7 @@ using Shouldly;
 namespace Hexalith.Parties.Platform.IntegrationTests;
 
 /// <summary>Exercises real Parties, Tenants and Memories; a missing handoff fails fixture initialization.</summary>
+[Collection(CiLifecycleHoldTests.ProcessHandoffCollection)]
 public sealed class PartyEnvironmentTests(PlatformEnvironmentFixture fixture, ITestOutputHelper output) : IClassFixture<PlatformEnvironmentFixture>
 {
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web)

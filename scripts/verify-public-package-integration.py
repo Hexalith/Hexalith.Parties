@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bind a hosted package integration artifact to its exact CI invocation and owner cleanup."""
+"""Bind a hosted public integration artifact to its exact CI invocation and owner cleanup."""
 from __future__ import annotations
 
 import argparse
@@ -18,7 +18,8 @@ EXECUTION_SCHEMA = "hexalith.module.ci-integration-execution.v1"
 CLEANUP_SCHEMA = "hexalith.module.ci-integration-cleanup.v1"
 CLEANUP_RECORD = re.compile(r"cleanup-([1-9][0-9]?)\.json\Z", re.ASCII)
 
-# Exact xUnit TRX inventory includes the original cases and the attached lifecycle hold controls.
+# Exact xUnit TRX inventory: the original cases, the attached lifecycle hold controls, the held
+# integration route and the released-image receipt refusals.
 NATIVE_CASES = frozenset("Hexalith.Parties.Platform.IntegrationTests." + suffix for suffix in (
     'CiLifecycleHoldTests.AfterPersistenceIsNoOpUnlessExplicitlyRequestedAsync',
     'CiLifecycleHoldTests.IsRequestedWhenControllerWaitControlExists',
@@ -33,23 +34,39 @@ NATIVE_CASES = frozenset("Hexalith.Parties.Platform.IntegrationTests." + suffix 
     'NativeAssemblyObservationTests.CopiedOutputReportsActualFileHashWithoutLoadingIt',
     'NativeAssemblyObservationTests.PrivateDiagnosticRefusesSymbolicDirectory',
     'NativeAssemblyObservationTests.PrivateDiagnosticRetainsFirstBytesAndRefusesOverwrite',
-    'NativeDiagnosticBindingTests.InvocationRequiresTheDeclaredIntegrationProfileOnce(profile: \\"platform-package\\", profiles: \\"platform-package,lifecycle-package\\", accepted: True)',
+    'NativeDiagnosticBindingTests.HeldIntegrationInvocationRoutesToTheLifecycleJournal(held: False)',
+    'NativeDiagnosticBindingTests.HeldIntegrationInvocationRoutesToTheLifecycleJournal(held: True)',
     'NativeDiagnosticBindingTests.InvocationRequiresTheDeclaredIntegrationProfileOnce(profile: \\"platform-package\\", profiles: \\"lifecycle-package\\", accepted: False)',
+    'NativeDiagnosticBindingTests.InvocationRequiresTheDeclaredIntegrationProfileOnce(profile: \\"platform-package\\", profiles: \\"platform-package,lifecycle-package\\", accepted: True)',
+    'NativeDiagnosticBindingTests.InvocationRequiresTheDeclaredIntegrationProfileOnce(profile: \\"platform-package\\", profiles: \\"platform-package,platform-package\\", accepted: False)',
+    'NativeDiagnosticBindingTests.InvocationRequiresTheDeclaredIntegrationProfileOnce(profile: \\"platform-package\\", profiles: \\"platform-package,platform-source\\", accepted: False)',
     'NativeDiagnosticBindingTests.InvocationRequiresTheDeclaredIntegrationProfileOnce(profile: \\"platform-package\\", profiles: \\"platform-package\\", accepted: True)',
     'NativeDiagnosticBindingTests.InvocationRequiresTheDeclaredIntegrationProfileOnce(profile: \\"platform-package\\", profiles: \\"unknown-package,platform-package\\", accepted: False)',
-    'NativeDiagnosticBindingTests.InvocationRequiresTheDeclaredIntegrationProfileOnce(profile: \\"platform-package\\", profiles: \\"platform-package,platform-source\\", accepted: False)',
-    'NativeDiagnosticBindingTests.InvocationRequiresTheDeclaredIntegrationProfileOnce(profile: \\"platform-package\\", profiles: \\"platform-package,platform-package\\", accepted: False)',
     'NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \\"changed-context\\")',
     'NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \\"changed-mapping\\")',
     'NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \\"foreign-attempt\\")',
     'NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \\"foreign-model-output\\")',
     'NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \\"foreign-run\\")',
+    'NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \\"held-platform-package\\")',
     'NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \\"lifecycle-foreign-receipt\\")',
     'NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \\"lifecycle-foreign-source\\")',
     'NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \\"lifecycle-local\\")',
     'NativeDiagnosticBindingTests.PublishedMappingRoutesScrubbedLocalControlsAndRefusesMismatches(mutation: \\"valid-local\\")',
     'PartyEnvironmentTests.GatewayRefusesAnonymousCommandStatusAsync',
     'PartyEnvironmentTests.RealDependencies_CreateQueryAndPersistMatchingPartyEvents',
+    'PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \\"accepted-immutable-config\\")',
+    'PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \\"accepted-tagged-manifest\\")',
+    'PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \\"duplicate-resource\\")',
+    'PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \\"empty-images\\")',
+    'PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \\"foreign-attempt\\")',
+    'PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \\"foreign-environment\\")',
+    'PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \\"foreign-mapping\\")',
+    'PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \\"foreign-repository\\")',
+    'PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \\"foreign-run\\")',
+    'PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \\"platform-source\\")',
+    'PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \\"qualification-credit\\")',
+    'PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \\"substituted-image-id\\")',
+    'PublicRuntimeImageObservationsTests.ReadBindsResolvedDependencyImagesToThisOwner(mutation: \\"substituted-reference\\")',
 ))
 
 
@@ -134,7 +151,7 @@ def validate(directory, *, context, source, platform, builds, release_tag, works
         native_output = workspaces / run_id / "test-builds/bin/Hexalith.Parties.Platform.IntegrationTests/release"
         return public.validate_held(root, context=context, source=source, platform=platform, builds=builds,
                                     release_tag=release_tag, native_output=native_output,
-                                    helper_files=frozenset({"invocation.json", *phase_files}), required_cases=NATIVE_CASES, current_owner=True)
+                                    helper_files=frozenset({"invocation.json", *phase_files}), required_cases=NATIVE_CASES)
 
 
 def main():
