@@ -535,7 +535,7 @@ change also requires an approved parser-invariant and test update. Edit
 `TEMPLATE` for non-ACL changes, then regenerate. Missing, duplicate, unsafe or
 stale input fails without rewriting in `--check` mode.
 
-The local module tool is pinned to 5.2.2 with Aspire CLI 13.6.5 alongside
+The local module tool is pinned to 5.2.2 with Aspire CLI 17.0.0 alongside
 aspirate; package CI continues to restore packages and build Release. Source mode is selected only
 by the tool's persisted mapping, with no file-existence fallback. Legacy hosting
 projects and package publication gates remain in their existing scope.

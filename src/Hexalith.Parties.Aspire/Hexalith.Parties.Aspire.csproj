@@ -6,6 +6,7 @@
     <PackageTags>parties;dapr;aspire;eventsourcing;dotnet</PackageTags>
     <!-- EventStore.Aspire uses the Aspire-aligned prerelease Dapr integration. -->
     <NoWarn>$(NoWarn);NU5104</NoWarn>
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);CS0618</WarningsNotAsErrors>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
