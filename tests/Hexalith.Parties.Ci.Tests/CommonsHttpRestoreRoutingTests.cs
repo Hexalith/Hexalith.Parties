@@ -8,6 +8,7 @@ namespace Hexalith.Parties.Ci.Tests;
 public sealed class CommonsHttpRestoreRoutingTests
 {
     private const string CommonsHttpProjectReference = @"$(HexalithCommonsRoot)\src\libraries\Hexalith.Commons.Http\Hexalith.Commons.Http.csproj";
+    private const string ClientProject = "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj";
     private const string EventStoreContractsPackageId = "Hexalith.EventStore.Contracts";
     private const string PackageCondition = "'$(HexalithCommonsHttpFromSource)' != 'true'";
     private const string PackageId = "Hexalith.Commons.Http";
@@ -31,7 +32,9 @@ public sealed class CommonsHttpRestoreRoutingTests
         XElement[] runtimeTools = packageVersions.Where(item => item.Attribute("Include") is not null).ToArray();
         runtimeTools.Select(item => (string?)item.Attribute("Include")).ShouldBe(
             ["Aspire.Hosting.Orchestration.linux-x64", "Aspire.Dashboard.Sdk.linux-x64"]);
-        packageVersions.ShouldAllBe(item => ((string?)item.Attribute("Version"))!.StartsWith("17.0.0", StringComparison.Ordinal));
+        runtimeTools.ShouldAllBe(item => (string?)item.Attribute("Version") == "$(HexalithAspireAppHostSdkVersion)");
+        packageVersions.Where(item => item.Attribute("Update") is not null)
+            .ShouldAllBe(item => ((string?)item.Attribute("Version"))!.StartsWith("17.0.0", StringComparison.Ordinal));
         XDocument buildsPackages = XDocument.Load(CiTestPaths.RepoFile("references/Hexalith.Builds/Props/Directory.Packages.props"));
         XElement contractUiVersion = buildsPackages.Descendants("PackageVersion")
             .Single(element => element.Attribute("Include")?.Value == "Hexalith.FrontComposer.Contracts.UI");
@@ -103,13 +106,15 @@ public sealed class CommonsHttpRestoreRoutingTests
         string packScript = CiTestPaths.ReadRepoFile("scripts/pack-release-packages.py");
         string validationScript = CiTestPaths.ReadRepoFile("scripts/validate-nuget-packages.py");
         string consumerValidationScript = CiTestPaths.ReadRepoFile("scripts/validate-consumer-package-references.py");
-        (string centralAlias, string centralVersion) = ReadCentralCommonsHttpPackageVersion();
-        (string eventStoreAlias, string eventStoreVersion) = ReadCentralPackageVersion(EventStoreContractsPackageId);
+        string commonsProperty = ReadCentralPackageProperty(PackageId);
+        string eventStoreProperty = ReadCentralPackageProperty(EventStoreContractsPackageId);
+        string centralVersion = EffectivePackageVersions.ReadProperty(CiTestPaths.RepositoryRoot, commonsProperty);
+        string eventStoreVersion = EffectivePackageVersions.ReadProperty(CiTestPaths.RepositoryRoot, eventStoreProperty);
 
-        centralAlias.ShouldBe("$(HexalithCommonsVersion)");
+        commonsProperty.ShouldBe("HexalithCommonsVersion");
         centralVersion.ShouldNotBeNullOrWhiteSpace();
         centralVersion.ShouldNotContain("$(");
-        eventStoreAlias.ShouldBe("$(HexalithEventStoreVersion)");
+        eventStoreProperty.ShouldBe("HexalithEventStoreVersion");
         eventStoreVersion.ShouldNotBeNullOrWhiteSpace();
         eventStoreVersion.ShouldNotContain("$(");
         packageVersion.Value.ShouldBe("$(HexalithCommonsHttpPackageVersion)");
@@ -138,9 +143,20 @@ public sealed class CommonsHttpRestoreRoutingTests
         consumerValidationScript.ShouldNotContain("\"3.47.0\"");
     }
 
-    [Fact]
-    public void MsbuildPropertyResolverReturnsCurrentCentralVersion()
+    [Theory]
+    [InlineData("", "3.0.1")]
+    [InlineData("package", "3.0.0")]
+    public void MsbuildPropertyResolverReturnsCurrentCentralVersion(string mappingMode, string commonsVersion)
     {
+        Dictionary<string, string> properties = new() { ["HexalithSourceMappingMode"] = mappingMode };
+        IReadOnlyDictionary<string, string> effectivePackages = EffectivePackageVersions.ReadPackages(
+            CiTestPaths.RepositoryRoot, ClientProject, globalProperties: properties);
+        string aspireVersion = EffectivePackageVersions.ReadProperty(
+            CiTestPaths.RepositoryRoot, "HexalithAspireAppHostSdkVersion", ClientProject, globalProperties: properties);
+        effectivePackages[PackageId].ShouldBe(commonsVersion);
+        effectivePackages["Aspire.Hosting.Orchestration.linux-x64"].ShouldBe(aspireVersion);
+        effectivePackages["Aspire.Dashboard.Sdk.linux-x64"].ShouldBe(aspireVersion);
+
         foreach (string packageId in new[]
         {
             PackageId,
@@ -149,14 +165,17 @@ public sealed class CommonsHttpRestoreRoutingTests
             "Hexalith.Tenants.Contracts",
         })
         {
-            (string alias, string centralVersion) = ReadCentralPackageVersion(packageId);
-            (int exitCode, string output, string error) = RunPython(
-                "scripts/msbuild_properties.py",
-                "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj",
-                alias[2..^1]);
+            var startInfo = new ProcessStartInfo("python3");
+            startInfo.ArgumentList.Add("scripts/msbuild_properties.py");
+            startInfo.ArgumentList.Add(ClientProject);
+            startInfo.ArgumentList.Add(ReadCentralPackageProperty(packageId));
+            PackageTestProcess.RemoveSourceMappingEnvironment(startInfo);
+            startInfo.Environment["HexalithSourceMappingMode"] = mappingMode;
 
-            exitCode.ShouldBe(0, error);
-            output.Trim().ShouldBe(centralVersion);
+            PackageTestProcessResult result = PackageTestProcess.Run(
+                startInfo, CiTestPaths.RepositoryRoot, PythonProcessTimeoutMilliseconds);
+            result.ExitCode.ShouldBe(0, result.StandardError);
+            result.StandardOutput.Trim().ShouldBe(effectivePackages[packageId]);
         }
     }
 
@@ -1347,10 +1366,7 @@ print("aspire-boundary|verified")
             "import time; time.sleep(5)"));
     }
 
-    private static (string Alias, string Version) ReadCentralCommonsHttpPackageVersion()
-        => ReadCentralPackageVersion(PackageId);
-
-    private static (string Alias, string Version) ReadCentralPackageVersion(string packageId)
+    private static string ReadCentralPackageProperty(string packageId)
     {
         XDocument props = XDocument.Load(CiTestPaths.RepoFile("references/Hexalith.Builds/Props/Directory.Packages.props"));
         string alias = props
@@ -1358,11 +1374,9 @@ print("aspire-boundary|verified")
             .Single(element => element.Attribute("Include")?.Value == packageId)
             .Attribute("Version")?.Value
             ?? throw new InvalidOperationException($"{packageId} version was not found in shared package props.");
-        string propertyName = alias.StartsWith("$(", StringComparison.Ordinal) && alias.EndsWith(')')
+        return alias.StartsWith("$(", StringComparison.Ordinal) && alias.EndsWith(')')
             ? alias[2..^1]
             : throw new InvalidOperationException($"{packageId} version '{alias}' is not a central property alias.");
-        string version = EffectivePackageVersions.ReadProperty(CiTestPaths.RepositoryRoot, propertyName);
-        return (alias, version);
     }
 
     private static (int ExitCode, string StandardOutput, string StandardError) RunPython(params string[] arguments)

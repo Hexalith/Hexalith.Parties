@@ -31,7 +31,7 @@ public sealed class ContainerProductTests
 
     [Theory]
     [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@axe-core/playwright", "^4.14.0", "4.14.0")]
-    [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@playwright/test", "^1.65.0", "1.65.0")]
+    [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@playwright/test", "^1.65.1", "1.65.1")]
     [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@types/node", "^24.19.2", "24.19.2")]
     [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "typescript", "^7.0.2", "7.0.2")]
     public void DependencyManifestsAndLocksMatchSelectedVersions(

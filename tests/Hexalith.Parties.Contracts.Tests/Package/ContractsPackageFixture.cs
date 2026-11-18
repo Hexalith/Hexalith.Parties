@@ -74,7 +74,7 @@ public sealed class ContractsPackageFixture : IDisposable
             "src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj",
             "HexalithMcpCliVersion");
         string eventStorePackVersionProperties =
-            $"-p:MinVerVersionOverride={eventStoreVersion} -p:PackageVersion={eventStoreVersion}";
+            $"-p:MinVerVersionOverride={eventStoreVersion} -p:PackageVersion={eventStoreVersion} -p:HexalithCommonsVersion={commonsVersion}";
         string uniqueIdsProject = RepositoryDependencyPaths.Resolve(repoRoot,
             "references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/Hexalith.Commons.UniqueIds.csproj");
         string eventStoreProject = RepositoryDependencyPaths.Resolve(repoRoot,

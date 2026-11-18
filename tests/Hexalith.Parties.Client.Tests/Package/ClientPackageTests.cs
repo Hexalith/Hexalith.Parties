@@ -207,7 +207,7 @@ public sealed class ClientPackageTests : IDisposable
         // fixture validation, with no claim about published same-version bytes.
         RunDotnet("build", $"\"{uniqueIdsProject}\" --configuration {PackageTestProcess.ProbeConfiguration} -m:1 {isolatedBuild} {commonsPackVersionProperties}", repoRoot);
         RunDotnet("pack", $"\"{uniqueIdsProject}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} {isolatedBuild} {commonsPackVersionProperties}", repoRoot);
-        RunDotnet("pack", $"\"{eventStoreProject}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} {isolatedBuild} -p:MinVerVersionOverride={eventStoreVersion} -p:PackageVersion={eventStoreVersion}", repoRoot);
+        RunDotnet("pack", $"\"{eventStoreProject}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} {isolatedBuild} -p:MinVerVersionOverride={eventStoreVersion} -p:PackageVersion={eventStoreVersion} -p:HexalithCommonsVersion={commonsVersion}", repoRoot);
         RunDotnet(
             "pack",
             $"\"{partiesContractsProject}\" --configuration {PackageTestProcess.ProbeConfiguration} --output \"{feedDirectory}\" {restoreSources} {isolatedBuild} {LocalPackVersionProperties}",
