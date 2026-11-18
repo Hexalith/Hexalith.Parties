@@ -45,9 +45,9 @@ Public command and query traffic goes through **Hexalith.EventStore**; the `part
 | Mediation | MediatR | 14.2.0 |
 | AuthN | JWT Bearer | 11.0.0 |
 | MCP | ModelContextProtocol | 2.4.0 |
-| UI | FluentUI Blazor + CustomElements | 5.0.1 / 11.0.0 |
-| Rich search (opt) | Hexalith.Memories.Client.Rest | 4.0.0 |
-| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers | 4.0.3 / 4.3.0 / 6.2.0 / 2.15.2 / 4.16.0 |
+| UI | FluentUI Blazor + CustomElements | 5.1.0 / 11.0.0 |
+| Rich search (opt) | Hexalith.Memories.Client.Rest | 3.0.27 |
+| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers | 4.0.3 / 4.3.0 / 6.2.0 / 2.15.2 / 4.17.0 |
 
 The DAPR row describes the .NET client/actor SDK packages. The selected runtime
 catalog remains `1.19.1`.

@@ -17,7 +17,6 @@ from pathlib import Path
 
 SOURCE = "a" * 40
 VERSION = "1.2.3"
-BUILDS = "11a3a79cfac4bba9548c6364a17a01ee9b561370"
 INDEX = "application/vnd.oci.image.index.v1+json"
 MANIFEST = "application/vnd.oci.image.manifest.v1+json"
 CONFIG = "application/vnd.oci.image.config.v1+json"
@@ -245,8 +244,7 @@ def run(repository, scenario, builds_root):
     with tempfile.TemporaryDirectory(prefix="parties-publication-") as temporary:
         root = Path(temporary)
         validator = root / "oci_registry_validator.py"
-        validator.write_bytes(subprocess.check_output(["git", "-C", str(builds_root),
-                                                       "show", f"{BUILDS}:Github/publish-containers/oci_registry_validator.py"]))
+        validator.write_bytes((Path(builds_root) / "Github/publish-containers/oci_registry_validator.py").read_bytes())
         if scenario == "unpinned-validator":
             validator.write_bytes(validator.read_bytes() + b"\n# modified\n")
         if scenario == "partial-inventory":

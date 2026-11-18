@@ -129,11 +129,14 @@ public sealed class StandaloneSolutionTests
     {
         ArgumentNullException.ThrowIfNull(solutionName);
         XDocument solution = XDocument.Load(CiTestPaths.RepoFile(solutionName));
-        foreach (string suite in new[] { "IntegrationTests", "LifecycleTests", "AttachedLifecycleTests" })
+        XElement integration = solution.Descendants("Project").Single(project =>
+            (string?)project.Attribute("Path") == "tests/Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj");
+        integration.Elements("Build").ShouldBeEmpty();
+        foreach (string suite in new[] { "LifecycleTests", "AttachedLifecycleTests" })
         {
             string path = $"tests/Hexalith.Parties.Platform.{suite}/Hexalith.Parties.Platform.{suite}.csproj";
             XElement native = solution.Descendants("Project").Single(project => (string?)project.Attribute("Path") == path);
-            native.Elements("Build").ShouldBeEmpty();
+            native.Elements("Build").Single().Attribute("Project")!.Value.ShouldBe("false");
         }
     }
 
