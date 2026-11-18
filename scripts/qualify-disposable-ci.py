@@ -50,7 +50,7 @@ RUN_ID = re.compile(r'[0-9a-f]{32}')
 LABEL = 'hexalith.g4.run'
 MANIFEST = 'module/hexalith.module-manifest.v2.json'
 PROFILE = 'lifecycle-package'
-CURRENT_PROFILE = 'platform-current-package'
+INTEGRATION_PROFILE = 'platform-package'
 CANCELLED = []
 ATTACHED_PROFILE = 'attached-lifecycle-package'
 ATTACHED_ENTRY = 'tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleTests.csproj'
@@ -447,14 +447,14 @@ def gated_exec(item, command):
         return supervise_attached_command(item, command, released)
     with open(os.devnull, 'rb') as empty:
         os.dup2(empty.fileno(), sys.stdin.fileno())
-    if owner_profile(item) == CURRENT_PROFILE:
+    if owner_profile(item) == INTEGRATION_PROFILE:
         os.environ['HEXALITH_CI_LIFECYCLE_HOLD'] = '1'
     os.execvp(command[0], command)
 
 
 def owner_profile(item):
-    """Execution cancellation uses the current-owner integration entry; other owners keep the lifecycle suite."""
-    return CURRENT_PROFILE if item.get('cancellationPhase') == 'execution' else PROFILE
+    """Execution cancellation uses the platform integration entry; other owners keep the lifecycle suite."""
+    return INTEGRATION_PROFILE if item.get('cancellationPhase') == 'execution' else PROFILE
 
 
 def supervise_attached_command(item, command, released):

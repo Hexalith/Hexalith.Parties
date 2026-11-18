@@ -22,11 +22,20 @@ internal sealed record NativeDiagnosticBinding(string RunId, string AttemptId, s
     /// <summary>Gets the exact public Platform identity carried by the already verified immutable mapping.</summary>
     internal JsonElement PlatformIdentity { get; init; }
 
+    /// <summary>Gets the verified active Parties revision, which may be a direct Platform submodule.</summary>
+    internal string OwnerRevision { get; init; } = Revision;
+
+    /// <summary>Whether the authenticated owner selected the package integration suite.</summary>
+    internal bool IntegrationSelected { get; init; } = Profile == "platform-package";
+
+    /// <summary>Gets whether this owner invocation uses the controller's persisted execution hold.</summary>
+    internal bool LifecycleInvocation { get; init; }
+
     /// <summary>Gets the original caller's existing classified artifact directory, outside disposable workspaces.</summary>
-    internal string ArtifactDirectory => Path.Combine(CallerRoot, "TestResults", Profile switch
+    internal string ArtifactDirectory => Path.Combine(CallerRoot, "TestResults", (Profile, LifecycleInvocation) switch
     {
-        "platform-package" or "platform-current-package" => "module-integration",
-        "lifecycle-package" => "ci-lifecycle",
+        ("platform-package", false) => "module-integration",
+        ("platform-package", true) or ("lifecycle-package", _) => "ci-lifecycle",
         _ => throw new InvalidDataException("Native diagnostic profile has no declared caller artifact route."),
     });
 
@@ -75,23 +84,34 @@ internal sealed record NativeDiagnosticBinding(string RunId, string AttemptId, s
             throw new InvalidDataException("Disposable native workspaces cannot select the caller artifact root.");
         string model = plan.RootElement.GetProperty("platformModelAssemblyPath").GetString()!;
         RequireEqual(model, Path.Combine(workspace, "hosts", "platform-model", "Hexalith.Platform.Composition.dll"));
+        string profile = plan.RootElement.GetProperty("selectedTest").GetProperty("name").GetString()!;
+        string revision = ReadRevision(root);
+        JsonElement owner = selected.GetProperty("Entries").EnumerateArray().Single(entry =>
+            entry.GetProperty("Identity").GetString() == "Hexalith.Parties" && entry.GetProperty("Origin").GetString() == "source");
+        string ownerRoot = owner.GetProperty("Path").GetString()!;
+        RequireEqual(ownerRoot, ownerRoot == root ? root : Path.Combine(root, "references", "Hexalith.Parties"));
+        VerifyDirectory(ownerRoot);
         return new(runId, run.GetProperty("attemptId").GetString()!, run.GetProperty("environmentId").GetString()!,
-            workspace, root, ReadRevision(root), hash, context.Clone(), stateDirectory, model, plan.RootElement.GetProperty("selectedTest").GetProperty("name").GetString()!)
+            workspace, root, revision, hash, context.Clone(), stateDirectory, model, profile)
         {
             PlatformIdentity = selected.GetProperty("PlatformIdentity").Clone(),
+            OwnerRevision = ownerRoot == root ? revision : ReadRevision(ownerRoot),
+            LifecycleInvocation = Environment.GetEnvironmentVariable("HEXALITH_CI_LIFECYCLE_HOLD") == "1",
+            IntegrationSelected = profile == "platform-package" || (plan.RootElement.TryGetProperty("selectedTests", out var tests)
+                && tests.EnumerateArray().Any(test => test.GetProperty("name").GetString() == "platform-package")),
         };
     }
 
     /// <summary>Verifies the original caller helper declared this artifact directory for the exact job and profile.</summary>
     internal void VerifyCallerArtifact()
     {
-        if (Profile is "platform-package" or "platform-current-package")
+        if (Profile == "platform-package" && !LifecycleInvocation)
         {
             using JsonDocument invocation = ReadDocument(Path.Combine(ArtifactDirectory, "invocation.json"));
             RequireEqual(invocation.RootElement.GetProperty("classification").GetString(), "baseline-only");
             string?[] profiles = invocation.RootElement.GetProperty("profiles").EnumerateArray().Select(value => value.GetString()).ToArray();
-            bool matches = Profile == "platform-current-package" ? profiles.SequenceEqual(new[] { Profile }, StringComparer.Ordinal)
-                : profiles.Contains(Profile, StringComparer.Ordinal) && !profiles.Contains("platform-current-package", StringComparer.Ordinal);
+            bool matches = profiles.Contains(Profile, StringComparer.Ordinal) && profiles.Distinct(StringComparer.Ordinal).Count() == profiles.Length
+                && profiles.All(profile => profile is "platform-package" or "lifecycle-package" or "attached-lifecycle-package");
             if (!JsonElement.DeepEquals(ExecutionContext, invocation.RootElement.GetProperty("executionContext")) || !matches)
                 throw new InvalidDataException("Native diagnostics differ from the original caller artifact invocation.");
             return;
@@ -185,19 +205,19 @@ internal sealed record NativeDiagnosticBinding(string RunId, string AttemptId, s
 
     internal JsonElement? ReadCurrentOwnerObservation()
     {
-        if (Profile != "platform-current-package") return null;
+        if (!IntegrationSelected) return null;
         string directory = Path.Combine(OwnerWorkspace, "platform-components", EnvironmentId + "-catalog");
         using JsonDocument document = ReadDocument(Path.Combine(directory, "current-owner-observation.json"));
         JsonElement value = document.RootElement;
-        foreach (var expected in new[] { ("profile", Profile), ("runId", RunId), ("attemptId", AttemptId),
-            ("environmentId", EnvironmentId), ("revision", Revision), ("mappingHash", MappingHash), ("configuration", "Release") })
+        foreach (var expected in new[] { ("profile", "platform-package"), ("runId", RunId), ("attemptId", AttemptId),
+            ("environmentId", EnvironmentId), ("revision", OwnerRevision), ("mappingHash", MappingHash), ("configuration", "Release") })
             RequireEqual(value.GetProperty(expected.Item1).GetString(), expected.Item2);
         if (value.GetProperty("qualificationCredit").GetBoolean() || !value.GetProperty("committedCatalogValidated").GetBoolean())
             throw new InvalidDataException("Current owner observation has no committed baseline authority.");
         return value.Clone();
     }
 
-    private static JsonDocument ReadDocument(string path)
+    internal static JsonDocument ReadDocument(string path)
     {
         VerifyDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
         FileInfo file = new(path);

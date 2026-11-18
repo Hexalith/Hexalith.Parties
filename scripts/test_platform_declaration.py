@@ -40,9 +40,10 @@ class PlatformDeclarationTests(unittest.TestCase):
         self.assertEqual([(s["name"], s["mode"], s["entry"]) for s in suites],
                          [("platform-source", "source", integration_entry),
                           ("platform-package", "package", integration_entry),
-                          ("platform-current-package", "package", integration_entry),
                           ("lifecycle-package", "package", lifecycle_entry),
                           ("attached-lifecycle-package", "package", attached_entry)])
+        package_entries = [suite["entry"] for suite in suites if suite["mode"] == "package"]
+        self.assertEqual(len(package_entries), len(set(package_entries)))
         for suite in suites:
             self.assertEqual(suite["executor"], "mtp")
             self.assertEqual(suite["reportFormat"], "trx")
@@ -51,7 +52,7 @@ class PlatformDeclarationTests(unittest.TestCase):
             self.assertNotIn("AppHost", text)
             self.assertNotIn("Aspire.Hosting", text)
             self.assertNotIn("NSubstitute", text)
-            if suite["name"] in ("platform-source", "platform-package", "platform-current-package"):
+            if suite["name"] in ("platform-source", "platform-package"):
                 self.assertIn("Hexalith.EventStore.Testing.Integration", text)
             elif suite["name"] == "attached-lifecycle-package":
                 self.assertIn('PackageReference Include="Hexalith.EventStore.Testing"', text)

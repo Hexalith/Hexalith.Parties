@@ -11,7 +11,6 @@ public sealed class NativeDiagnosticBindingTests
     /// <param name="mutation">The local metadata boundary to exercise.</param>
     [Theory]
     [InlineData("valid-local")]
-    [InlineData("current-valid-local")]
     [InlineData("foreign-run")]
     [InlineData("foreign-attempt")]
     [InlineData("changed-mapping")]
@@ -52,7 +51,7 @@ public sealed class NativeDiagnosticBindingTests
                 schema = "hexalith.g4-run-plan.v1", runId = run, workspace, resourceClaimStateDirectory = state,
                 attemptId = mutation == "foreign-attempt" ? Guid.NewGuid().ToString("N") : attempt, environmentId = environment,
                 sourceMappingHash = hash, sourceMapping = new { root = caller, contentHash = hash },
-                selectedTest = new { name = mutation == "current-valid-local" ? "platform-current-package" : mutation.StartsWith("lifecycle-", StringComparison.Ordinal) ? "lifecycle-package" : "platform-package" },
+                selectedTest = new { name = mutation.StartsWith("lifecycle-", StringComparison.Ordinal) ? "lifecycle-package" : "platform-package" },
                 platformModelAssemblyPath = Path.Combine(workspace, "hosts", mutation == "foreign-model-output" ? "unbound-output" : "platform-model", "Hexalith.Platform.Composition.dll"),
             }));
             File.WriteAllText(Path.Combine(state, run + ".json"), JsonSerializer.Serialize(new
@@ -69,7 +68,7 @@ public sealed class NativeDiagnosticBindingTests
                 ["HEXALITH_G4_SOURCE_MAPPING_PATH"] = Path.Combine(workspace, "source-mapping", "mapping.json"),
                 ["HEXALITH_SOURCE_MAPPING_HASH"] = mutation == "changed-mapping" ? new string('0', 64) : hash,
             };
-            if (mutation is not ("valid-local" or "current-valid-local") && !mutation.StartsWith("lifecycle-", StringComparison.Ordinal))
+            if (mutation != "valid-local" && !mutation.StartsWith("lifecycle-", StringComparison.Ordinal))
             {
                 Should.Throw<InvalidDataException>(() => NativeDiagnosticBinding.Read(run, handoff));
                 return;
@@ -119,15 +118,15 @@ public sealed class NativeDiagnosticBindingTests
             Directory.Delete(control, recursive: true);
         }
     }
-    /// <summary>Ordinary compatible batches retain containment; current purpose requires one exclusive profile.</summary>
+    /// <summary>Compatible declared package batches admit the integration entry once.</summary>
     [Theory]
     [InlineData("platform-package", "platform-package,lifecycle-package", true)]
     [InlineData("platform-package", "lifecycle-package", false)]
-    [InlineData("platform-current-package", "platform-current-package", true)]
-    [InlineData("platform-current-package", "platform-current-package,platform-package", false)]
-    [InlineData("platform-package", "platform-package,platform-current-package", false)]
-    [InlineData("platform-current-package", "platform-current-package,platform-current-package", false)]
-    public void InvocationPreservesOrdinaryBatchesAndRefusesMixedCurrentPurpose(string profile, string profiles, bool accepted)
+    [InlineData("platform-package", "platform-package", true)]
+    [InlineData("platform-package", "unknown-package,platform-package", false)]
+    [InlineData("platform-package", "platform-package,platform-source", false)]
+    [InlineData("platform-package", "platform-package,platform-package", false)]
+    public void InvocationRequiresTheDeclaredIntegrationProfileOnce(string profile, string profiles, bool accepted)
     {
         ArgumentNullException.ThrowIfNull(profiles);
         string directory = Directory.CreateTempSubdirectory("parties-local-invocation-").FullName;

@@ -67,7 +67,7 @@ class LaunchContractTests(unittest.TestCase):
                     patch.object(Q, 'gated_exec', return_value=17) as gate:
                 self.assertEqual(Q.launch_owner(child['label']), 17)
             gate.assert_called_once_with(child, Q.TOOL + ['test', '--manifest=' + Q.MANIFEST, '--mode=package',
-                                                          '--profile=' + Q.CURRENT_PROFILE,
+                                                          '--profile=' + Q.INTEGRATION_PROFILE,
                                                           '--ci-owner-receipt=' + child['receipt'], '--output=json'])
 
     def test_gated_exec_requests_hold_only_for_execution_cancellation_owners(self):

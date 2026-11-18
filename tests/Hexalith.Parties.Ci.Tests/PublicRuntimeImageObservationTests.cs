@@ -15,9 +15,9 @@ public sealed class PublicRuntimeImageObservationTests
     public async Task BoundedReaderMeasuresTheFiveActualFileBodiesAsync(string timestamp)
     {
         PublicRuntimeImageFixture fixture = new(timestamp);
-        JsonElement actual = await PublicRuntimeImageObservations.ObserveImageAsync(PublicRuntimeImageFixture.RunId,
+        JsonElement actual = await HistoricalPublicRuntimeImageObservations.ObserveImageAsync(PublicRuntimeImageFixture.RunId,
             fixture.ReadAsync, TestContext.Current.CancellationToken);
-        actual.GetProperty("image").GetProperty("imageReference").GetString().ShouldBe(PublicRuntimeImageObservations.ImageReference);
+        actual.GetProperty("image").GetProperty("imageReference").GetString().ShouldBe(HistoricalPublicRuntimeImageObservations.ImageReference);
         JsonElement bodies = actual.GetProperty("bodies");
         bodies.EnumerateObject().Count().ShouldBe(5);
         foreach (JsonProperty body in bodies.EnumerateObject())
@@ -58,7 +58,7 @@ public sealed class PublicRuntimeImageObservationTests
     public async Task UnverifiedRunningImageOrFileRefusesAsync(string mutation)
     {
         PublicRuntimeImageFixture fixture = new(mutation);
-        await Should.ThrowAsync<InvalidDataException>(() => PublicRuntimeImageObservations.ObserveImageAsync(
+        await Should.ThrowAsync<InvalidDataException>(() => HistoricalPublicRuntimeImageObservations.ObserveImageAsync(
             PublicRuntimeImageFixture.RunId, fixture.ReadAsync, TestContext.Current.CancellationToken));
         if (mutation is "foreign-id" or "foreign-owner" or "tag-only" or "stopped" or "unknown-field")
             fixture.Commands.ShouldNotContain(command => command[0] == "cp");
@@ -69,7 +69,7 @@ public sealed class PublicRuntimeImageObservationTests
     public async Task TamperedFileBytesRemainMeasuredInsteadOfBeingReplacedByExpectedHashesAsync()
     {
         PublicRuntimeImageFixture fixture = new("changed-bytes");
-        JsonElement actual = await PublicRuntimeImageObservations.ObserveImageAsync(PublicRuntimeImageFixture.RunId,
+        JsonElement actual = await HistoricalPublicRuntimeImageObservations.ObserveImageAsync(PublicRuntimeImageFixture.RunId,
             fixture.ReadAsync, TestContext.Current.CancellationToken);
         actual.GetProperty("bodies").GetProperty("Hexalith.Parties.Contracts").GetProperty("sha256").GetString()
             .ShouldNotBe(Convert.ToHexStringLower(SHA256.HashData(PublicRuntimeImageFixture.Body("Hexalith.Parties.Contracts.dll"))));
@@ -82,7 +82,7 @@ public sealed class PublicRuntimeImageObservationTests
         using CancellationTokenSource bound = new();
         await bound.CancelAsync();
         PublicRuntimeImageFixture fixture = new();
-        await Should.ThrowAsync<OperationCanceledException>(() => PublicRuntimeImageObservations.ObserveImageAsync(
+        await Should.ThrowAsync<OperationCanceledException>(() => HistoricalPublicRuntimeImageObservations.ObserveImageAsync(
             PublicRuntimeImageFixture.RunId, fixture.ReadAsync, bound.Token));
         fixture.Commands.ShouldBeEmpty();
     }

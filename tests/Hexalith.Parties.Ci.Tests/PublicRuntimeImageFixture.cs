@@ -55,7 +55,7 @@ internal sealed class PublicRuntimeImageFixture(string mutation = "valid")
             {
                 ["containerId"] = mutation == "foreign-id" ? new string('e', 64) : arguments[^1],
                 ["runId"] = mutation == "foreign-owner" ? new string('f', 32) : RunId,
-                ["imageReference"] = mutation == "tag-only" ? "registry.hexalith.com/parties:3.1.0" : mutation == "foreign-image" ? "foreign.invalid/owner@sha256:" + new string('c', 64) : PublicRuntimeImageObservations.ImageReference,
+                ["imageReference"] = mutation == "tag-only" ? "registry.hexalith.com/parties:3.1.0" : mutation == "foreign-image" ? "foreign.invalid/owner@sha256:" + new string('c', 64) : HistoricalPublicRuntimeImageObservations.ImageReference,
                 ["imageContentId"] = mutation == "bad-content-id" ? "latest" : "sha256:" + new string(mutation == "changed-image" && _inspections > 1 ? 'e' : 'c', 64),
                 ["running"] = mutation != "stopped",
                 ["startedAt"] = mutation == "nanoseconds" ? "2026-01-01T00:00:00.123456789Z" : mutation == "changed-start" && _inspections > 1 ? "2026-01-02T00:00:00Z" : "2026-01-01T00:00:00Z",

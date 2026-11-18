@@ -315,20 +315,20 @@ The suite observes real Tenants through its declared REST interface, reads the s
 tenant through its declared REST interface, creates and queries a Party, and verifies persisted
 aggregate metadata and every event envelope in the run-owned state store.
 
-From the selected Platform checkout, use the exact published module CLI 5.0.1 restored from its local tool manifest:
+From the verified Platform checkout, restore its pinned module CLI and run the declared suite:
 
 ```bash
-hexalith-module test --manifest references/Hexalith.Parties/module/hexalith.module-manifest.v2.json --profile platform-source --mode source
-hexalith-module test --manifest references/Hexalith.Parties/module/hexalith.module-manifest.v2.json --profile platform-current-package --mode package
-# Separate published-consumer purpose, after its public cohort is admitted:
-hexalith-module test --manifest references/Hexalith.Parties/module/hexalith.module-manifest.v2.json --profile platform-package --mode package
+dotnet hexalith-module test --manifest references/Hexalith.Parties/module/hexalith.module-manifest.v2.json --profile platform-source --mode source
+dotnet hexalith-module test --manifest references/Hexalith.Parties/module/hexalith.module-manifest.v2.json --profile platform-package --mode package
 ```
 
-The renderer owns both explicit suite declarations. Package execution requires authoritative
-publications of the migrated EventStore testing packages; Debug source validation grants no package
-acceptance. It also requires Platform's native owner preparation (the synthetic tenant and membership,
-the native scope and the private Memories invocation channel), now enabled for the selected
-Release/package cohort. The central CI migration retains the declared package suite and all isolated product
+The renderer declares one package profile per native project. The integration
+profile builds and observes the mapped Parties owner in Release with the
+catalog-selected packages and immutable dependency images. Use the Platform
+candidate or release that provides the run-owned `released-images.json` receipt
+and the `platform-package` Release owner observation. The lifecycle owner and
+attached project use `lifecycle-package` and `attached-lifecycle-package`.
+The central CI migration retains the declared package suite and all isolated product
 projects; [hook and compatibility-cohort qualification](docs/ci.md) is still pending. Actual native service and cleanup qualification
 remain required; source/model/protocol results do not establish hosted lifecycle acceptance. The existing `Hexalith.Parties.IntegrationTests` topology and infrastructure-control tests
 remain a frozen compatibility lane. Unit and isolated integration projects retain their test-only

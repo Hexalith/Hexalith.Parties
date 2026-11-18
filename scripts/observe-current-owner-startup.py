@@ -22,7 +22,7 @@ _spec = importlib.util.spec_from_file_location(
 HELPER = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(HELPER)
 MANIFEST = 'module/hexalith.module-manifest.v2.json'
-PROFILE = 'platform-current-package'
+PROFILE = 'platform-package'
 ENTRY = 'tests/Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj'
 LIMIT = 1_048_576
 PHASES = frozenset(('source-validated', 'bootstrap-submitting', 'bootstrap-committed', 'tenant-submitting',
@@ -35,7 +35,7 @@ EXIT_CODES = frozenset(('Success', 'UsageOrManifest', 'PrerequisiteUnavailable',
 PHASE_NAMES = frozenset(('None', 'Usage', 'Manifest', 'Prerequisite', 'Topology', 'Test', 'PersistedState', 'Evidence', 'Cleanup'))
 HOSTS = ('eventstore', 'parties', 'tenants', 'tenants-api', 'memories', 'memories-domain-service')
 FILES = ('native-scope.json', 'catalog.json', 'selected-closure.json', 'activation.json', 'preparation.json',
-         'current-reader-receipt.json', 'current-owner-observation.json') + tuple(
+         'current-reader-receipt.json', 'current-owner-observation.json', 'released-images.json') + tuple(
              host + suffix for host in HOSTS for suffix in ('.observation.json', '.ready.json', '.committed.json'))
 
 
