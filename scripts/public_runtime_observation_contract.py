@@ -112,8 +112,99 @@ def verify_cleanup_termination(result, owner_id, diagnostic):
                 "post-test termination is out of order or differs from the owned diagnostic")
 
 
+def verify_public_runtime(functional, owner, context, source, platform, builds, release_tag, persistence_start, observed):
+    """Check the retained compatibility suite that runs the published Parties image."""
+    require("currentOwner" in functional and functional["currentOwner"] is None, "ordinary evidence cannot promote a private current-owner proof")
+    runtime = functional.get("publicRuntime")
+    require(isinstance(runtime, dict) and set(runtime) == {"kind", "profile", "ownerRunId", "ownerAttemptId", "environmentId", "revision", "mappingHash", "executionContext", "platform", "image", "bodies", "measuredAtUtc", "qualificationCredit"}, "measured ordinary runtime evidence missing or unknown")
+    require(runtime["kind"] == "running-owned-public-parties-image" and runtime["qualificationCredit"] is False, "wrong runtime observation role")
+    for field, expected in (("profile", PROFILE), ("ownerRunId", owner["runId"]), ("ownerAttemptId", owner["attemptId"]),
+                            ("environmentId", owner["environmentId"]), ("revision", source), ("mappingHash", functional["mappingHash"]), ("executionContext", context)):
+        require(runtime.get(field) == expected, "running image owner/source/job differs")
+    require(runtime["platform"] == {"commit": platform, "compositionCommit": platform, "checkoutCommit": platform,
+                                   "catalogCommit": builds, "releaseTag": release_tag}, "running image public Platform/catalog differs")
+    image = runtime["image"]
+    require(isinstance(image, dict) and set(image) == {"containerId", "runId", "imageReference", "imageContentId", "running", "startedAt"}, "unknown running image identity")
+    require(HEX.fullmatch(image.get("containerId", "")) is not None and image.get("runId") == owner["runId"]
+            and image.get("imageReference") == IMAGE and image.get("running") is True
+            and re.fullmatch(r"sha256:[a-f0-9]{64}", image.get("imageContentId", ""), re.ASCII) is not None, "foreign, mutable or stopped public image")
+    require(isinstance(image.get("startedAt"), str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z", image["startedAt"], re.ASCII) is not None,
+            "running image start timestamp is unavailable")
+    measured = observation_timestamp(runtime["measuredAtUtc"])
+    require(persistence_start <= measured <= observed, "running image measurement lies outside observed execution")
+    require(observation_timestamp(image["startedAt"]) <= measured, "running image started after its measurement")
+    bodies = runtime["bodies"]
+    require(isinstance(bodies, dict) and set(bodies) == set(IMAGE_BODIES), "running image body set is incomplete or unknown")
+    for name, digest in IMAGE_BODIES.items():
+        require(isinstance(bodies[name], dict) and type(bodies[name].get("bytes")) is int, "running image byte count must be an integer")
+        require(bodies[name] == {"role": "running-public-image-file", "path": "/app/" + name + ".dll", "bytes": IMAGE_SIZES[name], "sha256": digest},
+                "actual running image body differs from its measured public role")
+
+
+def verify_current_runtime(functional, platform, builds, release_tag):
+    """Bind the running Release owner and every loaded dependency image to the native report."""
+    require("publicRuntime" not in functional, "historical image evidence cannot qualify a current owner run")
+    current = functional["currentOwner"]
+    require(isinstance(current, dict), "running Parties owner evidence is missing")
+    for key in ("runId", "attemptId", "environmentId", "revision", "mappingHash", "profile"):
+        require(current.get(key) == functional[key], "running Parties owner lineage differs")
+    require(current.get("configuration") == "Release" and current.get("qualificationCredit") is False
+            and current.get("committedCatalogValidated") is True and current.get("sdkVersion") == SDK_VERSION,
+            "running Parties owner did not use the qualified Release catalog")
+    identity = current["platform"]
+    require(all(identity.get(key) == platform for key in ("commit", "compositionCommit", "checkoutCommit"))
+            and identity.get("catalogCommit") == builds and identity.get("releaseTag") == release_tag
+            and identity.get("isPlatformRepository") is False, "running Parties Platform/catalog differs")
+    require(current.get("sdkBodies") == SDK, "running Parties SDK bytes differ")
+    require(HEX.fullmatch(current.get("routingCatalogRoot", "")) is not None, "committed routing catalog is missing")
+
+    contracts = "Hexalith.Parties.Contracts"
+    extensions = "Hexalith.Parties.EventStoreExtensions"
+    archives = current["packageArchives"]
+    archive_names = [re.fullmatch(r"(Hexalith\.Parties\.(?:Contracts|EventStoreExtensions))\.([0-9]+\.[0-9]+\.[0-9]+)\.nupkg", name)
+                     for name in archives]
+    require(len(archive_names) == 2 and all(archive_names)
+            and {name[1] for name in archive_names} == {contracts, extensions}
+            and len({name[2] for name in archive_names}) == 1, "measured owner package archive set differs")
+    runtime, catalog = current["runtimeBodies"], current["catalogBodies"]
+    require(set(runtime) == {"Hexalith.Parties", contracts, "Hexalith.Parties.Projections",
+                             "Hexalith.Parties.Authentication", "Hexalith.Parties.Security"}
+            and set(catalog) == {contracts, extensions}
+            and all(isinstance(body, str) and HEX.fullmatch(body) for body in (*archives.values(), *runtime.values(), *catalog.values())),
+            "running Parties owner body inventory differs")
+    require(runtime[contracts] == catalog[contracts] and runtime[contracts] not in {PACKAGE_READERS[contracts], IMAGE_BODIES[contracts]},
+            "running Parties Contracts differs from its committed catalog body")
+    executable = [digest for name, digest in current["observedExecutableOwners"].items()
+                  if name.split(",", 1)[0] == "Hexalith.Parties"]
+    require(executable == [runtime["Hexalith.Parties"]], "committed catalog executable differs from the running Parties body")
+
+    expected_versions = {"tenants": current["tenantsVersion"], "tenants-api": current["tenantsVersion"]}
+    expected_versions.update(dict.fromkeys(("memories", "memories-domain-service", "memories-access-telemetry-clock",
+                                           "memories-access-telemetry"), current["memoriesVersion"]))
+    images = functional["dependencyImages"]
+    require(isinstance(images, list) and len(images) == len(expected_versions) and images == current.get("dependencyImages")
+            and {image["resourceId"] for image in images} == expected_versions.keys(),
+            "released dependency image inventory differs from the running owner receipt")
+    containers = set()
+    for image in images:
+        resource = image["resourceId"]
+        version = expected_versions[resource]
+        require(re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version) is not None, "dependency image version is not released")
+        repository = f"registry.hexalith.com/{resource}"
+        tag = f"{repository}:{version}"
+        manifest = image["expectedManifestDigest"]
+        config = image["expectedConfigDigest"]
+        container = image["containerId"]
+        require(all(digest.startswith("sha256:") and HEX.fullmatch(digest[7:]) for digest in (manifest, config))
+                and HEX.fullmatch(container) is not None and container not in containers
+                and image["catalogImage"] == tag and image["expectedReference"] == f"{repository}@{manifest}"
+                and image["observedReference"] in (f"{repository}@{manifest}", f"{tag}@{manifest}")
+                and image["observedImageId"] in (manifest, config), "released dependency image identity differs")
+        containers.add(container)
+
+
 def validate_held(root: int, *, context: dict, source: str, platform: str, builds: str, release_tag: str, native_output: Path, helper_files: frozenset[str] | None = None,
-                  required_cases: frozenset[str] | None = None) -> dict:
+                  required_cases: frozenset[str] | None = None, current_owner: bool = False) -> dict:
     expected_runtime_inputs(context, source, platform, builds)
     result = document(root, "test-result.json")
     bindings = result_contract(result)
@@ -197,31 +288,10 @@ def validate_held(root: int, *, context: dict, source: str, platform: str, build
     require(functional.get("tenantsNativeQueryObserved") is True and functional.get("memoriesRegistryObserved") is True, "real reference-owner assertions absent")
     require(functional.get("selectorCompatibilityObserved") is True, "SDK selector compatibility assertions absent")
     persistence_start, observed = native_execution(report, cases, result, functional)
-    require("currentOwner" in functional and functional["currentOwner"] is None, "ordinary evidence cannot promote a private current-owner proof")
-    runtime = functional.get("publicRuntime")
-    require(isinstance(runtime, dict) and set(runtime) == {"kind", "profile", "ownerRunId", "ownerAttemptId", "environmentId", "revision", "mappingHash", "executionContext", "platform", "image", "bodies", "measuredAtUtc", "qualificationCredit"}, "measured ordinary runtime evidence missing or unknown")
-    require(runtime["kind"] == "running-owned-public-parties-image" and runtime["qualificationCredit"] is False, "wrong runtime observation role")
-    for field, expected in (("profile", PROFILE), ("ownerRunId", owner["runId"]), ("ownerAttemptId", owner["attemptId"]),
-                            ("environmentId", owner["environmentId"]), ("revision", source), ("mappingHash", functional["mappingHash"]), ("executionContext", context)):
-        require(runtime.get(field) == expected, "running image owner/source/job differs")
-    require(runtime["platform"] == {"commit": platform, "compositionCommit": platform, "checkoutCommit": platform,
-                                   "catalogCommit": builds, "releaseTag": release_tag}, "running image public Platform/catalog differs")
-    image = runtime["image"]
-    require(isinstance(image, dict) and set(image) == {"containerId", "runId", "imageReference", "imageContentId", "running", "startedAt"}, "unknown running image identity")
-    require(HEX.fullmatch(image.get("containerId", "")) is not None and image.get("runId") == owner["runId"]
-            and image.get("imageReference") == IMAGE and image.get("running") is True
-            and re.fullmatch(r"sha256:[a-f0-9]{64}", image.get("imageContentId", ""), re.ASCII) is not None, "foreign, mutable or stopped public image")
-    require(isinstance(image.get("startedAt"), str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z", image["startedAt"], re.ASCII) is not None,
-            "running image start timestamp is unavailable")
-    measured = observation_timestamp(runtime["measuredAtUtc"])
-    require(persistence_start <= measured <= observed, "running image measurement lies outside observed execution")
-    require(observation_timestamp(image["startedAt"]) <= measured, "running image started after its measurement")
-    bodies = runtime["bodies"]
-    require(isinstance(bodies, dict) and set(bodies) == set(IMAGE_BODIES), "running image body set is incomplete or unknown")
-    for name, digest in IMAGE_BODIES.items():
-        require(isinstance(bodies[name], dict) and type(bodies[name].get("bytes")) is int, "running image byte count must be an integer")
-        require(bodies[name] == {"role": "running-public-image-file", "path": "/app/" + name + ".dll", "bytes": IMAGE_SIZES[name], "sha256": digest},
-                "actual running image body differs from its measured public role")
+    if current_owner:
+        verify_current_runtime(functional, platform, builds, release_tag)
+    else:
+        verify_public_runtime(functional, owner, context, source, platform, builds, release_tag, persistence_start, observed)
     loaded_name = "loaded-assemblies-" + owner["runId"] + ".json"
     loaded = document(root, loaded_name)
     require(loaded.get("kind") == "real-native-sdk-assemblies" and loaded.get("profile") == PROFILE

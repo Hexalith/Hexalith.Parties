@@ -71,7 +71,7 @@ jobs:
         with:
           name: module-integration-diagnostics
           path: TestResults/public-package-evidence
-      - name: Require real public-package native effects and complete cleanup
+      - name: Require exact native owner, dependency images, persistence and cleanup
         shell: bash
         run: |
           platform_sha=$(git rev-parse HEAD:references/Hexalith.Platform)
