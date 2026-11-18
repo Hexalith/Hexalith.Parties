@@ -704,7 +704,7 @@ public sealed class AspireRuntimePreparationTests
             using JsonDocument evaluation = JsonDocument.Parse(result.Output);
             JsonElement properties = evaluation.RootElement.GetProperty("Properties");
             properties.GetProperty("HexalithEventStoreVersion").GetString().ShouldBe(selection == "fallback" ? "5.1.1" : "5.0.0");
-            properties.GetProperty("HexalithTenantsVersion").GetString().ShouldBe(selection == "fallback" ? "8.0.0" : "7.0.7");
+            properties.GetProperty("HexalithTenantsVersion").GetString().ShouldBe(selection == "fallback" ? "8.0.2" : "7.0.7");
             properties.GetProperty("HexalithMemoriesVersion").GetString().ShouldBe(selection == "fallback" ? "4.0.0" : "3.0.27");
             properties.GetProperty("HexalithFrontComposerVersion").GetString().ShouldBe(selection == "fallback" ? "6.0.0" : "5.0.0");
             properties.GetProperty("HexalithEventStoreCatalogHostsSupported").GetString().ShouldBe(selection == "fallback" ? "true" : string.Empty);

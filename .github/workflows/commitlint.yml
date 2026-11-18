@@ -18,5 +18,5 @@ jobs:
   commitlint:
     uses: Hexalith/Hexalith.Builds/.github/workflows/commitlint.yml@3c2f5944aaa28dc7854a00a8a9df171aa810b0c7
     with:
-      node-version: '24.22.1'
+      node-version: '26.13.1'
       pull-request-title: ${{ github.event.pull_request.title || '' }}

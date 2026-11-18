@@ -9,7 +9,7 @@
 | .NET SDK | **11.0.100** (pinned in `global.json`, rollForward latestPatch) |
 | .NET 10 SDK | **10.0.404** for retained compatibility fixtures alongside SDK 11 |
 | Docker Desktop | latest (must be running before Aspire) |
-| Node.js | **24.22.1**, with bundled **npm 11.19.1**, for `tests/e2e` |
+| Node.js | **26.13.1**, with bundled **npm 11.20.0**, for `tests/e2e` |
 | Git | recent |
 | `jq` | optional (Bash examples) |
 | PowerShell `pwsh` 7+ | local scripts and CI parity commands |

@@ -22,7 +22,7 @@
          A present catalog selects SDK 4.2 for Parties-role projects (HXW012). -->
     <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == '' and !Exists('$(Hexalith1BuildPackageProps)') and !Exists('$(Hexalith2BuildPackageProps)') and !Exists('$(Hexalith3BuildPackageProps)')">5.1.1</HexalithEventStoreVersion>
     <!-- Latest compatible published Tenants family, before the shared catalog defaults. -->
-    <HexalithTenantsVersion Condition="'$(HexalithTenantsVersion)' == '' and !Exists('$(Hexalith1BuildPackageProps)') and !Exists('$(Hexalith2BuildPackageProps)') and !Exists('$(Hexalith3BuildPackageProps)')">8.0.0</HexalithTenantsVersion>
+    <HexalithTenantsVersion Condition="'$(HexalithTenantsVersion)' == '' and !Exists('$(Hexalith1BuildPackageProps)') and !Exists('$(Hexalith2BuildPackageProps)') and !Exists('$(Hexalith3BuildPackageProps)')">8.0.2</HexalithTenantsVersion>
     <!-- Shared theme accessibility correction, qualified through the package browser gate. -->
     <HexalithFrontComposerVersion Condition="'$(HexalithFrontComposerVersion)' == '' and !Exists('$(Hexalith1BuildPackageProps)') and !Exists('$(Hexalith2BuildPackageProps)') and !Exists('$(Hexalith3BuildPackageProps)')">6.0.0</HexalithFrontComposerVersion>
     <!-- Published recovery/catalog compatibility fixes, before shared defaults. -->

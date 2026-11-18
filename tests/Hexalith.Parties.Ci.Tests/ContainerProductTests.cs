@@ -22,8 +22,8 @@ public sealed class ContainerProductTests
         foreach (JsonElement project in new[] { manifest.RootElement, packageLock.RootElement.GetProperty("packages").GetProperty("") })
         {
             JsonElement engines = project.GetProperty("engines");
-            engines.GetProperty("node").GetString().ShouldBe("24.22.1");
-            engines.GetProperty("npm").GetString().ShouldBe("11.19.1");
+            engines.GetProperty("node").GetString().ShouldBe("26.13.1");
+            engines.GetProperty("npm").GetString().ShouldBe("11.20.0");
         }
 
         CiTestPaths.ReadRepoFile($"{directory}.npmrc").Trim().ShouldBe("engine-strict=true");
@@ -32,7 +32,7 @@ public sealed class ContainerProductTests
     [Theory]
     [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@axe-core/playwright", "^4.14.0", "4.14.0")]
     [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@playwright/test", "^1.65.1", "1.65.1")]
-    [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@types/node", "^24.19.2", "24.19.2")]
+    [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@types/node", "^26.6.6", "26.6.6")]
     [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "typescript", "^7.0.2", "7.0.2")]
     public void DependencyManifestsAndLocksMatchSelectedVersions(
         string manifestPath,

@@ -1050,7 +1050,7 @@ The exact 6.0.0 browser helper compares all four served/restored assets before
 maintained Admin export, Consumer JSON export and navigation-cancellation
 controls. Exact 5.0.0 admission remains available. `test:config` also verifies
 unknown/neighboring/prerelease/build-metadata refusal and every byte mismatch.
-Run with pinned Node 24.22.1/npm 11.19.1 and Chromium, retries disabled. The receipt
+Run with pinned Node 26.13.1/npm 11.20.0 and Chromium, retries disabled. The receipt
 retains three real asset attachments and nonzero passing browser results.
 G4, deployment, historical custody and named owner acceptance remain separate.
 

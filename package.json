@@ -10,11 +10,11 @@
     "@semantic-release/exec": "^7.1.0",
     "@semantic-release/github": "^12.0.11",
     "@semantic-release/release-notes-generator": "^14.1.1",
-    "semantic-release": "^25.0.9"
+    "semantic-release": "^26.0.1"
   },
   "engines": {
-    "node": "24.22.1",
-    "npm": "11.19.1"
+    "node": "26.13.1",
+    "npm": "11.20.0"
   },
   "overrides": {
     "semantic-release": {
