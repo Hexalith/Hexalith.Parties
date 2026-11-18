@@ -844,3 +844,4 @@ references/Hexalith.EventStore|82657b3d3b9f3ede3e711ab72dc67fea836e3029|validate
 references/Hexalith.FrontComposer|76195272d07a0dd8c73ac3d8ffeb7a6b9a60d825|validated-advance|origin/main@76195272d07a0dd8c73ac3d8ffeb7a6b9a60d825|codex-agent|2026-11-18
 references/Hexalith.Memories|0856785c7c764a0dc305af058227d6485b65c697|validated-advance|origin/main@0856785c7c764a0dc305af058227d6485b65c697|codex-agent|2026-11-18
 references/Hexalith.Tenants|30b233026648488ca71fe5904fd218b7af934aed|validated-advance|origin/main@30b233026648488ca71fe5904fd218b7af934aed|codex-agent|2026-11-18
+references/Hexalith.Platform|5bfac7abfe2e4c3b74d56cc142a3087308f93360|validated-advance|v2.2.1@5bfac7abfe2e4c3b74d56cc142a3087308f93360|claude-agent|2026-11-19
