@@ -60,6 +60,7 @@ class PublicPackageEvidenceTests(unittest.TestCase):
         self.addCleanup(self.fixture.doCleanups)
         f = self.fixture
         self.expected = {**f.expected, "platform": "081178aa5cc01f5dc736ba0d1980aa80fedc6fe1", "builds": "5ec1779040606be89306129a7d2b245258c9acd2"}
+        self.expected["release_tag"] = "v1.9.0"
         self.expected["native_output"] = Path("/product/Release/native-tests")
         f.functional.update(profile=public.PROFILE, currentOwner=None, selectorCompatibilityObserved=True)
         platform = dict(commit="081178aa5cc01f5dc736ba0d1980aa80fedc6fe1", compositionCommit="081178aa5cc01f5dc736ba0d1980aa80fedc6fe1", checkoutCommit="081178aa5cc01f5dc736ba0d1980aa80fedc6fe1",
@@ -75,7 +76,7 @@ class PublicPackageEvidenceTests(unittest.TestCase):
         f.loaded["profile"] = public.PROFILE
         for name, digest in public.PACKAGE_READERS.items():
             item = dict(identity=name + ", Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", sha256=digest,
-                        informationalVersion="1.0.0+50904cc4ba53c9b0b2c082d5872a0d276be8f5c3")
+                        informationalVersion="1.0.0+84e3df796ac977041a21ec7bd8e5789bdc44241a")
             f.loaded["copied"].append(item)
             if name == "Hexalith.Parties.Contracts": f.loaded["loaded"].append(item.copy())
         for field in ("loaded", "copied"):
@@ -252,16 +253,17 @@ class PublicPackageEvidenceTests(unittest.TestCase):
                 f.seal()
                 with self.assertRaises(ValueError): self.check()
 
-    def test_native_sdk_bytes_cannot_replace_running_image_bytes(self):
+    def test_equal_sdk_bytes_still_require_running_image_provenance(self):
         f = self.fixture
         for name, digest in public.SDK.items():
             with self.subTest(name=name):
-                self.assertNotEqual(digest, public.IMAGE_SDK[name])
-                original = f.functional["publicRuntime"]["bodies"][name]["sha256"]
-                f.functional["publicRuntime"]["bodies"][name]["sha256"] = digest
+                self.assertEqual(digest, public.IMAGE_SDK[name])
+                body = f.functional["publicRuntime"]["bodies"][name]
+                body["role"] = "copied-native-composition-output"
                 f.seal()
-                with self.assertRaises(ValueError): self.check()
-                f.functional["publicRuntime"]["bodies"][name]["sha256"] = original
+                with self.assertRaisesRegex(ValueError, "measured public role"):
+                    self.check()
+                body["role"] = "running-public-image-file"
 
     def test_missing_renamed_duplicate_or_skipped_original_native_cases_refuse(self):
         f = self.fixture

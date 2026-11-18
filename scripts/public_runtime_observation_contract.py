@@ -26,23 +26,22 @@ issued_synthetic_tenant, result_contract = _readers.issued_synthetic_tenant, _re
 native_execution, observation_timestamp = _readers.native_execution, _readers.observation_timestamp
 SDK, SDK_VERSION, HEX, IDENTITY = _readers.SDK, _readers.SDK_VERSION, _readers.HEX, _readers.IDENTITY
 PROFILE = "platform-package"
-IMAGE = "registry.hexalith.com/parties@sha256:48d0e8db506e4ce574e8c7bd97e528a302d3fbf97754b007176904cbc1f3abfb"
+IMAGE = "registry.hexalith.com/parties@sha256:205e374548d3cac33457551f9c6f7b5f213db804ca58ae185332522833fe83c8"
 PACKAGE_READERS = {
-    "Hexalith.Parties.Contracts": "99230b764de6769a803702170c174f9dbef9b0b5b0c2931b07e85045478cd654",
-    "Hexalith.Parties.EventStoreExtensions": "a48612597603ce5b8d743e28e91236a51e561369c6bcd2d9fcca092dd78f1c06",
+    "Hexalith.Parties.Contracts": "3de20e490c7e1f42209d067caae4749369cf2c22ff982d29d698d97bf838cab5",
+    "Hexalith.Parties.EventStoreExtensions": "d5e8963120f881ca0b812d3f69b023a00e3676dd8e289160b2b870f8d36b4b55",
 }
-# The released image retains its independently measured SDK 4.1 bodies. Native
-# readers use SDK 4.2 and must never substitute their bytes for running image files.
+# Measured independently from the released Linux/amd64 Parties 3.1.1 image.
 IMAGE_SDK = {
-    "Hexalith.EventStore.Contracts": "f3f2d7f6e7edf54e187af15edec8b4f13bf7e255b186b999efa0836a0c86a739",
-    "Hexalith.EventStore.ServiceDefaults": "0e3f88ffefb12327d53f865b96bbb774beb71f7c78c9f20a3cbefa4901e9ba2d",
-    "Hexalith.EventStore.Client": "702dfb7537e990a2065fe37c0b06301cdb70c26907af42faa6acdae331a7bce6",
-    "Hexalith.EventStore.DomainService": "5d8068c8c116551efc3d545f85d41040023fa38217e5b4e73e4d225fe8e8bf78",
+    "Hexalith.EventStore.Contracts": "7e4c8823479a6c59456c5169c95d9082ccbb5d199f403f7cb7c3267c9cf9a44a",
+    "Hexalith.EventStore.ServiceDefaults": "3b618387d1adc3b98cef9823d629edace174c2bc9a8272a501e979f972fcad12",
+    "Hexalith.EventStore.Client": "5b184b6c7bc7e83251d4f48edfb6ee446a28ac4fae7c04c381c388ed8cb9cd92",
+    "Hexalith.EventStore.DomainService": "d1593c5a2b93e0a6cb8d84d946a94223403bf38c02bb7e30987f1f188ff13646",
 }
-IMAGE_BODIES = {**IMAGE_SDK, "Hexalith.Parties.Contracts": "b2ddfb18a7719b171ab9cf8b846675c4556d4d683ba0b5ebe8a503a6ae73d2f6"}
-IMAGE_SIZES = {"Hexalith.Parties.Contracts": 304640, "Hexalith.EventStore.Contracts": 953344,
-               "Hexalith.EventStore.Client": 1288192, "Hexalith.EventStore.DomainService": 1247744,
-               "Hexalith.EventStore.ServiceDefaults": 568320}
+IMAGE_BODIES = {**IMAGE_SDK, "Hexalith.Parties.Contracts": "4591cc733ba296a3043c449f615a4fb09b42213f7435276890a565c8ea3309d7"}
+IMAGE_SIZES = {"Hexalith.Parties.Contracts": 304640, "Hexalith.EventStore.Contracts": 1011200,
+               "Hexalith.EventStore.Client": 1288704, "Hexalith.EventStore.DomainService": 1254912,
+               "Hexalith.EventStore.ServiceDefaults": 603648}
 # Require persistence and anonymous access checks; other native controls run in their declared suites.
 CASES = _readers.CASES
 
@@ -81,18 +80,40 @@ def public_reader_roles(observations: dict, *, source: str, native_output: Path)
                     require(item.get("sha256") == digest, "image/private bytes cannot substitute for a public NuGet reader")
                     if name == contracts:
                         require(item["identity"] == contracts + ", Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
-                                and item.get("informationalVersion") == "1.0.0+50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+                                and item.get("informationalVersion") == "1.0.0+84e3df796ac977041a21ec7bd8e5789bdc44241a",
                                 "public NuGet Contracts assembly metadata differs")
     return {"loadedContracts": loaded_origin, "copiedContracts": "public-nuget"}
 
 
-def validate(directory: Path, *, context: dict, source: str, platform: str, builds: str, native_output: Path) -> dict:
+def validate(directory: Path, *, context: dict, source: str, platform: str, builds: str, release_tag: str, native_output: Path) -> dict:
     expected_runtime_inputs(context, source, platform, builds)
     with held_directory(directory) as root:
-        return validate_held(root, context=context, source=source, platform=platform, builds=builds, native_output=native_output)
+        return validate_held(root, context=context, source=source, platform=platform, builds=builds, release_tag=release_tag, native_output=native_output)
 
 
-def validate_held(root: int, *, context: dict, source: str, platform: str, builds: str, native_output: Path) -> dict:
+def verify_cleanup_termination(result, owner_id, diagnostic):
+    """Require exact post-test stops of the native work, the environment and its access."""
+    termination = result["termination"]
+    require(termination.get("state") == "populated" and termination.get("leftoverWorkIds") == []
+            and termination.get("failures") == [] and diagnostic.get("runId") == owner_id
+            and diagnostic.get("leftoverWorkIds") == [], "incomplete or foreign post-test termination")
+    passed_at = observation_timestamp(result["terminal"]["recordedAt"])
+    cleaned_at = observation_timestamp(result["cleanup"]["observedAt"])
+    for group, prefixes in (("ownedWork", {"native", "environment"}), ("environmentAccess", {"access"})):
+        work, evidence = termination.get(group), diagnostic.get(group)
+        require(isinstance(work, list) and isinstance(evidence, list) and len(work) == len(evidence) == len(prefixes),
+                "incomplete post-test termination inventory")
+        expected_ids = {prefix + ":" + owner_id for prefix in prefixes}
+        required = {(entry["id"], entry["status"], observation_timestamp(entry["observedAt"])) for entry in work}
+        actual = {(entry["Id"], entry["Status"], observation_timestamp(entry["ObservedAtUtc"])) for entry in evidence}
+        require({entry[0] for entry in required} == expected_ids and required == actual
+                and all(status == "terminated" and passed_at <= time <= cleaned_at for _, status, time in required)
+                and all(entry.get("diagnosticIds") == ["termination"] for entry in work),
+                "post-test termination is out of order or differs from the owned diagnostic")
+
+
+def validate_held(root: int, *, context: dict, source: str, platform: str, builds: str, release_tag: str, native_output: Path, helper_files: frozenset[str] | None = None,
+                  required_cases: frozenset[str] | None = None) -> dict:
     expected_runtime_inputs(context, source, platform, builds)
     result = document(root, "test-result.json")
     bindings = result_contract(result)
@@ -104,28 +125,40 @@ def validate_held(root: int, *, context: dict, source: str, platform: str, build
     require(bindings["environment"].get("mode") == "package" and bindings["environment"].get("executionContext") == context, "foreign result context")
     require(bindings["candidate"].get("classification") == "baseline-only", "fabricated candidate credit")
     require(result["terminal"].get("outcome") == "passed" and result["terminal"].get("cause") == "tests-completed", "native execution did not pass")
-    require(result.get("termination", {}).get("state") == "not-yet-populated", "interrupted native execution")
     cleanup = result["cleanup"]
     require(cleanup.get("state") == "populated" and cleanup.get("disposition") == "complete" and cleanup.get("failures") == [] and cleanup.get("leftoverResourceIds") == [], "owned result cleanup incomplete")
-    complete_cleanup(root, owner["runId"])
+    if helper_files is None:
+        complete_cleanup(root, owner["runId"])
     diagnostics = result.get("diagnostics")
-    require(isinstance(diagnostics, list) and 2 <= len(diagnostics) <= 3, "mandatory native/functional evidence missing")
+    require(isinstance(diagnostics, list) and 2 <= len(diagnostics) <= 5, "mandatory native/functional evidence missing")
     selected = {}
     names = set()
     for reference in diagnostics:
         require(set(reference) == {"id", "classification", "redacted", "reference", "contentIdentity"}, "invalid diagnostic shape")
         identity = reference["id"]
-        require(identity in ("native-report", "functional-observations", "lifecycle") and identity not in selected, "duplicate or unsupported diagnostic")
-        prefix, suffix = {"native-report": ("native", "trx"), "functional-observations": ("functional-observations", "json"), "lifecycle": ("lifecycle", "json")}[identity]
+        require(identity in ("native-report", "functional-observations", "lifecycle", "executing-tool", "termination") and identity not in selected, "duplicate or unsupported diagnostic")
+        prefix, suffix = {"native-report": ("native", "trx"), "functional-observations": ("functional-observations", "json"), "lifecycle": ("lifecycle", "json"),
+                          "executing-tool": ("executing-tool", "json"), "termination": ("termination", "json")}[identity]
         filename = reference["reference"]
         match = re.fullmatch(prefix + r"-([a-f0-9]{64})\." + suffix, filename, re.ASCII) if isinstance(filename, str) else None
         require(match is not None and reference["classification"] == "internal" and reference["redacted"] is True
                 and reference["contentIdentity"] == "sha256:" + match[1] and filename not in names, "invalid diagnostic reference")
         body = read(root, filename, 4194304 if identity == "native-report" else 1048576)
         require(hashlib.sha256(body).hexdigest() == match[1], "changed diagnostic content")
+        if identity == "executing-tool":
+            tool = bindings["tool"]
+            require(tool.get("state") == "populated" and tool.get("contentIdentity") == reference["contentIdentity"],
+                    "executing tool binding differs")
+        if identity in ("lifecycle", "termination") and helper_files is not None:
+            require(decode(body).get("runId") == owner["runId"], "foreign runner diagnostic")
         selected[identity] = body
         names.add(filename)
     require({"native-report", "functional-observations"} <= selected.keys(), "mandatory native/functional evidence absent")
+    if result["termination"].get("state") == "not-yet-populated":
+        require("termination" not in selected, "unexpected termination diagnostic")
+    else:
+        require(helper_files is not None and "termination" in selected, "unverified native termination")
+        verify_cleanup_termination(result, owner["runId"], decode(selected["termination"]))
     native = selected["native-report"]
     require(b"<!DOCTYPE" not in native.upper() and b"<!ENTITY" not in native.upper(), "unsafe native XML")
     report = ET.fromstring(native)
@@ -136,6 +169,9 @@ def validate_held(root: int, *, context: dict, source: str, platform: str, build
     require(all(item.get("outcome") == "Passed" for item in cases), "failed or skipped native case")
     require(all(int(count.get(key, "-1")) == len(cases) for key in ("total", "executed", "passed"))
             and all(int(count.get(key, "0")) == 0 for key in ("failed", "error", "timeout", "aborted", "notExecuted", "notRunnable", "disconnected", "inconclusive")), "inconsistent native counters")
+    if required_cases is not None:
+        case_names = {item.get("testName") for item in cases}
+        require(case_names == required_cases and len(cases) == len(required_cases), "exact native case inventory differs")
     for required in CASES:
         require(sum(item.get("testName") == required for item in cases) == 1, "required unchanged native case missing or duplicated")
     functional = decode(selected["functional-observations"])
@@ -169,7 +205,7 @@ def validate_held(root: int, *, context: dict, source: str, platform: str, build
                             ("environmentId", owner["environmentId"]), ("revision", source), ("mappingHash", functional["mappingHash"]), ("executionContext", context)):
         require(runtime.get(field) == expected, "running image owner/source/job differs")
     require(runtime["platform"] == {"commit": platform, "compositionCommit": platform, "checkoutCommit": platform,
-                                   "catalogCommit": builds, "releaseTag": "v1.9.0"}, "running image public Platform/catalog differs")
+                                   "catalogCommit": builds, "releaseTag": release_tag}, "running image public Platform/catalog differs")
     image = runtime["image"]
     require(isinstance(image, dict) and set(image) == {"containerId", "runId", "imageReference", "imageContentId", "running", "startedAt"}, "unknown running image identity")
     require(HEX.fullmatch(image.get("containerId", "")) is not None and image.get("runId") == owner["runId"]
@@ -202,6 +238,7 @@ def validate_held(root: int, *, context: dict, source: str, platform: str, build
             require(len(observed) == 1 if field == "copied" or name == "Hexalith.EventStore.Contracts" else len(observed) <= 1, "native/composition SDK inventory missing")
             require(all(item.get("sha256") == digest and f", Version={SDK_VERSION}.0," in item["identity"] for item in observed), "native/composition SDK substitution")
     reader_roles = public_reader_roles(loaded, source=source, native_output=native_output)
-    allowed = names | {loaded_name, "cleanup-observations.json", "test-result.json", "attachments.json", "attachment-withdrawals.json"}
+    allowed = names | {loaded_name, "test-result.json", "attachments.json", "attachment-withdrawals.json"}
+    allowed |= {"cleanup-observations.json"} if helper_files is None else helper_files
     require(all(name in allowed and stat.S_ISREG(os.stat(name, dir_fd=root, follow_symlinks=False).st_mode) for name in os.listdir(root)), "unreferenced or duplicate artifact substitute")
     return {"profile": PROFILE, "source": source, "runId": owner["runId"], "nativeCases": len(cases), "readerRoles": reader_roles, "qualificationCredit": False}

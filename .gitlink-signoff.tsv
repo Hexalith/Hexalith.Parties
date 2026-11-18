@@ -835,3 +835,5 @@ references/Hexalith.Memories|2b30558be1739549f1e6e5d7343bd3a65526209e|validated-
 references/Hexalith.Platform|bb8c7915ae67e427f3629427550c96ca1e74bc14|validated-advance|v2.1.11@bb8c7915ae67e427f3629427550c96ca1e74bc14|codex-agent|2026-11-18
 references/Hexalith.PolymorphicSerializations|df1a0e5c21ac97d3519fd5acd3059aa3f63f656a|validated-advance|origin/main@df1a0e5c21ac97d3519fd5acd3059aa3f63f656a|codex-agent|2026-11-18
 references/Hexalith.Tenants|2ff5f54c3b7e7e30e40bfee23aabd8695e7777fd|validated-advance|origin/main@2ff5f54c3b7e7e30e40bfee23aabd8695e7777fd|codex-agent|2026-11-18
+references/Hexalith.Platform|c5f5eab3af4605daeed547d3519b194faf4f0845|validated-advance|v2.2.0@c5f5eab3af4605daeed547d3519b194faf4f0845|codex-agent|2026-11-18
+references/Hexalith.Builds|38e038d1179b1c829ba47a45bfa0a4683ea5e2a5|validated-advance|v6.3.2@38e038d1179b1c829ba47a45bfa0a4683ea5e2a5|codex-agent|2026-11-18

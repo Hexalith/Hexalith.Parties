@@ -16,7 +16,7 @@ class PublicReaderRoleTests(unittest.TestCase):
         self.contracts = "Hexalith.Parties.Contracts"
         self.extensions = "Hexalith.Parties.EventStoreExtensions"
         package = dict(identity=self.contracts + ", Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
-                       informationalVersion="1.0.0+50904cc4ba53c9b0b2c082d5872a0d276be8f5c3",
+                       informationalVersion="1.0.0+84e3df796ac977041a21ec7bd8e5789bdc44241a",
                        sha256=public.PACKAGE_READERS[self.contracts])
         self.observed = dict(loaded=[copy.deepcopy(package)], copied=[copy.deepcopy(package)])
 

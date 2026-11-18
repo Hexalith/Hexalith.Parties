@@ -10,8 +10,8 @@ using System.Text.RegularExpressions;
 /// <summary>Measures five fixed files in the actual running owned public Parties image without executing container commands.</summary>
 internal static class PublicRuntimeImageObservations
 {
-    /// <summary>The already authenticated immutable public image index; tags confer no authority.</summary>
-    internal const string ImageReference = "registry.hexalith.com/parties@sha256:48d0e8db506e4ce574e8c7bd97e528a302d3fbf97754b007176904cbc1f3abfb";
+    /// <summary>The already authenticated immutable Linux/amd64 image manifest; tags confer no authority.</summary>
+    internal const string ImageReference = "registry.hexalith.com/parties@sha256:205e374548d3cac33457551f9c6f7b5f213db804ca58ae185332522833fe83c8";
     private const int MaximumFileBytes = 4 * 1024 * 1024;
     private const int MaximumTarBytes = 5 * 1024 * 1024;
     private const string InspectTemplate = "{\"containerId\":{{json .Id}},\"runId\":{{json (index .Config.Labels \"hexalith.g4.run\")}},\"imageReference\":{{json .Config.Image}},\"imageContentId\":{{json .Image}},\"running\":{{json .State.Running}},\"startedAt\":{{json .State.StartedAt}}}";
@@ -30,9 +30,9 @@ internal static class PublicRuntimeImageObservations
         binding.VerifyCallerArtifact();
         JsonElement platform = binding.PlatformIdentity;
         foreach (string name in new[] { "Commit", "CompositionCommit", "CheckoutCommit" })
-            Require(platform.GetProperty(name).GetString() == "081178aa5cc01f5dc736ba0d1980aa80fedc6fe1", "Public runtime Platform source differs from the authenticated release.");
-        Require(platform.GetProperty("CatalogCommit").GetString() == "5ec1779040606be89306129a7d2b245258c9acd2"
-            && platform.GetProperty("ReleaseTag").GetString() == "v1.9.0", "Public runtime catalog or release tag differs.");
+            Require(platform.GetProperty(name).GetString() == "c5f5eab3af4605daeed547d3519b194faf4f0845", "Public runtime Platform source differs from the authenticated release.");
+        Require(platform.GetProperty("CatalogCommit").GetString() == "38e038d1179b1c829ba47a45bfa0a4683ea5e2a5"
+            && platform.GetProperty("ReleaseTag").GetString() == "v2.2.0", "Public runtime catalog or release tag differs.");
         using CancellationTokenSource bound = CancellationTokenSource.CreateLinkedTokenSource(token);
         bound.CancelAfter(TimeSpan.FromSeconds(20));
         JsonElement actual = await ObserveImageAsync(binding.RunId, RunDockerAsync, bound.Token).ConfigureAwait(false);

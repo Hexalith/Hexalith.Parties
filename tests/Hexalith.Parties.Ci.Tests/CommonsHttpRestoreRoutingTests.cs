@@ -145,7 +145,7 @@ public sealed class CommonsHttpRestoreRoutingTests
 
     [Theory]
     [InlineData("", "3.0.1")]
-    [InlineData("package", "3.0.0")]
+    [InlineData("package", "3.0.1")]
     public void MsbuildPropertyResolverReturnsCurrentCentralVersion(string mappingMode, string commonsVersion)
     {
         Dictionary<string, string> properties = new() { ["HexalithSourceMappingMode"] = mappingMode };
