@@ -181,6 +181,7 @@ public sealed class DevelopmentCatalogPreparationCleanupTests
         const string Owner = "split-source-control";
         const string PublishedPartiesVersion = "3.1.1";
         const string PublishedSdkVersion = "4.2.0";
+        const string PublishedMcpCliVersion = "2.0.1";
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         deadline.CancelAfter(TimeSpan.FromMinutes(3));
         CancellationToken token = deadline.Token;
@@ -212,6 +213,7 @@ public sealed class DevelopmentCatalogPreparationCleanupTests
                 foreach (string argument in new[] { "build", project, "-c", configuration, "-m:1", "--disable-build-servers", "-nr:false",
                     "-p:UseSharedCompilation=false", "-p:UseHexalithProjectReferences=false", "-p:CentralPackageVersionsFileImported=true",
                     $"-p:HexalithPartiesVersion={PublishedPartiesVersion}", $"-p:HexalithEventStoreVersion={PublishedSdkVersion}",
+                    $"-p:HexalithMcpCliVersion={PublishedMcpCliVersion}",
                     "--output", output, "--nologo", "-warnaserror" })
                 {
                     start.ArgumentList.Add(argument);
@@ -219,11 +221,14 @@ public sealed class DevelopmentCatalogPreparationCleanupTests
                 CatalogTool.ConfigurePublishedPackageProcess(start);
                 await CatalogTool.RunProcessAsync(start, Path.Combine(prepared, "build.log"), token).ConfigureAwait(false);
                 using JsonDocument assets = JsonDocument.Parse(await File.ReadAllBytesAsync(Path.Combine(prepared, "obj", "project.assets.json"), token).ConfigureAwait(false));
-                JsonProperty[] sdk = assets.RootElement.GetProperty("libraries").EnumerateObject()
+                JsonElement libraries = assets.RootElement.GetProperty("libraries");
+                JsonProperty[] sdk = libraries.EnumerateObject()
                     .Where(library => library.Name.StartsWith("Hexalith.EventStore.", StringComparison.Ordinal)).ToArray();
                 sdk.ShouldNotBeEmpty();
                 sdk.ShouldAllBe(library => library.Value.GetProperty("type").GetString() == "package");
                 sdk.ShouldAllBe(library => library.Name.EndsWith("/" + PublishedSdkVersion, StringComparison.Ordinal));
+                libraries.GetProperty($"Hexalith.McpCli.Abstractions/{PublishedMcpCliVersion}")
+                    .GetProperty("type").GetString().ShouldBe("package");
                 string contracts = Path.Combine(output, "Hexalith.Parties.Contracts.dll");
                 string adapter = Path.Combine(output, "Hexalith.Parties.EventStoreExtensions.dll");
                 using JsonDocument receipt = await CatalogTool.GenerateAsync(root, path, Owner, "eventstore", PublishedSdkVersion,
