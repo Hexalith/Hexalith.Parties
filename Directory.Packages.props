@@ -35,7 +35,7 @@
   <Import Project="$(Hexalith3BuildPackageProps)" Condition="'$(HexalithVersionsLoaded)' != 'true'" />
   <PropertyGroup Condition="'$(HexalithSourceMappingMode)' != 'package'">
     <HexalithAspireAppHostSdkVersion>17.0.0</HexalithAspireAppHostSdkVersion>
-    <HexalithAspireHostingDaprVersion>17.0.0-beta.1052</HexalithAspireHostingDaprVersion>
+    <HexalithAspireHostingDaprVersion>17.0.0-beta.1078</HexalithAspireHostingDaprVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Aspire.Hosting.Orchestration.linux-x64" Version="$(HexalithAspireAppHostSdkVersion)" Condition="'@(PackageVersion->WithMetadataValue('Identity', 'Aspire.Hosting.Orchestration.linux-x64'))' == ''" />
@@ -55,6 +55,6 @@
     <PackageVersion Update="Aspire.Hosting.Redis" Version="17.0.0" />
     <PackageVersion Update="Aspire.Hosting.Testing" Version="17.0.0" />
     <PackageVersion Update="Aspire.Microsoft.Azure.Cosmos" Version="17.0.0" />
-    <PackageVersion Update="CommunityToolkit.Aspire.Hosting.Dapr" Version="17.0.0-beta.1052" />
+    <PackageVersion Update="CommunityToolkit.Aspire.Hosting.Dapr" Version="17.0.0-beta.1078" />
   </ItemGroup>
 </Project>
