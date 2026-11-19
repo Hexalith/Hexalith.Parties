@@ -9,12 +9,10 @@ namespace Hexalith.Parties.Platform.IntegrationTests;
 internal static class CiLifecycleHold
 {
     /// <summary>The exact native handoff flag forwarded only when the owner process requested a hold.</summary>
-    internal const string VariableName = "HEXALITH_CI_LIFECYCLE_HOLD";
+    internal const string VariableName = CiLifecycleHoldSignal.VariableName;
 
     /// <summary>True when the owner process forwarded the hold flag, or when the controller already published wait control for this run.</summary>
-    internal static bool IsRequested =>
-        string.Equals(Environment.GetEnvironmentVariable(VariableName), "1", StringComparison.Ordinal)
-        || ControlPath() is string path && File.Exists(path);
+    internal static bool IsRequested => CiLifecycleHoldSignal.IsRequested;
 
     /// <summary>No-ops unless the owner requested a hold; then it reuses the controller control/marker contract.</summary>
     /// <param name="fixture">The real runner-owned dependency fixture.</param>
@@ -90,21 +88,7 @@ internal static class CiLifecycleHold
             bound.Token).ConfigureAwait(false);
     }
 
-    internal static string? ControlPath()
-    {
-        string? runId = Environment.GetEnvironmentVariable("HEXALITH_G4_RUN_ID");
-        if (runId is not { Length: 32 } || !runId.All(character => character is >= '0' and <= '9' or >= 'a' and <= 'f'))
-        {
-            return null;
-        }
-
-        return Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "hexalith-builds",
-            "ci-qualification",
-            runId,
-            "control.json");
-    }
+    internal static string? ControlPath() => CiLifecycleHoldSignal.ControlPath();
 
     private static async Task PublishAsync(string directory, string ready, CancellationToken token)
     {

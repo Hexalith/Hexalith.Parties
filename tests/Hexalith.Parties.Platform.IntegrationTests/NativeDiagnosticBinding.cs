@@ -97,7 +97,7 @@ internal sealed record NativeDiagnosticBinding(string RunId, string AttemptId, s
             PlatformIdentity = selected.GetProperty("PlatformIdentity").Clone(),
             OwnerRevision = ownerRoot == root ? revision : ReadRevision(ownerRoot),
             // Builds 6.3.x forwards no hold variable; the controller's control file alone can signal the hold.
-            LifecycleInvocation = CiLifecycleHold.IsRequested,
+            LifecycleInvocation = CiLifecycleHoldSignal.IsRequested,
             IntegrationSelected = profile == "platform-package" || (plan.RootElement.TryGetProperty("selectedTests", out var tests)
                 && tests.EnumerateArray().Any(test => test.GetProperty("name").GetString() == "platform-package")),
         };

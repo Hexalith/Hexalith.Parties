@@ -24,5 +24,6 @@
     <Compile Include="..\PackageTests.Shared\*.cs" Link="Package\%(Filename)%(Extension)" />
     <Compile Include="..\TestInfrastructure.Shared\*.cs" Link="TestInfrastructure\%(Filename)%(Extension)" />
     <Compile Include="../Hexalith.Parties.Platform.IntegrationTests/NativeDiagnosticBinding.cs" Link="PublicRuntime/NativeDiagnosticBinding.cs" />
+    <Compile Include="../Hexalith.Parties.Platform.IntegrationTests/CiLifecycleHoldSignal.cs" Link="PublicRuntime/CiLifecycleHoldSignal.cs" />
   </ItemGroup>
 </Project>
