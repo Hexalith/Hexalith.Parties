@@ -628,6 +628,9 @@ public sealed class AspireRuntimePreparationTests
     [InlineData("5.0.0", false, false, false)]
     [InlineData("5.1.0", false, true, true)]
     [InlineData("5.1.1", false, true, true)]
+    [InlineData("5.3.0", false, true, true)]
+    [InlineData("5.3.1", false, true, true)]
+    [InlineData("5.3.2", false, false, false)]
     [InlineData("5.1.0-preview.1", false, false, false)]
     [InlineData("5.1.0+build.1", false, false, false)]
     [InlineData("5.2.0", false, false, false)]
@@ -664,7 +667,7 @@ public sealed class AspireRuntimePreparationTests
             constants.Contains("HEXALITH_EVENTSTORE_CATALOG_HOSTS", StringComparer.Ordinal).ShouldBe(hostsAvailable);
             constants.Contains("HEXALITH_DEVELOPMENT_CATALOG_SOURCE", StringComparer.Ordinal).ShouldBe(source);
             constants.Contains("HEXALITH_EVENTSTORE_QUERY_SELECTOR_BINDINGS", StringComparer.Ordinal)
-                .ShouldBe(source || version is "4.1.0" or "4.2.0" or "5.1.0" or "5.1.1");
+                .ShouldBe(source || version is "4.1.0" or "4.2.0" or "5.1.0" or "5.1.1" or "5.3.0" or "5.3.1");
         }
         finally { Directory.Delete(workspace, recursive: true); }
     }
@@ -703,7 +706,7 @@ public sealed class AspireRuntimePreparationTests
             result.ExitCode.ShouldBe(0, result.Output + result.Error);
             using JsonDocument evaluation = JsonDocument.Parse(result.Output);
             JsonElement properties = evaluation.RootElement.GetProperty("Properties");
-            properties.GetProperty("HexalithEventStoreVersion").GetString().ShouldBe(selection == "fallback" ? "5.1.1" : "5.0.0");
+            properties.GetProperty("HexalithEventStoreVersion").GetString().ShouldBe(selection == "fallback" ? "5.3.1" : "5.0.0");
             properties.GetProperty("HexalithTenantsVersion").GetString().ShouldBe(selection == "fallback" ? "8.0.2" : "7.0.7");
             properties.GetProperty("HexalithMemoriesVersion").GetString().ShouldBe(selection == "fallback" ? "4.0.0" : "3.0.27");
             properties.GetProperty("HexalithFrontComposerVersion").GetString().ShouldBe(selection == "fallback" ? "6.0.0" : "5.0.0");
@@ -727,6 +730,9 @@ public sealed class AspireRuntimePreparationTests
     [InlineData("5.0.0", false, false, false)]
     [InlineData("5.1.0", false, true, true)]
     [InlineData("5.1.1", false, true, true)]
+    [InlineData("5.3.0", false, true, true)]
+    [InlineData("5.3.1", false, true, true)]
+    [InlineData("5.3.2", false, false, false)]
     [InlineData("5.1.0-preview.1", false, false, false)]
     [InlineData("5.1.0+build.1", false, false, false)]
     [InlineData("5.2.0", false, false, false)]

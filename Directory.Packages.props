@@ -19,8 +19,9 @@
     <HexalithCommonsVersion Condition="'$(HexalithCommonsVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true' and '$(HexalithSourceMappingMode)' != 'package'">3.0.1</HexalithCommonsVersion>
     <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true' and '$(HexalithSourceMappingMode)' != 'package' and '$(MSBuildProjectName)' == 'Hexalith.Parties.Runtime.IntegrationTests'">5.3.1</HexalithEventStoreVersion>
     <!-- Keep the published product EventStore pin only when no Builds catalog is present.
-         A present catalog selects SDK 4.2 for Parties-role projects (HXW012). -->
-    <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == '' and !Exists('$(Hexalith1BuildPackageProps)') and !Exists('$(Hexalith2BuildPackageProps)') and !Exists('$(Hexalith3BuildPackageProps)')">5.1.1</HexalithEventStoreVersion>
+         A present catalog selects SDK 4.2 for Parties-role projects (HXW012).
+         Tenants 8.0.2 requires EventStore 5.3.1 in this standalone fallback. -->
+    <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == '' and !Exists('$(Hexalith1BuildPackageProps)') and !Exists('$(Hexalith2BuildPackageProps)') and !Exists('$(Hexalith3BuildPackageProps)')">5.3.1</HexalithEventStoreVersion>
     <!-- Latest compatible published Tenants family, before the shared catalog defaults. -->
     <HexalithTenantsVersion Condition="'$(HexalithTenantsVersion)' == '' and !Exists('$(Hexalith1BuildPackageProps)') and !Exists('$(Hexalith2BuildPackageProps)') and !Exists('$(Hexalith3BuildPackageProps)')">8.0.2</HexalithTenantsVersion>
     <!-- Shared theme accessibility correction, qualified through the package browser gate. -->
