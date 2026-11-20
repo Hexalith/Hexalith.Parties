@@ -32,7 +32,7 @@ async function fixture(version, mismatch, check) {
   } finally { await rm(root, { recursive: true, force: true }); }
 }
 
-for (const version of ['5.0.0', '6.0.0']) {
+for (const version of ['5.0.0', '6.0.0', '6.0.1']) {
   test(`exact ${version} compares all served assets and retains hashes`, async () => {
     await fixture(version, null, async (qualify, requests, attachments) => {
       assert.equal(await qualify(), 'package');
@@ -47,10 +47,10 @@ for (const version of ['5.0.0', '6.0.0']) {
   });
 }
 
-for (const version of ['4.9.9', '5.0.1', '6.0.1', '6.0.0-beta.1', '6.0.0+foreign', '7.0.0']) {
+for (const version of ['4.9.9', '5.0.1', '6.0.2', '6.0.1-beta.1', '6.0.1+foreign', '7.0.0']) {
   test(`unqualified ${version} refuses before served-asset access`, async () => {
     await fixture(version, null, async (qualify, requests, attachments) => {
-      await assert.rejects(qualify, /Only the exact retained 5.0.0 and current 6.0.0/);
+      await assert.rejects(qualify, /The selected FrontComposer package version must be qualified/);
       assert.equal(requests(), 0);
       assert.equal(attachments.length, 0);
     });
@@ -58,8 +58,8 @@ for (const version of ['4.9.9', '5.0.1', '6.0.1', '6.0.0-beta.1', '6.0.0+foreign
 }
 
 for (const asset of assets) {
-  test(`6.0.0 refuses mismatched served ${asset}`, async () => {
-    await fixture('6.0.0', asset, async (qualify, _requests, attachments) => {
+  test(`6.0.1 refuses mismatched served ${asset}`, async () => {
+    await fixture('6.0.1', asset, async (qualify, _requests, attachments) => {
       await assert.rejects(qualify, /Served package bytes/);
       assert.equal(attachments.length, 0);
     });

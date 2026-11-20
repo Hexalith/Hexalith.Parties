@@ -18,7 +18,7 @@ export async function qualifyFrontComposerAssets(page: Page, testInfo?: TestInfo
     expect(mode, 'Source qualification requires the validated pinned-tool mapping.').toBe('source');
     expect(path.isAbsolute(root)).toBe(true);
   } else {
-    expect(['5.0.0', '6.0.0'], 'Only the exact retained 5.0.0 and current 6.0.0 package capabilities are qualified.').toContain(version);
+    expect(['5.0.0', '6.0.0', '6.0.1'], 'The selected FrontComposer package version must be qualified.').toContain(version);
     expect(folders.length, 'Read the restored package folders from the current build.').toBeGreaterThan(0);
   }
   const assets = [];
