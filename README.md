@@ -33,8 +33,8 @@ mean a version is published or approved for downstream enrollment.
 ## Quick Start
 
 Set `HEXALITH_DAPR_HOME` to a prepared, absolute isolated Dapr home before
-starting. Follow the [pinned Platform v2.2.1 runtime prerequisites](https://github.com/Hexalith/Hexalith.Platform/blob/5bfac7abfe2e4c3b74d56cc142a3087308f93360/README.md#run-and-debug-a-technical-module);
-the tool refuses an unset or unprepared home.
+starting. Follow the [Parties runtime prerequisites](docs/getting-started.md#prerequisites)
+to prepare the required Dapr CLI and runtime.
 
 ```bash
 git clone https://github.com/Hexalith/Hexalith.Parties.git
@@ -44,7 +44,7 @@ dotnet tool restore
 dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json
 ```
 
-The repository pins module tool **6.3.2** alongside aspirate and uses Aspire CLI
+The repository pins module tool **6.4.4** alongside aspirate and uses Aspire CLI
 **17.0.0**. From this independent checkout, `debug` resolves direct references
 once, builds the selected
 source projects in Debug, and waits for exactly `parties`, `eventstore`, `tenants`,
