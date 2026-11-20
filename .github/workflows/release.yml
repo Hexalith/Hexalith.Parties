@@ -323,7 +323,6 @@ jobs:
         uses: Hexalith/Hexalith.Builds/Github/prepare-domain-release@3c2f5944aaa28dc7854a00a8a9df171aa810b0c7
         with:
           solution: Hexalith.Parties.Standalone.slnx
-          additional-sdk-version: '10.0.404'
           node-version: '26.13.1'
           builds-execution-sha: 3c2f5944aaa28dc7854a00a8a9df171aa810b0c7
           source-branch: main
@@ -436,7 +435,6 @@ jobs:
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
-          dotnet-version: '10.0.404'
       - name: Require published release for exact dispatched source
         id: published
         shell: bash
