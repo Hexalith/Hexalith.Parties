@@ -863,3 +863,12 @@ references/Hexalith.Platform|f3f96b2ed5ee877597de66ce10bf11a4843629b7|validated-
 # Published Platform v2.2.3 selects the Builds v6.4.3 catalog.
 references/Hexalith.Builds|dc225a6969473c21c3dad6bda8f1a18ad0aaae0d|validated-advance|v6.4.3@dc225a6969473c21c3dad6bda8f1a18ad0aaae0d|codex-agent|2026-11-20
 references/Hexalith.Platform|5f6845005eaa7f1d4e2481b59642f81b8b214d4a|validated-advance|v2.2.3@5f6845005eaa7f1d4e2481b59642f81b8b214d4a|codex-agent|2026-11-20
+
+# User-requested source selections verified against the owning main branches.
+references/Hexalith.AI.Tools|87a738ceeba8975c0b087bc5ecee7dfbc14bf73c|validated-advance|origin/main@87a738ceeba8975c0b087bc5ecee7dfbc14bf73c|codex-agent|2026-11-20
+references/Hexalith.CiCd|3422bc156a1521a24b3a8185b469dd5356cec419|validated-advance|origin/main@3422bc156a1521a24b3a8185b469dd5356cec419|codex-agent|2026-11-20
+references/Hexalith.Commons|258f9d20e33bd0ae411cf8b3836a26a131f5b9ae|validated-advance|origin/main@258f9d20e33bd0ae411cf8b3836a26a131f5b9ae|codex-agent|2026-11-20
+references/Hexalith.EventStore|607072c682be05885fccf9aefcf9f92289c4e98b|validated-advance|origin/main@607072c682be05885fccf9aefcf9f92289c4e98b|codex-agent|2026-11-20
+references/Hexalith.FrontComposer|aa016201c47e0cf226aed1418acb0f6c729fb0dc|validated-advance|origin/main@aa016201c47e0cf226aed1418acb0f6c729fb0dc|codex-agent|2026-11-20
+references/Hexalith.McpCli|6993abfebc02c877970b20df4b17a19ed8caf102|validated-advance|origin/main@6993abfebc02c877970b20df4b17a19ed8caf102|codex-agent|2026-11-20
+references/Hexalith.PolymorphicSerializations|c6d0dfce6dc4f9a0699a51f80baf021ba5ef5d60|validated-advance|origin/main@c6d0dfce6dc4f9a0699a51f80baf021ba5ef5d60|codex-agent|2026-11-20
