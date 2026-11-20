@@ -127,7 +127,7 @@ class VerifyCatalogRuntimeTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         for call in self.calls():
             self.assertIn("Release", call["arguments"])
-            self.assertEqual("5.3.1", call["sdk"])
+            self.assertEqual("5.4.0", call["sdk"])
         self.assert_workspace_removed()
 
     def test_preserves_an_explicit_runtime_sdk(self):

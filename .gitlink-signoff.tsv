@@ -856,3 +856,6 @@ references/Hexalith.McpCli|c1001cae7b8555c04b582c75c035105f04b1473f|validated-ad
 references/Hexalith.Memories|11343d16b9682fd25dc651c5fc32e48d5274c616|validated-advance|origin/main@11343d16b9682fd25dc651c5fc32e48d5274c616|codex-agent|2026-11-20
 references/Hexalith.PolymorphicSerializations|ed8a6d3149b0675f18b5ff17b4b948192ec354e3|validated-advance|origin/main@ed8a6d3149b0675f18b5ff17b4b948192ec354e3|codex-agent|2026-11-20
 references/Hexalith.Tenants|1806474afe485d509ce26bce4a0fbb6f8feb1dbc|validated-advance|origin/main@1806474afe485d509ce26bce4a0fbb6f8feb1dbc|codex-agent|2026-11-20
+
+# Released Platform identity pairs with the existing Builds v6.3.2 catalog.
+references/Hexalith.Platform|f3f96b2ed5ee877597de66ce10bf11a4843629b7|validated-advance|v2.2.2@f3f96b2ed5ee877597de66ce10bf11a4843629b7|codex-agent|2026-11-20

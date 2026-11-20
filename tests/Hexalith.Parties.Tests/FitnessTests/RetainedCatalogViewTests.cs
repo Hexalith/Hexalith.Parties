@@ -32,8 +32,7 @@ public sealed class RetainedCatalogViewTests
             string name = Path.GetFileNameWithoutExtension(project)!;
             string sdkVersion = name switch
             {
-                "Hexalith.Parties.Runtime.IntegrationTests" => "5.3.1",
-                "Hexalith.Parties.RuntimeArtifacts" => "5.3.0",
+                "Hexalith.Parties.Runtime.IntegrationTests" or "Hexalith.Parties.RuntimeArtifacts" => "5.4.0",
                 _ => "4.2.0",
             };
             current["Hexalith.EventStore.Contracts"].ShouldBe(sdkVersion, project);

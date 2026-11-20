@@ -102,9 +102,9 @@ def verify(configuration, results, *, reuse_build=False, artifacts=None):
             environment = dict(os.environ, TMPDIR=str(child_temporary),
                                TMP=str(child_temporary), TEMP=str(child_temporary))
             if not reuse_build:
-                # The current Tenants 8.x package cohort requires EventStore 5.3.1.
+                # Qualify the current EventStore SDK with the Tenants 8.x package cohort.
                 # Keep one compatible EventStore SDK across build, preparation and test.
-                environment.setdefault("HexalithEventStoreVersion", "5.3.1")
+                environment.setdefault("HexalithEventStoreVersion", "5.4.0")
             environment["PARTIES_MTLS_TOPOLOGY_TESTS"] = "true"
             environment["PARTIES_TEST_REPOSITORY_ROOT"] = str(ROOT)
             receipts = build / "runtime-profile" / configuration
