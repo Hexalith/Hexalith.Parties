@@ -21,7 +21,7 @@ authentication setup; those hosts are outside the reference environment.
 | Git | Any recent version | [git-scm.com](https://git-scm.com) |
 | `jq` | Latest, optional for Bash examples | [jqlang.org](https://jqlang.org) |
 
-Install Aspire CLI **17.0.0** to match the Parties AppHost SDK and hosting packages. The local tool manifest pins module tool **6.4.4**; `dotnet tool restore` restores that exact version. The tool owns run-scoped infrastructure, readiness and diagnostics; its catalog requires Dapr CLI 1.19.1 and runtime 1.19.1. Verify the downloaded archives against the [pinned toolchain checksums](https://github.com/Hexalith/Hexalith.Builds/blob/38e038d1179b1c829ba47a45bfa0a4683ea5e2a5/Props/dapr-toolchain-sha256.json). Set `HEXALITH_DAPR_HOME` to a prepared absolute isolated Dapr home with the CLI at `tools/dapr` and runtime binaries at `.dapr/bin/{daprd,placement,scheduler}`; an unset or unprepared home is refused.
+Install Aspire CLI **17.0.0** to match the Parties AppHost SDK and hosting packages. The local tool manifest pins module tool **6.4.4**; `dotnet tool restore` restores that exact version. The tool owns run-scoped infrastructure, readiness and diagnostics; its catalog requires Dapr CLI 1.19.1 and runtime 1.19.1. Verify the downloaded archives against the [pinned toolchain checksums](https://github.com/Hexalith/Hexalith.Builds/blob/dc225a6969473c21c3dad6bda8f1a18ad0aaae0d/Props/dapr-toolchain-sha256.json). Set `HEXALITH_DAPR_HOME` to a prepared absolute isolated Dapr home with the CLI at `tools/dapr` and runtime binaries at `.dapr/bin/{daprd,placement,scheduler}`; an unset or unprepared home is refused.
 
 Verify your setup:
 

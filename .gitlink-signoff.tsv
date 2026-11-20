@@ -859,3 +859,7 @@ references/Hexalith.Tenants|1806474afe485d509ce26bce4a0fbb6f8feb1dbc|validated-a
 
 # Released Platform identity pairs with the existing Builds v6.3.2 catalog.
 references/Hexalith.Platform|f3f96b2ed5ee877597de66ce10bf11a4843629b7|validated-advance|v2.2.2@f3f96b2ed5ee877597de66ce10bf11a4843629b7|codex-agent|2026-11-20
+
+# Published Platform v2.2.3 selects the Builds v6.4.3 catalog.
+references/Hexalith.Builds|dc225a6969473c21c3dad6bda8f1a18ad0aaae0d|validated-advance|v6.4.3@dc225a6969473c21c3dad6bda8f1a18ad0aaae0d|codex-agent|2026-11-20
+references/Hexalith.Platform|5f6845005eaa7f1d4e2481b59642f81b8b214d4a|validated-advance|v2.2.3@5f6845005eaa7f1d4e2481b59642f81b8b214d4a|codex-agent|2026-11-20

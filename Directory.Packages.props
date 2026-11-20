@@ -17,12 +17,6 @@
     <!-- Standalone family fallbacks defer to an existing caller-selected catalog. -->
     <!-- Unmapped builds can use current packages while Platform package mode uses its signed catalog. -->
     <HexalithCommonsVersion Condition="'$(HexalithCommonsVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true' and '$(HexalithSourceMappingMode)' != 'package'">3.0.1</HexalithCommonsVersion>
-    <!-- The current runtime cohort shares an SDK across the host and its test artifacts. -->
-    <_PartiesCurrentRuntimeSdk Condition="'$(MSBuildProjectName)' == 'Hexalith.Parties.Runtime.IntegrationTests' or '$(MSBuildProjectName)' == 'Hexalith.Parties.RuntimeArtifacts'">true</_PartiesCurrentRuntimeSdk>
-    <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true' and '$(HexalithSourceMappingMode)' != 'package' and '$(_PartiesCurrentRuntimeSdk)' == 'true'">5.4.0</HexalithEventStoreVersion>
-    <HexalithTenantsVersion Condition="'$(HexalithTenantsVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true' and '$(HexalithSourceMappingMode)' != 'package' and '$(HexalithEventStoreVersion)' == '5.4.0'">8.0.2</HexalithTenantsVersion>
-    <HexalithMemoriesVersion Condition="'$(HexalithMemoriesVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true' and '$(HexalithSourceMappingMode)' != 'package' and '$(HexalithEventStoreVersion)' == '5.4.0'">4.1.0</HexalithMemoriesVersion>
-    <HexalithFrontComposerVersion Condition="'$(HexalithFrontComposerVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true' and '$(HexalithSourceMappingMode)' != 'package'">6.0.1</HexalithFrontComposerVersion>
     <!-- Keep the published product EventStore pin only when no Builds catalog is present.
          A present catalog selects SDK 4.2 for Parties-role projects (HXW012). -->
     <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == '' and !Exists('$(Hexalith1BuildPackageProps)') and !Exists('$(Hexalith2BuildPackageProps)') and !Exists('$(Hexalith3BuildPackageProps)')">5.4.0</HexalithEventStoreVersion>
