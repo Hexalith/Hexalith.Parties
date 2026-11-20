@@ -1,8 +1,9 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>PRD Validation: Parties UI PRD</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parties UI PRD validation</title>
 <style>
   :root {
     --bg: #fafaf9;
@@ -198,452 +199,52 @@
   footer .meta { display: flex; gap: 24px; flex-wrap: wrap; }
 </style>
 </head>
-<body>
-  <div class="container">
 
-    <header class="report-header">
-      <div class="title">
-        <h1>Parties UI PRD — Validation Report</h1>
-        <div class="subtitle">_bmad-output/planning-artifacts/parties-ui-prd.md</div>
-      </div>
-      <div class="grade grade-fair">Fair</div>
-    </header>
-
-    <div class="synthesis">
-      <p>The v1.2.0 correction closed the Fair-grade identity holes: NFR rows exist, UX-DR1–16 are enumerated against <code>epics.md</code>, change control is real, the role model and the worst untestable phrases were tightened, and KMS is a named deployment gate. What is at risk is the new readiness surface itself. The NFR “Verified By” column cites a five-job CI topology this repository does not run, so a tool that extracts coverage gates from the Traceability Matrix will chase jobs that are not there. Residual scope cracks — the party picker missing from FR-Admin-3, NFR1 scoped to “Consumer-facing” while UX-DRs claim product-wide AA, and UX-DRs plus KMS sitting off the matrix the contract names — matter because this file is the chain-top index.</p>
-      <p>The adversarial and source-fidelity reviewers shift the picture on two verified facts and one remaining structural attack. Story 8.9 is stated as <code>backlog</code> and is <code>blocked</code> as of <code>sprint-status.yaml</code> 2026-09-07; the Epic 8 PRD freeze is now inventory-only (currency edits do not break CI unless <code>### FR-*</code> / <code>### NFR*</code> headings change). The adversarial reviewer re-rated three findings critical (identity-only canonicity, matrix still hiding UX-DRs/KMS, false CI topology); this synthesis consolidates them to high — the evidence-based reviewers corroborate the CI and 8.9 facts at high, and the identity split is a documented decision the rubric still calls adequate. Together with the remaining extraction gaps they keep the grade at Fair rather than Good.</p>
-    </div>
-
-    <div class="dimension-summary">
-      <div class="dim-card">
-        <div class="dim-name">Decision-readiness</div>
-        <div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div>
-      </div>
-      <div class="dim-card">
-        <div class="dim-name">Substance over theater</div>
-        <div class="dim-verdict" style="color: var(--verdict-strong)">strong</div>
-      </div>
-      <div class="dim-card">
-        <div class="dim-name">Strategic coherence</div>
-        <div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div>
-      </div>
-      <div class="dim-card">
-        <div class="dim-name">Done-ness clarity</div>
-        <div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div>
-      </div>
-      <div class="dim-card">
-        <div class="dim-name">Scope honesty</div>
-        <div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div>
-      </div>
-      <div class="dim-card">
-        <div class="dim-name">Downstream usability</div>
-        <div class="dim-verdict" style="color: var(--verdict-thin)">thin</div>
-      </div>
-      <div class="dim-card">
-        <div class="dim-name">Shape fit</div>
-        <div class="dim-verdict" style="color: var(--verdict-strong)">strong</div>
-      </div>
-    </div>
-
-    <section class="dimension">
-      <details>
-        <summary>
-          <h2>Decision-readiness</h2>
-          <span class="verdict-pill verdict-adequate">adequate</span>
-        </summary>
-        <div class="dim-body">
-          <div class="dim-judgment">
-            <p>For this shape, acting on the PRD means a readiness operator can trust its answers about which requirements exist, what is in or out, and which evidence to reconcile. §Source Artifacts now states the authority split as a decision: this file is “canonical for requirement identity and scope”; owning artifacts win on “detailed semantics.” Zero Open Questions remain shape-correct — the MVP is shipped. The snapshot is pinned (“As of 2026-08-18”); one listed story status has already moved.</p>
-          </div>
-        </div>
-        <div class="findings-list">
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-low">low</span>
-              <h3 class="finding-title">Story 8.9 status has moved since the snapshot</h3>
-              <span class="finding-location">§Current Implementation Evidence</span>
-            </header>
-            <div class="finding-note">The roster says “8.9 <code>backlog</code>”; sprint-status (2026-09-07) marks it <code>blocked</code>. FR identity is unaffected. A reader who treats the roster as live status will mis-file 8.9.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Restamp the as-of date and 8.9 status, or point at <code>sprint-status.yaml</code> as the only status source.</div>
-          </article>
-        </div>
-      </details>
-    </section>
-
-    <section class="dimension">
-      <details>
-        <summary>
-          <h2>Substance over theater</h2>
-          <span class="verdict-pill verdict-strong">strong</span>
-        </summary>
-        <div class="dim-body">
-          <div class="dim-judgment">
-            <p>There is still no furniture in the product body. No personas, no vision statement, no differentiation section — and for a retroactive consolidation that absence is honesty. NFR2 still commits to “never treats accepted commands as read-your-write.” The UX-DR list is now sixteen identity lines, not range theater. The one false-precision flourish is the new NFR “Verified By” column, logged under Downstream usability.</p>
-          </div>
-        </div>
-      </details>
-    </section>
-
-    <section class="dimension">
-      <details>
-        <summary>
-          <h2>Strategic coherence</h2>
-          <span class="verdict-pill verdict-adequate">adequate</span>
-        </summary>
-        <div class="dim-body">
-          <div class="dim-judgment">
-            <p>Weighted lower for this shape: the PRD is indexing a shipped brownfield product, not betting a thesis for a green-light. §Product Scope still carries a compact thesis (one responsive Blazor Server app, two role-gated areas, tokens server-side). The FR arc maps one-to-one onto Epics 1–5. No Success Metrics; for a consolidation whose success is extractable coverage, that omission stays appropriate.</p>
-          </div>
-        </div>
-      </details>
-    </section>
-
-    <section class="dimension">
-      <details>
-        <summary>
-          <h2>Done-ness clarity</h2>
-          <span class="verdict-pill verdict-adequate">adequate</span>
-        </summary>
-        <div class="dim-body">
-          <div class="dim-judgment">
-            <p>The 2026-08-18 done-ness residues are closed: D7 bounds, named GDPR seams, cancellation event, validation ownership, staleness trigger, 24×24 CSS px. What remains is not missing AC theater — stories own acceptance, per the readiness contract — but two scope/criterion mismatches a coverage check will get wrong if it trusts this file’s wording over <code>epics.md</code>.</p>
-          </div>
-        </div>
-        <div class="findings-list">
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-medium">medium</span>
-              <h3 class="finding-title">NFR1 scopes AA to Consumer-facing while UX-DRs are product-wide</h3>
-              <span class="finding-location">§NFR1, §UX-DR9, §UX-DR12</span>
-            </header>
-            <div class="finding-note">NFR1 opens “Consumer-facing surfaces target WCAG 2.2 AA.” UX-DR12 is product-wide. Typed-name erasure confirmation, the party-picker combobox, and admin sheets are Admin surfaces. A tool that honors “Consumer-facing” can skip Admin a11y and still pass NFR1.</div>
-            <div class="finding-fix"><strong>Fix:</strong> State the AA target as product-wide, or list excluded Admin surfaces, and point verification at tests that actually cover Admin GDPR and the picker.</div>
-          </article>
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-low">low</span>
-              <h3 class="finding-title">Residual adverbial copy requirements</h3>
-              <span class="finding-location">§FR-Consumer-3, §FR-Consumer-4</span>
-            </header>
-            <div class="finding-note">“Grant and withdraw consent honestly” and “Copy must be plain, honest” remain adjectives. UX-DR13–16 own the observable copy rules.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Drop the adverbs or replace them with the already-stated observables.</div>
-          </article>
-        </div>
-      </details>
-    </section>
-
-    <section class="dimension">
-      <details>
-        <summary>
-          <h2>Scope honesty</h2>
-          <span class="verdict-pill verdict-adequate">adequate</span>
-        </summary>
-        <div class="dim-body">
-          <div class="dim-judgment">
-            <p>Omissions still do real work. §Out of MVP Scope names gateway self-principal, consumer self-registration, and temporal/semantic search. The scope invariant now covers Epics 6, 7, and 8 uniformly. Production KMS was promoted into §Deployment Gates — the old burial finding is closed. Two cracks remain: a delivered MVP surface is missing from its FR, and the KMS gate is still dual-classed.</p>
-          </div>
-        </div>
-        <div class="findings-list">
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-medium">medium</span>
-              <h3 class="finding-title">Party picker is a delivered MVP surface with no FR row</h3>
-              <span class="finding-location">§FR-Admin-3, §Traceability Matrix vs epics.md</span>
-            </header>
-            <div class="finding-note">Epics FR-Admin-3 includes the in-form party picker; Story 2.5 is <code>done</code>. This PRD’s FR-Admin-3 names a radiogroup and omits the picker. UX-DR7 exists only in the prose list the readiness contract does not extract.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Restore the picker to FR-Admin-3 (or add FR-Admin-5) and map it on the matrix.</div>
-          </article>
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-medium">medium</span>
-              <h3 class="finding-title">KMS is a go-live gate without a requirement ID and is still listed as out of MVP</h3>
-              <span class="finding-location">§Deployment Gates, §Out of MVP Scope</span>
-            </header>
-            <div class="finding-note">The section is real. It has no <code>GATE-*</code> / NFR ID, no matrix row, and the first §Out of MVP Scope bullet still lists it. Verification is a doc read, not a fail-closed startup or CI check.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Give the gate a stable ID, put it on the matrix, keep it out of Out of MVP Scope, and name the fail-closed check if one exists — or state that the gate is documentary-only.</div>
-          </article>
-        </div>
-      </details>
-    </section>
-
-    <section class="dimension">
-      <details open>
-        <summary>
-          <h2>Downstream usability</h2>
-          <span class="verdict-pill verdict-thin">thin</span>
-        </summary>
-        <div class="dim-body">
-          <div class="dim-judgment">
-            <p>This dimension is load-bearing. The FR identity side is now clean — nine stable FR IDs, epic and route mapping, documented ID conventions. The NFR identity table closes the old “NFR coverage not extractable” finding. The new “Verified By” column is the failure: it names five CI jobs this repository does not run. The readiness contract then over-narrows extraction to the Traceability Matrix, which still omits UX-DR1–16 and the KMS gate.</p>
-          </div>
-        </div>
-        <div class="findings-list">
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-high">high</span>
-              <h3 class="finding-title">NFR “Verified By” cites a CI topology this repository does not run</h3>
-              <span class="finding-location">§Traceability Matrix NFR1 / NFR9 vs .github/workflows/ci.yml</span>
-            </header>
-            <div class="finding-note">The extractable gate names (<code>lint</code>, <code>test</code>, <code>ui-a11y</code>, <code>contract-test</code>, <code>report</code>) are not workflow jobs. Current CI is <code>domain-ci.yml</code> tiers <code>build-and-test</code>, <code>aspire-tests</code>, and <code>performance-tests</code>. Playwright a11y is a local <code>tests/e2e</code> lane, not a CI job.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Name the jobs and test projects that actually run, and mark NFR1 Playwright as out-of-CI until a workflow exists.</div>
-          </article>
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-medium">medium</span>
-              <h3 class="finding-title">Readiness contract extracts from a matrix that omits UX-DRs and the KMS gate</h3>
-              <span class="finding-location">§Document Control, §Traceability Matrix</span>
-            </header>
-            <div class="finding-note">Document Control tells tooling to extract from the Traceability Matrix. UX-DR1–16 and the production-KMS gate have no matrix row and no FR/NFR ID.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Add UX-DR and GATE-KMS rows to the same matrix, or change the contract to name every extractable section.</div>
-          </article>
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-medium">medium</span>
-              <h3 class="finding-title">NFR7’s owned UX-DR range disagrees with its matrix cell</h3>
-              <span class="finding-location">§NFR7 vs §Traceability Matrix NFR7</span>
-            </header>
-            <div class="finding-note">Body: “UX-DR1 through UX-DR7.” Matrix: “UX-DR1–UX-DR3.” An extractor cannot tell which set brand discipline owns.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Make the body and the matrix cell name the same UX-DR set.</div>
-          </article>
-        </div>
-      </details>
-    </section>
-
-    <section class="dimension">
-      <details>
-        <summary>
-          <h2>Shape fit</h2>
-          <span class="verdict-pill verdict-strong">strong</span>
-        </summary>
-        <div class="dim-body">
-          <div class="dim-judgment">
-            <p>The PRD still names its shape in §Purpose and holds to it. It is a brownfield capability consolidation: no personas, no user journeys, no success-metric apparatus bolted on. §Document Control now makes the ID grammar and the FR-only scope invariant explicit. Brownfield path checks still hold. Done MVP versus Epics 6–8 maintenance is distinguished crisply.</p>
-          </div>
-        </div>
-      </details>
-    </section>
-
-    <section class="reviewer-section">
-      <details>
-        <summary>
-          <h2>Adversarial review</h2>
-          <span class="reviewer-source">review-adversarial-general.md</span>
-        </summary>
-        <div class="dim-body">
-          <div class="dim-judgment">
-            <p>v1.2.0 did not make this file a readiness source. It made the file look like one. The Purpose still sells a single extractable contract; §Source Artifacts then confines canonicity to “requirement identity and scope” and hands detailed semantics to unpinned architecture, UX spines, and story records. That is an ID catalog with a forwarding address, not a source a readiness check can fail against. Worse, the new “Verified By” column cites a five-job CI topology this repository no longer runs. The central claim is still false; v1.2.0 made the falsehood machine-shaped.</p>
-            <p>Prior attacks re-tested: false date / UX-DR unrecoverable / role model / NFR3 seam / Epic 6 invariant / D7 / cancellation — CLOSED. Canonical-in-name, untestable language, omitted matrix rows, ID grammars, KMS burial, readiness-contract absence — PAPERED. No ACs / NFR thresholds — OPEN.</p>
-          </div>
-        </div>
-        <div class="findings-list">
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-critical">critical</span>
-              <h3 class="finding-title">Identity-only canonicity is a dodge, not a fix</h3>
-              <span class="finding-location">§Purpose vs §Source Artifacts vs §Document Control</span>
-            </header>
-            <div class="finding-note">The file still opens as “the canonical … source for implementation readiness checks,” then immediately cedes detailed semantics and tells readiness tooling that story records win on completed-work evidence. A readiness source that is not chain-top cannot produce a red verdict on substance. Sources remain unpinned.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Either make this file win — pin sources, put ACs and NFR thresholds here — or rename it a requirements index and stop telling readiness tooling this is the source.</div>
-          </article>
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-critical">critical</span>
-              <h3 class="finding-title">The readiness contract extracts from a matrix that still hides the items v1.2.0 claimed to surface</h3>
-              <span class="finding-location">§Document Control, §Traceability Matrix, §UX Requirements, §Deployment Gates</span>
-            </header>
-            <div class="finding-note">The matrix still has nine FR rows and nine NFR rows. UX-DR1–16 and the production-KMS go-live gate have no matrix row. Enumerating UX-DRs in a prose list does not close the 2026-08-18 extraction attack; it moves the content off the only surface the new contract blesses.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Put UX-DR1–16 and a GATE-KMS row on the same matrix the contract names, or change the contract to name every extractable section.</div>
-          </article>
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-critical">critical</span>
-              <h3 class="finding-title">NFR “Verified By” cites a CI topology this repository does not run</h3>
-              <span class="finding-location">§Traceability Matrix NFR1 / NFR9 vs .github/workflows/ci.yml</span>
-            </header>
-            <div class="finding-note">NFR9 is “verified by” “all five CI jobs (<code>lint</code>, <code>test</code>, <code>ui-a11y</code>, <code>contract-test</code>, <code>report</code>).” Those five job names do not exist. Current CI is one reusable caller with <code>build-and-test</code> / <code>aspire-tests</code> / <code>performance-tests</code>.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Name the jobs and test projects that actually run, and mark NFR1 Playwright as out-of-CI until a workflow exists.</div>
-          </article>
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-high">high</span>
-              <h3 class="finding-title">Implementation evidence is already false against the file it tells you to trust</h3>
-              <span class="finding-location">§Current Implementation Evidence vs sprint-status.yaml</span>
-            </header>
-            <div class="finding-note">The snapshot says Story 8.9 is <code>backlog</code>. Sprint-status (2026-09-07) marks it <code>blocked</code>. Document Control promises <code>last_updated</code> and <code>version</code> advance with every edit; they have not moved since 2026-08-18.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Bump the as-of date and 8.9 status, or delete the story-level roster and point at the yaml as the only status source.</div>
-          </article>
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-high">high</span>
-              <h3 class="finding-title">Still no acceptance criteria, no NFR thresholds, and no waived-category list</h3>
-              <span class="finding-location">§Functional Requirements, §Non-Functional Requirements</span>
-            </header>
-            <div class="finding-note">Every FR is still capability prose. NFR2 still calls freshness “first-class” with no bound. <code>.memlog.md</code> admits this was deferred. A readiness check that can only match IDs to story titles can never fail on substance.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Attach 2–5 observable ACs per FR; quantify each NFR; list waived NFR categories with a reason.</div>
-          </article>
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-high">high</span>
-              <h3 class="finding-title">UX-DR enumeration is ID theater</h3>
-              <span class="finding-location">§UX Requirements vs epics.md Design Requirements</span>
-            </header>
-            <div class="finding-note">v1.2.0 printed sixteen labels. It did not copy the testable contract. UX-DR1 no longer names the token vs raw hex. UX-DR8 no longer splits polite vs assertive. UX-DR12 silently drops the live gap.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Paste the epics.md one-sentence MUST per UX-DR, including current-gap clauses, or extract from <code>epics.md</code> with a pinned revision.</div>
-          </article>
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-high">high</span>
-              <h3 class="finding-title">KMS is still a paragraph, not a gate, and architecture still says there is no runtime guard</h3>
-              <span class="finding-location">§Deployment Gates, §Out of MVP Scope, docs/architecture.md</span>
-            </header>
-            <div class="finding-note">No ID, no matrix row, still listed as out of MVP. Verification is “read the GDPR notice.” Architecture still warns that <code>LocalDevKeyStorageBackend</code> is the only registered store and that there is no production-environment rejection guard.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Give it an ID, put it on the matrix, require a fail-closed production startup/CI check, and delete it from Out of MVP Scope.</div>
-          </article>
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-high">high</span>
-              <h3 class="finding-title">The Epic 8 inventory freeze cannot see the sections added to close the last review</h3>
-              <span class="finding-location">EpicEightClosureFitnessTests.ExtractRequirementIds</span>
-            </header>
-            <div class="finding-note">The regex is heading-shaped <code>FR-*</code> / <code>NFR*</code> only. UX-DR bullets, Deployment Gates, and the NFR table are invisible. The freeze would still pass if every UX-DR vanished.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Extract UX-DR and GATE IDs too, or stop claiming the freeze protects readiness extractability.</div>
-          </article>
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-high">high</span>
-              <h3 class="finding-title">Party picker is a delivered MVP surface with no FR row</h3>
-              <span class="finding-location">§FR-Admin-3 vs epics.md FR-Admin-3 / UX-DR7</span>
-            </header>
-            <div class="finding-note">Epics FR-Admin-3 includes the in-form party picker. Story 2.5 is <code>done</code>. This PRD’s FR-Admin-3 mentions a radiogroup and omits the picker.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Restore the picker to FR-Admin-3 (or add FR-Admin-5) and map it on the matrix.</div>
-          </article>
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-medium">medium</span>
-              <h3 class="finding-title">NFR “Verified By” cells are unexecutable except the ones that are wrong</h3>
-              <span class="finding-location">§Traceability Matrix NFR2–NFR8</span>
-            </header>
-            <div class="finding-note">“All data surfaces; freshness contract tests.” “GDPR and consent surface copy.” No test class, job, or command.</div>
-            <div class="finding-fix"><strong>Fix:</strong> One named job or test class per NFR, or an explicit <code>unverified</code> token.</div>
-          </article>
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-medium">medium</span>
-              <h3 class="finding-title">FR rows still have no verification column at all</h3>
-              <span class="finding-location">§Traceability Matrix FR table</span>
-            </header>
-            <div class="finding-note">NFRs get a (false) gate column; the nine FRs that are the actual product still map only to an epic and a path.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Add the same Verified-By column to the FR table with story IDs and test names.</div>
-          </article>
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-medium">medium</span>
-              <h3 class="finding-title">NFR1 scopes AA to “Consumer-facing” while UX-DRs claim product-wide</h3>
-              <span class="finding-location">§NFR1 vs UX-DR9 / UX-DR12</span>
-            </header>
-            <div class="finding-note">Typed-name erasure confirmation, party picker combobox, and admin sheets are Admin surfaces. A readiness tool that honors NFR1’s scope can skip Admin a11y and still pass NFR1.</div>
-            <div class="finding-fix"><strong>Fix:</strong> State the AA target as product-wide, or list excluded Admin surfaces.</div>
-          </article>
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-medium">medium</span>
-              <h3 class="finding-title">Live freshness (SignalR) is a done Epic 1 requirement absent from this PRD</h3>
-              <span class="finding-location">§NFR2 vs epics.md AR-D6 / Story 1.7</span>
-            </header>
-            <div class="finding-note">Architecture and epics require EventStore projection updates over SignalR with metadata fallback. This file’s NFR2 only mentions last-known rendering and optimistic echo.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Add the SignalR subscribe + degraded-poll fallback as a normative NFR2 clause.</div>
-          </article>
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-low">low</span>
-              <h3 class="finding-title">Residual “honestly” / “plain” copy requirements remain unverifiable</h3>
-              <span class="finding-location">FR-Consumer-3, FR-Consumer-4, NFR4</span>
-            </header>
-            <div class="finding-note">The 2026-08-18 pass replaced the worst adverbs and left the ones that still cannot fail a check.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Replace with the observable defaults already used elsewhere.</div>
-          </article>
-        </div>
-      </details>
-    </section>
-
-    <section class="reviewer-section">
-      <details>
-        <summary>
-          <h2>Source-fidelity review</h2>
-          <span class="reviewer-source">review-source-fidelity.md</span>
-        </summary>
-        <div class="dim-body">
-          <div class="dim-judgment">
-            <p>The PRD remains a valid FR/NFR identity source: all six source paths exist, FR→Epic ownership matches <code>epics.md</code>, all matrix routes exist, NFR8/NFR9 stack claims hold, KMS docs survive, and the Epic 8 freeze is now inventory-only rather than byte-for-byte. The evidence snapshot and named CI jobs are stale against the 2026-09-07 tracker and current workflows. A corrective currency edit does not break the Epic 8 gate unless it adds, removes, or reorders <code>### FR-*</code> / <code>### NFR*</code> headings.</p>
-          </div>
-        </div>
-        <div class="findings-list">
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-high">high</span>
-              <h3 class="finding-title">Story 8.9 is stated as backlog but is blocked today</h3>
-              <span class="finding-location">§Current Implementation Evidence</span>
-            </header>
-            <div class="finding-note">The as-of 2026-08-18 snapshot still matches every Epic 8 row except 8.9. Sprint-status (2026-09-07) marks <code>8-9-ui-frontcomposer-and-fluent-consolidation: blocked</code>. The 2026-09-06 key-freeze SCP ratified that status and chose “No PRD FR/NFR edits.”</div>
-            <div class="finding-fix"><strong>Fix:</strong> Refresh the as-of date and change “8.9 backlog” to “8.9 blocked”. Currency-only; does not break the inventory freeze.</div>
-          </article>
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-high">high</span>
-              <h3 class="finding-title">NFR coverage table names five CI jobs that do not exist</h3>
-              <span class="finding-location">§Traceability Matrix, NFR1/NFR9</span>
-            </header>
-            <div class="finding-note">Parties <code>.github/workflows</code> today contains <code>ci.yml</code>, <code>commitlint.yml</code>, <code>dependency-review.yml</code>, <code>codeql.yml</code>, <code>rc-gate.yml</code>, and <code>release.yml</code>. <code>ci.yml</code> calls <code>domain-ci.yml@main</code>, whose jobs are <code>build-and-test</code>, <code>aspire-tests</code>, and <code>performance-tests</code>. The capability claim mostly holds; the job-name claim does not.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Replace the five names with the current workflow/job set, or drop named jobs and point at <code>docs/ci.md</code>.</div>
-          </article>
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-medium">medium</span>
-              <h3 class="finding-title">Post-2026-08-18 planning left the PRD’s implementation snapshot frozen on purpose</h3>
-              <span class="finding-location">§Current Implementation Evidence; 2026-09-06 SCP</span>
-            </header>
-            <div class="finding-note">The 2026-09-06 SCP correctly said the PRD has no FR/NFR impact (I15). It is not correct as a currency strategy: the PRD still publishes a dated story-status table that readiness tooling is told to extract.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Keep the zero-new-FR rule, but treat the evidence snapshot as a living pointer to <code>sprint-status.yaml</code>.</div>
-          </article>
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-low">low</span>
-              <h3 class="finding-title">UX-DR one-liners drop definitional halves that epics.md still requires</h3>
-              <span class="finding-location">§UX Requirements vs epics.md Design Requirements</span>
-            </header>
-            <div class="finding-note">Material omissions: UX-DR5 degraded state, UX-DR8 assertive half, UX-DR9 radiogroup/typed-erase/grid, UX-DR10 visible focus and dialog trap, UX-DR13 30-day / never-success-green, UX-DR16 “per action.” The PRD’s precedence rule already sends detailed semantics to <code>epics.md</code>.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Add the assertive/degraded/typed-name clauses if the one-liners are the extractable UX inventory; otherwise leave them and rely on <code>epics.md</code>.</div>
-          </article>
-          <article class="finding">
-            <header>
-              <span class="badge badge-sev-low">low</span>
-              <h3 class="finding-title">Admin route templates use {id} while @page parameters are {RoutePartyId}</h3>
-              <span class="finding-location">§Traceability Matrix</span>
-            </header>
-            <div class="finding-note">Paths match. <code>epics.md</code> also writes <code>{id}</code>. Parameter-name drift, not a missing surface.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Optional note that the Blazor parameter is <code>RoutePartyId</code>.</div>
-          </article>
-        </div>
-      </details>
-    </section>
-
-    <div class="mechanical">
-      <h3>Mechanical notes</h3>
-      <ul>
-        <li>Closed since 2026-08-18: frontmatter version/changelog; NFR identity table; UX-DR1–16 enumerated; FR-Shell role/landing rules; NFR3 now-vs-deferred seam; Epic 6 in the maintenance invariant; D7 / named GDPR seams; cancellation event; NFR8 Commons.ServiceDefaults; KMS promoted into §Deployment Gates.</li>
-        <li>All six §Source Artifacts paths present; KMS verification paths exist; <code>docs/deployment-security-checklist.md</code> remains retired.</li>
-        <li>Sprint-status: Epics 1–7 <code>done</code>, Epic 8 <code>in-progress</code>. Drift since 2026-08-18: 8.9 <code>backlog</code> → <code>blocked</code>; 8.7 / 8.8 remain <code>blocked</code>; 8.10 remains <code>review</code>.</li>
-        <li>ID continuity: FR-Shell + FR-Admin-1..4 + FR-Consumer-1..4 unique; NFR1–NFR9 contiguous; UX-DR1–16 contiguous. No <code>[ASSUMPTION]</code> / <code>[NOTE FOR PM]</code> tags. No UJs — shape-appropriate.</li>
-        <li>Epic 8 PRD freeze is inventory-only (<code>ExtractRequirementIds</code> on heading IDs). <code>epics.md</code> is still a git-diff freeze. Currency edits do not break the gate unless <code>### FR-*</code> / <code>### NFR*</code> headings are added, removed, or reordered.</li>
-      </ul>
-    </div>
-
-    <footer class="report-footer">
-      <div class="meta">
-        <span>Rubric: .agents/skills/bmad-prd/assets/prd-validation-checklist.md</span>
-        <span>Generated: 2026-09-08T11:30:57+02:00</span>
-      </div>
-    </footer>
-  </div>
-</body>
-</html>
+<body><main class="container">
+<header class="report-header"><div class="title"><h1>Parties UI PRD validation</h1><div class="subtitle">v1.3.2 · 787aef2dee<br>_bmad-output/planning-artifacts/parties-ui-prd.md</div></div><div class="grade grade-fair">Fair</div></header>
+<div class="synthesis"><p>The PRD gives maintainers a usable inventory of the Admin and Consumer requirements, and defines concrete evidence for closing the production key-custody gate. Its verification matrix still points to retired controls and omits open qualification work for erasure and signed-in access. A release reviewer needs those evidence references corrected before relying on the matrix for readiness.</p><p>The source check also found a user-visible gap. The My Consent page disables the Article 21 objection button, and its cited test only checks the label. The approved UX calls for a usable contact route. GATE-KMS correctly remains unverified pending the startup, replacement-host and independent-replica checks.</p><p><strong>0 critical · 5 high · 4 medium · 0 low</strong></p></div>
+<div class="dimension-summary">
+<div class="dim-card"><div class="dim-name">Decision-readiness</div><div class="dim-verdict" style="color:var(--verdict-thin)">Thin</div></div>
+<div class="dim-card"><div class="dim-name">Substance over theater</div><div class="dim-verdict" style="color:var(--verdict-strong)">Strong</div></div>
+<div class="dim-card"><div class="dim-name">Strategic coherence</div><div class="dim-verdict" style="color:var(--verdict-strong)">Strong</div></div>
+<div class="dim-card"><div class="dim-name">Done-ness clarity</div><div class="dim-verdict" style="color:var(--verdict-thin)">Thin</div></div>
+<div class="dim-card"><div class="dim-name">Scope honesty</div><div class="dim-verdict" style="color:var(--verdict-adequate)">Adequate</div></div>
+<div class="dim-card"><div class="dim-name">Downstream usability</div><div class="dim-verdict" style="color:var(--verdict-thin)">Thin</div></div>
+<div class="dim-card"><div class="dim-name">Shape fit</div><div class="dim-verdict" style="color:var(--verdict-strong)">Strong</div></div>
+</div>
+<section class="dimension"><details open><summary><h2>Decision-readiness</h2><span class="verdict-pill verdict-thin">thin</span></summary><div class="dim-body"><div class="dim-judgment"><p>GATE-KMS identifies the deployment owner, the affected data and the required startup, host-replacement and independent-replica checks (PRD lines 433–445). The November decision keeps the initial erasure worker and replica revocation separate from key custody. A reader following the FR matrix cannot see how those open decisions affect the promise to prove erasure.</p></div></div><div class="findings-list">
+<article class="finding"><header><span class="badge badge-sev-high">high</span><h3 class="finding-title">The erasure report can pass while end-to-end erasure remains unverified</h3><span class="finding-location">FR-Admin-4 · FR-Consumer-4</span></header><div class="finding-note">The browser check displays a fixture-backed verification report. The open sprint actions require one accepted request to reach key destruction, a persisted certificate and redacted reads. They also require a second replica to refuse the destroyed key. The matrix omits both qualifications.</div><div class="finding-fix"><strong>Correction</strong> · Keep the request, cancellation and report-display evidence. Mark terminal erasure and cross-replica revocation unverified in the affected rows and link their tracker actions. The production key-custody gate has separate closure criteria.</div><div class="finding-location"><a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L320">PRD</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/e2e/specs/admin-gdpr-erasure-verification.spec.ts#L39">Report test</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/implementation-artifacts/sprint-status.yaml#L375">Erasure lifecycle</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/implementation-artifacts/sprint-status.yaml#L404">Replica revocation</a></div></article>
+</div></details></section>
+<section class="dimension"><details><summary><h2>Substance over theater</h2><span class="verdict-pill verdict-strong">strong</span></summary><div class="dim-body"><div class="dim-judgment"><p>The role precedence, zero-or-multiple party-binding outcome and Consumer cancellation boundary translate into observable behaviors (lines 68–76 and 133–143). The distinction between consent and other lawful bases determines which control users see (lines 125–131). These details justify their place in a brownfield requirements index.</p></div></div><div class="findings-list">
+</div></details></section>
+<section class="dimension"><details><summary><h2>Strategic coherence</h2><span class="verdict-pill verdict-strong">strong</span></summary><div class="dim-body"><div class="dim-judgment"><p>The two role-gated areas support a single purpose. The own-data boundary explains the Consumer feature set, and the Admin role covers organization-wide records within a tenant. Lines 388–415 distinguish maintenance and the external Agents contract from MVP delivery. The October scope addendum confirms that decision at <code>_bmad-output/planning-artifacts/implementation-readiness-scope-addendum-2026-10-09.md</code> lines 10–29.</p></div></div><div class="findings-list">
+</div></details></section>
+<section class="dimension"><details open><summary><h2>Done-ness clarity</h2><span class="verdict-pill verdict-thin">thin</span></summary><div class="dim-body"><div class="dim-judgment"><p>The functional requirements generally specify an observable outcome. Two acceptance boundaries need correction before reviewers can tell which build or deployed session satisfies them.</p></div></div><div class="findings-list">
+<article class="finding"><header><span class="badge badge-sev-high">high</span><h3 class="finding-title">A consumer cannot use the Article 21 objection control</h3><span class="finding-location">FR-Consumer-3 · UX-DR14</span></header><div class="finding-note">The PRD says legitimate-interest items “provide Object under Art.21.” The page renders a disabled button and the cited test checks its label. The approved UX calls for a contact route while the backend objection command is unavailable.</div><div class="finding-fix"><strong>Correction</strong> · State the contact fallback in the requirement. Mark that clause unverified until a test follows the contact route or submits an objection. Keep the existing consent-toggle evidence.</div><div class="finding-location"><a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L125">PRD</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/src/Hexalith.Parties.ConsumerPortal/Components/MyConsentPage.razor#L112">Rendered button</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/Hexalith.Parties.ConsumerPortal.Tests/Components/MyConsentPageTests.cs#L116">Label assertion</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/EXPERIENCE.md#L148">Approved fallback</a></div></article>
+<article class="finding"><header><span class="badge badge-sev-high">high</span><h3 class="finding-title">Access to a user’s own data still needs a real signed-in session check</h3><span class="finding-location">FR-Shell · NFR3</span></header><div class="finding-note">The cited checks exercise roles, claims, client boundaries and synthetic sessions. The tracker still calls for a read and update through the standalone host and real gateway, with session expiry and two-user isolation. A reader extracting the matrix alone misses that open qualification.</div><div class="finding-fix"><strong>Correction</strong> · Keep the component coverage. Add an unverified entry for the standalone session and link the <code>audit-standalone-token-relay</code> action until the owner records the qualifying run.</div><div class="finding-location"><a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L336">PRD</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/e2e/specs/consumer-party-binding.spec.ts#L18">Browser fixture</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/implementation-artifacts/sprint-status.yaml#L416">Open session qualification</a></div></article>
+<article class="finding"><header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">The build requirement still specifies .NET 10</h3><span class="finding-location">NFR9</span></header><div class="finding-note">The PRD says the work stays on .NET 10. The current SDK pin is 11.0.100, the target framework is <code>net11.0</code>, and the UI container uses ASP.NET 11. CI separately installs a .NET 10 SDK.</div><div class="finding-fix"><strong>Correction</strong> · Identify the current target and SDK from their tracked configuration. Date the .NET 10 baseline wherever its history matters.</div><div class="finding-location"><a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L211">PRD</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/global.json#L3">SDK</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/Directory.Build.props#L9">Target</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj#L11">UI container</a></div></article>
+<article class="finding"><header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Destructive confirmation follows conflicting design rules</h3><span class="finding-location">UX-DR6 · FR-Admin-4</span></header><div class="finding-note">The PRD carries an obsolete danger-color token. The approved design prescribes an outline trigger and a different confirmation fill. The experience specification also requires trimming, case-folding and NFKC normalization of the typed name, while the cited component test rejects case and trailing-space variants.</div><div class="finding-fix"><strong>Correction</strong> · Point UX-DR6 to the effective design override. Flag the confirmation mismatch for the UX and implementation owners, and qualify the current test coverage.</div><div class="finding-location"><a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L250">PRD</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/DESIGN.md#L272">Color override</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/EXPERIENCE.md#L149">Name confirmation rule</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs#L246">Current assertions</a></div></article>
+</div></details></section>
+<section class="dimension"><details><summary><h2>Scope honesty</h2><span class="verdict-pill verdict-adequate">adequate</span></summary><div class="dim-body"><div class="dim-judgment"><p>The PRD distinguishes waived UI thresholds from service benchmarks and protects regulated-data go-live with an explicit open gate. Its historical status snapshot is dated. The later maintenance summary reads as current, which matters when deciding who still owns the blocked work.</p></div></div><div class="findings-list">
+<article class="finding"><header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">The maintenance summary still calls Epic 8 in progress</h3><span class="finding-location">Current Implementation Evidence</span></header><div class="finding-note">The following maintenance summary repeats an in-progress status after a dated September snapshot. The live tracker marks Epic 8, Story 8.10 and the retrospective done. Stories 8.7, 8.8 and 8.9 remain blocked under approved deferrals.</div><div class="finding-fix"><strong>Correction</strong> · Point the summary to the live tracker or date it and describe the administrative closure with the three deferred stories.</div><div class="finding-location"><a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L401">PRD</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/implementation-artifacts/sprint-status.yaml#L129">Sprint tracker</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/implementation-artifacts/epic-8-retro-2026-10-09.md#L161">Closure and deferrals</a></div></article>
+</div></details></section>
+<section class="dimension"><details open><summary><h2>Downstream usability</h2><span class="verdict-pill verdict-thin">thin</span></summary><div class="dim-body"><div class="dim-judgment"><p>The four tables give each requirement a stable row. Release tooling can extract all 35 identities, but several evidence references would send it to the wrong workflow, a deleted test or an inaccurate coverage status.</p></div></div><div class="findings-list">
+<article class="finding"><header><span class="badge badge-sev-high">high</span><h3 class="finding-title">The CI map points to a retired workflow and misses five hosted browser specs</h3><span class="finding-location">Traceability Matrix · NFR1 · NFR9</span></header><div class="finding-note">The PRD names <code>domain-ci.yml@main</code> and describes Playwright as local-only. The caller pins <code>domain-ci-v2.yml</code> and its <code>ui-a11y</code> job runs five Chromium specs, including accessibility, and publishes results. The three FR-Shell browser specs and the dedicated erasure report spec fall outside that command. A test class cited by NFR9 was deleted in commit <code>0f261ccd</code>.</div><div class="finding-fix"><strong>Correction</strong> · Map each affected row to the caller, job, command and artifact. Identify the five hosted specs separately from the full suite. Cite a run at the reviewed commit when reporting a passing result.</div><div class="finding-location"><a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L304">PRD</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/.github/workflows/ci.yml#L22">Pinned caller</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/.github/workflows/ci.yml#L393">Hosted check</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/e2e/package.json#L11">Five specs</a></div></article>
+<article class="finding"><header><span class="badge badge-sev-high">high</span><h3 class="finding-title">The named requirement-freeze test has been deleted</h3><span class="finding-location">Source Artifacts · Document Control</span></header><div class="finding-note">The PRD says <code>EpicEightAddsNoPrdFunctionalRequirement</code> enforces the FR/NFR heading sequence and the exact contents of <code>epics.md</code>. Commit <code>0f261ccd</code> deleted the test. The current headings still match the baseline at <code>37f4ec82</code>, and the epics blob is still <code>f418a181</code>. A matching snapshot gives no evidence that the next change will be blocked.</div><div class="finding-fix"><strong>Correction</strong> · Name the active enforcement mechanism if one exists. Otherwise document the owner, baseline and reproducible comparison as a manual policy check.</div><div class="finding-location"><a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L483">PRD</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md#L5">Historical closure record</a></div></article>
+<article class="finding"><header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Responsive and accessibility rows understate existing coverage</h3><span class="finding-location">NFR5 · UX-DR12</span></header><div class="finding-note">The matrix says reflow has no automated assertion. Hosted browser cases check Admin layout at 320 pixels and 200% zoom, focus restoration, and Consumer overflow at 390 pixels. The accessibility specimen also asserts visible focus in forced colors and reduced-motion behavior. The Consumer single-column requirement still lacks a direct assertion.</div><div class="finding-fix"><strong>Correction</strong> · Map each covered behavior to its browser assertion. Keep the unverified marker on the remaining single-column clause.</div><div class="finding-location"><a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L338">PRD</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/e2e/specs/admin-parties-list.spec.ts#L753">Admin reflow</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/e2e/specs/consumer-portal-routes.spec.ts#L94">Consumer reflow</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/e2e/specs/parties-accessibility.spec.ts#L418">Media and focus</a></div></article>
+</div></details></section>
+<section class="dimension"><details><summary><h2>Shape fit</h2><span class="verdict-pill verdict-strong">strong</span></summary><div class="dim-body"><div class="dim-judgment"><p>A short scope statement, role-specific capabilities and a matrix suit this retrospective index. The linked UX experience document already maps shell and area states to user-visible behavior and requirement IDs (<code>_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/EXPERIENCE.md</code> lines 55–65). Additional personas or duplicated story acceptance criteria would add little to the release decision.</p></div></div><div class="findings-list">
+</div></details></section>
+<section class="reviewer-section"><details><summary><h2>Source-fidelity review</h2><span class="reviewer-source">review-source-fidelity.md</span></summary><div class="dim-body"><p>The source check also found a user-visible gap. The My Consent page disables the Article 21 objection button, and its cited test only checks the label. The approved UX calls for a usable contact route. GATE-KMS correctly remains unverified pending the startup, replacement-host and independent-replica checks.</p></div><div class="findings-list">
+<article class="finding"><header><span class="badge badge-sev-high">high</span><h3 class="finding-title">A consumer cannot use the Article 21 objection control</h3><span class="finding-location">FR-Consumer-3 · UX-DR14</span></header><div class="finding-note">The PRD says legitimate-interest items “provide Object under Art.21.” The page renders a disabled button and the cited test checks its label. The approved UX calls for a contact route while the backend objection command is unavailable.</div><div class="finding-fix"><strong>Correction</strong> · State the contact fallback in the requirement. Mark that clause unverified until a test follows the contact route or submits an objection. Keep the existing consent-toggle evidence.</div><div class="finding-location"><a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L125">PRD</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/src/Hexalith.Parties.ConsumerPortal/Components/MyConsentPage.razor#L112">Rendered button</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/Hexalith.Parties.ConsumerPortal.Tests/Components/MyConsentPageTests.cs#L116">Label assertion</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/EXPERIENCE.md#L148">Approved fallback</a></div></article>
+<article class="finding"><header><span class="badge badge-sev-high">high</span><h3 class="finding-title">The erasure report can pass while end-to-end erasure remains unverified</h3><span class="finding-location">FR-Admin-4 · FR-Consumer-4</span></header><div class="finding-note">The browser check displays a fixture-backed verification report. The open sprint actions require one accepted request to reach key destruction, a persisted certificate and redacted reads. They also require a second replica to refuse the destroyed key. The matrix omits both qualifications.</div><div class="finding-fix"><strong>Correction</strong> · Keep the request, cancellation and report-display evidence. Mark terminal erasure and cross-replica revocation unverified in the affected rows and link their tracker actions. The production key-custody gate has separate closure criteria.</div><div class="finding-location"><a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L320">PRD</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/e2e/specs/admin-gdpr-erasure-verification.spec.ts#L39">Report test</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/implementation-artifacts/sprint-status.yaml#L375">Erasure lifecycle</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/implementation-artifacts/sprint-status.yaml#L404">Replica revocation</a></div></article>
+<article class="finding"><header><span class="badge badge-sev-high">high</span><h3 class="finding-title">Access to a user’s own data still needs a real signed-in session check</h3><span class="finding-location">FR-Shell · NFR3</span></header><div class="finding-note">The cited checks exercise roles, claims, client boundaries and synthetic sessions. The tracker still calls for a read and update through the standalone host and real gateway, with session expiry and two-user isolation. A reader extracting the matrix alone misses that open qualification.</div><div class="finding-fix"><strong>Correction</strong> · Keep the component coverage. Add an unverified entry for the standalone session and link the <code>audit-standalone-token-relay</code> action until the owner records the qualifying run.</div><div class="finding-location"><a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L336">PRD</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/e2e/specs/consumer-party-binding.spec.ts#L18">Browser fixture</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/implementation-artifacts/sprint-status.yaml#L416">Open session qualification</a></div></article>
+<article class="finding"><header><span class="badge badge-sev-high">high</span><h3 class="finding-title">The CI map points to a retired workflow and misses five hosted browser specs</h3><span class="finding-location">Traceability Matrix · NFR1 · NFR9</span></header><div class="finding-note">The PRD names <code>domain-ci.yml@main</code> and describes Playwright as local-only. The caller pins <code>domain-ci-v2.yml</code> and its <code>ui-a11y</code> job runs five Chromium specs, including accessibility, and publishes results. The three FR-Shell browser specs and the dedicated erasure report spec fall outside that command. A test class cited by NFR9 was deleted in commit <code>0f261ccd</code>.</div><div class="finding-fix"><strong>Correction</strong> · Map each affected row to the caller, job, command and artifact. Identify the five hosted specs separately from the full suite. Cite a run at the reviewed commit when reporting a passing result.</div><div class="finding-location"><a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L304">PRD</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/.github/workflows/ci.yml#L22">Pinned caller</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/.github/workflows/ci.yml#L393">Hosted check</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/e2e/package.json#L11">Five specs</a></div></article>
+<article class="finding"><header><span class="badge badge-sev-high">high</span><h3 class="finding-title">The named requirement-freeze test has been deleted</h3><span class="finding-location">Source Artifacts · Document Control</span></header><div class="finding-note">The PRD says <code>EpicEightAddsNoPrdFunctionalRequirement</code> enforces the FR/NFR heading sequence and the exact contents of <code>epics.md</code>. Commit <code>0f261ccd</code> deleted the test. The current headings still match the baseline at <code>37f4ec82</code>, and the epics blob is still <code>f418a181</code>. A matching snapshot gives no evidence that the next change will be blocked.</div><div class="finding-fix"><strong>Correction</strong> · Name the active enforcement mechanism if one exists. Otherwise document the owner, baseline and reproducible comparison as a manual policy check.</div><div class="finding-location"><a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L483">PRD</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md#L5">Historical closure record</a></div></article>
+<article class="finding"><header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">The build requirement still specifies .NET 10</h3><span class="finding-location">NFR9</span></header><div class="finding-note">The PRD says the work stays on .NET 10. The current SDK pin is 11.0.100, the target framework is <code>net11.0</code>, and the UI container uses ASP.NET 11. CI separately installs a .NET 10 SDK.</div><div class="finding-fix"><strong>Correction</strong> · Identify the current target and SDK from their tracked configuration. Date the .NET 10 baseline wherever its history matters.</div><div class="finding-location"><a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L211">PRD</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/global.json#L3">SDK</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/Directory.Build.props#L9">Target</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj#L11">UI container</a></div></article>
+<article class="finding"><header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Destructive confirmation follows conflicting design rules</h3><span class="finding-location">UX-DR6 · FR-Admin-4</span></header><div class="finding-note">The PRD carries an obsolete danger-color token. The approved design prescribes an outline trigger and a different confirmation fill. The experience specification also requires trimming, case-folding and NFKC normalization of the typed name, while the cited component test rejects case and trailing-space variants.</div><div class="finding-fix"><strong>Correction</strong> · Point UX-DR6 to the effective design override. Flag the confirmation mismatch for the UX and implementation owners, and qualify the current test coverage.</div><div class="finding-location"><a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L250">PRD</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/DESIGN.md#L272">Color override</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/EXPERIENCE.md#L149">Name confirmation rule</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs#L246">Current assertions</a></div></article>
+<article class="finding"><header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Responsive and accessibility rows understate existing coverage</h3><span class="finding-location">NFR5 · UX-DR12</span></header><div class="finding-note">The matrix says reflow has no automated assertion. Hosted browser cases check Admin layout at 320 pixels and 200% zoom, focus restoration, and Consumer overflow at 390 pixels. The accessibility specimen also asserts visible focus in forced colors and reduced-motion behavior. The Consumer single-column requirement still lacks a direct assertion.</div><div class="finding-fix"><strong>Correction</strong> · Map each covered behavior to its browser assertion. Keep the unverified marker on the remaining single-column clause.</div><div class="finding-location"><a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L338">PRD</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/e2e/specs/admin-parties-list.spec.ts#L753">Admin reflow</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/e2e/specs/consumer-portal-routes.spec.ts#L94">Consumer reflow</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/e2e/specs/parties-accessibility.spec.ts#L418">Media and focus</a></div></article>
+<article class="finding"><header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">The maintenance summary still calls Epic 8 in progress</h3><span class="finding-location">Current Implementation Evidence</span></header><div class="finding-note">The following maintenance summary repeats an in-progress status after a dated September snapshot. The live tracker marks Epic 8, Story 8.10 and the retrospective done. Stories 8.7, 8.8 and 8.9 remain blocked under approved deferrals.</div><div class="finding-fix"><strong>Correction</strong> · Point the summary to the live tracker or date it and describe the administrative closure with the three deferred stories.</div><div class="finding-location"><a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L401">PRD</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/implementation-artifacts/sprint-status.yaml#L129">Sprint tracker</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/implementation-artifacts/epic-8-retro-2026-10-09.md#L161">Closure and deferrals</a></div></article>
+</div></details></section>
+<section class="mechanical"><h3>Verification notes</h3><ul><li>All 35 matrix identities occur once across the four tables. They comprise nine functional requirements, nine non-functional requirements, sixteen UX requirements and one deployment gate. All seven original source-artifact entries resolve in the repository.</li><li>GATE-KMS agrees with the November sprint decision. Before real regulated EU data goes live, the deployment owner must demonstrate that startup refuses ephemeral custody outside development and that a durable provider can decrypt and replay a synthetic protected record after host replacement and on an independent replica.</li><li>The review checked source, test assertions, workflow definitions, Git history and sprint records at the recorded commit. Hosted test pass status and deployed behavior were outside this document review. Findings describe gaps in the evidence a readiness reader can use.</li><li>Counts merge overlapping findings from the two reviews. Erasure and signed-in access have separate owners and acceptance checks.</li></ul></section>
+<footer class="report-footer"><div class="meta"><a href="review-rubric.md">Rubric review</a><a href="review-source-fidelity.md">Source-fidelity review</a><span>Rubric · .agents/skills/bmad-prd/assets/prd-validation-checklist.md</span><time datetime="2026-11-20T12:50:11+01:00">2026-11-20T12:50:11+01:00</time></div></footer></main></body></html>

@@ -4,7 +4,7 @@ document_type: prd
 status: canonical-requirements-source
 date: 2026-06-27
 last_updated: 2026-11-20
-version: 1.3.2
+version: 1.3.3
 requirements_basis: "Brownfield docs + final UX design set + architecture requirements inventory + epics FR map"
 ---
 
@@ -28,8 +28,8 @@ treating the absence of a traditional PRD as a blocker.
 ## Source Artifacts
 
 - `_bmad-output/planning-artifacts/architecture.md`
-- `_bmad-output/planning-artifacts/epics.md` — frozen byte-for-byte at commit
-  `37f4ec82` by `EpicEightClosureFitnessTests.EpicEightAddsNoPrdFunctionalRequirement`
+- `_bmad-output/planning-artifacts/epics.md` — commit `37f4ec82` is the
+  reference copy for the Epic 8 inventory check in Document Control.
 - `_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/DESIGN.md`
 - `_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/EXPERIENCE.md`
 - `_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/validation-report.md`
@@ -101,13 +101,14 @@ commands use optimistic UI plus projection reconciliation.
 
 ### FR-Admin-4: GDPR Operations
 
-DPO/Admin users can erase a party with typed-name confirmation, restrict and lift
-processing restriction, record and revoke consent, export data under Art.20, view
-processing records under Art.30, and prove erasure with a verification report
-bounded per the D7 erasure-certificate decision in `epics.md` (delivered by
-Stories 3.5 and 3.6). GDPR operations must avoid PII leakage and route through
-the existing typed client/gateway seams (`IAdminPortalGdprClient`,
-`IErasureVerificationService`).
+DPO/Admin users can request erasure with typed-name confirmation, restrict and
+lift processing restrictions, record and revoke consent, export data under
+Art.20, and view processing records under Art.30. The verification report must
+show completion only after the service persists the certificate and commits
+the terminal erasure events. Stories 3.5 and 3.6 supply the bounded D7
+certificate and report UI. The matrix tracks the deployed erasure and replica
+checks separately. GDPR operations must avoid PII leakage and use the existing
+typed clients (`IAdminPortalGdprClient`, `IErasureVerificationService`).
 
 ### FR-Consumer-1: My Profile
 
@@ -127,8 +128,10 @@ through the shared optimistic/freshness pattern.
 Bound Consumers can grant and withdraw consent under the lawful-basis rules of
 UX-DR14. Consent toggles default Off, are real switch controls, and distinguish
 consent-based items from contract, legal, and legitimate-interest bases.
-Legitimate-interest items provide Object under Art.21 rather than a withdraw
-toggle.
+For each legitimate-interest item, show the Article 21 right to object on its
+own line. Until an objection command exists, give the Consumer a usable contact
+route and explain that the team will review the objection and reply within a
+month. The current page shows a disabled Object button.
 
 ### FR-Consumer-4: My Data and Privacy
 
@@ -170,11 +173,13 @@ duplicate application (AR-D6 and Story 1.7 in `epics.md`).
 ### NFR3: Security and Own-Data Privacy
 
 Consumer operations are own-data only. Consumer pages use the self-scoped accessor
-and must not accept caller-supplied party ids. Parties-side defense-in-depth
-asserts `aggregateId == party_id`; this Parties-side assertion is the implemented
-enforcement today, and the deferred gateway-level data-subject/self principal
-support (see Out of MVP Scope) would add an earlier enforcement seam without
-replacing it. Logs, telemetry, tombstones, and error copy do not expose PII.
+and must not accept caller-supplied party ids. Parties checks that
+`aggregateId == party_id`. Through the standalone OIDC host and real gateway,
+each signed-in user can read and update only their own record. Once a session
+expires, it must no longer authorize either operation. The NFR3 matrix row
+tracks the deployed qualification. Gateway-level data-subject/self principal
+support is deferred.
+Logs, telemetry, tombstones, and error copy do not expose PII.
 
 ### NFR4: GDPR Honesty
 
@@ -210,16 +215,20 @@ headers, and freshness metadata without logging personal data or event payloads.
 
 ### NFR9: Build and Quality Gates
 
-The work stays on .NET 10, central package management, `.slnx`, warnings as
-errors, xUnit v3/Shouldly/NSubstitute/bUnit, Playwright accessibility checks
-(a local lane under `tests/e2e`; not a CI job today), and root-level
-submodules under `references/` only.
+The UI targets `net11.0` and runs in an ASP.NET 11 container. The repository
+pins SDK `11.0.100`. The .NET 10 target in the frozen MVP inventory is
+historical. CI also installs SDK `10.0.404` as an additional tool.
+[SDK pin](../../global.json) · [Build target](../../Directory.Build.props) · [UI container](../../src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj)
+
+Builds use central package management, `.slnx`, warnings as errors, and direct
+submodules under `references/`. Tests use xUnit v3, Shouldly, NSubstitute,
+bUnit, and Playwright. The matrix identifies the hosted browser checks.
 
 **Waived NFR categories.** This PRD sets no UI performance, latency,
 availability, or browser-support threshold for the MVP. Reason: this is a
 brownfield readiness index for a Blazor Server shell over an existing service;
-service-side performance benchmarks run in the `performance-tests` CI job and
-are not UI requirements, and browser support follows the FluentUI Blazor V5 and
+the .NET test project runs `LocalFuzzySearchPerformanceBenchmarkTests` for
+service-side search. Browser support follows the FluentUI Blazor V5 and
 Blazor Server support matrix. Quantified thresholds for NFR2–NFR9 are likewise
 not set here; they live with the story records per the Source Artifacts
 precedence rule. Both waivers are revisited if this PRD becomes the chain-top
@@ -227,10 +236,9 @@ requirements document again.
 
 ## UX Requirements
 
-The final UX design set is authoritative for the product experience; the UX-DR
-identifiers below are defined in `epics.md` (Design Requirements), and each
-line reproduces the `epics.md` MUST clause so that this list is a faithful
-extractable inventory, including the current-gap clauses `epics.md` records:
+The design requirements in `epics.md` define the identifiers below.
+`DESIGN.md` and `EXPERIENCE.md` define their current visual and interaction
+rules, including the destructive confirmation and Article 21 contact route.
 
 - UX-DR1 — AA-safe brand fill: filled primary buttons (white text) bind to
   `--colorBrandBackground` (AA-safe), never the raw teal `#0097A7`; the raw
@@ -247,9 +255,14 @@ extractable inventory, including the current-gap clauses `epics.md` records:
 - UX-DR5 — Data-freshness indicator: dot plus word for fresh, stale ("as of
   HH:MM"), and degraded ("showing last known"); its text node is a `role=status
   aria-live=polite` region so transitions are announced.
-- UX-DR6 — GDPR destructive button: danger fill (`--colorStatusDangerForeground1`)
-  plus typed-name confirmation for irreversible actions; restrict and withdraw
-  use Outline, not danger fill; never auto-fire on focus or blur.
+- UX-DR6 — Use an outline erase trigger. Only the irreversible Confirm inside
+  the dialog uses the `--colorStatusDangerBackground3` fill with
+  `--colorNeutralForegroundOnBrand` text. Restrict, lift, withdraw and cancel
+  use Outline. For Admin erasure, show the expected name, allow paste and enable
+  Confirm when the names match after trimming, Unicode NFKC normalization and
+  case-insensitive comparison. The Consumer erasure request uses a single
+  confirmation. Focus and blur never submit either action.
+  [Button design](ux-designs/ux-parties-2026-06-09/DESIGN.md) · [Confirmation behavior](ux-designs/ux-parties-2026-06-09/EXPERIENCE.md)
 - UX-DR7 — Party picker re-skin with the full WAI-ARIA combobox contract (folds
   AR-D11): `--hx-picker-*` on Fluent 2 tokens; input `role=combobox` with
   `aria-controls`, `aria-expanded`, and `aria-activedescendant`; `role=listbox`
@@ -277,9 +290,10 @@ extractable inventory, including the current-gap clauses `epics.md` records:
   least 44px touch slop for the consent toggle and icon-only controls; Consumer
   secondary text floored at 13–14px; nothing conveyed only at 12px or smaller;
   survives 200% zoom and text spacing.
-- UX-DR12 — Forced-colors and reduced-motion supported product-wide. Current-gap
-  clause from `epics.md`: at planning time only the picker honored them; the
-  Playwright lane checks that both media are observable in the shell.
+- UX-DR12 — Support forced colors and reduced motion throughout both areas.
+  Hosted Chromium tests check visible keyboard focus with forced colors and
+  motion suppression on specimen controls. The matrix also names the checks on
+  Consumer routes.
 - UX-DR13 — Honest erasure copy: commit to the start ("We've started deleting
   your data… usually within 30 days… we'll confirm when it's done"), never a
   hard finish SLA; state both halves — cancellable until deletion begins,
@@ -287,9 +301,10 @@ extractable inventory, including the current-gap clauses `epics.md` records:
   acknowledgement uses neutral/info tone, never success-green.
 - UX-DR14 — Lawful-basis honesty: split "Things you control" (consent toggles,
   default Off) from "Things we keep to run your account" (contract and
-  legitimate interest, read-only); offer Object (Art.21) for legitimate-interest
-  bases, not a withdraw toggle; "Manage all consent" links to the full
-  My-consent surface with withdraw/grant parity.
+  legitimate interest, read-only). Show the Article 21 objection right
+  separately for legitimate-interest items and provide the contact route in
+  FR-Consumer-3 while a dedicated command is unavailable. "Manage all consent"
+  links to My Consent, where users can both grant and withdraw consent.
 - UX-DR15 — Export copy with no time promise ("Preparing your export — this can
   take a little while. We'll show it here the moment it's ready"); states
   machine-readable JSON; the synchronous download is the happy case, not the
@@ -301,27 +316,38 @@ extractable inventory, including the current-gap clauses `epics.md` records:
 
 ## Traceability Matrix
 
-Verification conventions used below: CI jobs are those of `.github/workflows/ci.yml`,
-which delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@main`
-and runs three jobs — `build-and-test` (Tier 1 unit test projects and Tier 2
-integration test projects listed in `ci.yml`), `aspire-tests` (Tier 3,
-`tests/Hexalith.Parties.IntegrationTests`), and `performance-tests`. The
-Playwright lane (`tests/e2e`; `npm run test:a11y` runs the axe specimen, `npm test`
-runs every spec) is local-only and is not a CI job. `unverified` marks a clause with no automated check; it is not a pass.
+The `ci` job calls `Hexalith.Builds/.github/workflows/domain-ci-v2.yml` at
+`fe68718b6c074a6b500a7191e3554a1d39e17688`. It lists the .NET test projects
+and selects the `platform-package` integration profile. The
+`verify-public-package-integration` job checks the integration evidence for
+the tested revision. [CI workflow](../../.github/workflows/ci.yml)
+
+The separate `ui-a11y` job runs `npm run test:ui` in Chromium and uploads
+`ui-a11y-results`. The five specs are `parties-accessibility.spec.ts`,
+`admin-parties-list.spec.ts`, `consumer-portal-routes.spec.ts`,
+`party-picker.spec.ts` and `shared-portal-display-formatters.spec.ts`.
+The full local suite uses `npm test`. A test name identifies what it exercises.
+Readiness requires a passing result for the revision under review.
+`unverified` marks a clause that still lacks qualifying evidence.
+[Browser test commands](../../tests/e2e/package.json)
+
+Action IDs in the matrix refer to the sprint tracker. Each action names the
+owner and the evidence needed to close it.
+[Sprint tracker](../implementation-artifacts/sprint-status.yaml)
 
 Functional requirements:
 
 | Requirement | Primary Epic | Stories | Primary Surfaces | Verified By |
 |---|---|---|---|---|
-| FR-Shell | Epic 1 | 1.1–1.5 | Sign-in, role landing, navigation, NoPartyBinding | `PartiesUiOidcConfigurationTests`, `RoleLandingRedirectTests`, `PartiesUiNavEntryGatingTests`, `PartiesUiAreaAuthorizationTests`, `PartyIdClaimResolverTests`, `NoPartyBindingRoutingTests` (Tier 1, `Hexalith.Parties.UI.Tests`); e2e `admin-area-authorization.spec.ts`, `shared-role-policy-authorization.spec.ts`, `consumer-party-binding.spec.ts` (local lane) |
-| FR-Admin-1 | Epic 2 | 2.1, 2.2 | `/admin/parties` | `PartiesAdminPortalComponentTests` (Tier 1, `Hexalith.Parties.AdminPortal.Tests`), `AdminPortalQueryContractTests` (`Hexalith.Parties.Client.Tests`), `MvpDisplayNameSearchContractTests` (Tier 2, `Hexalith.Parties.Tests`); e2e `admin-parties-list.spec.ts` |
+| FR-Shell | Epic 1 | 1.1–1.5 | Sign-in, role landing, navigation, NoPartyBinding | `PartiesUiOidcConfigurationTests`, `RoleLandingRedirectTests`, `PartiesUiNavEntryGatingTests`, `PartiesUiAreaAuthorizationTests`, `PartyIdClaimResolverTests`, `NoPartyBindingRoutingTests` in `Hexalith.Parties.UI.Tests`. The full local suite includes `admin-area-authorization.spec.ts`, `shared-role-policy-authorization.spec.ts` and `consumer-party-binding.spec.ts`. Real signed-in reads and updates, expiry and two-user isolation are `unverified` (`audit-standalone-token-relay`). |
+| FR-Admin-1 | Epic 2 | 2.1, 2.2 | `/admin/parties` | `PartiesAdminPortalComponentTests` (Admin Portal), `AdminPortalQueryContractTests` (client), `MvpDisplayNameSearchContractTests` (domain). The hosted `ui-a11y` job runs `admin-parties-list.spec.ts`. |
 | FR-Admin-2 | Epic 2 | 2.3 | `/admin/parties/{id}` | `PartiesAdminPortalComponentTests`, `AdminPortalRouteIdsTests` (`Hexalith.Parties.AdminPortal.Tests`), `PartyStateBadgeTests` (tombstone, `Hexalith.Parties.UI.Tests`) |
-| FR-Admin-3 | Epic 2 | 2.4, 2.5 | `/admin/parties/new`, `/admin/parties/{id}/edit`, in-form `<hexalith-party-picker>` host | `CreateEditPartyPageTests`, `PartyFormPickerBridgeTests` (`Hexalith.Parties.AdminPortal.Tests`), `PartyPickerComponentTests` (`Hexalith.Parties.Picker.Tests`); e2e `party-picker.spec.ts` |
-| FR-Admin-4 | Epic 3 | 3.1–3.6 | `/admin/parties/{id}/gdpr` | `PartiesAdminPortalComponentTests` (typed-name erasure), `AdminPortalGdprSurfaceTests`, `AdminPortalGdprPrivacyGuardrailTests` (`Hexalith.Parties.Contracts.Tests`), `AdminPortalGdprOperationContractTests` (`Hexalith.Parties.Client.Tests`), `GdprDestructiveButtonTests` (`Hexalith.Parties.UI.Tests`); e2e `admin-gdpr-erasure-verification.spec.ts` |
-| FR-Consumer-1 | Epic 4 | 4.3, 4.4 | `/me` | `MyProfilePageTests` (`Hexalith.Parties.ConsumerPortal.Tests`), `ConsumerProfileDataClientTests`, `SelfScopedPartiesClientTests` (`Hexalith.Parties.UI.Tests`); e2e `consumer-portal-routes.spec.ts` |
-| FR-Consumer-2 | Epic 4 | 4.5 | `/me/edit` | `EditMyProfilePageTests` (`Hexalith.Parties.ConsumerPortal.Tests`), `ConsumerProfileEditClientTests` (`Hexalith.Parties.UI.Tests`) |
-| FR-Consumer-3 | Epic 5 | 5.1 | `/me/consent` | `MyConsentPageTests` (`Hexalith.Parties.ConsumerPortal.Tests`), `ConsumerConsentClientTests` (`Hexalith.Parties.UI.Tests`) |
-| FR-Consumer-4 | Epic 5 | 5.2–5.4 | `/me/privacy` | `MyPrivacyPageTests` (`Hexalith.Parties.ConsumerPortal.Tests`), `ConsumerPrivacyExportClientTests`, `ConsumerPrivacyErasureClientTests`, `ConsumerPrivacyProcessingClientTests` (`Hexalith.Parties.UI.Tests`), `PartyExportFileNameTests` (`Hexalith.Parties.Contracts.Tests`) |
+| FR-Admin-3 | Epic 2 | 2.4, 2.5 | `/admin/parties/new`, `/admin/parties/{id}/edit`, in-form `<hexalith-party-picker>` host | `CreateEditPartyPageTests`, `PartyFormPickerBridgeTests` (Admin Portal) and `PartyPickerComponentTests` (picker). The hosted `ui-a11y` job runs `party-picker.spec.ts`. |
+| FR-Admin-4 | Epic 3 | 3.1–3.6 | `/admin/parties/{id}/gdpr` | `PartiesAdminPortalComponentTests` exercises typed confirmation. `AdminPortalGdprSurfaceTests`, `AdminPortalGdprPrivacyGuardrailTests`, `AdminPortalGdprOperationContractTests` and `GdprDestructiveButtonTests` cover the UI and contracts. The local `admin-gdpr-erasure-verification.spec.ts` displays a fixture-backed certificate. Normalized name matching is `unverified` (UX-DR6). Terminal erasure is `unverified` (`epic-8-retro-erasure-status-after-commit`). Cross-replica revocation is `unverified` (`audit-replica-key-revocation`). |
+| FR-Consumer-1 | Epic 4 | 4.3, 4.4 | `/me` | `MyProfilePageTests` (Consumer Portal), `ConsumerProfileDataClientTests` and `SelfScopedPartiesClientTests` (UI). Hosted `consumer-portal-routes.spec.ts` uses a bound fixture. Reading a Consumer’s own record through the deployed gateway is `unverified` (`audit-standalone-token-relay`). |
+| FR-Consumer-2 | Epic 4 | 4.5 | `/me/edit` | `EditMyProfilePageTests` (Consumer Portal) and `ConsumerProfileEditClientTests` (UI) cover editing and client behavior. Updating a Consumer’s own record through the deployed gateway is `unverified` (`audit-standalone-token-relay`). |
+| FR-Consumer-3 | Epic 5 | 5.1 | `/me/consent` | `MyConsentPageTests` and `ConsumerConsentClientTests` cover consent controls and the client. Hosted `consumer-portal-routes.spec.ts` checks grant and withdrawal and expects a disabled Object button. The Article 21 contact route is `unverified` until a Consumer can follow it. |
+| FR-Consumer-4 | Epic 5 | 5.2–5.4 | `/me/privacy` | `MyPrivacyPageTests`, `ConsumerPrivacyExportClientTests`, `ConsumerPrivacyErasureClientTests`, `ConsumerPrivacyProcessingClientTests` and `PartyExportFileNameTests` cover the page, request/cancel flow, processing reads and export. Committed erasure through redacted reads is `unverified` (`epic-8-retro-erasure-status-after-commit`). Refusal of retired key versions on both replicas is `unverified` (`audit-replica-key-revocation`). |
 
 Route note: the matrix writes Admin route parameters as `{id}` to match
 `epics.md`; the Blazor `@page` templates in `Hexalith.Parties.AdminPortal` name
@@ -331,15 +357,15 @@ NFR coverage (cross-cutting; primary owners and verification):
 
 | Requirement | Primary Epics | Verified By |
 |---|---|---|
-| NFR1 | Epics 1–5 (a11y foundation in Story 1.9) | Tier 1 bUnit: `MainLayoutAccessibilityTests`, `PartiesAccessibilitySpecimenTests`, `AccessibilityStyleGuardTests`, `StatusLiveRegionTests` (`Hexalith.Parties.UI.Tests`); `PartyPickerComponentTests` combobox contract (`Hexalith.Parties.Picker.Tests`); `PartiesAdminPortalComponentTests` typed-name confirmation (`Hexalith.Parties.AdminPortal.Tests`). Playwright axe gate `parties-accessibility.spec.ts` (`npm run test:a11y`) plus `party-picker.spec.ts` combobox checks (`npm test`): local lane only, not a CI job |
-| NFR2 | Epics 1–2, 4 (shared freshness/optimistic pattern) | `OptimisticReconcileTests`, `ProjectionFreshnessCompositionTests`, `ProjectionFreshnessFallbackTests`, `DegradedResponseHeaderHandlerTests`, `PartiesProjectionSubscriptionTests` (SignalR subscribe/reconnect), `DataFreshnessIndicatorTests` (`Hexalith.Parties.UI.Tests`); `ProjectionFreshnessAndDegradationTests` (Tier 2, `Hexalith.Parties.Tests`) |
-| NFR3 | Epic 1 (Story 1.4 binding), Epics 4–5 (self-scoped clients) | `PartyIdClaimResolverTests`, `IdentityBindingBoundaryTests`, `SelfScopedPartiesClientSurfaceTests`, `PartiesUiAreaAuthorizationTests` (`Hexalith.Parties.UI.Tests`); `AdminPortalGdprPrivacyGuardrailTests` (PII guardrail); `PartyStateBadgeTests` (tombstone); e2e `consumer-party-binding.spec.ts` |
+| NFR1 | Epics 1–5 (a11y foundation in Story 1.9) | bUnit coverage includes `MainLayoutAccessibilityTests`, `PartiesAccessibilitySpecimenTests`, `AccessibilityStyleGuardTests`, `StatusLiveRegionTests`, `PartyPickerComponentTests` and `PartiesAdminPortalComponentTests`. Hosted `ui-a11y` runs the axe specimen in `parties-accessibility.spec.ts` and the combobox checks in `party-picker.spec.ts`. |
+| NFR2 | Epics 1–2, 4 (shared freshness/optimistic pattern) | `OptimisticReconcileTests`, `ProjectionFreshnessCompositionTests`, `ProjectionFreshnessFallbackTests`, `DegradedResponseHeaderHandlerTests`, `PartiesProjectionSubscriptionTests` (SignalR subscribe/reconnect), `DataFreshnessIndicatorTests` (`Hexalith.Parties.UI.Tests`); `ProjectionFreshnessAndDegradationTests` (`Hexalith.Parties.Tests`) |
+| NFR3 | Epic 1 (Story 1.4 binding), Epics 4–5 (self-scoped clients) | `PartyIdClaimResolverTests`, `IdentityBindingBoundaryTests`, `SelfScopedPartiesClientSurfaceTests` and `PartiesUiAreaAuthorizationTests` exercise binding and access rules. `AdminPortalGdprPrivacyGuardrailTests` checks PII handling. `PartyStateBadgeTests` covers tombstones. Local `consumer-party-binding.spec.ts` uses a fixture. Standalone OIDC reads and updates through the real gateway, expiry and isolation between two signed-in users are `unverified` (`audit-standalone-token-relay`). |
 | NFR4 | Epics 3, 5 | `MyConsentPageTests`, `MyPrivacyPageTests` (`Hexalith.Parties.ConsumerPortal.Tests`); `GdprDestructiveButtonTests`; `RecordConsentValidatorTests`, `RevokeConsentValidatorTests` |
-| NFR5 | Epics 2, 4 | `unverified` (no automated reflow or single-column assertion; the phone sheet behavior is e2e-pinned per the UX validation report, and its focus contract is covered under UX-DR10) |
-| NFR6 | Epics 1–2 | `StatusPresentationTests` and `OptimisticReconcileTests` tenant warm-up split to `StatusKind.TenantUnavailable` (`Hexalith.Parties.UI.Tests`); `HelperDrivenTenantAccessTests` fail-closed tenant access (Tier 2, `Hexalith.Parties.Tests`) |
+| NFR5 | Epics 2, 4 | Hosted `admin-parties-list.spec.ts` checks horizontal overflow on a 320 px form at 200% zoom and focus restoration on closing the phone detail sheet. Hosted `consumer-portal-routes.spec.ts` checks overflow and keyboard access at 390 px. The Consumer single-column layout across supported widths is `unverified`. |
+| NFR6 | Epics 1–2 | `StatusPresentationTests` and `OptimisticReconcileTests` tenant warm-up split to `StatusKind.TenantUnavailable` (`Hexalith.Parties.UI.Tests`); `HelperDrivenTenantAccessTests` fail-closed tenant access (`Hexalith.Parties.Tests`) |
 | NFR7 | Epics 1–5 (UX-DR1–UX-DR7) | `AccessibilityStyleGuardTests`, `SharedDomainComponentStyleTests` (`Hexalith.Parties.UI.Tests`); e2e `parties-accessibility.spec.ts` "filled primary button does not compute to raw teal" |
-| NFR8 | Epic 1 (host wiring), Story 8.4 (wrapper retirement) | `RetiredLeafProjectFitnessTests` (wrapper retirement); `ServiceDefaultsCompatibilityTests`, `HealthEndpointIntegrationTests` (Tier 2, service side); `HealthEndpointE2ETests` (`aspire-tests`). UI-host telemetry and health endpoint: `unverified` by a UI-host-specific automated test |
-| NFR9 | Epic 6 and CI | `ci.yml` → `domain-ci.yml@main` jobs `build-and-test`, `aspire-tests`, `performance-tests`; `PartiesContainerPublishWorkflowTests.CiWorkflowDelegatesToSharedDomainCiWithPartiesTestLanes`, `StandaloneSolutionTests` (`Hexalith.Parties.Ci.Tests`); `commitlint.yml`, `codeql.yml`, `dependency-review.yml`, `rc-gate.yml` (`gitlink-rc-gate`); Playwright lane local-only |
+| NFR8 | Epic 1 (host wiring), Story 8.4 (wrapper retirement) | `RetiredLeafProjectFitnessTests` checks UI-host registration in source. `ServiceDefaultsCompatibilityTests` and `HealthEndpointIntegrationTests` cover service-side behavior. The six `HealthEndpointE2ETests` cases are skipped. UI-host runtime health and telemetry export are `unverified`. |
+| NFR9 | Epic 6 and CI | `ci` calls the pinned `domain-ci-v2.yml` workflow. Its `build-and-test` job runs the listed .NET projects. `verify-public-package-integration` validates the package integration evidence. `ui-a11y` runs `npm run test:ui` and uploads `ui-a11y-results`. `StandaloneSolutionTests` and `BrowserProductTests` check the solution and browser commands. Related workflows include `commitlint.yml`, `codeql.yml`, `dependency-review.yml` and `rc-gate.yml` (`gitlink-rc-gate`). |
 
 UX design requirements (identity defined in `epics.md`; owning requirement here):
 
@@ -350,15 +376,15 @@ UX design requirements (identity defined in `epics.md`; owning requirement here)
 | UX-DR3 | NFR7 | Epic 1 (Story 1.1, 1.9) | `AccessibilityStyleGuardTests` |
 | UX-DR4 | NFR7, FR-Admin-2 | Epic 1 (Story 1.8) | `PartyStateBadgeTests` |
 | UX-DR5 | NFR7, NFR2 | Epic 1 (Story 1.8) | `DataFreshnessIndicatorTests` |
-| UX-DR6 | NFR7, FR-Admin-4 | Epic 1 (Story 1.8), Epic 3 | `GdprDestructiveButtonTests` |
+| UX-DR6 | NFR7, FR-Admin-4 | Epic 1 (Story 1.8), Epic 3 | `GdprDestructiveButtonTests` covers explicit confirmation. The Admin panel styles use the approved token pair. The shared button still uses `--colorStatusDangerForegroundInverted` for text. `PartiesAdminPortalComponentTests` rejects case and trailing-space variants. Consistent Confirm styling and normalized Admin name matching are `unverified`. |
 | UX-DR7 | NFR7, FR-Admin-3 | Epic 2 (Story 2.5) | `PartyPickerComponentTests`; e2e `party-picker.spec.ts` |
 | UX-DR8 | NFR1, NFR2 | Epic 1 (Story 1.6) | `StatusLiveRegionTests`, `StatusPresentationTests` |
-| UX-DR9 | NFR1 | Epics 2, 3, 5 | `MyConsentPageTests`, `CreateEditPartyPageTests`, `PartiesAdminPortalComponentTests` (typed-erase) |
+| UX-DR9 | NFR1 | Epics 2, 3, 5 | `MyConsentPageTests` and `CreateEditPartyPageTests` cover control semantics. `PartiesAdminPortalComponentTests` checks the Admin input and exact-match enablement. Trimmed, case-insensitive NFKC matching is `unverified` (UX-DR6). |
 | UX-DR10 | NFR1 | Epic 1 (Story 1.9), Epic 2 | `MainLayoutAccessibilityTests`; e2e skip-link and keyboard-flow tests |
 | UX-DR11 | NFR1 | Epics 1–5 | `PartiesAccessibilitySpecimenTests`; e2e axe gate |
-| UX-DR12 | NFR1 | Epic 1 (Story 1.9) | e2e "forced-colors and reduced-motion media are observable" (local lane) |
+| UX-DR12 | NFR1 | Epic 1 (Story 1.9) | Hosted `parties-accessibility.spec.ts` checks visible keyboard focus in forced colors and suppression of animation and transitions on specimen controls. Hosted `consumer-portal-routes.spec.ts` checks accordion keyboard focus at narrow width under forced colors. Coverage of all product surfaces is `unverified`. |
 | UX-DR13 | NFR4, FR-Consumer-4 | Epic 5 (Story 5.3) | `MyPrivacyPageTests` |
-| UX-DR14 | NFR4, FR-Consumer-3 | Epic 5 (Story 5.1) | `MyConsentPageTests` |
+| UX-DR14 | NFR4, FR-Consumer-3 | Epic 5 (Story 5.1) | `MyConsentPageTests` checks the objection label. Hosted `consumer-portal-routes.spec.ts` verifies consent controls and the disabled Object button. The Article 21 contact fallback is `unverified` until a test follows the contact route. |
 | UX-DR15 | NFR4, FR-Consumer-4 | Epic 5 (Story 5.2) | `MyPrivacyPageTests`, `ConsumerPrivacyExportClientTests` |
 | UX-DR16 | NFR4 | Epics 4–5 | `MyPrivacyPageTests`; e2e `shared-portal-display-formatters.spec.ts` |
 
@@ -370,20 +396,9 @@ Deployment gates (not UI feature scope; readiness must surface them):
 
 ## Current Implementation Evidence
 
-`_bmad-output/implementation-artifacts/sprint-status.yaml` is the only
-story-status source. The roster below is a dated snapshot for readers; a
-readiness run must read the live file and must not extract story status from
-this paragraph.
-
-As of `sprint-status.yaml` `last_updated: 2026-09-07`, the MVP scope — Epics 1-5
-and their stories — is `done`, Epic 6 is `done`, Epic 7 is `done`, and Epic 8 is
-`in-progress` (stories 8.1-8.6 and 8.11-8.13 `done`; 8.7, 8.8, and 8.9
-`blocked` — 8.9 was moved from `backlog` to `blocked` by
-`sprint-change-proposal-2026-09-06-sprint-status-key-freeze-and-blocked-status.md`;
-8.10 in `review`). Readiness validation after this date must reconcile this PRD
-and planning documents with implementation story records.
-
-Post-MVP maintenance status:
+On 2026-11-20 the tracker records the MVP epics (1–5) as `done`. Read the
+live tracker for current epic and story status and the story records for
+acceptance evidence. [Sprint tracker](../implementation-artifacts/sprint-status.yaml)
 
 **Scope invariant:** Epics 6, 7, and 8 are maintenance scope only. None of them
 introduces or covers a new PRD functional requirement, and none may be counted
@@ -398,11 +413,11 @@ as MVP or product-feature functional coverage.
   `sprint-change-proposal-2026-08-01-projection-rollback-retention-revalidation.md`),
   while crypto/key-management rollback paths remain preserved pending the
   Story 8.7 gate.
-- Epic 8 (`in-progress`), approved by `sprint-change-proposal-2026-07-06.md`,
-  is domain-focus refactoring and platform extraction; stories 8.11-8.13 were
-  added by the 2026-07-07 and 2026-07-08 correct-course proposals. It is
-  post-MVP maintenance only, carries no new PRD functional requirement
-  coverage, and must not be reported as product-feature delivery.
+- Epic 8 closed as post-MVP refactoring and platform extraction. The
+  2026-11-20 tracker marks the epic, Story 8.10 and the retrospective `done`.
+  Stories 8.7, 8.8 and 8.9 remain `blocked` under explicit deferrals. The
+  retrospective records the outstanding erasure qualifications.
+  [Epic 8 retrospective](../implementation-artifacts/epic-8-retro-2026-10-09.md)
 
 **External consumer extension:** `EXT-PARTIES-1` Branch B is separate
 Agents-consumer contract work, governed by
@@ -423,6 +438,12 @@ Known completed dependency evidence:
 - Story 3.6 completed the bounded Admin erasure-verification report UI.
 - Story 4.1 completed the accepted Consumer identity binding ADR.
 - Story 4.2 completed admin-link identity binding provisioning.
+
+**Open erasure qualifications.** One accepted gateway request must reach key
+destruction, persisted certification, cleanup, committed terminal events and
+redacted reads through restart and redelivery. The separate revocation check
+requires both replicas to refuse retired keys, including a lookup already in
+flight. [November sprint change](sprint-change-proposal-2026-11-20.md)
 
 ## Deployment Gates
 
@@ -480,12 +501,14 @@ as such. Acceptance evidence for each requirement lives in the implementation
 story records, which win on completed-work evidence per the Source Artifacts
 precedence rule.
 
-Freeze scope: `EpicEightClosureFitnessTests.EpicEightAddsNoPrdFunctionalRequirement`
-freezes the `### FR-*` and `### NFR<n>` heading inventory of this file against
-commit `37f4ec82` and freezes `epics.md` byte-for-byte. UX-DR and GATE
-identities, the UX Requirements list, and the matrix tables are not
-freeze-protected; extending the freeze to them is deferred to the Epic 8
-closure owner (Story 8.10 follow-up).
+The Epic 8 freeze applies to the ordered FR/NFR headings and the full text of
+`epics.md`. Commit `0f261ccd` retired the fitness test that enforced it.
+The readiness reviewer compares the ordered `### FR-` and `### NFR` headings
+in this PRD with the copy at `37f4ec82`, then compares the bytes of
+`epics.md` with that commit. The reviewer records the revision and both results.
+At `787aef2d`, the heading inventory matched and both epics blobs were
+`f418a181`. UX-DRs, deployment gates and matrix mappings fall outside that
+historical freeze.
 
 Change log:
 
@@ -498,3 +521,4 @@ Change log:
 | 1.3.0 | 2026-09-08 | Governed correction from the 2026-09-08 validation run (`prds/prd-parties-2026-08-18/validation-report.md`): real CI topology and named tests in every `Verified By` cell with explicit `unverified` tokens; FR verification column; UX-DR and GATE-KMS matrix tables; UX-DR MUST clauses restored from `epics.md`; party picker restored to FR-Admin-3; NFR1 product-wide; NFR2 SignalR clause; NFR7 range aligned; waived NFR categories stated; 8.9 `blocked` and `sprint-status.yaml` as living status pointer; Purpose aligned with identity/scope canonicity; readiness contract and freeze scope stated. No functional requirement added, removed, or reordered. |
 | 1.3.1 | 2026-10-09 | Classify EXT-PARTIES-1 Branch B as a separate spec-only external-consumer extension; preserve the PRD requirement inventory and Epics 7-8 maintenance scope. |
 | 1.3.2 | 2026-11-20 | Define the startup, restart and replica evidence required to close GATE-KMS. |
+| 1.3.3 | 2026-11-20 | Reconcile the nine November validation findings. Update privacy and UX qualifications, CI and runtime references, Epic 8 closure and the inventory comparison. |

@@ -1,121 +1,125 @@
-# Validation Report — Parties UI PRD
+# Parties UI PRD validation
 
-- **PRD:** `_bmad-output/planning-artifacts/parties-ui-prd.md`
-- **Rubric:** `.agents/skills/bmad-prd/assets/prd-validation-checklist.md`
-- **Run at:** 2026-09-08T11:30:57+02:00
-- **Grade:** Fair
+**Fair** · v1.3.2 · `787aef2dee` · 0 critical · 5 high · 4 medium · 0 low
+
+PRD · `_bmad-output/planning-artifacts/parties-ui-prd.md`
+
+Rubric · `.agents/skills/bmad-prd/assets/prd-validation-checklist.md`
+
+Reviewed · 2026-11-20T12:50:11+01:00
 
 ## Overall verdict
 
-The v1.2.0 correction closed the Fair-grade identity holes: NFR rows exist, UX-DR1–16 are enumerated against `epics.md`, change control is real, the role model and the worst untestable phrases were tightened, and KMS is a named deployment gate. What is at risk is the new readiness surface itself. The NFR "Verified By" column cites a five-job CI topology this repository does not run, so a tool that extracts coverage gates from the Traceability Matrix will chase jobs that are not there. Residual scope cracks — the party picker missing from FR-Admin-3, NFR1 scoped to "Consumer-facing" while UX-DRs claim product-wide AA, and UX-DRs plus KMS sitting off the matrix the contract names — matter because this file is the chain-top index.
+The PRD gives maintainers a usable inventory of the Admin and Consumer requirements, and defines concrete evidence for closing the production key-custody gate. Its verification matrix still points to retired controls and omits open qualification work for erasure and signed-in access. A release reviewer needs those evidence references corrected before relying on the matrix for readiness.
 
-The adversarial and source-fidelity reviewers shift the picture on two verified facts and one remaining structural attack. Story 8.9 is stated as `backlog` and is `blocked` as of `sprint-status.yaml` 2026-09-07; the Epic 8 PRD freeze is now inventory-only (currency edits do not break CI unless `### FR-*` / `### NFR*` headings change). The adversarial reviewer re-rated three findings critical (identity-only canonicity, matrix still hiding UX-DRs/KMS, false CI topology); this synthesis consolidates them to high — the evidence-based reviewers corroborate the CI and 8.9 facts at high, and the identity split is a documented decision the rubric still calls adequate. Together with the remaining extraction gaps they keep the grade at Fair rather than Good.
+The source check also found a user-visible gap. The My Consent page disables the Article 21 objection button, and its cited test only checks the label. The approved UX calls for a usable contact route. GATE-KMS correctly remains unverified pending the startup, replacement-host and independent-replica checks.
 
 ## Dimension verdicts
-- Decision-readiness — adequate
-- Substance over theater — strong
-- Strategic coherence — adequate
-- Done-ness clarity — adequate
-- Scope honesty — adequate
-- Downstream usability — thin
-- Shape fit — strong
+
+| Dimension | Verdict | Judgment |
+| --- | --- | --- |
+| Decision-readiness | Thin | GATE-KMS identifies the deployment owner, the affected data and the required startup, host-replacement and independent-replica checks (PRD lines 433–445). The November decision keeps the initial erasure worker and replica revocation separate from key custody. A reader following the FR matrix cannot see how those open decisions affect the promise to prove erasure. |
+| Substance over theater | Strong | The role precedence, zero-or-multiple party-binding outcome and Consumer cancellation boundary translate into observable behaviors (lines 68–76 and 133–143). The distinction between consent and other lawful bases determines which control users see (lines 125–131). These details justify their place in a brownfield requirements index. |
+| Strategic coherence | Strong | The two role-gated areas support a single purpose. The own-data boundary explains the Consumer feature set, and the Admin role covers organization-wide records within a tenant. Lines 388–415 distinguish maintenance and the external Agents contract from MVP delivery. The October scope addendum confirms that decision at `_bmad-output/planning-artifacts/implementation-readiness-scope-addendum-2026-10-09.md` lines 10–29. |
+| Done-ness clarity | Thin | The functional requirements generally specify an observable outcome. Two acceptance boundaries need correction before reviewers can tell which build or deployed session satisfies them. |
+| Scope honesty | Adequate | The PRD distinguishes waived UI thresholds from service benchmarks and protects regulated-data go-live with an explicit open gate. Its historical status snapshot is dated. The later maintenance summary reads as current, which matters when deciding who still owns the blocked work. |
+| Downstream usability | Thin | The four tables give each requirement a stable row. Release tooling can extract all 35 identities, but several evidence references would send it to the wrong workflow, a deleted test or an inaccurate coverage status. |
+| Shape fit | Strong | A short scope statement, role-specific capabilities and a matrix suit this retrospective index. The linked UX experience document already maps shell and area states to user-visible behavior and requirement IDs (`_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/EXPERIENCE.md` lines 55–65). Additional personas or duplicated story acceptance criteria would add little to the release decision. |
 
 ## Findings by severity
 
-Severities below are the consolidated (synthesis) ratings. Where a reviewer's original rating differed, it is noted. Duplicated findings across reviewers are merged, with corroborating reviewers named.
-
 ### Critical (0)
 
-None after consolidation. The adversarial reviewer's three critical-rated findings appear under High with their original rating noted; their full adversarial statements are preserved in `review-adversarial-general.md`.
+None.
 
-### High (7)
+### High (5)
 
-**[Rubric + Adversarial + Source-fidelity]** — NFR "Verified By" cites a CI topology this repository does not run (§Traceability Matrix NFR1 / NFR9 vs `.github/workflows/ci.yml`) *(adversarial rated critical)*
-The extractable gate names (`lint`, `test`, `ui-a11y`, `contract-test`, `report`) are not workflow jobs. Current CI is a reusable `Hexalith.Builds` `domain-ci.yml@main` caller whose jobs are `build-and-test`, `aspire-tests`, and `performance-tests`. Playwright a11y still lives in `tests/e2e`; Pact is unscaffolded at the root. A tool that trusts this column will look for gates that do not exist and can still report green.
-Fix: Name the jobs and test projects that actually run (`ci.yml` / `domain-ci.yml` tiers, plus the local Playwright lane), and mark NFR1 Playwright as out-of-CI until a workflow exists.
+**A consumer cannot use the Article 21 objection control** · Done-ness clarity · FR-Consumer-3 · UX-DR14
 
-**[Adversarial + Source-fidelity]** — Story 8.9 is stated as `backlog` but is `blocked` today (§Current Implementation Evidence vs `sprint-status.yaml`) *(rubric rated low)*
-The as-of 2026-08-18 roster still matches every Epic 8 row except 8.9. `sprint-status.yaml` (`last_updated: 2026-09-07`) marks `8-9-ui-frontcomposer-and-fluent-consolidation: blocked`. The 2026-09-06 key-freeze SCP ratified that status and chose "No PRD FR/NFR edits." FR identity is unaffected; a readiness run that trusts the roster without reconciling sprint-status would treat 8.9 as unstarted.
-Fix: Restamp the as-of date and change “8.9 `backlog`” to “8.9 `blocked`”, or drop the story-level roster and point at `sprint-status.yaml` as the only status source. Currency-only; does not break the inventory freeze.
+The PRD says legitimate-interest items “provide Object under Art.21.” The page renders a disabled button and the cited test checks its label. The approved UX calls for a contact route while the backend objection command is unavailable.
 
-**[Adversarial]** — Identity-only canonicity is a dodge, not a fix (§Purpose vs §Source Artifacts vs §Document Control) *(adversarial rated critical; rubric did not file)*
-The file still opens as the canonical readiness source, then confines canonicity to identity and scope and tells tooling that story records win on completed-work evidence. Sources remain unpinned. The rubric treats this split as a usable, stated decision; the adversarial reviewer says a readiness source that cannot produce a red verdict on substance is still false.
-Fix: Either make this file win — pin sources, put ACs and NFR thresholds here — or rename it a requirements index and stop telling readiness tooling this is the source.
+**Correction** · State the contact fallback in the requirement. Mark that clause unverified until a test follows the contact route or submits an objection. Keep the existing consent-toggle evidence.
 
-**[Rubric + Adversarial]** — Readiness contract extracts from a matrix that still omits UX-DRs and the KMS gate (§Document Control, §Traceability Matrix, §UX Requirements, §Deployment Gates) *(adversarial rated critical; rubric rated medium)*
-Document Control tells tooling to extract identity and epic/surface mapping from the Traceability Matrix. That matrix still has nine FR rows and nine NFR rows. UX-DR1–16 and the production-KMS go-live gate have no matrix row. Enumerating UX-DRs in a prose list closes the old "unrecoverable IDs" finding for a human; it does not put them on the surface the new contract blesses.
-Fix: Add UX-DR and GATE-KMS (or NFR) rows to the same matrix, or change the contract to name every extractable section.
+[PRD](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L125) · [Rendered button](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/src/Hexalith.Parties.ConsumerPortal/Components/MyConsentPage.razor#L112) · [Label assertion](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/Hexalith.Parties.ConsumerPortal.Tests/Components/MyConsentPageTests.cs#L116) · [Approved fallback](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/EXPERIENCE.md#L148)
 
-**[Adversarial]** — Still no acceptance criteria, no NFR thresholds, and no waived-category list (§Functional Requirements, §Non-Functional Requirements)
-Every FR is still capability prose. NFR2 still calls freshness "first-class" with no bound. There is still no performance, latency, availability, or browser-support NFR, and no sentence that those categories are waived. `.memlog.md` records this as an explicit deferral ("revisit if PRD becomes chain-top again").
-Fix: Attach 2–5 observable ACs per FR; quantify each NFR or list waived categories with a reason — or keep the deferral and stop claiming this file is the readiness source for substance.
+**The erasure report can pass while end-to-end erasure remains unverified** · Decision-readiness · FR-Admin-4 · FR-Consumer-4
 
-**[Rubric + Adversarial]** — Party picker is a delivered MVP surface with no FR row (§FR-Admin-3, §Traceability Matrix vs `epics.md`) *(rubric rated medium)*
-Epics FR-Admin-3 includes the in-form `<hexalith-party-picker>`; Story 2.5 is `done`. This PRD's FR-Admin-3 names a radiogroup and omits the picker. UX-DR7 exists only in the prose list the readiness contract does not extract.
-Fix: Restore the picker to FR-Admin-3 (or add FR-Admin-5) and map it on the matrix to the create/edit routes plus the picker host.
+The browser check displays a fixture-backed verification report. The open sprint actions require one accepted request to reach key destruction, a persisted certificate and redacted reads. They also require a second replica to refuse the destroyed key. The matrix omits both qualifications.
 
-**[Adversarial]** — KMS is still a paragraph, not a fail-closed gate (§Deployment Gates, §Out of MVP Scope, `docs/architecture.md`) *(rubric rated medium)*
-There is no requirement ID, no matrix row, and the item remains listed as out of MVP. Verification is "read the GDPR notice in `docs/index.md`." Brownfield architecture still warns that `LocalDevKeyStorageBackend` is the only registered store and that there is no production-environment rejection guard.
-Fix: Give it a stable ID (`GATE-KMS` or NFR), put it on the matrix, keep it out of Out of MVP Scope, and name the fail-closed check if one exists — or state that the gate is documentary-only.
+**Correction** · Keep the request, cancellation and report-display evidence. Mark terminal erasure and cross-replica revocation unverified in the affected rows and link their tracker actions. The production key-custody gate has separate closure criteria.
 
-### Medium (8)
+[PRD](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L320) · [Report test](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/e2e/specs/admin-gdpr-erasure-verification.spec.ts#L39) · [Erasure lifecycle](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/implementation-artifacts/sprint-status.yaml#L375) · [Replica revocation](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/implementation-artifacts/sprint-status.yaml#L404)
 
-**[Rubric + Adversarial]** — NFR1 scopes AA to Consumer-facing while UX-DRs and Admin GDPR are product-wide (§NFR1, §UX-DR9, §UX-DR12)
-NFR1 opens "Consumer-facing surfaces target WCAG 2.2 AA." UX-DR12 is product-wide. Typed-name erasure confirmation, the party-picker combobox, and admin sheets are Admin surfaces. A tool that honors the "Consumer-facing" sentence can skip Admin a11y and still pass NFR1.
-Fix: State the AA target as product-wide, or list excluded Admin surfaces, and point verification at tests that actually cover Admin GDPR and the picker.
+**Access to a user’s own data still needs a real signed-in session check** · Done-ness clarity · FR-Shell · NFR3
 
-**[Rubric]** — NFR7's owned UX-DR range disagrees with its matrix cell (§NFR7 vs §Traceability Matrix NFR7)
-Body: "UX-DR1 through UX-DR7." Matrix: "UX-DR1–UX-DR3." An extractor cannot tell whether brand discipline owns three token DRs or seven domain deltas.
-Fix: Make the body and the matrix cell name the same UX-DR set.
+The cited checks exercise roles, claims, client boundaries and synthetic sessions. The tracker still calls for a read and update through the standalone host and real gateway, with session expiry and two-user isolation. A reader extracting the matrix alone misses that open qualification.
 
-**[Adversarial + Source-fidelity]** — UX-DR one-liners drop criteria `epics.md` still gates (§UX Requirements vs `epics.md`) *(adversarial rated high; source-fidelity rated low)*
-v1.2.0 printed sixteen labels. Material omissions include UX-DR8's assertive half, UX-DR5 degraded/"showing last known", UX-DR12's live gap, and UX-DR6's danger-token / typed-name split. The PRD's precedence rule already sends detailed semantics to `epics.md`.
-Fix: Paste the `epics.md` one-sentence MUST per UX-DR, including current-gap clauses, or stop listing UX-DRs here and extract them from `epics.md` with a pinned revision.
+**Correction** · Keep the component coverage. Add an unverified entry for the standalone session and link the `audit-standalone-token-relay` action until the owner records the qualifying run.
 
-**[Adversarial]** — The Epic 8 inventory freeze cannot see the sections added to close the last review (`EpicEightClosureFitnessTests.ExtractRequirementIds`)
-The regex sees heading-shaped `FR-*` / `NFR*` IDs only. UX-DR bullets, Deployment Gates, and the NFR table are invisible. The freeze would still pass if every UX-DR vanished. Source-fidelity confirms this is now inventory-only, not byte-for-byte, and that currency edits are allowed.
-Fix: Extract UX-DR and GATE IDs too, or stop claiming the freeze protects readiness extractability.
+[PRD](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L336) · [Browser fixture](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/e2e/specs/consumer-party-binding.spec.ts#L18) · [Open session qualification](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/implementation-artifacts/sprint-status.yaml#L416)
 
-**[Adversarial]** — NFR "Verified By" cells are unexecutable except the ones that are wrong (§Traceability Matrix NFR2–NFR8)
-Cells such as "freshness contract tests" and "GDPR and consent surface copy" name no test class, job, or command.
-Fix: One named job or test class per NFR, or an explicit `unverified` token.
+**The CI map points to a retired workflow and misses five hosted browser specs** · Downstream usability · Traceability Matrix · NFR1 · NFR9
 
-**[Adversarial]** — FR rows still have no verification column (§Traceability Matrix FR table)
-NFRs got a (false) gate column; the nine product FRs still map only to an epic and a path.
-Fix: Add the same Verified-By column to the FR table with story IDs and test names.
+The PRD names `domain-ci.yml@main` and describes Playwright as local-only. The caller pins `domain-ci-v2.yml` and its `ui-a11y` job runs five Chromium specs, including accessibility, and publishes results. The three FR-Shell browser specs and the dedicated erasure report spec fall outside that command. A test class cited by NFR9 was deleted in commit `0f261ccd`.
 
-**[Adversarial]** — Live freshness (SignalR) is a done Epic 1 requirement absent from this PRD (§NFR2 vs `epics.md` AR-D6 / Story 1.7)
-NFR2 mentions last-known rendering and optimistic echo, not SignalR subscribe + degraded-poll fallback.
-Fix: Add the SignalR subscribe + degraded-poll fallback as a normative NFR2 clause, or an FR-Shell/NFR2 AC.
+**Correction** · Map each affected row to the caller, job, command and artifact. Identify the five hosted specs separately from the full suite. Cite a run at the reviewed commit when reporting a passing result.
 
-**[Source-fidelity]** — Post-2026-08-18 planning left the PRD’s implementation snapshot frozen on purpose (§Current Implementation Evidence; 2026-09-06 SCP)
-The 2026-09-06 SCP correctly said the PRD has no FR/NFR impact (I15) and then left a dated story-status table that readiness tooling is told to extract.
-Fix: Keep the zero-new-FR rule, but treat the evidence snapshot as a living pointer to `sprint-status.yaml`.
+[PRD](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L304) · [Pinned caller](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/.github/workflows/ci.yml#L22) · [Hosted check](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/.github/workflows/ci.yml#L393) · [Five specs](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/e2e/package.json#L11)
 
-### Low (3)
+**The named requirement-freeze test has been deleted** · Downstream usability · Source Artifacts · Document Control
 
-**[Rubric + Adversarial]** — Residual adverbial copy requirements (§FR-Consumer-3, §FR-Consumer-4)
-"Grant and withdraw consent honestly" and "Copy must be plain, honest" remain adjectives. UX-DR13–16 own the observable copy rules.
-Fix: Drop the adverbs or replace them with the already-stated observables.
+The PRD says `EpicEightAddsNoPrdFunctionalRequirement` enforces the FR/NFR heading sequence and the exact contents of `epics.md`. Commit `0f261ccd` deleted the test. The current headings still match the baseline at `37f4ec82`, and the epics blob is still `f418a181`. A matching snapshot gives no evidence that the next change will be blocked.
 
-**[Source-fidelity]** — UX-DR one-liners drop definitional halves that `epics.md` still requires (§UX Requirements)
-Covered in more detail under Medium. Residual compression on UX-DR5/9/10/13/16.
-Fix: Add the assertive/degraded/typed-name clauses if the one-liners are the extractable UX inventory.
+**Correction** · Name the active enforcement mechanism if one exists. Otherwise document the owner, baseline and reproducible comparison as a manual policy check.
 
-**[Source-fidelity]** — Admin route templates use `{id}` while `@page` parameters are `{RoutePartyId}` (§Traceability Matrix)
-Paths match. `epics.md` also writes `{id}`. Parameter-name drift, not a missing surface.
-Fix: Optional note that the Blazor parameter is `RoutePartyId`.
+[PRD](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L483) · [Historical closure record](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md#L5)
 
-## Mechanical notes
-- Closed since 2026-08-18 (not re-filed): frontmatter `last_updated` / `version` / changelog; NFR identity table; UX-DR1–16 enumerated with `epics.md` as ID authority; FR-Shell role/landing rules; NFR3 now-vs-deferred seam; Epic 6 in the maintenance invariant; D7 / named GDPR seams; cancellation event; NFR8 `Hexalith.Commons.ServiceDefaults`; KMS promoted into §Deployment Gates.
-- All six §Source Artifacts paths present; KMS verification paths `docs/index.md` and `docs/getting-started.md` exist; `docs/deployment-security-checklist.md` remains retired.
-- Sprint-status roundtrip: Epics 1–7 `done`, Epic 8 `in-progress`. Story-level drift since 2026-08-18: 8.9 `backlog` → `blocked`; 8.7 / 8.8 remain `blocked`; 8.10 remains `review`.
-- ID continuity: FR-Shell + FR-Admin-1..4 + FR-Consumer-1..4 unique; NFR1–NFR9 contiguous; UX-DR1–UX-DR16 contiguous. Document Control declares which classes count as functional requirements.
-- Assumptions Index: vacuously consistent — no `[ASSUMPTION]` or `[NOTE FOR PM]` tags.
-- No UJs — shape-appropriate. Glossary still absent; `party_id`, "Bound Consumers", "last-known", "tombstone" remain consistent.
-- Epic 8 PRD freeze is inventory-only (`ExtractRequirementIds` on `### FR-*` / `### NFR*` headings). `epics.md` is still a git-diff freeze. Current and baseline inventories are the same 18 IDs. Currency edits do not break the gate unless those headings are added, removed, or reordered.
+### Medium (4)
+
+**The build requirement still specifies .NET 10** · Done-ness clarity · NFR9
+
+The PRD says the work stays on .NET 10. The current SDK pin is 11.0.100, the target framework is `net11.0`, and the UI container uses ASP.NET 11. CI separately installs a .NET 10 SDK.
+
+**Correction** · Identify the current target and SDK from their tracked configuration. Date the .NET 10 baseline wherever its history matters.
+
+[PRD](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L211) · [SDK](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/global.json#L3) · [Target](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/Directory.Build.props#L9) · [UI container](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj#L11)
+
+**Destructive confirmation follows conflicting design rules** · Done-ness clarity · UX-DR6 · FR-Admin-4
+
+The PRD carries an obsolete danger-color token. The approved design prescribes an outline trigger and a different confirmation fill. The experience specification also requires trimming, case-folding and NFKC normalization of the typed name, while the cited component test rejects case and trailing-space variants.
+
+**Correction** · Point UX-DR6 to the effective design override. Flag the confirmation mismatch for the UX and implementation owners, and qualify the current test coverage.
+
+[PRD](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L250) · [Color override](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/DESIGN.md#L272) · [Name confirmation rule](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/EXPERIENCE.md#L149) · [Current assertions](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs#L246)
+
+**Responsive and accessibility rows understate existing coverage** · Downstream usability · NFR5 · UX-DR12
+
+The matrix says reflow has no automated assertion. Hosted browser cases check Admin layout at 320 pixels and 200% zoom, focus restoration, and Consumer overflow at 390 pixels. The accessibility specimen also asserts visible focus in forced colors and reduced-motion behavior. The Consumer single-column requirement still lacks a direct assertion.
+
+**Correction** · Map each covered behavior to its browser assertion. Keep the unverified marker on the remaining single-column clause.
+
+[PRD](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L338) · [Admin reflow](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/e2e/specs/admin-parties-list.spec.ts#L753) · [Consumer reflow](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/e2e/specs/consumer-portal-routes.spec.ts#L94) · [Media and focus](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/tests/e2e/specs/parties-accessibility.spec.ts#L418)
+
+**The maintenance summary still calls Epic 8 in progress** · Scope honesty · Current Implementation Evidence
+
+The following maintenance summary repeats an in-progress status after a dated September snapshot. The live tracker marks Epic 8, Story 8.10 and the retrospective done. Stories 8.7, 8.8 and 8.9 remain blocked under approved deferrals.
+
+**Correction** · Point the summary to the live tracker or date it and describe the administrative closure with the three deferred stories.
+
+[PRD](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/planning-artifacts/parties-ui-prd.md#L401) · [Sprint tracker](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/implementation-artifacts/sprint-status.yaml#L129) · [Closure and deferrals](https://github.com/Hexalith/Hexalith.Parties/blob/787aef2deed296b48677f01c9ace2d84e3f03cd5/_bmad-output/implementation-artifacts/epic-8-retro-2026-10-09.md#L161)
+
+### Low (0)
+
+None.
+
+## Verification notes
+
+- All 35 matrix identities occur once across the four tables. They comprise nine functional requirements, nine non-functional requirements, sixteen UX requirements and one deployment gate. All seven original source-artifact entries resolve in the repository.
+- GATE-KMS agrees with the November sprint decision. Before real regulated EU data goes live, the deployment owner must demonstrate that startup refuses ephemeral custody outside development and that a durable provider can decrypt and replay a synthetic protected record after host replacement and on an independent replica.
+- The review checked source, test assertions, workflow definitions, Git history and sprint records at the recorded commit. Hosted test pass status and deployed behavior were outside this document review. Findings describe gaps in the evidence a readiness reader can use.
+- Counts merge overlapping findings from the two reviews. Erasure and signed-in access have separate owners and acceptance checks.
 
 ## Reviewer files
-- `review-rubric.md`
-- `review-adversarial-general.md`
-- `review-source-fidelity.md`
+
+- [Rubric review](review-rubric.md)
+- [Source-fidelity review](review-source-fidelity.md)
