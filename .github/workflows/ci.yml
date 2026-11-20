@@ -22,7 +22,6 @@ jobs:
     uses: Hexalith/Hexalith.Builds/.github/workflows/domain-ci-v2.yml@fe68718b6c074a6b500a7191e3554a1d39e17688
     with:
       solution: Hexalith.Parties.Standalone.slnx
-      additional-sdk-version: '10.0.404'
       module-manifest: module/hexalith.module-manifest.v2.json
       integration-test-profiles: platform-package
       package-prepare-script: scripts/prepare-ci-package-dependencies.sh
@@ -91,7 +90,6 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
-          dotnet-version: '10.0.404'
       - name: Initialize recorded catalog and gateway settings
         run: |
           git -c submodule.recurse=false submodule update --init --depth 1 --checkout -- references/Hexalith.Builds references/Hexalith.EventStore
@@ -150,7 +148,6 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
-          dotnet-version: '10.0.404'
       - name: Initialize recorded catalog and gateway settings
         run: |
           git -c submodule.recurse=false submodule update --init --depth 1 --checkout -- references/Hexalith.Builds references/Hexalith.Platform references/Hexalith.EventStore references/Hexalith.Tenants references/Hexalith.Memories
@@ -220,7 +217,6 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
-          dotnet-version: '10.0.404'
       - name: Read the selected Dapr toolchain
         id: toolchain
         shell: bash
@@ -273,7 +269,6 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
-          dotnet-version: '10.0.404'
       - name: Initialize recorded package inputs
         run: |
           git -c submodule.recurse=false submodule update --init --depth 1 --checkout -- references/Hexalith.Builds references/Hexalith.EventStore
@@ -320,7 +315,6 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
-          dotnet-version: '10.0.404'
       - name: Initialize owner publisher build dependencies
         run: git -c submodule.recurse=false submodule update --init references/Hexalith.EventStore references/Hexalith.Builds
       - name: Resolve the EventStore owner's Builds catalog
@@ -371,7 +365,6 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
-          dotnet-version: '10.0.404'
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '26.13.1'
@@ -437,7 +430,6 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
-          dotnet-version: '10.0.404'
       - name: Initialize direct declaration owners
         run: git -c submodule.recurse=false submodule update --init --depth 1 --checkout -- references/Hexalith.EventStore references/Hexalith.Tenants references/Hexalith.Memories
       - name: Restore the pinned module tool
