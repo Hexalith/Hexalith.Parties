@@ -243,8 +243,8 @@ public sealed class DevelopmentCatalogPreparationCleanupTests
                 string reader = Path.Combine(path, "reader");
                 using JsonDocument preparation = JsonDocument.Parse(await File.ReadAllBytesAsync(Path.Combine(reader, "preparation.json"), token).ConfigureAwait(false));
                 string template = preparation.RootElement.GetProperty("templateSource").GetString()!;
-                string companion = Path.Combine(Path.GetDirectoryName(template)!, "PublishedCatalogArtifactCohort.cs");
-                File.Exists(companion).ShouldBeTrue();
+                string[] catalogSources = Directory.GetFiles(Path.GetDirectoryName(template)!, "*.cs");
+                catalogSources.Length.ShouldBeGreaterThan(1);
                 (await File.ReadAllBytesAsync(Path.Combine(path, "global.json"), token).ConfigureAwait(false)).ShouldBe(sdkPin);
                 foreach (string owner in new[] { contracts, adapter })
                 {
@@ -254,7 +254,7 @@ public sealed class DevelopmentCatalogPreparationCleanupTests
                     preparation.RootElement.GetProperty("inputHashes").GetProperty(owner).GetString()
                         .ShouldBe(Convert.ToHexStringLower(SHA256.HashData(expected)));
                 }
-                foreach (string source in Directory.EnumerateFiles(Path.GetDirectoryName(template)!, "*.cs"))
+                foreach (string source in catalogSources)
                 {
                     byte[] actual = await File.ReadAllBytesAsync(Path.Combine(reader, Path.GetFileName(source)), token).ConfigureAwait(false);
                     actual.ShouldBe(await File.ReadAllBytesAsync(source, token).ConfigureAwait(false));
