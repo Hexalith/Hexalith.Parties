@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-11-02
+# last_updated: 2026-11-20
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -45,7 +45,7 @@
 #   against this file: it rejects `blocked` and re-slugs titles. Refresh in place.
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-11-02
+last_updated: 2026-11-20
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -374,7 +374,8 @@ action_items:
     status: open
   - id: "epic-8-retro-erasure-status-after-commit"
     epic: 8
-    action: "Derive erasure status from committed events or reconcile it after event persistence; cover failed append and retry before reporting Verified or Erased."
+    action: "Derive erasure status from committed events or reconcile it after event persistence; cover failed append and retry before reporting Verified or Erased. Identify the initial worker and prove that one accepted gateway request reaches destruction, durable certification and redacted reads through restart and redelivery. Exercise cancellation before destruction and monitor overdue pending requests."
+    # Expanded by sprint-change-proposal-2026-11-20.md. The October retrospective remains the original source.
     owner: "Amelia (Developer) + Winston (Architect) + Murat (Test Architect)"
     status: open
     ref: "_bmad-output/implementation-artifacts/epic-8-retro-2026-10-09.md"
@@ -393,3 +394,46 @@ action_items:
     # Resolved 2026-10-18: spec-dw-194-destroyed-key-marker-fault.md.
     status: done
     ref: "_bmad-output/implementation-artifacts/epic-8-retro-2026-10-09.md"
+  # Follow-up from the 2026-11-20 audit. The existing erasure action above owns initial processing.
+  - id: "audit-key-custody"
+    epic: 1
+    action: "Require a durable production key backend and verify host replacement and second-replica replay before closing GATE-KMS."
+    owner: "Parties maintainer + deployment/platform owner"
+    status: open
+    ref: "_bmad-output/planning-artifacts/sprint-change-proposal-2026-11-20.md"
+  - id: "audit-replica-key-revocation"
+    epic: 8
+    action: "Prove verified destruction covers versioned key reads on all replicas, including concurrent lookups. Measure the cost of bypassing the raw-key cache before choosing a revocation mechanism."
+    owner: "Parties Security maintainer + Platform key provider owner"
+    status: open
+    ref: "_bmad-output/planning-artifacts/sprint-change-proposal-2026-11-20.md"
+  - id: "audit-package-integration"
+    epic: 8
+    action: "Align both quick starts with the tool manifest. Close on a hosted run of the corrected revision that executes the package create, query, persisted-event and cleanup checks."
+    owner: "Parties maintainer + release owner"
+    status: in-progress
+    ref: "_bmad-output/planning-artifacts/sprint-change-proposal-2026-11-20.md"
+  - id: "audit-standalone-token-relay"
+    epic: 1
+    action: "Reuse gateway authorization on the standalone query, command and GDPR clients. Qualify signed-in reads and writes, expiry and independent sessions against the gateway."
+    owner: "Parties UI maintainer + identity platform owner"
+    status: open
+    ref: "_bmad-output/planning-artifacts/sprint-change-proposal-2026-11-20.md"
+  - id: "audit-gdpr-actor-attribution"
+    epic: 3
+    action: "Use an approved opaque identity from authenticated gateway metadata for new GDPR records. Verify agreement between events and processing records for two users and replay of historical data."
+    owner: "Parties domain maintainer + privacy owner"
+    status: open
+    ref: "_bmad-output/planning-artifacts/sprint-change-proposal-2026-11-20.md"
+  - id: "audit-tenant-search-capacity"
+    epic: 2
+    action: "Measure end-to-end p95 search latency, allocations, state size and write conflicts for representative tenants under concurrent updates before choosing an index change."
+    owner: "Parties query/projection maintainer + performance test owner"
+    status: open
+    ref: "_bmad-output/planning-artifacts/sprint-change-proposal-2026-11-20.md"
+  - id: "audit-dependency-review-pin"
+    epic: 8
+    action: "Request a reviewed workflow commit pin from Hexalith.CiCd and qualify the delivered dependency-review workflow on a test pull request."
+    owner: "Hexalith.CiCd workflow owner + Parties release owner"
+    status: open
+    ref: "_bmad-output/planning-artifacts/sprint-change-proposal-2026-11-20.md"

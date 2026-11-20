@@ -3,8 +3,8 @@ project_name: parties
 document_type: prd
 status: canonical-requirements-source
 date: 2026-06-27
-last_updated: 2026-10-09
-version: 1.3.1
+last_updated: 2026-11-20
+version: 1.3.2
 requirements_basis: "Brownfield docs + final UX design set + architecture requirements inventory + epics FR map"
 ---
 
@@ -436,9 +436,14 @@ the Traceability Matrix.
   regulated EU personal data. Owner: deployment/platform owner. Enforcement:
   documentary only — no production-environment rejection guard and no startup
   dev-only warning exist in code (`docs/architecture.md` §8), so the gate is
-  `unverified` until a fail-closed check ships or a production key backend is
-  registered. Documentation: the GDPR notice in `docs/index.md` and the
-  production KMS gate in `docs/getting-started.md` (the former
+  `unverified`. To close it, the deployment/platform owner must show that the
+  service refuses the ephemeral key backend outside development and that the
+  selected durable provider can decrypt and replay a synthetic protected record
+  after host replacement and from an independent replica. Record the deployed
+  provider identity and redacted test results. See the
+  [November sprint change](sprint-change-proposal-2026-11-20.md) for the
+  separate erasure and replica-revocation checks. Operator guidance lives in
+  the GDPR notice in `docs/index.md` and the production KMS gate in `docs/getting-started.md` (the former
   `docs/deployment-security-checklist.md` was retired by Story 8.13).
   Crypto/key-management extraction is Story 8.7 (`blocked`).
 
@@ -492,3 +497,4 @@ Change log:
 | 1.2.0 | 2026-08-18 | Governed correction from `prds/prd-parties-2026-08-18/validation-report.md`: currency refresh, NFR traceability, UX-DR enumeration, deployment-gate section, clarified wording. No functional requirement added or removed. |
 | 1.3.0 | 2026-09-08 | Governed correction from the 2026-09-08 validation run (`prds/prd-parties-2026-08-18/validation-report.md`): real CI topology and named tests in every `Verified By` cell with explicit `unverified` tokens; FR verification column; UX-DR and GATE-KMS matrix tables; UX-DR MUST clauses restored from `epics.md`; party picker restored to FR-Admin-3; NFR1 product-wide; NFR2 SignalR clause; NFR7 range aligned; waived NFR categories stated; 8.9 `blocked` and `sprint-status.yaml` as living status pointer; Purpose aligned with identity/scope canonicity; readiness contract and freeze scope stated. No functional requirement added, removed, or reordered. |
 | 1.3.1 | 2026-10-09 | Classify EXT-PARTIES-1 Branch B as a separate spec-only external-consumer extension; preserve the PRD requirement inventory and Epics 7-8 maintenance scope. |
+| 1.3.2 | 2026-11-20 | Define the startup, restart and replica evidence required to close GATE-KMS. |
