@@ -19,12 +19,15 @@ container, browser and accessibility checks. Tests of workflow YAML, assistant
 instructions, story status, historical CI receipts and controller orchestration
 are retired. Historical records and actual product fixture bytes remain available.
 
-All three native test projects participate in the solution build:
-`Hexalith.Parties.Platform.IntegrationTests`,
+The solutions list three runner-owned projects. Their ordinary builds include
+`Hexalith.Parties.Platform.IntegrationTests`. Build the two opt-in suites,
 `Hexalith.Parties.Platform.LifecycleTests` and
-`Hexalith.Parties.Platform.AttachedLifecycleTests`. The published EventStore 5.1.1
-fixture APIs compile with these projects. The package graph selects EventStore through `HexalithEventStoreVersion`; explicit compatibility selections retain authority. Compilation does not establish a
-successful native runtime run.
+`Hexalith.Parties.Platform.AttachedLifecycleQualification.Tests`, directly.
+The attached suite uses the current EventStore SDK for lineage and expiry.
+The original attached project path forwards legacy builds to that suite. The
+package graph selects EventStore through `HexalithEventStoreVersion`. Explicit
+compatibility selections retain authority. Use `hexalith-module test` to
+verify native runtime behavior.
 
 ## Local verification
 

@@ -101,20 +101,23 @@ public sealed class DocumentationFitnessTests
 
         // Assert the exact set, not the count. A bare Length check lets a rename, or an add paired
         // with a removal, pass while the documented inventory silently drifts.
-        string[] expectedTestProjects = [.. ExpectedRunnableProjects, "Hexalith.Parties.Platform.AttachedLifecycleTests", "Hexalith.Parties.Platform.IntegrationTests", "Hexalith.Parties.Platform.LifecycleTests", "Hexalith.Parties.EventStoreGateway.TestHost", "Hexalith.Parties.EventStoreAdminUI.TestHost", "Hexalith.Parties.EventStoreSample.Contracts.TestArtifact", "Hexalith.Parties.EventStoreSample.TestHost", "Hexalith.Parties.RuntimeArtifacts"];
+        string[] expectedTestProjects = [.. ExpectedRunnableProjects, "Hexalith.Parties.Platform.AttachedLifecycleTests", "Hexalith.Parties.Platform.AttachedLifecycleQualification.Tests", "Hexalith.Parties.Platform.IntegrationTests", "Hexalith.Parties.Platform.LifecycleTests", "Hexalith.Parties.EventStoreGateway.TestHost", "Hexalith.Parties.EventStoreAdminUI.TestHost", "Hexalith.Parties.EventStoreSample.Contracts.TestArtifact", "Hexalith.Parties.EventStoreSample.TestHost", "Hexalith.Parties.RuntimeArtifacts"];
         testProjects.ShouldBe([.. expectedTestProjects.Order(StringComparer.Ordinal)]);
 
         string testScript = Read(root, "scripts/test.ps1");
+        string runnableProjectLists = testScript.Split("$testSupportProjects", StringSplitOptions.None)[0];
         string[] runnableProjects = Regex.Matches(
-                testScript,
-                "tests/(?<project>[^/]+Tests)/[^\"\\r\\n]+\\.csproj",
+                runnableProjectLists,
+                "tests/[^/]+/(?<project>[^/\"\\r\\n]+Tests)\\.csproj",
                 RegexOptions.CultureInvariant)
             .Select(static match => match.Groups["project"].Value)
             .Distinct(StringComparer.Ordinal)
             .Order(StringComparer.Ordinal)
             .ToArray();
-        runnableProjects.ShouldBe([.. ExpectedRunnableProjects.Append("Hexalith.Parties.Platform.AttachedLifecycleTests").Append("Hexalith.Parties.Platform.IntegrationTests").Append("Hexalith.Parties.Platform.LifecycleTests").Order(StringComparer.Ordinal)]);
-        testScript.ShouldContain("$platformProjects");
+        runnableProjects.ShouldBe([.. ExpectedRunnableProjects.Append("Hexalith.Parties.Platform.AttachedLifecycleQualification.Tests").Append("Hexalith.Parties.Platform.IntegrationTests").Append("Hexalith.Parties.Platform.LifecycleTests").Order(StringComparer.Ordinal)]);
+        string[] platformSections = testScript.Split("$platformProjects = @(", 2, StringSplitOptions.None);
+        platformSections.Length.ShouldBe(2);
+        platformSections[1].Split(')', 2)[0].ShouldContain("Hexalith.Parties.Platform.AttachedLifecycleQualification.Tests.csproj");
         testScript.ShouldContain("$testSupportProjects");
         testScript.ShouldContain("Hexalith.Parties.EventStoreGateway.TestHost.csproj");
         testScript.ShouldContain("Hexalith.Parties.EventStoreSample.Contracts.TestArtifact.csproj");

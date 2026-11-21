@@ -99,7 +99,7 @@ $ciProjects = @(
 
 # Platform suites are executed only by hexalith-module test, which owns their environment.
 $platformProjects = @(
-    "tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleTests.csproj",
+    "tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleQualification.Tests.csproj",
     "tests/Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj",
     "tests/Hexalith.Parties.Platform.LifecycleTests/Hexalith.Parties.Platform.LifecycleTests.csproj"
 )
@@ -110,10 +110,12 @@ $allProjects = $unitProjects + $integrationProjects + $topologyProjects + $ciPro
 # these explicit so the inventory gate still fails when an unreviewed project appears, without
 # attempting to execute a Web test host as a test assembly.
 $testSupportProjects = @(
+    "tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleTests.csproj",
     "tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj",
     "tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj",
     "tests/Hexalith.Parties.EventStoreSample.TestHost/Hexalith.Parties.EventStoreSample.TestHost.csproj",
-    "tests/Hexalith.Parties.EventStoreSample.Contracts.TestArtifact/Hexalith.Parties.EventStoreSample.Contracts.TestArtifact.csproj"
+    "tests/Hexalith.Parties.EventStoreSample.Contracts.TestArtifact/Hexalith.Parties.EventStoreSample.Contracts.TestArtifact.csproj",
+    "tests/Hexalith.Parties.RuntimeArtifacts/Hexalith.Parties.RuntimeArtifacts.csproj"
 )
 
 function Assert-TestProjectInventory {

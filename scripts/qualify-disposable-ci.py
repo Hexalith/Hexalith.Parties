@@ -53,7 +53,6 @@ PROFILE = 'lifecycle-package'
 INTEGRATION_PROFILE = 'platform-package'
 CANCELLED = []
 ATTACHED_PROFILE = 'attached-lifecycle-package'
-ATTACHED_ENTRY = 'tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleTests.csproj'
 POLICY = 'hexalith.platform.candidate-and-attachment-policy.v1'
 INTENTIONAL_FAILURE = 'HEXALITH_ATTACHED_LIFECYCLE_INTENTIONAL_FAILURE:'
 OWNER_LABELS = ('passing', 'failing', 'peer', 'retry', 'partial', 'cancel', 'collision-owner', 'collision-peer',
@@ -1283,13 +1282,19 @@ class Qualification:
         document = optional_read(self.diagnostics(item) / 'attachments.json')
         before = document['attachments'] if document is not None else []
         directory = private_directory(self.temporary / label)
-        project = ROOT / ATTACHED_ENTRY
+        manifest_bytes = read_bytes(ROOT / MANIFEST)
+        profiles = [profile for module in json.loads(manifest_bytes)['modules'] for profile in module.get('tests', [])
+                    if profile['name'] == ATTACHED_PROFILE]
+        require(len(profiles) == 1 and profiles[0]['mode'] == 'package', 'Require one attached package suite in the manifest')
+        project = Path(profiles[0]['entry'])
+        require(not project.is_absolute() and '..' not in project.parts and project.suffix == '.csproj',
+                'Require a repository-relative attached test project')
         entry = {'label': label, 'kind': 'attached-suite', 'ownerLabel': item['label'], 'ownerRunId': owner['runId'],
                  'environmentId': owner['environmentId'], 'executionContext': self.context, 'source': self.journal['source'],
                  'profile': ATTACHED_PROFILE, 'ownerWorkspace': self.state(item)['workspace'],
                  'holdSeconds': hold_seconds, 'requestedAtUtc': now(),
-                 'manifestHash': hashlib.sha256(read_bytes(ROOT / MANIFEST)).hexdigest(),
-                 'entryHash': hashlib.sha256(read_bytes(project)).hexdigest(),
+                 'manifestHash': hashlib.sha256(manifest_bytes).hexdigest(),
+                 'entryHash': hashlib.sha256(read_bytes(ROOT / project)).hexdigest(),
                  'beforeAttachmentIds': [value['attachedRunId'] for value in before],
                  'receipt': str(directory / 'receipt.json'), 'launchRecord': str(directory / 'launch.json'),
                  'publicResult': str(directory / 'public-result.json')}

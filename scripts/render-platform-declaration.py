@@ -447,7 +447,7 @@ TEMPLATE = json.loads(r'''
         {
           "name": "attached-lifecycle-package",
           "executor": "mtp",
-          "entry": "tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleTests.csproj",
+          "entry": "tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleQualification.Tests.csproj",
           "reportFormat": "trx",
           "executionTimeoutSeconds": 300,
           "stopTimeoutSeconds": 90,

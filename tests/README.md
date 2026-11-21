@@ -1,6 +1,6 @@
 # Hexalith.Parties Test Framework
 
-Hexalith.Parties uses a .NET 10, xUnit v3, Shouldly, NSubstitute, bUnit, Testcontainers, and Aspire-hosted integration test framework. The framework is already organized by production package boundary; keep that shape when adding coverage.
+Hexalith.Parties uses .NET 11, xUnit v3, Shouldly, NSubstitute, bUnit, Testcontainers, and Aspire-hosted integration test framework. The framework is already organized by production package boundary; keep that shape when adding coverage.
 
 ## Test Lanes
 
@@ -13,7 +13,7 @@ Hexalith.Parties uses a .NET 10, xUnit v3, Shouldly, NSubstitute, bUnit, Testcon
 
 The runner-owned `Hexalith.Parties.Platform.IntegrationTests`,
 `Hexalith.Parties.Platform.LifecycleTests` and
-`Hexalith.Parties.Platform.AttachedLifecycleTests` execute through
+`Hexalith.Parties.Platform.AttachedLifecycleQualification.Tests` execute through
 `hexalith-module test`. The local script inventories these projects separately
 from its ordinary lanes.
 

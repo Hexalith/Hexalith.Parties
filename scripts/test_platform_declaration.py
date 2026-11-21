@@ -36,7 +36,7 @@ class PlatformDeclarationTests(unittest.TestCase):
         suites = module["tests"]
         integration_entry = "tests/Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj"
         lifecycle_entry = "tests/Hexalith.Parties.Platform.LifecycleTests/Hexalith.Parties.Platform.LifecycleTests.csproj"
-        attached_entry = "tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleTests.csproj"
+        attached_entry = "tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleQualification.Tests.csproj"
         self.assertEqual([(s["name"], s["mode"], s["entry"]) for s in suites],
                          [("platform-source", "source", integration_entry),
                           ("platform-package", "package", integration_entry),
