@@ -41,7 +41,9 @@ restart for the supported aggregate one-shot/shared staged protocols on the owne
 provider; it supplies no aggregate staged-resume, production history completeness,
 deployed writer drain, authorization or cutover acceptance.
 
-Supply a private JSON file through `PARTIES_BACKFILL_STATE_RUNTIME_CONFIG` with
+Export `PARTIES_BACKFILL_STATE_RUNTIME_CONFIG` as the absolute path to a
+private JSON file. Workload children start in separate scratch directories.
+The file contains
 `daprAppId`, `daprHttpEndpoint`, `daprGrpcEndpoint`, `daprApiToken`,
 `redisEndpoint`, `stateStoreName` and `ownedDisposableStore: true`. Dapr endpoints must use loopback
 HTTP, the unique app ID must begin `parties-backfill-rehearsal-`, and the state
@@ -60,13 +62,28 @@ The flag is an owner attestation: use a newly created private Redis container,
 never a shared store or a forwarded deployed endpoint. Each test uses a fresh
 synthetic tenant. Keep credentials/configuration outside the repository.
 
-After building `Hexalith.Parties.Tests`, invoke its test assembly with
-`-class Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests`
-and `-class Hexalith.Parties.Tests.Projections.PartyLegacyBackfillProcessRuntimeTests`.
-An absent configuration skips this explicitly opt-in lane; skipped execution is
-not qualification. Set `PARTIES_BACKFILL_WORKLOAD_EVIDENCE` to a retained results
-directory outside `TMPDIR` to preserve each workload's XML, immutable input,
-canonical and generation snapshots before disposable workspace cleanup.
+From the repository root, build the `Hexalith.Parties.Runtime.IntegrationTests`
+project using the workstation's `run-with-temp` helper. The linked classes
+retain their `Hexalith.Parties.Tests.Projections` namespace. Export
+`PARTIES_BACKFILL_WORKLOAD_EVIDENCE` as the absolute path to a new results
+directory outside `TMPDIR`.
+
+```bash
+run-with-temp bash -euc '
+  mkdir -p "$PARTIES_BACKFILL_WORKLOAD_EVIDENCE"
+  project=Hexalith.Parties.Runtime.IntegrationTests
+  dotnet build "tests/$project/$project.csproj" -c Release \
+    --artifacts-path "$TMPDIR/artifacts" --disable-build-servers
+  dotnet "$TMPDIR/artifacts/bin/$project/release/$project.dll" \
+    -class Hexalith.Parties.Tests.Projections.PartyLegacyReadModelBackfillRuntimeTests \
+    -class Hexalith.Parties.Tests.Projections.PartyLegacyBackfillProcessRuntimeTests \
+    -failSkips -result-xml "$PARTIES_BACKFILL_WORKLOAD_EVIDENCE/backfill.xml"
+'
+```
+
+Without the provider configuration, `-failSkips` fails the opt-in lane. The
+results directory preserves the parent report, each child report, immutable
+input, and canonical and generation snapshots before scratch cleanup.
 Preserve the command, selected package/provider identities,
 test XML and the owned-resource cleanup result. Destroy the exclusively owned
 container and sidecar after the run; do not enumerate or delete SDK recovery
