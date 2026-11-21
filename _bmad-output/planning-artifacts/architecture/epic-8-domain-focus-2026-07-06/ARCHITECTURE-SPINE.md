@@ -2,13 +2,15 @@
 title: Epic 8 Architecture Spine (Reconciliation)
 epic: 8
 date: 2026-07-07
-updated: 2026-11-02
+updated: 2026-11-21
 status: final
-amendment: 2026-11-02 Platform successor c635a2dc approved for gitlink signoff only after Parties 957111c5; prior 2026-11-02 Tenants successor 4d0d5998 approved for current-selection assertion and gitlink signoff only after Parties 18579b62; prior 2026-11-02 DW-182/I16 approved then-current committed source and effective Release package selection for assertions only; prior 2026-11-01 Round 7 approved then-current identity set, selected-gitlink accessibility stamps and closure-commit v2 evidence; prior 2026-10-05 final identity/approval reconciliation (Builds/Tenants selection, EventStore 3.113.0 package and source, I16 re-validation approved for the final set, I13/DW-111 accepted deferral — see §13), then the same-day DW-140/DW-141/DW-142 closure-blocker resolution and its review loop 3 correction (§13); prior 2026-10-04 identity/documentation reconciliation (Round 6, explicit three-pin approval, then working-tree five-pin approval); prior 2026-09-08 validation-driven (I19/I19a/I20 added; I1/I7/I10/I11/I14/I16 tightened; §2/§4/§5/§7 corrected; Inherited Invariants + Deferred added — see §10); prior 2026-08-18 amendment in §8
+amendment: 2026-11-21 release selection, host cutover, erasure-safe reads and delivery, custody, replay and deferral sequencing
 classification: post-MVP maintenance (Class C) — zero new PRD FRs
 closes-blocker: "Story 8.1 preserved 'missing Epic 8 architecture spine' blocker"
-open-condition: "The 2026-11-02 ten-gitlink and effective Release package set at Parties 18579b62ef9ac3c8780fc5e8ba26112d2665f566 is owner-approved for current-selection assertions and Tenants gitlink signoff, and its Platform successor c635a2dc22f404d97c9fe7e27f7e7f4c9017943b is signed off for the otherwise unchanged set (8.3 I20 table); the a92d15866bbf4f49cefa6c03f4a9eeec442af1de and 2026-11-01 b6443b2475d3495b58358f84cdb161b05c62d0f9 approvals are dated history. The six lanes passed at Parties 56fc3b73ff26292791782be54df9af1f050464c5 (v2 snapshot c07155972705c6aa1e2459198cec0bfdcaed1c92ccbbaab243f4478345777bf9; dependency set abbf5c289e3b66fbedc7d2d1b8c258bbaab7a1b79e5f6a391fb9ab763061cdd9), which is dated history. As of 2026-11-02 no closure lane is qualified; the canonical tests/test-summary.md table (the last `### Validation receipts` heading) records each lane's live status and stamps. I13 remains Deferred under accepted DW-111; DW-159 is open for compile-level external-runtime preflight."
+open-condition: "Stories 8.7–8.9 remain blocked. GATE-KMS and the end-to-end erasure and replica-revocation actions remain open. Round 10 closure evidence applies to its recorded source."
 related:
+  - _bmad-output/planning-artifacts/sprint-change-proposal-2026-11-20.md
+  - docs/architecture.md
   - _bmad-output/planning-artifacts/sprint-change-proposal-2026-07-06.md
   - _bmad-output/planning-artifacts/sprint-change-proposal-2026-07-16-g7-g9-tenant-claims-ownership.md
   - _bmad-output/planning-artifacts/implementation-readiness-report-2026-07-07.md
@@ -21,6 +23,16 @@ related:
 
 **Approved McpCli course correction (2026-09-27):** `Hexalith.McpCli` is the target Hexalith-owned CLI/MCP surface for Parties operations that pass contract enrollment and authorization. Any proprietary module CLI, MCP host, plug-in, or planned adapter described below is an obsolete migration source or historical design, not a new target. The module retains its domain, UI, and security semantics; replacement or approved withdrawal and parity evidence precede retirement. External development CLIs are unaffected.
 
+
+## Release selection and open gates · 2026-11-21
+
+Parties revision `42b27f2e` records Platform **v2.2.4** (`a74abe17`) and the same Builds **v6.4.3** catalog (`dc225a69`) that this Platform release selects. The EventStore source gitlink is `7435254c`. The superproject tree records all eleven source identities. Evaluate package versions for the consuming project and build mode under I4. [Gitlink signoffs](../../../../.gitlink-signoff.tsv) · [Central package selection](../../../../Directory.Packages.props)
+
+| Decision for the next story | Evidence and owner |
+| --- | --- |
+| Preserve the release selection when preparing a private Development catalog. | In Release package mode the Parties host and gateway test host select EventStore `4.2.0`. The attached lifecycle qualification suite selects `5.4.0`. Each selection governs its own build. See I4 and I16. |
+| Keep the Parties AppHost, crypto adapters and UI rollback surfaces. | The [sprint tracker](../../../implementation-artifacts/sprint-status.yaml) records Stories 8.7, 8.8 and 8.9 as blocked. The [November 20 decision](../../sprint-change-proposal-2026-11-20.md) assigns production custody and end-to-end erasure evidence to Parties and the deployment owners. |
+| Use closure receipts only for their recorded revision. | Story 8.10 and Epic 8 closed at `c7dd607b` with six passing Round 10 lanes. Subsequent release qualification uses evidence from the selected source and packages. [Closure receipts](../../../implementation-artifacts/tests/test-summary.md) · [Product qualification](../../../../docs/ci.md) |
 
 ## 1. Purpose & Reconciliation Statement
 
@@ -37,8 +49,9 @@ explicit invariant set and a per-story readiness gate for the remaining work.
 
 **Authoritative spine artifact set (read together):**
 - This document — invariants + readiness gate + blocker closure.
-- `epic-8-context.md` — goal, requirements/constraints, technical decisions,
-  UX conformance rules, cross-story dependencies.
+- [Epic 8 context](../../../implementation-artifacts/epic-8-context.md) — original
+  goal, story scope and cross-story dependencies. For current target framework,
+  projection replay and last-known UI behavior, follow I12, I9 and I10/I14 here.
 - Epic 7 spine (`…/epic-7-platform-alignment-2026-06-29/ARCHITECTURE-SPINE.md`)
   — the platform-adoption boundary Epic 8 continues from.
 - Landed specs 8.1–8.5 (esp. 8.3's platform-API prerequisite matrix) — the
@@ -61,8 +74,8 @@ rule.
 
 The Epic 7 spine is the parent of this one. Its decisions bind here **read-only,
 by their original IDs** — they are not re-derived below, and a local invariant
-that weakens one is a conflict to surface, not an override. The only recorded
-supersession is the gated Authentication/tenant-claims slice named in §2.
+that weakens one requires parent authority. Section 2 identifies the selected
+destinations and the outstanding approval for the tenant-claims and McpCli changes.
 
 | Inherited | From parent (Epic 7 spine) | Binds here |
 | --- | --- | --- |
@@ -74,8 +87,8 @@ supersession is the gated Authentication/tenant-claims slice named in §2.
 | AD-6 Compatibility And Rollback Gates | same | Each story names a rollback (adapter switch, pointer rollback, dual-read, deferred deletion) preserving data, projection state, gateway routes, and PII redaction (I1a, I3, §4 clause 3). |
 | EventStore gateway boundary | parent Inherited Invariants | No public Parties host API; traffic enters via the EventStore gateway (I1, I2). |
 | Consumer self-scope and GDPR privacy | parent Inherited Invariants | Platform adoption never weakens own-data checks, erasure semantics, PII rules, or regulated copy (I6, I7, I8, I14). |
-| Event-sourced projection replay | parent Inherited Invariants | At-least-once replay, duplicate tolerance, last-known fallback, degraded freshness stay mandatory (I9, I10). |
-| Class A shared-anchor boundary | parent Inherited Invariants; `sprint-change-proposal-2026-06-28.md` | Shared anchors are defined once in `Hexalith.Parties.Contracts` and never re-hardcoded in a second project. **Contracts half: fully binding.** Authentication half: superseded, gated (§2). |
+| Event-sourced projection replay | parent Inherited Invariants | Preserve at-least-once replay, duplicate tolerance, safe last-known fallback and degraded freshness under I9/I10. |
+| Class A shared-anchor boundary | parent Inherited Invariants; `sprint-change-proposal-2026-06-28.md` | Define shared anchors once in `Hexalith.Parties.Contracts`. Retain the Authentication rollback surface pending the §2 approval and parity gates. |
 | Submodule governance | parent Inherited Invariants | EventStore, Commons, Memories, FrontComposer, Tenants, and Builds changes require explicit story ownership, non-recursive handling, and release sequencing (I12, §4 clause 2). |
 | Convention — public contracts additive only | parent Consistency Conventions | Removing/renaming contract fields, enum values, shapes, or metadata needs an approved versioning plan (I5, I20). |
 | Convention — logs and telemetry | parent Consistency Conventions | Low-cardinality and PII-free across host, UI, and MCP: no event payloads, party names, identifiers, raw key aliases, destroyed-key details, decrypted values, or unbounded claim-transformation logs (I8 covers the payload half; this row covers the rest). |
@@ -94,22 +107,19 @@ substance and sheds reusable platform mechanics.
 | Tenant-claims **policy** (which claims Parties requires) | Tenant-claim transformation → EventStore.Authentication + Commons ULID helpers (owner decision 2026-07-16; G7/G9) |
 | Domain UI **semantics** (labels, GDPR copy, flows) | Status/freshness/reconcile/grid/picker UI primitives → FrontComposer (G4) |
 | Domain samples; no domain-owned AppHost in the target state | Build-root probing → Builds; reusable security/module helpers → EventStore.Aspire; canonical integrated local topology → FrontComposer.AppHost / approved platform AppHost owner; runtime deploy orchestration → platform-ops |
-| Domain-specific health semantics (which projections must be current for "ready") | Degraded-response middleware and DAPR health-check plumbing → EventStore SDK / Commons ServiceDefaults (G1/G2); the Parties-local copies stay only as the `8.8-runtime-boundary-cleanup` rollback surface |
+| Parties readiness policy for Dapr and Tenants, plus diagnostic health for read models, pub/sub and Memories (I1a) | Degraded-response middleware and Dapr health-check plumbing → EventStore SDK / Commons ServiceDefaults (G1/G2). The Parties-local copies provide the `8.8-runtime-boundary-cleanup` rollback surface. |
 
-Where this table and the Epic 7 spine disagree, this table wins — provided
-the divergence carries recorded SCP or owner authority, as the one on record
-does. That one recorded supersession is the **Authentication / tenant-claims
-slice** of the Epic 7 Class A anchor boundary — not the whole boundary. It is
-approved but gated, not executed (SCP
-`sprint-change-proposal-2026-07-16-g7-g9-tenant-claims-ownership.md`, G7/G9):
-the tenant-claim anchors route to EventStore.Authentication, while
-`Hexalith.Parties.Authentication` remains in-repo as the gated rollback
-surface until `8.8-runtime-boundary-cleanup` proves parity and retires it.
-The **Contracts half is not superseded**: shared anchors stay defined once in
-`Hexalith.Parties.Contracts`, `PartiesClaimTypes.EventStoreTenant` remains a
-compatibility alias until an intentionally versioned public-contract removal
-is approved (I5, I20), and deleting the authentication implementation never
-authorizes a Contracts breaking change.
+The July 16 G7/G9 decision routes tenant-claim transformation to
+EventStore.Authentication and identifier helpers to Commons. The September 27
+course correction routes MCP/CLI presentation to McpCli. The I20 approval row
+for these divergences from Epic 7 is pending. Keep `Hexalith.Parties.Authentication`
+as the rollback surface until the row records parent authority and
+`8.8-runtime-boundary-cleanup` proves consumer parity and exercises rollback.
+Any MCP/CLI retirement also requires the approved replacement or withdrawal
+for the affected surface. Shared anchors remain in `Hexalith.Parties.Contracts`.
+Removal of the `PartiesClaimTypes.EventStoreTenant` compatibility alias
+requires its own I5/I20 versioning approval.
+[G7/G9 routing decision](../../sprint-change-proposal-2026-07-16-g7-g9-tenant-claims-ownership.md) · [Story 8.3 approval table](../../../implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md#i20-approval-table--reconciled-2026-10-05)
 
 **GDPR words vs. UI mechanics.** The GDPR copy Parties KEEPS is the *legal
 vocabulary* — consent vs. lawful basis, restriction, cancellation vs.
@@ -133,20 +143,21 @@ disagree, this table wins.
   controllers/endpoints to that internal host. The ACL has exactly one
   authoritative owner file at any time (today:
   `src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol.parties.yaml`);
-  the fitness gate asserts the authoritative copy as (app ID, verb, policy,
-  action) tuples, and route-list changes require an owner approval recorded in
-  the Story 8.3 matrix reconciliation ledger, referencing this invariant — the
-  list above is the baseline, not a hand-editable ceiling. The deny-default
-  EventStore-only tuple set binds **every** ACL that admits traffic to a
-  Parties domain-service host — the local authoritative file *and* any
-  environment-specific copy `external-runtime-deployment` writes in its owner
-  repository; an external copy that adds an app ID, verb, or route is an I1
-  route-list change and needs the same recorded approval. Fitness asserts the
-  local copy; the external owner attests tuple-equality (or an approved
-  delta) in that deferral's evidence field. Ratified brownfield: the only
-  other ingress is the DAPR pub/sub subscription-delivery endpoint
+  the [declaration check](../../../../scripts/render-platform-declaration.py) verifies its
+  global and caller-policy deny defaults, trust domains, caller app ID and
+  namespace, and each operation’s exact path, HTTP verb and action. The
+  external deployment owner must compare the effective ACL one grant at a time
+  with that canonical policy at the selected revision. Record both identities,
+  defaults and grants in the deployment deferral’s evidence field. Any
+  difference requires an I1 owner decision in the Story 8.3 I20 ledger before
+  use. In the isolated mTLS test profile,
+  record the canonical caller and the exercised `eventstore-<suffix>` caller,
+  session namespace and `public` trust domain. Check the same deny-default
+  verbs and routes under that mapping. Deployment ACL changes require their
+  own I1 approval. [Test identity mapping](../../../../src/Hexalith.Parties.AppHost/DaprMtlsBootstrap.cs)
+  The other ingress is the DAPR pub/sub subscription-delivery endpoint
   `POST /tenants/events` mapped by `MapEventStoreDomainEvents()` — it is
-  subscription delivery, not service invocation, stays outside the tuple
+  subscription delivery, stays outside the service-invocation grant
   list, is not a public API, and adding, removing, or re-exposing it is an I1
   route change. On I1a retirement the authoritative path named above is
   rewritten in this invariant and in the 8.3 ledger in the same changeset as
@@ -157,6 +168,18 @@ disagree, this table wins.
   The target integrated local topology is owned by FrontComposer.AppHost or an
   explicitly approved platform AppHost owner, and the domain AppHost is retired
   only after topology, security, publish, and rollback parity are proven.
+  On the successor receiver, exercise authenticated Dapr application-channel
+  admission for discovery, actor callbacks and Tenants delivery. Canonical
+  gateway operations additionally require a workload assertion for the receiving
+  service and exact operation. Record acceptance and refusal for each channel,
+  including absent or invalid channel credentials and assertions with the wrong
+  caller, service or operation. [Host registration](../../../../src/Hexalith.Parties/Program.cs)
+  Exercise `/ready` with Dapr sidecar and state storage healthy and with each
+  unavailable. Disabled Tenants integration contributes a healthy result.
+  Enabled Tenants must be configured and ready for readiness to pass.
+  With those dependencies healthy, read-model, pub/sub or Memories degradation
+  must appear on `/health` while `/ready` stays healthy.
+  [Health registrations](../../../../src/Hexalith.Parties/HealthChecks/PartiesHealthCheckExtensions.cs) · [Tenants readiness](../../../../src/Hexalith.Parties/HealthChecks/TenantsIntegrationHealthCheck.cs)
   Retirement additionally requires that every accepted deferral whose exit
   proof or rollback names the Parties AppHost (currently
   `8.6-residual-review-debt`, `8.8-runtime-boundary-cleanup` itself, and
@@ -177,7 +200,18 @@ disagree, this table wins.
   already-available surface whose Story 8.3 row records the exact released
   package version or root-declared submodule gitlink SHA selected by the
   consumer. A checked-out source file or `available` status alone is not
-  consumption evidence.
+  consumption evidence. For a source claim, compare the actual checkout with the
+  superproject gitlink and record the revision exercised. Only a clean, matching
+  checkout can support evidence for the pinned source. For each EventStore
+  package consumer, record the evaluated `HexalithEventStoreVersion`.
+  A caller-supplied version takes precedence over catalog defaults. When
+  preparing the private Development catalog, pass the gateway test host's
+  evaluated version to the catalog reader and build it with package references.
+  Bind the reader to the prepared owner and adapter assemblies and their app IDs.
+  Reject differing binaries with the same filename or restored EventStore packages
+  outside the evaluated version. Release builds check resolved EventStore
+  NuGet references against the selected version.
+  [Package guards](../../../../Directory.Build.targets) · [Catalog reader](../../../../src/Hexalith.Parties.AppHost/PartiesDevelopmentCatalogTool.cs)
 
 **Behavior preservation (stable or intentionally versioned)**
 - I5. Public package contracts: `Client` + `Contracts` public shape and the
@@ -204,20 +238,69 @@ disagree, this table wins.
   change it except by an I5 versioning plan recorded in the 8.3 ledger and
   approved (I20) *before* G5 producer adoption; D7 verification and Memories
   cleanup certification consume that same shape.
+  The first committed request for an active party starts a pending erasure.
+  Repeated requests preserve its committed state. Both doors derive terminal
+  status from committed lifecycle events and the persisted verification record.
+  Parties and deployment owners must identify the durable, idempotent consumer,
+  name the retry owner and monitor pending requests against the owner’s operating
+  threshold. Qualification covers cancellation before destruction, failed event
+  append, restart and redelivery through cleanup and redacted reads.
+  A subscriber may acknowledge completed work, a verified completed duplicate,
+  an event explicitly outside its obligations, or a durable handoff that records
+  the operation identity and retry owner. A transient failure before completion
+  or handoff must request redelivery. The owner reconciles exhausted deliveries.
+  This applies to the initial erasure request and downstream `PartyErased`
+  cleanup. Only the committed lifecycle and verification record establish terminal status.
+  [Erasure qualification and ownership](../../sprint-change-proposal-2026-11-20.md)
+  Profile erasure ends current human-actor eligibility immediately. A past
+  action may be attributed only through a separately authorized, tenant- and
+  party-scoped historical query under I8. It conveys no current authority.
 - I8. Protected-payload compatibility: `json+pdenc-v1`, `json-redacted`, legacy
   unprotected reads, key zeroing, typed-unreadable outcomes, no-leak
   diagnostics, Art.20 exports, Art.30 processing records, erasure
   reports/certificates.
+  Before handling real regulated EU personal data, the host must refuse
+  ephemeral key storage outside Development. The deployment owner must prove
+  that a synthetic protected record decrypts and replays after host replacement
+  and on an independent replica using the deployed per-party `IKeyStorageBackend`. After
+  certified destruction, replicas must refuse retired keys, including versioned
+  reads and cache fills overlapping destruction. The provider and deployed
+  worker still require deployment-owner evidence. [GATE-KMS](../../parties-ui-prd.md#deployment-gates) · [Revocation proof](../../sprint-change-proposal-2026-11-20.md)
+  Human-actor attribution history requires custody independent of the profile.
+  Under `party-actor-retention-v1`, access expires at `ValidFrom + 365 fixed days`,
+  measured from binding effectiveness. Deny release at and after that instant,
+  even during cleanup. Restore must check fresh, durable lifecycle evidence
+  before decryption and honor the original expiry and destruction. Production
+  use remains disabled pending qualified custody, all-copy cleanup and restore
+  evidence, and owner compatibility acceptance. [Actor-history retention policy v1](../../actor-history-retention-policy-v1.md)
 
 **Projection/query (survive the SDK migration)**
-- I9. Replay-from-zero on every delivery; per-read-model sequence checkpoints +
-  set-based idempotency; duplicate/out-of-order tolerance.
-- I10. Stale/degraded reads render last-known (never throw on staleness);
-  the Parties compatibility mapping `ProjectionFreshnessMetadata` (Epic 7
-  AD-2) on every read; erased parties excluded from the index, and Party
-  identifiers remain permanently unavailable for reuse after erasure —
-  sequence/checkpoint state must preserve that tombstone under delayed or
-  same-ID events. Target SDK seams: `IDomainProjectionHandler`,
+- I9. Live delivery resumes from each read model’s persisted checkpoint.
+  Order the delivered events by sequence, tolerate equivalent duplicates and
+  fold the contiguous tail once. Conflicts or uncovered gaps cannot advance
+  the checkpoint. Recover missing historical state only from verified history
+  or require a rebuild. A full rebuild folds the complete history into an empty
+  candidate. For the same history, require equivalent domain state and per-party
+  sequence and erasure checkpoints. Reject a candidate that would roll back
+  newer state or lose an erasure tombstone. The shared index version is a
+  diagnostic hint and can restart on rebuild.
+  [Detail fold and rebuild](../../../../src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs) · [Index checkpoints](../../../../src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs)
+- I10. Query handlers apply the Parties `ProjectionFreshnessMetadata` mapping
+  (Epic 7 AD-2) to admitted reads. If canonical storage is unavailable, evict
+  cached active detail and nonempty or unknown indexes and fail the read.
+  Cached erased detail must be redacted again. Absent detail retains the
+  query’s absence outcome. Only a confirmed empty index with intact tracking
+  state can be served from cache. Export and Article 30 queries must admit the
+  party detail before using any processing-record fallback. Clients must honor
+  a denied read even when they hold an older copy. For list and search, an
+  admitted empty page replaces the prior page. The sole reuse case is explicit
+  server confirmation that the same authorized representation is unchanged.
+  Match identity, tenant, operation, query, filters, sort, page and representation
+  validator. A degradation reason or stale age alone cannot authorize reuse.
+  Erased parties stay out of the index, and their IDs
+  stay unavailable for reuse under delayed or same-ID events.
+  [Query admission](../../../../src/Hexalith.Parties/Queries/PartySdkQueryService.cs) · [Cross-replica outage cases](../../../../tests/Hexalith.Parties.Tests/Gateway/PartySdkCrossInstanceErasureTests.cs)
+  Target SDK seams: `IDomainProjectionHandler`,
   `IDomainQueryHandler`, `IReadModelStore`, `IQueryCursorCodec`, plus the
   static write-policy helper `ReadModelWritePolicy`. A full rebuild is
   executed and verified against aggregate replay before local code deletion.
@@ -227,32 +310,43 @@ disagree, this table wins.
   G6 envelope once `available`; until then the spec-8-6 three-state production
   dialect is the only legal emitter: `ProjectionFreshnessStatus` produces only
   `Current` / `Stale` / `Unavailable` (the other enum members stay for wire
-  compatibility), a store outage is `Stale` carrying the
+  compatibility), an admitted degraded result is `Stale` carrying the
   `projection-state-store-unavailable` warning code, and the degraded flag
   rides the EventStore `QueryResponseMetadata` that Parties maps from — and a
   UI consumer (G4-B) may bind only to that named shape version. Presence of
   `ProjectionFreshnessMetadata` without a named grammar is not I10 compliance.
 
 **Identifier, build, UI, GDPR copy, scope**
-- I11. Stop rejecting valid ULID-compatible aggregate IDs; retain replay compat
-  for GUID-shaped IDs; use Commons unique-ID helpers where semantics require.
-  **Format acceptance is not allocation:** today's `IdentifierValidator` and,
-  once the G9 additive APIs are `available`, `UniqueIdHelper.IsValidUlid` /
-  `AggregateIdentity.IsValid` decide shape only; allocation of an aggregate ID
-  that is tombstoned under I10 is rejected at the command handler with a typed,
-  stable outcome, reading tombstone state from aggregate/event-stream state —
-  never from a class-(a) read model that I10 permits to be stale — and
-  helpers are never wired as the sole create-time gate. I10 wins on reuse.
-- I12. Build discipline unchanged: .NET 10, `.slnx` only, CPM, warnings-as-
-  errors, xUnit v3 / Shouldly / NSubstitute / bUnit, Playwright a11y where UI
-  is touched, root submodules only, MinVer.
+- I11. Preserve ULID-compatible IDs and GUID-shaped legacy replay.
+  `PartyIdentifier.IsValid` checks the format. Allocation uses aggregate
+  creation evidence (`HasBeenCreated` or the legacy party type). After
+  format and provisioning checks, an ordinary create retry against an
+  already-created party emits no events, including after erasure. The simple
+  handler returns `NoOp` and the composite handler returns an empty result.
+  G9 helper adoption must preserve this behavior and I10’s permanent ban on
+  reuse. A distinct tombstone rejection requires an explicit compatibility
+  decision and tests for both commands. [Create handlers](../../../../src/Hexalith.Parties/Domain/PartyAggregate.cs)
+- I12. Build Parties for `net11.0` using the SDK selected by `global.json`
+  (`11.0.100`, latest patch roll-forward). Use `.slnx`, CPM, warnings-as-errors,
+  xUnit v3 / Shouldly / NSubstitute / bUnit, Playwright a11y for UI changes,
+  direct submodules only, and MinVer.
 - I13. UI: Fluent 2 inheritance; purge FAST/v4 tokens; teal accent non-text
   only, filled actions bind AA-safe brand background; WCAG 2.2 AA contracts
   (keyboard/pointer parity, skip links, focus rings, forced-colors,
   reduced-motion, semantic controls, typed destructive confirmation,
   polite/assertive live-region split, no focus-stealing on optimistic updates).
 - I14. GDPR copy honesty: no consent dark patterns, no over-promised export
-  latency, cancellation-vs-permanence distinction, stale reads show last-known.
+  latency, cancellation-vs-permanence distinction. For a denied read, clear
+  previously displayed personal data and show the query’s unavailable or
+  absent outcome. For an admitted empty page, replace prior rows, counts and
+  paging with the admitted result and clear detail from the superseded result.
+  Preserve rows only on I10’s explicit confirmation of an unchanged representation.
+  Story 8.9 must cover denial, an authoritative empty result (including a changed
+  query with degradation metadata), and confirmed unchanged results in bUnit
+  for both list and search. The existing degraded-empty search test expects the
+  old row to remain. UI parity stays open until the component and tests implement
+  the rule and any I18 successor approval is recorded.
+  [Component](../../../../src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor) · [Component tests](../../../../tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs)
   The legal strings that carry these distinctions have exactly one source —
   Parties (§2 "GDPR words vs. UI mechanics"); a shared FrontComposer primitive
   renders them, never defines them.
@@ -309,7 +403,7 @@ disagree, this table wins.
 
 **Persistence class, policy ownership, approval record (added 2026-09-08 after
 spine validation)**
-- I19. Persistence class: every persisted store is exactly one of **(a)** an
+- I19. Each store of projection or operational records is either **(a)** an
   event-derived read model — rebuildable from zero, subject to I9/I10
   rebuild-vs-replay verification — or **(b)** an operational side-effect
   ledger — records effects outside the event stream, is never rebuilt from
@@ -317,12 +411,23 @@ spine validation)**
   carries its own consistency tests, named in the activating spec and
   approved (I20) before they become I18 baseline surfaces. Retention across
   rebuilds is not retention across erasure: a class-(b) ledger holding
-  personal data still obeys I7/I8. Every store an Epic 8 spec touches names
-  its class in that spec. `PartyMemoryUnitMappingStore` is class (b): DW-81
-  may place it behind an EventStore persistence seam only if that seam has no
-  rebuild-from-replay semantics (so not `IReadModelStore` /
-  `ReadModelWritePolicy` nor any seam a rebuild can overwrite), or the store
-  is explicitly reclassified with its own parity evidence and an I20 approval.
+  personal data still obeys I7/I8. Each activating spec names the class of
+  every such store it touches. Treat `PartyMemoryUnitMappingStore` as class (b).
+  DW-81 shipped conditional reads, writes and deletes through the EventStore
+  SDK’s `IReadModelStore`. Projection rebuilds must never replace or purge
+  its mapping keys. Cleanup must preserve outstanding obligations across
+  conflicts and retries. Before a migration relies on this interface, the
+  Parties and EventStore owners must record in I20 whether it satisfies the
+  ledger contract or requires a dedicated interface, and approve tests for
+  rebuild exclusion, concurrent updates and exact cleanup. The row is pending.
+  [Mapping store](../../../../src/Hexalith.Parties/Search/PartyMemoryUnitMappingStore.cs) · [DW-81 evidence](../../../implementation-artifacts/deferred-work-archive.md#dw-81-move-the-memories-mapping-ledger-behind-eventstore-persistence)
+  The per-party key provider is authoritative for key versions, wrapping
+  metadata and destruction. Projection replay must never recreate, replace or
+  delete custody state. Before provider migration, Parties security/privacy
+  and the deployment/key-storage owner must record which I19 rules apply and
+  which tests qualify the provider in the I20 ledger. I8 and GATE-KMS govern
+  restart, independent replica and revocation proof. That decision remains open.
+  [Custody contract](../../../../src/Hexalith.Parties.Contracts/Security/IKeyStorageBackend.cs)
 - I19a. Policy oracle: there is exactly one writer of erasure-in-progress,
   Art.18 restriction, personal-data classification, and lawful basis — the
   Parties aggregate and GDPR policy types. `IPersonalDataPolicy` and
@@ -339,7 +444,7 @@ spine validation)**
   hook-vs-engine classification, I5 intentional versioning, I7 certificate
   versioning and erasure-door changes, I10 freshness-dialect change, I16
   identity re-validation, I17 activation handover, I18 successor test, I19
-  reclassification and class-(b) test set, I19a G5 reclassification, and any
+  reclassification, class-(b) test set and custody disposition, I19a G5 reclassification, and any
   §2 divergence from the Epic 7 spine — is decidable only as a row in the
   Story 8.3 matrix reconciliation ledger's **approval table**: decision,
   artifact, named human, date, written by that human or the reviewer gate,
@@ -363,10 +468,14 @@ itself:
    PolymorphicSerializations / Builds) + any external owner repository (e.g.
    the `external-runtime-deployment` deployment repo) it edits. An omitted
    edited repository makes the spec incomplete.
-3. **Rollback path** — which local code stays until parity, how to revert, and
-   evidence the revert was **exercised once**: build + the named I18 surfaces
-   green on the reverted tree *at the I16 identity the spec's parity evidence
-   is stamped with*. A later spec that edits a prior slice's Parties paths
+3. **Rollback path** — name the retained code, describe how to revert and
+   exercise the revert once. Build and run the named I18 checks on the
+   reverted tree. For an adapter switch at fixed dependencies, use the same
+   I16 dependency identities for forward and rollback runs. For a package or
+   gitlink rollback, record both the forward and restored identities and stamp
+   each run with the versions or SHAs it exercised. The forward deletion gate
+   still requires parity at the identity selected for merge (I16).
+   A later spec that edits a prior slice's Parties paths
    must re-exercise or explicitly supersede every still-live rollback path it
    disturbs, recorded in both specs.
 4. **Validation lanes** — the specific xUnit v3 assemblies (run directly, not
@@ -392,15 +501,21 @@ exactly as it bound the stories, **and binds every `deferred-work.md` ledger
 item whose `source_spec`, `origin`, `authored_by_spec`, or `reason` names an
 accepted closure deferral, a `spec-8-x` file, or a Story 8.x story file
 (`8-x-…md`), and every item that deletes or replaces a surface that a
-deferral's rollback clause or a §7 row names** — the last test is by touched
-file, so a child with no parent spelled out is still bound (today DW-81/82/86,
-DW-100, DW-101, DW-104, DW-111 among others). Children are not independently
-schedulable: a child inherits the slot of its parent deferral; a child with
-two parents takes the later slot; a child whose parent is 8.10–8.13 or
-`external-runtime-deployment` (neither in the four-slot order) takes the slot
-of the earliest accepted deferral whose rollback, exit proof, or §7 row names
-a surface it touches, and if none does it runs after 8.9. No child may start
-before its slot's predecessors have closed. Two items may execute concurrently only if their §4
+deferral's rollback clause, exit proof or a §7 row names** — the last test is by touched
+file. Assign each bound item a slot before work starts.
+
+- A child inherits its declared parent’s slot. For a parent in 8.10–8.13 or
+  `external-runtime-deployment`, use the earliest accepted 8.6–8.9 deferral
+  whose rollback, exit proof or §7 evidence names a touched surface. With no
+  match, use the slot after 8.9. For multiple declared parents, take the latest
+  of their individually resolved slots.
+- For a child with no declared parent, list **all** accepted 8.6–8.9 deferrals
+  whose rollback, exit proof or §7 evidence names a touched surface. Take the
+  latest matching slot so every affected predecessor has closed. If none
+  matches, run after 8.9. Record the surfaces, matches and slot in the activating
+  spec. The recorded deferral owners resolve unclear mappings before work starts.
+
+No child may start before its slot’s predecessors have closed. Two items may execute concurrently only if their §4
 clause-2 touched-repo sets (beyond Parties itself, which every set contains)
 and their clause-6 parity-checklist sets are disjoint, where clause-6
 disjointness is computed from the §7 invariants the *touched files* actually
@@ -415,7 +530,7 @@ by §4 (per-spec readiness gate) rather than by the absence of this document.
 
 ## 7. Story 8.10 Closure Evidence Map — 2026-10-05 (baseline 2026-08-18)
 
-**Current-map reconciliation — 2026-10-26:** DW-96 is complete; the four
+**Map reconciliation at 2026-10-26:** DW-96 is complete; the four
 remaining accepted open umbrellas stay unchanged. I2/I7/I9/I10 now identify
 executable guards for retained behavior, with the passing package and configured
 runtime receipts linked below. Migration parity remains separately gated.
@@ -423,13 +538,16 @@ DW-50 writer drain and historical reconciliation, DW-82, DW-168 and independent
 migration, publication and deployment obligations remain open; every retained
 rollback seam remains in place. Dated identity and approval receipts are unchanged.
 
-The following map records the current Epic 8 disposition; closure remains open. “Executable” means the
-retained implementation is guarded by a named automated test surface;
-“deferred” means the current path remains the rollback surface and the accepted
-entry in `deferred-work.md` owns the future exit proof. No deferred item is
-represented as delivered. Map corrected 2026-08-18 after spine validation
-(§8); the I4 identity caveat below is the open closure condition that
-sprint-status tracks.
+Read the following map at the closure revision. “Executable” means a named
+automated test guarded the retained implementation at that revision;
+“deferred” means the current path remains the rollback surface and the listed deferral owned the exit proof at closure. Commit `0f261ccd`
+retired the story-status and receipt tests, including `EpicEightClosureFitnessTests`
+and `PlatformApiPrerequisitesTests`. Their names preserve the I18 baseline.
+CAP-1 records the committed August baseline at `2b63ab9` and the six final
+Round 10 receipts at `c7dd607b`. Before a new deletion
+relies on a retired witness, the story owner must identify an executable
+product check covering the same behavior, obtain I20 approval for the I18
+successor and run it at the selected identity. [Epic 8 SPEC](../../../specs/spec-epic-8-domain-focus/SPEC.md)
 
 <!-- epic-8-invariant-map:start -->
 | Invariant | Disposition | Executable evidence or accepted deferral |
@@ -438,7 +556,7 @@ sprint-status tracks.
 | I1a | Deferred | `8.8-runtime-boundary-cleanup` retains the Parties AppHost until integrated-topology, security, publish, and rollback parity exist. Retirement additionally requires requalifying completed DW-96 (`8.6-residual-review-debt`) host/gateway/ACL proof against the successor topology under I20 and the open `8.8-runtime-boundary-cleanup` / `external-runtime-deployment` owners. Every deferral whose exit proof or rollback names the Parties AppHost must pass or be re-approved (I20) against that successor; successor-topology parity remains required. |
 | I2 | Executable | `RetiredLeafProjectFitnessTests` guards the retained EventStore SDK host shape and retired leaf boundaries; `EventStoreGatewayE2ETests` executes authenticated handler discovery, exact projected detail and persisted event-envelope checks in the explicitly configured isolated topology. DW-96 closure receipts are in `_bmad-output/implementation-artifacts/tests/five-published-sdk-and-runtime-closure-2026-10-26/`; original-name coexistence and independent deployment gates remain separate. |
 | I3 | Deferred | `8.8-runtime-boundary-cleanup` retains the host/gateway/ACL switch-back seams after DW-96 proof completion; together with `8.7-data-protection-extraction` and `8.9-frontcomposer-ui-consolidation`, it retains every named local rollback path until parity is executable. `external-runtime-deployment` retains the release-recovery rollback path and successor-topology requalification. All existing retirement, I20 approval and parity gates remain required. |
-| I4 | Executable | `PlatformApiPrerequisitesTests` proves committed root gitlinks via `git ls-tree HEAD` plus clean matching checkouts and package/source graphs separately. The current source/package set is approved by Administrator / jpiquot in the 2026-11-02 DW-182 I20 rows (Tenants successor explicitly confirmed at the spec 8.10 Round 9 review); the 2026-11-01 I20 row is dated history, and selection does not revalidate parity. The dated 2026-10-05 set (8.3 I20 rows for decisions 1 and 2) recorded separately: EventStore package `3.113.0` (Parties pre-import CPM pin) and source `865cd9e49273dffbb1cdae85efeaf1aac322e09e` (tag `v3.113.0`, the same release); Builds `360a2b9c4e96809365a7de785be9a68152d5ac28`; Tenants `72b8e4f508176b69826549e87b7b2a286f607fd1` / package `5.7.0`; Commons HTTP `116d26815eb81e35b3c161e1799e5ee12805fc0a` / package fallback `2.30.1`; FrontComposer `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470` / package `4.5.0`; Memories `5b43fe2f8a0f04dc021921a077dff1a573c2ce5e` / package `2.27.1`; PolymorphicSerializations `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375`; AI.Tools `3f194e17174994d308ec84af9ee2b5aa68674d0d`. Every root gitlink in the final set is committed: EventStore `865cd9e49273dffbb1cdae85efeaf1aac322e09e` in Parties `75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6`, the other seven were already committed at Parties `47e2da3244fd7d6d14e39bc30513b23504e9bc27`, so `git ls-tree HEAD references/` records all eight and the committed-tree guard is green. Dated history: never-approved committed EventStore `547c938d52e4fd31b47783b9dd032528a5100549` / `0dc44e46ccb7f56c3182b855c21f337173a1307f` and Tenants `b55f96d89b839fd443ac589835880102add46d64`; superseded, never-committed 2026-10-04 approvals of EventStore `2242ad55a1b678828df8aa093fd92399c29af5bf` and Tenants `04e655cf070b17eced9daefb9eaa87a09ec60e81`; the superseded 2026-10-04 Builds `145ae921d9032f110b7371614939559e0aee202a`, three-pin, and Round 6 selections. Source presence/compile and selection signoff do not certify parity. |
+| I4 | Executable | `PlatformApiPrerequisitesTests` proves committed root gitlinks via `git ls-tree HEAD` plus clean matching checkouts and package/source graphs separately. The then-selected source/package set was approved by Administrator / jpiquot in the 2026-11-02 DW-182 I20 rows (Tenants successor explicitly confirmed at the spec 8.10 Round 9 review); the 2026-11-01 I20 row is dated history, and selection does not revalidate parity. The dated 2026-10-05 set (8.3 I20 rows for decisions 1 and 2) recorded separately: EventStore package `3.113.0` (Parties pre-import CPM pin) and source `865cd9e49273dffbb1cdae85efeaf1aac322e09e` (tag `v3.113.0`, the same release); Builds `360a2b9c4e96809365a7de785be9a68152d5ac28`; Tenants `72b8e4f508176b69826549e87b7b2a286f607fd1` / package `5.7.0`; Commons HTTP `116d26815eb81e35b3c161e1799e5ee12805fc0a` / package fallback `2.30.1`; FrontComposer `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470` / package `4.5.0`; Memories `5b43fe2f8a0f04dc021921a077dff1a573c2ce5e` / package `2.27.1`; PolymorphicSerializations `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375`; AI.Tools `3f194e17174994d308ec84af9ee2b5aa68674d0d`. Every root gitlink in the final set is committed: EventStore `865cd9e49273dffbb1cdae85efeaf1aac322e09e` in Parties `75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6`, the other seven were already committed at Parties `47e2da3244fd7d6d14e39bc30513b23504e9bc27`, so `git ls-tree HEAD references/` records all eight and the committed-tree guard is green. Dated history: never-approved committed EventStore `547c938d52e4fd31b47783b9dd032528a5100549` / `0dc44e46ccb7f56c3182b855c21f337173a1307f` and Tenants `b55f96d89b839fd443ac589835880102add46d64`; superseded, never-committed 2026-10-04 approvals of EventStore `2242ad55a1b678828df8aa093fd92399c29af5bf` and Tenants `04e655cf070b17eced9daefb9eaa87a09ec60e81`; the superseded 2026-10-04 Builds `145ae921d9032f110b7371614939559e0aee202a`, three-pin, and Round 6 selections. Source presence/compile and selection signoff do not certify parity. |
 | I5 | Executable | `ContractsPublicApiSnapshotTests`, `ClientPackageTests`, `PartyPickerPackagingTests`, `AdminPortalPackagingTests`, and `ConsumerPortalPackagingTests` preserve the public package surface. |
 | I6 | Executable + Deferred | `EventStoreGatewayRoutingTests`, `HttpPartiesQueryClientTests`, and `SelfScopedPartiesClientTests` preserve command/query behavior and self-scope; `8.8-runtime-boundary-cleanup` owns future shared-helper adoption. |
 | I7 | Executable | `PartyAggregateConsentTests`, `PartyAggregateErasureTests`, and `ErasureVerificationServiceTests` guard retained consent, restriction, certificate and erasure behavior. Story 8.6 residual review is resolved under DW-96; DW-82 authoritative inventory and DW-168 live physical-erasure qualification remain open, alongside shared-provider migration, publication and deployment gates. |
@@ -447,7 +565,7 @@ sprint-status tracks.
 | I10 | Executable | `PartySdkQueryHandlerTests` and `ProjectionFreshnessAndDegradationTests` guard retained rebuild, freshness mapping, search bounds, stale reads, erased indexes, tombstones and historical wire compatibility. DW-96 residual review is resolved; DW-82, DW-168 and independent migration/publication/deployment qualification remain open. |
 | I11 | Executable + Deferred | `IdentifierHygieneFitnessTests` bans GUID-parser regressions; `IdentifierValidatorTests` preserves both ULID-compatible acceptance and GUID-shaped replay acceptance; `PartyAggregateCompositeTests` exercises ULID party IDs through the aggregate; `8.8-runtime-boundary-cleanup` owns future Commons-helper adoption and the command-handler tombstone-allocation refusal. |
 | I12 | Executable | `DocumentationFitnessTests` and `PartiesContainerPublishWorkflowTests` pin the runnable lanes and publication contract; warning, restore, Release build, package, consumer, typecheck, and Playwright receipts remain mandatory closure gates (the always-on CI Playwright a11y lane is a separate open ledger item). |
-| I13 | Deferred (parity not yet discharged) | `MainLayoutAccessibilityTests` (asserting the FrontComposer shell slice — skip links and landmarks — adopted 2026-08-18 under the 2026-08-19 backfill SCP) and `PartiesAccessibilitySpecimenTests` guard the retained UI, but I13 parity is NOT discharged: the app-owned focus-visible, forced-colors, and reduced-motion rules are now scoped under `.parties-main-content` (isolation repair) but are still verified only by source greps, not observed at runtime (DW-111), and the Playwright receipt focuses only the shell skip link, never a content control; residual FAST/v4 tokens remain in retained RCL CSS. `8.9-frontcomposer-ui-consolidation` owns the remaining shared-primitive slices, the token purge, and this open runtime-observation gap. On 2026-10-05 Administrator / jpiquot accepted the missing runtime content-control focus, forced-colors, and reduced-motion proof as the named DW-111 deferral owned by `8.9-frontcomposer-ui-consolidation` (8.3 I20 row) for Story 8.10 closure; the acceptance is a waiting contract and does not discharge I13. |
+| I13 | Deferred (parity not yet discharged) | `MainLayoutAccessibilityTests` and `PartiesAccessibilitySpecimenTests` guard the retained shell and UI. The October 5 I20 decision accepted DW-111 as a closure deferral. Its October 21 browser evidence covers content focus in normal and forced colors and reduced motion. Story 8.9 still owns shared-primitive and token-purge parity for the remaining UI. [DW-111 resolution](../../../implementation-artifacts/deferred-work-archive.md#dw-111-observe-app-owned-content-focus-and-reduced-motion-css-at-runtime-not-as-source-greps) |
 | I14 | Executable + Deferred | `MyConsentPageTests` and `MyPrivacyPageTests` guard GDPR copy and stale-read honesty; `8.9-frontcomposer-ui-consolidation` owns the remaining shared-copy consolidation (shell slice already adopted 2026-08-18). |
 | I15 | Executable | `EpicEightClosureFitnessTests` verifies that Epic 8 changes no PRD functional-requirement artifact and cannot be reported as MVP feature delivery. |
 <!-- epic-8-invariant-map:end -->
@@ -463,8 +581,8 @@ silent omission, and so the map's row set stays exactly the set the closure
 fitness test parses.
 
 - **I16 (identity-stamped parity) — partially executable.**
-  `PlatformApiPrerequisitesTests` is I16 enforcement: it verifies package and
-  source selection separately and pins each retained identity. Its residual gap
+  At closure, `PlatformApiPrerequisitesTests` verified package and source
+  selection separately and pinned each retained identity. Its residual gap
   is that identity re-opening is a review-time obligation, not something a test
   can observe. Owner: whichever story changes a retained identity. On
   2026-10-05 Administrator / jpiquot approved I16 identity re-validation for the
@@ -493,11 +611,11 @@ fitness test parses.
   `4d0d599879767196928e1c265622483a62b457ae`; the owner approved that
   exact successor for current-selection assertions and gitlink signoff.
   The initial Tenants `4b3e431745550f8466f1ce0d70e6b507c747b59a`
-  selection is dated history; the other nine gitlinks and effective package
-  graph remain selected. The six lanes passed at Parties `56fc3b73` with
+  selection is dated history. The other nine gitlinks and effective package
+  graph stayed at their then-selected identities. The six lanes passed at Parties `56fc3b73` with
   the pinned v2 tokens above; that qualification is dated history. The
-  canonical `tests/test-summary.md` table records each lane's current live
-  status and stamp.
+  final Round 10 table in `tests/test-summary.md` records the six Pass results
+  and stamps committed at closure.
   Every current clean Pass must bind the live v2 snapshot and dependency set.
   Once Story 8.10 is committed `done`, closure evidence, both digests and the
   FrontComposer gitlink are verified against the Git objects of the commit
@@ -513,11 +631,11 @@ fitness test parses.
   vocabulary added 2026-08-19 (`authored_by_spec` / `activated_by_spec` /
   `delivered_slices`) makes the waiting-versus-working distinction legible so
   that a reviewer can check it. Owner: the spec author and the reviewer gate.
-- **I18 (parity baseline) — process gate, not executable.** The baseline is the
-  §7 map as of closure commit `2b63ab9`. `InvariantMapCoversI1ThroughI15WithExecutableOrDeferredEvidence`
-  checks that every named surface still resolves to a class under `tests/`, which
-  is a necessary but not sufficient guard: it cannot tell whether a surface was
-  weakened rather than deleted. Owner: the reviewer gate.
+- **I18 (parity baseline) — review gate.** The §7 baseline is frozen at
+  `2b63ab9`. At closure, `InvariantMapCoversI1ThroughI15WithExecutableOrDeferredEvidence`
+  checked that the named classes existed under `tests/`. That test retired
+  with its suite at `0f261ccd`. The reviewer checks behavior coverage against
+  the baseline and the I20 row for any proposed successor.
 
 No executable-evidence claim is made for I17 or I18, and none should be
 manufactured — a test asserting that a document contains its own wording is not
@@ -525,12 +643,11 @@ evidence.
 
 ### 7b. Disposition of I19–I20 — added 2026-09-08
 
-- **I19 (persistence class) — process gate until first activation.** No store
-  is reclassified today; `PartyMemoryUnitMappingStore` remains the DAPR-backed
-  operational ledger it is. The first spec that touches any store (DW-81 in
-  `8.6-residual-review-debt`, or 8.7) names each store's class and, for class
-  (b), adds the consistency tests that become its I18 baseline surface. Owner:
-  the activating spec author and the reviewer gate.
+- **I19 (persistence class) — owner approval pending.** DW-81 completed on
+  October 23 with SDK/Dapr compatibility and two-client conflict evidence.
+  The ledger remains operational across rebuilds. The activating spec must
+  identify the affected storage operations and secure the I20 classification
+  and test-set decision before citing its tests as I18 migration evidence.
 - **I19a (policy oracle) — blocked on the 8.3 G5 row.** G5 is still
   `needs-additive-api`; the row must be amended (drop or reclassify
   `IPersonalDataPolicy` / `IErasureStateProvider`) with an I20 row before 8.7
@@ -581,13 +698,12 @@ re-opens it. A row here is a scheduled decision, not permission to diverge.
 
 | Deferred decision | Owned by | Revisit when |
 | --- | --- | --- |
-| Production key-backend / KMS choice and key-ring topology (Parties `DaprXmlRepository` vs G5 KMS vs successor AppHost statestore) | `8.7-data-protection-extraction` spec, `external-runtime-deployment` | First 8.7 activation spec is authored; must declare the backend and the I8 `pdenc` readability window before any crypto deletion. |
-| Infra / provider strategy and environment topology beyond local Aspire | `external-runtime-deployment` | Its activation spec; the spine binds only I1 tuples and I1a parity, not the provider. |
-| Key-ring, cursor, and DataProtection payload continuity across the AppHost cutover (I1a parity list) | **One decision** recorded once in the 8.3 ledger (I20) and binding both `8.7-data-protection-extraction` (key backend) and `8.8-runtime-boundary-cleanup` (successor topology) | Whichever of the two activation specs is authored first: either prove the successor unprotects predecessor payloads (cursor purposes included) or declare the invalidation window and the user-visible `InvalidCursor` / typed-unreadable behavior; the second spec inherits that row. |
+| Provider for per-party encryption keys (`IKeyStorageBackend`) | `8.7-data-protection-extraction` spec, `external-runtime-deployment` | Record the I19 custody disposition and test scope under I20 before provider migration. Qualify the deployed backend under GATE-KMS and I8 before regulated-data go-live. Before any crypto deletion, the 8.7 spec must declare the `pdenc` readability window. |
+| Infra / provider strategy and environment topology beyond local Aspire | `external-runtime-deployment` | Its activation spec names the provider and topology. They must preserve the I1 ACL, I1a rollback and the I7/I8 erasure, custody and revocation guarantees. |
+| ASP.NET Core Data Protection key-ring, cursor and payload continuity across the AppHost cutover (I1a parity list) | **One decision** recorded once in the 8.3 ledger (I20) and binding both `8.7-data-protection-extraction` (key backend) and `8.8-runtime-boundary-cleanup` (successor topology) | Whichever of the two activation specs is authored first: either prove the successor unprotects predecessor payloads (cursor purposes included) or declare the invalidation window and the user-visible `InvalidCursor` / typed-unreadable behavior; the second spec inherits that row. |
 | FAST/v4 token purge and a token-purity guard for retained RCL CSS | `8.9-frontcomposer-ui-consolidation` | Its activation spec; I13 stays Deferred until the purge is executable. |
-| Fluent UI Blazor V5 GA `5.0.0` is selected | Builds catalog, I13 | The catalog has reached GA; I13 parity/token-purge gates remain open at the selected identity. |
-| `EventStoreGatewayE2ETests` is a silent no-op without Docker/DAPR | `8.6-residual-review-debt` | Its topology proof: convert to an explicit skip or run in the topology lane. |
-| Epic 7 parent Stack table (SDK `10.0.302`, Dapr `1.18.4`, Aspire `13.4.6`, Fluent RC3) is behind live pins (`10.0.401` / `1.18.10` / `13.6.0` / Fluent `5.0.0`) | Epic 7 spine (parent) | An Epic 7 spine update; this child does not override the parent's seed, and I12 deliberately names no patch pins. |
+| Remaining Fluent UI V5 accessibility parity | Story 8.9, I13 | Recheck affected controls at the selected package and source identities when adopting a shared primitive. |
+| Epic 7 parent stack snapshot | Epic 7 spine (parent) | Refresh on the next parent revision. For current Parties builds, use I12 and the project’s evaluated package graph. |
 | 8.3 historical G5 retained-pair wording | Story 8.3 matrix owners | Resolved 2026-10-04: the G5 cell labels both old pairs as dated inspection receipts; the current 8.10 graph is recorded separately. G5 itself remains needs-additive-api. |
 
 ## 10. Validation & Amendment Record — 2026-09-08

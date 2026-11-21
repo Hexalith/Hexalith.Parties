@@ -31,16 +31,16 @@ Broker-specific production Dapr components are environment-owned deployment asse
 
 Before implementing any handler, ensure these rules are followed:
 
-1. **Always return 200 OK** — even for duplicates, unknown events, and missing aggregates. DAPR retries on non-2xx responses, causing redelivery loops.
-2. **Implement idempotent deduplication** — use `ConcurrentDictionary<string, bool>` keyed on the CloudEvents `id` header, with a `{correlationId}:{sequenceNumber}` fallback for local testing.
+1. **Acknowledge completed work.** Return success after committing the effect, verifying a completed duplicate, or handing the operation durably to a named retry owner. If a transient failure precedes that point, request redelivery. The owner reconciles exhausted retries. [Dead-letter policy](event-publishing.md#dead-letter-topic-setup)
+2. **Make redelivery safe.** Use a stable operation identity and persist completion with the effect, or persist an idempotent handoff. The sample tracks IDs in memory for local testing. Recording receipt alone cannot establish completion after a failure or restart.
 3. **Guard aggregate sequence** — store the highest processed `sequenceNumber` per aggregate and skip or reconcile older events, especially when the broker or subscriber deployment cannot prove per-aggregate ordering.
-4. **Use order-tolerant projection updates** — prefer idempotent `set` operations over incremental `delta` operations.
+4. **Make accepted updates idempotent.** Apply absolute assignments only after checking the sequence and erasure tombstone. A delayed update must never restore erased data.
 5. **Do NOT log event payloads** — structured logging with correlation IDs only (Security Rule #5). Event payloads may contain personal data.
-6. **Handle unknown event types gracefully** — log and return 200 OK.
+6. **Acknowledge unsupported events only when they fall outside the subscriber’s obligations.** Consumers holding party references must process `PartyErased`.
 7. **Normalize event type names before dispatch** — published CloudEvents usually carry fully qualified .NET type names such as `Hexalith.Parties.Contracts.Events.PartyCreated`, so convert them to their short names before switching on them.
 
 ```csharp
-// Idempotent deduplication pattern
+// Local sample with in-memory state. For durable processing, use rules 1–2 above.
 if (!_processedEventIds.TryAdd(eventId, true))
 {
     logger.LogInformation("Skipping already-processed event {EventId}", eventId);
@@ -414,11 +414,11 @@ default:
 >
 > If your application stores **any** reference to a party ID — whether as a foreign key, a display name cache, a search index entry, or any other form — you **must** handle `PartyErased` to remain GDPR-compliant.
 
-### MVP Soft Deactivation vs. Future Erasure
+### Historical MVP Soft Deactivation vs. Future Erasure
 
 MVP delete operations are soft deactivations. They publish lifecycle state such as `PartyDeactivated`; they do not perform GDPR legal erasure, crypto-shredding, or subscriber cleanup. Treat `PartyDeactivated` as an active/inactive business-state change, not as permission to purge or anonymize records.
 
-`PartyErased` is the future v1.1 cleanup signal. It is emitted only after the Parties service has completed the erasure workflow and destroyed or made unrecoverable the party personal-data key. Until v1.1 GDPR features are explicitly active, follow the [MVP Compliance Boundary](getting-started.md#mvp-compliance-boundary): use synthetic data, stop using any accidental sensitive dataset, and follow operator manual deletion or environment rebuild procedures. Do not treat the MVP as an erasure-complete system.
+The service now publishes `PartyErased` as the downstream cleanup signal. Production key custody and end-to-end erasure still require deployment qualification. Use synthetic data until qualification. For accidentally loaded sensitive data, follow the operator’s manual deletion or environment rebuild procedures. [MVP Compliance Boundary](getting-started.md#mvp-compliance-boundary) · [Deployment gates](../_bmad-output/planning-artifacts/parties-ui-prd.md#deployment-gates)
 
 ### Background
 
@@ -478,7 +478,7 @@ When implementing your `PartyErased` handler, verify:
 - [ ] Display names are replaced with `"[Erased Party]"` (not deleted)
 - [ ] Records with independent legal retention are preserved (invoices, contracts, audit logs)
 - [ ] The erasure is logged for audit trail (party ID only, no personal data)
-- [ ] The handler returns 200 OK even if no local records are found (idempotent)
+- [ ] A completed scan confirming no local references can be acknowledged. A failed scan requests retry unless a durable handoff has taken responsibility.
 
 ### Testing Strategy
 
@@ -623,7 +623,7 @@ public sealed record ContactChannelUpdatedPayload
 The Hexalith.Parties event contract evolves additively:
 
 1. **New optional fields** may be added to existing event payloads. Existing subscribers ignore them (see [Unknown Field Handling](#unknown-field-handling)).
-2. **New event types** may be introduced. Existing subscribers receive them in the `default` switch case and return 200 OK.
+2. **New event types** may be introduced. The default case may acknowledge events that the subscriber has no obligation to handle.
 3. **Existing fields are never removed or renamed.** This guarantees backward compatibility.
 
 ### Tolerant Reader Pattern Example
@@ -652,9 +652,9 @@ T? payload = JsonSerializer.Deserialize<T>(payloadJson, _jsonOptions);
 
 **`PartyMerged` (v2):** Already present in the contracts as a placeholder. Current subscribers acknowledge it without processing. When v2 ships, subscribers add a handler in the `switch` statement — no breaking changes.
 
-**`PartyErased` (v1.1):** Will arrive as a new event type. Subscribers without a handler will hit the `default` case and return 200 OK. Subscribers that have implemented the [PartyErased handler](#partyerased-handler-mandatory) will process it immediately.
+**`PartyErased` (v1.1).** Subscribers holding party references must route this event to their cleanup handler and acknowledge it under the durable completion or handoff rule. [PartyErased handler](#partyerased-handler-mandatory)
 
-**Consent, restriction, export, and processing-record events (v1.1+):** Contract naming leaves room for consent lifecycle, processing restriction, data export, and processing activity events. MVP consumers are not required to process these unavailable capabilities as active behavior; keep tolerant default handling until your integration explicitly opts into the future GDPR workflow.
+**Consent and restriction.** Use the published event contracts for these workflows. Record which events the subscriber handles and apply the acknowledgement rules above. [Event contracts](../src/Hexalith.Parties.Contracts/Events)
 
 This additive evolution pattern means:
 - **Producers** can ship new events without coordinating with subscribers

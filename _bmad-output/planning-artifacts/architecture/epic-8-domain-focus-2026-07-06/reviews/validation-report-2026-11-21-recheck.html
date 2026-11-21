@@ -1,0 +1,126 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Epic 8 architecture revalidation</title><style>*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#fcfbf8;color:#152e30;font:17px/1.6 system-ui,sans-serif}header{background:#123b3a;color:white;border-bottom:5px solid #ddbb72}nav,main{max-width:900px;margin:auto;padding:16px 28px}nav{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:center}nav a{color:#fff;font-size:.85rem;font-weight:650;text-decoration:none}nav a:last-child{margin-left:auto}nav a:hover,nav a:focus-visible{text-decoration:underline}main{padding-top:36px;padding-bottom:70px}h1,h2,h3{line-height:1.17;scroll-margin-top:16px}h1{font:600 clamp(2.3rem,5vw,3.7rem)/1.08 Georgia,serif;letter-spacing:-.035em;margin:0 0 12px}h1+p{color:#476067;margin:0}h2{font-size:1.6rem;margin:44px 0 15px;border-bottom:1px solid #c5d0cc;padding-bottom:11px}h3{margin:26px 0 8px;font-size:1.17rem}p{margin:9px 0 14px}main a{color:#005b64;text-underline-offset:.15em}code{font-family:ui-monospace,monospace;font-size:.86em;overflow-wrap:anywhere}h2#verdict+p{background:#f9f1dd;border-left:4px solid #947132;padding:13px 17px}strong{font-weight:690}h3+p strong{color:#74401b}table{width:100%;border-collapse:collapse;font-size:.94em}th,td{text-align:left;vertical-align:top;border-bottom:1px solid #cbd4cf;padding:11px 10px}td:first-child,th:first-child{width:26%}thead{background:#e9efeb}tbody tr:nth-child(even){background:#f5f7f4}a:focus-visible{outline:2px solid #b57b25;outline-offset:3px}@media(max-width:650px){nav,main{padding-inline:16px}nav{gap:8px 14px}nav a:last-child{margin-left:0}main{padding-top:24px}table{font-size:.86em}th,td{padding:8px 5px}}@media print{header{display:none}body{background:#fff;color:#111;font:11pt/1.4 Georgia,serif}main{padding:0}h2,h3{break-after:avoid}tr{break-inside:avoid}a{color:inherit}}</style></head><body><header><nav aria-label="Report navigation"><a href="#verdict">Verdict</a><a href="#findings">Findings</a><a href="#earlier-findings">Earlier findings</a><a href="#evidence-and-limits">Evidence</a><a href="validation-report-2026-11-21-recheck.md" download>Download Markdown</a></nav></header><main><h1 id="epic-8-architecture-revalidation">Epic 8 architecture revalidation</h1>
+<p>21 November 2026 · Hexalith.Parties · Post-amendment working copy</p>
+<h2 id="verdict">Verdict</h2>
+<p><strong>Changes required before the affected migrations can use these documents for sign-off.</strong> All eleven findings in the earlier report were addressed in the amended wording. This independent recheck identified two high-priority issues for successor-host and UI parity, seven medium findings and two low findings. The November 2 closure still applies to its recorded revision.</p>
+<p>The first corrections belong to the host team (readiness behavior) and the admin UI team (what an empty degraded response permits the grid to display). Stories 8.7–8.9 remain blocked on their recorded prerequisites.</p>
+<h2 id="findings">Findings</h2>
+<h3 id="successor-host-readiness">Successor-host readiness</h3>
+<p><strong>High.</strong> The overview (§9) lists the Dapr sidecar and state store as readiness gates. The current host also tags the Tenants integration as ready. A disabled integration reports healthy, while a failed enabled probe makes the host unready. Pub/sub, Memories and projection-store degradation contribute to health separately. Section 2 of the spine leaves the projection rule unclear.</p>
+<p><strong>Action.</strong> State which failures take the host out of rotation. Qualify the successor against enabled and disabled Tenants and against projection-only degradation. <a href="../ARCHITECTURE-SPINE.md">Epic 8 spine</a> · <a href="../../../../../docs/architecture.md">Team overview</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/42b27f2e9375c6d8db270524029c3e875d830a8e/src/Hexalith.Parties/HealthChecks/PartiesHealthCheckExtensions.cs#L30">Readiness registrations</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/42b27f2e9375c6d8db270524029c3e875d830a8e/src/Hexalith.Parties/HealthChecks/TenantsIntegrationHealthCheck.cs#L62">Tenants probe</a></p>
+<h3 id="empty-degraded-responses-and-previously-displayed-names">Empty degraded responses and previously displayed names</h3>
+<p><strong>High for UI parity.</strong> I10/I14 now cover denied reads, and the admin grid clears its rows on a failure. On a successful empty response the component can retain prior rows when metadata signals degradation. A component test expects an earlier name to remain visible after a new search returns no results and a degradation reason. The typed client supplies empty portal metadata for successful list and search calls. The finding concerns the component contract and other adapters. The review established no production disclosure.</p>
+<p><strong>Action.</strong> Distinguish a validated unchanged result for the same query from a new, admitted empty result. Require the latter to clear rows and counts. Cover both results and explicit denial across list and search before accepting UI parity. <a href="../ARCHITECTURE-SPINE.md">Epic 8 spine</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/42b27f2e9375c6d8db270524029c3e875d830a8e/src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor#L995">Grid result handling</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/42b27f2e9375c6d8db270524029c3e875d830a8e/src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor#L1528">Failure clears the grid</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/42b27f2e9375c6d8db270524029c3e875d830a8e/tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs#L1122">Two component expectations</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/42b27f2e9375c6d8db270524029c3e875d830a8e/src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalApiClient.cs#L93">Typed and fallback adapters</a></p>
+<h3 id="subscriber-acknowledgement">Subscriber acknowledgement</h3>
+<p><strong>Medium.</strong> The overview (§7) tells subscribers to always return HTTP 200. A success acknowledgement before a transient processing failure is durably handed off can consume the broker’s opportunity to retry, including work needed for erasure cleanup. The publishing guide provides retry and dead-letter handling.</p>
+<p><strong>Action.</strong> Document the acknowledgement point for successful work, duplicates and durable retry handoffs. Require retryable failure or an explicit retry outcome when the subscriber cannot accept responsibility. <a href="../../../../../docs/architecture.md">Team overview</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/42b27f2e9375c6d8db270524029c3e875d830a8e/docs/event-handler-patterns.md#L34">Subscriber examples</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/42b27f2e9375c6d8db270524029c3e875d830a8e/docs/event-publishing.md#L82">Delivery failure policy</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/42b27f2e9375c6d8db270524029c3e875d830a8e/_bmad-output/planning-artifacts/sprint-change-proposal-2026-11-20.md#L38">Erasure retry ownership</a></p>
+<h3 id="receiver-authentication-at-host-cutover">Receiver authentication at host cutover</h3>
+<p><strong>Medium.</strong> I1/I1a specify sidecar ACLs, isolated identities and general security parity. The current host also verifies its application channel on Dapr callbacks and requires a workload assertion scoped to the receiving service and gateway operation. The successor acceptance map does not name these two checks.</p>
+<p><strong>Action.</strong> Require receiver-side acceptance and rejection results for the intended channel, service and operation as part of the host migration evidence. <a href="../ARCHITECTURE-SPINE.md">Epic 8 spine</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/42b27f2e9375c6d8db270524029c3e875d830a8e/src/Hexalith.Parties/Program.cs#L71">Host endpoint registration</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/42b27f2e9375c6d8db270524029c3e875d830a8e/tests/Hexalith.Parties.IntegrationTests/Topology/PrivateCatalogWorkloadAuthenticationTests.cs#L32">Existing verifier tests</a></p>
+<h3 id="operation-paths-in-deployment-acl-evidence">Operation paths in deployment ACL evidence</h3>
+<p><strong>Medium.</strong> I1 lists thirteen paths and requires external owners to attest identical grants. Its prescribed tuple names app ID, verb, policy and action, leaving the operation path implicit. Different allowed paths can produce the same written receipt.</p>
+<p><strong>Action.</strong> Include the operation name/path for every grant and preserve the caller identity, namespace, trust domain, verb, action and deny defaults. Compare this receipt against the canonical declaration at the selected revision. <a href="../ARCHITECTURE-SPINE.md">Epic 8 spine</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/42b27f2e9375c6d8db270524029c3e875d830a8e/src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol.parties.yaml#L26">Canonical grant</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/42b27f2e9375c6d8db270524029c3e875d830a8e/scripts/render-platform-declaration.py#L506">Declaration check</a></p>
+<h3 id="scheduling-work-identified-only-by-a-touched-file">Scheduling work identified only by a touched file</h3>
+<p><strong>Medium.</strong> Section 5 binds a task when it touches a protected file. It assigns slots for named parents and special cases, but a task linked solely by its touched file can still lack a unique slot. Two teams can agree that the task is gated and disagree about which predecessor must finish.</p>
+<p><strong>Action.</strong> Specify how to derive the owning slot from the affected rollback or acceptance evidence, and who resolves overlaps before a task starts. <a href="../ARCHITECTURE-SPINE.md">Epic 8 spine</a> · <a href="../../../../specs/spec-epic-8-domain-focus/SPEC.md">Epic 8 SPEC</a></p>
+<h3 id="classifying-durable-key-custody">Classifying durable key custody</h3>
+<p><strong>Medium.</strong> I19 assigns each persisted store to a rebuildable read model or an operational side-effect ledger. The per-party key backend manages authoritative secrets and wrapping metadata. I8 and GATE-KMS cover provider qualification, but a team cannot tell which I19 approval or tests also apply to that backend.</p>
+<p><strong>Action.</strong> Have the custody and storage owners record how I19 applies to the provider and which evidence is required alongside I8 before a provider migration. <a href="../ARCHITECTURE-SPINE.md">Epic 8 spine</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/42b27f2e9375c6d8db270524029c3e875d830a8e/src/Hexalith.Parties.Contracts/Security/IKeyStorageBackend.cs#L3">Provider operations</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/42b27f2e9375c6d8db270524029c3e875d830a8e/_bmad-output/planning-artifacts/parties-ui-prd.md#L454">Deployment gate</a></p>
+<h3 id="replay-method-selection">Replay method selection</h3>
+<p><strong>Medium.</strong> The overview (§13) says reordering Apply overloads would silently corrupt replay. A repository fitness test enforces declaration order. The selected resolver gives priority to exact names, then boundary-anchored suffixes, and reports ambiguity. The local ordering convention and SDK dispatch behavior have different evidence.</p>
+<p><strong>Action.</strong> Describe the repository ordering test as a compatibility guard and document the selected resolver’s behavior separately. <a href="../../../../../docs/architecture.md">Team overview</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/42b27f2e9375c6d8db270524029c3e875d830a8e/tests/Hexalith.Parties.Tests/FitnessTests/PartyStateApplyOrderingFitnessTests.cs#L17">Local ordering guard</a> · <a href="https://github.com/Hexalith/Hexalith.EventStore/blob/7435254cc1a148031224eebe1aafd53a8659b2cd/src/Hexalith.EventStore.Client/Aggregates/ApplyMethodResolver.cs#L145">Selected EventStore resolver</a></p>
+<h3 id="pact-job-status">Pact job status</h3>
+<p><strong>Medium.</strong> Section 13 describes a Pact job reporting a skip accepted by the quality gate. The current CI workflow still accepts the contract-verification dispatch event. Neither its jobs nor the pinned reusable workflow defines that Pact job.</p>
+<p><strong>Action.</strong> Date the historical Pact description. Point the current qualification section to the jobs and evidence consumers can actually run. <a href="../../../../../docs/architecture.md">Team overview</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/42b27f2e9375c6d8db270524029c3e875d830a8e/.github/workflows/ci.yml#L10">Current CI</a> · <a href="https://github.com/Hexalith/Hexalith.Builds/blob/fe68718b6c074a6b500a7191e3554a1d39e17688/.github/workflows/domain-ci-v2.yml">Pinned reusable workflow</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/42b27f2e9375c6d8db270524029c3e875d830a8e/docs/ci-legacy-reference.md#L511">Historical Pact notes</a></p>
+<h3 id="test-project-inventory">Test project inventory</h3>
+<p><strong>Low.</strong> The overview (§§1 and 11) counts 18 runnable test projects. The repository also defines three Platform-run suites, giving 21 xUnit projects. The legacy attached-lifecycle project forwards builds to the qualification project.</p>
+<p><strong>Action.</strong> Distinguish the script’s 18 projects from the three suites run by Platform. Keep the forwarding project in the support inventory. <a href="../../../../../docs/architecture.md">Team overview</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/42b27f2e9375c6d8db270524029c3e875d830a8e/scripts/test.ps1#L100">Runner and support inventories</a></p>
+<h3 id="gdpr-notice-in-the-readme">GDPR notice in the README</h3>
+<p><strong>Low.</strong> Section 13 lists a discrepancy that the README already resolved. Both documents describe default-enabled crypto-shredding and the development-only in-memory key store.</p>
+<p><strong>Action.</strong> Remove the stale discrepancy and keep GATE-KMS visible as the open production decision. <a href="../../../../../docs/architecture.md">Team overview</a> · <a href="https://github.com/Hexalith/Hexalith.Parties/blob/42b27f2e9375c6d8db270524029c3e875d830a8e/README.md#L5">Current GDPR notice</a></p>
+<h2 id="earlier-findings">Earlier findings</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Earlier finding</th>
+<th>Result on the amended copy</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Outage reads</td>
+<td>I10/I14 specify which cached results may be used and require clients to clear denied data. The new UI finding concerns a successful empty response.</td>
+</tr>
+<tr class="even">
+<td>Memories cleanup ledger</td>
+<td>I19 preserves mapping keys across rebuilds and records the conditional SDK interface. Owner approval of the interface and tests is outstanding.</td>
+</tr>
+<tr class="odd">
+<td>Actor-history custody</td>
+<td>I7/I8 bind independently authorized attribution to exclusive expiry 365 fixed days from binding effectiveness, including on restore.</td>
+</tr>
+<tr class="even">
+<td>Retired CAP-1 tests</td>
+<td>CAP-1 distinguishes the August baseline from November closure and requires approved successors before affected deletions.</td>
+</tr>
+<tr class="odd">
+<td>Projection recovery</td>
+<td>I9 specifies incremental live folds, a rebuild from empty state and preservation of erasure checkpoints.</td>
+</tr>
+<tr class="even">
+<td>Tenant-claims and McpCli routing</td>
+<td>Section 2 separates selected destinations from migration authority.</td>
+</tr>
+<tr class="odd">
+<td>Create retries</td>
+<td>I11 records existing aggregate evidence and the no-event outcomes for both create commands.</td>
+</tr>
+<tr class="even">
+<td>Rollback identities</td>
+<td>Section 4 records forward and restored dependency identities and the result at each.</td>
+</tr>
+<tr class="odd">
+<td>Isolated Dapr identity</td>
+<td>I1 records the canonical and exercised identities and the session namespace.</td>
+</tr>
+<tr class="even">
+<td>Protection adapter host</td>
+<td>The team overview identifies the correct host and service-registration order.</td>
+</tr>
+<tr class="odd">
+<td>Gateway test deferral</td>
+<td>Section 9 removes the superseded reminder. Section 7 retains the recorded DW-96 scope.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="evidence-and-limits">Evidence and limits</h2>
+<p>The reviewed working copy is based on Parties <code>42b27f2e9375c6d8db270524029c3e875d830a8e</code>. Its SHA-256 prefixes are <code>8a5a3a85be25</code> for the spine, <code>998f196c8d35</code> for the SPEC and <code>373bf1efaf1a</code> for the overview. <a href="../ARCHITECTURE-SPINE.md">Epic 8 spine</a> · <a href="../../../../specs/spec-epic-8-domain-focus/SPEC.md">Epic 8 SPEC</a> · <a href="../../../../../docs/architecture.md">Team overview</a></p>
+<table>
+<thead>
+<tr class="header">
+<th>Check</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Structure and references</td>
+<td>Spine lint returned zero findings. All 22 Epic 8 invariant IDs, six inherited decisions, 16 closure-map rows and six capability IDs match the committed order. The 75 distinct-per-document relative links and their heading targets resolved.</td>
+</tr>
+<tr class="even">
+<td>Closure and tracker</td>
+<td>Git records the two original test classes at <code>2b63ab9</code>, their retirement at <code>0f261ccd</code> and six passing Round 10 lanes at <code>c7dd607b</code>. The tracker records Epic 8 and Story 8.10 as done and 8.7–8.9 as blocked.</td>
+</tr>
+<tr class="odd">
+<td>Source and packages</td>
+<td>Checked 11 direct gitlinks and the matching Platform v2.2.4 / Builds v6.4.3 selection. Builds, CiCd and Platform working checkouts differ from the parent pins. MSBuild using the pinned catalog evaluated EventStore <code>4.2.0</code> for the Parties host and gateway test host, <code>5.4.0</code> for the attached qualification project and <code>5.4.0</code> for an explicit host override. All target <code>net11.0</code>.</td>
+</tr>
+<tr class="even">
+<td>Declaration</td>
+<td>The generated Platform declaration matched. All seven declaration unit tests passed.</td>
+</tr>
+</tbody>
+</table>
+<p>Production custody, completed erasure after restart, cross-replica revocation, I18 successor tests and I19 storage approvals still require their own evidence. This validation used source and test inspection, Git history, package evaluation and the declaration checks. Hosted CI, the UI component suite and live erasure were not executed for this report.</p>
+<h2 id="review-records">Review records</h2>
+<p><a href="validation-report-2026-11-21.md">Earlier validation</a> · <a href="validate-2026-11-21-recheck-rubric.md">Rubric review</a> · <a href="validate-2026-11-21-recheck-reality.md">Reality review</a> · <a href="validate-2026-11-21-recheck-adversarial.md">Adversarial review</a></p>
+</main></body></html>
