@@ -367,6 +367,8 @@ review_interrupted_runtime_2026_11_15: Final reviewed provider11/11 includes dis
 
 qualification_released_catalog_2026_11_21: The released EventStore 5.4.0 cohort passes 39 generation recovery, 941 query and 466 current projection controls. The disposable provider also resumes a 4,097-record history across workload processes. Writer drain, historical private-material reconciliation, migration approval and deployed rollback remain open. See `spec-five-released-catalog-deferrals.md`.
 
+followup_released_catalog_2026_11_21: The maintained released-catalog runner passes 39 processing generation recovery, 941 query and 466 projection controls. Deployed older-writer drain, historical private-material reconciliation, owner-approved migration and rollback remain open. See `spec-reproduce-five-released-catalog-deferrals.md`.
+
 ### DW-51: Resolve projection-handler performance and validation-coupling debt
 
 status: done 2026-10-21
@@ -442,6 +444,8 @@ verification_interrupted_runtime_2026_11_15: `tests/five-interrupted-runtime-and
 review_interrupted_runtime_2026_11_15: Final reviewed provider11/11 includes distinguishable pre-cutover detail, all64 early buckets,12 workload children and evidence-failure cleanup. Consumer/custody controls pass42/42. Evidence: `tests/five-interrupted-runtime-and-browser-deferrals-2026-11-15/review-final/`. External gates remain open.
 
 qualification_released_catalog_2026_11_21: The runtime integration assembly passes nine owned Redis/Dapr controls and two local evidence-cleanup controls with zero skips. The restart control launches 12 separately exiting child workloads across both starting states. They verify SDK state, erasure and rollback survivors. Owned provider cleanup succeeds. The migration guide now selects the runtime assembly. Production capture, cutover and rollback acceptance remain open. See `spec-five-released-catalog-deferrals.md`.
+
+followup_released_catalog_2026_11_21: The maintained runner passes six in-memory actor-to-SDK backfill controls. The owned provider rehearsal remains available through the migration runbook. Deployed writer drain, production capture completeness, authorization, cutover and rollback acceptance remain open. See `spec-reproduce-five-released-catalog-deferrals.md`.
 
 ### DW-59: Preserve mappings when unit ID and source URI match different rows
 
@@ -648,6 +652,8 @@ verification_runner_interruption_final_2026_11_17: Final qualification: `tests/f
 
 qualification_released_catalog_2026_11_21: The Parties consumer, built with released Memories 4.1.0 client and contracts packages, passes 18 inventory and 27 REST recovery controls for missing or incomplete local inventory, scoped progress and stable refresh identity. The owned current-source producer run passes the unit-authority refusals and restored-authority controls. The published 4.1.0 producer was outside that run. Historical producer inventory, writer exclusion and owner acceptance remain open. See `spec-five-released-catalog-deferrals.md`.
 
+followup_released_catalog_2026_11_21: The maintained runner passes 18 source inventory and 27 REST recovery controls. The producer built from the Memories 4.1.0 package source passes the owned generation-scoped inventory and refresh controls. The run without generation settings refused refresh pending legacy-owner reconciliation. Historical producer inventory, deployed writer exclusion and owner acceptance remain open. See `spec-reproduce-five-released-catalog-deferrals.md`.
+
 ### DW-83: Persist recovery when mapping and compensating deletion both fail
 
 status: done 2026-10-23
@@ -784,6 +790,7 @@ verification_2026_11_15: `tests/five-current-package-capability-deferrals-2026-1
 
 qualification_released_catalog_2026_11_21: The released FrontComposer 6.0.1 and EventStore 5.4.0 UI suite passes 465 controls, including registered shared reconciliation, fallback, freshness, live regions and real SignalR membership recovery. Production composition and named owner acceptance remain open. See `spec-five-released-catalog-deferrals.md`.
 
+followup_released_catalog_2026_11_21: The maintained runner passes all 465 UI controls, including shared and fallback freshness, live regions, optimistic reconciliation and SignalR membership recovery. Production composition and named owner acceptance remain open. See `spec-reproduce-five-released-catalog-deferrals.md`.
 
 ### DW-101: Consolidate Admin and Consumer exports onto the approved FrontComposer browser-download service after G4-D delivery
 
@@ -1324,6 +1331,8 @@ verification_runner_interruption_2026_11_16: Historical review-loop 2/source 39:
 verification_runner_interruption_final_2026_11_17: Final qualification: `tests/five-runner-interruption-2026-11-16/review-final/` binds isolated d0/source 39 and one unchanged explicit Release wrapper/prepared/Runtime.IntegrationTests child cohort. All six actual SIGINT cases, 32 process, 101 cleanup, 38+22 consumer, 5 startup, 7 configuration and 5 queue controls, real state refusal/restoration, ordinary six-replacement wrapper/actual child, controlled cancellation and four live modes pass. Independent closure finds 320 lifetimes, 36 containers, 6 networks and 12 anonymous volumes absent; full input/helper pre/post readback is unchanged, final jobs are awaited and scratch removed. Native d0 writer-lease/disposal failure and 41/105880 drifts, both earlier100/101 suites and all prior outcomes remain unqualified or historical. Explicit invocation pins do not adopt current defaults. Original47/49/51 authenticated SDK custody stays unestablished. Interrupted business work and every existing publication/adoption, historical-inventory, older-writer-exclusion, deployment/workload/key/trust-custody and owner-acceptance gate remain OPEN.
 
 qualification_released_catalog_2026_11_21: The Parties consumer, built with released Memories 4.1.0 client and contracts packages, passes 39 cleanup/recovery controls, covering required terminal evidence, persisted obligations, cancellation and retry. The owned current-source producer run passes delayed ingestion and physical deletion checks with unrelated survivors and complete teardown. This run qualifies the current-source host. Production workload custody, historical reconciliation and deployed physical erasure remain open. See `spec-five-released-catalog-deferrals.md`.
+
+followup_released_catalog_2026_11_21: The maintained runner passes 39 terminal cleanup and recovery controls. The producer built from the Memories 4.1.0 package source passes delayed ingestion, physical deletion, survivor and replay checks with generation-scoped ownership in the disposable runtime. Historical reconciliation, production workload custody and deployed physical erasure remain open. See `spec-reproduce-five-released-catalog-deferrals.md`.
 
 ### DW-169: D7 — Use concurrency-aware removal when cleaning a party memory-unit mapping inventory.
 

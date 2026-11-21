@@ -971,6 +971,66 @@ operator cutover remain separate external gates. Exact commands, revisions,
 per-test outcomes and cleanup are retained in the dated batch receipt.
 
 
+## Repeat the released-catalog deferred-work checks
+
+From the repository root on Linux, use the SDK in `global.json`, Python 3,
+and the workstation's `run-with-temp` helper. Pass a new results directory
+under an existing parent.
+
+```bash
+mkdir -p artifacts/qualification-results
+bash scripts/verify-released-catalog-deferrals.sh artifacts/qualification-results/released-catalog
+```
+
+The command builds three Release test projects with the default package
+catalog. The core lane covers processing generation recovery and queries
+(DW-50), in-memory backfill (DW-58), source inventory recovery (DW-82), and
+terminal cleanup and retries (DW-168). The projections lane exercises the
+current staged SDK and excludes the legacy inline SDK control. The full UI
+suite covers shared freshness, live regions, optimistic reconciliation, and
+SignalR membership recovery (DW-100).
+
+The results directory retains build and test logs, xUnit XML, resolved runtime
+dependencies, test assembly hashes, and a count by test class. A passing run
+requires zero skipped tests and passing results in each required class.
+The temporary build tree is removed after the run.
+
+Run the owned Redis/Dapr backfill using the
+[migration rehearsal runbook](../docs/read-model-migration.md).
+
+For the Memories 4.1.0 producer run, make a disposable Parties checkout inside
+a `run-with-temp` job. Use its root-declared dependencies, with
+`references/Hexalith.Memories` checked out at
+`0856785c7c764a0dc305af058227d6485b65c697`, the source revision in the released
+Memories client and contracts packages. Keep the original checkout as-is.
+Run the following from the disposable repository root. Set `results` to
+the absolute path for a new directory outside the job.
+
+```bash
+mkdir -- "$results"
+catalog_artifacts="$PWD/artifacts/job-output"
+bash scripts/prepare-aspire-runtime-hosts.sh \
+  --artifacts-path "$catalog_artifacts" --include-memory-qualification true
+
+project=Hexalith.Parties.IntegrationTests
+manifest="$catalog_artifacts/runtime-profile/Release/prepared.json"
+cp -- "$manifest" "$results/prepared.json"
+PARTIES_TEST_REPOSITORY_ROOT="$PWD" PARTIES_MEMORIES_OWNED_RUNTIME=1 \
+  Parties__Testing__PreparedRuntimeManifest="$manifest" \
+  dotnet "$catalog_artifacts/bin/$project/release/$project.dll" \
+  -method '*ActualCurrentSourceMemoriesRunsAuthorityAndPhysicalErasureControl' \
+  -parallelMode none -failSkips -result-xml "$results/memories-producer.xml" \
+  > "$results/memories-producer.log" 2>&1
+```
+
+The authority wrapper assigns a fresh ownership generation to the disposable
+producer. Before the job exits, retain the source and package identities and
+collect `runtime.xml` and the outcome fields from `ownership.json` in its
+private `parties-five-memory-runtime-*` evidence directory. The
+[deferred-work ledger](../_bmad-output/implementation-artifacts/deferred-work.md)
+tracks production evidence and owner acceptance.
+
+
 ## Exact current package boundary qualification (2026-11-15)
 
 The explicit EventStore `5.1.0`, Memories `4.0.0` and FrontComposer `6.0.0`
