@@ -87,7 +87,7 @@ Solution-wide build settings (`Directory.Build.props`): `Nullable=enable`, `Impl
 
 The AppHost SDK and Aspire packages are aligned at `17.0.0`; DAPR client,
 actors, and ASP.NET Core packages are aligned at `1.19.1`. This is the .NET SDK
-package version; at the committed Builds revision the selected Dapr runtime catalog remains `1.19.1`.
+package version; at the committed Builds revision the selected Dapr runtime catalog uses `1.19.2`.
 The local mTLS bootstrap also accepts the `1.19.2` profile and selects its
 matching digest-pinned control-plane image. An unset `DAPR_MTLS_RUNTIME_PROFILE`
 uses the script’s `1.18.7` compatibility default. [mTLS bootstrap](../scripts/aspire-start-mtls.sh)
