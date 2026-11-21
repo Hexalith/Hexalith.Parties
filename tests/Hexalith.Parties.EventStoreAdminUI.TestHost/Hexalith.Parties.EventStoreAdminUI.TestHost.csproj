@@ -98,9 +98,8 @@
       <!-- The inherited mapper owns source selectors and reconciles the hosted SDK edges.
            Keep the explicit package profile only when no source mapping is active. -->
       <_NativeAdminUiBuildProperties Condition="'$(HexalithSourceMappingMode)' != 'source'">$(_NativeAdminUiBuildProperties);UseHexalithProjectReferences=false;UseNuGetDeps=true</_NativeAdminUiBuildProperties>
-      <!-- Root's authenticated package catalog deliberately gives this external owner
-           its ordinary SDK5 view. Qualify only the private SDK4 application artifact
-           independently; mapped source keeps the original inherited mapper. -->
+      <!-- Qualify the native application independently against the exact SDK selected
+           by its mapped package host. Mapped source keeps the inherited mapper. -->
       <_NativeAdminUiPackageBoundary Condition="'$(HexalithSourceMappingApplies)' == 'true' and '$(HexalithSourceMappingMode)' == 'package'">true</_NativeAdminUiPackageBoundary>
       <_NativeAdminUiBoundaryRoot>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)native-admin-ui/qualified', '$(MSBuildProjectDirectory)/'))</_NativeAdminUiBoundaryRoot>
     </PropertyGroup>

@@ -604,9 +604,9 @@ as zero subscriptions. Native/default/publish keep the original UI host and its
 `200 []` discovery. This changes no SDK receiver guard or catalog authority.
 
 Under authenticated package mapping, the private native UI artifact uses its
-own isolated output and the original EventStore project with the exact retained
-SDK4.2.0 profile. Root's catalog guards remain active for mapped Root projects;
-the external application's ordinary SDK5 catalog view remains unchanged.
+own isolated output and the original EventStore project with the exact selected
+SDK profile, either 5.4.0 or the retained 4.2.0 profile. Root's catalog guards
+remain active for mapped Root projects and the external owner's catalog is preserved.
 `scripts/prepare-native-admin-ui-artifact.py` verifies the actual native compiler
 output, framework, complete source inventory, restored SDK archives and deployed
 binaries through the existing runtime receipt reader. Each build independently

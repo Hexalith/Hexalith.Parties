@@ -10,8 +10,11 @@ namespace Hexalith.Parties.Ci.Tests;
 public sealed class NativeAdminUiBuildProfileTests
 {
     /// <summary>The actual native compiler and official SDK archives qualify the private artifact despite the owner's different ordinary catalog.</summary>
-    [Fact]
-    public void MappedPackageArtifactQualifiesTheActualOwnerOutsideTheRootCatalog()
+    /// <param name="sdkVersion">The exact SDK selected for the mapped host.</param>
+    [Theory]
+    [InlineData("4.2.0")]
+    [InlineData("5.4.0")]
+    public void MappedPackageArtifactQualifiesTheActualOwnerOutsideTheRootCatalog(string sdkVersion)
     {
         string root = Directory.CreateTempSubdirectory("parties-native-ui-boundary-").FullName;
         try
@@ -37,7 +40,7 @@ public sealed class NativeAdminUiBuildProfileTests
                 new XElement("PropertyGroup", new XElement("_AdminUiEventStoreRoot", owner),
                     new XElement("_AdminUiRepositoryRoot", CiTestPaths.RepositoryRoot), new XElement("TargetFramework", "net11.0"),
                     new XElement("IntermediateOutputPath", Path.Combine(root, "obj") + Path.DirectorySeparatorChar),
-                    new XElement("Configuration", "Release"), new XElement("HexalithEventStoreVersion", "4.2.0"),
+                    new XElement("Configuration", "Release"), new XElement("HexalithEventStoreVersion", sdkVersion),
                     new XElement("HexalithSourceMappingApplies", "true"), new XElement("HexalithSourceMappingMode", "package")),
                 source.Root!.Elements("Target").Where(target => (string?)target.Attribute("Name") is "ValidateAdminUiSettingsRoot" or "BuildNativeAdminUiArtifact"),
                 new XElement("Target", new XAttribute("Name", "CaptureArtifact"), new XAttribute("AfterTargets", "BuildNativeAdminUiArtifact"),
@@ -66,7 +69,7 @@ public sealed class NativeAdminUiBuildProfileTests
             Path.GetFullPath(artifact).ShouldStartWith(root + Path.DirectorySeparatorChar);
             string boundary = Path.Combine(root, "obj", "native-admin-ui", "qualified");
             using JsonDocument manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(boundary, "prepared.json")));
-            manifest.RootElement.GetProperty("sdkVersion").GetString().ShouldBe("4.2.0");
+            manifest.RootElement.GetProperty("sdkVersion").GetString().ShouldBe(sdkVersion);
             manifest.RootElement.GetProperty("targetFramework").GetString().ShouldBe("net11.0");
             manifest.RootElement.GetProperty("publicArchives").EnumerateArray().ShouldNotBeEmpty();
             using JsonDocument receipt = JsonDocument.Parse(File.ReadAllText(Path.Combine(boundary, "native-owner.json")));
@@ -82,7 +85,7 @@ public sealed class NativeAdminUiBuildProfileTests
             PackageTestProcessResult changedImport = PackageTestProcess.Run("python3",
                 [CiTestPaths.RepoFile("scripts/validate-aspire-runtime-cohort.py"), "--manifest", Path.Combine(boundary, "prepared.json"),
                     "--project", Path.Combine(owner, "src", "Hexalith.EventStore.Admin.UI", "Hexalith.EventStore.Admin.UI.csproj"),
-                    "--version", "4.2.0", "--configuration", "Release", "--target-framework", "net11.0"], root);
+                    "--version", sdkVersion, "--configuration", "Release", "--target-framework", "net11.0"], root);
             changedImport.ExitCode.ShouldNotBe(0);
             changedImport.Diagnostic.ShouldContain("drifted after completed build");
         }
