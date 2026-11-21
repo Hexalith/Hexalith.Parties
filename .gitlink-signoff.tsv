@@ -875,3 +875,14 @@ references/Hexalith.PolymorphicSerializations|c6d0dfce6dc4f9a0699a51f80baf021ba5
 
 # Platform v2.2.4 uses the recorded Builds v6.4.3 catalog.
 references/Hexalith.Platform|a74abe1794db0bc79d6ca3ba45722ca02d05951c|validated-advance|v2.2.4@a74abe1794db0bc79d6ca3ba45722ca02d05951c|codex-agent|2026-11-20
+
+
+# User-requested sync to each owning origin/main, authorized for the release gate.
+references/Hexalith.Builds|315722135a383bec43e1a35a18231f130d65fb7a|validated-advance|origin/main@315722135a383bec43e1a35a18231f130d65fb7a|jpiquot|2026-11-21
+references/Hexalith.CiCd|399b2f2d9102649e17b0017c4da26e07e8d4f991|validated-advance|origin/main@399b2f2d9102649e17b0017c4da26e07e8d4f991|jpiquot|2026-11-21
+references/Hexalith.EventStore|db5db24707a2468e69cf86016c3bba2f3fb5d516|validated-advance|origin/main@db5db24707a2468e69cf86016c3bba2f3fb5d516|jpiquot|2026-11-21
+references/Hexalith.FrontComposer|61dcd07fb412acf2feb66d8ee61513c16ef6ec4d|validated-advance|origin/main@61dcd07fb412acf2feb66d8ee61513c16ef6ec4d|jpiquot|2026-11-21
+references/Hexalith.McpCli|e79b7f8b64303397ce9dfd856ed2111b513ade88|validated-advance|origin/main@e79b7f8b64303397ce9dfd856ed2111b513ade88|jpiquot|2026-11-21
+references/Hexalith.Memories|e413124b3cafe437c3e512d4b65114c09b0df0f3|validated-advance|origin/main@e413124b3cafe437c3e512d4b65114c09b0df0f3|jpiquot|2026-11-21
+references/Hexalith.Platform|432e8fa9314ba860c44471de75b3e12ba4feef7e|validated-advance|origin/main@432e8fa9314ba860c44471de75b3e12ba4feef7e|jpiquot|2026-11-21
+references/Hexalith.Tenants|f15f61706a9ddc3c6fa2b0d63ab4bda6c0e7c299|validated-advance|origin/main@f15f61706a9ddc3c6fa2b0d63ab4bda6c0e7c299|jpiquot|2026-11-21
