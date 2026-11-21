@@ -37,6 +37,8 @@ internal static class PartiesDevelopmentCatalogTool
         XDocument xml = XDocument.Load(template);
         xml.Root!.AddFirst(new XElement("Import", new XAttribute("Project", Path.Combine(repositoryRoot.FullName, "Directory.Packages.props"))));
         xml.Root.AddFirst(new XElement("Import", new XAttribute("Project", Path.Combine(repositoryRoot.FullName, "Directory.Build.props"))));
+        xml.Root.Add(new XElement("PropertyGroup",
+            new XElement("DirectoryBuildTargetsPath", Path.Combine(repositoryRoot.FullName, "Directory.Build.targets"))));
         XElement references = new("ItemGroup");
         Dictionary<string, string> copied = new(StringComparer.OrdinalIgnoreCase);
         Dictionary<string, string> inputHashes = new(StringComparer.Ordinal);
