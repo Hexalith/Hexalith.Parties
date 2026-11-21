@@ -25,6 +25,8 @@ sentry_image="daprio/dapr@sha256:b42eeb03c4300938226b7a5d7a15db5513e69e1d5557096
 case "${DAPR_MTLS_RUNTIME_PROFILE:-1.18.7}" in
     1.18.7) ;;
     1.19.1) sentry_image="daprio/dapr@sha256:801b920e02867addcd64f9a5792b8aadf015d6fc365f8b26a72415e2e01bcf98" ;;
+    # Docker Hub tag 1.19.2 index digest, matching the shared catalog runtime.
+    1.19.2) sentry_image="daprio/dapr@sha256:16ca01236a97825e30b19ef9c89c7c9006fabdd9036a6d7e8947662371418851" ;;
     *) printf 'Unsupported Dapr mTLS runtime profile: %s\n' "${DAPR_MTLS_RUNTIME_PROFILE}" >&2; exit 2 ;;
 esac
 sentry_configuration="${repository_root}/src/Hexalith.Parties.AppHost/DaprComponents/sentry.yaml"

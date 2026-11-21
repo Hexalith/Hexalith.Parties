@@ -56,6 +56,7 @@ public sealed class AspireMtlsBootstrapTests
     [Theory]
     [InlineData("1.18.7")]
     [InlineData("1.19.1")]
+    [InlineData("1.19.2")]
     public void BootstrapUsesTheSelectedRuntimeControlPlane(string profile)
     {
         (int exitCode, string error, string[] requests) = RunBootstrap(prepareOnly: true, runtimeProfile: profile);
@@ -431,10 +432,13 @@ public sealed class AspireMtlsBootstrapTests
             start.Environment["FAKE_EXTRA_NETWORK_MEMBER"] = extraNetworkMember;
             start.Environment["FAKE_SENTRY_CONFIGURATION"] = CiTestPaths.RepoFile("src/Hexalith.Parties.AppHost/DaprComponents/sentry.yaml");
             start.Environment["DAPR_MTLS_RUNTIME_PROFILE"] = runtimeProfile;
-            start.Environment["FAKE_SENTRY_IMAGE"] = observedControlPlaneImage ?? (runtimeProfile == "1.19.1"
-                ? "daprio/dapr@sha256:801b920e02867addcd64f9a5792b8aadf015d6fc365f8b26a72415e2e01bcf98"
-                : CiTestPaths.ReadRepoFile("scripts/aspire-start-mtls.sh")
-                    .Split('\n').Single(line => line.StartsWith("sentry_image=", StringComparison.Ordinal)).Split('"')[1]);
+            start.Environment["FAKE_SENTRY_IMAGE"] = observedControlPlaneImage ?? runtimeProfile switch
+            {
+                "1.19.1" => "daprio/dapr@sha256:801b920e02867addcd64f9a5792b8aadf015d6fc365f8b26a72415e2e01bcf98",
+                "1.19.2" => "daprio/dapr@sha256:16ca01236a97825e30b19ef9c89c7c9006fabdd9036a6d7e8947662371418851",
+                _ => CiTestPaths.ReadRepoFile("scripts/aspire-start-mtls.sh")
+                    .Split('\n').Single(line => line.StartsWith("sentry_image=", StringComparison.Ordinal)).Split('"')[1],
+            };
 
             using Process process = new() { StartInfo = start };
             process.Start().ShouldBeTrue();
