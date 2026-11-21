@@ -15,6 +15,8 @@ public sealed class RetainedCatalogViewTests
         string[] projects = new[] { "src", "samples", "tests" }
             .SelectMany(directory => Directory.GetFiles(Path.Combine(root, directory), "*.csproj", SearchOption.AllDirectories))
             .Where(path => !Path.GetRelativePath(root, path).Split(Path.DirectorySeparatorChar).Any(segment => segment is "bin" or "obj"))
+            // The compatibility entry delegates MSBuild targets and has no package graph of its own.
+            .Where(path => Path.GetFileName(path) != "Hexalith.Parties.Platform.AttachedLifecycleTests.csproj")
             .Select(path => Path.GetRelativePath(root, path))
             .Order(StringComparer.Ordinal)
             .ToArray();
@@ -29,13 +31,7 @@ public sealed class RetainedCatalogViewTests
         {
             IReadOnlyDictionary<string, string> current = EffectivePackageVersions.ReadPackages(root, project,
                 configuration: "Release", isolateEnvironment: true, globalProperties: properties);
-            string name = Path.GetFileNameWithoutExtension(project)!;
-            string sdkVersion = name switch
-            {
-                "Hexalith.Parties.Runtime.IntegrationTests" or "Hexalith.Parties.RuntimeArtifacts" => "5.4.0",
-                _ => "4.2.0",
-            };
-            current["Hexalith.EventStore.Contracts"].ShouldBe(sdkVersion, project);
+            current["Hexalith.EventStore.Contracts"].ShouldBe("5.4.0", project);
             properties["HexalithEventStoreVersion"] = "4.2.0";
             IReadOnlyDictionary<string, string> compatibility = EffectivePackageVersions.ReadPackages(root, project,
                 configuration: "Release", isolateEnvironment: true, globalProperties: properties);

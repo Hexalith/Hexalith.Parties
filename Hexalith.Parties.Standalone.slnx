@@ -39,6 +39,7 @@
     <Project Path="tests/Hexalith.Parties.Platform.LifecycleTests/Hexalith.Parties.Platform.LifecycleTests.csproj">
       <Build Project="false" />
     </Project>
+    <File Path="tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleTests.csproj" />
     <Project Path="tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleQualification.Tests.csproj">
       <Build Project="false" />
     </Project>

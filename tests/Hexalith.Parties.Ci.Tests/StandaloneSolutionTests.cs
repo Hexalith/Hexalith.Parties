@@ -8,7 +8,13 @@ public sealed class StandaloneSolutionTests
     private const string GatewayTestHostProject =
         "tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj";
 
-    /// <summary>Verifies that every owned project on disk is represented exactly once.</summary>
+    private const string AttachedLifecycleForwarder =
+        "tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleTests.csproj";
+
+    private const string AttachedLifecycleQualification =
+        "tests/Hexalith.Parties.Platform.AttachedLifecycleTests/Hexalith.Parties.Platform.AttachedLifecycleQualification.Tests.csproj";
+
+    /// <summary>Verifies that every owned project and the compatibility entry are represented exactly once.</summary>
     [Fact]
     public void StandaloneSolutionContainsEveryOwnedProjectAndNoReferenceEntries()
     {
@@ -18,7 +24,10 @@ public sealed class StandaloneSolutionTests
             .Order(StringComparer.Ordinal)
             .ToArray();
 
-        projects.ShouldBe(EnumerateOwnedProjectFiles());
+        projects.Append(AttachedLifecycleForwarder).Order(StringComparer.Ordinal).ShouldBe(EnumerateOwnedProjectFiles());
+        solution.Descendants("File")
+            .Count(file => NormalizePath(file.Attribute("Path")?.Value) == AttachedLifecycleForwarder)
+            .ShouldBe(1);
         solution.Descendants()
             .Where(static entry => entry.Name.LocalName is "Project" or "File")
             .Select(static entry => NormalizePath(entry.Attribute("Path")?.Value))
@@ -120,7 +129,7 @@ public sealed class StandaloneSolutionTests
         program.ShouldContain("builder.AddProject(\"tenants\", tenantsProjectPath)");
     }
 
-    /// <summary>The qualified published fixture APIs keep all native suites in the normal build graph.</summary>
+    /// <summary>Verifies the solution includes the native integration and dedicated lifecycle projects.</summary>
     /// <param name="solutionName">The owned solution whose default build graph is checked.</param>
     [Theory]
     [InlineData("Hexalith.Parties.Standalone.slnx")]
@@ -132,9 +141,13 @@ public sealed class StandaloneSolutionTests
         XElement integration = solution.Descendants("Project").Single(project =>
             (string?)project.Attribute("Path") == "tests/Hexalith.Parties.Platform.IntegrationTests/Hexalith.Parties.Platform.IntegrationTests.csproj");
         integration.Elements("Build").ShouldBeEmpty();
-        foreach (string suite in new[] { "LifecycleTests", "AttachedLifecycleTests" })
+        string[] lifecycleProjects =
+        [
+            "tests/Hexalith.Parties.Platform.LifecycleTests/Hexalith.Parties.Platform.LifecycleTests.csproj",
+            AttachedLifecycleQualification,
+        ];
+        foreach (string path in lifecycleProjects)
         {
-            string path = $"tests/Hexalith.Parties.Platform.{suite}/Hexalith.Parties.Platform.{suite}.csproj";
             XElement native = solution.Descendants("Project").Single(project => (string?)project.Attribute("Path") == path);
             native.Elements("Build").Single().Attribute("Project")!.Value.ShouldBe("false");
         }
