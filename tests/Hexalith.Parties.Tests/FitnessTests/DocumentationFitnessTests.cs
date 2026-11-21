@@ -218,9 +218,9 @@ public sealed class DocumentationFitnessTests
         Version("Microsoft.Extensions.ServiceDiscovery").ShouldBe(Version("Microsoft.Extensions.Http.Resilience"));
         architecture.ShouldContain($"aligned at `{aspire}`");
         string overview = Read(root, "docs/project-overview.md");
-        architecture.ShouldContain($"selected Dapr runtime catalog remains `{daprRuntime}`");
+        architecture.ShouldContain($"selected Dapr runtime catalog uses `{daprRuntime}`");
         overview.ShouldContain($"| Actors / pub-sub | DAPR | {dapr} |");
-        overview.ShouldContain($"catalog remains `{daprRuntime}`");
+        overview.ShouldContain($"catalog uses `{daprRuntime}`");
         overview.ShouldContain($"| Rich search (opt) | Hexalith.Memories.Client.Rest | {Version("Hexalith.Memories.Client.Rest")} |");
         overview.ShouldContain($"| AuthN | JWT Bearer | {Version("Microsoft.AspNetCore.Authentication.JwtBearer")} |");
         overview.ShouldContain($"| UI | FluentUI Blazor + CustomElements | {Version("Microsoft.FluentUI.AspNetCore.Components")} / {Version("Microsoft.AspNetCore.Components.CustomElements")} |");
