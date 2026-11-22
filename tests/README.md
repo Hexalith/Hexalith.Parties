@@ -1045,6 +1045,54 @@ private `parties-five-memory-runtime-*` evidence directory. The
 tracks production evidence and owner acceptance.
 
 
+## Repeat the released backfill and Memories checks
+
+Use Linux, Python 3.11 or newer, .NET SDK 11.0.100, Docker and the pinned
+Aspire 17.0.0 and Dapr 1.19.2 toolchain. [Getting started](../docs/getting-started.md)
+
+Use a standalone `Hexalith.Memories` checkout at `v4.1.0` and initialize its
+pinned direct Builds reference with `git submodule update --init -- references/Hexalith.Builds`.
+Use the pinned Builds reference in Parties as well. The runner checks that both
+Memories 4.1.0 NuGet packages identify the supplied producer commit.
+If the Aspire CLI bundle is unavailable, restore the pinned tools with
+`bash scripts/prepare-ci-package-dependencies.sh` and export `DcpDir` and
+`AspireDashboardDir` as the directories containing `dcp` and `Aspire.Dashboard`.
+
+Prepare a private Redis 7.4.7 and Dapr backfill provider and export
+`PARTIES_BACKFILL_STATE_RUNTIME_CONFIG` as described in the migration runbook.
+[Migration runbook](../docs/read-model-migration.md)
+
+The Memories fixtures start their own Redis Stack and FalkorDB containers. For
+the nightly test, start the Dapr placement service and scheduler in separate
+terminals. For example, with ports dedicated to this run and a new scheduler
+data directory, use the following commands with the Dapr binaries on `PATH`.
+
+```bash
+placement --listen-address 127.0.0.1 --port 50005 --healthz-port 50015 --enable-metrics=false
+scheduler --listen-address 127.0.0.1 --port 50006 --healthz-port 50016 --enable-metrics=false \
+    --etcd-client-port 50017 --etcd-initial-cluster dapr-scheduler-server-0=http://127.0.0.1:50018 \
+    --etcd-data-dir /path/to/new-scheduler-data
+```
+
+The fixture uses the ordinary Dapr installation. For a separate installation,
+set `PARTIES_MEMORIES_TEST_DAPRD` to its absolute executable path. The runner
+applies that path override to a scratch copy of the released test fixture.
+
+```bash
+export MEMORIES_DAPR_PLACEMENT_HOST_ADDRESS=127.0.0.1:50005
+export MEMORIES_DAPR_SCHEDULER_HOST_ADDRESS=127.0.0.1:50006
+python3 scripts/verify-backfill-and-memories-deferrals.py \
+    /path/to/memories-v4.1.0 /path/to/new-results-directory
+```
+
+The runner builds the three test projects in Release/package mode and executes
+five lanes. Expect 11 backfill cases, with 12 reports from the empty and existing
+target workloads, followed by 2 same-URI refresh, 4 bounded discovery, 5
+cross-source authority and 2 purged-identity reuse cases. The destination must
+be new. Its logs, XML and `summary.json` retain the executed test and package
+identities. Remove the provider, placement and scheduler you started after the
+run. The results qualify the disposable provider and producer paths used here.
+
 ## Exact current package boundary qualification (2026-11-15)
 
 The explicit EventStore `5.1.0`, Memories `4.0.0` and FrontComposer `6.0.0`
