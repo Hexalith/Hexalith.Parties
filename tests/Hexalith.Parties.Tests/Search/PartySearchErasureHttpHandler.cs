@@ -2,13 +2,14 @@ namespace Hexalith.Parties.Tests.Search;
 
 /// <summary>Runs the real Memories HTTP client and cleanup against a deterministic test transport.</summary>
 /// <param name="send">The test's explicit response and side-effect callback.</param>
+/// <param name="simulateInventory">Whether the unit fixture supplies its empty source inventory.</param>
 internal sealed class PartySearchErasureHttpHandler(
-    Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> send) : HttpMessageHandler
+    Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> send, bool simulateInventory = true) : HttpMessageHandler
 {
     /// <inheritdoc/>
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        HttpResponseMessage response = PartyMemoryInventoryTestWire.TryResponse(request, out HttpResponseMessage inventory)
+        HttpResponseMessage response = simulateInventory && PartyMemoryInventoryTestWire.TryResponse(request, out HttpResponseMessage inventory)
             ? inventory : await send(request, cancellationToken).ConfigureAwait(false);
 #if HEXALITH_MEMORIES_SOURCE_REFRESH
         if (response.IsSuccessStatusCode && request.Method == HttpMethod.Post

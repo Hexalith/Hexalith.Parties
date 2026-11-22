@@ -1026,6 +1026,17 @@ PARTIES_TEST_REPOSITORY_ROOT="$PWD" PARTIES_MEMORIES_OWNED_RUNTIME=1 \
   > "$results/memories-producer.log" 2>&1
 ```
 
+This wrapper also exercises remote-only inventory discovery with complete and
+incomplete historical coverage. It interrupts the consumer before its first
+DELETE, recreates the clients, and checks the persisted obligation and the
+producer response used by the successful cleanup call.
+
+The package-matched Memories checkout also contains the two historical admission
+race cases. On its owned Redis Stack, FalkorDB and Dapr Workflow test setup,
+build `tests/Hexalith.Memories.Integration.NightlyTests` in Release and run its
+built assembly with `-method '*ActualOlderProducerBetweenAbsentReadAndAdmissionCannotGainModernAuthority' -failSkips`.
+The ordinary and annotation cases must both pass.
+
 The authority wrapper assigns a fresh ownership generation to the disposable
 producer. Before the job exits, retain the source and package identities and
 collect `runtime.xml` and the outcome fields from `ownership.json` in its

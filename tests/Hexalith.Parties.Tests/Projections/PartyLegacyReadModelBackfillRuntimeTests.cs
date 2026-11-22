@@ -1,6 +1,10 @@
+using System.Text.Json;
+
 using Hexalith.EventStore.Client.Projections;
 using Hexalith.EventStore.Contracts.Projections;
 using Hexalith.EventStore.DomainService;
+using Hexalith.Parties.Contracts;
+using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Projections.Models;
 
 using Shouldly;
@@ -19,6 +23,8 @@ public sealed class PartyLegacyReadModelBackfillRuntimeTests
         var fixture = new PartyLegacyBackfillRuntimeFixture(await PartyLegacyBackfillRuntimeFixture.ConfigurationAsync(token));
         await fixture.SeedAsync(token);
         fixture.Survivors.Count.ShouldBe(9);
+        var migratedDetails = new Dictionary<string, ReadModelEntry<PartyDetailSdkReadModel>>();
+        var migratedProcessing = new Dictionary<string, ReadModelEntry<PartyProcessingSdkReadModel>>();
         foreach (ProjectionRequest history in fixture.Histories)
         {
             string detailKey = PartySdkReadModelAddresses.Detail(fixture.Tenant, history.AggregateId);
@@ -54,6 +60,8 @@ public sealed class PartyLegacyReadModelBackfillRuntimeTests
                 persistedDetail.ETag.ShouldNotBe(previousDetail.ETag);
                 persistedProcessing.ETag.ShouldNotBe(previousProcessing.ETag);
             }
+            migratedDetails.Add(history.AggregateId, persistedDetail);
+            migratedProcessing.Add(history.AggregateId, persistedProcessing);
             var detail = persistedDetail.Value.ShouldNotBeNull();
             detail.LastSequenceNumber.ShouldBe(3);
             var processing = persistedProcessing.Value.ShouldNotBeNull();
@@ -98,7 +106,56 @@ public sealed class PartyLegacyReadModelBackfillRuntimeTests
         index.Entries["party-live"].IsActive.ShouldBeFalse();
         index.LastSequenceNumbers["party-live"].ShouldBe(3);
         index.ErasureSequenceNumbers["party-erased"].ShouldBe(2);
-        (await fixture.RawAsync(indexKey, token)).ShouldNotBeEmpty();
+        // Select the retained actor view after the whole-tenant cutover. Each read opens a fresh Redis client.
+        string indexActor = PartyActorIds.Index(fixture.Tenant);
+        string indexPrefix = $"parties||PartyIndexProjectionActor||{indexActor}:all||";
+        string[] manifest = JsonSerializer.Deserialize<string[]>(await fixture.RawAsync(indexPrefix + indexActor + ":manifest", token))!;
+        manifest.ShouldBe(["all"]);
+        var legacyIndex = JsonSerializer.Deserialize<Dictionary<string, PartyIndexEntry>>(
+            await fixture.RawAsync(indexPrefix + indexActor + ":" + manifest.Single(), token), PartiesJsonOptions.Default)!;
+        legacyIndex.Keys.ShouldBe(index.Entries.Keys);
+        foreach ((string id, PartyIndexEntry entry) in legacyIndex)
+        {
+            PartyIndexEntry canonical = index.Entries[id];
+            (entry.Id, entry.Type, entry.IsActive, entry.DisplayName, entry.SortName, entry.IsErased)
+                .ShouldBe((canonical.Id, canonical.Type, canonical.IsActive, canonical.DisplayName, canonical.SortName, canonical.IsErased));
+        }
+        foreach ((string party, var migrated) in migratedDetails)
+        {
+            string actor = PartyActorIds.Detail(fixture.Tenant, party);
+            string key = $"parties||PartyDetailProjectionActor||{actor}||{actor}";
+            var legacy = JsonSerializer.Deserialize<PartyDetail>(await fixture.RawAsync(key, token), PartiesJsonOptions.Default)!;
+            var canonical = migrated.Value!.Detail!;
+            JsonSerializer.Deserialize<long>(await fixture.RawAsync(key + ":last-sequence", token)).ShouldBe(migrated.Value.LastSequenceNumber);
+            JsonElement.DeepEquals(BusinessDetail(legacy), BusinessDetail(canonical)).ShouldBeTrue(party);
+        }
+
+        // Compare the complete persisted business shape, including empty collections and redaction.
+        // Legacy handlers timestamped these transitions at application time; SDK replay uses the event time.
+        static JsonElement BusinessDetail(PartyDetail detail) => JsonSerializer.SerializeToElement(detail with
+        {
+            CreatedAt = default,
+            LastModifiedAt = default,
+            ErasedAt = detail.ErasedAt.HasValue ? DateTimeOffset.UnixEpoch : null,
+            NameHistory = detail.NameHistory.Select(change => change with { ChangedAt = default }).ToArray(),
+        }, PartiesJsonOptions.Default);
+
+        // Switch back to the SDK store. Compare the full typed values and revisions with the original cutover.
+        foreach (string party in migratedDetails.Keys)
+        {
+            await AssertSdkValueAsync(PartySdkReadModelAddresses.Detail(fixture.Tenant, party), migratedDetails[party]);
+            await AssertSdkValueAsync(PartySdkReadModelAddresses.Processing(fixture.Tenant, party), migratedProcessing[party]);
+        }
+        await AssertSdkValueAsync(indexKey, persistedIndex);
+
+        async Task AssertSdkValueAsync<T>(string key, ReadModelEntry<T> expected) where T : class
+        {
+            var actual = await fixture.ReadAsync<T>(key, token).ConfigureAwait(false);
+            actual.ETag.ShouldBe(expected.ETag);
+            JsonSerializer.SerializeToUtf8Bytes(actual.Value, PartiesJsonOptions.Default)
+                .ShouldBe(JsonSerializer.SerializeToUtf8Bytes(expected.Value, PartiesJsonOptions.Default));
+        }
+
         foreach ((string key, byte[] bytes) in fixture.Survivors)
         {
             (await fixture.RawAsync(key, token)).ShouldBe(bytes);

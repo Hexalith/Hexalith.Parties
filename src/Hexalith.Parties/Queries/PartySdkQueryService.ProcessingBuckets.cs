@@ -70,12 +70,12 @@ public sealed partial class PartySdkQueryService
     private async Task<IReadOnlyList<ProcessingActivityRecord>> ReadAllProcessingRecordsAsync(string tenant, string party,
         PartyProcessingSdkReadModel model, string? etag, CancellationToken token)
     {
+        PartyProcessingBucketValidation.ValidateCoverage(model);
         if (model.BucketGeneration is null)
         {
             ValidateInlineProcessingScope(model, tenant, party);
             return model.Records;
         }
-        PartyProcessingBucketValidation.ValidateCoverage(model);
         var records = new List<ProcessingActivityRecord>();
         if (model.FirstBucket is { } first && model.LastBucket is { } last)
         {

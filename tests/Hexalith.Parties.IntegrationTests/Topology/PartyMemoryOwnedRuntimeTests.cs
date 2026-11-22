@@ -172,7 +172,8 @@ public sealed class PartyMemoryOwnedRuntimeTests
             await fixture.InitializeAsync(token).ConfigureAwait(true);
             fixture.IsAvailable.ShouldBeTrue(fixture.UnavailableReason);
             using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
-            deadline.CancelAfter(TimeSpan.FromMinutes(producerRestart ? 27 : 5));
+            // Allow the full consumer matrix to finish its six-minute budget and return its teardown receipts.
+            deadline.CancelAfter(TimeSpan.FromMinutes(producerRestart ? 27 : focused ? 5 : 7));
             await fixture.App.ResourceNotifications.WaitForResourceHealthyAsync("memories", deadline.Token).ConfigureAwait(true);
             phase = "authenticated-workflow-and-erasure-control";
             ProjectResource memoriesResource = fixture.App.Services.GetRequiredService<DistributedApplicationModel>().Resources

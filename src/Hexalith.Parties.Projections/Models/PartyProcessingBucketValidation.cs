@@ -10,7 +10,9 @@ public static class PartyProcessingBucketValidation
         ArgumentNullException.ThrowIfNull(model);
         if (model.BucketGeneration is null)
         {
-            if (model.Records is null || model.Records.Any(record => record is null || record.SequenceNumber < 0)
+            if (model.FirstBucket is not null || model.LastBucket is not null || model.RecordCount != 0
+                || model.FirstRecordSequenceNumber is not null || model.LastRecordSequenceNumber is not null
+                || model.Records is null || model.Records.Any(record => record is null || record.SequenceNumber < 0)
                 || !model.Records.Select(record => record.SequenceNumber).SequenceEqual(
                     model.Records.Select(record => record.SequenceNumber).Distinct().Order())
                 || model.Records.Count > 0 && model.Records[^1].SequenceNumber - model.Records[0].SequenceNumber != model.Records.Count - 1)

@@ -272,23 +272,41 @@ public sealed class PartySdkQueryHandlerTests
         stale.PayloadBytes.ShouldBeNull();
     }
 
+    public static TheoryData<string, string> CorruptInlineProcessingCases
+    {
+        get
+        {
+            var cases = new TheoryData<string, string>();
+            foreach (string defect in new[] { "tenant", "party", "gap", "swapped", "first-bucket", "last-bucket", "count", "first-sequence", "last-sequence" })
+                foreach (string mode in new[] { "page", "complete", "export" })
+                    cases.Add(defect, mode);
+            return cases;
+        }
+    }
+
     [Theory]
-    [InlineData("tenant", "page")]
-    [InlineData("party", "page")]
-    [InlineData("tenant", "complete")]
-    [InlineData("party", "complete")]
-    [InlineData("tenant", "export")]
-    [InlineData("party", "export")]
-    public async Task InlineProcessingReadsRefuseMisplacedForeignFactsWithoutPayloadAsync(string foreign, string mode)
+    [MemberData(nameof(CorruptInlineProcessingCases))]
+    public async Task InlineProcessingReadsRefuseCorruptFactsWithoutPayloadAsync(string defect, string mode)
     {
         var token = TestContext.Current.CancellationToken;
         IReadModelStore store = Substitute.For<IReadModelStore>();
         store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), token)
             .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel { Detail = Detail("party-1") }, "detail"));
-        var fact = new ProcessingActivityRecord { SequenceNumber = 1, TenantId = foreign == "tenant" ? "foreign" : "tenant-a",
-            PartyId = foreign == "party" ? "foreign" : "party-1", EventType = "PartyUpdated", Timestamp = s_now, Summary = "foreign-private-fact" };
+        var fact = new ProcessingActivityRecord { SequenceNumber = 1, TenantId = defect == "tenant" ? "foreign" : "tenant-a",
+            PartyId = defect == "party" ? "foreign" : "party-1", EventType = "PartyUpdated", Timestamp = s_now, Summary = "foreign-private-fact" };
+        var model = defect switch
+        {
+            "gap" => new PartyProcessingSdkReadModel { Records = [fact, fact with { SequenceNumber = 3 }] },
+            "swapped" => new PartyProcessingSdkReadModel { Records = [fact, fact with { SequenceNumber = 3 }, fact with { SequenceNumber = 2 }, fact with { SequenceNumber = 4 }] },
+            "first-bucket" => new PartyProcessingSdkReadModel { FirstBucket = 0 },
+            "last-bucket" => new PartyProcessingSdkReadModel { LastBucket = 0 },
+            "count" => new PartyProcessingSdkReadModel { RecordCount = 1 },
+            "first-sequence" => new PartyProcessingSdkReadModel { FirstRecordSequenceNumber = 1 },
+            "last-sequence" => new PartyProcessingSdkReadModel { LastRecordSequenceNumber = 1 },
+            _ => new PartyProcessingSdkReadModel { Records = [fact] },
+        };
         store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), token)
-            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(new PartyProcessingSdkReadModel { Records = [fact] }, "revision"));
+            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(model, "revision"));
         var service = CreateService(store);
         var query = CreateDetailEnvelope(mode == "export" ? "ExportPartyData" : "GetProcessingRecords");
         var result = mode == "export" ? await service.ExportPartyDataAsync(query, token)
@@ -347,7 +365,8 @@ public sealed class PartySdkQueryHandlerTests
     {
         CancellationToken token = TestContext.Current.CancellationToken;
         var records = Enumerable.Range(1, 80).Select(sequence => new ProcessingActivityRecord { SequenceNumber = sequence,
-            PartyId = "party-1", TenantId = "tenant-a", EventType = "PartyDeactivated", Timestamp = s_now, Summary = "Party deactivated." }).ToArray();
+            PartyId = "party-1", TenantId = "tenant-a", EventType = "PartyDeactivated", Timestamp = s_now.AddSeconds(sequence), Summary = $"Processing activity {sequence}.",
+            ActorId = $"actor-{sequence}", CorrelationId = $"correlation-{sequence}" }).ToArray();
         var model = new PartyProcessingSdkReadModel { BucketGeneration = "generation", FirstBucket = 0, LastBucket = 2,
             FirstRecordSequenceNumber = 1, LastRecordSequenceNumber = 80, RecordCount = 80, LastSequenceNumber = 80, ProjectionVersion = "80", ProjectedAt = s_now };
         string revision = "revision-a";
@@ -365,10 +384,10 @@ public sealed class PartySdkQueryHandlerTests
         QueryResult complete = await service.GetProcessingRecordsAsync(envelope, token);
         complete.Success.ShouldBeTrue();
         complete.ProjectionType.ShouldBe(PartiesCatalogDeclarations.Queries.Single(route => route.MessageType == "GetProcessingRecords").ProjectionType);
-        complete.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!.Length.ShouldBe(80);
+        complete.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!.ShouldBe(records);
         QueryResult exported = await service.ExportPartyDataAsync(envelope with { QueryType = "ExportPartyData" }, token);
         exported.Success.ShouldBeTrue();
-        exported.GetPayload().Deserialize<PartyDataPortabilityPackage>(PartiesJsonOptions.Default)!.ProcessingRecords.Count.ShouldBe(80);
+        exported.GetPayload().Deserialize<PartyDataPortabilityPackage>(PartiesJsonOptions.Default)!.ProcessingRecords.ShouldBe(records);
         QueryResult first = await service.GetProcessingRecordsAsync(envelope with { Paging = new QueryPagingOptions(PageSize: 17) }, token);
         first.Success.ShouldBeTrue();
         first.ProjectionType.ShouldBe(PartiesCatalogDeclarations.Queries.Single(route => route.MessageType == "GetProcessingRecords").ProjectionType);
@@ -404,7 +423,7 @@ public sealed class PartySdkQueryHandlerTests
                 page = await service.GetProcessingRecordsAsync(envelope with { Paging = new QueryPagingOptions(PageSize: 17, Cursor: continuation) }, token);
                 page.Success.ShouldBeTrue();
             }
-            all.Select(record => record.SequenceNumber).ShouldBe(Enumerable.Range(1, 80).Select(number => (long)number));
+            all.ShouldBe(records);
         }
     }
 

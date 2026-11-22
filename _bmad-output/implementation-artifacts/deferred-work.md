@@ -369,6 +369,8 @@ qualification_released_catalog_2026_11_21: The released EventStore 5.4.0 cohort 
 
 followup_released_catalog_2026_11_21: The maintained released-catalog runner passes 39 processing generation recovery, 941 query and 466 projection controls. Deployed older-writer drain, historical private-material reconciliation, owner-approved migration and rollback remain open. See `spec-reproduce-five-released-catalog-deferrals.md`.
 
+qualification_2026_11_22: EventStore 5.4.0 complete reads and exports now reject invalid inline sequence coverage and bucket metadata with a missing generation. The three public read paths return the same ordered values across bucket boundaries. The released-package query and generation recovery tests passed. See `spec-read-model-and-memories-recovery-qualification.md`.
+
 ### DW-51: Resolve projection-handler performance and validation-coupling debt
 
 status: done 2026-10-21
@@ -446,6 +448,8 @@ review_interrupted_runtime_2026_11_15: Final reviewed provider11/11 includes dis
 qualification_released_catalog_2026_11_21: The runtime integration assembly passes nine owned Redis/Dapr controls and two local evidence-cleanup controls with zero skips. The restart control launches 12 separately exiting child workloads across both starting states. They verify SDK state, erasure and rollback survivors. Owned provider cleanup succeeds. The migration guide now selects the runtime assembly. Production capture, cutover and rollback acceptance remain open. See `spec-five-released-catalog-deferrals.md`.
 
 followup_released_catalog_2026_11_21: The maintained runner passes six in-memory actor-to-SDK backfill controls. The owned provider rehearsal remains available through the migration runbook. Deployed writer drain, production capture completeness, authorization, cutover and rollback acceptance remain open. See `spec-reproduce-five-released-catalog-deferrals.md`.
+
+qualification_2026_11_22: Eight Redis/Dapr provider cases passed, including rollback reads of typed actor detail and index followed by full SDK value and ETag comparisons for both empty and existing targets. The standard workload parent encountered a missing Linux procfs children file. An external driver launched the same six child phases against each target and verified all twelve receipts, including the interrupted 4,097-record rebuild. Deployed writer drain and route switch-back still require operator evidence. See `spec-read-model-and-memories-recovery-qualification.md`.
 
 ### DW-59: Preserve mappings when unit ID and source URI match different rows
 
@@ -653,6 +657,8 @@ verification_runner_interruption_final_2026_11_17: Final qualification: `tests/f
 qualification_released_catalog_2026_11_21: The Parties consumer, built with released Memories 4.1.0 client and contracts packages, passes 18 inventory and 27 REST recovery controls for missing or incomplete local inventory, scoped progress and stable refresh identity. The owned current-source producer run passes the unit-authority refusals and restored-authority controls. The published 4.1.0 producer was outside that run. Historical producer inventory, writer exclusion and owner acceptance remain open. See `spec-five-released-catalog-deferrals.md`.
 
 followup_released_catalog_2026_11_21: The maintained runner passes 18 source inventory and 27 REST recovery controls. The producer built from the Memories 4.1.0 package source passes the owned generation-scoped inventory and refresh controls. The run without generation settings refused refresh pending legacy-owner reconciliation. Historical producer inventory, deployed writer exclusion and owner acceptance remain open. See `spec-reproduce-five-released-catalog-deferrals.md`.
+
+qualification_2026_11_22: The owned Memories 4.1.0 producer rehearsal began with two remote sources and no local mappings or intents. Interrupting the first deletion left a durable obligation for a fresh client. After deletion, scoped absence was verified in both cases. The incomplete-history source remained open on retry and the complete-history source closed. Production writer exclusion and historical owner reconciliation remain open. See `spec-read-model-and-memories-recovery-qualification.md`.
 
 ### DW-83: Persist recovery when mapping and compensating deletion both fail
 
@@ -1333,6 +1339,8 @@ verification_runner_interruption_final_2026_11_17: Final qualification: `tests/f
 qualification_released_catalog_2026_11_21: The Parties consumer, built with released Memories 4.1.0 client and contracts packages, passes 39 cleanup/recovery controls, covering required terminal evidence, persisted obligations, cancellation and retry. The owned current-source producer run passes delayed ingestion and physical deletion checks with unrelated survivors and complete teardown. This run qualifies the current-source host. Production workload custody, historical reconciliation and deployed physical erasure remain open. See `spec-five-released-catalog-deferrals.md`.
 
 followup_released_catalog_2026_11_21: The maintained runner passes 39 terminal cleanup and recovery controls. The producer built from the Memories 4.1.0 package source passes delayed ingestion, physical deletion, survivor and replay checks with generation-scoped ownership in the disposable runtime. Historical reconciliation, production workload custody and deployed physical erasure remain open. See `spec-reproduce-five-released-catalog-deferrals.md`.
+
+qualification_2026_11_22: The delayed-ingestion and deletion rehearsal passed against the Memories 4.1.0 producer. After the consumer restarted, its first successful cleanup observed terminal source inventory and scoped physical absence and persisted the settled receipt. All seven focused terminal-wait controls passed. Production workload custody, historical reconciliation and deployed physical erasure remain open. See `spec-read-model-and-memories-recovery-qualification.md`.
 
 ### DW-169: D7 — Use concurrency-aware removal when cleaning a party memory-unit mapping inventory.
 
@@ -2679,7 +2687,7 @@ archived: 2026-11-15
 
   qualification_process_2026_11_16: An actual absent lookup precedes completion of the actual older chunk/NL producer. Its observed exit and a distinct replacement precede ordinary/annotation admission. Missing exact-unit authority still blocks complete erasure while all historical and survivor hashes remain unchanged. No production older-writer exclusion is attested.
   verification_process_2026_11_16: `tests/five-process-erasure-boundaries-2026-11-16/` retains the ordered checkpoints and process/backing identities.
-
+  qualification_2026_11_22: Both ordinary and annotation admission passed the deterministic Redis/Dapr interleaving at the source revision of the Memories 4.1.0 packages. Each case preserved the existing chunk bytes after reconnection and refused historical cleanup authority. Production writer exclusion remains open. See `spec-read-model-and-memories-recovery-qualification.md`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-snapshot-history-and-publish-deferrals.md`
   summary: Establish per-unit historical identity authority across source changes without blocking ordinary fresh production cleanup.

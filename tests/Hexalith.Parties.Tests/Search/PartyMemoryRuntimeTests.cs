@@ -30,13 +30,14 @@ public sealed class PartyMemoryRuntimeTests
     private bool _includeProducerControls = true;
     private bool _producerRestarts;
     /// <summary>Observes durable canonical identities and terminal remote absence across fresh clients.</summary>
-    [Fact(Timeout = 360000)]
+    [Fact(Timeout = 420000)]
     public async Task SelectedMemoriesIngestionAndCleanupPersistAcrossRestart()
     {
         string? path = Environment.GetEnvironmentVariable("PARTIES_MEMORIES_RUNTIME_CONFIG");
         Assert.SkipUnless(!string.IsNullOrWhiteSpace(path), "Set PARTIES_MEMORIES_RUNTIME_CONFIG to an owned local runtime's private JSON configuration.");
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
-        deadline.CancelAfter(TimeSpan.FromMinutes(_producerRestarts ? 24 : 5));
+        // The full producer matrix ingests and erases two additional remote-only sources.
+        deadline.CancelAfter(TimeSpan.FromMinutes(_producerRestarts ? 24 : _includeProducerControls ? 6 : 5));
         CancellationToken token = deadline.Token;
         PartyMemoryRuntimeConfiguration config = JsonSerializer.Deserialize<PartyMemoryRuntimeConfiguration>(
             await File.ReadAllTextAsync(path!, token), new JsonSerializerOptions(JsonSerializerDefaults.Web))
@@ -197,6 +198,11 @@ public sealed class PartyMemoryRuntimeTests
         }
         IOptions<PartyMemoryUnitMappingStoreOptions> stateOptions = Options.Create(new PartyMemoryUnitMappingStoreOptions { StateStoreName = config.StateStoreName });
         var searchOptions = new PartyMemoryTestOptionsMonitor(new PartyMemorySearchOptions { Endpoint = http.BaseAddress, ApiToken = bearer, CaseId = caseId });
+        if (_includeProducerControls)
+        {
+            await QualifyRemoteOnlyInventoryAsync(config, http, memories, tenant, caseId, stateOptions, coverageComplete: false, unitAuthorities, token);
+            await QualifyRemoteOnlyInventoryAsync(config, http, memories, tenant, caseId, stateOptions, coverageComplete: true, unitAuthorities, token);
+        }
         PartyMemoryIndexingResult? indexed = null;
         using (DaprClient dapr = Dapr(config))
         {
@@ -558,6 +564,75 @@ public sealed class PartyMemoryRuntimeTests
         await AssertDerivedStateAsync(owner, tenant, party, populated: false, token).ConfigureAwait(true);
     }
 
+    private static async Task QualifyRemoteOnlyInventoryAsync(PartyMemoryRuntimeConfiguration config, HttpClient owner, MemoriesClient client,
+        string tenant, string caseId, IOptions<PartyMemoryUnitMappingStoreOptions> stateOptions, bool coverageComplete,
+        List<object> observations, CancellationToken token)
+    {
+        string party = "inventory-only-" + Guid.NewGuid().ToString("N");
+        string source = PartyMemoryUrn.Build(tenant, party);
+        if (coverageComplete) { await InitializeOwnedSourceAsync(owner, tenant, party, token).ConfigureAwait(true); }
+        (string workflow, string unit) = await IngestRemoteUnitAsync(owner, client, tenant, caseId, party, "remoteamber", token).ConfigureAwait(true);
+        using DaprClient dapr = Dapr(config);
+        var sdk = new DaprReadModelStore(dapr);
+        var mappings = new PartyMemoryUnitMappingStore(sdk, stateOptions, NullLogger<PartyMemoryUnitMappingStore>.Instance);
+        var intents = new PartyMemoryIngestionIntentStore(sdk, stateOptions);
+        (await mappings.GetMappingsAsync(tenant, party, token).ConfigureAwait(true)).ShouldBeEmpty();
+        (await intents.GetAsync(tenant, party, token).ConfigureAwait(true)).ShouldBeEmpty();
+        using var firstNetwork = new HttpMessageInvoker(new HttpClientHandler());
+        bool deletionInterrupted = false;
+        using HttpClient first = ObserveCleanupClient(owner, firstNetwork, _ => { }, request =>
+        {
+            request.RequestUri.ShouldBe(new Uri(owner.BaseAddress!, MemoriesRoutes.CaseMemoryUnitPath(tenant, caseId, unit)));
+            deletionInterrupted = true;
+            throw new HttpRequestException("Interrupt the consumer before transmitting its first DELETE.");
+        });
+        var cleanup = new PartyMemoryCleanupService(first, mappings, NullLogger<PartyMemoryCleanupService>.Instance, intents);
+        (await cleanup.DeleteByPartyAsync(tenant, caseId, party, token).ConfigureAwait(true)).Cleaned.ShouldBeFalse();
+        deletionInterrupted.ShouldBeTrue();
+        PartyMemoryIngestionIntent discovered = (await intents.GetAsync(tenant, party, token).ConfigureAwait(true)).ShouldHaveSingleItem();
+        (discovered.SourceUri, discovered.CaseId, discovered.WorkflowInstanceId, discovered.MemoryUnitId)
+            .ShouldBe((source, caseId, workflow, unit));
+        discovered.CleanupSettled.ShouldBeFalse();
+
+        // An individually deleted output can settle its obligation. Unknown source coverage must still block closure.
+        using DaprClient restarted = Dapr(config);
+        var restartedStore = new DaprReadModelStore(restarted);
+        var recoveredIntents = new PartyMemoryIngestionIntentStore(restartedStore, stateOptions);
+        (await recoveredIntents.GetAsync(tenant, party, token).ConfigureAwait(true)).ShouldHaveSingleItem().ShouldBe(discovered);
+        JsonElement? lastInventory = null;
+        using var restartedNetwork = new HttpMessageInvoker(new HttpClientHandler());
+        using HttpClient consumer = ObserveCleanupClient(owner, restartedNetwork, page => lastInventory = page);
+        var recovered = new PartyMemoryCleanupService(consumer,
+            new PartyMemoryUnitMappingStore(restartedStore, stateOptions, NullLogger<PartyMemoryUnitMappingStore>.Instance),
+            NullLogger<PartyMemoryCleanupService>.Instance, recoveredIntents);
+        JsonElement inventory;
+        for (int attempt = 0; ; attempt++)
+        {
+            attempt.ShouldBeLessThan(120, "Remote discovery and deletion must reach the expected bounded outcome.");
+            lastInventory = null;
+            var result = await recovered.DeleteByPartyAsync(tenant, caseId, party, token).ConfigureAwait(true);
+            inventory = lastInventory.ShouldNotBeNull("Inspect the actual inventory response used by this cleanup call.");
+            inventory.GetProperty("coverageComplete").GetBoolean().ShouldBe(coverageComplete);
+            if (result.Cleaned)
+            {
+                coverageComplete.ShouldBeTrue("Unknown historical source coverage must block completion.");
+                break;
+            }
+            if (!coverageComplete && inventory.GetProperty("entries")[0].GetProperty("state").GetString() == "Deleted"
+                && (await recoveredIntents.GetAsync(tenant, party, token).ConfigureAwait(true)).Count == 0)
+            {
+                // Retry with only the settled unit receipt; it cannot discharge unknown historical coverage.
+                lastInventory = null;
+                (await recovered.DeleteByPartyAsync(tenant, caseId, party, token).ConfigureAwait(true)).Cleaned.ShouldBeFalse();
+                inventory = lastInventory.ShouldNotBeNull();
+                break;
+            }
+            await Task.Delay(250, token).ConfigureAwait(true);
+        }
+        await AssertDeletedOutputAsync(owner, restartedStore, config.StateStoreName, tenant, caseId, party, workflow, unit,
+            inventory, coverageComplete, observations, token).ConfigureAwait(true);
+    }
+
     private static async Task QualifyLostAcknowledgementAndDelayedCleanupAsync(PartyMemoryRuntimeConfiguration config, HttpClient owner,
         string tenant, string caseId, IOptions<PartyMemoryUnitMappingStoreOptions> stateOptions,
         IOptionsMonitor<PartyMemorySearchOptions> searchOptions, string? preparedParty, List<object> observations, CancellationToken token)
@@ -640,13 +715,23 @@ public sealed class PartyMemoryRuntimeTests
         {
             rejected.StatusCode.ShouldBe(System.Net.HttpStatusCode.Conflict);
         }
+        JsonElement? cleanupInventory = null;
+        using var cleanupNetwork = new HttpMessageInvoker(new HttpClientHandler());
+        using HttpClient consumer = ObserveCleanupClient(owner, cleanupNetwork, page => cleanupInventory = page);
         PartyMemoryCleanupResult? final = null;
         bool delayedDeletionObserved = false;
         for (int attempt = 0; attempt < 120; attempt++)
         {
-            final = await new PartyMemoryCleanupService(owner, mappings, NullLogger<PartyMemoryCleanupService>.Instance, intentsAfterRestart)
+            cleanupInventory = null;
+            final = await new PartyMemoryCleanupService(consumer, mappings, NullLogger<PartyMemoryCleanupService>.Instance, intentsAfterRestart)
                 .DeleteByPartyAsync(tenant, caseId, party, token).ConfigureAwait(true);
-            if (final.Cleaned) { break; }
+            if (final.Cleaned)
+            {
+                await AssertDeletedOutputAsync(owner, restartedSdk, config.StateStoreName, tenant, caseId, party, admittedWorkflow!,
+                    outputUnit!, cleanupInventory.ShouldNotBeNull("The first successful call must have read terminal inventory."),
+                    coverageComplete: true, observations, token).ConfigureAwait(true);
+                break;
+            }
             bool acceptedDeletion = (await intentsAfterRestart.GetAsync(tenant, party, token).ConfigureAwait(true)).Any(intent => intent.MemoryUnitId is not null && !intent.RequiresTerminalEvidence);
             if (acceptedDeletion && !delayedDeletionObserved)
             {
@@ -678,9 +763,66 @@ public sealed class PartyMemoryRuntimeTests
         }
         (await PartyMemoryUnitAuthorityRuntime.InspectAsync(config, owner, tenant, caseId, source,
             admittedWorkflow!, outputUnit!, deleted: true, observations, token).ConfigureAwait(true)).ShouldBe(outputAuthority);
-        await AssertDerivedStateAsync(owner, tenant, party, populated: false, token).ConfigureAwait(true);
         (await mappings.GetMappingsAsync(tenant, party, token).ConfigureAwait(true)).ShouldBeEmpty();
         (await intentsAfterRestart.GetAsync(tenant, party, token).ConfigureAwait(true)).ShouldBeEmpty();
+    }
+
+    // Mirror the producer responses the consumer actually receives. An extra inventory GET could reconcile workflow state.
+    private static HttpClient ObserveCleanupClient(HttpClient owner, HttpMessageInvoker network, Action<JsonElement> observeInventory,
+        Action<HttpRequestMessage>? beforeDelete = null)
+    {
+        var handler = new PartySearchErasureHttpHandler(async (request, token) =>
+        {
+            if (request.Method == HttpMethod.Delete) { beforeDelete?.Invoke(request); }
+            HttpResponseMessage response = await network.SendAsync(request, token).ConfigureAwait(false);
+            if (request.Method == HttpMethod.Get && request.RequestUri!.AbsolutePath.EndsWith("/source-inventory", StringComparison.Ordinal)
+                && response.IsSuccessStatusCode)
+            {
+                using JsonDocument inventory = JsonDocument.Parse(await response.Content.ReadAsByteArrayAsync(token).ConfigureAwait(false));
+                observeInventory(inventory.RootElement.Clone());
+            }
+            return response;
+        }, simulateInventory: false);
+        var client = new HttpClient(handler) { BaseAddress = owner.BaseAddress, Timeout = owner.Timeout };
+        foreach (var header in owner.DefaultRequestHeaders) { client.DefaultRequestHeaders.Add(header.Key, header.Value); }
+        return client;
+    }
+
+    private static async Task AssertDeletedOutputAsync(HttpClient owner, IReadModelStore sdk, string storeName, string tenant, string caseId,
+        string party, string workflow, string unit, JsonElement inventory, bool coverageComplete, List<object> observations, CancellationToken token)
+    {
+        inventory.GetProperty("tenantId").GetString().ShouldBe(tenant);
+        inventory.GetProperty("sourceUri").GetString().ShouldBe(PartyMemoryUrn.Build(tenant, party));
+        inventory.GetProperty("coverageComplete").GetBoolean().ShouldBe(coverageComplete);
+        inventory.GetProperty("admissionClosed").GetBoolean().ShouldBeTrue();
+        inventory.GetProperty("permanent").GetBoolean().ShouldBeTrue();
+        (!inventory.TryGetProperty("nextCursor", out JsonElement cursor) || cursor.ValueKind == JsonValueKind.Null).ShouldBeTrue();
+        JsonElement entry = inventory.GetProperty("entries").EnumerateArray().ShouldHaveSingleItem();
+        entry.GetProperty("caseId").GetString().ShouldBe(caseId);
+        entry.GetProperty("workflowInstanceId").GetString().ShouldBe(workflow);
+        entry.GetProperty("memoryUnitId").GetString().ShouldBe(unit);
+        entry.GetProperty("state").GetString().ShouldBe("Deleted");
+        entry.GetProperty("terminalVerified").GetBoolean().ShouldBeTrue();
+        string intentKey = PartyMemoryUnitMappingStore.BuildKey(tenant, party).Replace("memory-mapping", "memory-ingestion", StringComparison.Ordinal);
+        var durable = (await sdk.GetAsync<PartyMemoryIngestionInventory>(storeName, intentKey, token).ConfigureAwait(true)).Value.ShouldNotBeNull();
+        durable.Intents.ShouldBeEmpty();
+        durable.PermanentCleanup.ShouldBeTrue();
+        string? authority = PartyMemoryCleanupService.BuildProducerAuthority(owner.BaseAddress);
+        var receipt = durable.CleanupReceipts.ShouldNotBeNull().ShouldHaveSingleItem();
+        (receipt.SourceUri, receipt.CaseId, receipt.WorkflowInstanceId, receipt.MemoryUnitId, receipt.CleanupSettled, receipt.AbsenceAuthority)
+            .ShouldBe((PartyMemoryUrn.Build(tenant, party), caseId, workflow, unit, true, authority));
+        if (coverageComplete)
+        {
+            durable.SourceClosureVersion.ShouldBe(inventory.GetProperty("version").GetString());
+            durable.SourceClosureAuthority.ShouldBe(authority);
+        }
+        else { durable.SourceClosureVersion.ShouldBeNull(); }
+        using HttpResponseMessage absent = await owner.GetAsync(MemoriesRoutes.CaseMemoryUnitPath(tenant, caseId, unit), token).ConfigureAwait(true);
+        (await PartyMemoryCleanupResponse.IsAbsentAsync(absent, token).ConfigureAwait(true)).ShouldBeTrue("The exact unit must return MEMORY_UNIT_NOT_FOUND.");
+        JsonElement derived = await AssertDerivedStateAsync(owner, tenant, party, populated: false, token).ConfigureAwait(true);
+        observations.Add(new { Boundary = "consumer-cleanup-observation", Tenant = tenant, Case = caseId, Party = party,
+            Workflow = workflow, Unit = unit, Cleaned = coverageComplete, Inventory = inventory, ScopedAbsence = true, Derived = derived,
+            SettledReceipt = receipt, ClosureVersion = durable.SourceClosureVersion });
     }
 
     private static async Task WaitForDeletionTerminalAsync(HttpClient http, string unit, TimeSpan limit, CancellationToken token)
@@ -707,6 +849,12 @@ public sealed class PartyMemoryRuntimeTests
         MemoriesClient memories, string tenant, string caseId, string party, string content, CancellationToken token, bool alreadyQualified = false)
     {
         if (!alreadyQualified) { await InitializeOwnedSourceAsync(http, tenant, party, token).ConfigureAwait(true); }
+        return (await IngestRemoteUnitAsync(http, memories, tenant, caseId, party, content, token).ConfigureAwait(true)).Unit;
+    }
+
+    private static async Task<(string Workflow, string Unit)> IngestRemoteUnitAsync(HttpClient http, MemoriesClient memories,
+        string tenant, string caseId, string party, string content, CancellationToken token)
+    {
         PartyMemoryUnit input = PartyMemoryUnitMapper.Map(
             PartyMemoryRecoveryFixture.Entry() with { Id = party, DisplayName = content + " synthetic survivor" },
             new PartyMemoryUnitMappingContext(tenant, caseId, "PartyCreated", Timestamp: DateTimeOffset.UnixEpoch, SequenceNumber: 1))!;
@@ -723,7 +871,7 @@ public sealed class PartyMemoryRuntimeTests
         unit.ShouldNotBeNullOrWhiteSpace("Survivor scopes must hold real persisted and derived content before main-party erasure.");
         (await memories.GetMemoryUnitAsync(tenant, caseId, unit!, token).ConfigureAwait(true)).Content.ShouldContain(content);
         await AssertDerivedStateAsync(http, tenant, party, populated: true, token).ConfigureAwait(true);
-        return unit!;
+        return (workflow, unit!);
     }
 
     private static async Task<(string Tenant, string Case, string PartyA, string UnitA, string PartyB, string UnitB)> PrepareOwnerComponentAsync(
@@ -769,7 +917,7 @@ public sealed class PartyMemoryRuntimeTests
         response.EnsureSuccessStatusCode();
     }
 
-    private static async Task AssertDerivedStateAsync(HttpClient http, string tenant, string party, bool populated, CancellationToken token)
+    private static async Task<JsonElement> AssertDerivedStateAsync(HttpClient http, string tenant, string party, bool populated, CancellationToken token)
     {
         string route = "api/v1/tenants/" + Uri.EscapeDataString(tenant) + "/source-inventory/owned-derived-state?sourceUri="
             + Uri.EscapeDataString(PartyMemoryUrn.Build(tenant, party));
@@ -784,7 +932,13 @@ public sealed class PartyMemoryRuntimeTests
             if (populated) { count.ShouldBeGreaterThan(0, backend + " must have positive source data before absence can qualify"); }
             else { count.ShouldBe(0, backend + " must have persisted/derived end-state absence"); }
         }
-        if (!populated) { state.GetProperty("naturalLanguage").GetInt32().ShouldBe(0); }
+        if (!populated)
+        {
+            state.GetProperty("naturalLanguage").GetInt32().ShouldBe(0);
+            foreach (string counter in new[] { "sourcePayloads", "retainedPayloadReferences", "failedUnits" })
+                if (state.TryGetProperty(counter, out JsonElement count)) { count.GetInt64().ShouldBe(0, counter); }
+        }
+        return state;
     }
 
     [Fact]
