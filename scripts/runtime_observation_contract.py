@@ -122,6 +122,13 @@ def observation_timestamp(value):
     return (seconds - int(instant.utcoffset().total_seconds())) * 1_000_000_000 + int((match[1] or "0").ljust(9, "0"))
 
 
+def native_report_times(report):
+    """Read the TRX execution interval from the reporter's single Times element."""
+    times = [item for item in report if item.tag.rsplit("}", 1)[-1] == "Times"]
+    require(len(times) == 1, "native report timing missing or ambiguous")
+    return tuple(observation_timestamp(times[0].get(key)) for key in ("creation", "queuing", "start", "finish"))
+
+
 def native_execution(report, cases, result, functional):
     """Bind real reporter identities and observations to the runner's issued execution interval."""
     deadlines = result["bindings"].get("deadlines")
@@ -145,9 +152,7 @@ def native_execution(report, cases, result, functional):
                 "undeclared execution has deadline fields")
     require(report.tag.rsplit("}", 1)[-1] == "TestRun" and TRX_ID.fullmatch(report.get("id", "")) is not None,
             "native report execution identity missing")
-    times = [item for item in report if item.tag.rsplit("}", 1)[-1] == "Times"]
-    require(len(times) == 1, "native report timing missing or ambiguous")
-    creation, queuing, start, finish = (observation_timestamp(times[0].get(key)) for key in ("creation", "queuing", "start", "finish"))
+    creation, queuing, start, finish = native_report_times(report)
     require(issued <= creation <= queuing <= start <= finish <= terminal, "native report lies outside issued execution")
     require(finish <= deadline, "native execution exceeded its issued deadline")
     definitions = [item for item in report.iter() if item.tag.rsplit("}", 1)[-1] == "UnitTest"]

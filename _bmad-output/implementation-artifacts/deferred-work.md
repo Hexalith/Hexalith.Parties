@@ -2737,22 +2737,32 @@ archived: 2026-11-15
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-runner-interruption-deferred-items.md`
   summary: Root npm bootstrap was retired while legacy release/commitlint consumers remain active.
   evidence: Independent0f deletes package.json/package-lock.json; unchanged pinned release/commitlint actions require root npm ci, and the legacy release path invokes semantic-release. Restore compatibility or migrate all consumers together.
+  status: done 2026-11-22
+  resolution: The lockfile installed with Node 26.13.1 and npm 11.20.0. The pinned commitlint CLI ran and all four configured semantic-release plugins loaded. See `spec-five-ci-entrypoint-deferrals.md`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-runner-interruption-deferred-items.md`
   summary: Active workflows still call legacy CLI entry points removed by the prior shared-pipeline migration.
   evidence: Independent0f removes gitlink-rc-gate.sh, verify-public-package-integration.py CLI, qualify-disposable-ci.py and observe-current-owner-startup.py while CI/release/RC/lifecycle/startup workflows retain those exact invocations. Missing files block their execution; preserve compatible commands until caller migration.
+  status: done 2026-11-22
+  resolution: The gitlink gate, public verifier, lifecycle controller and startup observer are available at the caller paths. The public verifier now accepts native exit after the TRX finishes and still requires environment and access cleanup after the terminal record. Replays of two baseline hosted artifacts passed all 46 native cases each. See `spec-five-ci-entrypoint-deferrals.md`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-runner-interruption-deferred-items.md`
   summary: The unchanged CI Python discovery selector no longer selects the renamed evidence controls.
   evidence: ci.yml:68 retains test_*_integration.py after independent0f renames all matching modules. The exact selector produces zero tests and exit5 in this environment; update discovery together with test names.
+  status: done 2026-11-22
+  resolution: The exact workflow discovery command executed 72 passing tests across the public and private evidence controls. See `spec-five-ci-entrypoint-deferrals.md`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-runner-interruption-deferred-items.md`
   summary: Cold-cache CI dependency preparation requires assets before its pinned workflow restores them.
   evidence: Independent0f makes prepare-ci-package-dependencies.sh verification-only, while domain-ci-v2@9ebc31f invokes the hook before restore. The reviewer reproduced exit1 with an empty NUGET_PACKAGES for missing dcp.
+  status: done 2026-11-22
+  resolution: The hook restored both Aspire 17.0.0 executables into an empty package cache. It now refuses an empty executable left in an otherwise restored cache before exporting the version. See `spec-five-ci-entrypoint-deferrals.md`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-runner-interruption-deferred-items.md`
   summary: The PowerShell test inventory omits the new RuntimeArtifacts support project.
   evidence: The unconditional Assert-TestProjectInventory in scripts/test.ps1 includes every tests/**/*.csproj but its support array lacks tests/Hexalith.Parties.RuntimeArtifacts/Hexalith.Parties.RuntimeArtifacts.csproj, the sole missing project. Both files are unchanged independent0f source.
+  status: done 2026-11-22
+  resolution: The inventory classifies all 27 projects, including RuntimeArtifacts as support. The inventory lane passed and refused unlisted, duplicate and case-mismatched paths in isolated copies. See `spec-five-ci-entrypoint-deferrals.md`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-runner-interruption-deferred-items.md`
   summary: Build reuse rejects valid unchanged incremental outputs as older than the latest solution start.

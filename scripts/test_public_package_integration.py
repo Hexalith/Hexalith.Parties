@@ -81,10 +81,10 @@ class PublicPackageIntegrationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "execution was not a verified completion"):
             gate.validate(self.fixture.root, **self.expected)
 
-    def add_post_test_termination(self, observed_at):
+    def add_post_test_termination(self, observed_at, **times):
         results = self.fixture.result
         def entry(prefix):
-            return dict(id=prefix + ":" + self.run_id, status="terminated", observedAt=observed_at,
+            return dict(id=prefix + ":" + self.run_id, status="terminated", observedAt=times.get(prefix, observed_at),
                         diagnosticIds=["termination"])
         work, access = [entry("native"), entry("environment")], [entry("access")]
         results["termination"] = dict(state="populated", ownedWork=work, environmentAccess=access,
@@ -104,8 +104,27 @@ class PublicPackageIntegrationTests(unittest.TestCase):
         self.add_post_test_termination("2026-11-05T10:00:09.5Z")
         self.assertEqual(gate.validate(self.fixture.root, **self.expected)["nativeCases"], 46)
 
-    def test_termination_before_native_success_is_refused(self):
-        self.add_post_test_termination("2026-11-05T10:00:08Z")
+    def test_environment_stop_before_terminal_record_is_refused(self):
+        self.add_post_test_termination("2026-11-05T10:00:09.5Z", environment="2026-11-05T10:00:08Z")
+        with self.assertRaisesRegex(ValueError, "post-test termination is out of order"):
+            gate.validate(self.fixture.root, **self.expected)
+
+    def test_native_stop_between_report_and_terminal_record_is_accepted(self):
+        self.add_post_test_termination("2026-11-05T10:00:09.5Z", native="2026-11-05T10:00:08.8Z")
+        self.assertEqual(gate.validate(self.fixture.root, **self.expected)["nativeCases"], 46)
+
+    def test_native_stop_before_report_finishes_is_refused(self):
+        self.add_post_test_termination("2026-11-05T10:00:09.5Z", native="2026-11-05T10:00:07.9999999Z")
+        with self.assertRaisesRegex(ValueError, "post-test termination is out of order"):
+            gate.validate(self.fixture.root, **self.expected)
+
+    def test_native_stop_after_cleanup_is_refused(self):
+        self.add_post_test_termination("2026-11-05T10:00:09.5Z", native="2026-11-05T10:00:10.0000001Z")
+        with self.assertRaisesRegex(ValueError, "post-test termination is out of order"):
+            gate.validate(self.fixture.root, **self.expected)
+
+    def test_access_stop_before_terminal_record_is_refused(self):
+        self.add_post_test_termination("2026-11-05T10:00:09.5Z", access="2026-11-05T10:00:08.8Z")
         with self.assertRaisesRegex(ValueError, "post-test termination is out of order"):
             gate.validate(self.fixture.root, **self.expected)
 

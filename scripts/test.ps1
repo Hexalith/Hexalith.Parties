@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("unit", "integration", "topology", "ci", "all", "coverage")]
+    [ValidateSet("inventory", "unit", "integration", "topology", "ci", "all", "coverage")]
     [string] $Lane = "unit",
 
     [string] $Configuration = "Release",
@@ -21,14 +21,6 @@ param(
 $ErrorActionPreference = "Stop"
 
 $RepositoryRoot = Split-Path -Parent $PSScriptRoot
-
-if ($ResultsDirectory) {
-    if (-not [System.IO.Path]::IsPathRooted($ResultsDirectory)) {
-        $ResultsDirectory = Join-Path $RepositoryRoot $ResultsDirectory
-    }
-
-    New-Item -ItemType Directory -Force -Path $ResultsDirectory | Out-Null
-}
 
 function Invoke-TestProject {
     param(
@@ -132,14 +124,29 @@ function Assert-TestProjectInventory {
         throw "Duplicate test project entries in scripts/test.ps1: $duplicateList"
     }
 
-    $inventoryDiff = Compare-Object -ReferenceObject $discoveredProjects -DifferenceObject $configuredProjects
+    $inventoryDiff = Compare-Object -ReferenceObject $discoveredProjects -DifferenceObject $configuredProjects -CaseSensitive
     if ($inventoryDiff) {
         $details = ($inventoryDiff | ForEach-Object { "$($_.SideIndicator) $($_.InputObject)" }) -join "; "
         throw "Test project inventory mismatch between tests/**/*.csproj and scripts/test.ps1: $details"
     }
+
+    return $configuredProjects.Count
 }
 
-Assert-TestProjectInventory
+$projectCount = Assert-TestProjectInventory
+
+if ($Lane -eq "inventory") {
+    Write-Output "Test project inventory is complete ($projectCount projects)."
+    return
+}
+
+if ($ResultsDirectory) {
+    if (-not [System.IO.Path]::IsPathRooted($ResultsDirectory)) {
+        $ResultsDirectory = Join-Path $RepositoryRoot $ResultsDirectory
+    }
+
+    New-Item -ItemType Directory -Force -Path $ResultsDirectory | Out-Null
+}
 
 $laneProjects = switch ($Lane) {
     "unit" { $unitProjects }

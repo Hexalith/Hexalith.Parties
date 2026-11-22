@@ -66,6 +66,9 @@ their source catalog and Platform qualification remain separate.
 Run the focused lane first, then broaden only when the changed surface justifies it.
 
 ```powershell
+# Check that every test or support project is classified exactly once
+.\scripts\test.ps1 -Lane inventory
+
 # Fastest useful feedback for most source changes
 .\scripts\test.ps1 -Lane unit
 

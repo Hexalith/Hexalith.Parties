@@ -66,7 +66,7 @@ def validate(directory: Path, *, context: dict, source: str, platform: str, buil
         return validate_held(root, context=context, source=source, platform=platform, builds=builds, release_tag=release_tag, native_output=native_output)
 
 
-def verify_cleanup_termination(result, owner_id, diagnostic):
+def verify_cleanup_termination(result, owner_id, diagnostic, native_finished_at):
     """Require exact post-test stops of the native work, the environment and its access."""
     termination = result["termination"]
     require(termination.get("state") == "populated" and termination.get("leftoverWorkIds") == []
@@ -78,11 +78,13 @@ def verify_cleanup_termination(result, owner_id, diagnostic):
         work, evidence = termination.get(group), diagnostic.get(group)
         require(isinstance(work, list) and isinstance(evidence, list) and len(work) == len(evidence) == len(prefixes),
                 "incomplete post-test termination inventory")
-        expected_ids = {prefix + ":" + owner_id for prefix in prefixes}
+        # The runner observes native exit before it can publish a passing terminal record.
+        earliest = {prefix + ":" + owner_id: native_finished_at if prefix == "native" else passed_at
+                    for prefix in prefixes}
         required = {(entry["id"], entry["status"], observation_timestamp(entry["observedAt"])) for entry in work}
         actual = {(entry["Id"], entry["Status"], observation_timestamp(entry["ObservedAtUtc"])) for entry in evidence}
-        require({entry[0] for entry in required} == expected_ids and required == actual
-                and all(status == "terminated" and passed_at <= time <= cleaned_at for _, status, time in required)
+        require({entry[0] for entry in required} == earliest.keys() and required == actual
+                and all(status == "terminated" and earliest[identity] <= time <= cleaned_at for identity, status, time in required)
                 and all(entry.get("diagnosticIds") == ["termination"] for entry in work),
                 "post-test termination is out of order or differs from the owned diagnostic")
 
@@ -129,11 +131,6 @@ def validate_held(root: int, *, context: dict, source: str, platform: str, build
         selected[identity] = body
         names.add(filename)
     require({"native-report", "functional-observations"} <= selected.keys(), "mandatory native/functional evidence absent")
-    if result["termination"].get("state") == "not-yet-populated":
-        require("termination" not in selected, "unexpected termination diagnostic")
-    else:
-        require(helper_files is not None and "termination" in selected, "unverified native termination")
-        verify_cleanup_termination(result, owner["runId"], decode(selected["termination"]))
     native = selected["native-report"]
     require(b"<!DOCTYPE" not in native.upper() and b"<!ENTITY" not in native.upper(), "unsafe native XML")
     report = ET.fromstring(native)
@@ -172,6 +169,12 @@ def validate_held(root: int, *, context: dict, source: str, platform: str, build
     require(functional.get("tenantsNativeQueryObserved") is True and functional.get("memoriesRegistryObserved") is True, "real reference-owner assertions absent")
     require(functional.get("selectorCompatibilityObserved") is True, "SDK selector compatibility assertions absent")
     native_execution(report, cases, result, functional)
+    if result["termination"].get("state") == "not-yet-populated":
+        require("termination" not in selected, "unexpected termination diagnostic")
+    else:
+        require(helper_files is not None and "termination" in selected, "unverified native termination")
+        _, _, _, native_finished_at = _readers.native_report_times(report)
+        verify_cleanup_termination(result, owner["runId"], decode(selected["termination"]), native_finished_at)
     current = current_owner(functional, platform=platform, builds=builds, release_tag=release_tag)
     loaded_name = "loaded-assemblies-" + owner["runId"] + ".json"
     loaded = document(root, loaded_name)

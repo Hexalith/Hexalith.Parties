@@ -26,7 +26,7 @@ packages="${NUGET_PACKAGES:-$HOME/.nuget/packages}"
 for binary in \
     "$packages/aspire.hosting.orchestration.linux-x64/$version/tools/dcp" \
     "$packages/aspire.dashboard.sdk.linux-x64/$version/tools/Aspire.Dashboard"; do
-    if [[ ! -f "$binary" || -L "$binary" ]]; then
+    if [[ ! -f "$binary" || ! -s "$binary" || -L "$binary" ]]; then
         printf 'Aspire package preparation did not materialize %s\n' "$binary" >&2
         exit 1
     fi
