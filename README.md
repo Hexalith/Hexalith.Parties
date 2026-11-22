@@ -135,7 +135,7 @@ Hexalith.Parties/
     Hexalith.Parties.ConsumerPortal/ # Protected Consumer /me self-service RCL
     Hexalith.Parties.Picker/         # Embeddable Blazor/custom-element party picker
     Hexalith.Parties.UI/             # Blazor Server browser UI/BFF for Admin and Consumer experiences
-    Hexalith.Parties.Mcp/            # Separate parties-mcp host over the typed client
+    Hexalith.Parties.Mcp/            # Retained compatibility parties-mcp host over the typed client
     # Internal (domain-service-host private — not adopter-facing dependencies)
     Hexalith.Parties.Authentication/ # Internal claims-transformation library; packable but not adopter-facing. Retained as the rollback surface until 8.8 runtime-boundary cleanup proves G7/G9 parity
     Hexalith.Parties/                # SDK domain-service host and PartyAggregate behind EventStore
@@ -161,7 +161,7 @@ Hexalith.Parties/
 
 These are versioned compatibility binaries. They are not retired and stay outside every Hexalith.Platform composition.
 
-- `Hexalith.Parties.Mcp` (container `parties-mcp`): removal gate "Parties inventory gates; replacement evidence and approved withdrawal for every row" ([technical-tools inventory 1.0.3](https://github.com/Hexalith/Hexalith.McpCli/blob/main/_bmad-output/implementation-artifacts/technical-tools-migration-inventory-v1.0.3.md) PS05; [Parties inventory 1.2.0](https://github.com/Hexalith/Hexalith.McpCli/blob/c70ca9784da393cb1929741c6a6c9564717eace5/_bmad-output/implementation-artifacts/parties-migration-inventory-v1.md)). Retirement is blocked: the McpCli Story 5.4 verdict is `retirement-blocked`, with G01–G06 open ([owner approval](https://github.com/Hexalith/Hexalith.McpCli/blob/c70ca9784da393cb1929741c6a6c9564717eace5/_bmad-output/implementation-artifacts/evidence/story-5-4-owner-approval/owner-approval.json)). Technical inventory SHA-256: `7f2810174ae929e569d9affaccabe745565dcfe4f0487b71847806f3eda1ef8c`.
+- `Hexalith.Parties.Mcp` (container `parties-mcp`): removal gate "Parties inventory gates; replacement evidence and approved withdrawal for every row" ([technical-tools inventory 1.0.4](https://github.com/Hexalith/Hexalith.McpCli/blob/main/_bmad-output/implementation-artifacts/technical-tools-migration-inventory-v1.0.4.md) PS05; [Parties inventory 1.2.0](https://github.com/Hexalith/Hexalith.McpCli/blob/c70ca9784da393cb1929741c6a6c9564717eace5/_bmad-output/implementation-artifacts/parties-migration-inventory-v1.md)). Retirement is blocked: the McpCli Story 5.4 verdict is `retirement-blocked`, with G01–G06 open ([owner approval](https://github.com/Hexalith/Hexalith.McpCli/blob/c70ca9784da393cb1929741c6a6c9564717eace5/_bmad-output/implementation-artifacts/evidence/story-5-4-owner-approval/owner-approval.json)). Technical inventory SHA-256: `94985d72232864ab8f40ba212cd0fc73dbd0c5497856073cfd19c2972b89e8b8`.
 
 ## Positioning
 
@@ -178,13 +178,13 @@ Hexalith.Parties manages **party records** -- people and organizations with cont
 
 This project is licensed under the [MIT License](LICENSE).
 
-### Generic McpCli command declarations (local migration increment)
+### Generic McpCli command declarations (historical local increment; now enrolled)
 
 The Contracts assembly declares exactly `parties.create-party`,
 `parties.update-party`, `parties.reactivate-party` and `parties.deactivate-party`.
 The module uses String identifiers, domain `party`, the existing full CLR command
 wire names, and root `PartyId` for aggregate routing. Tenant authority remains in
-the gateway envelope. `Hexalith.McpCli.Abstractions` 1.0.0 supplies declaration
+the gateway envelope. The historical `Hexalith.McpCli.Abstractions` 1.0.0 supplied declaration
 attributes only; the package/source pair follows `UseHexalithProjectReferences`.
 This increment does not enroll or publish a module or retire the legacy host.
 
@@ -256,15 +256,15 @@ not provide a classification-change command. Lifecycle operations require an
 existing unrestricted party with current erasure status Active, including
 when requesting an already-current active state.
 
-### Generic McpCli read declarations (local candidate)
+### Generic McpCli read declarations (historical local candidate; now enrolled)
 
-The Contracts candidate declares exactly seven operations: `parties.get-party`,
+The declaration set contains exactly seven operations: `parties.get-party`,
 `parties.list-parties`, `parties.search-parties`, `parties.create-party`,
 `parties.update-party`, `parties.reactivate-party` and `parties.deactivate-party`.
-The complete candidate still requires fresh maintainer approval, exact-source CI,
-and the protected owning release workflow before its published version can be
-pinned in Builds and enrolled in McpCli. The existing five-tool MCP host remains
-available; this declaration work does not authorize retirement.
+The original local candidate has since been published and enrolled in McpCli;
+current source selects Parties Contracts 4.0.0. The published McpCli 2.0.1 tool
+discovers these seven operations. The existing five-tool MCP host remains
+retained compatibility; enrollment does not authorize retirement.
 
 Queries use domain `party` and envelope tenant authority. Detail uses wire type
 `PartyDetail`, projection `party-detail`, historical compatibility name
@@ -346,3 +346,20 @@ The `Hexalith.Parties.EventStoreExtensions` package carries the existing owner-d
 The catalog-enabled release cohort requires trusted catalog enrollment before a service becomes ready or accepts catalog dispatch. The run-only packaged test profile prepares the exact selected public packages through `scripts/prepare-aspire-runtime-hosts.sh` and supplies a private Development catalog. Production composition must provide the SDK authority and trust-provider configuration.
 
 Public browser calls require the signed `eventstore:surface=ui` claim; agent calls use `agent` when the declared operation permits that surface. The local confidential `hexalith-parties-ui` OAuth client emits the UI claim alongside its existing audience and authorization claims. Configure the corresponding explicit client claim in an external identity provider; roles and request headers do not determine the caller surface.
+
+## Shared McpCli access (reconciliation candidate)
+
+The five-tool parties-mcp host is retained compatibility. Current McpCli source enrolls published Parties Contracts 4.0.0; the earlier local-candidate descriptions are historical development context. The published McpCli 2.0.1 tool discovers seven Parties operations; source-selected package versions and released tool contents must be assessed separately. Retirement remains blocked by G01–G06 and the separate destructive-classification/exposure conflict, requiring an exact-byte owner successor and both-head direct/chained denial with zero unauthorized effects. This documentation does not change existing exposure or owner tests.
+
+For the verified 2.0.1 examples, install `dotnet tool install --global Hexalith.McpCli --version 2.0.1`.
+Run `hexalith modules`, `hexalith operations tenants` or
+`hexalith operations parties`, and `hexalith describe tenants.list-tenants`
+for offline discovery of the installed cohort. Start the MCP server with
+`hexalith mcp --transport stdio`; it offers five generic tools, never a tool or
+CLI subcommand per operation. Configure a McpCli profile with the documented
+`hexalith config --help` flow before authorized `query` or `send` submission.
+Do not copy the Admin `profiles.json`. Offline Catalog discovery proves neither
+Gateway authorization, live availability nor retirement. A missing operation
+fails safely; confidential human actions hand off to the owning UI, never to
+an alternative module endpoint. No Gateway call is needed for this setup check.
+
