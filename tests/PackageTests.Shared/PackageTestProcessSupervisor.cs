@@ -156,17 +156,45 @@ internal sealed class PackageTestProcessSupervisor : IDisposable
             except OSError:
                 pass
 
+        def check_cleanup_deadline(deadline):
+            if time.monotonic() >= deadline:
+                raise TimeoutError('owned descendants exceeded cleanup deadline')
+
+        def owned_children(deadline=None):
+            supervisor_pid = str(os.getpid())
+            try:
+                children = pathlib.Path('/proc/self/task', supervisor_pid, 'children').read_text()
+            except FileNotFoundError:
+                # Linux can omit the task children file. The stat record still
+                # identifies children of this exclusive, single-threaded reaper.
+                parent_pid = supervisor_pid.encode('ascii')
+                with os.scandir('/proc') as processes:
+                    for process in processes:
+                        if deadline is not None:
+                            check_cleanup_deadline(deadline)
+                        if not process.name.isdecimal():
+                            continue
+                        try:
+                            stat = pathlib.Path(process.path, 'stat').read_bytes()
+                        except (FileNotFoundError, ProcessLookupError, PermissionError):
+                            continue
+                        # The process name can itself contain spaces or parentheses.
+                        fields = stat.rpartition(b') ')[2].split(maxsplit=2)
+                        if len(fields) >= 2 and fields[1] == parent_pid:
+                            yield int(process.name)
+                return
+            yield from map(int, children.split())
+
         def reap_exited_adopted_children():
             # Orphaned SDK daemons can monitor an exited parent's PID. Leaving
             # that adopted parent as a zombie until the whole command ends
             # prevents its monitors from completing their normal shutdown.
-            children = pathlib.Path('/proc/self/task/' + str(os.getpid()) + '/children').read_text().split()
-            for pid in children:
-                if int(pid) == child.pid:
+            for pid in owned_children():
+                if pid == child.pid:
                     # Popen owns the direct command's exit status.
                     continue
                 try:
-                    os.waitpid(int(pid), os.WNOHANG)
+                    os.waitpid(pid, os.WNOHANG)
                 except ChildProcessError:
                     pass
 
@@ -177,22 +205,24 @@ internal sealed class PackageTestProcessSupervisor : IDisposable
             except ProcessLookupError:
                 pass
             while True:
-                if time.monotonic() >= deadline:
-                    raise TimeoutError('owned descendants exceeded cleanup deadline')
+                check_cleanup_deadline(deadline)
                 # Once parents die, even descendants that created a new session
                 # are adopted by this exclusive subreaper and remain owned.
-                children = pathlib.Path('/proc/self/task/' + str(os.getpid()) + '/children').read_text().split()
-                for pid in children:
+                for pid in owned_children(deadline):
+                    check_cleanup_deadline(deadline)
                     try:
-                        os.kill(int(pid), signal.SIGKILL)
+                        os.kill(pid, signal.SIGKILL)
                     except ProcessLookupError:
                         pass
-                try:
-                    pid, status = os.waitpid(-1, os.WNOHANG)
-                except ChildProcessError:
-                    return
-                if pid == 0:
-                    time.sleep(0.005)
+                while True:
+                    check_cleanup_deadline(deadline)
+                    try:
+                        pid, _ = os.waitpid(-1, os.WNOHANG)
+                    except ChildProcessError:
+                        return
+                    if pid == 0:
+                        break
+                time.sleep(0.005)
 
         try:
             libc = ctypes.CDLL(None, use_errno=True)

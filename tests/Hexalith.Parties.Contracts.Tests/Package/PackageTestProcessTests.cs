@@ -10,12 +10,15 @@ namespace Hexalith.Parties.Contracts.Tests.Package;
 
 public sealed class PackageTestProcessTests
 {
-    /// <summary>Reaps an exited adopted daemon while its PID monitor and the direct command remain active.</summary>
+    /// <summary>Reaps an adopted daemon during execution and an escaped child at direct command exit.</summary>
     /// <param name="exitCode">The direct command's expected exit status.</param>
+    /// <param name="hideChildrenFile">Whether to simulate a Linux kernel without the task children file.</param>
     [Theory]
-    [InlineData(0)]
-    [InlineData(7)]
-    public void RunReapsAdoptedExitsWithoutConsumingTheActiveDirectCommandStatus(int exitCode)
+    [InlineData(0, false)]
+    [InlineData(7, false)]
+    [InlineData(0, true)]
+    [InlineData(7, true)]
+    public void RunReapsAdoptedExitsWithoutConsumingTheActiveDirectCommandStatus(int exitCode, bool hideChildrenFile)
     {
         Assert.SkipUnless(OperatingSystem.IsLinux(), "The adopted-child supervisor requires Linux procfs.");
         string directory = Path.Combine(Path.GetTempPath(), "active-adoption-" + Guid.NewGuid().ToString("N"));
@@ -55,19 +58,56 @@ public sealed class PackageTestProcessTests
                 (root/'exit').touch()
                 while not (root/'monitor-done').exists() and time.monotonic()<deadline:time.sleep(.005)
                 if not (root/'monitor-done').exists():sys.exit(23)
+                escaped = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(30)'], start_new_session=True)
+                (root/'escaped-pid').write_text(str(escaped.pid))
                 sys.exit(int(sys.argv[2]))
                 """,
         };
+        string escapedPidFile = Path.Combine(directory, "escaped-pid");
         try
         {
             foreach ((string name, string script) in scripts) { File.WriteAllText(Path.Combine(directory, name), script); }
-            PackageTestProcessResult result = PackageTestProcess.Run("python3",
-                [Path.Combine(directory, "active.py"), directory, exitCode.ToString(System.Globalization.CultureInfo.InvariantCulture)],
-                Directory.GetCurrentDirectory(), processTimeoutMilliseconds: 10_000);
+            var command = new ProcessStartInfo("python3")
+            {
+                ArgumentList = { Path.Combine(directory, "active.py"), directory, exitCode.ToString(System.Globalization.CultureInfo.InvariantCulture) },
+            };
+            if (hideChildrenFile)
+            {
+                File.WriteAllText(Path.Combine(directory, "sitecustomize.py"), """
+                    import pathlib
+                    read_text = pathlib.Path.read_text
+                    task_root = pathlib.Path('/proc/self/task')
+                    marker = pathlib.Path(__file__).with_name('children-unavailable')
+                    def read_without_task_children(path, *args, **kwargs):
+                        if path.name == 'children' and path.parent.parent == task_root:
+                            marker.touch()
+                            raise FileNotFoundError(path)
+                        return read_text(path, *args, **kwargs)
+                    pathlib.Path.read_text = read_without_task_children
+                    """);
+                command.Environment["PYTHONPATH"] = directory;
+            }
+
+            PackageTestProcessResult result = PackageTestProcess.Run(command, Directory.GetCurrentDirectory(), processTimeoutMilliseconds: 10_000);
             result.ExitCode.ShouldBe(exitCode, "Adopted exits 11 and 19 must not replace the direct command's status.");
             File.Exists(Path.Combine(directory, "monitor-done")).ShouldBeTrue("The monitor must observe the adopted PID disappear before the active command finishes.");
+            if (hideChildrenFile)
+            {
+                File.Exists(Path.Combine(directory, "children-unavailable")).ShouldBeTrue();
+            }
+
+            int escapedPid = int.Parse(File.ReadAllText(escapedPidFile), System.Globalization.CultureInfo.InvariantCulture);
+            Should.Throw<ArgumentException>(() => Process.GetProcessById(escapedPid));
         }
-        finally { Directory.Delete(directory, recursive: true); }
+        finally
+        {
+            if (File.Exists(escapedPidFile) && int.TryParse(File.ReadAllText(escapedPidFile), out int escapedPid))
+            {
+                StopFixtureProcess(escapedPid);
+            }
+
+            Directory.Delete(directory, recursive: true);
+        }
     }
 
     /// <summary>Bounded direct and carried dotnet commands evaluate in a worker owned by their exact invocation.</summary>
