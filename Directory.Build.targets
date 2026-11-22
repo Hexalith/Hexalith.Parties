@@ -233,4 +233,5 @@
       <ContainerLabel Include="org.opencontainers.artifact.created" Value="$(ContainerProvenanceCreated)" />
     </ItemGroup>
   </Target>
+  <Import Project="$(MSBuildThisFileDirectory)scripts/PartiesRuntimeBuildOutput.targets" Condition="'$(PartiesRuntimeBuildAttempt)' != '' and '$(PartiesRuntimeBuildOutputImported)' != 'true'" />
 </Project>

@@ -1,0 +1,35 @@
+<Project>
+  <PropertyGroup>
+    <PartiesRuntimeBuildOutputImported>true</PartiesRuntimeBuildOutputImported>
+  </PropertyGroup>
+  <Target Name="CapturePartiesRuntimeCompilerInputs" BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <_PartiesMarkerRoot Condition="'$(ArtifactsPath)' != ''">$(ArtifactsPath)</_PartiesMarkerRoot>
+      <_PartiesMarkerRoot Condition="'$(_PartiesMarkerRoot)' == ''">$(SolutionDir)artifacts</_PartiesMarkerRoot>
+      <_PartiesAttemptDirectory>$(_PartiesMarkerRoot)/runtime-profile/$(Configuration)/attempts/$(PartiesRuntimeBuildAttempt)</_PartiesAttemptDirectory>
+      <_PartiesOutputKey>$([MSBuild]::StableStringHash('$(MSBuildProjectFullPath)|$(TargetPath)|$(ProjectAssetsFile)'))</_PartiesOutputKey>
+      <_PartiesInputStamp>$(IntermediateOutputPath)$(MSBuildProjectFile).parties-inputs</_PartiesInputStamp>
+    </PropertyGroup>
+    <ItemGroup>
+      <_PartiesBuildInput Include="$(MSBuildProjectFullPath);$(MSBuildAllProjects);$(DirectoryBuildPropsPath);$(DirectoryBuildTargetsPath);$(DirectoryPackagesPropsPath);$(Hexalith1BuildPackageProps);$(Hexalith2BuildPackageProps);$(Hexalith3BuildPackageProps);$(CustomBeforeDirectoryBuildProps);$(CustomAfterDirectoryBuildTargets)" />
+      <_PartiesBuildInput Include="@(Compile);@(Analyzer);@(ReferencePathWithRefAssemblies);@(EmbeddedResource);@(AdditionalFiles);@(EditorConfigFiles);@(RazorComponent);@(RazorGenerate)" />
+      <_PartiesExistingInput Include="@(_PartiesBuildInput)" Condition="Exists('%(_PartiesBuildInput.FullPath)')" />
+    </ItemGroup>
+    <GetFileHash Files="@(_PartiesExistingInput)" Algorithm="SHA256">
+      <Output TaskParameter="Items" ItemName="_PartiesHashedInput" />
+    </GetFileHash>
+    <!-- A backdated source edit must invalidate the SDK's timestamp-based compile. -->
+    <WriteLinesToFile File="$(_PartiesInputStamp)" Overwrite="true" WriteOnlyWhenDifferent="true"
+                      Lines="@(_PartiesHashedInput->'%(FileHash) %(FullPath)')" />
+    <ItemGroup>
+      <CustomAdditionalCompileInputs Include="$(_PartiesInputStamp)" />
+      <FileWrites Include="$(_PartiesInputStamp)" />
+    </ItemGroup>
+    <Copy SourceFiles="$(_PartiesInputStamp)" DestinationFiles="$(_PartiesAttemptDirectory)/$(_PartiesOutputKey).inputs" />
+  </Target>
+  <!-- Only projects visited by this solution's Build target may authorize reuse. -->
+  <Target Name="RecordPartiesRuntimeBuildOutput" AfterTargets="Build" Condition="'$(_PartiesAttemptDirectory)' != ''">
+    <WriteLinesToFile File="$(_PartiesAttemptDirectory)/$(_PartiesOutputKey).output" Overwrite="true"
+                      Lines="$(MSBuildProjectFullPath);$(TargetPath);$(ProjectAssetsFile);@(AllItemsFullPathWithTargetPath->'%(FullPath)|%(TargetPath)')" />
+  </Target>
+</Project>

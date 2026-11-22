@@ -276,6 +276,23 @@ class RuntimeReceiptCases(unittest.TestCase):
             cohort.write(self.manifest, cohort.complete([self.receipt_path], "Release", "3.129.1", [], self.cache, self.families))
         return receipt
 
+    def test_reused_receipt_detects_a_deployed_component_change_after_recording(self):
+        component = self.output / "DaprComponents/accesscontrol.parties.yaml"
+        component.parent.mkdir()
+        component.write_text("defaultAction: deny")
+        copies = [str(component.relative_to(self.output))]
+        hashes = cohort.output_hashes(self.project, self.target, self.assets_path, copies, cohort.runtime_inputs(self.target))
+        marker = self.root / "build.json"
+        cohort.write(marker, {"configuration": "Release", "buildStartedNs": 1, "projects": {
+            str(self.target): {"copies": copies, "sha256": cohort.file_set_digest(hashes)}}})
+        receipt = cohort.record(self.metadata, self.project, "Release", "3.129.1", 1, "runtime", self.families, build_marker=marker)
+        cohort.write(self.receipt_path, receipt)
+        with patch.object(cohort, "public_archive", side_effect=self.official_archive):
+            cohort.write(self.manifest, cohort.complete([self.receipt_path], "Release", "3.129.1", [], self.cache, self.families))
+        component.write_text("changed")
+        with self.assertRaisesRegex(ValueError, "Prepared runtime file drifted"):
+            cohort.verify_manifest(self.manifest, self.project, "Release", "3.129.1", self.families)
+
     def official_archive(self, package, cache):
         package_id, version = package.split("=", 1)
         archive = self.official / (package_id.lower() + "." + version + ".nupkg")

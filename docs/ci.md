@@ -48,12 +48,20 @@ nonpackable helpers are declared alongside them. Ordinary libraries remain
 packages; runtime project references retain the Release configuration. Published
 Aspire DCP/dashboard assets are restored by that same graph.
 
-After a successful fresh Release solution build, run
-`bash scripts/prepare-aspire-runtime-hosts.sh --reuse-build true --include-memory-qualification true`
-to bind those outputs without compiling or restoring. The completed-build marker
-and existing strict cohort/archive checks must pass. Use the same optional
-`--artifacts-path` as the solution build. The catalog verifier also accepts
-`--reuse-build`; it retains its runtime custody/cleanup behavior.
+After a successful standalone Release package build, run
+`bash scripts/prepare-aspire-runtime-hosts.sh --reuse-build true --include-memory-qualification true`.
+Preparation checks the build inputs and the output bytes recorded for each
+project that MSBuild visited. An unchanged incremental build can reuse an older
+DLL. A source, profile or output mismatch requires another solution build.
+Use the same optional `--artifacts-path` as the build. The catalog verifier
+also accepts `--reuse-build`.
+
+To repeat the regression, build the standalone solution twice with
+`-c Release -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true`,
+then run `python3 scripts/verify-incremental-runtime-reuse.py`. The check
+permits SDK property queries during preparation, verifies all 13 receipts
+and compares the entry binaries' hashes and timestamps before and after.
+It needs network access for the existing public package archive verification.
 
 Compatibility-cohort routing and enabled hooks remain pending. The shipped
 native runner still compiles its model and tests for each private execution;

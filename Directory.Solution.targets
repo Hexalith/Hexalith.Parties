@@ -9,12 +9,20 @@
       <_GenerateRestoreGraphProjectEntryInputProperties>$(_GenerateRestoreGraphProjectEntryInputProperties);HexalithUsePublishedSdkForHostedTests=true;HexalithPartiesReuseRuntimeGraph=true;HexalithPartiesRuntimeTargetFramework=net11.0;HexalithEventStoreVersion=$(HexalithEventStoreVersion);HexalithTenantsVersion=$(HexalithTenantsVersion);HexalithMemoriesVersion=$(HexalithMemoriesVersion);HexalithFrontComposerVersion=$(HexalithFrontComposerVersion);HexalithMcpCliVersion=$(HexalithMcpCliVersion);CustomAfterMicrosoftCommonProps=$(MSBuildThisFileDirectory)scripts/PartiesHostedRuntime.props</_GenerateRestoreGraphProjectEntryInputProperties>
     </PropertyGroup>
   </Target>
+  <PropertyGroup>
+    <_PartiesBuildAttempt>$([System.Guid]::NewGuid())</_PartiesBuildAttempt>
+  </PropertyGroup>
   <Target Name="BeginPartiesRuntimeBuild" BeforeTargets="ValidateProjects"
           Condition="'$(UseHexalithProjectReferences)' == 'false' and '$(Configuration)' == 'Release'">
-    <Exec Command="python3 &quot;$(MSBuildThisFileDirectory)scripts/runtime-build-marker.py&quot; begin --configuration &quot;$(Configuration)&quot; --artifacts-path &quot;$(ArtifactsPath)&quot;" />
+    <ItemGroup>
+      <ProjectReference Update="@(ProjectReference)">
+        <AdditionalProperties>%(ProjectReference.AdditionalProperties);PartiesRuntimeBuildAttempt=$(_PartiesBuildAttempt)</AdditionalProperties>
+      </ProjectReference>
+    </ItemGroup>
+    <Exec Command="python3 &quot;$(MSBuildThisFileDirectory)scripts/runtime-build-marker.py&quot; begin --solution &quot;$(SolutionPath)&quot; --attempt &quot;$(_PartiesBuildAttempt)&quot; --configuration &quot;$(Configuration)&quot; --artifacts-path &quot;$(ArtifactsPath)&quot;" />
   </Target>
   <Target Name="CompletePartiesRuntimeBuild" AfterTargets="Build"
           Condition="'$(UseHexalithProjectReferences)' == 'false' and '$(Configuration)' == 'Release'">
-    <Exec Command="python3 &quot;$(MSBuildThisFileDirectory)scripts/runtime-build-marker.py&quot; complete --configuration &quot;$(Configuration)&quot; --artifacts-path &quot;$(ArtifactsPath)&quot;" />
+    <Exec Command="python3 &quot;$(MSBuildThisFileDirectory)scripts/runtime-build-marker.py&quot; complete --solution &quot;$(SolutionPath)&quot; --attempt &quot;$(_PartiesBuildAttempt)&quot; --configuration &quot;$(Configuration)&quot; --artifacts-path &quot;$(ArtifactsPath)&quot;" />
   </Target>
 </Project>

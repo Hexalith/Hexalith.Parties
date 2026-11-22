@@ -99,7 +99,8 @@ def validate_families(assets: dict, families: dict) -> None:
 
 
 def digest(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    with path.open("rb") as stream:
+        return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
 def load(path: Path) -> dict:
@@ -378,8 +379,25 @@ def validate_framework(assets: dict, target: Path, framework: str, role: str) ->
             raise ValueError("Deployed runtime shared framework declarations differ from actual restored references")
 
 
+def file_hashes(paths: set[Path]) -> dict[str, str]:
+    return {str(path): digest(path) for path in sorted(paths)}
+
+
+def file_set_digest(hashes: dict[str, str]) -> str:
+    checksum = hashlib.sha256()
+    for name, value in sorted(hashes.items()):
+        checksum.update(name.encode() + b"\0" + bytes.fromhex(value))
+    return checksum.hexdigest()
+
+
+def output_hashes(project: Path, target: Path, assets: Path, copies: list[str], runtime: set[Path]) -> dict[str, str]:
+    deployed = {target.parent / name for name in copies}
+    return file_hashes(runtime | deployed | {project.resolve(), assets.resolve()})
+
+
 def record(metadata: dict, project: Path, configuration: str, version: str, started_ns: int, role: str, families: dict,
-           private_admin_ui_receipt: Path | None = None, target_framework: str | None = None) -> dict:
+           private_admin_ui_receipt: Path | None = None, target_framework: str | None = None,
+           build_marker: Path | None = None) -> dict:
     properties = metadata.get("Properties", metadata)
     if properties["Configuration"] != configuration or properties["HexalithEventStoreVersion"] != version:
         raise ValueError("Evaluated build configuration/cohort differs from the completed build")
@@ -390,7 +408,17 @@ def record(metadata: dict, project: Path, configuration: str, version: str, star
             or Path(properties.get("CustomAfterMicrosoftCommonProps", "")).resolve() != RUNTIME_PROFILE:
         raise ValueError("Evaluated runtime build profile differs from the selected hosted profile")
     target, assets_path = Path(properties["TargetPath"]).resolve(), Path(properties["ProjectAssetsFile"]).resolve()
-    if not target.is_file() or target.stat().st_mtime_ns < started_ns:
+    bound_files = {}
+    runtime = runtime_inputs(target)
+    if build_marker is not None:
+        marker = load(build_marker)
+        built = marker["projects"].get(str(target))
+        if built:
+            bound_files = output_hashes(project, target, assets_path, built["copies"], runtime)
+        if (marker["buildStartedNs"] != started_ns or marker["configuration"] != configuration
+                or not built or built["sha256"] != file_set_digest(bound_files)):
+            raise ValueError("Runtime output differs from the completed solution build: " + str(target))
+    elif not target.is_file() or target.stat().st_mtime_ns < started_ns:
         raise ValueError("The completed rebuild did not produce its actual runtime entry PE")
     deps = target.with_suffix(".deps.json")
     runtimeconfig = target.with_suffix(".runtimeconfig.json")
@@ -402,13 +430,14 @@ def record(metadata: dict, project: Path, configuration: str, version: str, star
     native_ui = bind_native_ui(target, project, configuration, version, families, private_admin_ui_receipt, framework)
     validate_deps(deps, version, set(assets["libraries"]), families, project, native_ui is not None)
     archives, binaries = sdk_proof(assets, target, version, families)
-    paths = runtime_inputs(target) | {assets_path, project.resolve(), RUNTIME_PROFILE}
+    paths = runtime | {assets_path, project.resolve(), RUNTIME_PROFILE}
     paths.update(native_ui_sources(target, configuration, version, framework))
+    bound_files.update(file_hashes({path for path in paths if str(path) not in bound_files}))
     return {"schemaVersion": 1, "completed": True, "project": str(project.resolve()), "configuration": configuration,
             "sdkVersion": version, "targetFramework": framework, "familyVersions": families, "role": role, "targetPath": str(target), "assetsPath": str(assets_path),
             "buildStartedNs": started_ns, "completedNs": time.time_ns(),
-            "runtimeInputs": [str(path) for path in sorted(runtime_inputs(target))],
-            "files": {str(path): digest(path) for path in sorted(paths)},
+            "runtimeInputs": [str(path) for path in sorted(runtime)],
+            "files": bound_files,
             "sdkArchives": archives, "sdkBinaries": binaries, "nativeAdminUi": native_ui}
 
 
@@ -547,6 +576,7 @@ def main() -> None:
     parser.add_argument("--metadata-json")
     parser.add_argument("--private-admin-ui-receipt", type=Path)
     parser.add_argument("--build-started-ns", type=int)
+    parser.add_argument("--build-marker", type=Path)
     parser.add_argument("--role", choices=("runtime", "catalog"), default="runtime")
     parser.add_argument("--complete-manifest", type=Path)
     parser.add_argument("--receipt", type=Path, action="append", default=[])
@@ -562,7 +592,7 @@ def main() -> None:
             raise ValueError("Completed runtime evidence requires the exact evaluated --target-framework")
         if args.record:
             value = record(json.loads(args.metadata_json), args.project, args.configuration, args.version, args.build_started_ns, args.role, families,
-                           args.private_admin_ui_receipt, args.target_framework)
+                           args.private_admin_ui_receipt, args.target_framework, args.build_marker)
             write(args.record, value)
         elif args.complete_manifest:
             value = complete(args.receipt, args.configuration, args.version, args.public_package, args.archive_cache, families, args.target_framework)

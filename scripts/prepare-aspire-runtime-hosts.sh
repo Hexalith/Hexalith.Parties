@@ -48,6 +48,7 @@ if [[ "$reuse_build" == true && "$gateway_profile" != packaged ]]; then
     printf 'Build reuse requires the declared packaged runtime graph.\n' >&2
     exit 2
 fi
+marker_arguments=()
 if [[ "$gateway_profile" == packaged ]]; then
     receipt_directory="${artifacts_path:-$repository_root/artifacts}/runtime-profile/$configuration"
     mkdir -p "$receipt_directory"
@@ -55,34 +56,10 @@ if [[ "$gateway_profile" == packaged ]]; then
     rm -f -- "$receipt_directory/prepared.json"
     if [[ "$reuse_build" == true ]]; then
         completed_build="$receipt_directory/solution-build-completed.json"
-        solution_started_ns="$(python3 - "$completed_build" "$configuration" <<'BUILD_MARKER'
-import json, pathlib, sys, time
-path = pathlib.Path(sys.argv[1])
-started = path.with_name("solution-build-started-ns")
-if not path.is_file() or path.is_symlink() or not started.is_file() or started.is_symlink():
-    raise SystemExit("Build reuse requires a successful complete standalone solution build")
-def unique(pairs):
-    result = {}
-    for key, value in pairs:
-        if key in result:
-            raise ValueError("Duplicate build marker field")
-        result[key] = value
-    return result
-try:
-    if path.stat().st_size > 1024 or started.stat().st_size > 32:
-        raise ValueError("Oversized build marker")
-    marker = json.loads(path.read_text(), object_pairs_hook=unique)
-    begin = int(started.read_text())
-    if (not isinstance(marker, dict) or set(marker) != {"configuration", "buildStartedNs", "completedNs"}
-            or marker["configuration"] != sys.argv[2]
-            or type(marker["buildStartedNs"]) is not int or type(marker["completedNs"]) is not int
-            or not 0 < begin == marker["buildStartedNs"] <= marker["completedNs"] <= time.time_ns()):
-        raise ValueError("Mismatched build marker")
-except (OSError, ValueError, TypeError):
-    raise SystemExit("The completed runtime build marker is invalid")
-print(marker["buildStartedNs"])
-BUILD_MARKER
-)"
+        verify_build=(python3 "$script_directory/runtime-build-marker.py" verify --configuration "$configuration"
+            --artifacts-path "${artifacts_path:-$repository_root/artifacts}")
+        solution_started_ns="$("${verify_build[@]}")"
+        marker_arguments=(--build-marker "$completed_build")
     fi
 fi
 runtime_hosts=(
@@ -179,12 +156,12 @@ for project in "${runtime_hosts[@]}" "${catalog_artifacts[@]}"; do
                 if [[ "${receipt_projects[$owner_index]}" == "$native_ui_project" ]]; then
                     python3 "$script_directory/validate-aspire-runtime-cohort.py" --record "${receipt_paths[$owner_index]}" --project "$native_ui_project" \
                         --metadata-json "${receipt_metadata[$owner_index]}" --configuration "$configuration" --version "$sdk_version" --target-framework "$target_framework" \
-                        --build-started-ns "${receipt_started[$owner_index]}" --role "${receipt_roles[$owner_index]}" --families-json "$families_json"
+                        "${marker_arguments[@]}" --build-started-ns "${receipt_started[$owner_index]}" --role "${receipt_roles[$owner_index]}" --families-json "$families_json"
                 fi
             done
         fi
         python3 "$script_directory/validate-aspire-runtime-cohort.py" --record "$receipt" --project "$project" \
-            --metadata-json "$metadata" --configuration "$configuration" --version "$sdk_version" --target-framework "$target_framework" --build-started-ns "$started_ns" --role "$role" --families-json "$families_json" "${native_ui_arguments[@]}"
+            --metadata-json "$metadata" --configuration "$configuration" --version "$sdk_version" --target-framework "$target_framework" "${marker_arguments[@]}" --build-started-ns "$started_ns" --role "$role" --families-json "$families_json" "${native_ui_arguments[@]}"
         receipt_projects+=("$project")
         receipt_metadata+=("$metadata")
         receipt_started+=("$started_ns")
@@ -207,10 +184,17 @@ if [[ "$gateway_profile" == packaged ]]; then
         fi
         python3 "$script_directory/validate-aspire-runtime-cohort.py" --record "${receipt_paths[$index]}" --project "${receipt_projects[$index]}" \
             --metadata-json "${receipt_metadata[$index]}" --configuration "$configuration" --version "$sdk_version" --target-framework "$target_framework" \
-            --build-started-ns "${receipt_started[$index]}" --role "${receipt_roles[$index]}" --families-json "$families_json" "${native_ui_arguments[@]}"
+            "${marker_arguments[@]}" --build-started-ns "${receipt_started[$index]}" --role "${receipt_roles[$index]}" --families-json "$families_json" "${native_ui_arguments[@]}"
     done
-    python3 "$script_directory/validate-aspire-runtime-cohort.py" --complete-manifest "$receipt_directory/prepared.json" \
+    manifest=$(mktemp "$receipt_directory/prepared.XXXXXXXX")
+    trap 'rm -f -- "$manifest" "$manifest.pending"' EXIT
+    python3 "$script_directory/validate-aspire-runtime-cohort.py" --complete-manifest "$manifest" \
         --configuration "$configuration" --version "$sdk_version" --target-framework "$target_framework" --families-json "$families_json" "${receipts[@]}" --archive-cache "$receipt_directory/public-archives" \
         --public-package "Hexalith.Tenants.Contracts=$tenants_version" --public-package "Hexalith.Tenants.Server=$tenants_version" \
         --public-package "Hexalith.Memories.EventStore=$memories_version" --public-package "Hexalith.Memories.EventStoreExtensions=$memories_version"
+    if [[ "$reuse_build" == true ]]; then
+        "${verify_build[@]}" --expected-start "$solution_started_ns" --publish-manifest "$manifest" >/dev/null
+    else
+        mv -- "$manifest" "$receipt_directory/prepared.json"
+    fi
 fi

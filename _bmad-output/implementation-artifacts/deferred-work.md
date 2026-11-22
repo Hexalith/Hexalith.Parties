@@ -2733,6 +2733,8 @@ archived: 2026-11-15
 
   qualification_process_2026_11_16: Three disposable children trace actual constructor/IOptions.Value, AdmitAsync, RecordCandidateAsync, ReadAsync and semantic discovery calls. Options is shared-framework-owned and its valid divergent peer is unselected. The resolver-selected valid divergent System.IO.Hashing asset remains unloaded on those calls. No reachable mismatch was reproduced, so no speculative guard or global dependency-safety claim is added.
   verification_process_2026_11_16: `tests/five-process-erasure-boundaries-2026-11-16/` retains 77 loaded path/hash identities per child and both exact attempted counterexamples. Unexecuted paths and external owner gates remain separate.
+  status: done 2026-11-22
+  resolution: The maintained dependency test passed on the standalone Release build against a disposable Redis instance. Matching, divergent framework peer and divergent private asset each ran five owner calls, recorded 64 loaded identities and zero mismatches, and exited successfully. Each parent bound its child receipt by hash, nonce and process birth. The archived final run on November 16 recorded 75 identities per child. Closure covers these calls and counterexamples. See `spec-five-runtime-build-verification-deferrals.md`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-runner-interruption-deferred-items.md`
   summary: Root npm bootstrap was retired while legacy release/commitlint consumers remain active.
@@ -2767,15 +2769,23 @@ archived: 2026-11-15
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-runner-interruption-deferred-items.md`
   summary: Build reuse rejects valid unchanged incremental outputs as older than the latest solution start.
   evidence: The independent0f reuse branch passes solution-build-started-ns into validate-aspire-runtime-cohort.record(), which rejects target mtime before that timestamp; incremental success can leave the original target timestamp unchanged.
+  status: done 2026-11-22
+  resolution: Release preparation accepts the runtime bytes recorded by the successful solution build. The same unchanged incremental build that previously failed on the first gateway produced all 13 receipts with all 13 entry DLLs older than the latest build start. See `spec-five-runtime-build-verification-deferrals.md`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-runner-interruption-deferred-items.md`
   summary: Completed-build reuse markers do not bind source and build inputs to the compiled outputs.
   evidence: Independent0f runtime-build-marker.py contains only configuration/timestamps. After source/profile changes, the unchanged reuse path can record current input hashes alongside earlier binaries without detecting they were compiled from different inputs.
+  status: done 2026-11-22
+  resolution: Each build attempt binds compiler inputs, the source inventory, restored assets and actual deployed files. Changed input and output controls refuse reuse. A real SDK build recompiles a backdated source edit and leaves the next unchanged DLL timestamp intact. See `spec-five-runtime-build-verification-deferrals.md`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-runner-interruption-deferred-items.md`
   summary: Successful build reuse lacks a regression control through the real preparation script.
   evidence: Preverified R3-V1: marker tests exercise rejection only, successful catalog-driver coverage stubs preparation, and runtime-artifact-graph tests never execute it. A valid-marker real preparation control must reject any build invocation, preserve binary hashes/timestamps and complete all prepared receipts.
+  status: done 2026-11-22
+  resolution: Run `python3 scripts/verify-incremental-runtime-reuse.py` after an unchanged incremental standalone Release package build. The control runs the real preparation script, enforces SDK property queries, and verifies the project and role set, receipt hashes, and binary hashes and timestamps for all 13 projects. See `spec-five-runtime-build-verification-deferrals.md`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-runner-interruption-deferred-items.md`
   summary: The existing hung-signal-helper control assumes STOP delivery is already a kernel stopped-state observation.
   evidence: Parent post-review Release controls ran101 rows and failed only HungSignalHelperAfterAppliedStopIsReapedAndOriginalProcessResumes at its immediate State==T assertion, before creating the intentionally hung helper. The unchanged baseline SignalAsync acknowledges pidfd_send_signal; WhileStoppedAsync separately waits for T/t. Retain the failed100/101 aggregate, preserve the timeout/resume contract, and use a bounded stopped-state observation in the test. The actual failed state was not captured.
+  status: done 2026-11-22
+  resolution: Main already polls for T/t with a two-second cancellation bound and checks the original process birth. The focused Linux Release test passed with one test, zero skips and zero failures, including helper timeout, reaping and resumption of the original child. The historical 100/101 run remains recorded. See `spec-five-runtime-build-verification-deferrals.md`.

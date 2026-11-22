@@ -8,4 +8,5 @@
         <!-- The private wrapper stages these actual owner assets once. -->
         <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
     </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)PartiesRuntimeBuildOutput.targets" Condition="'$(PartiesRuntimeBuildAttempt)' != '' and '$(PartiesRuntimeBuildOutputImported)' != 'true'" />
 </Project>
