@@ -211,7 +211,7 @@ public sealed class PartyMemoryRecoveryRegressionTests
     [InlineData(false, false)]
     [InlineData(true, false)]
     [InlineData(true, true)]
-    public async Task EquivalentTerminalOutputsReuseScopedAbsenceBeforeTransportDenial(bool previouslySettled, bool directSecond)
+    public async Task EquivalentTerminalOutputsShareFreshAbsenceWithinTheBulkPass(bool previouslySettled, bool directSecond)
     {
         var state = new PartyMemoryTestReadModelStore();
         var first = new PartyMemoryIngestionIntent("first", "case", "urn:first", "workflow-first", "canonical")
@@ -226,17 +226,16 @@ public sealed class PartyMemoryRecoveryRegressionTests
         await PartyMemoryRecoveryTests.Mappings(state).RecordMappingAsync("tenant", "party", "canonical", "urn:first", "case", Token);
         await PartyMemoryRecoveryTests.Mappings(state).RecordMappingAsync("tenant", "party", "workflow-second", "urn:second", "case", Token);
         List<HttpMethod> requests = [];
+        bool requiresFreshBulkObservation = previouslySettled && !directSecond;
+        int expectedRequests = requiresFreshBulkObservation ? 4 : 2;
         using var transport = new PartySearchErasureHttpHandler((request, _) =>
         {
             requests.Add(request.Method);
-            return Task.FromResult(requests.Count switch
+            return Task.FromResult(requests.Count > expectedRequests ? new HttpResponseMessage(HttpStatusCode.Unauthorized) : request.Method == HttpMethod.Delete
+                ? new HttpResponseMessage(HttpStatusCode.NoContent)
+                : new HttpResponseMessage(HttpStatusCode.NotFound)
             {
-                1 => new HttpResponseMessage(HttpStatusCode.NoContent),
-                2 => new HttpResponseMessage(HttpStatusCode.NotFound)
-                {
-                    Content = new StringContent("{\"code\":\"MEMORY_UNIT_NOT_FOUND\"}", Encoding.UTF8, "application/json"),
-                },
-                _ => new HttpResponseMessage(HttpStatusCode.Unauthorized),
+                Content = new StringContent("{\"code\":\"MEMORY_UNIT_NOT_FOUND\"}", Encoding.UTF8, "application/json"),
             });
         });
         using var http = PartyMemoryRecoveryTests.Http(transport);
@@ -252,7 +251,9 @@ public sealed class PartyMemoryRecoveryRegressionTests
         }
 
         (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteByPartyAsync("tenant", "case", "party", Token)).Cleaned.ShouldBeTrue();
-        requests.ShouldBe([HttpMethod.Delete, HttpMethod.Get]);
+        requests.ShouldBe(requiresFreshBulkObservation
+            ? [HttpMethod.Delete, HttpMethod.Get, HttpMethod.Delete, HttpMethod.Get]
+            : [HttpMethod.Delete, HttpMethod.Get]);
         (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", Token)).ShouldBeEmpty();
         (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", Token)).ShouldBeEmpty();
         IReadOnlyList<PartyMemoryIngestionIntent> receipts = await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync("tenant", "party", Token);

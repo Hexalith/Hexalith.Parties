@@ -22,8 +22,13 @@ internal interface IPartyMemoryIngestionIntentStore
     /// <summary>Closes admission before taking the cleanup snapshot, including racing reservations.</summary>
     Task<IReadOnlyList<PartyMemoryIngestionIntent>> BeginCleanupAsync(string tenantId, string partyId, CancellationToken cancellationToken, bool permanent = true);
 
+    /// <summary>Retains validated terminal status and producer authority for an exact active cleanup snapshot.</summary>
+    Task<PartyMemoryIngestionIntent> RetainTerminalStatusAsync(string tenantId, string partyId, PartyMemoryIngestionIntent snapshot,
+        string canonicalId, string producerAuthority, CancellationToken cancellationToken);
+
     /// <summary>Retains validated legacy workflow provenance under the cleanup fence before remote deletion.</summary>
-    Task<PartyMemoryIngestionIntent> RetainLegacyAsync(string tenantId, string partyId, PartyMemoryUnitMappingEntry mapping, string caseId, string canonicalId, CancellationToken cancellationToken, string? producerAuthority = null);
+    Task<PartyMemoryIngestionIntent> RetainLegacyAsync(string tenantId, string partyId, PartyMemoryUnitMappingEntry mapping, string caseId, string canonicalId,
+        CancellationToken cancellationToken, string? producerAuthority = null, bool requirePending = false);
 
     /// <summary>Durably retains a producer discovered in the authoritative remote source inventory under the cleanup fence.</summary>
     Task RetainDiscoveredAsync(string tenantId, string partyId, string caseId, string sourceUri, string? workflowId,

@@ -240,8 +240,34 @@ internal sealed class PartyMemoryIngestionIntentStore(
     }
 
     /// <inheritdoc/>
+    public async Task<PartyMemoryIngestionIntent> RetainTerminalStatusAsync(string tenantId, string partyId,
+        PartyMemoryIngestionIntent snapshot, string canonicalId, string producerAuthority, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(canonicalId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(producerAuthority);
+        if (snapshot.CleanupSettled || snapshot.SubmissionRejected || string.IsNullOrWhiteSpace(snapshot.WorkflowInstanceId)
+            || (snapshot.ProducerAuthority is not null && snapshot.ProducerAuthority != producerAuthority)
+            || (snapshot.MemoryUnitId is not null && snapshot.MemoryUnitId != canonicalId))
+        {
+            throw new InvalidOperationException("memory-ingestion-terminal-status-identity-mismatch");
+        }
+
+        PartyMemoryIngestionIntent retained = snapshot with
+        {
+            MemoryUnitId = canonicalId,
+            RequiresTerminalEvidence = false,
+            ProducerAuthority = producerAuthority,
+        };
+        _ = await ChangeAsync(tenantId, partyId, current => current.CleanupRequested && current.Intents.Contains(snapshot)
+            ? current with { Intents = [.. current.Intents.Select(item => item == snapshot ? retained : item)] }
+            : throw new InvalidOperationException("memory-ingestion-cleanup-snapshot-changed"), cancellationToken).ConfigureAwait(false);
+        return retained;
+    }
+
+    /// <inheritdoc/>
     public async Task<PartyMemoryIngestionIntent> RetainLegacyAsync(string tenantId, string partyId,
-        PartyMemoryUnitMappingEntry mapping, string caseId, string canonicalId, CancellationToken cancellationToken, string? producerAuthority = null)
+        PartyMemoryUnitMappingEntry mapping, string caseId, string canonicalId, CancellationToken cancellationToken,
+        string? producerAuthority = null, bool requirePending = false)
     {
         ArgumentNullException.ThrowIfNull(mapping);
         ArgumentException.ThrowIfNullOrWhiteSpace(caseId);
@@ -256,7 +282,12 @@ internal sealed class PartyMemoryIngestionIntentStore(
                 throw new InvalidOperationException("memory-ingestion-cleanup-not-requested");
             }
 
-            PartyMemoryIngestionIntent? receipt = (current.CleanupReceipts ?? []).FirstOrDefault(item =>
+            if (requirePending && (current.CleanupReceipts ?? []).Any(item => item.AttemptId == attemptId))
+            {
+                throw new InvalidOperationException("memory-ingestion-legacy-snapshot-changed");
+            }
+
+            PartyMemoryIngestionIntent? receipt = requirePending ? null : (current.CleanupReceipts ?? []).FirstOrDefault(item =>
                 item.CaseId == caseId && item.MemoryUnitId == canonicalId
                 && !string.IsNullOrWhiteSpace(producerAuthority) && item.AbsenceAuthority == producerAuthority);
             if (receipt is not null && (receipt.WorkflowInstanceId == mapping.MemoryUnitId || receipt.MemoryUnitId == mapping.MemoryUnitId))
@@ -327,14 +358,17 @@ internal sealed class PartyMemoryIngestionIntentStore(
                     throw new InvalidOperationException("memory-ingestion-remote-identity-mismatch");
                 }
                 if ((current.CleanupReceipts ?? []).Contains(existing)) { return current; }
+                bool unverifiedLegacyWorkflow = existing.ProducerAuthority is null && existing.WorkflowInstanceId is not null
+                    && (workflowId is null || canonicalId is null || !terminalVerified);
                 PartyMemoryIngestionIntent captured = existing with
                 {
                     SubmissionRejected = false,
-                    ProducerAuthority = existing.ProducerAuthority ?? producerAuthority,
+                    ProducerAuthority = existing.ProducerAuthority
+                        ?? (workflowId is null && existing.WorkflowInstanceId is not null ? null : producerAuthority),
                     WorkflowInstanceId = existing.WorkflowInstanceId ?? workflowId,
                     MemoryUnitId = existing.MemoryUnitId ?? canonicalId,
-                    RequiresTerminalEvidence = workflowId is null ? existing.RequiresTerminalEvidence
-                        : !terminalVerified && (existing.RequiresTerminalEvidence || existing.WorkflowInstanceId is null || existing.MemoryUnitId is null),
+                    RequiresTerminalEvidence = unverifiedLegacyWorkflow || (workflowId is null ? existing.RequiresTerminalEvidence
+                        : !terminalVerified && (existing.RequiresTerminalEvidence || existing.WorkflowInstanceId is null || existing.MemoryUnitId is null)),
                 };
                 return current with { Intents = [.. current.Intents.Where(item => item == existing || item != unitObservation)
                     .Select(item => item == existing ? captured : item)] };

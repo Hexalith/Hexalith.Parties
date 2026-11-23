@@ -22,6 +22,7 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
 {
     private const string ManifestVariable = "PARTIES_BACKFILL_WORKLOAD_MANIFEST";
     private const string PhaseVariable = "PARTIES_BACKFILL_WORKLOAD_PHASE";
+    private const string HashVariable = "PARTIES_BACKFILL_WORKLOAD_HASH";
     private static readonly JsonSerializerOptions s_json = new(JsonSerializerDefaults.Web);
 
     /// <summary>Requires durable canonical, erasure and survivor outcomes after independent seed/rebuild/stage/commit/verify processes.</summary>
@@ -34,9 +35,10 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
         if (!string.IsNullOrWhiteSpace(selected))
         {
             byte[] bytes = await File.ReadAllBytesAsync(selected, token).ConfigureAwait(true);
-            Convert.ToHexStringLower(SHA256.HashData(bytes)).ShouldBe(Environment.GetEnvironmentVariable("PARTIES_BACKFILL_WORKLOAD_HASH"));
+            string inputSha256 = Convert.ToHexStringLower(SHA256.HashData(bytes));
+            inputSha256.ShouldBe(Environment.GetEnvironmentVariable(HashVariable));
             var manifest = JsonSerializer.Deserialize<PartyLegacyBackfillWorkloadManifest>(bytes, s_json).ShouldNotBeNull();
-            await RunPhaseAsync(configuration, manifest, selected, Environment.GetEnvironmentVariable(PhaseVariable).ShouldNotBeNull(), token).ConfigureAwait(true);
+            await RunPhaseAsync(configuration, manifest, selected, Environment.GetEnvironmentVariable(PhaseVariable).ShouldNotBeNull(), inputSha256, token).ConfigureAwait(true);
             return;
         }
 
@@ -67,7 +69,7 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
                         "-failSkips", "-result-xml", Path.Combine(directory, phase + ".xml") }) start.ArgumentList.Add(argument);
                     start.Environment[ManifestVariable] = path;
                     start.Environment[PhaseVariable] = phase;
-                    start.Environment["PARTIES_BACKFILL_WORKLOAD_HASH"] = hash;
+                    start.Environment[HashVariable] = hash;
                     var result = PackageTestProcess.Run(start, directory, 120000);
                     await File.WriteAllTextAsync(Path.Combine(directory, phase + ".log"), result.Diagnostic, token).ConfigureAwait(true);
                     result.ExitCode.ShouldBe(0, result.Diagnostic);
@@ -80,6 +82,7 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
                     receipt.RootElement.GetProperty("tenant").GetString().ShouldBe(manifest.Tenant);
                     receipt.RootElement.GetProperty("operation").GetString().ShouldBe(manifest.IndexOperation);
                     receipt.RootElement.GetProperty("phase").GetString().ShouldBe(phase);
+                    receipt.RootElement.GetProperty("inputSha256").GetString().ShouldBe(hash);
                     workloads.Add(receipt.RootElement.GetProperty("processId").GetInt32()).ShouldBeTrue();
                     (await File.ReadAllBytesAsync(path, token).ConfigureAwait(true)).ShouldBe(immutable);
                 }
@@ -144,7 +147,7 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
     }
 
     private static async Task RunPhaseAsync(PartyLegacyBackfillRuntimeConfiguration configuration, PartyLegacyBackfillWorkloadManifest manifest,
-        string path, string phase, CancellationToken token)
+        string path, string phase, string inputSha256, CancellationToken token)
     {
         string directory = Path.GetDirectoryName(path)!;
         var fixture = new PartyLegacyBackfillRuntimeFixture(configuration, manifest.Tenant, manifest.Histories);
@@ -308,7 +311,7 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
         survivors.Count.ShouldBe(9);
         foreach (var survivor in survivors) (await fixture.RawAsync(survivor.Key, token).ConfigureAwait(true)).ShouldBe(survivor.Value);
         await File.WriteAllBytesAsync(Path.Combine(directory, phase + ".json"), JsonSerializer.SerializeToUtf8Bytes(new
-        { tenant = manifest.Tenant, operation = manifest.IndexOperation, phase, processId = Environment.ProcessId }, s_json), token).ConfigureAwait(true);
+        { tenant = manifest.Tenant, operation = manifest.IndexOperation, phase, inputSha256, processId = Environment.ProcessId }, s_json), token).ConfigureAwait(true);
     }
 
     private static bool IsGeneration(ReadModelBatch batch) => batch.Scope.ProjectionType.EndsWith(".generation", StringComparison.Ordinal);

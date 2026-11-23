@@ -222,25 +222,30 @@ def verify_workloads(directory):
     phases = ("seed", "interrupt", "rebuild", "stage", "commit", "verify")
     outcomes = {}
     for target in sorted(directory.iterdir()):
-        manifest_path = target / "input.json"
-        manifest = json.loads(manifest_path.read_text())
+        manifest_bytes = (target / "input.json").read_bytes()
+        manifest = json.loads(manifest_bytes)
+        input_sha256 = hashlib.sha256(manifest_bytes).hexdigest()
         existing = manifest["existing"]
         if type(existing) is not bool or existing in outcomes or manifest["tenant"] != target.name:
             raise ValueError(f"{target}: unexpected backfill workload manifest")
+        operation = manifest.get("indexOperation")
+        if not isinstance(operation, str) or not operation.strip():
+            raise ValueError(f"{target}: invalid backfill workload operation")
         pids = set()
         for phase in phases:
             check_report(target / f"{phase}.xml", {WORKLOAD_METHOD: FACT}, BACKFILL_PROJECT)
             receipt = json.loads((target / f"{phase}.json").read_text())
-            if (receipt["tenant"], receipt["operation"], receipt["phase"]) != (
-                    target.name, manifest["indexOperation"], phase):
+            if (receipt["tenant"], receipt["operation"], receipt["phase"]) != (target.name, operation, phase):
                 raise ValueError(f"{target}: mismatched {phase} workload receipt")
+            if receipt.get("inputSha256") != input_sha256:
+                raise ValueError(f"{target}: missing or mismatched {phase} workload input SHA-256")
             pid = receipt["processId"]
             if type(pid) is not int or pid <= 0:
                 raise ValueError(f"{target}: invalid {phase} workload process ID")
             pids.add(pid)
         if len(pids) != len(phases):
             raise ValueError(f"{target}: expected a distinct process for each phase")
-        outcomes[existing] = {"tenant": target.name, "inputSha256": file_hash(manifest_path), "phases": list(phases)}
+        outcomes[existing] = {"tenant": target.name, "inputSha256": input_sha256, "phases": list(phases)}
     if outcomes.keys() != {False, True}:
         raise ValueError(f"{directory}: expected workload receipts for the empty and existing targets")
     return {"empty": outcomes[False], "existing": outcomes[True]}

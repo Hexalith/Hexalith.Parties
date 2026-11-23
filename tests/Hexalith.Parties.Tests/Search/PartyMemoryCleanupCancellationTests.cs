@@ -49,15 +49,17 @@ public sealed class PartyMemoryCleanupCancellationTests
         CancellationToken token = TestContext.Current.CancellationToken;
         using var caller = CancellationTokenSource.CreateLinkedTokenSource(token);
         var state = new PartyMemoryTestReadModelStore();
-        var first = new PartyMemoryIngestionIntent("first", "case", "urn:first", "workflow-first", "canonical-first");
-        var second = new PartyMemoryIngestionIntent("second", "case", "urn:second", "workflow-second", "canonical-second");
+        var handler = new PartyMemoryRecoveryHandler();
+        using var http = PartyMemoryRecoveryTests.Http(handler);
+        string? authority = PartyMemoryCleanupService.BuildProducerAuthority(http.BaseAddress);
+        var first = new PartyMemoryIngestionIntent("first", "case", "urn:first", "workflow-first", "canonical-first", ProducerAuthority: authority);
+        var second = new PartyMemoryIngestionIntent("second", "case", "urn:second", "workflow-second", "canonical-second", ProducerAuthority: authority);
         foreach (PartyMemoryIngestionIntent intent in new[] { first, second })
         {
             await PartyMemoryRecoveryTests.Intents(state).RegisterAsync("tenant", "party", intent, token);
             await PartyMemoryRecoveryTests.Mappings(state).RecordMappingAsync("tenant", "party", intent.MemoryUnitId!, intent.SourceUri, intent.CaseId, token);
         }
 
-        var handler = new PartyMemoryRecoveryHandler();
         handler.BeforeRequest = (request, _) =>
         {
             if (request.Method == HttpMethod.Delete && request.RequestUri!.AbsolutePath.EndsWith("/canonical-second", StringComparison.Ordinal))
@@ -68,8 +70,6 @@ public sealed class PartyMemoryCleanupCancellationTests
 
             return Task.CompletedTask;
         };
-        using var http = PartyMemoryRecoveryTests.Http(handler);
-
         await Should.ThrowAsync<OperationCanceledException>(() => PartyMemoryRecoveryTests.Cleanup(state, http).DeleteByPartyAsync("tenant", "case", "party", caller.Token));
 
         (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", token)).ShouldHaveSingleItem().ShouldBe(second);
@@ -116,10 +116,6 @@ public sealed class PartyMemoryCleanupCancellationTests
         CancellationToken token = TestContext.Current.CancellationToken;
         using var caller = CancellationTokenSource.CreateLinkedTokenSource(token);
         var state = new PartyMemoryTestReadModelStore();
-        var intent = new PartyMemoryIngestionIntent("attempt", "case", "urn:source", "workflow", "canonical");
-        await PartyMemoryRecoveryTests.Intents(state).RegisterAsync("tenant", "party", intent, token);
-        await PartyMemoryRecoveryTests.Mappings(state).RecordMappingAsync("tenant", "party", "canonical", intent.SourceUri, "case", token);
-        var mapping = (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", token)).ShouldHaveSingleItem();
         List<HttpMethod> requests = [];
         using var transport = new PartySearchErasureHttpHandler((request, _) =>
         {
@@ -129,6 +125,11 @@ public sealed class PartyMemoryCleanupCancellationTests
                 : new HttpResponseMessage(HttpStatusCode.NotFound) { Content = new PartyMemoryCancellationContent(caller.Cancel) });
         });
         using var http = PartyMemoryRecoveryTests.Http(transport);
+        var intent = new PartyMemoryIngestionIntent("attempt", "case", "urn:source", "workflow", "canonical",
+            ProducerAuthority: PartyMemoryCleanupService.BuildProducerAuthority(http.BaseAddress));
+        await PartyMemoryRecoveryTests.Intents(state).RegisterAsync("tenant", "party", intent, token);
+        await PartyMemoryRecoveryTests.Mappings(state).RecordMappingAsync("tenant", "party", "canonical", intent.SourceUri, "case", token);
+        var mapping = (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", token)).ShouldHaveSingleItem();
         (await Should.ThrowAsync<OperationCanceledException>(() => PartyMemoryRecoveryTests.Cleanup(state, http)
             .DeleteByPartyAsync("tenant", "case", "party", caller.Token))).CancellationToken.ShouldBe(caller.Token);
         requests.ShouldBe([HttpMethod.Delete, HttpMethod.Get]);

@@ -34,6 +34,49 @@ public sealed class PartySdkQueryHandlerTests
 {
     private static readonly DateTimeOffset s_now = new(2026, 8, 1, 12, 0, 0, TimeSpan.Zero);
 
+    /// <summary>Verifies that a cached generation cannot authorize any complete bucket reads.</summary>
+    /// <param name="export">Whether to exercise the export entry point.</param>
+    /// <returns>A task that represents the verification.</returns>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CompleteProcessingReadWithoutCachedBucketRevisionFailsBeforeReadingBucketsAsync(bool export)
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), token)
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel { Detail = Detail("party-1") }, "detail"));
+        var model = new PartyProcessingSdkReadModel
+        {
+            BucketGeneration = "generation", FirstBucket = 0, LastBucket = 0,
+            FirstRecordSequenceNumber = 1, LastRecordSequenceNumber = 1, RecordCount = 1, LastSequenceNumber = 1,
+        };
+        var bucket = new PartyProcessingBucket
+        {
+            Records = [new ProcessingActivityRecord { TenantId = "tenant-a", PartyId = "party-1", SequenceNumber = 1,
+                EventType = "PartyUpdated", Timestamp = s_now, Summary = "Retained fact." }],
+        };
+        bool unavailable = false;
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), token).Returns(_ => unavailable
+            ? Task.FromException<ReadModelEntry<PartyProcessingSdkReadModel>>(new IOException("store unavailable"))
+            : Task.FromResult(new ReadModelEntry<PartyProcessingSdkReadModel>(model, "revision")));
+        store.GetAsync<PartyProcessingBucket>("statestore", Arg.Any<string>(), token)
+            .Returns(new ReadModelEntry<PartyProcessingBucket>(bucket, "bucket"));
+        var service = CreateService(store);
+        QueryEnvelope envelope = CreateDetailEnvelope("GetProcessingRecords");
+        (await service.GetProcessingRecordsAsync(envelope, token)).Success.ShouldBeTrue();
+        unavailable = true;
+        store.ClearReceivedCalls();
+
+        QueryResult result = export ? await service.ExportPartyDataAsync(envelope with { QueryType = "ExportPartyData" }, token)
+            : await service.GetProcessingRecordsAsync(envelope, token);
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.QueryExecutionFailure);
+        result.PayloadBytes.ShouldBeNull();
+        await store.DidNotReceive().GetAsync<PartyProcessingBucket>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
+
     [Theory]
     [InlineData("missing")]
     [InlineData("outage")]

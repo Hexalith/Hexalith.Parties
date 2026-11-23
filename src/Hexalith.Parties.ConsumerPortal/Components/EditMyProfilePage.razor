@@ -317,33 +317,49 @@
         _saveCts?.Dispose();
         _saveCts = new CancellationTokenSource();
         CancellationToken token = _saveCts.Token;
+        PartyDetail original = _profile;
+        ConsumerProfileUpdateRequest submitted = BuildRequest(original.Type);
         ConsumerProfileUpdateResult result;
         try
         {
-            result = await ProfileEditClient
-                .UpdateMyProfileAsync(BuildRequest(_profile.Type), token)
-                .ConfigureAwait(false);
+            result = await ProfileEditClient.UpdateMyProfileAsync(submitted, token);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
-            _isSaving = false;
             return;
         }
         catch
         {
-            _formAlert = ConsumerPortalLabels.EditProfileSaveFailure;
-            _saveStatusMessage = null;
-            _pendingAlertFocus = true;
-            _isSaving = false;
+            if (!token.IsCancellationRequested)
+            {
+                _formAlert = ConsumerPortalLabels.EditProfileSaveFailure;
+                _saveStatusMessage = null;
+                _pendingAlertFocus = true;
+                _isSaving = false;
+            }
+
+            return;
+        }
+
+        if (token.IsCancellationRequested)
+        {
             return;
         }
 
         if (result.Outcome == ConsumerProfileUpdateOutcome.Accepted)
         {
-            _profile = NormalizeDetail(result.Detail ?? BuildOptimisticDetail(_profile));
+            _profile = NormalizeDetail(result.Detail ?? BuildOptimisticDetail(original, submitted));
             PopulateFromDetail(_profile);
-            _saveStatusMessage = ConsumerPortalLabels.EditProfileSavedUpdating;
-            await ReconcileAsync().ConfigureAwait(false);
+            if (_profile.IsErased || !IsSameProfile(original, _profile))
+            {
+                _saveStatusMessage = null;
+            }
+            else
+            {
+                _saveStatusMessage = ConsumerPortalLabels.EditProfileSavedUpdating;
+                StateHasChanged();
+                await ReconcileAsync(original, submitted, token);
+            }
         }
         else if (result.Outcome == ConsumerProfileUpdateOutcome.ValidationRejected)
         {
@@ -357,29 +373,36 @@
             _pendingAlertFocus = true;
         }
 
-        _isSaving = false;
+        if (!token.IsCancellationRequested)
+        {
+            _isSaving = false;
+        }
     }
 
-    private async Task ReconcileAsync()
+    private async Task ReconcileAsync(PartyDetail original, ConsumerProfileUpdateRequest submitted, CancellationToken token)
     {
-        _saveCts?.Cancel();
-        _saveCts?.Dispose();
-        _saveCts = new CancellationTokenSource();
-        CancellationToken token = _saveCts.Token;
-
         try
         {
-            PartyDetail confirmed = NormalizeDetail(await ProfileDataClient.GetMyPartyAsync(token).ConfigureAwait(false));
+            PartyDetail confirmed = NormalizeDetail(await ProfileDataClient.GetMyPartyAsync(token));
             if (token.IsCancellationRequested)
             {
                 return;
             }
 
-            _profile = confirmed;
-            PopulateFromDetail(confirmed);
-            _saveStatusMessage = confirmed.Freshness?.Status == ProjectionFreshnessStatus.Current
-                ? ConsumerPortalLabels.EditProfileSavedCurrent
-                : ConsumerPortalLabels.EditProfileDegradedAfterSave;
+            if (confirmed.IsErased || !IsSameProfile(original, confirmed))
+            {
+                _profile = confirmed;
+                PopulateFromDetail(confirmed);
+                _saveStatusMessage = null;
+                return;
+            }
+
+            if (confirmed.Freshness?.Status == ProjectionFreshnessStatus.Current && MatchesSubmittedDetails(confirmed, submitted))
+            {
+                _profile = confirmed;
+                PopulateFromDetail(confirmed);
+                _saveStatusMessage = ConsumerPortalLabels.EditProfileSavedCurrent;
+            }
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
@@ -392,6 +415,17 @@
             }
         }
     }
+
+    private static bool IsSameProfile(PartyDetail original, PartyDetail observed)
+        => original.Id == observed.Id && original.Type == observed.Type;
+
+    private static bool MatchesSubmittedDetails(PartyDetail profile, ConsumerProfileUpdateRequest submitted)
+        => profile.Type switch
+        {
+            PartyType.Person => submitted.PersonDetails is not null && profile.PersonDetails == submitted.PersonDetails,
+            PartyType.Organization => submitted.OrganizationDetails is not null && profile.OrganizationDetails == submitted.OrganizationDetails,
+            _ => false,
+        };
 
     private bool ValidateClient(PartyType type)
     {
@@ -514,37 +548,32 @@
             IsNaturalPerson = _model.OrganizationIsNaturalPerson,
         };
 
-    private PartyDetail BuildOptimisticDetail(PartyDetail current)
+    private static PartyDetail BuildOptimisticDetail(PartyDetail current, ConsumerProfileUpdateRequest submitted)
         => current with
         {
-            DisplayName = current.Type == PartyType.Person
-                ? $"{_model.PersonFirstName} {_model.PersonLastName}".Trim()
-                : _model.OrganizationLegalName.Trim(),
-            SortName = current.SortName,
-            PersonDetails = current.Type == PartyType.Person ? BuildPersonDetails() : null,
-            OrganizationDetails = current.Type == PartyType.Organization ? BuildOrganizationDetails() : null,
+            DisplayName = submitted.PersonDetails is { } person
+                ? $"{person.FirstName} {person.LastName}"
+                : submitted.OrganizationDetails?.LegalName ?? current.DisplayName,
+            PersonDetails = submitted.PersonDetails,
+            OrganizationDetails = submitted.OrganizationDetails,
             Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Stale),
         };
 
     private void PopulateFromDetail(PartyDetail detail)
     {
-        if (detail.PersonDetails is { } person)
-        {
-            _model.PersonFirstName = person.FirstName;
-            _model.PersonLastName = person.LastName;
-            _model.PersonPrefix = person.Prefix;
-            _model.PersonSuffix = person.Suffix;
-            _model.PersonDateOfBirth = FormatDate(person.DateOfBirth);
-        }
+        PersonDetails? person = detail.IsErased ? null : detail.PersonDetails;
+        _model.PersonFirstName = person?.FirstName ?? string.Empty;
+        _model.PersonLastName = person?.LastName ?? string.Empty;
+        _model.PersonPrefix = person?.Prefix;
+        _model.PersonSuffix = person?.Suffix;
+        _model.PersonDateOfBirth = FormatDate(person?.DateOfBirth);
 
-        if (detail.OrganizationDetails is { } organization)
-        {
-            _model.OrganizationLegalName = organization.LegalName;
-            _model.OrganizationTradingName = organization.TradingName;
-            _model.OrganizationLegalForm = organization.LegalForm;
-            _model.OrganizationRegistrationNumber = organization.RegistrationNumber;
-            _model.OrganizationIsNaturalPerson = organization.IsNaturalPerson;
-        }
+        OrganizationDetails? organization = detail.IsErased ? null : detail.OrganizationDetails;
+        _model.OrganizationLegalName = organization?.LegalName ?? string.Empty;
+        _model.OrganizationTradingName = organization?.TradingName;
+        _model.OrganizationLegalForm = organization?.LegalForm;
+        _model.OrganizationRegistrationNumber = organization?.RegistrationNumber;
+        _model.OrganizationIsNaturalPerson = organization?.IsNaturalPerson ?? false;
     }
 
     private void OnFieldChanged(object? sender, FieldChangedEventArgs e)

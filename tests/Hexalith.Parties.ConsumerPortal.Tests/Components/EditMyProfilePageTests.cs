@@ -201,18 +201,18 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
     }
 
     [Fact]
-    public void EditMyProfilePage_AcceptedSave_OptimisticallyUpdatesAndUsesOnePoliteStatusSource()
+    public async Task EditMyProfilePage_AcceptedSave_OptimisticallyUpdatesAndUsesOnePoliteStatusSource()
     {
         var save = new TaskCompletionSource<ConsumerProfileUpdateResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-        PartyDetail updated = CurrentPerson() with
-        {
-            DisplayName = "Grace Lovelace",
-            PersonDetails = CurrentPerson().PersonDetails! with { FirstName = "Grace" },
-            Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Current),
-        };
+        var readback = new TaskCompletionSource<PartyDetail>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var readbackStarted = new TaskCompletionSource<CancellationToken>(TaskCreationOptions.RunContinuationsAsynchronously);
         var dataClient = new QueueProfileDataClient(
             _ => Task.FromResult(CurrentPerson()),
-            _ => Task.FromResult(updated));
+            token =>
+            {
+                readbackStarted.SetResult(token);
+                return readback.Task;
+            });
         var editClient = new QueueProfileEditClient(_ => save.Task);
         Services.AddSingleton<IConsumerProfileDataClient>(dataClient);
         Services.AddSingleton<IConsumerProfileEditClient>(editClient);
@@ -228,15 +228,192 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
             cut.FindAll("[role='status'][aria-live='polite']").Count.ShouldBe(1);
         });
 
+        PartyDetail updated = CurrentPerson() with
+        {
+            DisplayName = "Grace Lovelace",
+            PersonDetails = editClient.LastRequest.ShouldNotBeNull().PersonDetails,
+        };
         save.SetResult(new ConsumerProfileUpdateResult(ConsumerProfileUpdateOutcome.Accepted, updated));
+        CancellationToken readbackToken = await readbackStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), Xunit.TestContext.Current.CancellationToken);
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Grace Lovelace");
+            cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldBe("Saved - updating");
+            cut.FindAll("[role='status'][aria-live='polite']").Count.ShouldBe(1);
+            dataClient.CallCount.ShouldBe(2);
+            readbackToken.ShouldBe(editClient.LastToken);
+            readbackToken.IsCancellationRequested.ShouldBeFalse();
+        });
+        readback.SetResult(updated);
 
         cut.WaitForAssertion(() =>
         {
             FindTextInput(cut, "First name").Instance.Value.ShouldBe("Grace");
-            cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldContain("Saved");
+            cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldBe("Saved");
             editClient.LastRequest.ShouldNotBeNull();
             editClient.LastRequest!.PersonDetails!.FirstName.ShouldBe("Grace");
             dataClient.CallCount.ShouldBe(2);
+        });
+    }
+
+    [Fact]
+    public async Task EditMyProfilePage_LateAcceptanceAfterDisposalDoesNotReadBack()
+    {
+        var save = new TaskCompletionSource<ConsumerProfileUpdateResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var dataClient = new QueueProfileDataClient(_ => Task.FromResult(CurrentPerson()));
+        var editClient = new QueueProfileEditClient(_ => save.Task);
+        Services.AddSingleton<IConsumerProfileDataClient>(dataClient);
+        Services.AddSingleton<IConsumerProfileEditClient>(editClient);
+        IRenderedComponent<EditMyProfilePage> cut = Render<EditMyProfilePage>();
+        cut.WaitForAssertion(() => FindTextInput(cut, "First name").Instance.Value.ShouldBe("Ada"));
+        SetTextInput(cut, "First name", "Grace");
+        Task submit = cut.Find("form").TriggerEventAsync("onsubmit", EventArgs.Empty);
+        cut.WaitForAssertion(() => editClient.LastRequest.ShouldNotBeNull());
+
+        await DisposeComponentsAsync();
+        editClient.LastToken.IsCancellationRequested.ShouldBeTrue();
+        save.SetResult(new ConsumerProfileUpdateResult(ConsumerProfileUpdateOutcome.Accepted));
+        await submit.WaitAsync(TimeSpan.FromSeconds(5), Xunit.TestContext.Current.CancellationToken);
+
+        dataClient.CallCount.ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData(false, ProjectionFreshnessStatus.Stale)]
+    [InlineData(false, ProjectionFreshnessStatus.Current)]
+    [InlineData(true, ProjectionFreshnessStatus.Stale)]
+    [InlineData(true, ProjectionFreshnessStatus.Current)]
+    public void EditMyProfilePage_ReadbackOfEarlierDetailsKeepsAcceptedEdits(bool organization, ProjectionFreshnessStatus freshness)
+    {
+        PartyDetail original = organization ? CurrentOrganization() : CurrentPerson();
+        const string edited = "Accepted edit";
+        string label = organization ? "Legal name" : "First name";
+        var dataClient = new QueueProfileDataClient(
+            _ => Task.FromResult(original),
+            _ => Task.FromResult(original with { Freshness = ProjectionFreshnessMetadata.Create(freshness) }));
+        var editClient = new QueueProfileEditClient(request => Task.FromResult(new ConsumerProfileUpdateResult(
+            ConsumerProfileUpdateOutcome.Accepted, organization ? original with
+            {
+                DisplayName = edited, OrganizationDetails = request.OrganizationDetails,
+            } : null)));
+        Services.AddSingleton<IConsumerProfileDataClient>(dataClient);
+        Services.AddSingleton<IConsumerProfileEditClient>(editClient);
+        IRenderedComponent<EditMyProfilePage> cut = Render<EditMyProfilePage>();
+        cut.WaitForAssertion(() => FindTextInput(cut, label).Instance.Value.ShouldNotBeEmpty());
+
+        SetTextInput(cut, label, edited);
+        cut.Find("form").Submit();
+
+        cut.WaitForAssertion(() =>
+        {
+            dataClient.CallCount.ShouldBe(2);
+            cut.Find("fieldset").HasAttribute("disabled").ShouldBeFalse();
+            FindTextInput(cut, label).Instance.Value.ShouldBe(edited);
+            cut.Markup.ShouldContain(edited);
+            cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldBe("Saved - updating");
+        });
+    }
+
+    [Theory]
+    [InlineData(false, ProjectionFreshnessStatus.Stale, true)]
+    [InlineData(true, ProjectionFreshnessStatus.Stale, true)]
+    [InlineData(false, ProjectionFreshnessStatus.Current, true)]
+    [InlineData(true, ProjectionFreshnessStatus.Current, true)]
+    [InlineData(false, ProjectionFreshnessStatus.Current, false)]
+    [InlineData(true, ProjectionFreshnessStatus.Current, false)]
+    public void EditMyProfilePage_ReadbackConfirmsOnlyCurrentMatchingDetails(bool organization, ProjectionFreshnessStatus freshness, bool matching)
+    {
+        PartyDetail original = organization ? CurrentOrganization() : CurrentPerson();
+        const string edited = "Edited details";
+        string label = organization ? "Trading name" : "Prefix";
+        var editClient = new QueueProfileEditClient();
+        var dataClient = new QueueProfileDataClient(_ => Task.FromResult(original), _ =>
+        {
+            ConsumerProfileUpdateRequest submitted = editClient.LastRequest.ShouldNotBeNull();
+            return Task.FromResult(original with
+            {
+                PersonDetails = matching || organization ? submitted.PersonDetails
+                    : submitted.PersonDetails! with { Prefix = original.PersonDetails!.Prefix },
+                OrganizationDetails = matching || !organization ? submitted.OrganizationDetails
+                    : submitted.OrganizationDetails! with { TradingName = original.OrganizationDetails!.TradingName },
+                Freshness = ProjectionFreshnessMetadata.Create(freshness),
+            });
+        });
+        Services.AddSingleton<IConsumerProfileDataClient>(dataClient);
+        Services.AddSingleton<IConsumerProfileEditClient>(editClient);
+        IRenderedComponent<EditMyProfilePage> cut = Render<EditMyProfilePage>();
+        cut.WaitForAssertion(() => FindTextInput(cut, label).Instance.Value.ShouldNotBeEmpty());
+
+        SetTextInput(cut, label, edited);
+        cut.Find("form").Submit();
+
+        cut.WaitForAssertion(() =>
+        {
+            dataClient.CallCount.ShouldBe(2);
+            cut.Find("fieldset").HasAttribute("disabled").ShouldBeFalse();
+            FindTextInput(cut, label).Instance.Value.ShouldBe(edited);
+            cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldBe(matching && freshness == ProjectionFreshnessStatus.Current
+                ? "Saved" : "Saved - updating");
+        });
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void EditMyProfilePage_ReadbackHonorsErasureOrChangedProfileWithoutConfirmingSave(bool erased)
+    {
+        PartyDetail original = CurrentPerson();
+        PartyDetail changed = original with
+        {
+            Id = erased ? original.Id : "replacement-profile",
+            IsErased = erased,
+            DisplayName = "Replacement profile",
+            PersonDetails = original.PersonDetails! with { FirstName = "Grace" },
+        };
+        Services.AddSingleton<IConsumerProfileDataClient>(new QueueProfileDataClient(
+            _ => Task.FromResult(original), _ => Task.FromResult(changed)));
+        Services.AddSingleton<IConsumerProfileEditClient>(new QueueProfileEditClient());
+        IRenderedComponent<EditMyProfilePage> cut = Render<EditMyProfilePage>();
+        cut.WaitForAssertion(() => FindTextInput(cut, "First name").Instance.Value.ShouldBe("Ada"));
+
+        SetTextInput(cut, "First name", "Grace");
+        cut.Find("form").Submit();
+
+        cut.WaitForAssertion(() =>
+        {
+            if (erased)
+            {
+                cut.FindAll("form").ShouldBeEmpty();
+                cut.Markup.ShouldNotContain("Grace");
+            }
+            else
+            {
+                cut.Markup.ShouldContain("Replacement profile");
+                FindTextInput(cut, "First name").Instance.Value.ShouldBe("Grace");
+            }
+
+            cut.Markup.ShouldNotContain("Saved");
+        });
+    }
+
+    [Fact]
+    public void EditMyProfilePage_AcceptedSaveRetainsSubmittedDetailsAndReadErrorStatus()
+    {
+        Services.AddSingleton<IConsumerProfileDataClient>(new QueueProfileDataClient(
+            _ => Task.FromResult(CurrentPerson()),
+            _ => Task.FromException<PartyDetail>(new InvalidOperationException("readback failure"))));
+        Services.AddSingleton<IConsumerProfileEditClient>(new QueueProfileEditClient());
+        IRenderedComponent<EditMyProfilePage> cut = Render<EditMyProfilePage>();
+        cut.WaitForAssertion(() => FindTextInput(cut, "First name").Instance.Value.ShouldBe("Ada"));
+
+        SetTextInput(cut, "First name", "Grace");
+        cut.Find("form").Submit();
+
+        cut.WaitForAssertion(() =>
+        {
+            FindTextInput(cut, "First name").Instance.Value.ShouldBe("Grace");
+            cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldBe("Saved - showing the latest available details");
         });
     }
 
@@ -477,10 +654,13 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
 
         public ConsumerProfileUpdateRequest? LastRequest { get; private set; }
 
+        public CancellationToken LastToken { get; private set; }
+
         public Task<ConsumerProfileUpdateResult> UpdateMyProfileAsync(
             ConsumerProfileUpdateRequest request,
             CancellationToken cancellationToken = default)
         {
+            LastToken = cancellationToken;
             LastRequest = request;
             Func<ConsumerProfileUpdateRequest, Task<ConsumerProfileUpdateResult>>? call = calls.Length == 0
                 ? null

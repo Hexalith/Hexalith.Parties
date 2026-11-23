@@ -76,6 +76,12 @@ public sealed partial class PartySdkQueryService
             ValidateInlineProcessingScope(model, tenant, party);
             return model.Records;
         }
+
+        if (string.IsNullOrEmpty(etag))
+        {
+            throw new InvalidOperationException("processing-history-revision-unavailable");
+        }
+
         var records = new List<ProcessingActivityRecord>();
         if (model.FirstBucket is { } first && model.LastBucket is { } last)
         {

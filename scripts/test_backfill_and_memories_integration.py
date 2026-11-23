@@ -1,3 +1,5 @@
+import hashlib
+import json
 from pathlib import Path
 import runpy
 import tempfile
@@ -10,7 +12,9 @@ runner = runpy.run_path(str(Path(__file__).with_name("verify-backfill-and-memori
 
 class BackfillMemoriesReportTests(unittest.TestCase):
     def report(self, lane, project):
-        expected = runner["MEMORIES_METHODS"][lane]
+        return self.report_for_methods(runner["MEMORIES_METHODS"][lane], project)
+
+    def report_for_methods(self, expected, project):
         assembly = ET.Element("assembly", name=project + ".dll", errors="0")
         collection = ET.SubElement(assembly, "collection")
         for method, arguments in expected.items():
@@ -32,6 +36,60 @@ class BackfillMemoriesReportTests(unittest.TestCase):
             report = Path(directory) / "results.xml"
             ET.ElementTree(root).write(report)
             return runner["check_report"](report, runner["MEMORIES_METHODS"][lane], project)
+
+    def write_workloads(self, directory, *, empty_operation="operation-empty"):
+        phases = ("seed", "interrupt", "rebuild", "stage", "commit", "verify")
+        assembly = self.report_for_methods({runner["WORKLOAD_METHOD"]: runner["FACT"]}, runner["BACKFILL_PROJECT"])
+        root = ET.Element("assemblies")
+        root.append(assembly)
+        outcomes = {}
+        for tenant, existing in (("empty", False), ("existing", True)):
+            target = directory / tenant
+            target.mkdir()
+            operation = "operation-existing" if existing else empty_operation
+            manifest = json.dumps({"tenant": tenant, "existing": existing, "indexOperation": operation}, indent=2).encode()
+            (target / "input.json").write_bytes(manifest)
+            digest = hashlib.sha256(manifest).hexdigest()
+            for pid, phase in enumerate(phases, start=1):
+                ET.ElementTree(root).write(target / f"{phase}.xml")
+                (target / f"{phase}.json").write_text(json.dumps({
+                    "tenant": tenant, "operation": operation, "phase": phase, "processId": pid, "inputSha256": digest,
+                }))
+            outcomes[tenant] = {"tenant": tenant, "inputSha256": digest, "phases": list(phases)}
+        return outcomes
+
+    def test_every_phase_binds_the_retained_manifest_for_both_starting_states(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp)
+            expected = self.write_workloads(directory)
+            self.assertEqual(runner["verify_workloads"](directory), expected)
+
+    def test_workloads_reject_changed_or_missing_input_digests(self):
+        for defect in ("changed receipt", "missing receipt digest", "changed manifest bytes"):
+            with self.subTest(defect=defect), tempfile.TemporaryDirectory() as tmp:
+                directory = Path(tmp)
+                self.write_workloads(directory)
+                if defect == "changed manifest bytes":
+                    manifest = directory / "existing" / "input.json"
+                    manifest.write_bytes(manifest.read_bytes() + b"\n")
+                else:
+                    receipt_path = directory / "empty" / "stage.json"
+                    receipt = json.loads(receipt_path.read_text())
+                    if defect == "changed receipt":
+                        receipt["inputSha256"] = "0" * 64
+                    else:
+                        del receipt["inputSha256"]
+                    receipt_path.write_text(json.dumps(receipt))
+                with self.assertRaisesRegex(ValueError, "missing or mismatched .* workload input SHA-256"):
+                    runner["verify_workloads"](directory)
+
+    def test_workloads_reject_invalid_operations_with_matching_receipts_and_digests(self):
+        for operation in ("", "  ", None, 42, True):
+            with self.subTest(operation=operation), tempfile.TemporaryDirectory() as tmp:
+                directory = Path(tmp)
+                self.write_workloads(directory, empty_operation=operation)
+                with self.assertRaisesRegex(ValueError, "invalid backfill workload operation"):
+                    runner["verify_workloads"](directory)
 
     def test_misplaced_test_is_rejected_even_when_reported_counts_match(self):
         project = runner["MEMORIES_PROJECT"]

@@ -374,6 +374,8 @@ qualification_2026_11_22: EventStore 5.4.0 complete reads and exports now reject
 qualification_2026_11_23: The catalog check now requires all seven paging and cursor scenarios, both interrupted-rebuild paths, and the bounded projection rebuild. See `spec-verify-five-deferred-behaviors.md` for the released-package run and remaining gates.
 recovery_batch_2026_11_23: An unresolved delivery rechecks the selected processing representation on each conditional write. A competing bucket rebuild preserves its generation and records. The released-package query and projection tests cover subsequent reads. Deployed paging and cutover remain open. See `spec-ten-deferred-recovery-and-runtime-checks.md`.
 
+authority_recovery_2026_11_23: Complete processing reads and exports reject cached bucket metadata without an authoritative revision before fetching buckets. See `spec-five-deferred-authority-and-recovery-fixes.md`.
+
 ### DW-51: Resolve projection-handler performance and validation-coupling debt
 
 status: done 2026-10-21
@@ -459,6 +461,8 @@ followup_repeatable_2026_11_22: The maintained runner reproduces the 11 EventSto
 
 qualification_2026_11_23: The catalog check now requires all six in-memory migration cases covering restart and rollback, incomplete history, and competing canonical writers. See `spec-verify-five-deferred-behaviors.md` for the released-package run and remaining gates.
 recovery_batch_2026_11_23: An audit retry now re-reads both slots, preserves a missing canonical slot, and returns rebuild-required on observing the loss. The released processing-only conditional write cannot detect an independent detail deletion after its last companion read. Deployed writer coordination is still required. The disposable Redis/Dapr migration passed for empty and existing targets, including six separately verified workload phases per target. Deployed writer drain, cutover and rollback remain open. See `spec-ten-deferred-recovery-and-runtime-checks.md`.
+
+authority_recovery_2026_11_23: Each backfill workload receipt records the digest of the input it verified. The parent and retained report reader check it. The owned Redis/Dapr rehearsal verified all 12 receipts across both canonical starting states. See `spec-five-deferred-authority-and-recovery-fixes.md`.
 
 ### DW-59: Preserve mappings when unit ID and source URI match different rows
 
@@ -672,6 +676,8 @@ qualification_2026_11_22: The owned Memories 4.1.0 producer rehearsal began with
 qualification_2026_11_23: The catalog check now requires empty-local-state results for both complete and incomplete inventory, wrong-tenant refusal, and full-capacity REST paging. See `spec-verify-five-deferred-behaviors.md` for the released-package run and remaining gates.
 recovery_batch_2026_11_23: Discovery binds an unbound legacy intent to the producer that supplied the matched inventory. After restart, another producer cannot settle that obligation from its own inventory. Historical inventory reconciliation and deployed writer exclusion remain open. See `spec-ten-deferred-recovery-and-runtime-checks.md`.
 
+authority_recovery_2026_11_23: Validated terminal status now binds the active legacy workflow to its producer in the same conditional write as its canonical output. Cleanup checks producer authority again before using older unbound records. See `spec-five-deferred-authority-and-recovery-fixes.md`.
+
 ### DW-83: Persist recovery when mapping and compensating deletion both fail
 
 status: done 2026-10-23
@@ -813,6 +819,8 @@ followup_released_catalog_2026_11_21: The maintained runner passes all 465 UI co
 
 qualification_2026_11_23: The catalog check now requires both reconciliation registrations, freshness and live-region behavior, fallback polling, and reconnection through the production transport adapter. See `spec-verify-five-deferred-behaviors.md` for the released-package run and remaining gates.
 recovery_batch_2026_11_23: The public embedded UI module and the standalone host now honor the same shared-primitives setting. Registration tests exercise enabled, disabled and absent configuration. Deployment and named owner acceptance remain open. See `spec-ten-deferred-recovery-and-runtime-checks.md`.
+
+authority_recovery_2026_11_23: The profile editor retains accepted values when the first readback is stale or returns earlier details. A current match confirms the save. Erasure and profile changes take precedence. See `spec-five-deferred-authority-and-recovery-fixes.md`.
 
 ### DW-101: Consolidate Admin and Consumer exports onto the approved FrontComposer browser-download service after G4-D delivery
 
@@ -1360,6 +1368,8 @@ qualification_2026_11_22: The delayed-ingestion and deletion rehearsal passed ag
 
 qualification_2026_11_23: The catalog check now requires accepted deletion to retain obligations, pending producers to survive restart, and a mapping-removal failure to prevent cleanup success. See `spec-verify-five-deferred-behaviors.md` for the released-package run and remaining gates.
 recovery_batch_2026_11_23: Cleanup retains the observed producer binding when legacy inventory imports workflow and unit facts. Restarting against another endpoint preserves the outstanding work for its original producer. Production custody and erasure evidence remain open. See `spec-ten-deferred-recovery-and-runtime-checks.md`.
+
+authority_recovery_2026_11_23: Bulk cleanup retains a shared unit and its mappings until every known workflow for that unit has validated terminal evidence. A single scoped deletion attempt supplies evidence for the unit per pass. See `spec-five-deferred-authority-and-recovery-fixes.md`.
 
 ### DW-169: D7 — Use concurrency-aware removal when cleaning a party memory-unit mapping inventory.
 
@@ -2831,3 +2841,11 @@ archived: 2026-11-15
   evidence: Parent post-review Release controls ran101 rows and failed only HungSignalHelperAfterAppliedStopIsReapedAndOriginalProcessResumes at its immediate State==T assertion, before creating the intentionally hung helper. The unchanged baseline SignalAsync acknowledges pidfd_send_signal; WhileStoppedAsync separately waits for T/t. Retain the failed100/101 aggregate, preserve the timeout/resume contract, and use a bounded stopped-state observation in the test. The actual failed state was not captured.
   status: done 2026-11-22
   resolution: Main already polls for T/t with a two-second cancellation bound and checks the original process birth. The focused Linux Release test passed with one test, zero skips and zero failures, including helper timeout, reaping and resumption of the original child. The historical 100/101 run remains recorded. See `spec-five-runtime-build-verification-deferrals.md`.
+
+- source_spec: `spec-five-deferred-authority-and-recovery-fixes.md`
+  summary: Continue observing an accepted profile save after an unwitnessed first readback.
+  evidence: The editor performs one readback. After an earlier or stale result it keeps the submitted values and updating status. Verify a subsequent observation and cancellation without changing the submit contract.
+
+- source_spec: `spec-five-deferred-authority-and-recovery-fixes.md`
+  summary: Recover a newly observed shared output after a terminal-evidence write fails and workflow status becomes unavailable.
+  evidence: The current pass protects an output first seen in terminal status even when saving that evidence fails. A later pass can only protect known scoped units if the status can be recovered or inventory identifies the output. Qualify a durable reconciliation strategy for that case.
