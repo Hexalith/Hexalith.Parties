@@ -31,12 +31,13 @@ class BackfillMemoriesReportTests(unittest.TestCase):
             node.attrib.update(total=total, passed=total, skipped="0", failed="0", **{"not-run": "0"})
 
     def verify(self, assembly, lane, project):
+        methods = runner["BACKFILL_METHODS"] if lane == "backfill" else runner["MEMORIES_METHODS"][lane]
         root = ET.Element("assemblies")
         root.append(assembly)
         with tempfile.TemporaryDirectory() as directory:
             report = Path(directory) / "results.xml"
             ET.ElementTree(root).write(report)
-            return runner["check_report"](report, runner["MEMORIES_METHODS"][lane], project)
+            return runner["check_report"](report, methods, project)
 
     def write_workloads(self, directory, *, empty_operation="operation-empty"):
         phases = ("seed", "interrupt", "rebuild", "stage", "commit", "verify")
@@ -195,6 +196,29 @@ class BackfillMemoriesReportTests(unittest.TestCase):
                     self.recount(assembly)
                     with self.assertRaisesRegex(ValueError, method):
                         self.verify(assembly, lane, project)
+
+    def test_backfill_requires_every_workload_report_integrity_case(self):
+        project = runner["BACKFILL_PROJECT"]
+        method = ("Hexalith.Parties.Tests.Projections.PartyLegacyBackfillProcessRuntimeTests."
+                  "WorkloadReportRefusesSubstitutedOrMalformedEvidence")
+        for defect in ("phase", "target", "nested output", "identity", "counts"):
+            with self.subTest(defect=defect):
+                assembly = self.report_for_methods(runner["BACKFILL_METHODS"], project)
+                complete = self.verify(assembly, "backfill", project)
+                collection = assembly.find("collection")
+                case = f'{method}(defect: "{defect}")'
+                self.assertIn(case, complete["cases"])
+                collection.remove(next(test for test in collection if test.get("name") == case))
+                self.recount(assembly)
+                with self.assertRaisesRegex(ValueError, "missing"):
+                    self.verify(assembly, "backfill", project)
+
+                checks = {lane: {"passed": len(cases), "cases": sorted(cases)}
+                          for lane, cases in runner["REQUIRED_CASES"].items()}
+                remaining = [name for name in complete["cases"] if name != case]
+                checks["backfill"] = {"passed": len(remaining), "cases": remaining}
+                with self.assertRaisesRegex(ValueError, "backfill: incomplete required case evidence"):
+                    runner["complete_summary"]({"checks": checks})
 
     def test_assembly_identity_error_and_collection_results_must_agree(self):
         lane, project = "cross-source-authority", runner["MEMORIES_PROJECT"]

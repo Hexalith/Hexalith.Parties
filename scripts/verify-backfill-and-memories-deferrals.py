@@ -47,6 +47,8 @@ BACKFILL_METHODS = {
         for target in ("detail", "processing", "index") for existing in ("False", "True")),
     f"{BACKFILL_PROCESS}.EvidenceRetentionFailureStillDeletesScratchAndPreservesPrimary": boolean_cases("qualificationFailed"),
     WORKLOAD_METHOD: FACT,
+    f"{BACKFILL_PROCESS}.WorkloadReportRefusesSubstitutedOrMalformedEvidence": tuple(
+        f'(defect: "{defect}")' for defect in ("phase", "target", "nested output", "identity", "counts")),
 }
 INGESTION = f"{MEMORIES_PROJECT}.Ingestion"
 DISCOVERY = f"{INGESTION}.NaturalLanguageErasureIntegrationTests"

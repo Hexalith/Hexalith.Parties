@@ -350,7 +350,14 @@
 
         if (result.Outcome == ConsumerProfileUpdateOutcome.Accepted)
         {
-            _profile = NormalizeDetail(result.Detail ?? BuildOptimisticDetail(original, submitted));
+            PartyDetail? accepted = result.Detail;
+            if (accepted is null
+                || (IsSameProfile(original, accepted) && !accepted.IsErased && !MatchesSubmittedDetails(accepted, submitted)))
+            {
+                accepted = BuildOptimisticDetail(accepted ?? original, submitted);
+            }
+
+            _profile = NormalizeDetail(accepted);
             PopulateFromDetail(_profile);
             _editContext.MarkAsUnmodified();
             if (_profile.IsErased || !IsSameProfile(original, _profile))

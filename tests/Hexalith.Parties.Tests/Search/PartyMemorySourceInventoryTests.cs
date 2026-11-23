@@ -318,6 +318,77 @@ public sealed class PartyMemorySourceInventoryTests
     }
 
     [Fact]
+    public async Task UnacknowledgedLegacyReservationHoldsItsCaseUntilInventoryBindsTheAttempt()
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        const string tenant = "tenant";
+        const string party = "party";
+        string source = PartyMemoryUrn.Build(tenant, party);
+        var state = new PartyMemoryTestReadModelStore();
+        var remote = new PartyMemoryRecoveryHandler();
+        remote.Units.UnionWith(["terminal-unit", "mapped-unit", "other-unit", "reserved-unit", "unrelated-survivor"]);
+        remote.Workflows["mapped-workflow"] = PartyMemoryRecoveryHandler.Completed("mapped-workflow", "mapped-unit");
+        using var http = PartyMemoryRecoveryTests.Http(remote);
+        string? producer = PartyMemoryCleanupService.BuildProducerAuthority(http.BaseAddress);
+        var reservation = new PartyMemoryIngestionIntent("unacknowledged", "case", source, ProducerAuthority: producer);
+        await PartyMemoryRecoveryTests.Intents(state).RegisterAsync(tenant, party, reservation, token);
+        await PartyMemoryRecoveryTests.Mappings(state).RecordMappingAsync(tenant, party, "mapped-workflow", source, "case", token);
+        await PartyMemoryRecoveryTests.Mappings(state).RecordMappingAsync(tenant, party, "other-unit", source, "other-case", token);
+
+        string retryHash = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(
+            System.Text.Encoding.UTF8.GetBytes(reservation.AttemptId)));
+        bool published = false;
+        remote.InventoryRequest = (request, _) =>
+        {
+            if (request.Method == HttpMethod.Post)
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NoContent));
+            }
+
+            object Entry(string caseId, string workflow, string unit, string? retry = null) => new
+            {
+                caseId, workflowInstanceId = workflow, memoryUnitId = unit,
+                state = remote.Units.Contains(unit) ? "Completed" : "Deleted",
+                terminalVerified = true, idempotencyTokenHash = retry,
+            };
+            List<object> entries = [Entry("case", "terminal", "terminal-unit"), Entry("other-case", "other", "other-unit")];
+            if (published)
+            {
+                entries.Add(Entry("case", "reserved-workflow", "reserved-unit", retryHash));
+            }
+
+            return Task.FromResult(Page(entries.ToArray(), complete: false));
+        };
+
+        (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteByPartyAsync(tenant, "case", party, token)).Cleaned.ShouldBeFalse();
+
+        remote.Requests.Where(item => item.Method == HttpMethod.Delete).ShouldHaveSingleItem().Path.ShouldEndWith("/other-unit");
+        remote.Units.ShouldBe(["terminal-unit", "mapped-unit", "reserved-unit", "unrelated-survivor"], ignoreOrder: true);
+        var active = await PartyMemoryRecoveryTests.Intents(state).GetAsync(tenant, party, token);
+        active.Single(item => item.AttemptId == reservation.AttemptId).ShouldBe(reservation);
+        active.Single(item => item.WorkflowInstanceId == "terminal").MemoryUnitId.ShouldBe("terminal-unit");
+        active.ShouldAllBe(item => !item.CleanupSettled);
+        (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync(tenant, party, token))
+            .ShouldHaveSingleItem().MemoryUnitId.ShouldBe("mapped-workflow");
+
+        published = true;
+        remote.Requests.Clear();
+        (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteByPartyAsync(tenant, "case", party, token)).Cleaned.ShouldBeFalse();
+
+        remote.Requests.Where(item => item.Method == HttpMethod.Delete).Select(item => item.Path.Split('/')[^1])
+            .ShouldBe(["terminal-unit", "mapped-unit", "reserved-unit"], ignoreOrder: true);
+        remote.Units.ShouldBe(["unrelated-survivor"]);
+        (await PartyMemoryRecoveryTests.Intents(state).GetAsync(tenant, party, token)).ShouldBeEmpty();
+        (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync(tenant, party, token)).ShouldBeEmpty();
+        var receipts = await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync(tenant, party, token);
+        receipts.Single(item => item.AttemptId == reservation.AttemptId).ShouldBe(reservation with
+        {
+            WorkflowInstanceId = "reserved-workflow", MemoryUnitId = "reserved-unit", CleanupSettled = true, AbsenceAuthority = producer,
+        });
+        (await PartyMemoryRecoveryTests.Intents(state).GetSourceClosureVersionAsync(tenant, party, token, producer)).ShouldBeNull();
+    }
+
+    [Fact]
     public async Task SharedUnitRetainsValidatedLegacyAliasForRetryAfterWorkflowExpiry()
     {
         CancellationToken token = TestContext.Current.CancellationToken;
@@ -795,6 +866,188 @@ public sealed class PartyMemorySourceInventoryTests
         (await PartyMemoryRecoveryTests.Cleanup(persisted, differentPrefix).DeleteByPartyAsync("tenant", "case", "party", token)).Cleaned.ShouldBeFalse();
     }
 
+    [Theory]
+    [InlineData("unknown-output")]
+    [InlineData("known-output")]
+    [InlineData("unacknowledged")]
+    public async Task DirectUnitCleanupRetainsAliasUntilSiblingCanBeReconciled(string siblingEvidence)
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        const string tenant = "tenant";
+        const string party = "party";
+        const string caseId = "case";
+        var state = new PartyMemoryTestReadModelStore();
+        var remote = new PartyMemoryRecoveryHandler();
+        remote.Units.UnionWith(["shared", "unrelated-survivor"]);
+        remote.Workflows["selected"] = PartyMemoryRecoveryHandler.Completed("selected", "shared");
+        var completedSibling = PartyMemoryRecoveryHandler.Completed("sibling", "shared");
+        remote.Workflows["sibling"] = completedSibling with { RuntimeStatus = "Running" };
+        using var http = PartyMemoryRecoveryTests.Http(remote);
+        string? producer = PartyMemoryCleanupService.BuildProducerAuthority(http.BaseAddress);
+        bool acknowledged = siblingEvidence != "unacknowledged";
+        var sibling = new PartyMemoryIngestionIntent("pending-sibling", caseId, PartyMemoryUrn.Build(tenant, party),
+            acknowledged ? "sibling" : null, siblingEvidence == "known-output" ? "shared" : null,
+            RequiresTerminalEvidence: acknowledged, ProducerAuthority: producer);
+        await PartyMemoryRecoveryTests.Intents(state).RegisterAsync(tenant, party, sibling, token);
+
+        (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteMemoryUnitAsync(tenant, caseId, party, "selected", token)).Cleaned.ShouldBeFalse();
+
+        remote.Requests.ShouldNotContain(item => item.Method == HttpMethod.Delete);
+        remote.Units.ShouldContain("shared");
+        var retained = await PartyMemoryRecoveryTests.Intents(state).GetAsync(tenant, party, token);
+        retained.Count.ShouldBe(2);
+        retained.ShouldContain(sibling);
+        var selected = retained.Single(item => item.WorkflowInstanceId == "selected");
+        selected.MemoryUnitId.ShouldBe("shared");
+        selected.ProducerAuthority.ShouldBe(producer);
+        retained.ShouldAllBe(item => !item.CleanupSettled);
+        (await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync(tenant, party, token)).ShouldBe(retained);
+
+        if (!acknowledged)
+        {
+            remote.Requests.ShouldHaveSingleItem().Path.ShouldEndWith("/ingest/selected");
+            remote.Requests.Clear();
+            remote.Workflows.Remove("selected");
+            (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteMemoryUnitAsync(tenant, caseId, party, "selected", token)).Cleaned.ShouldBeFalse();
+            remote.Requests.ShouldBeEmpty();
+            (await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync(tenant, party, token)).ShouldBe(retained);
+            return;
+        }
+
+        remote.Requests.Clear();
+        remote.Workflows.Remove("selected");
+        remote.Workflows["sibling"] = completedSibling;
+        (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteMemoryUnitAsync(tenant, caseId, party, "selected", token)).Cleaned.ShouldBeTrue();
+
+        remote.Requests.ShouldNotContain(item => item.Path.EndsWith("/ingest/selected", StringComparison.Ordinal));
+        remote.Requests.Where(item => item.Path.EndsWith("/shared", StringComparison.Ordinal)).Select(item => item.Method)
+            .ShouldBe([HttpMethod.Delete, HttpMethod.Get]);
+        remote.Units.ShouldBe(["unrelated-survivor"]);
+        var intents = PartyMemoryRecoveryTests.Intents(state);
+        (await intents.GetAsync(tenant, party, token)).ShouldHaveSingleItem()
+            .ShouldBe(sibling with { RequiresTerminalEvidence = false, MemoryUnitId = "shared" });
+        (await intents.BeginCleanupAsync(tenant, party, token)).Single(item => item.WorkflowInstanceId == "selected")
+            .ShouldBe(selected with { CleanupSettled = true, AbsenceAuthority = producer });
+
+        remote.Requests.Clear();
+        remote.Workflows.Remove("sibling");
+        (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteMemoryUnitAsync(tenant, caseId, party, "sibling", token)).Cleaned.ShouldBeTrue();
+        remote.Requests.ShouldBeEmpty();
+        (await intents.GetAsync(tenant, party, token)).ShouldBeEmpty();
+        (await intents.BeginCleanupAsync(tenant, party, token)).ShouldAllBe(item => item.CleanupSettled && item.AbsenceAuthority == producer);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task DirectUnitCleanupRequiresFreshAbsenceAfterNewSharedProducerBecomesTerminal(bool selectNewProducer)
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        const string tenant = "tenant";
+        const string party = "party";
+        const string caseId = "case";
+        var state = new PartyMemoryTestReadModelStore();
+        var remote = new PartyMemoryRecoveryHandler();
+        remote.Units.Add("shared");
+        remote.Workflows["historical"] = PartyMemoryRecoveryHandler.Completed("historical", "shared");
+        using var http = PartyMemoryRecoveryTests.Http(remote);
+        string? producer = PartyMemoryCleanupService.BuildProducerAuthority(http.BaseAddress);
+        (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteMemoryUnitAsync(tenant, caseId, party, "historical", token)).Cleaned.ShouldBeTrue();
+
+        string source = PartyMemoryUrn.Build(tenant, party);
+        await PartyMemoryRecoveryTests.Intents(state).RetainDiscoveredAsync(tenant, party, caseId, source, "new-producer",
+            "shared", retryIdentityHash: null, terminalVerified: false, token, producer);
+        remote.Units.Add("shared");
+        remote.Workflows["new-producer"] = PartyMemoryRecoveryHandler.Completed("new-producer", "shared");
+        string selected = selectNewProducer ? "new-producer" : "historical";
+        remote.Requests.Clear();
+        remote.DeleteStatus = (int)HttpStatusCode.ServiceUnavailable;
+
+        (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteMemoryUnitAsync(tenant, caseId, party, selected, token)).Cleaned.ShouldBeFalse();
+
+        remote.Requests.Where(item => item.Method == HttpMethod.Delete).ShouldHaveSingleItem().Path.ShouldEndWith("/shared");
+        var beforeRetry = await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync(tenant, party, token);
+        beforeRetry.Single(item => item.CleanupSettled).WorkflowInstanceId.ShouldBe("historical");
+        beforeRetry.Single(item => !item.CleanupSettled).RequiresTerminalEvidence.ShouldBeTrue();
+
+        remote.Requests.Clear();
+        remote.DeleteStatus = (int)HttpStatusCode.NoContent;
+        remote.DelayDeletion = true;
+        (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteMemoryUnitAsync(tenant, caseId, party, selected, token)).Cleaned.ShouldBeFalse();
+        remote.Requests.Where(item => item.Path.EndsWith("/shared", StringComparison.Ordinal)).Select(item => item.Method)
+            .ShouldBe([HttpMethod.Delete, HttpMethod.Get]);
+        remote.Units.ShouldContain("shared");
+        (await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync(tenant, party, token)).ShouldBe(beforeRetry);
+
+        remote.Requests.Clear();
+        remote.DelayDeletion = false;
+        (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteMemoryUnitAsync(tenant, caseId, party, selected, token)).Cleaned.ShouldBeTrue();
+        remote.Requests.Where(item => item.Path.EndsWith("/shared", StringComparison.Ordinal)).Select(item => item.Method)
+            .ShouldBe([HttpMethod.Delete, HttpMethod.Get]);
+        remote.Units.ShouldBeEmpty();
+        var recovered = (await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync(tenant, party, token))
+            .Single(item => item.WorkflowInstanceId == "new-producer");
+        recovered.RequiresTerminalEvidence.ShouldBeFalse();
+        recovered.CleanupSettled.ShouldBe(selectNewProducer);
+        recovered.AbsenceAuthority.ShouldBe(selectNewProducer ? producer : null);
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task DirectUnitCleanupReusesExactAbsenceWhenSiblingPublishesToADifferentUnit(bool differentHasReceipt, bool mismatchedOutput)
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        const string tenant = "tenant";
+        const string party = "party";
+        const string caseId = "case";
+        var state = new PartyMemoryTestReadModelStore();
+        var remote = new PartyMemoryRecoveryHandler();
+        remote.Units.UnionWith(["historical-unit", "different-unit"]);
+        remote.Workflows["historical"] = PartyMemoryRecoveryHandler.Completed("historical", "historical-unit");
+        using var http = PartyMemoryRecoveryTests.Http(remote);
+        string? producer = PartyMemoryCleanupService.BuildProducerAuthority(http.BaseAddress);
+        (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteMemoryUnitAsync(tenant, caseId, party, "historical", token)).Cleaned.ShouldBeTrue();
+
+        if (differentHasReceipt)
+        {
+            remote.Workflows["different-history"] = PartyMemoryRecoveryHandler.Completed("different-history", "different-unit");
+            (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteMemoryUnitAsync(tenant, caseId, party, "different-history", token)).Cleaned.ShouldBeTrue();
+            remote.Units.Add("different-unit");
+        }
+
+        string source = PartyMemoryUrn.Build(tenant, party);
+        string? knownSiblingUnit = mismatchedOutput ? "historical-unit" : null;
+        await PartyMemoryRecoveryTests.Intents(state).RetainDiscoveredAsync(tenant, party, caseId, source, "sibling",
+            knownSiblingUnit, retryIdentityHash: null, terminalVerified: false, token, producer);
+        remote.Workflows["sibling"] = PartyMemoryRecoveryHandler.Completed("sibling", "different-unit");
+        remote.Workflows["alias"] = PartyMemoryRecoveryHandler.Completed("alias", "historical-unit");
+        remote.Requests.Clear();
+        remote.DeleteStatus = (int)HttpStatusCode.ServiceUnavailable;
+
+        (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteMemoryUnitAsync(tenant, caseId, party, "alias", token)).Cleaned.ShouldBe(!mismatchedOutput);
+
+        remote.Requests.ShouldAllBe(item => item.Method == HttpMethod.Get && item.Path.Contains("/ingest/", StringComparison.Ordinal));
+        remote.Units.ShouldBe(["different-unit"]);
+        var retained = await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync(tenant, party, token);
+        var different = retained.Single(item => item.WorkflowInstanceId == "sibling");
+        different.MemoryUnitId.ShouldBe(differentHasReceipt ? knownSiblingUnit : "different-unit");
+        different.RequiresTerminalEvidence.ShouldBe(differentHasReceipt);
+        different.CleanupSettled.ShouldBeFalse();
+        different.AbsenceAuthority.ShouldBeNull();
+        retained.Single(item => item.WorkflowInstanceId == "alias").AbsenceAuthority.ShouldBe(mismatchedOutput ? null : producer);
+
+        if (differentHasReceipt && !mismatchedOutput)
+        {
+            remote.Requests.Clear();
+            (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteMemoryUnitAsync(tenant, caseId, party, "sibling", token)).Cleaned.ShouldBeFalse();
+            remote.Requests.Where(item => item.Method == HttpMethod.Delete).ShouldHaveSingleItem().Path.ShouldEndWith("/different-unit");
+            remote.Units.ShouldBe(["different-unit"]);
+            (await PartyMemoryRecoveryTests.Intents(state).GetAsync(tenant, party, token)).ShouldHaveSingleItem().ShouldBe(different);
+        }
+    }
+
     [Fact]
     public async Task DirectUnitCleanupDoesNotReuseAnotherProducerAbsenceForIdenticalIdentifiers()
     {
@@ -849,12 +1102,12 @@ public sealed class PartyMemorySourceInventoryTests
     }
 #endif
 
-    internal static HttpResponseMessage Page(object[] entries, string? next = null, string tenant = "tenant") => new(HttpStatusCode.OK)
+    internal static HttpResponseMessage Page(object[] entries, string? next = null, string tenant = "tenant", bool complete = true) => new(HttpStatusCode.OK)
     {
         Content = JsonContent.Create(new
         {
             tenantId = tenant, sourceUri = PartyMemoryUrn.Build("tenant", "party"), version = "controlled-snapshot",
-            coverageComplete = true, admissionClosed = true, permanent = true, entries, nextCursor = next,
+            coverageComplete = complete, admissionClosed = true, permanent = true, entries, nextCursor = next,
         }),
     };
 }

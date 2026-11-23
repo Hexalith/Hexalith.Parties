@@ -233,6 +233,7 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
         {
             DisplayName = "Grace Lovelace",
             PersonDetails = editClient.LastRequest.ShouldNotBeNull().PersonDetails,
+            Identifiers = [new PartyIdentifier { Id = "accepted", Type = IdentifierType.Other, Value = "ACCEPTED-ID" }],
         };
         save.SetResult(new ConsumerProfileUpdateResult(ConsumerProfileUpdateOutcome.Accepted, updated));
         CancellationToken readbackToken = await readbackStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), Xunit.TestContext.Current.CancellationToken);
@@ -240,6 +241,7 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
         cut.WaitForAssertion(() =>
         {
             cut.Markup.ShouldContain("Grace Lovelace");
+            cut.Markup.ShouldContain("ACCEPTED-ID");
             cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldBe("Saved - updating");
             cut.FindAll("[role='status'][aria-live='polite']").Count.ShouldBe(1);
             dataClient.CallCount.ShouldBe(2);
@@ -317,6 +319,56 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
     }
 
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task EditMyProfilePage_OlderAcceptanceAndInconclusiveReadbacksKeepSubmittedDetails(bool organization)
+    {
+        PartyDetail original = organization ? CurrentOrganization() : CurrentPerson();
+        string label = organization ? "Legal name" : "First name";
+        const string edited = "Accepted edit";
+        const string acceptedIdentifier = "ACCEPTED-READ-ONLY-ID";
+        PartyDetail accepted = original with
+        {
+            Identifiers = [new PartyIdentifier { Id = "accepted", Type = IdentifierType.Other, Value = acceptedIdentifier }],
+        };
+        var firstReadback = new TaskCompletionSource<PartyDetail>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var dataClient = new QueueProfileDataClient(
+            _ => Task.FromResult(original),
+            _ => firstReadback.Task,
+            _ => Task.FromResult(original with { Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Stale) }));
+        var editClient = new QueueProfileEditClient(_ => Task.FromResult(new ConsumerProfileUpdateResult(
+            ConsumerProfileUpdateOutcome.Accepted, accepted)));
+        Services.AddSingleton<IConsumerProfileDataClient>(dataClient);
+        Services.AddSingleton<IConsumerProfileEditClient>(editClient);
+        IRenderedComponent<EditMyProfilePage> cut = Render<EditMyProfilePage>();
+        cut.WaitForAssertion(() => FindTextInput(cut, label).Instance.Value.ShouldNotBeEmpty());
+
+        SetTextInput(cut, label, edited);
+        Task submit = cut.Find("form").TriggerEventAsync("onsubmit", EventArgs.Empty);
+
+        cut.WaitForAssertion(() =>
+        {
+            dataClient.CallCount.ShouldBe(2);
+            FindTextInput(cut, label).Instance.Value.ShouldBe(edited);
+            cut.Markup.ShouldContain(edited);
+            cut.Markup.ShouldContain(acceptedIdentifier);
+            cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldBe("Saved - updating");
+        });
+
+        firstReadback.SetResult(original);
+        await submit.WaitAsync(TimeSpan.FromSeconds(5), Xunit.TestContext.Current.CancellationToken);
+
+        cut.WaitForAssertion(() =>
+        {
+            dataClient.CallCount.ShouldBe(3);
+            FindTextInput(cut, label).Instance.Value.ShouldBe(edited);
+            cut.Markup.ShouldContain(edited);
+            cut.Markup.ShouldContain(acceptedIdentifier);
+            cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldBe("Saved - showing the latest available details");
+        });
+    }
+
+    [Theory]
     [InlineData(false, ProjectionFreshnessStatus.Stale, true)]
     [InlineData(true, ProjectionFreshnessStatus.Stale, true)]
     [InlineData(false, ProjectionFreshnessStatus.Current, true)]
@@ -361,11 +413,13 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
     }
 
     [Theory]
-    [InlineData(true, false)]
-    [InlineData(false, false)]
-    [InlineData(true, true)]
-    [InlineData(false, true)]
-    public void EditMyProfilePage_ReadbackHonorsErasureOrChangedProfileWithoutConfirmingSave(bool erased, bool delayed)
+    [InlineData(true, false, false)]
+    [InlineData(false, false, false)]
+    [InlineData(true, true, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, true)]
+    [InlineData(false, false, true)]
+    public void EditMyProfilePage_HonorsErasureOrChangedProfileWithoutConfirmingSave(bool erased, bool delayed, bool fromAcceptance)
     {
         PartyDetail original = CurrentPerson();
         PartyDetail changed = original with
@@ -373,12 +427,14 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
             Id = erased ? original.Id : "replacement-profile",
             IsErased = erased,
             DisplayName = "Replacement profile",
-            PersonDetails = original.PersonDetails! with { FirstName = "Grace" },
+            PersonDetails = original.PersonDetails! with { FirstName = "Replacement" },
         };
         var dataClient = new QueueProfileDataClient(
             _ => Task.FromResult(original), _ => Task.FromResult(delayed ? original : changed), _ => Task.FromResult(changed));
+        var editClient = new QueueProfileEditClient(_ => Task.FromResult(new ConsumerProfileUpdateResult(
+            ConsumerProfileUpdateOutcome.Accepted, fromAcceptance ? changed : null)));
         Services.AddSingleton<IConsumerProfileDataClient>(dataClient);
-        Services.AddSingleton<IConsumerProfileEditClient>(new QueueProfileEditClient());
+        Services.AddSingleton<IConsumerProfileEditClient>(editClient);
         IRenderedComponent<EditMyProfilePage> cut = Render<EditMyProfilePage>();
         cut.WaitForAssertion(() => FindTextInput(cut, "First name").Instance.Value.ShouldBe("Ada"));
 
@@ -395,11 +451,11 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
             else
             {
                 cut.Markup.ShouldContain("Replacement profile");
-                FindTextInput(cut, "First name").Instance.Value.ShouldBe("Grace");
+                FindTextInput(cut, "First name").Instance.Value.ShouldBe("Replacement");
             }
 
             cut.Markup.ShouldNotContain("Saved");
-            dataClient.CallCount.ShouldBe(delayed ? 3 : 2);
+            dataClient.CallCount.ShouldBe(fromAcceptance ? 1 : delayed ? 3 : 2);
         });
     }
 

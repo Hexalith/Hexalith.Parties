@@ -518,7 +518,7 @@ public sealed partial class PartySdkQueryService(
             {
                 lastKnownCache.EvictProcessing(tenantId, partyId);
             }
-            else if (!lastKnownCache.StoreProcessingIfCurrent(tenantId, partyId, cacheGeneration, read.Value))
+            else if (!lastKnownCache.StoreProcessingIfCurrent(tenantId, partyId, cacheGeneration, read.Value, read.ETag))
             {
                 throw new InvalidOperationException("read-model-invalidated");
             }

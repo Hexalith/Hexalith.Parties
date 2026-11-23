@@ -377,6 +377,8 @@ recovery_batch_2026_11_23: An unresolved delivery rechecks the selected processi
 authority_recovery_2026_11_23: Complete processing reads and exports reject cached bucket metadata without an authoritative revision before fetching buckets. See `spec-five-deferred-authority-and-recovery-fixes.md`.
 recovery_evidence_followup_2026_11_23: Complete inline processing history and portability exports recheck the selected revision before returning records. The cache evicts a rejected snapshot while preserving an independently installed replacement. See `spec-five-deferred-recovery-evidence-followups.md`.
 
+recovery_integrity_2026_11_23: Processing history and portability export reject every cached copy of a superseded ETag. A delayed read cannot reinsert it after rejection, and a separately cached revision can still serve degraded reads. See `spec-five-deferred-recovery-integrity-checks.md`.
+
 ### DW-51: Resolve projection-handler performance and validation-coupling debt
 
 status: done 2026-10-21
@@ -465,6 +467,8 @@ recovery_batch_2026_11_23: An audit retry now re-reads both slots, preserves a m
 
 authority_recovery_2026_11_23: Each backfill workload receipt records the digest of the input it verified. The parent and retained report reader check it. The owned Redis/Dapr rehearsal verified all 12 receipts across both canonical starting states. See `spec-five-deferred-authority-and-recovery-fixes.md`.
 recovery_evidence_followup_2026_11_23: Each passing xUnit workload result carries the exact phase receipt bytes. The parent and evidence reader reject a successful XML report copied from a different phase or target. See `spec-five-deferred-recovery-evidence-followups.md`.
+
+recovery_integrity_2026_11_23: The maintained backfill runner now requires all five workload report integrity cases. Omission of any one case prevents qualification. See `spec-five-deferred-recovery-integrity-checks.md`.
 
 ### DW-59: Preserve mappings when unit ID and source URI match different rows
 
@@ -681,6 +685,8 @@ recovery_batch_2026_11_23: Discovery binds an unbound legacy intent to the produ
 authority_recovery_2026_11_23: Validated terminal status now binds the active legacy workflow to its producer in the same conditional write as its canonical output. Cleanup checks producer authority again before using older unbound records. See `spec-five-deferred-authority-and-recovery-fixes.md`.
 recovery_evidence_followup_2026_11_23: A contradictory Admitted row retains its workflow and requires terminal evidence. Cleanup protects that case and restores the requirement on older active intents. See `spec-five-deferred-recovery-evidence-followups.md`.
 
+recovery_integrity_2026_11_23: An unacknowledged legacy reservation retains possible outputs and mappings in its case until inventory identifies the attempt. Other cases can continue cleanup. See `spec-five-deferred-recovery-integrity-checks.md`.
+
 ### DW-83: Persist recovery when mapping and compensating deletion both fail
 
 status: done 2026-10-23
@@ -825,6 +831,8 @@ recovery_batch_2026_11_23: The public embedded UI module and the standalone host
 
 authority_recovery_2026_11_23: The profile editor retains accepted values when the first readback is stale or returns earlier details. A current match confirms the save. Erasure and profile changes take precedence. See `spec-five-deferred-authority-and-recovery-fixes.md`.
 recovery_evidence_followup_2026_11_23: An inconclusive first profile readback schedules one further read. A matching current read confirms the accepted save and preserves any newer form edits. See `spec-five-deferred-recovery-evidence-followups.md`.
+
+recovery_integrity_2026_11_23: A stale same-profile acceptance payload preserves submitted editable details and the read-only fields returned by the acceptance response. Erasure and replacement retain precedence. See `spec-five-deferred-recovery-integrity-checks.md`.
 
 ### DW-101: Consolidate Admin and Consumer exports onto the approved FrontComposer browser-download service after G4-D delivery
 
@@ -1375,6 +1383,8 @@ recovery_batch_2026_11_23: Cleanup retains the observed producer binding when le
 
 authority_recovery_2026_11_23: Bulk cleanup retains a shared unit and its mappings until every known workflow for that unit has validated terminal evidence. A single scoped deletion attempt supplies evidence for the unit per pass. See `spec-five-deferred-authority-and-recovery-fixes.md`.
 recovery_evidence_followup_2026_11_23: An unresolved inventory or legacy workflow with unknown output protects candidates in its case during cleanup retries and producer changes. Other cases and independently verified refreshes can continue. See `spec-five-deferred-recovery-evidence-followups.md`.
+
+recovery_integrity_2026_11_23: Direct cleanup retains the selected alias while another known workflow may still publish the same unit. A prior absence receipt cannot settle a newly published output after a failed deletion or absence read. See `spec-five-deferred-recovery-integrity-checks.md`.
 
 ### DW-169: D7 — Use concurrency-aware removal when cleaning a party memory-unit mapping inventory.
 
@@ -2854,3 +2864,11 @@ archived: 2026-11-15
 - source_spec: `spec-five-deferred-authority-and-recovery-fixes.md`
   summary: Recover a newly observed shared output after a terminal-evidence write fails and workflow status becomes unavailable.
   evidence: The current pass protects an output first seen in terminal status even when saving that evidence fails. A later pass can only protect known scoped units if the status can be recovered or inventory identifies the output. Qualify a durable reconciliation strategy for that case.
+
+- source_spec: `spec-five-deferred-recovery-integrity-checks.md`
+  summary: Decide whether a processing snapshot needs completed revision verification before it can serve degraded history or portability export.
+  evidence: An initial processing read currently populates the cache before the verification call. A verification transport failure can leave that first snapshot available to later degraded reads. Qualify the intended availability contract and verify the failure interleaving.
+
+- source_spec: `spec-five-deferred-recovery-integrity-checks.md`
+  summary: Coordinate direct Memories cleanup with source inventory reconciliation that imports obligations after the cleanup snapshot.
+  evidence: The admission fence stops new local submissions. An overlapping inventory reconciliation can still retain an unresolved remote workflow after the direct operation reads its durable snapshot. Verify coordination of discovery and scoped deletion before extending the direct cleanup guarantee.

@@ -135,7 +135,16 @@ public sealed class PartySdkLastKnownReadModelCache
         string partyId,
         long generation,
         PartyProcessingSdkReadModel value)
-        => StoreIfCurrent(PartySdkReadModelAddresses.Processing(tenantId, partyId), generation, value);
+        => StoreProcessingIfCurrent(tenantId, partyId, generation, value, etag: null);
+
+    /// <summary>Stores a processing value and the revision used to verify it.</summary>
+    internal bool StoreProcessingIfCurrent(
+        string tenantId,
+        string partyId,
+        long generation,
+        PartyProcessingSdkReadModel value,
+        string? etag)
+        => StoreIfCurrent(PartySdkReadModelAddresses.Processing(tenantId, partyId), generation, value, etag);
 
     /// <summary>Attempts to get a non-expired processing value.</summary>
     public bool TryGetProcessing(string tenantId, string partyId, out PartyProcessingSdkReadModel? value)
@@ -145,19 +154,14 @@ public sealed class PartySdkLastKnownReadModelCache
     public void EvictProcessing(string tenantId, string partyId)
         => Evict(PartySdkReadModelAddresses.Processing(tenantId, partyId));
 
-    /// <summary>Evicts a rejected processing instance while preserving a concurrently installed replacement.</summary>
-    internal void EvictProcessingIfSame(string tenantId, string partyId, PartyProcessingSdkReadModel rejected)
-        => Evict(PartySdkReadModelAddresses.Processing(tenantId, partyId), rejected);
+    /// <summary>Evicts a rejected processing revision while preserving a concurrently installed replacement.</summary>
+    internal void EvictProcessingIfSame(string tenantId, string partyId, PartyProcessingSdkReadModel rejected, string? etag)
+        => Evict(PartySdkReadModelAddresses.Processing(tenantId, partyId), rejected, etag);
 
-    private void Evict(string key, object? expected = null)
+    private void Evict(string key, object? expected = null, string? etag = null)
     {
         lock (_gate)
         {
-            if (expected is not null && (!_entries.TryGetValue(key, out var entry) || !ReferenceEquals(entry.Value, expected)))
-            {
-                return;
-            }
-
             long[] invalidated = _activeReads
                 .Where(pair => string.Equals(pair.Value, key, StringComparison.Ordinal))
                 .Select(static pair => pair.Key)
@@ -167,7 +171,11 @@ public sealed class PartySdkLastKnownReadModelCache
                 _ = _activeReads.Remove(generation);
             }
 
-            _ = _entries.Remove(key);
+            if (expected is null || (_entries.TryGetValue(key, out var entry)
+                && (entry.ETag is null ? ReferenceEquals(entry.Value, expected) : string.Equals(entry.ETag, etag, StringComparison.Ordinal))))
+            {
+                _ = _entries.Remove(key);
+            }
         }
     }
 
@@ -185,7 +193,7 @@ public sealed class PartySdkLastKnownReadModelCache
         }
     }
 
-    private bool StoreIfCurrent<TValue>(string key, long generation, TValue value)
+    private bool StoreIfCurrent<TValue>(string key, long generation, TValue value, string? etag = null)
         where TValue : class
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -205,7 +213,7 @@ public sealed class PartySdkLastKnownReadModelCache
                 _ = _entries.Remove(oldestKey);
             }
 
-            _entries[key] = new PartySdkLastKnownReadModelCacheEntry(value, now);
+            _entries[key] = new PartySdkLastKnownReadModelCacheEntry(value, now, etag);
             return true;
         }
     }

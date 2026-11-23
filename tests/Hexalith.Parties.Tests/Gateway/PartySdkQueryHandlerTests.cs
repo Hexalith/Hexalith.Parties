@@ -364,8 +364,14 @@ public sealed class PartySdkQueryHandlerTests
     [InlineData(true, "changed")]
     [InlineData(false, "absent")]
     [InlineData(true, "absent")]
-    [InlineData(false, "concurrent")]
-    [InlineData(true, "concurrent")]
+    [InlineData(false, "concurrent-revisionless")]
+    [InlineData(true, "concurrent-revisionless")]
+    [InlineData(false, "concurrent-same-revisionless")]
+    [InlineData(true, "concurrent-same-revisionless")]
+    [InlineData(false, "concurrent-same")]
+    [InlineData(true, "concurrent-same")]
+    [InlineData(false, "concurrent-different")]
+    [InlineData(true, "concurrent-different")]
     public async Task CompleteInlineProcessingReadsEvictOnlyRejectedRevisionAndPreserveDegradedFallbackAsync(bool export, string verification)
     {
         CancellationToken token = TestContext.Current.CancellationToken;
@@ -382,20 +388,20 @@ public sealed class PartySdkQueryHandlerTests
         var rejected = new PartyProcessingSdkReadModel { Records = [record] };
         var replacement = rejected with { Records = [record with { Summary = "New revision." }] };
         var cache = new PartySdkLastKnownReadModelCache();
-        store.GetAsync<PartyProcessingSdkReadModel>("statestore", processingKey, token).Returns(
-            _ => new ReadModelEntry<PartyProcessingSdkReadModel>(rejected, "before"),
-            _ =>
-            {
-                if (verification == "concurrent")
-                {
-                    cache.StoreProcessing(tenant, party, replacement);
-                }
-
-                return verification == "absent" ? new ReadModelEntry<PartyProcessingSdkReadModel>(null, null)
-                    : new ReadModelEntry<PartyProcessingSdkReadModel>(replacement, "after");
-            });
         var service = CreateService(store, lastKnownCache: cache);
         var envelope = CreateDetailEnvelope(export ? "ExportPartyData" : "GetProcessingRecords");
+        bool concurrentSameRevision = verification == "concurrent-same";
+        byte[] concurrentSnapshot = JsonSerializer.SerializeToUtf8Bytes(
+            concurrentSameRevision ? rejected : replacement, PartiesJsonOptions.Default);
+        string concurrentETag = concurrentSameRevision ? "before" : "after";
+        var oldReadResponse = new TaskCompletionSource<ReadModelEntry<PartyProcessingSdkReadModel>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task<QueryResult>? oldRead = null;
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", processingKey, token).Returns(
+            _ => Task.FromResult(new ReadModelEntry<PartyProcessingSdkReadModel>(rejected, "before")),
+            _ => VerifyAfterConcurrentReadAsync(),
+            _ => verification == "concurrent-different" ? oldReadResponse.Task : Task.FromResult(DeserializeConcurrentSnapshot()),
+            _ => Task.FromResult(DeserializeConcurrentSnapshot()),
+            _ => Task.FromResult(DeserializeConcurrentSnapshot()));
 
         QueryResult changed = await ReadAsync();
 
@@ -404,8 +410,14 @@ public sealed class PartySdkQueryHandlerTests
         changed.PayloadBytes.ShouldBeNull();
 
         store.GetAsync<PartyProcessingSdkReadModel>("statestore", processingKey, token).ThrowsAsync(new IOException("store unavailable"));
+        if (oldRead is not null)
+        {
+            oldReadResponse.SetResult(new ReadModelEntry<PartyProcessingSdkReadModel>(rejected, "before"));
+            Records(await oldRead.ConfigureAwait(true)).ShouldBe(replacement.Records);
+        }
+
         IReadOnlyList<ProcessingActivityRecord> afterRejection = Records(await ReadAsync());
-        if (verification == "concurrent")
+        if (verification is "concurrent-revisionless" or "concurrent-different")
         {
             afterRejection.ShouldBe(replacement.Records);
         }
@@ -424,6 +436,29 @@ public sealed class PartySdkQueryHandlerTests
         await store.Received(1).GetAsync<PartyProcessingSdkReadModel>("statestore", processingKey, token);
 
         Task<QueryResult> ReadAsync() => export ? service.ExportPartyDataAsync(envelope, token) : service.GetProcessingRecordsAsync(envelope, token);
+
+        async Task<ReadModelEntry<PartyProcessingSdkReadModel>> VerifyAfterConcurrentReadAsync()
+        {
+            if (verification == "concurrent-different")
+            {
+                oldRead = ReadAsync();
+            }
+
+            if (verification is "concurrent-revisionless" or "concurrent-same-revisionless")
+            {
+                cache.StoreProcessing(tenant, party, verification == "concurrent-same-revisionless" ? rejected : replacement);
+            }
+            else if (verification is "concurrent-same" or "concurrent-different")
+            {
+                (await ReadAsync().ConfigureAwait(false)).Success.ShouldBeTrue();
+            }
+
+            return verification == "absent" ? new ReadModelEntry<PartyProcessingSdkReadModel>(null, null)
+                : new ReadModelEntry<PartyProcessingSdkReadModel>(replacement, "after");
+        }
+
+        ReadModelEntry<PartyProcessingSdkReadModel> DeserializeConcurrentSnapshot()
+            => new(JsonSerializer.Deserialize<PartyProcessingSdkReadModel>(concurrentSnapshot, PartiesJsonOptions.Default), concurrentETag);
 
         IReadOnlyList<ProcessingActivityRecord> Records(QueryResult degraded)
         {

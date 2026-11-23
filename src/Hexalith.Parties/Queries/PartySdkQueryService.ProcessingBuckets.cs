@@ -124,7 +124,7 @@ public sealed partial class PartySdkQueryService
                     PartySdkReadModelAddresses.Processing(tenant, party), token).ConfigureAwait(false);
         if (etag is null || latest.Value is null || latest.ETag != etag)
         {
-            lastKnownCache.EvictProcessingIfSame(tenant, party, model);
+            lastKnownCache.EvictProcessingIfSame(tenant, party, model, etag);
             throw new InvalidOperationException("processing-history-revision-changed");
         }
     }

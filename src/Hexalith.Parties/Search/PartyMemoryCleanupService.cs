@@ -32,13 +32,10 @@ internal sealed partial class PartyMemoryCleanupService(
                 && (item.WorkflowInstanceId == memoryUnitId || item.MemoryUnitId == memoryUnitId)
                 && producerAuthority is not null
                 && (item.CleanupSettled ? item.AbsenceAuthority == producerAuthority : item.ProducerAuthority == producerAuthority));
-            if (intent?.CleanupSettled == true)
-            {
-                return Result(tenantId, partyId, intent.MemoryUnitId ?? memoryUnitId, true, null);
-            }
-
-            string? canonical = intent?.MemoryUnitId;
-            if (canonical is null || intent?.RequiresTerminalEvidence == true)
+            string? canonical = intent is { CleanupSettled: true }
+                ? intent.MemoryUnitId ?? memoryUnitId
+                : intent?.MemoryUnitId;
+            if (canonical is null || intent is { CleanupSettled: false, RequiresTerminalEvidence: true })
             {
                 canonical = await ResolveAsync(tenantId, caseId, intent?.WorkflowInstanceId ?? memoryUnitId, cancellationToken).ConfigureAwait(false);
                 if (intent?.MemoryUnitId is not null && canonical is not null && intent.MemoryUnitId != canonical)
@@ -46,33 +43,87 @@ internal sealed partial class PartyMemoryCleanupService(
                     throw new InvalidOperationException("memory-source-inventory-output-mismatch");
                 }
             }
-            if (canonical is null)
+            if (canonical is null || producerAuthority is null)
             {
                 return Result(tenantId, partyId, memoryUnitId, false, "Memories cleanup requires validated terminal ingestion evidence.");
             }
 
+            bool selectedWasPending = intent is { CleanupSettled: false }
+                && (intent.MemoryUnitId is null || intent.RequiresTerminalEvidence);
+            PartyMemoryIngestionIntent[] siblings = snapshot.Where(item => item.AttemptId != intent?.AttemptId
+                && item.CaseId == caseId && !item.CleanupSettled && !item.SubmissionRejected
+                && (HasUnknownSharedOutput(item)
+                    || (item.MemoryUnitId == canonical
+                        && (item.ProducerAuthority is null || (item.ProducerAuthority == producerAuthority && item.RequiresTerminalEvidence)))))
+                .ToArray();
             if (intent is null)
             {
+                // Retain the alias even when a sibling still prevents us from settling it.
                 intent = await intentStore.RetainLegacyAsync(tenantId, partyId,
-                    new(memoryUnitId, PartyMemoryUrn.Build(tenantId, partyId), caseId), caseId, canonical, cancellationToken, producerAuthority).ConfigureAwait(false);
+                    new(memoryUnitId, PartyMemoryUrn.Build(tenantId, partyId), caseId), caseId, canonical, cancellationToken,
+                    producerAuthority, requirePending: siblings.Length > 0).ConfigureAwait(false);
             }
-            else if (intent.MemoryUnitId is null || intent.RequiresTerminalEvidence)
+            List<PartyMemoryIngestionIntent> sharedSiblings = [];
+            foreach (PartyMemoryIngestionIntent sibling in siblings)
             {
-                intent = intent with { MemoryUnitId = canonical, RequiresTerminalEvidence = false };
-                await intentStore.UpdateAsync(tenantId, partyId, intent, cancellationToken).ConfigureAwait(false);
+                if ((sibling.ProducerAuthority is not null && sibling.ProducerAuthority != producerAuthority)
+                    || string.IsNullOrWhiteSpace(sibling.WorkflowInstanceId))
+                {
+                    return Result(tenantId, partyId, canonical, false, "Memories cleanup retains an unresolved sibling ingestion obligation.");
+                }
+
+                string? observed = await ResolveAsync(tenantId, caseId, sibling.WorkflowInstanceId, cancellationToken).ConfigureAwait(false);
+                if (observed is null)
+                {
+                    return Result(tenantId, partyId, canonical, false, "Memories cleanup retains an unresolved sibling ingestion obligation.");
+                }
+
+                if (sibling.MemoryUnitId is not null && sibling.MemoryUnitId != observed)
+                {
+                    throw new InvalidOperationException("memory-source-inventory-output-mismatch");
+                }
+
+                if (observed == canonical)
+                {
+                    sharedSiblings.Add(sibling);
+                }
+                else if (!HasAbsenceReceipt(observed))
+                {
+                    _ = await intentStore.RetainTerminalStatusAsync(tenantId, partyId, sibling, observed, producerAuthority, cancellationToken).ConfigureAwait(false);
+                }
             }
-            bool alreadyAbsent = snapshot.Any(receipt => receipt.CleanupSettled && !receipt.SubmissionRejected
-                && producerAuthority is not null && receipt.AbsenceAuthority == producerAuthority
-                && receipt.CaseId == caseId && receipt.MemoryUnitId == canonical);
-            PartyMemoryCleanupResult result = intent.CleanupSettled || alreadyAbsent
+
+            // Newly terminal producers of this unit can invalidate historical absence. Keep
+            // their terminal evidence pending until deletion and scoped absence both succeed.
+            bool alreadyAbsent = !selectedWasPending && sharedSiblings.Count == 0
+                && (intent.CleanupSettled || HasAbsenceReceipt(canonical));
+            PartyMemoryCleanupResult result = alreadyAbsent
                 ? Result(tenantId, partyId, canonical, true, null)
                 : await DeleteTerminalUnitAsync(tenantId, caseId, partyId, canonical, cancellationToken).ConfigureAwait(false);
-            if (result.Cleaned && !intent.CleanupSettled)
+            if (result.Cleaned)
             {
-                _ = await intentStore.RemoveAsync(tenantId, partyId, [intent], cancellationToken, BuildProducerAuthority(httpClient.BaseAddress)).ConfigureAwait(false);
+                foreach (PartyMemoryIngestionIntent sibling in sharedSiblings)
+                {
+                    _ = await intentStore.RetainTerminalStatusAsync(tenantId, partyId, sibling, canonical, producerAuthority, cancellationToken).ConfigureAwait(false);
+                }
+
+                if (selectedWasPending)
+                {
+                    intent = intent with { MemoryUnitId = canonical, RequiresTerminalEvidence = false };
+                    await intentStore.UpdateAsync(tenantId, partyId, intent, cancellationToken).ConfigureAwait(false);
+                }
+
+                if (!intent.CleanupSettled)
+                {
+                    _ = await intentStore.RemoveAsync(tenantId, partyId, [intent], cancellationToken, producerAuthority).ConfigureAwait(false);
+                }
             }
 
             return result;
+
+            bool HasAbsenceReceipt(string unit) => snapshot.Any(receipt => receipt.CleanupSettled
+                && !receipt.SubmissionRejected && receipt.AbsenceAuthority == producerAuthority
+                && receipt.CaseId == caseId && receipt.MemoryUnitId == unit);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -416,11 +467,7 @@ internal sealed partial class PartyMemoryCleanupService(
 
         void ProtectCaseWithUnknownOutput(PartyMemoryIngestionIntent intent)
         {
-            // Legacy and unresolved inventory producers can share an output. A typed refresh revision
-            // has an independently scoped candidate when the inventory has no outstanding evidence requirement.
-            if (intent is { MemoryUnitId: null, WorkflowInstanceId: not null, SubmissionRejected: false }
-                && (intent.RequiresTerminalEvidence || intent.RefreshProtocolVersion != SourceRefreshProtocol.Version
-                    || intent.SourceRevisionNumber is null || string.IsNullOrWhiteSpace(intent.RefreshIdentityDigest)))
+            if (HasUnknownSharedOutput(intent))
             {
                 casesWithUnknownOutputs.Add(intent.CaseId);
             }
@@ -439,6 +486,13 @@ internal sealed partial class PartyMemoryCleanupService(
             }
         }
     }
+
+    // A legacy reservation can share an output even if the submit response never assigned it a workflow ID.
+    // A typed refresh revision has an independently scoped candidate unless terminal evidence is required.
+    private static bool HasUnknownSharedOutput(PartyMemoryIngestionIntent intent)
+        => intent is { MemoryUnitId: null, CleanupSettled: false, SubmissionRejected: false }
+            && (intent.RequiresTerminalEvidence || intent.RefreshProtocolVersion != SourceRefreshProtocol.Version
+                || intent.SourceRevisionNumber is null || string.IsNullOrWhiteSpace(intent.RefreshIdentityDigest));
 
     private async Task<string?> ResolveAsync(string tenantId, string caseId, string workflowId, CancellationToken cancellationToken)
     {
