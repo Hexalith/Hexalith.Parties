@@ -222,7 +222,7 @@ internal sealed class PartyMemoryIngestionIntentStore(
 
             return current with
             {
-                Intents = [.. current.Intents.Select(item => item.AttemptId == intent.AttemptId ? intent : item)],
+                Intents = [.. current.Intents.Select(item => item.AttemptId == intent.AttemptId ? intent with { TerminalObservationId = existing.TerminalObservationId } : item)],
             };
         }, cancellationToken).ConfigureAwait(false);
     }
@@ -236,11 +236,38 @@ internal sealed class PartyMemoryIngestionIntentStore(
             PermanentCleanup = current.PermanentCleanup || permanent,
         }, cancellationToken).ConfigureAwait(false);
         // Retained receipts reconcile mappings published by a writer after an earlier cleanup.
-        return [.. inventory.Intents, .. (inventory.CleanupReceipts ?? []).Select(item => item with { CleanupSettled = true })];
+        return CleanupSnapshot(inventory);
     }
 
     /// <inheritdoc/>
-    public async Task<PartyMemoryIngestionIntent> RetainTerminalStatusAsync(string tenantId, string partyId,
+    public async Task ConfirmDirectCleanupAsync(string tenantId, string partyId, string caseId,
+        IReadOnlyCollection<PartyMemoryIngestionIntent> expected, IReadOnlyList<PartyMemoryIngestionIntent> confirmed,
+        string producerAuthority, CancellationToken cancellationToken)
+    {
+        HashSet<PartyMemoryIngestionIntent> expectedItems = [.. expected];
+        HashSet<PartyMemoryIngestionIntent> targets = [.. confirmed];
+        if (!targets.IsSubsetOf(expectedItems)
+            || targets.Any(item => item.CleanupSettled || item.CaseId != caseId || item.ProducerAuthority != producerAuthority))
+        {
+            throw new InvalidOperationException("memory-ingestion-direct-cleanup-scope-mismatch");
+        }
+
+        _ = await ChangeAsync(tenantId, partyId, current =>
+        {
+            RequireCleanupSnapshot(current, caseId, expectedItems);
+
+            // The conditional write arbitrates with inventory imports on the same durable key.
+            return targets.Count == 0 ? current : Settle(current, targets, producerAuthority);
+        }, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc/>
+    public Task<PartyMemoryIngestionIntent> SetTerminalObservationAsync(string tenantId, string partyId,
+        PartyMemoryIngestionIntent snapshot, string? observationId, CancellationToken cancellationToken)
+        => ReplaceCleanupIntentAsync(tenantId, partyId, snapshot, snapshot with { TerminalObservationId = observationId }, cancellationToken);
+
+    /// <inheritdoc/>
+    public Task<PartyMemoryIngestionIntent> RetainTerminalStatusAsync(string tenantId, string partyId,
         PartyMemoryIngestionIntent snapshot, string canonicalId, string producerAuthority, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(canonicalId);
@@ -257,7 +284,14 @@ internal sealed class PartyMemoryIngestionIntentStore(
             MemoryUnitId = canonicalId,
             RequiresTerminalEvidence = false,
             ProducerAuthority = producerAuthority,
+            TerminalObservationId = null,
         };
+        return ReplaceCleanupIntentAsync(tenantId, partyId, snapshot, retained, cancellationToken);
+    }
+
+    private async Task<PartyMemoryIngestionIntent> ReplaceCleanupIntentAsync(string tenantId, string partyId,
+        PartyMemoryIngestionIntent snapshot, PartyMemoryIngestionIntent retained, CancellationToken cancellationToken)
+    {
         _ = await ChangeAsync(tenantId, partyId, current => current.CleanupRequested && current.Intents.Contains(snapshot)
             ? current with { Intents = [.. current.Intents.Select(item => item == snapshot ? retained : item)] }
             : throw new InvalidOperationException("memory-ingestion-cleanup-snapshot-changed"), cancellationToken).ConfigureAwait(false);
@@ -267,7 +301,8 @@ internal sealed class PartyMemoryIngestionIntentStore(
     /// <inheritdoc/>
     public async Task<PartyMemoryIngestionIntent> RetainLegacyAsync(string tenantId, string partyId,
         PartyMemoryUnitMappingEntry mapping, string caseId, string canonicalId, CancellationToken cancellationToken,
-        string? producerAuthority = null, bool requirePending = false)
+        string? producerAuthority = null, bool requirePending = false,
+        IReadOnlyCollection<PartyMemoryIngestionIntent>? expectedCase = null)
     {
         ArgumentNullException.ThrowIfNull(mapping);
         ArgumentException.ThrowIfNullOrWhiteSpace(caseId);
@@ -290,6 +325,11 @@ internal sealed class PartyMemoryIngestionIntentStore(
             PartyMemoryIngestionIntent? receipt = requirePending ? null : (current.CleanupReceipts ?? []).FirstOrDefault(item =>
                 item.CaseId == caseId && item.MemoryUnitId == canonicalId
                 && !string.IsNullOrWhiteSpace(producerAuthority) && item.AbsenceAuthority == producerAuthority);
+            if (receipt is not null && expectedCase is not null)
+            {
+                RequireCleanupSnapshot(current, caseId, expectedCase);
+            }
+
             if (receipt is not null && (receipt.WorkflowInstanceId == mapping.MemoryUnitId || receipt.MemoryUnitId == mapping.MemoryUnitId))
             {
                 retained = receipt with { CleanupSettled = true };
@@ -384,6 +424,8 @@ internal sealed class PartyMemoryIngestionIntentStore(
                         ?? (workflowId is null && existing.WorkflowInstanceId is not null ? null : producerAuthority),
                     WorkflowInstanceId = existing.WorkflowInstanceId ?? workflowId,
                     MemoryUnitId = existing.MemoryUnitId ?? canonicalId,
+                    TerminalObservationId = terminalVerified && workflowId is not null && canonicalId is not null
+                        ? null : existing.TerminalObservationId,
                     RequiresTerminalEvidence = requireTerminalEvidence || unverifiedLegacyWorkflow || (workflowId is null ? existing.RequiresTerminalEvidence
                         : !terminalVerified && (existing.RequiresTerminalEvidence || existing.WorkflowInstanceId is null || existing.MemoryUnitId is null)),
                 };
@@ -475,15 +517,32 @@ internal sealed class PartyMemoryIngestionIntentStore(
     public async Task<int> RemoveAsync(string tenantId, string partyId, IReadOnlyList<PartyMemoryIngestionIntent> intents, CancellationToken cancellationToken, string? absenceAuthority = null)
     {
         HashSet<PartyMemoryIngestionIntent> targets = [.. intents];
-        return (await ChangeAsync(tenantId, partyId, current => current with
+        return (await ChangeAsync(tenantId, partyId, current => Settle(current, targets, absenceAuthority),
+            cancellationToken).ConfigureAwait(false)).Intents.Count;
+    }
+
+    private static void RequireCleanupSnapshot(PartyMemoryIngestionInventory inventory, string caseId,
+        IReadOnlyCollection<PartyMemoryIngestionIntent> expected)
+    {
+        if (!inventory.CleanupRequested || !CleanupSnapshot(inventory).Where(item => item.CaseId == caseId).ToHashSet().SetEquals(expected))
+        {
+            throw new InvalidOperationException("memory-ingestion-cleanup-snapshot-changed");
+        }
+    }
+
+    private static IReadOnlyList<PartyMemoryIngestionIntent> CleanupSnapshot(PartyMemoryIngestionInventory inventory)
+        => [.. inventory.Intents, .. (inventory.CleanupReceipts ?? []).Select(item => item with { CleanupSettled = true })];
+
+    private static PartyMemoryIngestionInventory Settle(PartyMemoryIngestionInventory current,
+        HashSet<PartyMemoryIngestionIntent> targets, string? absenceAuthority)
+        => current with
         {
             Intents = [.. current.Intents.Where(item => !targets.Contains(item))],
             // Preserve provenance rather than waiting for process-local writers or guessing that
             // a crashed writer cannot resume. A late mapping remains resolvable after restart.
             CleanupReceipts = [.. (current.CleanupReceipts ?? []).Concat(current.Intents.Where(targets.Contains)
                 .Select(item => item with { CleanupSettled = true, AbsenceAuthority = absenceAuthority })).Distinct()],
-        }, cancellationToken).ConfigureAwait(false)).Intents.Count;
-    }
+        };
 
     private Task<PartyMemoryIngestionInventory> ChangeAsync(string tenantId, string partyId, Func<PartyMemoryIngestionInventory, PartyMemoryIngestionInventory> change, CancellationToken cancellationToken)
         => ReadModelWritePolicy.UpdateAsync<PartyMemoryIngestionInventory>(store, _storeName, Key(tenantId, partyId),

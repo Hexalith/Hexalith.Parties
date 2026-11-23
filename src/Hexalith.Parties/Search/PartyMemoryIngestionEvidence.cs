@@ -43,6 +43,11 @@ internal static class PartyMemoryIngestionEvidence
             && status.RuntimeStatus == "Completed" && status.MemoryUnitStatus == MemoryUnitStatus.Failed
             && status.FailureSummary == "source-refresh-superseded" && !string.IsNullOrWhiteSpace(status.MemoryUnitId);
 
+    /// <summary>Identifies a durable typed revision that can be compared with an independently admitted refresh.</summary>
+    internal static bool HasVerifiedRefreshAdmission(PartyMemoryIngestionIntent intent)
+        => intent.RefreshProtocolVersion == SourceRefreshProtocol.Version && intent.SourceRevisionNumber is >= 0
+            && !string.IsNullOrWhiteSpace(intent.RefreshIdentityDigest);
+
     /// <summary>Returns only a scoped, successful terminal identity; all uncertain evidence remains unresolved.</summary>
     internal static string? Resolve(IngestionWorkflowStatus? status, string instanceId, string tenantId, string caseId)
         => status is not null

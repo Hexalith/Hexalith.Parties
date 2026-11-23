@@ -71,7 +71,7 @@ public sealed partial class PartySdkQueryService(
                 return QueryResult.Failure(PartySdkQueryFailureReason.ReadModelUnavailable);
             }
 
-            (ReadModelEntry<PartyProcessingSdkReadModel> processing, bool processingDegraded) = await ReadCompleteProcessingModelAsync(
+            var (_, records, processingDegraded) = await ReadCompleteProcessingModelAsync(
                 query.TenantId,
                 partyId,
                 cancellationToken).ConfigureAwait(false);
@@ -79,8 +79,6 @@ public sealed partial class PartySdkQueryService(
             DateTimeOffset now = timeProvider.GetUtcNow();
             ProjectionFreshnessMetadata freshness = ToPartiesFreshness(read.Value, now, degraded);
             PartyDetail detail = stored with { Freshness = freshness };
-            IReadOnlyList<ProcessingActivityRecord> records = await ReadAllProcessingRecordsAsync(query.TenantId, partyId,
-                processing.Value ?? new PartyProcessingSdkReadModel(), processing.ETag, cancellationToken).ConfigureAwait(false);
             bool unavailable = string.IsNullOrWhiteSpace(detail.DisplayName) || string.IsNullOrWhiteSpace(detail.SortName);
             var package = new PartyDataPortabilityPackage
             {
@@ -147,13 +145,12 @@ public sealed partial class PartySdkQueryService(
                 return await ReadProcessingPageAsync(query, partyId, detailDegraded, cancellationToken).ConfigureAwait(false);
             }
 
-            (ReadModelEntry<PartyProcessingSdkReadModel> read, bool degraded) = await ReadCompleteProcessingModelAsync(
+            var (read, records, degraded) = await ReadCompleteProcessingModelAsync(
                 query.TenantId,
                 partyId,
                 cancellationToken).ConfigureAwait(false);
             degraded |= detailDegraded;
             PartyProcessingSdkReadModel model = read.Value ?? new PartyProcessingSdkReadModel();
-            IReadOnlyList<ProcessingActivityRecord> records = await ReadAllProcessingRecordsAsync(query.TenantId, partyId, model, read.ETag, cancellationToken).ConfigureAwait(false);
             return Success(
                 records,
                 PartyDetailQueryTypes.ProjectionType,
@@ -505,7 +502,7 @@ public sealed partial class PartySdkQueryService(
         }
     }
 
-    private async Task<(ReadModelEntry<PartyProcessingSdkReadModel> Read, bool Degraded)> ReadCompleteProcessingModelAsync(
+    private async Task<(ReadModelEntry<PartyProcessingSdkReadModel> Read, IReadOnlyList<ProcessingActivityRecord> Records, bool Degraded)> ReadCompleteProcessingModelAsync(
         string tenantId,
         string partyId,
         CancellationToken cancellationToken)
@@ -514,7 +511,20 @@ public sealed partial class PartySdkQueryService(
         long cacheGeneration = lastKnownCache.BeginRead(key);
         try
         {
-            return await ReadProcessingModelAsync(tenantId, partyId, key, cacheGeneration, verifyInline: true, cancellationToken).ConfigureAwait(false);
+            var (read, degraded) = await ReadProcessingModelAsync(tenantId, partyId, key, cacheGeneration, verifyInline: true, cancellationToken).ConfigureAwait(false);
+            PartyProcessingSdkReadModel model = read.Value ?? new PartyProcessingSdkReadModel();
+            IReadOnlyList<ProcessingActivityRecord> records = await ReadAllProcessingRecordsAsync(tenantId, partyId, model, read.ETag, cacheGeneration, cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            bool current = degraded || (model.BucketGeneration is not null
+                ? lastKnownCache.RetireEarlierProcessingFallback(tenantId, partyId, cacheGeneration)
+                : lastKnownCache.IsProcessingReadCurrent(tenantId, partyId, cacheGeneration));
+            if (!current)
+            {
+                (read, degraded) = ReadProcessingFallback(tenantId, partyId, new InvalidOperationException("read-model-invalidated"));
+                records = await ReadAllProcessingRecordsAsync(tenantId, partyId, read.Value!, read.ETag, cacheGeneration, cancellationToken).ConfigureAwait(false);
+            }
+
+            return (read, records, degraded);
         }
         finally
         {
@@ -539,38 +549,33 @@ public sealed partial class PartySdkQueryService(
         cancellationToken.ThrowIfCancellationRequested();
         if (read.Value is not { } model)
         {
-            lastKnownCache.EvictProcessing(tenantId, partyId);
+            _ = lastKnownCache.RetireEarlierProcessingFallback(tenantId, partyId, cacheGeneration, invalidateEarlier: true);
             return (new ReadModelEntry<PartyProcessingSdkReadModel>(new PartyProcessingSdkReadModel(), null), true);
         }
 
-        // A page verifies its own revision after checking the cursor. Complete legacy
-        // inline reads can still serve revisionless records without admitting them to fallback.
-        if (string.IsNullOrWhiteSpace(read.ETag) || (!verifyInline && model.BucketGeneration is null))
+        // A page verifies its revision after checking the cursor. A bucket header
+        // is never a complete fallback snapshot, even when its buckets are readable.
+        if (!verifyInline || model.BucketGeneration is not null || string.IsNullOrWhiteSpace(read.ETag))
         {
             return (read, false);
         }
 
-        if (model.BucketGeneration is null)
+        PartyProcessingBucketValidation.ValidateCoverage(model);
+        ValidateInlineProcessingScope(model, tenantId, partyId);
+        ReadModelEntry<PartyProcessingSdkReadModel> latest;
+        try
         {
-            PartyProcessingBucketValidation.ValidateCoverage(model);
-            ValidateInlineProcessingScope(model, tenantId, partyId);
-            ReadModelEntry<PartyProcessingSdkReadModel> latest;
-            try
-            {
-                latest = await readModelStore.GetAsync<PartyProcessingSdkReadModel>(StoreName, key, cancellationToken).ConfigureAwait(false);
-            }
-            catch (Exception exception) when (exception is not OperationCanceledException)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                return ReadProcessingFallback(tenantId, partyId, exception);
-            }
-
+            latest = await readModelStore.GetAsync<PartyProcessingSdkReadModel>(StoreName, key, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
             cancellationToken.ThrowIfCancellationRequested();
-            RequireProcessingRevision(tenantId, partyId, model, read.ETag, latest);
+            return ReadProcessingFallback(tenantId, partyId, exception);
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-        return lastKnownCache.StoreProcessingIfCurrent(tenantId, partyId, cacheGeneration, model, read.ETag)
+        RequireProcessingRevision(tenantId, partyId, model, read.ETag, latest, cacheGeneration);
+        return lastKnownCache.AcceptProcessingRead(tenantId, partyId, cacheGeneration, model, read.ETag)
             ? (read, false)
             : ReadProcessingFallback(tenantId, partyId, new InvalidOperationException("read-model-invalidated"));
     }
@@ -578,7 +583,8 @@ public sealed partial class PartySdkQueryService(
     private (ReadModelEntry<PartyProcessingSdkReadModel> Read, bool Degraded) ReadProcessingFallback(
         string tenantId, string partyId, Exception exception)
     {
-        if (lastKnownCache.TryGetProcessing(tenantId, partyId, out PartyProcessingSdkReadModel? cached))
+        if (lastKnownCache.TryGetProcessing(tenantId, partyId, out PartyProcessingSdkReadModel? cached)
+            && cached is { BucketGeneration: null })
         {
             return (new ReadModelEntry<PartyProcessingSdkReadModel>(cached, null), true);
         }

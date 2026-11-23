@@ -22,13 +22,23 @@ internal interface IPartyMemoryIngestionIntentStore
     /// <summary>Closes admission before taking the cleanup snapshot, including racing reservations.</summary>
     Task<IReadOnlyList<PartyMemoryIngestionIntent>> BeginCleanupAsync(string tenantId, string partyId, CancellationToken cancellationToken, bool permanent = true);
 
+    /// <summary>Conditionally verifies the case snapshot and settles only its exact confirmed obligations.</summary>
+    Task ConfirmDirectCleanupAsync(string tenantId, string partyId, string caseId,
+        IReadOnlyCollection<PartyMemoryIngestionIntent> expected, IReadOnlyList<PartyMemoryIngestionIntent> confirmed,
+        string producerAuthority, CancellationToken cancellationToken);
+
+    /// <summary>Conditionally retains or clears the observation marker on an exact active cleanup attempt.</summary>
+    Task<PartyMemoryIngestionIntent> SetTerminalObservationAsync(string tenantId, string partyId,
+        PartyMemoryIngestionIntent snapshot, string? observationId, CancellationToken cancellationToken);
+
     /// <summary>Retains validated terminal status and producer authority for an exact active cleanup snapshot.</summary>
     Task<PartyMemoryIngestionIntent> RetainTerminalStatusAsync(string tenantId, string partyId, PartyMemoryIngestionIntent snapshot,
         string canonicalId, string producerAuthority, CancellationToken cancellationToken);
 
     /// <summary>Retains validated legacy workflow provenance under the cleanup fence before remote deletion.</summary>
     Task<PartyMemoryIngestionIntent> RetainLegacyAsync(string tenantId, string partyId, PartyMemoryUnitMappingEntry mapping, string caseId, string canonicalId,
-        CancellationToken cancellationToken, string? producerAuthority = null, bool requirePending = false);
+        CancellationToken cancellationToken, string? producerAuthority = null, bool requirePending = false,
+        IReadOnlyCollection<PartyMemoryIngestionIntent>? expectedCase = null);
 
     /// <summary>Retains a discovered producer under the cleanup fence, returning false for an unproved typed retry binding.</summary>
     Task<bool> RetainDiscoveredAsync(string tenantId, string partyId, string caseId, string sourceUri, string? workflowId,

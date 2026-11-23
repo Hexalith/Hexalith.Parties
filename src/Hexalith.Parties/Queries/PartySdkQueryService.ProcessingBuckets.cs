@@ -64,9 +64,12 @@ public sealed partial class PartySdkQueryService
                 records.AddRange(value.Records.Where(record => record.SequenceNumber > after).Take(size + 1 - records.Count));
             }
         }
-        await VerifyProcessingRevisionAsync(query.TenantId, party, model, etag, token).ConfigureAwait(false);
+        await VerifyProcessingRevisionAsync(query.TenantId, party, model, etag, cacheGeneration, token).ConfigureAwait(false);
         token.ThrowIfCancellationRequested();
-        if (model.BucketGeneration is null && !lastKnownCache.StoreProcessingIfCurrent(query.TenantId, party, cacheGeneration, model, etag))
+        bool current = model.BucketGeneration is null
+            ? lastKnownCache.AcceptProcessingRead(query.TenantId, party, cacheGeneration, model, etag)
+            : lastKnownCache.IsProcessingReadCurrent(query.TenantId, party, cacheGeneration);
+        if (!current)
         {
             return QueryResult.Failure(PartySdkQueryFailureReason.ReadModelUnavailable);
         }
@@ -91,7 +94,7 @@ public sealed partial class PartySdkQueryService
             && (paging.Offset is null || (paging.Offset == 0 && string.IsNullOrWhiteSpace(paging.Cursor))));
 
     private async Task<IReadOnlyList<ProcessingActivityRecord>> ReadAllProcessingRecordsAsync(string tenant, string party,
-        PartyProcessingSdkReadModel model, string? etag, CancellationToken token)
+        PartyProcessingSdkReadModel model, string? etag, long cacheGeneration, CancellationToken token)
     {
         PartyProcessingBucketValidation.ValidateCoverage(model);
         if (model.BucketGeneration is null)
@@ -117,7 +120,7 @@ public sealed partial class PartySdkQueryService
         {
             throw new InvalidOperationException("processing-history-incomplete");
         }
-        await VerifyProcessingRevisionAsync(tenant, party, model, etag, token).ConfigureAwait(false);
+        await VerifyProcessingRevisionAsync(tenant, party, model, etag, cacheGeneration, token).ConfigureAwait(false);
         return records;
     }
 
@@ -136,20 +139,26 @@ public sealed partial class PartySdkQueryService
         return value;
     }
 
-    private async Task VerifyProcessingRevisionAsync(string tenant, string party, PartyProcessingSdkReadModel model, string? etag, CancellationToken token)
+    private async Task VerifyProcessingRevisionAsync(string tenant, string party, PartyProcessingSdkReadModel model, string? etag, long cacheGeneration, CancellationToken token)
     {
         var latest = await readModelStore.GetAsync<PartyProcessingSdkReadModel>(StoreName,
                     PartySdkReadModelAddresses.Processing(tenant, party), token).ConfigureAwait(false);
         token.ThrowIfCancellationRequested();
-        RequireProcessingRevision(tenant, party, model, etag, latest);
+        RequireProcessingRevision(tenant, party, model, etag, latest, cacheGeneration);
     }
 
     private void RequireProcessingRevision(string tenant, string party, PartyProcessingSdkReadModel model, string? etag,
-        ReadModelEntry<PartyProcessingSdkReadModel> latest)
+        ReadModelEntry<PartyProcessingSdkReadModel> latest, long cacheGeneration)
     {
-        if (etag is null || latest.Value is null || latest.ETag != etag)
+        if (latest.Value is null)
         {
-            lastKnownCache.EvictProcessingIfSame(tenant, party, model, etag);
+            _ = lastKnownCache.RetireEarlierProcessingFallback(tenant, party, cacheGeneration, invalidateEarlier: true);
+            throw new InvalidOperationException("processing-history-revision-changed");
+        }
+
+        if (etag is null || latest.ETag != etag)
+        {
+            lastKnownCache.RejectProcessingRevision(tenant, party, cacheGeneration, model, etag);
             throw new InvalidOperationException("processing-history-revision-changed");
         }
     }

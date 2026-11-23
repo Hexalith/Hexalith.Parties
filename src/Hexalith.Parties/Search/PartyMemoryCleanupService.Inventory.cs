@@ -8,6 +8,8 @@ internal sealed partial class PartyMemoryCleanupService
     private async Task<(bool Complete, bool Terminal, string Version)> ReconcileSourceInventoryAsync(
         string tenantId, string partyId, bool permanent, bool fence, HashSet<string> casesWithUnknownOutputs, CancellationToken cancellationToken)
     {
+        string producerAuthority = BuildProducerAuthority(httpClient.BaseAddress)
+            ?? throw new InvalidOperationException("memory-source-inventory-producer-unavailable");
         string sourceUri = PartyMemoryUrn.Build(tenantId, partyId);
         string route = $"api/v1/tenants/{Uri.EscapeDataString(tenantId)}/source-inventory";
         string query = "?sourceUri=" + Uri.EscapeDataString(sourceUri);
@@ -22,7 +24,6 @@ internal sealed partial class PartyMemoryCleanupService
         bool coverageComplete = true;
         bool complete = true;
         bool terminal = true;
-        string? producerAuthority = BuildProducerAuthority(httpClient.BaseAddress);
         var typedRetries = (await intentStore.GetAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false))
             .Where(PartyMemoryIngestionEvidence.IsTypedRetryReservation)
             .ToDictionary(intent => PartyMemoryIngestionEvidence.RetryIdentityHash(intent.AttemptId), StringComparer.Ordinal);
@@ -104,6 +105,7 @@ internal sealed partial class PartyMemoryCleanupService
                 }
                 else
                 {
+                    // Publish this obligation through the same conditional state that direct cleanup validates.
                     // Even a producer deletion marker needs independent observation of scoped absence.
                     bool retained = await intentStore.RetainDiscoveredAsync(tenantId, partyId, capturedCase, sourceUri, workflow,
                         admitted ? null : canonical, retryHash, terminalVerified && !admitted, cancellationToken,

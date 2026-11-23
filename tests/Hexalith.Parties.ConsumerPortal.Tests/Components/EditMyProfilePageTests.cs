@@ -242,12 +242,19 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
         {
             cut.Markup.ShouldContain("Grace Lovelace");
             cut.Markup.ShouldContain("ACCEPTED-ID");
+            cut.Find("fieldset").HasAttribute("disabled").ShouldBeFalse();
             cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldBe("Saved - updating");
             cut.FindAll("[role='status'][aria-live='polite']").Count.ShouldBe(1);
             dataClient.CallCount.ShouldBe(2);
             readbackToken.CanBeCanceled.ShouldBeTrue();
             readbackToken.IsCancellationRequested.ShouldBeFalse();
         });
+        ConsumerProfileUpdateRequest accepted = editClient.LastRequest.ShouldNotBeNull();
+        await cut.Find("form").TriggerEventAsync("onsubmit", EventArgs.Empty);
+        editClient.LastRequest.ShouldBeSameAs(accepted);
+        readbackToken.IsCancellationRequested.ShouldBeFalse();
+        dataClient.CallCount.ShouldBe(2);
+        cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldBe("Saved - updating");
         readback.SetResult(updated);
 
         cut.WaitForAssertion(() =>
@@ -511,6 +518,70 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
             cut.Markup.ShouldContain("PROJECTED-ID");
             cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldBe("Saved");
             dataClient.CallCount.ShouldBe(3);
+        });
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task EditMyProfilePage_TransientFirstReadbackRetriesUnlessDisposed(bool dispose)
+    {
+        CancellationToken token = Xunit.TestContext.Current.CancellationToken;
+        var firstRead = new TaskCompletionSource<PartyDetail>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var firstStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var secondRead = new TaskCompletionSource<PartyDetail>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var secondStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        PartyDetail original = CurrentPerson();
+        int submissions = 0;
+        var editClient = new QueueProfileEditClient(_ =>
+        {
+            submissions++;
+            return Task.FromResult(new ConsumerProfileUpdateResult(ConsumerProfileUpdateOutcome.Accepted));
+        });
+        var dataClient = new QueueProfileDataClient(_ => Task.FromResult(original), _ =>
+        {
+            firstStarted.SetResult();
+            return firstRead.Task;
+        }, _ =>
+        {
+            secondStarted.SetResult();
+            return secondRead.Task;
+        });
+        Services.AddSingleton<IConsumerProfileDataClient>(dataClient);
+        Services.AddSingleton<IConsumerProfileEditClient>(editClient);
+        IRenderedComponent<EditMyProfilePage> cut = Render<EditMyProfilePage>();
+        cut.WaitForAssertion(() => FindTextInput(cut, "First name").Instance.Value.ShouldBe("Ada"));
+        SetTextInput(cut, "First name", "Grace");
+        Task submit = cut.Find("form").TriggerEventAsync("onsubmit", EventArgs.Empty);
+        await firstStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), token);
+        cut.Find("fieldset").HasAttribute("disabled").ShouldBeFalse();
+        cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldBe("Saved - updating");
+
+        firstRead.SetException(new HttpRequestException("temporary projection failure"));
+        if (dispose)
+        {
+            await cut.InvokeAsync(cut.Instance.Dispose);
+            await submit.WaitAsync(TimeSpan.FromSeconds(5), token);
+            dataClient.CallCount.ShouldBe(2);
+            submissions.ShouldBe(1);
+            return;
+        }
+
+        await secondStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), token);
+        SetTextInput(cut, "First name", "Unsaved draft");
+        secondRead.SetResult(original with
+        {
+            DisplayName = "Grace Lovelace",
+            PersonDetails = editClient.LastRequest.ShouldNotBeNull().PersonDetails,
+        });
+        await submit.WaitAsync(TimeSpan.FromSeconds(5), token);
+        cut.WaitForAssertion(() =>
+        {
+            FindTextInput(cut, "First name").Instance.Value.ShouldBe("Unsaved draft");
+            cut.Markup.ShouldContain("Grace Lovelace");
+            cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldBe("Saved");
+            dataClient.CallCount.ShouldBe(3);
+            submissions.ShouldBe(1);
         });
     }
 

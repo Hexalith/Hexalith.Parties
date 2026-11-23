@@ -197,6 +197,7 @@
     private ValidationMessageStore? _messages;
     private ElementReference _alertRef;
     private PartyDetail? _profile;
+    private ConsumerProfileUpdateRequest? _readbackSubmission;
     private bool _isLoading = true;
     private bool _loadFailed;
     private bool _isSaving;
@@ -302,25 +303,29 @@
             return;
         }
 
-        _isSaving = true;
-        _formAlert = null;
-        _saveStatusMessage = null;
         _messages.Clear();
 
         if (!ValidateClient(_profile.Type))
         {
             ApplyValidationFailure();
-            _isSaving = false;
             return;
         }
 
+        PartyDetail original = _profile;
+        ConsumerProfileUpdateRequest submitted = BuildRequest(original.Type);
+        if (_readbackSubmission == submitted)
+        {
+            return;
+        }
+
+        _isSaving = true;
+        _formAlert = null;
+        _readbackSubmission = null;
         _saveStatusMessage = ConsumerPortalLabels.EditProfileSaving;
         _saveCts?.Cancel();
         _saveCts?.Dispose();
         _saveCts = new CancellationTokenSource();
         CancellationToken token = _saveCts.Token;
-        PartyDetail original = _profile;
-        ConsumerProfileUpdateRequest submitted = BuildRequest(original.Type);
         ConsumerProfileUpdateResult result;
         try
         {
@@ -366,9 +371,21 @@
             }
             else
             {
+                _readbackSubmission = submitted;
                 _saveStatusMessage = ConsumerPortalLabels.EditProfileSavedUpdating;
+                _isSaving = false;
                 StateHasChanged();
-                await ReconcileAsync(original, submitted, token);
+                try
+                {
+                    await ReconcileAsync(original, submitted, token);
+                }
+                finally
+                {
+                    if (!token.IsCancellationRequested)
+                    {
+                        _readbackSubmission = null;
+                    }
+                }
             }
         }
         else if (result.Outcome == ConsumerProfileUpdateOutcome.ValidationRejected)
@@ -391,33 +408,30 @@
 
     private async Task ReconcileAsync(PartyDetail original, ConsumerProfileUpdateRequest submitted, CancellationToken token)
     {
-        try
+        for (int attempt = 0; attempt < 2; attempt++)
         {
-            PartyDetail observed = await ReadbackAsync(token);
-            token.ThrowIfCancellationRequested();
-            if (ApplyReadback(original, submitted, observed))
+            try
+            {
+                if (attempt > 0)
+                {
+                    await Task.Delay(s_readbackRetryDelay, token);
+                }
+
+                PartyDetail observed = await ReadbackAsync(token);
+                token.ThrowIfCancellationRequested();
+                if (ApplyReadback(original, submitted, observed))
+                {
+                    return;
+                }
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
                 return;
             }
-
-            _isSaving = false;
-            StateHasChanged();
-            await Task.Delay(s_readbackRetryDelay, token);
-
-            observed = await ReadbackAsync(token);
-            token.ThrowIfCancellationRequested();
-            if (ApplyReadback(original, submitted, observed))
+            catch
             {
-                return;
+                // Keep the accepted values if the readback fails or times out.
             }
-        }
-        catch (OperationCanceledException) when (token.IsCancellationRequested)
-        {
-            return;
-        }
-        catch
-        {
-            // Keep the accepted values if the readback fails or times out.
         }
 
         if (!token.IsCancellationRequested)

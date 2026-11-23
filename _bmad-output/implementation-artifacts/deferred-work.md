@@ -381,6 +381,8 @@ recovery_integrity_2026_11_23: Processing history and portability export reject 
 
 recovery_boundaries_2026_11_23: Inline history and export cache a revision only after authoritative readback. Unavailable verification serves the verified fallback or the empty degraded result. Cancellation and revisionless reads leave the verified cache intact. Bucket fallback during migration and ordering across overlapping successful revision reads remain unqualified. Deployed older-writer drain, historical reconciliation, migration approval and rollback qualification remain open. See `spec-five-deferred-recovery-boundaries.md`.
 
+recovery_followthrough_2026_11_23: A missing bucket or unavailable revision verification leaves the last verified inline history available for degraded history and portability export. Complete bucket validation with a current revision, or an authoritative missing canonical model, retires the older fallback. A later registered verified inline observation prevents an earlier overlapping read from replacing it. The erasure fence still invalidates pending reads and cached values. Deployed older-writer drain, historical reconciliation, migration approval and rollback qualification remain open. See `spec-five-deferred-recovery-followthrough.md`.
+
 ### DW-51: Resolve projection-handler performance and validation-coupling debt
 
 status: done 2026-10-21
@@ -839,6 +841,8 @@ authority_recovery_2026_11_23: The profile editor retains accepted values when t
 recovery_evidence_followup_2026_11_23: An inconclusive first profile readback schedules one further read. A matching current read confirms the accepted save and preserves any newer form edits. See `spec-five-deferred-recovery-evidence-followups.md`.
 
 recovery_integrity_2026_11_23: A stale same-profile acceptance payload preserves submitted editable details and the read-only fields returned by the acceptance response. Erasure and replacement retain precedence. See `spec-five-deferred-recovery-integrity-checks.md`.
+
+recovery_followthrough_2026_11_23: The form reopens on acceptance and an exceptional first readback gets the same bounded retry as an inconclusive response. An unchanged repeat submit cannot interrupt the accepted readback or duplicate the update. A current match confirms the single save while preserving a newer draft. Disposal cancels observation. Production composition and named owner acceptance remain open. See `spec-five-deferred-recovery-followthrough.md`.
 
 ### DW-101: Consolidate Admin and Consumer exports onto the approved FrontComposer browser-download service after G4-D delivery
 
@@ -1394,6 +1398,8 @@ recovery_evidence_followup_2026_11_23: An unresolved inventory or legacy workflo
 recovery_integrity_2026_11_23: Direct cleanup retains the selected alias while another known workflow may still publish the same unit. A prior absence receipt cannot settle a newly published output after a failed deletion or absence read. See `spec-five-deferred-recovery-integrity-checks.md`.
 
 recovery_boundaries_2026_11_23: Direct cleanup requires fresh scoped absence when an active terminal producer shares the unit, whether selected by its workflow or by a historical receipt. Failed DELETE and delayed absence retain the pending obligations for retry. Qualification of concurrent inventory imports and newly observed legacy aliases remains open. Production workload, key and trust custody, historical reconciliation, writer drain, adoption, deployed physical erasure and owner acceptance remain open. See `spec-five-deferred-recovery-boundaries.md`.
+
+recovery_followthrough_2026_11_23: Direct cleanup persists exact terminal status before attempting deletion. A durable observation marker holds same-case candidates after a terminal-evidence write failure and later unavailable status, in both direct and bulk paths. Shared units and mappings remain until exact inventory evidence and independent scoped absence are available. Imports persisted before the deletion decision prevent the stale request. Imports during DELETE or receipt-based completion prevent stale settlement. Separately verified newer typed revisions can still progress when an ordinary older status is unavailable. Pending status alone supplies no authority for unrelated units. Production workload, key and trust custody, historical reconciliation, writer drain, adoption, deployed physical erasure and owner acceptance remain open. See `spec-five-deferred-recovery-followthrough.md`.
 
 ### DW-169: D7 — Use concurrency-aware removal when cleaning a party memory-unit mapping inventory.
 
@@ -2869,15 +2875,33 @@ archived: 2026-11-15
 - source_spec: `spec-five-deferred-authority-and-recovery-fixes.md`
   summary: Continue observing an accepted profile save after an unwitnessed first readback.
   evidence: The editor performs one readback. After an earlier or stale result it keeps the submitted values and updating status. Verify a subsequent observation and cancellation without changing the submit contract.
+  resolution_2026_11_23: The bounded retry covers transient transport failure after acceptance. The recovery observes a current match after a newer edit or stops when disposed, with one submission in both schedules. All 47 local profile cases passed with zero failures or skips.
 
 - source_spec: `spec-five-deferred-authority-and-recovery-fixes.md`
   summary: Recover a newly observed shared output after a terminal-evidence write fails and workflow status becomes unavailable.
   evidence: The current pass protects an output first seen in terminal status even when saving that evidence fails. A later pass can only protect known scoped units if the status can be recovered or inventory identifies the output. Qualify a durable reconciliation strategy for that case.
+  resolution_2026_11_23: The direct path persists terminal evidence before DELETE. After the injected write fault, retry with unavailable status protects both the known shared unit and its mapping across fresh service instances. Exact scoped inventory and a later independent absence observation settle the obligations.
 
 - source_spec: `spec-five-deferred-recovery-integrity-checks.md`
   summary: Decide whether a processing snapshot needs completed revision verification before it can serve degraded history or portability export.
   evidence: An initial processing read currently populates the cache before the verification call. A verification transport failure can leave that first snapshot available to later degraded reads. Qualify the intended availability contract and verify the failure interleaving.
+  resolution_2026_11_23: Tentative bucket headers cannot displace verified inline fallback during bucket and revision failures. Controlled reverse completion preserves the later inline admission without comparing ETags. Erasure invalidation prevents either read from restoring fallback.
 
 - source_spec: `spec-five-deferred-recovery-integrity-checks.md`
   summary: Coordinate direct Memories cleanup with source inventory reconciliation that imports obligations after the cleanup snapshot.
   evidence: The admission fence stops new local submissions. An overlapping inventory reconciliation can still retain an unresolved remote workflow after the direct operation reads its durable snapshot. Verify coordination of discovery and scoped deletion before extending the direct cleanup guarantee.
+  resolution_2026_11_23: Controlled imports before DELETE, during DELETE, and during receipt-only completion leave the shared obligation unsettled. The already-dispatched DELETE can finish remotely; the conditional settlement refuses the stale snapshot and retains the imported obligation.
+
+Local verification for `spec-five-deferred-recovery-followthrough.md` used the pinned .NET SDK 11.0.100. Both Release test projects built with zero warnings and errors. The Gateway query class passed 1,000 cases. The three focused Search classes passed 158 cases. The profile class passed 47 cases within the 127-case Consumer Portal assembly run. All .NET runs had zero failures and skips. Python integration discovery (`python3 -m unittest discover -s scripts -p 'test_*_integration.py'`) passed 84 tests. The warning guard and CRLF-aware Git whitespace checks passed. After review the full Gateway and Search namespaces passed 2,098 cases and Consumer Portal passed 127, with zero failures or skips. The EventStore owner publisher passed all 14 checks with the pinned owner Builds catalog, writable Aspire bundle and Dapr CLI 1.18.0. Full Python discovery passed all 131 tests with those prerequisites.
+
+- source_spec: `spec-five-deferred-recovery-followthrough.md`
+  summary: Requalify a historical absence receipt when source inventory reports a present unit without a workflow identity.
+  evidence: A unit-only row can match the canonical ID of a receipt and leave the durable obligation snapshot unchanged. Verify rematerialization against the producer without granting legacy aliases wider deletion authority.
+
+- source_spec: `spec-five-deferred-recovery-followthrough.md`
+  summary: Retain independent terminal evidence for a different sibling unit with a prior receipt.
+  evidence: Selecting another target can leave the different sibling pending when its newly resolved ID matches an old receipt. Qualify retention and later retry without changing the independent selected target's deletion scope.
+
+- source_spec: `spec-five-deferred-recovery-followthrough.md`
+  summary: Qualify the interval between direct deletion authorization and request dispatch.
+  evidence: The local conditional check orders already committed imports. A later import can race with request dispatch, and the conditional settlement refuses stale completion. Stronger dispatch coordination would require a compatible producer-side scope fence or conditional delete.

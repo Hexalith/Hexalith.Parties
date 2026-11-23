@@ -12,7 +12,7 @@ public sealed class PartySdkLastKnownReadModelCache
     private const int DefaultMaximumEntries = 1024;
     private static readonly TimeSpan s_defaultRetention = TimeSpan.FromMinutes(5);
     private readonly Dictionary<string, PartySdkLastKnownReadModelCacheEntry> _entries = new(StringComparer.Ordinal);
-    private readonly Dictionary<long, string> _activeReads = new();
+    private readonly Dictionary<long, (string Key, bool Superseded)> _activeReads = new();
     private readonly object _gate = new();
     private readonly int _maximumEntries;
     private readonly TimeProvider _timeProvider;
@@ -75,7 +75,7 @@ public sealed class PartySdkLastKnownReadModelCache
             }
 
             long generation = ++_lastReadToken;
-            _activeReads.Add(generation, cacheKey);
+            _activeReads.Add(generation, (cacheKey, false));
             return generation;
         }
     }
@@ -127,7 +127,7 @@ public sealed class PartySdkLastKnownReadModelCache
     /// <summary>Attempts to store a processing value within a temporary read registration.
     /// Skips storage if tracking capacity or token space is exhausted.</summary>
     public void StoreProcessing(string tenantId, string partyId, PartyProcessingSdkReadModel value)
-        => Store(PartySdkReadModelAddresses.Processing(tenantId, partyId), value);
+        => Store(PartySdkReadModelAddresses.Processing(tenantId, partyId), value, orderAdmissions: true);
 
     /// <summary>Stores a processing value only while its read token is registered for that key.</summary>
     public bool StoreProcessingIfCurrent(
@@ -135,16 +135,58 @@ public sealed class PartySdkLastKnownReadModelCache
         string partyId,
         long generation,
         PartyProcessingSdkReadModel value)
-        => StoreProcessingIfCurrent(tenantId, partyId, generation, value, etag: null);
+        => StoreIfCurrent(PartySdkReadModelAddresses.Processing(tenantId, partyId), generation, value, orderAdmissions: true);
 
-    /// <summary>Stores a processing value and the revision used to verify it.</summary>
-    internal bool StoreProcessingIfCurrent(
+    /// <summary>
+    /// Admits a verified processing value unless a later read already supplied fallback.
+    /// Returns false only if the underlying read registration is invalid.
+    /// </summary>
+    internal bool AcceptProcessingRead(
         string tenantId,
         string partyId,
         long generation,
         PartyProcessingSdkReadModel value,
         string? etag)
-        => StoreIfCurrent(PartySdkReadModelAddresses.Processing(tenantId, partyId), generation, value, etag);
+        => StoreIfCurrent(PartySdkReadModelAddresses.Processing(tenantId, partyId), generation, value, etag, orderAdmissions: true, acceptSuperseded: true);
+
+    /// <summary>Checks the eviction fence for a verified processing read that supplies no fallback value.</summary>
+    internal bool IsProcessingReadCurrent(string tenantId, string partyId, long generation)
+    {
+        lock (_gate)
+        {
+            return _activeReads.TryGetValue(generation, out var read)
+                && read.Key == PartySdkReadModelAddresses.Processing(tenantId, partyId);
+        }
+    }
+
+    /// <summary>Retires earlier inline fallback after verified bucketed history or authoritative absence.</summary>
+    internal bool RetireEarlierProcessingFallback(string tenantId, string partyId, long generation, bool invalidateEarlier = false)
+    {
+        string key = PartySdkReadModelAddresses.Processing(tenantId, partyId);
+        lock (_gate)
+        {
+            if (!_activeReads.TryGetValue(generation, out var read) || read.Key != key)
+            {
+                return false;
+            }
+
+            if (!read.Superseded)
+            {
+                if (invalidateEarlier)
+                {
+                    InvalidateReads(key, generation);
+                }
+                else
+                {
+                    SupersedeEarlierReads(key, generation);
+                }
+
+                _ = _entries.Remove(key);
+            }
+
+            return true;
+        }
+    }
 
     /// <summary>Attempts to get a non-expired processing value.</summary>
     public bool TryGetProcessing(string tenantId, string partyId, out PartyProcessingSdkReadModel? value)
@@ -154,38 +196,43 @@ public sealed class PartySdkLastKnownReadModelCache
     public void EvictProcessing(string tenantId, string partyId)
         => Evict(PartySdkReadModelAddresses.Processing(tenantId, partyId));
 
-    /// <summary>Evicts a rejected processing revision while preserving a concurrently installed replacement.</summary>
-    internal void EvictProcessingIfSame(string tenantId, string partyId, PartyProcessingSdkReadModel rejected, string? etag)
-        => Evict(PartySdkReadModelAddresses.Processing(tenantId, partyId), rejected, etag);
-
-    private void Evict(string key, object? expected = null, string? etag = null)
+    /// <summary>Removes a rejected processing revision without invalidating newer reads.</summary>
+    internal void RejectProcessingRevision(string tenantId, string partyId, long generation,
+        PartyProcessingSdkReadModel rejected, string? etag)
     {
+        string key = PartySdkReadModelAddresses.Processing(tenantId, partyId);
         lock (_gate)
         {
-            long[] invalidated = _activeReads
-                .Where(pair => string.Equals(pair.Value, key, StringComparison.Ordinal))
-                .Select(static pair => pair.Key)
-                .ToArray();
-            foreach (long generation in invalidated)
+            if (!_activeReads.TryGetValue(generation, out var read) || read.Key != key)
             {
-                _ = _activeReads.Remove(generation);
+                return;
             }
 
-            if (expected is null || (_entries.TryGetValue(key, out var entry)
-                && (entry.ETag is null ? ReferenceEquals(entry.Value, expected) : string.Equals(entry.ETag, etag, StringComparison.Ordinal))))
+            InvalidateReads(key, generation);
+            if (_entries.TryGetValue(key, out var entry)
+                && (entry.ETag is null ? ReferenceEquals(entry.Value, rejected) : string.Equals(entry.ETag, etag, StringComparison.Ordinal)))
             {
                 _ = _entries.Remove(key);
             }
         }
     }
 
-    private void Store<TValue>(string key, TValue value)
+    private void Evict(string key)
+    {
+        lock (_gate)
+        {
+            InvalidateReads(key, _lastReadToken);
+            _ = _entries.Remove(key);
+        }
+    }
+
+    private void Store<TValue>(string key, TValue value, bool orderAdmissions = false)
         where TValue : class
     {
         long generation = BeginRead(key);
         try
         {
-            _ = StoreIfCurrent(key, generation, value);
+            _ = StoreIfCurrent(key, generation, value, orderAdmissions: orderAdmissions);
         }
         finally
         {
@@ -193,16 +240,26 @@ public sealed class PartySdkLastKnownReadModelCache
         }
     }
 
-    private bool StoreIfCurrent<TValue>(string key, long generation, TValue value, string? etag = null)
+    private bool StoreIfCurrent<TValue>(string key, long generation, TValue value, string? etag = null,
+        bool orderAdmissions = false, bool acceptSuperseded = false)
         where TValue : class
     {
         ArgumentNullException.ThrowIfNull(value);
         lock (_gate)
         {
-            if (!_activeReads.TryGetValue(generation, out string? readKey)
-                || !string.Equals(readKey, key, StringComparison.Ordinal))
+            if (!_activeReads.TryGetValue(generation, out var read) || read.Key != key)
             {
                 return false;
+            }
+
+            if (read.Superseded)
+            {
+                return acceptSuperseded;
+            }
+
+            if (orderAdmissions)
+            {
+                SupersedeEarlierReads(key, generation);
             }
 
             DateTimeOffset now = _timeProvider.GetUtcNow();
@@ -215,6 +272,27 @@ public sealed class PartySdkLastKnownReadModelCache
 
             _entries[key] = new PartySdkLastKnownReadModelCacheEntry(value, now, etag);
             return true;
+        }
+    }
+
+    private void SupersedeEarlierReads(string key, long generation)
+    {
+        // An older overlapping read stays superseded even if the newer entry expires.
+        long[] superseded = _activeReads.Where(pair => pair.Key < generation && pair.Value.Key == key)
+            .Select(static pair => pair.Key).ToArray();
+        foreach (long prior in superseded)
+        {
+            _activeReads[prior] = (key, true);
+        }
+    }
+
+    private void InvalidateReads(string key, long throughGeneration)
+    {
+        long[] invalidated = _activeReads.Where(pair => pair.Key <= throughGeneration && pair.Value.Key == key)
+            .Select(static pair => pair.Key).ToArray();
+        foreach (long token in invalidated)
+        {
+            _ = _activeReads.Remove(token);
         }
     }
 
