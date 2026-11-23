@@ -6,7 +6,7 @@ internal sealed partial class PartyMemoryCleanupService
 {
     /// <summary>Persists every discovered obligation before continuing pagination; unknown coverage never certifies cleanup.</summary>
     private async Task<(bool Complete, bool Terminal, string Version)> ReconcileSourceInventoryAsync(
-        string tenantId, string partyId, bool permanent, bool fence, CancellationToken cancellationToken)
+        string tenantId, string partyId, bool permanent, bool fence, HashSet<string> casesWithUnknownOutputs, CancellationToken cancellationToken)
     {
         string sourceUri = PartyMemoryUrn.Build(tenantId, partyId);
         string route = $"api/v1/tenants/{Uri.EscapeDataString(tenantId)}/source-inventory";
@@ -54,19 +54,29 @@ internal sealed partial class PartyMemoryCleanupService
                 string? retryHash = entry.TryGetProperty("idempotencyTokenHash", out JsonElement retry) ? retry.GetString() : null;
                 string? state = entry.GetProperty("state").GetString();
                 bool terminalVerified = entry.TryGetProperty("terminalVerified", out JsonElement proof) && proof.GetBoolean();
+                bool admitted = state == "Admitted";
                 var identity = workflow is not null ? ("workflow", (string?)null, workflow) : ("unit", capturedCase, canonical);
                 if ((workflow is null && canonical is null) || (workflow is not null && !ValidHandle(workflow, 512))
                     || (canonical is not null && !ValidHandle(canonical, 512)) || !ValidHandle(capturedCase, 512)
                     || (retryHash is not null && (retryHash.Length != 64 || retryHash.Any(character => !char.IsAsciiHexDigit(character)))) || !seen.Add(identity)
                     || seen.Count > PartyMemoryIngestionIntentStore.Capacity || state is not ("Admitted" or "Completed" or "Deleted")
-                    || (state != "Admitted" && string.IsNullOrWhiteSpace(canonical)))
+                    || (admitted ? workflow is null : string.IsNullOrWhiteSpace(canonical)))
                 {
                     throw new InvalidOperationException("memory-source-inventory-entry-invalid");
                 }
+                bool contradictory = admitted && terminalVerified;
+                if (contradictory)
+                {
+                    // Keep the admitted producer and hold its case while continuing to retain other rows.
+                    complete = false;
+                    casesWithUnknownOutputs.Add(capturedCase);
+                }
+
                 // Even a producer deletion marker must pass the consumer's exact scoped GET
                 // absence check. Retaining canonical provenance does not settle the obligation.
                 await intentStore.RetainDiscoveredAsync(tenantId, partyId, capturedCase, sourceUri, workflow,
-                    state == "Admitted" ? null : canonical, retryHash, terminalVerified, cancellationToken, BuildProducerAuthority(httpClient.BaseAddress)).ConfigureAwait(false);
+                    admitted ? null : canonical, retryHash, terminalVerified && !admitted, cancellationToken,
+                    BuildProducerAuthority(httpClient.BaseAddress), requireTerminalEvidence: contradictory).ConfigureAwait(false);
                 terminal &= state == "Deleted" && (workflow is null || terminalVerified);
             }
             cursor = page.TryGetProperty("nextCursor", out JsonElement next) ? next.GetString() : null;

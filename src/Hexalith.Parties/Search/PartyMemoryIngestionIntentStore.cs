@@ -327,7 +327,8 @@ internal sealed class PartyMemoryIngestionIntentStore(
 
     /// <inheritdoc/>
     public async Task RetainDiscoveredAsync(string tenantId, string partyId, string caseId, string sourceUri, string? workflowId,
-        string? canonicalId, string? retryIdentityHash, bool terminalVerified, CancellationToken cancellationToken, string? producerAuthority = null)
+        string? canonicalId, string? retryIdentityHash, bool terminalVerified, CancellationToken cancellationToken, string? producerAuthority = null,
+        bool requireTerminalEvidence = false)
     {
         _ = await ChangeAsync(tenantId, partyId, current =>
         {
@@ -367,7 +368,7 @@ internal sealed class PartyMemoryIngestionIntentStore(
                         ?? (workflowId is null && existing.WorkflowInstanceId is not null ? null : producerAuthority),
                     WorkflowInstanceId = existing.WorkflowInstanceId ?? workflowId,
                     MemoryUnitId = existing.MemoryUnitId ?? canonicalId,
-                    RequiresTerminalEvidence = unverifiedLegacyWorkflow || (workflowId is null ? existing.RequiresTerminalEvidence
+                    RequiresTerminalEvidence = requireTerminalEvidence || unverifiedLegacyWorkflow || (workflowId is null ? existing.RequiresTerminalEvidence
                         : !terminalVerified && (existing.RequiresTerminalEvidence || existing.WorkflowInstanceId is null || existing.MemoryUnitId is null)),
                 };
                 return current with { Intents = [.. current.Intents.Where(item => item == existing || item != unitObservation)

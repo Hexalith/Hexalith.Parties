@@ -145,10 +145,19 @@ public sealed class PartySdkLastKnownReadModelCache
     public void EvictProcessing(string tenantId, string partyId)
         => Evict(PartySdkReadModelAddresses.Processing(tenantId, partyId));
 
-    private void Evict(string key)
+    /// <summary>Evicts a rejected processing instance while preserving a concurrently installed replacement.</summary>
+    internal void EvictProcessingIfSame(string tenantId, string partyId, PartyProcessingSdkReadModel rejected)
+        => Evict(PartySdkReadModelAddresses.Processing(tenantId, partyId), rejected);
+
+    private void Evict(string key, object? expected = null)
     {
         lock (_gate)
         {
+            if (expected is not null && (!_entries.TryGetValue(key, out var entry) || !ReferenceEquals(entry.Value, expected)))
+            {
+                return;
+            }
+
             long[] invalidated = _activeReads
                 .Where(pair => string.Equals(pair.Value, key, StringComparison.Ordinal))
                 .Select(static pair => pair.Key)

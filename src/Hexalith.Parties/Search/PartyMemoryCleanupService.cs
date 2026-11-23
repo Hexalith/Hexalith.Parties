@@ -116,11 +116,12 @@ internal sealed partial class PartyMemoryCleanupService(
         }
 
         string? remoteBlock = null;
+        HashSet<string> casesWithUnknownOutputs = new(StringComparer.Ordinal);
         if (!remoteComplete)
         {
             try
             {
-                (remoteComplete, _, _) = await ReconcileSourceInventoryAsync(tenantId, partyId, permanent, fence: true, cancellationToken).ConfigureAwait(false);
+                (remoteComplete, _, _) = await ReconcileSourceInventoryAsync(tenantId, partyId, permanent, fence: true, casesWithUnknownOutputs, cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException) { throw; }
             catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
@@ -167,6 +168,7 @@ internal sealed partial class PartyMemoryCleanupService(
                 {
                     blocked ??= "Memories cleanup retains an obligation from a different producer authority.";
                     ProtectMappings(snapshot);
+                    ProtectCaseWithUnknownOutput(snapshot);
                     continue;
                 }
 
@@ -214,6 +216,10 @@ internal sealed partial class PartyMemoryCleanupService(
                     {
                         unresolvedUnits.Add((intent.CaseId, observedUnit));
                     }
+                    else
+                    {
+                        ProtectCaseWithUnknownOutput(intent);
+                    }
 
                     continue;
                 }
@@ -226,7 +232,7 @@ internal sealed partial class PartyMemoryCleanupService(
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 string unit = intent.MemoryUnitId!;
-                if (unresolvedUnits.Contains((intent.CaseId, unit)))
+                if (casesWithUnknownOutputs.Contains(intent.CaseId) || unresolvedUnits.Contains((intent.CaseId, unit)))
                 {
                     continue;
                 }
@@ -266,7 +272,7 @@ internal sealed partial class PartyMemoryCleanupService(
                     continue;
                 }
 
-                if (protectedMappings.Contains((resolvedCase, mapping.MemoryUnitId)))
+                if (casesWithUnknownOutputs.Contains(resolvedCase) || protectedMappings.Contains((resolvedCase, mapping.MemoryUnitId)))
                 {
                     continue;
                 }
@@ -359,7 +365,7 @@ internal sealed partial class PartyMemoryCleanupService(
         {
             if (sourceClosureVersion is null)
             {
-                (bool complete, bool terminal, string version) = await ReconcileSourceInventoryAsync(tenantId, partyId, permanent, fence: false, cancellationToken).ConfigureAwait(false);
+                (bool complete, bool terminal, string version) = await ReconcileSourceInventoryAsync(tenantId, partyId, permanent, fence: false, casesWithUnknownOutputs, cancellationToken).ConfigureAwait(false);
                 if (!complete || !terminal) { blocked ??= "Memories source inventory has not established complete terminal absence."; }
                 else { verifiedRemoteVersion = version; }
             }
@@ -406,6 +412,18 @@ internal sealed partial class PartyMemoryCleanupService(
             }
 
             return attempt;
+        }
+
+        void ProtectCaseWithUnknownOutput(PartyMemoryIngestionIntent intent)
+        {
+            // Legacy and unresolved inventory producers can share an output. A typed refresh revision
+            // has an independently scoped candidate when the inventory has no outstanding evidence requirement.
+            if (intent is { MemoryUnitId: null, WorkflowInstanceId: not null, SubmissionRejected: false }
+                && (intent.RequiresTerminalEvidence || intent.RefreshProtocolVersion != SourceRefreshProtocol.Version
+                    || intent.SourceRevisionNumber is null || string.IsNullOrWhiteSpace(intent.RefreshIdentityDigest)))
+            {
+                casesWithUnknownOutputs.Add(intent.CaseId);
+            }
         }
 
         void ProtectMappings(PartyMemoryIngestionIntent intent)

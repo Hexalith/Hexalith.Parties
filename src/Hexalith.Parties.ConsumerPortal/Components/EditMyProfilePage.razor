@@ -185,6 +185,8 @@
 </section>
 
 @code {
+    private static readonly TimeSpan s_readbackRetryDelay = TimeSpan.FromMilliseconds(250);
+    private static readonly TimeSpan s_readbackTimeout = TimeSpan.FromSeconds(2);
     private static int s_nextInstanceId;
 
     private readonly int _instanceId = System.Threading.Interlocked.Increment(ref s_nextInstanceId);
@@ -295,7 +297,7 @@
 
     private async Task SubmitAsync()
     {
-        if (_editContext is null || _messages is null || _profile is null)
+        if (_isSaving || _editContext is null || _messages is null || _profile is null || _profile.IsErased)
         {
             return;
         }
@@ -350,6 +352,7 @@
         {
             _profile = NormalizeDetail(result.Detail ?? BuildOptimisticDetail(original, submitted));
             PopulateFromDetail(_profile);
+            _editContext.MarkAsUnmodified();
             if (_profile.IsErased || !IsSameProfile(original, _profile))
             {
                 _saveStatusMessage = null;
@@ -383,37 +386,72 @@
     {
         try
         {
-            PartyDetail confirmed = NormalizeDetail(await ProfileDataClient.GetMyPartyAsync(token));
-            if (token.IsCancellationRequested)
+            PartyDetail observed = await ReadbackAsync(token);
+            token.ThrowIfCancellationRequested();
+            if (ApplyReadback(original, submitted, observed))
             {
                 return;
             }
 
-            if (confirmed.IsErased || !IsSameProfile(original, confirmed))
-            {
-                _profile = confirmed;
-                PopulateFromDetail(confirmed);
-                _saveStatusMessage = null;
-                return;
-            }
+            _isSaving = false;
+            StateHasChanged();
+            await Task.Delay(s_readbackRetryDelay, token);
 
-            if (confirmed.Freshness?.Status == ProjectionFreshnessStatus.Current && MatchesSubmittedDetails(confirmed, submitted))
+            observed = await ReadbackAsync(token);
+            token.ThrowIfCancellationRequested();
+            if (ApplyReadback(original, submitted, observed))
             {
-                _profile = confirmed;
-                PopulateFromDetail(confirmed);
-                _saveStatusMessage = ConsumerPortalLabels.EditProfileSavedCurrent;
+                return;
             }
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
+            return;
         }
         catch
         {
-            if (!token.IsCancellationRequested)
-            {
-                _saveStatusMessage = ConsumerPortalLabels.EditProfileDegradedAfterSave;
-            }
+            // Keep the accepted values if the readback fails or times out.
         }
+
+        if (!token.IsCancellationRequested)
+        {
+            _saveStatusMessage = ConsumerPortalLabels.EditProfileDegradedAfterSave;
+        }
+    }
+
+    private async Task<PartyDetail> ReadbackAsync(CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
+        deadline.CancelAfter(s_readbackTimeout);
+        PartyDetail observed = await ProfileDataClient.GetMyPartyAsync(deadline.Token).WaitAsync(deadline.Token);
+        deadline.Token.ThrowIfCancellationRequested();
+        return NormalizeDetail(observed);
+    }
+
+    private bool ApplyReadback(PartyDetail original, ConsumerProfileUpdateRequest submitted, PartyDetail observed)
+    {
+        if (observed.IsErased || !IsSameProfile(original, observed))
+        {
+            _profile = observed;
+            PopulateFromDetail(observed);
+            _saveStatusMessage = null;
+            return true;
+        }
+
+        if (observed.Freshness?.Status != ProjectionFreshnessStatus.Current || !MatchesSubmittedDetails(observed, submitted))
+        {
+            return false;
+        }
+
+        _profile = observed;
+        if (_editContext?.IsModified() != true)
+        {
+            PopulateFromDetail(observed);
+        }
+
+        _saveStatusMessage = ConsumerPortalLabels.EditProfileSavedCurrent;
+        return true;
     }
 
     private static bool IsSameProfile(PartyDetail original, PartyDetail observed)

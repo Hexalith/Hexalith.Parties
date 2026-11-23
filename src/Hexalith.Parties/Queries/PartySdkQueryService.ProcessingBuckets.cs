@@ -74,6 +74,7 @@ public sealed partial class PartySdkQueryService
         if (model.BucketGeneration is null)
         {
             ValidateInlineProcessingScope(model, tenant, party);
+            await VerifyProcessingRevisionAsync(tenant, party, model, etag, token).ConfigureAwait(false);
             return model.Records;
         }
 
@@ -121,8 +122,9 @@ public sealed partial class PartySdkQueryService
         }
         var latest = await readModelStore.GetAsync<PartyProcessingSdkReadModel>(StoreName,
                     PartySdkReadModelAddresses.Processing(tenant, party), token).ConfigureAwait(false);
-        if (etag is null || latest.ETag != etag)
+        if (etag is null || latest.Value is null || latest.ETag != etag)
         {
+            lastKnownCache.EvictProcessingIfSame(tenant, party, model);
             throw new InvalidOperationException("processing-history-revision-changed");
         }
     }

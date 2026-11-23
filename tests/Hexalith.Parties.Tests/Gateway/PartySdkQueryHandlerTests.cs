@@ -359,6 +359,81 @@ public sealed class PartySdkQueryHandlerTests
         result.PayloadBytes.ShouldBeNull();
     }
 
+    [Theory]
+    [InlineData(false, "changed")]
+    [InlineData(true, "changed")]
+    [InlineData(false, "absent")]
+    [InlineData(true, "absent")]
+    [InlineData(false, "concurrent")]
+    [InlineData(true, "concurrent")]
+    public async Task CompleteInlineProcessingReadsEvictOnlyRejectedRevisionAndPreserveDegradedFallbackAsync(bool export, string verification)
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        const string tenant = "tenant-a";
+        const string party = "party-1";
+        string processingKey = PartySdkReadModelAddresses.Processing(tenant, party);
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", PartySdkReadModelAddresses.Detail(tenant, party), token)
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel { Detail = Detail(party) }, "detail"));
+        var record = new ProcessingActivityRecord
+        {
+            TenantId = tenant, PartyId = party, SequenceNumber = 1, EventType = "PartyUpdated", Timestamp = s_now, Summary = "Retained fact.",
+        };
+        var rejected = new PartyProcessingSdkReadModel { Records = [record] };
+        var replacement = rejected with { Records = [record with { Summary = "New revision." }] };
+        var cache = new PartySdkLastKnownReadModelCache();
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", processingKey, token).Returns(
+            _ => new ReadModelEntry<PartyProcessingSdkReadModel>(rejected, "before"),
+            _ =>
+            {
+                if (verification == "concurrent")
+                {
+                    cache.StoreProcessing(tenant, party, replacement);
+                }
+
+                return verification == "absent" ? new ReadModelEntry<PartyProcessingSdkReadModel>(null, null)
+                    : new ReadModelEntry<PartyProcessingSdkReadModel>(replacement, "after");
+            });
+        var service = CreateService(store, lastKnownCache: cache);
+        var envelope = CreateDetailEnvelope(export ? "ExportPartyData" : "GetProcessingRecords");
+
+        QueryResult changed = await ReadAsync();
+
+        changed.Success.ShouldBeFalse();
+        changed.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.QueryExecutionFailure);
+        changed.PayloadBytes.ShouldBeNull();
+
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", processingKey, token).ThrowsAsync(new IOException("store unavailable"));
+        IReadOnlyList<ProcessingActivityRecord> afterRejection = Records(await ReadAsync());
+        if (verification == "concurrent")
+        {
+            afterRejection.ShouldBe(replacement.Records);
+        }
+        else
+        {
+            afterRejection.ShouldBeEmpty();
+        }
+
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", processingKey, token)
+            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(replacement, "stable"));
+        (await ReadAsync()).Success.ShouldBeTrue();
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", processingKey, token).ThrowsAsync(new IOException("store unavailable"));
+        store.ClearReceivedCalls();
+
+        Records(await ReadAsync()).ShouldBe(replacement.Records);
+        await store.Received(1).GetAsync<PartyProcessingSdkReadModel>("statestore", processingKey, token);
+
+        Task<QueryResult> ReadAsync() => export ? service.ExportPartyDataAsync(envelope, token) : service.GetProcessingRecordsAsync(envelope, token);
+
+        IReadOnlyList<ProcessingActivityRecord> Records(QueryResult degraded)
+        {
+            degraded.Success.ShouldBeTrue();
+            degraded.Metadata!.IsDegraded.ShouldBe(true);
+            return export ? degraded.GetPayload().Deserialize<PartyDataPortabilityPackage>(PartiesJsonOptions.Default)!.ProcessingRecords
+                : degraded.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!;
+        }
+    }
+
     [Fact]
     public async Task InlineProcessingPagesTraverseProtectedFirstContinuationAndTerminalMetadataAsync()
     {
@@ -1634,11 +1709,11 @@ public sealed class PartySdkQueryHandlerTests
         store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(_ => readCount++ switch
             {
-                0 => Task.FromResult(new ReadModelEntry<PartyProcessingSdkReadModel>(new PartyProcessingSdkReadModel
+                0 or 1 => Task.FromResult(new ReadModelEntry<PartyProcessingSdkReadModel>(new PartyProcessingSdkReadModel
                 {
                     Records = [staleActivity],
                 }, "etag-old")),
-                1 => Task.FromResult(new ReadModelEntry<PartyProcessingSdkReadModel>(null, null)),
+                2 => Task.FromResult(new ReadModelEntry<PartyProcessingSdkReadModel>(null, null)),
                 _ => Task.FromException<ReadModelEntry<PartyProcessingSdkReadModel>>(new InvalidOperationException("outage")),
             });
         var cache = new PartySdkLastKnownReadModelCache();
@@ -2511,7 +2586,7 @@ public sealed class PartySdkQueryHandlerTests
                 "statestore",
                 PartySdkReadModelAddresses.Processing("tenant-a", "party-1"),
                 Arg.Any<CancellationToken>())
-            .Returns(_ => readCount++ == 0
+            .Returns(_ => readCount++ < 2
                 ? Task.FromResult(read)
                 : Task.FromException<ReadModelEntry<PartyProcessingSdkReadModel>>(
                     new InvalidOperationException("state store unavailable")));
@@ -2852,7 +2927,7 @@ public sealed class PartySdkQueryHandlerTests
 
         if (queryType is PartyDetailQueryTypes.ExportPartyDataQueryType or PartyDetailQueryTypes.GetProcessingRecordsQueryType)
         {
-            await store.Received(1).GetAsync<PartyProcessingSdkReadModel>(
+            await store.Received(2).GetAsync<PartyProcessingSdkReadModel>(
                 "statestore", PartySdkReadModelAddresses.Processing("tenant-a", partyId), Arg.Any<CancellationToken>());
             IReadOnlyList<ProcessingActivityRecord> records = queryType == PartyDetailQueryTypes.ExportPartyDataQueryType
                 ? result.GetPayload().Deserialize<PartyDataPortabilityPackage>(PartiesJsonOptions.Default)!.ProcessingRecords

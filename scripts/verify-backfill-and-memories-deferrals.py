@@ -2,6 +2,7 @@
 """Reproduce the backfill and Memories 4.1.0 release checks on Linux."""
 
 import argparse
+import base64
 from collections import Counter
 import hashlib
 import json
@@ -31,6 +32,7 @@ BACKFILL_NAMESPACE = "Hexalith.Parties.Tests.Projections"
 BACKFILL_RUNTIME = f"{BACKFILL_NAMESPACE}.PartyLegacyReadModelBackfillRuntimeTests"
 BACKFILL_PROCESS = f"{BACKFILL_NAMESPACE}.PartyLegacyBackfillProcessRuntimeTests"
 WORKLOAD_METHOD = f"{BACKFILL_PROCESS}.ActualProviderBackfillSurvivesSeparateWorkloadProcesses"
+WORKLOAD_RECEIPT_PREFIX = "Backfill workload receipt (base64): "
 
 
 def boolean_cases(parameter):
@@ -181,10 +183,10 @@ def check_pass_counts(report, node, count):
             raise ValueError(f"{report}: inconsistent xUnit {node.tag} {field} count")
 
 
-def check_report(report, expected, project):
+def check_report(report, expected, project, *, expected_receipt=None):
     root = ET.parse(report).getroot()
     assemblies = root.findall("assembly")
-    if len(assemblies) != 1 or Path(assemblies[0].get("name", "")).name != f"{project}.dll":
+    if root.tag != "assemblies" or len(assemblies) != 1 or Path(assemblies[0].get("name", "")).name != f"{project}.dll":
         raise ValueError(f"{report}: expected one {project} assembly")
     assembly = assemblies[0]
     if assembly.get("errors") != "0" or assembly.find("errors/error") is not None:
@@ -207,6 +209,15 @@ def check_report(report, expected, project):
         observed[method, name] += 1
     if observed != required:
         raise ValueError(f"{report}: missing {list((required - observed).elements())}, unexpected {list((observed - required).elements())}")
+    if expected_receipt is not None:
+        outputs = [output for test in tests for output in test.findall("output")]
+        if any(len(output) for output in outputs):
+            raise ValueError(f"{report}: passing workload test must contain one matching XML receipt in plain output text")
+        receipts = [line for output in outputs for line in (output.text or "").splitlines()
+                    if line.startswith(WORKLOAD_RECEIPT_PREFIX)]
+        encoded = base64.b64encode(expected_receipt).decode("ascii")
+        if receipts != [WORKLOAD_RECEIPT_PREFIX + encoded]:
+            raise ValueError(f"{report}: passing workload test must contain one matching XML receipt")
     return {"passed": len(tests), "cases": sorted(name for _, name in observed)}
 
 
@@ -233,8 +244,8 @@ def verify_workloads(directory):
             raise ValueError(f"{target}: invalid backfill workload operation")
         pids = set()
         for phase in phases:
-            check_report(target / f"{phase}.xml", {WORKLOAD_METHOD: FACT}, BACKFILL_PROJECT)
-            receipt = json.loads((target / f"{phase}.json").read_text())
+            receipt_bytes = (target / f"{phase}.json").read_bytes()
+            receipt = json.loads(receipt_bytes)
             if (receipt["tenant"], receipt["operation"], receipt["phase"]) != (target.name, operation, phase):
                 raise ValueError(f"{target}: mismatched {phase} workload receipt")
             if receipt.get("inputSha256") != input_sha256:
@@ -242,6 +253,7 @@ def verify_workloads(directory):
             pid = receipt["processId"]
             if type(pid) is not int or pid <= 0:
                 raise ValueError(f"{target}: invalid {phase} workload process ID")
+            check_report(target / f"{phase}.xml", {WORKLOAD_METHOD: FACT}, BACKFILL_PROJECT, expected_receipt=receipt_bytes)
             pids.add(pid)
         if len(pids) != len(phases):
             raise ValueError(f"{target}: expected a distinct process for each phase")

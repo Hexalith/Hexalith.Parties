@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Runtime.ExceptionServices;
 using System.Text.Json;
+using System.Xml.Linq;
 
 using Hexalith.EventStore.Client.Projections;
 using Hexalith.EventStore.Contracts.Projections;
@@ -23,7 +24,10 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
     private const string ManifestVariable = "PARTIES_BACKFILL_WORKLOAD_MANIFEST";
     private const string PhaseVariable = "PARTIES_BACKFILL_WORKLOAD_PHASE";
     private const string HashVariable = "PARTIES_BACKFILL_WORKLOAD_HASH";
+    private const string ReceiptPrefix = "Backfill workload receipt (base64): ";
     private static readonly JsonSerializerOptions s_json = new(JsonSerializerDefaults.Web);
+
+    private static string WorkloadMethod => typeof(PartyLegacyBackfillProcessRuntimeTests).FullName + "." + nameof(ActualProviderBackfillSurvivesSeparateWorkloadProcesses);
 
     /// <summary>Requires durable canonical, erasure and survivor outcomes after independent seed/rebuild/stage/commit/verify processes.</summary>
     [Fact(Timeout = 300000)]
@@ -65,7 +69,7 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
                 {
                     var start = new ProcessStartInfo("dotnet");
                     foreach (string argument in new[] { typeof(PartyLegacyBackfillProcessRuntimeTests).Assembly.Location,
-                        "-method", typeof(PartyLegacyBackfillProcessRuntimeTests).FullName + "." + nameof(ActualProviderBackfillSurvivesSeparateWorkloadProcesses),
+                        "-method", WorkloadMethod,
                         "-failSkips", "-result-xml", Path.Combine(directory, phase + ".xml") }) start.ArgumentList.Add(argument);
                     start.Environment[ManifestVariable] = path;
                     start.Environment[PhaseVariable] = phase;
@@ -73,12 +77,9 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
                     var result = PackageTestProcess.Run(start, directory, 120000);
                     await File.WriteAllTextAsync(Path.Combine(directory, phase + ".log"), result.Diagnostic, token).ConfigureAwait(true);
                     result.ExitCode.ShouldBe(0, result.Diagnostic);
-                    var xml = System.Xml.Linq.XDocument.Load(Path.Combine(directory, phase + ".xml"));
-                    var assembly = xml.Descendants("assembly").ShouldHaveSingleItem();
-                    assembly.Attribute("total")!.Value.ShouldBe("1");
-                    assembly.Attribute("passed")!.Value.ShouldBe("1");
-                    assembly.Attribute("skipped")!.Value.ShouldBe("0");
-                    using var receipt = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(directory, phase + ".json"), token).ConfigureAwait(true));
+                    byte[] receiptBytes = await File.ReadAllBytesAsync(Path.Combine(directory, phase + ".json"), token).ConfigureAwait(true);
+                    VerifyWorkloadReport(XDocument.Load(Path.Combine(directory, phase + ".xml")), receiptBytes);
+                    using var receipt = JsonDocument.Parse(receiptBytes);
                     receipt.RootElement.GetProperty("tenant").GetString().ShouldBe(manifest.Tenant);
                     receipt.RootElement.GetProperty("operation").GetString().ShouldBe(manifest.IndexOperation);
                     receipt.RootElement.GetProperty("phase").GetString().ShouldBe(phase);
@@ -103,6 +104,91 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
                         foreach (string file in Directory.EnumerateFiles(directory)) File.Copy(file, Path.Combine(retained, Path.GetFileName(file)), overwrite: false);
                     }
                 }, () => Directory.Delete(directory, recursive: true), primaryFailure);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("phase")]
+    [InlineData("target")]
+    [InlineData("nested output")]
+    [InlineData("identity")]
+    [InlineData("counts")]
+    public void WorkloadReportRefusesSubstitutedOrMalformedEvidence(string defect)
+    {
+        byte[] receipt = """{"tenant":"test-tenant","phase":"stage"}"""u8.ToArray();
+        XDocument xml = XDocument.Parse($"""
+            <assemblies>
+              <assembly name="{typeof(PartyLegacyBackfillProcessRuntimeTests).Assembly.GetName().Name}.dll" errors="0" total="1" passed="1" failed="0" skipped="0" not-run="0">
+                <collection total="1" passed="1" failed="0" skipped="0" not-run="0">
+                  <test type="{typeof(PartyLegacyBackfillProcessRuntimeTests).FullName}" method="{nameof(ActualProviderBackfillSurvivesSeparateWorkloadProcesses)}" name="{WorkloadMethod}" result="Pass">
+                    <output>{ReceiptPrefix}{Convert.ToBase64String(receipt)}</output>
+                  </test>
+                </collection>
+              </assembly>
+            </assemblies>
+            """);
+        VerifyWorkloadReport(xml, receipt);
+
+        XElement test = xml.Descendants("test").ShouldHaveSingleItem();
+        XElement output = test.Element("output").ShouldNotBeNull();
+        switch (defect)
+        {
+            case "phase":
+                output.Value = ReceiptPrefix + Convert.ToBase64String("""{"tenant":"test-tenant","phase":"seed"}"""u8);
+                break;
+            case "target":
+                output.Value = ReceiptPrefix + Convert.ToBase64String("""{"tenant":"other-tenant","phase":"stage"}"""u8);
+                break;
+            case "nested output":
+                output.ReplaceNodes(new XElement("nested", output.Value));
+                break;
+            case "identity":
+                test.SetAttributeValue("method", "OtherMethod");
+                break;
+            case "counts":
+                test.Parent.ShouldNotBeNull().SetAttributeValue("failed", "1");
+                break;
+        }
+
+        Should.Throw<ShouldAssertException>(() => VerifyWorkloadReport(xml, receipt));
+    }
+
+    private static void VerifyWorkloadReport(XDocument report, byte[] receipt)
+    {
+        XElement root = report.Root.ShouldNotBeNull();
+        root.Name.ShouldBe(XName.Get("assemblies"));
+        XElement assembly = root.Elements("assembly").ShouldHaveSingleItem();
+        Path.GetFileName((string?)assembly.Attribute("name")).ShouldBe(typeof(PartyLegacyBackfillProcessRuntimeTests).Assembly.GetName().Name + ".dll");
+        ((string?)assembly.Attribute("errors")).ShouldBe("0");
+        assembly.Elements("errors").Elements("error").ShouldBeEmpty();
+        VerifyPassCounts(assembly, 1);
+
+        XElement test = assembly.Elements("collection").Elements("test").ShouldHaveSingleItem();
+        root.Descendants("test").ShouldHaveSingleItem();
+        foreach (XElement collection in assembly.Elements("collection"))
+        {
+            VerifyPassCounts(collection, collection.Elements("test").Count());
+        }
+
+        ((string?)test.Attribute("type")).ShouldBe(typeof(PartyLegacyBackfillProcessRuntimeTests).FullName);
+        ((string?)test.Attribute("method")).ShouldBe(nameof(ActualProviderBackfillSurvivesSeparateWorkloadProcesses));
+        ((string?)test.Attribute("name")).ShouldBe(WorkloadMethod);
+        ((string?)test.Attribute("result")).ShouldBe("Pass");
+        XElement[] outputs = test.Elements("output").ToArray();
+        outputs.ShouldAllBe(output => !output.HasElements);
+        outputs.SelectMany(output => output.Value.ReplaceLineEndings("\n").Split('\n'))
+            .Where(line => line.StartsWith(ReceiptPrefix, StringComparison.Ordinal))
+            .ShouldHaveSingleItem().ShouldBe(ReceiptPrefix + Convert.ToBase64String(receipt));
+
+        static void VerifyPassCounts(XElement node, int count)
+        {
+            string passed = count.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            ((string?)node.Attribute("total")).ShouldBe(passed);
+            ((string?)node.Attribute("passed")).ShouldBe(passed);
+            foreach (string field in new[] { "failed", "skipped", "not-run" })
+            {
+                ((string?)node.Attribute(field)).ShouldBe("0");
             }
         }
     }
@@ -310,8 +396,11 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
         var survivors = JsonSerializer.Deserialize<Dictionary<string, byte[]>>(await File.ReadAllBytesAsync(survivorsPath, token).ConfigureAwait(true), s_json).ShouldNotBeNull();
         survivors.Count.ShouldBe(9);
         foreach (var survivor in survivors) (await fixture.RawAsync(survivor.Key, token).ConfigureAwait(true)).ShouldBe(survivor.Value);
-        await File.WriteAllBytesAsync(Path.Combine(directory, phase + ".json"), JsonSerializer.SerializeToUtf8Bytes(new
-        { tenant = manifest.Tenant, operation = manifest.IndexOperation, phase, inputSha256, processId = Environment.ProcessId }, s_json), token).ConfigureAwait(true);
+        byte[] receipt = JsonSerializer.SerializeToUtf8Bytes(new
+        { tenant = manifest.Tenant, operation = manifest.IndexOperation, phase, inputSha256, processId = Environment.ProcessId }, s_json);
+        await File.WriteAllBytesAsync(Path.Combine(directory, phase + ".json"), receipt, token).ConfigureAwait(true);
+        // Base64 preserves the exact JSON bytes through xUnit's XML text escaping.
+        TestContext.Current.TestOutputHelper.ShouldNotBeNull().WriteLine(ReceiptPrefix + Convert.ToBase64String(receipt));
     }
 
     private static bool IsGeneration(ReadModelBatch batch) => batch.Scope.ProjectionType.EndsWith(".generation", StringComparison.Ordinal);

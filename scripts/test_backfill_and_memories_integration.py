@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import json
 from pathlib import Path
@@ -42,6 +43,7 @@ class BackfillMemoriesReportTests(unittest.TestCase):
         assembly = self.report_for_methods({runner["WORKLOAD_METHOD"]: runner["FACT"]}, runner["BACKFILL_PROJECT"])
         root = ET.Element("assemblies")
         root.append(assembly)
+        output = ET.SubElement(assembly.find("collection/test"), "output")
         outcomes = {}
         for tenant, existing in (("empty", False), ("existing", True)):
             target = directory / tenant
@@ -51,10 +53,13 @@ class BackfillMemoriesReportTests(unittest.TestCase):
             (target / "input.json").write_bytes(manifest)
             digest = hashlib.sha256(manifest).hexdigest()
             for pid, phase in enumerate(phases, start=1):
-                ET.ElementTree(root).write(target / f"{phase}.xml")
-                (target / f"{phase}.json").write_text(json.dumps({
+                receipt = json.dumps({
                     "tenant": tenant, "operation": operation, "phase": phase, "processId": pid, "inputSha256": digest,
-                }))
+                }).encode("utf-8")
+                encoded = base64.b64encode(receipt).decode("ascii")
+                output.text = f"Synthetic diagnostic\n{runner['WORKLOAD_RECEIPT_PREFIX']}{encoded}\n"
+                ET.ElementTree(root).write(target / f"{phase}.xml")
+                (target / f"{phase}.json").write_bytes(receipt)
             outcomes[tenant] = {"tenant": tenant, "inputSha256": digest, "phases": list(phases)}
         return outcomes
 
@@ -63,6 +68,38 @@ class BackfillMemoriesReportTests(unittest.TestCase):
             directory = Path(tmp)
             expected = self.write_workloads(directory)
             self.assertEqual(runner["verify_workloads"](directory), expected)
+
+    def test_workloads_reject_xml_from_another_phase_or_target(self):
+        for source in (Path("empty/seed.xml"), Path("existing/stage.xml")):
+            with self.subTest(source=source), tempfile.TemporaryDirectory() as tmp:
+                directory = Path(tmp)
+                self.write_workloads(directory)
+                (directory / "empty/stage.xml").write_bytes((directory / source).read_bytes())
+                with self.assertRaisesRegex(ValueError, "passing workload test must contain one matching XML receipt"):
+                    runner["verify_workloads"](directory)
+
+    def test_workloads_require_exactly_one_verbatim_receipt_on_the_passing_test(self):
+        for defect in ("misplaced", "duplicate", "nested", "reformatted"):
+            with self.subTest(defect=defect), tempfile.TemporaryDirectory() as tmp:
+                directory = Path(tmp)
+                self.write_workloads(directory)
+                report = directory / "empty/stage.xml"
+                root = ET.parse(report)
+                test = root.find("assembly/collection/test")
+                output = test.find("output")
+                if defect == "misplaced":
+                    test.remove(output)
+                    root.find("assembly").append(output)
+                elif defect == "duplicate":
+                    output.text += output.text
+                elif defect == "nested":
+                    ET.SubElement(output, "nested").text = output.text
+                else:
+                    receipt_path = directory / "empty/stage.json"
+                    receipt_path.write_text(json.dumps(json.loads(receipt_path.read_text()), sort_keys=True))
+                root.write(report)
+                with self.assertRaisesRegex(ValueError, "passing workload test must contain one matching XML receipt"):
+                    runner["verify_workloads"](directory)
 
     def test_workloads_reject_changed_or_missing_input_digests(self):
         for defect in ("changed receipt", "missing receipt digest", "changed manifest bytes"):

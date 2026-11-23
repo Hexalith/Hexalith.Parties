@@ -375,6 +375,7 @@ qualification_2026_11_23: The catalog check now requires all seven paging and cu
 recovery_batch_2026_11_23: An unresolved delivery rechecks the selected processing representation on each conditional write. A competing bucket rebuild preserves its generation and records. The released-package query and projection tests cover subsequent reads. Deployed paging and cutover remain open. See `spec-ten-deferred-recovery-and-runtime-checks.md`.
 
 authority_recovery_2026_11_23: Complete processing reads and exports reject cached bucket metadata without an authoritative revision before fetching buckets. See `spec-five-deferred-authority-and-recovery-fixes.md`.
+recovery_evidence_followup_2026_11_23: Complete inline processing history and portability exports recheck the selected revision before returning records. The cache evicts a rejected snapshot while preserving an independently installed replacement. See `spec-five-deferred-recovery-evidence-followups.md`.
 
 ### DW-51: Resolve projection-handler performance and validation-coupling debt
 
@@ -463,6 +464,7 @@ qualification_2026_11_23: The catalog check now requires all six in-memory migra
 recovery_batch_2026_11_23: An audit retry now re-reads both slots, preserves a missing canonical slot, and returns rebuild-required on observing the loss. The released processing-only conditional write cannot detect an independent detail deletion after its last companion read. Deployed writer coordination is still required. The disposable Redis/Dapr migration passed for empty and existing targets, including six separately verified workload phases per target. Deployed writer drain, cutover and rollback remain open. See `spec-ten-deferred-recovery-and-runtime-checks.md`.
 
 authority_recovery_2026_11_23: Each backfill workload receipt records the digest of the input it verified. The parent and retained report reader check it. The owned Redis/Dapr rehearsal verified all 12 receipts across both canonical starting states. See `spec-five-deferred-authority-and-recovery-fixes.md`.
+recovery_evidence_followup_2026_11_23: Each passing xUnit workload result carries the exact phase receipt bytes. The parent and evidence reader reject a successful XML report copied from a different phase or target. See `spec-five-deferred-recovery-evidence-followups.md`.
 
 ### DW-59: Preserve mappings when unit ID and source URI match different rows
 
@@ -677,6 +679,7 @@ qualification_2026_11_23: The catalog check now requires empty-local-state resul
 recovery_batch_2026_11_23: Discovery binds an unbound legacy intent to the producer that supplied the matched inventory. After restart, another producer cannot settle that obligation from its own inventory. Historical inventory reconciliation and deployed writer exclusion remain open. See `spec-ten-deferred-recovery-and-runtime-checks.md`.
 
 authority_recovery_2026_11_23: Validated terminal status now binds the active legacy workflow to its producer in the same conditional write as its canonical output. Cleanup checks producer authority again before using older unbound records. See `spec-five-deferred-authority-and-recovery-fixes.md`.
+recovery_evidence_followup_2026_11_23: A contradictory Admitted row retains its workflow and requires terminal evidence. Cleanup protects that case and restores the requirement on older active intents. See `spec-five-deferred-recovery-evidence-followups.md`.
 
 ### DW-83: Persist recovery when mapping and compensating deletion both fail
 
@@ -821,6 +824,7 @@ qualification_2026_11_23: The catalog check now requires both reconciliation reg
 recovery_batch_2026_11_23: The public embedded UI module and the standalone host now honor the same shared-primitives setting. Registration tests exercise enabled, disabled and absent configuration. Deployment and named owner acceptance remain open. See `spec-ten-deferred-recovery-and-runtime-checks.md`.
 
 authority_recovery_2026_11_23: The profile editor retains accepted values when the first readback is stale or returns earlier details. A current match confirms the save. Erasure and profile changes take precedence. See `spec-five-deferred-authority-and-recovery-fixes.md`.
+recovery_evidence_followup_2026_11_23: An inconclusive first profile readback schedules one further read. A matching current read confirms the accepted save and preserves any newer form edits. See `spec-five-deferred-recovery-evidence-followups.md`.
 
 ### DW-101: Consolidate Admin and Consumer exports onto the approved FrontComposer browser-download service after G4-D delivery
 
@@ -1370,6 +1374,7 @@ qualification_2026_11_23: The catalog check now requires accepted deletion to re
 recovery_batch_2026_11_23: Cleanup retains the observed producer binding when legacy inventory imports workflow and unit facts. Restarting against another endpoint preserves the outstanding work for its original producer. Production custody and erasure evidence remain open. See `spec-ten-deferred-recovery-and-runtime-checks.md`.
 
 authority_recovery_2026_11_23: Bulk cleanup retains a shared unit and its mappings until every known workflow for that unit has validated terminal evidence. A single scoped deletion attempt supplies evidence for the unit per pass. See `spec-five-deferred-authority-and-recovery-fixes.md`.
+recovery_evidence_followup_2026_11_23: An unresolved inventory or legacy workflow with unknown output protects candidates in its case during cleanup retries and producer changes. Other cases and independently verified refreshes can continue. See `spec-five-deferred-recovery-evidence-followups.md`.
 
 ### DW-169: D7 — Use concurrency-aware removal when cleaning a party memory-unit mapping inventory.
 

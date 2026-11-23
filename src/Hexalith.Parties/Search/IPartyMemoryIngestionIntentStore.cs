@@ -32,7 +32,8 @@ internal interface IPartyMemoryIngestionIntentStore
 
     /// <summary>Durably retains a producer discovered in the authoritative remote source inventory under the cleanup fence.</summary>
     Task RetainDiscoveredAsync(string tenantId, string partyId, string caseId, string sourceUri, string? workflowId,
-        string? canonicalId, string? retryIdentityHash, bool terminalVerified, CancellationToken cancellationToken, string? producerAuthority = null);
+        string? canonicalId, string? retryIdentityHash, bool terminalVerified, CancellationToken cancellationToken, string? producerAuthority = null,
+        bool requireTerminalEvidence = false);
 
     /// <summary>Reads previously verified complete absence under an enduring remote permanent fence.</summary>
     Task<string?> GetSourceClosureVersionAsync(string tenantId, string partyId, CancellationToken cancellationToken, string? producerAuthority = null);
