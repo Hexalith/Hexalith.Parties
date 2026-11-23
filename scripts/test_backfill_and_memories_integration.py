@@ -169,6 +169,20 @@ class BackfillMemoriesReportTests(unittest.TestCase):
                     with self.assertRaises(ValueError):
                         runner["complete_summary"]({"checks": shortened})
 
+    def test_backfill_requires_both_index_competitors_after_staging(self):
+        method = f"{runner['BACKFILL_RUNTIME']}.ActualProviderIndexCompetitorAfterStagingSurvivesCommit"
+        project = runner["BACKFILL_PROJECT"]
+        for value in ("False", "True"):
+            with self.subTest(existing=value):
+                required_case = f"{method}(existing: {value})"
+                self.assertIn(required_case, runner["REQUIRED_CASES"]["backfill"])
+                assembly = self.report_for_methods(runner["BACKFILL_METHODS"], project)
+                collection = assembly.find("collection")
+                collection.remove(next(test for test in collection if test.get("name") == required_case))
+                self.recount(assembly)
+                with self.assertRaisesRegex(ValueError, "missing|incomplete|expected"):
+                    self.verify(assembly, "backfill", project)
+
     def test_substituted_theory_argument_cannot_replace_required_variant(self):
         for lane, project, suffix in (
             ("same-uri-refresh", runner["MEMORIES_PROJECT"], "(newerFirst: False)"),

@@ -42,6 +42,7 @@ def boolean_cases(parameter):
 FACT = ("",)
 BACKFILL_METHODS = {
     f"{BACKFILL_RUNTIME}.ActualProviderRebuildPersistsAcrossFreshClientsAndPreservesErasureAndRollbackBytes": boolean_cases("existing"),
+    f"{BACKFILL_RUNTIME}.ActualProviderIndexCompetitorAfterStagingSurvivesCommit": boolean_cases("existing"),
     f"{BACKFILL_RUNTIME}.ActualProviderCompetingWriteAfterPreparationRefusesPublicationAndPreservesEveryCanonicalKey": tuple(
         f'(target: "{target}", existing: {existing})'
         for target in ("detail", "processing", "index") for existing in ("False", "True")),

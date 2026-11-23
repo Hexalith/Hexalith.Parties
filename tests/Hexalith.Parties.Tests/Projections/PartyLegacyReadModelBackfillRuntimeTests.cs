@@ -163,6 +163,79 @@ public sealed class PartyLegacyReadModelBackfillRuntimeTests
     }
 
     [Theory(Timeout = 120000)]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ActualProviderIndexCompetitorAfterStagingSurvivesCommit(bool existing)
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        var fixture = new PartyLegacyBackfillRuntimeFixture(await PartyLegacyBackfillRuntimeFixture.ConfigurationAsync(token));
+        await fixture.SeedAsync(token);
+        const string operation = "staged-index-competing-write";
+        string indexKey = PartySdkReadModelAddresses.Index(fixture.Tenant);
+        string detailKey = PartySdkReadModelAddresses.Detail(fixture.Tenant, fixture.Histories[0].AggregateId);
+        string processingKey = PartySdkReadModelAddresses.Processing(fixture.Tenant, fixture.Histories[0].AggregateId);
+        await fixture.SaveAsync(detailKey, new PartyDetailSdkReadModel { ProjectionVersion = "detail-survivor" }, token);
+        await fixture.SaveAsync(processingKey, new PartyProcessingSdkReadModel { ProjectionVersion = "processing-survivor" }, token);
+        byte[] detail = await fixture.RawAsync(detailKey, token);
+        byte[] processing = await fixture.RawAsync(processingKey, token);
+        if (existing)
+        {
+            await fixture.SaveAsync(indexKey, new PartyIndexSdkReadModel { ProjectionVersion = "previous-canonical" }, token);
+        }
+        var previous = await fixture.ReadAsync<PartyIndexSdkReadModel>(indexKey, token);
+        if (existing)
+        {
+            previous.Value.ShouldNotBeNull().ProjectionVersion.ShouldBe("previous-canonical");
+            previous.ETag.ShouldNotBeNullOrWhiteSpace();
+        }
+        else
+        {
+            previous.Value.ShouldBeNull();
+            previous.ETag.ShouldBeNullOrEmpty();
+        }
+
+        (await fixture.PrepareIndexAsync(operation, token)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        (await fixture.IndexAsync(operation, DomainSharedProjectionRebuildAction.Stage, token)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        var staged = await fixture.ReadAsync<PartyIndexSdkReadModel>(indexKey, token);
+        staged.ETag.ShouldBeNullOrEmpty();
+        staged.Value?.ProjectionVersion.ShouldBe(previous.Value?.ProjectionVersion);
+
+        var winner = new PartyIndexSdkReadModel
+        {
+            ProjectionVersion = "competing-canonical-winner",
+            LastSequenceNumbers = new Dictionary<string, long> { ["competing-erasure"] = 37 },
+            ErasureSequenceNumbers = new Dictionary<string, long> { ["competing-erasure"] = 37 },
+        };
+        (await fixture.TrySaveAsync(indexKey, winner, previous.ETag ?? string.Empty, token)).ShouldBeFalse();
+        // Simulate a writer that obtained the physical ETag without using the SDK's staged view.
+        var stagedPhysical = await fixture.ReadPhysicalAsync(indexKey, token);
+        (await fixture.TrySaveAsync(indexKey, winner, stagedPhysical.ETag, token)).ShouldBeTrue();
+        var competing = await fixture.ReadPhysicalAsync(indexKey, token);
+        competing.ETag.ShouldNotBe(stagedPhysical.ETag);
+        (await fixture.ReadAsync<PartyIndexSdkReadModel>(indexKey, token)).ETag.ShouldBe(competing.ETag);
+
+        var refused = await fixture.IndexAsync(operation, DomainSharedProjectionRebuildAction.Commit, token);
+        refused.Status.ShouldBe(ProjectionDispatchStatus.Failed);
+        refused.ReasonCode.ShouldBe(ProjectionDispatchReasonCodes.DeliveryIdentityConflict);
+        var retried = await fixture.IndexAsync(operation, DomainSharedProjectionRebuildAction.Commit, token);
+        retried.Status.ShouldBe(ProjectionDispatchStatus.Failed);
+        retried.ReasonCode.ShouldBe(ProjectionDispatchReasonCodes.DeliveryIdentityConflict);
+        var persisted = await fixture.ReadAsync<PartyIndexSdkReadModel>(indexKey, token);
+        persisted.Value.ShouldNotBeNull().ProjectionVersion.ShouldBe("competing-canonical-winner");
+        persisted.Value.ErasureSequenceNumbers["competing-erasure"].ShouldBe(37);
+        persisted.ETag.ShouldBe(competing.ETag);
+        var unchanged = await fixture.ReadPhysicalAsync(indexKey, token);
+        unchanged.ETag.ShouldBe(competing.ETag);
+        unchanged.Bytes.ShouldBe(competing.Bytes);
+        (await fixture.RawAsync(detailKey, token)).ShouldBe(detail);
+        (await fixture.RawAsync(processingKey, token)).ShouldBe(processing);
+        foreach ((string key, byte[] bytes) in fixture.Survivors)
+        {
+            (await fixture.RawAsync(key, token)).ShouldBe(bytes);
+        }
+    }
+
+    [Theory(Timeout = 120000)]
     [InlineData("detail", false)]
     [InlineData("detail", true)]
     [InlineData("processing", false)]

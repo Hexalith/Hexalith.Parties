@@ -466,6 +466,60 @@ public sealed class PartyIdentityPersistedVerifierTests
         JsonSerializer.Serialize(revived, PartiesJsonOptions.Default).ShouldNotContain(ActorId);
     }
 
+    /// <summary>Ordinary commands replay before expiry and fail closed across acknowledged synthetic destruction.</summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task OrdinaryPartyCommandsFailClosedAfterAcknowledgedIdentityHistoryExpiry(bool erase)
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        using Lane lane = Lane.Open(registerHostSeams: true);
+        const string tenantId = "tenant-a";
+        const string partyId = "ordinary-command-expiry";
+        await lane.CreatePerson(partyId, "Synthetic", "Person");
+        (_, DomainResult bound) = await lane.Establish(partyId, ActorId, "bind-expiring-actor");
+        IdentityHistoryCustodyEvidence evidence = bound.Events.OfType<HumanActorBindingEstablished>().Single().Custody;
+        await lane.Commit(tenantId, partyId, bound, ActorId);
+        var identity = new AggregateIdentity(tenantId, "party", partyId);
+
+        lane.Clock.UtcNow = evidence.ExpiresAt.AddTicks(-1);
+        CommandEnvelope command = erase
+            ? lane.Plain(new EraseParty { TenantId = tenantId, PartyId = partyId }, tenantId, partyId)
+            : lane.Plain(new UpdatePersonDetails
+            {
+                PartyId = partyId,
+                PersonDetails = new PersonDetails { FirstName = "Updated", LastName = "Synthetic" },
+            }, tenantId, partyId);
+        DomainResult preview = await lane.Dispatch(command);
+        preview.IsRejection.ShouldBeFalse();
+        if (erase)
+        {
+            preview.Events.ShouldContain(item => item is ErasePartyRequested);
+        }
+        else
+        {
+            preview.Events.ShouldContain(item => item is PersonDetailsUpdated);
+        }
+        (await lane.Custody.DestroyExpiredAsync(identity, evidence, token)).ShouldBeFalse();
+
+        IReadOnlyList<PersistedPartyEvent> before = lane.Directory.Read(tenantId, partyId);
+        string fingerprint = lane.Directory.Fingerprint(tenantId, partyId);
+        AssertCiphertextOmitsActor(lane, evidence.EvidenceId, ActorId);
+        lane.Clock.UtcNow = evidence.ExpiresAt;
+        lane.Custody.HoldAcknowledgement(evidence.EvidenceId);
+        (await lane.Custody.DestroyExpiredAsync(identity, evidence, token)).ShouldBeFalse();
+        lane.Custody.Acknowledge(evidence.EvidenceId);
+        (await lane.Custody.DestroyExpiredAsync(identity, evidence, token)).ShouldBeTrue();
+        lane.Restart();
+        lane.Custody.EveryCopyIsUnreadable(evidence.EvidenceId).ShouldBeTrue();
+
+        CryptographicException rejected = await Should.ThrowAsync<CryptographicException>(() => lane.Dispatch(command));
+        rejected.Message.ShouldBe("History decryption capability is destroyed.");
+        lane.Directory.Read(tenantId, partyId).Count.ShouldBe(before.Count);
+        lane.Directory.Fingerprint(tenantId, partyId).ShouldBe(fingerprint);
+        AssertCiphertextOmitsActor(lane, evidence.EvidenceId, ActorId);
+    }
+
     /// <summary>Gap, overlap, and a conflicting revision fail closed with no current-binding fallback.</summary>
     [Fact]
     public async Task P09_GapOverlapAndConflictingRevisionDoNotFallBack()

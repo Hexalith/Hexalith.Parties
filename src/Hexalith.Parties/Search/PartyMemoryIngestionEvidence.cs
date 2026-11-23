@@ -8,6 +8,25 @@ namespace Hexalith.Parties.Search;
 /// <summary>Validates the published workflow output before trusting its canonical identity.</summary>
 internal static class PartyMemoryIngestionEvidence
 {
+    /// <summary>Identifies unacknowledged reservations that carry typed refresh admission evidence.</summary>
+    internal static bool IsTypedRetryReservation(PartyMemoryIngestionIntent intent)
+        => intent.WorkflowInstanceId is null && HasTypedRefreshAdmission(intent);
+
+    /// <summary>Identifies an intent written with typed refresh fields, including incomplete earlier records.</summary>
+    internal static bool HasTypedRefreshAdmission(PartyMemoryIngestionIntent intent)
+        => intent.RefreshProtocolVersion is not null || intent.SourceRevisionNumber is not null || intent.RefreshIdentityDigest is not null;
+
+    /// <summary>Computes the token hash returned by source inventory for a persisted attempt.</summary>
+    internal static string RetryIdentityHash(string attemptId)
+        => Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(attemptId)));
+
+    /// <summary>Matches source inventory admission evidence to the original durable typed refresh.</summary>
+    internal static bool MatchesRefreshAdmission(PartyMemoryIngestionIntent intent,
+        string? protocolVersion, long? sourceRevision, string? identityDigest)
+        => intent.RefreshProtocolVersion == SourceRefreshProtocol.Version && protocolVersion == intent.RefreshProtocolVersion
+            && sourceRevision.HasValue && sourceRevision == intent.SourceRevisionNumber
+            && !string.IsNullOrWhiteSpace(identityDigest) && identityDigest == intent.RefreshIdentityDigest;
+
     /// <summary>Recognizes only selected-server responses issued before reservation or scheduling.</summary>
     internal static bool IsDefiniteSubmissionRejection(MemoriesRemoteException exception)
         => exception.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden

@@ -326,10 +326,11 @@ internal sealed class PartyMemoryIngestionIntentStore(
     }
 
     /// <inheritdoc/>
-    public async Task RetainDiscoveredAsync(string tenantId, string partyId, string caseId, string sourceUri, string? workflowId,
+    public async Task<bool> RetainDiscoveredAsync(string tenantId, string partyId, string caseId, string sourceUri, string? workflowId,
         string? canonicalId, string? retryIdentityHash, bool terminalVerified, CancellationToken cancellationToken, string? producerAuthority = null,
-        bool requireTerminalEvidence = false)
+        bool requireTerminalEvidence = false, (string? ProtocolVersion, long? SourceRevision, string? IdentityDigest) admission = default)
     {
+        bool retained = false;
         _ = await ChangeAsync(tenantId, partyId, current =>
         {
             if (!current.CleanupRequested || sourceUri != PartyMemoryUrn.Build(tenantId, partyId)
@@ -337,14 +338,29 @@ internal sealed class PartyMemoryIngestionIntentStore(
             {
                 throw new InvalidOperationException("memory-ingestion-remote-scope-mismatch");
             }
-            PartyMemoryIngestionIntent? existing = current.Intents.Concat(current.CleanupReceipts ?? []).FirstOrDefault(item =>
+            PartyMemoryIngestionIntent? typedRetry = retryIdentityHash is null ? null : current.Intents.Find(item =>
+                PartyMemoryIngestionEvidence.HasTypedRefreshAdmission(item)
+                && (item.WorkflowInstanceId is null || admission.ProtocolVersion is not null)
+                && PartyMemoryIngestionEvidence.RetryIdentityHash(item.AttemptId) == retryIdentityHash);
+            if (typedRetry is not null && (typedRetry.CaseId != caseId || typedRetry.SourceUri != sourceUri || workflowId is null
+                || (typedRetry.WorkflowInstanceId is not null && typedRetry.WorkflowInstanceId != workflowId)
+                || requireTerminalEvidence || string.IsNullOrWhiteSpace(producerAuthority) || typedRetry.ProducerAuthority != producerAuthority
+                || !PartyMemoryIngestionEvidence.MatchesRefreshAdmission(typedRetry,
+                    admission.ProtocolVersion, admission.SourceRevision, admission.IdentityDigest)))
+            {
+                retained = false;
+                return current;
+            }
+
+            retained = true;
+            PartyMemoryIngestionIntent? existing = typedRetry ?? current.Intents.Concat(current.CleanupReceipts ?? []).FirstOrDefault(item =>
                 item.CaseId == caseId && item.SourceUri == sourceUri
                 && (current.Intents.Contains(item) ? item.ProducerAuthority is null || item.ProducerAuthority == producerAuthority
                     : !string.IsNullOrWhiteSpace(producerAuthority) && item.AbsenceAuthority == producerAuthority)
                 && ((workflowId is not null && item.WorkflowInstanceId == workflowId)
                     || (workflowId is null && item.MemoryUnitId == canonicalId)
                     || (item.WorkflowInstanceId is null && retryIdentityHash is not null
-                        && Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(item.AttemptId))) == retryIdentityHash)));
+                        && PartyMemoryIngestionEvidence.RetryIdentityHash(item.AttemptId) == retryIdentityHash)));
             // A unit-only inventory row can precede the workflow row on another page.
             // Attach that observation to its producer without merging independent workflows.
             PartyMemoryIngestionIntent? unitObservation = workflowId is null || canonicalId is null ? null
@@ -383,6 +399,7 @@ internal sealed class PartyMemoryIngestionIntentStore(
             return current with { Intents = [.. current.Intents, new(attemptId, caseId, sourceUri, workflowId, canonicalId, current.Generation,
                 RequiresTerminalEvidence: workflowId is not null && !terminalVerified, ProducerAuthority: producerAuthority)] };
         }, cancellationToken).ConfigureAwait(false);
+        return retained;
     }
 
     /// <inheritdoc/>

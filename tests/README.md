@@ -1092,7 +1092,7 @@ python3 scripts/verify-backfill-and-memories-deferrals.py \
 ```
 
 The runner builds the three test projects in Release/package mode and executes
-six lanes. Expect 11 backfill cases, with 12 reports from the empty and existing
+six lanes. Expect 18 backfill cases, with 12 reports from the empty and existing
 target workloads, followed by 2 same-URI refresh, 4 bounded discovery, 6
 cross-source authority (including the unconfigured producer), 2 purged-identity
 reuse and 4 competing older-producer admission cases. The last lane exercises

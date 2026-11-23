@@ -19,8 +19,16 @@ internal sealed partial class PartyMemoryCleanupService
         }
         string? cursor = null;
         string? version = null;
+        bool coverageComplete = true;
         bool complete = true;
         bool terminal = true;
+        string? producerAuthority = BuildProducerAuthority(httpClient.BaseAddress);
+        var typedRetries = (await intentStore.GetAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false))
+            .Where(PartyMemoryIngestionEvidence.IsTypedRetryReservation)
+            .ToDictionary(intent => PartyMemoryIngestionEvidence.RetryIdentityHash(intent.AttemptId), StringComparer.Ordinal);
+        HashSet<string> observedTypedRetries = new(StringComparer.Ordinal);
+        Dictionary<string, (string CaseId, string? WorkflowId, string? CanonicalId, bool TerminalVerified,
+            (string? ProtocolVersion, long? SourceRevision, string? IdentityDigest) Admission)> pendingBindings = new(StringComparer.Ordinal);
         HashSet<(string Kind, string? Case, string? Id)> seen = [];
         HashSet<string> cursors = new(StringComparer.Ordinal);
         for (int pageNumber = 0; pageNumber < PartyMemoryIngestionIntentStore.Capacity; pageNumber++)
@@ -40,7 +48,7 @@ internal sealed partial class PartyMemoryCleanupService
                 throw new InvalidOperationException("memory-source-inventory-scope-or-version-mismatch");
             }
             version = observedVersion;
-            complete &= page.GetProperty("coverageComplete").GetBoolean();
+            coverageComplete &= page.GetProperty("coverageComplete").GetBoolean();
             JsonElement entries = page.GetProperty("entries");
             if (entries.ValueKind != JsonValueKind.Array || entries.GetArrayLength() > 100)
             {
@@ -64,6 +72,7 @@ internal sealed partial class PartyMemoryCleanupService
                 {
                     throw new InvalidOperationException("memory-source-inventory-entry-invalid");
                 }
+                retryHash = retryHash?.ToLowerInvariant();
                 bool contradictory = admitted && terminalVerified;
                 if (contradictory)
                 {
@@ -72,15 +81,64 @@ internal sealed partial class PartyMemoryCleanupService
                     casesWithUnknownOutputs.Add(capturedCase);
                 }
 
-                // Even a producer deletion marker must pass the consumer's exact scoped GET
-                // absence check. Retaining canonical provenance does not settle the obligation.
-                await intentStore.RetainDiscoveredAsync(tenantId, partyId, capturedCase, sourceUri, workflow,
-                    admitted ? null : canonical, retryHash, terminalVerified && !admitted, cancellationToken,
-                    BuildProducerAuthority(httpClient.BaseAddress), requireTerminalEvidence: contradictory).ConfigureAwait(false);
+                // Delay binding a typed retry until complete coverage rules out another claim to that token.
+                if (retryHash is not null && typedRetries.TryGetValue(retryHash, out PartyMemoryIngestionIntent? reservation))
+                {
+                    string? protocol = ReadOptionalString(entry, "refreshProtocolVersion");
+                    long? revision = entry.TryGetProperty("sourceRevisionNumber", out JsonElement sourceRevision)
+                        && sourceRevision.ValueKind == JsonValueKind.Number && sourceRevision.TryGetInt64(out long number) ? number : null;
+                    string? digest = ReadOptionalString(entry, "refreshIdentityDigest");
+                    if (!observedTypedRetries.Add(retryHash) || contradictory || workflow is null || capturedCase != reservation.CaseId
+                        || reservation.ProducerAuthority is null || reservation.ProducerAuthority != producerAuthority
+                        || !PartyMemoryIngestionEvidence.MatchesRefreshAdmission(reservation, protocol, revision, digest))
+                    {
+                        pendingBindings.Remove(retryHash);
+                        complete = false;
+                        casesWithUnknownOutputs.Add(reservation.CaseId);
+                        casesWithUnknownOutputs.Add(capturedCase);
+                    }
+                    else
+                    {
+                        pendingBindings.Add(retryHash, (capturedCase, workflow, admitted ? null : canonical, terminalVerified, (protocol, revision, digest)));
+                    }
+                }
+                else
+                {
+                    // Even a producer deletion marker needs independent observation of scoped absence.
+                    bool retained = await intentStore.RetainDiscoveredAsync(tenantId, partyId, capturedCase, sourceUri, workflow,
+                        admitted ? null : canonical, retryHash, terminalVerified && !admitted, cancellationToken,
+                        producerAuthority, requireTerminalEvidence: contradictory).ConfigureAwait(false);
+                    if (!retained)
+                    {
+                        complete = false;
+                        casesWithUnknownOutputs.Add(capturedCase);
+                    }
+                }
+
                 terminal &= state == "Deleted" && (workflow is null || terminalVerified);
             }
             cursor = page.TryGetProperty("nextCursor", out JsonElement next) ? next.GetString() : null;
-            if (cursor is null) { return (complete, terminal, version!); }
+            if (cursor is null)
+            {
+                if (!coverageComplete)
+                {
+                    return (false, terminal, version!);
+                }
+
+                foreach (var (retryHash, binding) in pendingBindings)
+                {
+                    bool retained = await intentStore.RetainDiscoveredAsync(tenantId, partyId, binding.CaseId, sourceUri, binding.WorkflowId,
+                        binding.CanonicalId, retryHash, binding.TerminalVerified, cancellationToken, producerAuthority,
+                        admission: binding.Admission).ConfigureAwait(false);
+                    if (!retained)
+                    {
+                        complete = false;
+                        casesWithUnknownOutputs.Add(binding.CaseId);
+                    }
+                }
+
+                return (complete, terminal, version!);
+            }
             if (!ValidHandle(cursor, 8192) || entries.GetArrayLength() == 0 || !cursors.Add(cursor))
             {
                 throw new InvalidOperationException("memory-source-inventory-continuation-invalid");
@@ -95,6 +153,9 @@ internal sealed partial class PartyMemoryCleanupService
         string authority = normalized.Uri.AbsoluteUri.TrimEnd('/') + "/";
         return Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(authority)));
     }
+
+    private static string? ReadOptionalString(JsonElement entry, string property)
+        => entry.TryGetProperty(property, out JsonElement value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
 
     private static bool ValidHandle([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] string? value, int maximumLength)
         => !string.IsNullOrWhiteSpace(value) && value.Length <= maximumLength && !value.Any(char.IsControl);

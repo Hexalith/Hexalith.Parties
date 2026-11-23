@@ -156,11 +156,17 @@ internal sealed class PartyLegacyBackfillRuntimeFixture
             version.ToString().ShouldBe("1");
             return bytes;
         }
+        return (await ReadPhysicalAsync(key, token).ConfigureAwait(false)).Bytes;
+    }
+
+    /// <summary>Reads the disposable provider's physical bytes and revision beneath SDK visibility.</summary>
+    public async Task<(byte[] Bytes, string ETag)> ReadPhysicalAsync(string key, CancellationToken token)
+    {
         using DaprClient dapr = Client();
         (ReadOnlyMemory<byte> value, string etag) = await dapr.GetByteStateAndETagAsync(
-            _configuration.StateStoreName, key, cancellationToken: token).ConfigureAwait(false);
+            _configuration.StateStoreName, key, consistencyMode: ConsistencyMode.Strong, cancellationToken: token).ConfigureAwait(false);
         etag.ShouldNotBeNullOrWhiteSpace();
-        return value.ToArray();
+        return (value.ToArray(), etag);
     }
 
     /// <summary>Reads SDK-visible persisted state through a fresh client and SDK store.</summary>

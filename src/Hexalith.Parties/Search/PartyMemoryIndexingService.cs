@@ -183,13 +183,12 @@ internal sealed partial class PartyMemoryIndexingService(
         {
             throw new InvalidOperationException("memory-ingestion-producer-authority-mismatch");
         }
-        string digest = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(intent.AttemptId)));
+        string digest = PartyMemoryIngestionEvidence.RetryIdentityHash(intent.AttemptId);
         if (intent.RefreshProtocolVersion != SourceRefreshProtocol.Version || intent.SourceRevisionNumber != revision
             || string.IsNullOrWhiteSpace(intent.RefreshIdentityDigest))
         {
             throw new InvalidOperationException("memory-ingestion-original-refresh-proof-unavailable");
         }
-        string bodyBinding = intent.RefreshIdentityDigest;
         string? cursor = null;
         string? version = null;
         SourceInventoryEntry? match = null;
@@ -212,8 +211,8 @@ internal sealed partial class PartyMemoryIndexingService(
                 { throw new InvalidOperationException("memory-ingestion-inventory-duplicate-entry"); }
                 if (entry.IdempotencyTokenHash != digest) { continue; }
                 if (entry.CaseId != intent.CaseId || string.IsNullOrWhiteSpace(entry.WorkflowInstanceId) || match is not null
-                    || entry.RefreshProtocolVersion != SourceRefreshProtocol.Version || entry.SourceRevisionNumber != revision
-                    || entry.RefreshIdentityDigest != bodyBinding)
+                    || !PartyMemoryIngestionEvidence.MatchesRefreshAdmission(intent, entry.RefreshProtocolVersion,
+                        entry.SourceRevisionNumber, entry.RefreshIdentityDigest))
                 {
                     throw new InvalidOperationException("memory-ingestion-inventory-retry-identity-mismatch");
                 }

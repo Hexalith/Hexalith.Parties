@@ -469,6 +469,153 @@ public sealed class PartySdkQueryHandlerTests
         }
     }
 
+    [Theory]
+    [InlineData(false, false, false)]
+    [InlineData(false, false, true)]
+    [InlineData(false, true, false)]
+    [InlineData(false, true, true)]
+    [InlineData(true, false, false)]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, false)]
+    [InlineData(true, true, true)]
+    public async Task UnverifiedInlineRevisionCannotReplaceProcessingFallbackAsync(bool export, bool warm, bool canceled)
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        const string tenant = "tenant-a";
+        const string party = "party-1";
+        string key = PartySdkReadModelAddresses.Processing(tenant, party);
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", PartySdkReadModelAddresses.Detail(tenant, party), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel { Detail = Detail(party) }, "detail"));
+        var retained = new ProcessingActivityRecord
+        {
+            TenantId = tenant, PartyId = party, SequenceNumber = 1, EventType = "PartyUpdated", Timestamp = s_now, Summary = "Verified fact.",
+        };
+        var verified = new PartyProcessingSdkReadModel { Records = [retained] };
+        var tentative = verified with { Records = [retained with { Summary = "Unverified fact." }] };
+        var cache = new PartySdkLastKnownReadModelCache();
+        var service = CreateService(store, lastKnownCache: cache);
+        var envelope = CreateDetailEnvelope(export ? "ExportPartyData" : "GetProcessingRecords");
+        Task<QueryResult> QueryAsync(CancellationToken cancellationToken)
+            => export ? service.ExportPartyDataAsync(envelope, cancellationToken) : service.GetProcessingRecordsAsync(envelope, cancellationToken);
+
+        if (warm)
+        {
+            store.GetAsync<PartyProcessingSdkReadModel>("statestore", key, token)
+                .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(verified, "verified"));
+            (await QueryAsync(token)).Success.ShouldBeTrue();
+        }
+
+        using var verification = CancellationTokenSource.CreateLinkedTokenSource(token);
+        bool? cachedDuringVerification = null;
+        PartyProcessingSdkReadModel? duringVerification = null;
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", key, verification.Token).Returns(
+            _ => Task.FromResult(new ReadModelEntry<PartyProcessingSdkReadModel>(tentative, "tentative")),
+            _ =>
+            {
+                cachedDuringVerification = cache.TryGetProcessing(tenant, party, out duringVerification);
+                if (canceled)
+                {
+                    verification.Cancel();
+                    return Task.FromCanceled<ReadModelEntry<PartyProcessingSdkReadModel>>(verification.Token);
+                }
+
+                return Task.FromException<ReadModelEntry<PartyProcessingSdkReadModel>>(new IOException("verification unavailable"));
+            });
+
+        if (canceled)
+        {
+            await Should.ThrowAsync<OperationCanceledException>(() => QueryAsync(verification.Token));
+        }
+        else
+        {
+            AssertFallback(await QueryAsync(verification.Token));
+        }
+
+        cachedDuringVerification.ShouldBe(warm);
+        duringVerification.ShouldBe(warm ? verified : null);
+        cache.TryGetProcessing(tenant, party, out PartyProcessingSdkReadModel? afterVerification).ShouldBe(warm);
+        afterVerification.ShouldBe(warm ? verified : null);
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", key, token).ThrowsAsync(new IOException("read unavailable"));
+        AssertFallback(await QueryAsync(token));
+
+        void AssertFallback(QueryResult result)
+        {
+            result.Success.ShouldBeTrue();
+            result.Metadata!.IsDegraded.ShouldBe(true);
+            IReadOnlyList<ProcessingActivityRecord> records = export
+                ? result.GetPayload().Deserialize<PartyDataPortabilityPackage>(PartiesJsonOptions.Default)!.ProcessingRecords
+                : result.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!;
+            records.ShouldBe(warm ? [retained] : []);
+        }
+    }
+
+    [Theory]
+    [InlineData("complete", null)]
+    [InlineData("complete", "")]
+    [InlineData("complete", " ")]
+    [InlineData("page-with-blank-revision", " ")]
+    [InlineData("invalid-cursor", "tentative")]
+    [InlineData("readback-unavailable", "tentative")]
+    public async Task RejectedPageAndRevisionlessReadPreserveVerifiedFallbackAsync(string scenario, string? revision)
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        const string tenant = "tenant-a";
+        const string party = "party-1";
+        string key = PartySdkReadModelAddresses.Processing(tenant, party);
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", PartySdkReadModelAddresses.Detail(tenant, party), token)
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel { Detail = Detail(party) }, "detail"));
+        var retained = new ProcessingActivityRecord
+        {
+            TenantId = tenant, PartyId = party, SequenceNumber = 1, EventType = "PartyUpdated", Timestamp = s_now, Summary = "Verified fact.",
+        };
+        var candidate = retained with { Summary = "Unverified fact." };
+        var verified = new PartyProcessingSdkReadModel { Records = [retained] };
+        var tentative = new PartyProcessingSdkReadModel { Records = [candidate] };
+        var cache = new PartySdkLastKnownReadModelCache();
+        var service = CreateService(store, lastKnownCache: cache);
+        var query = CreateDetailEnvelope("GetProcessingRecords");
+        var page = query with { Paging = new QueryPagingOptions(PageSize: 10, Cursor: scenario == "invalid-cursor" ? "invalid" : null) };
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", key, token)
+            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(verified, "verified"));
+        (await service.GetProcessingRecordsAsync(query with { Paging = new QueryPagingOptions(PageSize: 10) }, token)).Success.ShouldBeTrue();
+        cache.TryGetProcessing(tenant, party, out var initial).ShouldBeTrue();
+        initial.ShouldBe(verified);
+
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", key, token).Returns(
+            _ => Task.FromResult(new ReadModelEntry<PartyProcessingSdkReadModel>(tentative, revision)),
+            _ => scenario == "readback-unavailable"
+                ? Task.FromException<ReadModelEntry<PartyProcessingSdkReadModel>>(new IOException("verification unavailable"))
+                : Task.FromResult(new ReadModelEntry<PartyProcessingSdkReadModel>(tentative, revision)));
+
+        QueryResult attempted = await service.GetProcessingRecordsAsync(scenario == "complete" ? query : page, token);
+        if (scenario == "complete")
+        {
+            attempted.Success.ShouldBeTrue();
+            attempted.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default).ShouldBe([candidate]);
+        }
+        else
+        {
+            attempted.Success.ShouldBeFalse();
+            attempted.ErrorMessage.ShouldBe(scenario switch
+            {
+                "page-with-blank-revision" => PartySdkQueryFailureReason.ReadModelUnavailable,
+                "invalid-cursor" => QueryAdapterFailureReason.InvalidCursor,
+                _ => PartySdkQueryFailureReason.QueryExecutionFailure,
+            });
+            attempted.PayloadBytes.ShouldBeNull();
+        }
+
+        cache.TryGetProcessing(tenant, party, out var retainedModel).ShouldBeTrue();
+        retainedModel.ShouldBe(verified);
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", key, token).ThrowsAsync(new IOException("read unavailable"));
+        QueryResult degraded = await service.GetProcessingRecordsAsync(query, token);
+        degraded.Success.ShouldBeTrue();
+        degraded.Metadata!.IsDegraded.ShouldBe(true);
+        degraded.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default).ShouldBe([retained]);
+    }
+
     [Fact]
     public async Task InlineProcessingPagesTraverseProtectedFirstContinuationAndTerminalMetadataAsync()
     {

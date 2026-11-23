@@ -379,6 +379,8 @@ recovery_evidence_followup_2026_11_23: Complete inline processing history and po
 
 recovery_integrity_2026_11_23: Processing history and portability export reject every cached copy of a superseded ETag. A delayed read cannot reinsert it after rejection, and a separately cached revision can still serve degraded reads. See `spec-five-deferred-recovery-integrity-checks.md`.
 
+recovery_boundaries_2026_11_23: Inline history and export cache a revision only after authoritative readback. Unavailable verification serves the verified fallback or the empty degraded result. Cancellation and revisionless reads leave the verified cache intact. Bucket fallback during migration and ordering across overlapping successful revision reads remain unqualified. Deployed older-writer drain, historical reconciliation, migration approval and rollback qualification remain open. See `spec-five-deferred-recovery-boundaries.md`.
+
 ### DW-51: Resolve projection-handler performance and validation-coupling debt
 
 status: done 2026-10-21
@@ -469,6 +471,8 @@ authority_recovery_2026_11_23: Each backfill workload receipt records the digest
 recovery_evidence_followup_2026_11_23: Each passing xUnit workload result carries the exact phase receipt bytes. The parent and evidence reader reject a successful XML report copied from a different phase or target. See `spec-five-deferred-recovery-evidence-followups.md`.
 
 recovery_integrity_2026_11_23: The maintained backfill runner now requires all five workload report integrity cases. Omission of any one case prevents qualification. See `spec-five-deferred-recovery-integrity-checks.md`.
+
+recovery_boundaries_2026_11_23: Disposable Redis/Dapr checks cover a competing canonical index erasure fence after successful staging from absent and existing index states. Commit and a fresh commit retry report a delivery identity conflict and preserve the competing bytes, ETag and unrelated keys. Deployed provider and workload qualification, production capture and key completeness, writer drain, authorization, cutover and rollback acceptance remain open. See `spec-five-deferred-recovery-boundaries.md`.
 
 ### DW-59: Preserve mappings when unit ID and source URI match different rows
 
@@ -686,6 +690,8 @@ authority_recovery_2026_11_23: Validated terminal status now binds the active le
 recovery_evidence_followup_2026_11_23: A contradictory Admitted row retains its workflow and requires terminal evidence. Cleanup protects that case and restores the requirement on older active intents. See `spec-five-deferred-recovery-evidence-followups.md`.
 
 recovery_integrity_2026_11_23: An unacknowledged legacy reservation retains possible outputs and mappings in its case until inventory identifies the attempt. Other cases can continue cleanup. See `spec-five-deferred-recovery-integrity-checks.md`.
+
+recovery_boundaries_2026_11_23: Cleanup requires an exact typed refresh protocol, source revision and identity digest before binding an unacknowledged retry. Incomplete coverage, missing evidence, conflicting claims and canceled pagination retain the affected case and allow a later exact observation. Older typed records with a unit ID still require workflow admission. Historical inventory reconciliation, deployed writer exclusion, production configuration and owner acceptance remain open. See `spec-five-deferred-recovery-boundaries.md`.
 
 ### DW-83: Persist recovery when mapping and compensating deletion both fail
 
@@ -1087,6 +1093,7 @@ qualification_2026_10_28: Fresh EXT-PARTIES-1 Live execution refuses before tran
 remaining_gate_2026_10_28: Complete installed owner-approved custody acceptance and actual exclusive 365-day expiry qualification, then determine the behavior of profile, erasure, replay and switch-back commands from persisted end-state. If qualified expiry prevents ordinary replay, establish value-free lifecycle continuity without expired actor values; a generic read denial is insufficient authority. Preserve independent history custody and rollback; status remains open.
 verification_2026_10_28: `tests/five-data-lifecycle-qualification-2026-10-28/`; synthetic provider receipts do not close this external gate.
 
+recovery_boundaries_2026_11_23: In the persisted test-only custody lane, the domain processor replays ordinary profile and erasure commands with a readable identity event and fails closed after acknowledged expiry and restart. The persisted stream and ciphertext fingerprint are preserved. Installed owner-approved custody, actual expiry, value-free lifecycle continuity and deployed replay and switch-back qualification remain open. See `spec-five-deferred-recovery-boundaries.md`.
 
 ### DW-131: Validate identity fold wire representations
 
@@ -1385,6 +1392,8 @@ authority_recovery_2026_11_23: Bulk cleanup retains a shared unit and its mappin
 recovery_evidence_followup_2026_11_23: An unresolved inventory or legacy workflow with unknown output protects candidates in its case during cleanup retries and producer changes. Other cases and independently verified refreshes can continue. See `spec-five-deferred-recovery-evidence-followups.md`.
 
 recovery_integrity_2026_11_23: Direct cleanup retains the selected alias while another known workflow may still publish the same unit. A prior absence receipt cannot settle a newly published output after a failed deletion or absence read. See `spec-five-deferred-recovery-integrity-checks.md`.
+
+recovery_boundaries_2026_11_23: Direct cleanup requires fresh scoped absence when an active terminal producer shares the unit, whether selected by its workflow or by a historical receipt. Failed DELETE and delayed absence retain the pending obligations for retry. Qualification of concurrent inventory imports and newly observed legacy aliases remains open. Production workload, key and trust custody, historical reconciliation, writer drain, adoption, deployed physical erasure and owner acceptance remain open. See `spec-five-deferred-recovery-boundaries.md`.
 
 ### DW-169: D7 — Use concurrency-aware removal when cleaning a party memory-unit mapping inventory.
 

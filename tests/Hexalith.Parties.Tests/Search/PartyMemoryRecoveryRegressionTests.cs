@@ -214,20 +214,22 @@ public sealed class PartyMemoryRecoveryRegressionTests
     public async Task EquivalentTerminalOutputsShareFreshAbsenceWithinTheBulkPass(bool previouslySettled, bool directSecond)
     {
         var state = new PartyMemoryTestReadModelStore();
-        var first = new PartyMemoryIngestionIntent("first", "case", "urn:first", "workflow-first", "canonical")
+        string source = PartyMemoryUrn.Build("tenant", "party");
+        var first = new PartyMemoryIngestionIntent("first", "case", source, "workflow-first", "canonical")
         { ProducerAuthority = PartyMemoryCleanupService.BuildProducerAuthority(new Uri("http://127.0.0.1:1/gateway/")) };
-        var second = new PartyMemoryIngestionIntent("second", "case", "urn:second", "workflow-second", "canonical")
+        var second = new PartyMemoryIngestionIntent("second", "case", source, "workflow-second", "canonical")
         { ProducerAuthority = first.ProducerAuthority };
-        foreach (PartyMemoryIngestionIntent intent in new[] { first, second })
+        var intents = PartyMemoryRecoveryTests.Intents(state);
+        await intents.RegisterAsync("tenant", "party", first, Token);
+        if (!previouslySettled)
         {
-            await PartyMemoryRecoveryTests.Intents(state).RegisterAsync("tenant", "party", intent, Token);
+            await intents.RegisterAsync("tenant", "party", second, Token);
         }
 
-        await PartyMemoryRecoveryTests.Mappings(state).RecordMappingAsync("tenant", "party", "canonical", "urn:first", "case", Token);
-        await PartyMemoryRecoveryTests.Mappings(state).RecordMappingAsync("tenant", "party", "workflow-second", "urn:second", "case", Token);
+        await PartyMemoryRecoveryTests.Mappings(state).RecordMappingAsync("tenant", "party", "canonical", source, "case", Token);
+        await PartyMemoryRecoveryTests.Mappings(state).RecordMappingAsync("tenant", "party", "workflow-second", source, "case", Token);
         List<HttpMethod> requests = [];
-        bool requiresFreshBulkObservation = previouslySettled && !directSecond;
-        int expectedRequests = requiresFreshBulkObservation ? 4 : 2;
+        int expectedRequests = previouslySettled ? 4 : 2;
         using var transport = new PartySearchErasureHttpHandler((request, _) =>
         {
             requests.Add(request.Method);
@@ -242,7 +244,10 @@ public sealed class PartyMemoryRecoveryRegressionTests
         if (previouslySettled)
         {
             (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteMemoryUnitAsync("tenant", "case", "party", "workflow-first", Token)).Cleaned.ShouldBeTrue();
-            (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", Token)).ShouldHaveSingleItem().ShouldBe(second);
+            (await intents.GetAsync("tenant", "party", Token)).ShouldBeEmpty();
+            (await intents.RetainDiscoveredAsync("tenant", "party", "case", source, second.WorkflowInstanceId,
+                second.MemoryUnitId, retryIdentityHash: null, terminalVerified: true, Token, second.ProducerAuthority)).ShouldBeTrue();
+            (await intents.GetAsync("tenant", "party", Token)).ShouldHaveSingleItem().WorkflowInstanceId.ShouldBe(second.WorkflowInstanceId);
         }
 
         if (directSecond)
@@ -251,7 +256,7 @@ public sealed class PartyMemoryRecoveryRegressionTests
         }
 
         (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteByPartyAsync("tenant", "case", "party", Token)).Cleaned.ShouldBeTrue();
-        requests.ShouldBe(requiresFreshBulkObservation
+        requests.ShouldBe(previouslySettled
             ? [HttpMethod.Delete, HttpMethod.Get, HttpMethod.Delete, HttpMethod.Get]
             : [HttpMethod.Delete, HttpMethod.Get]);
         (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", Token)).ShouldBeEmpty();

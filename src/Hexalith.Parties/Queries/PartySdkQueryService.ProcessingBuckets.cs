@@ -1,4 +1,5 @@
 using System.Globalization;
+using Hexalith.EventStore.Client.Projections;
 using Hexalith.EventStore.Contracts.Queries;
 using Hexalith.EventStore.Client.Queries;
 using Hexalith.Parties.Contracts.Models;
@@ -8,15 +9,31 @@ namespace Hexalith.Parties.Queries;
 
 public sealed partial class PartySdkQueryService
 {
+    private async Task<QueryResult> ReadProcessingPageAsync(QueryEnvelope query, string party, bool detailDegraded, CancellationToken token)
+    {
+        string key = PartySdkReadModelAddresses.Processing(query.TenantId, party);
+        long cacheGeneration = lastKnownCache.BeginRead(key);
+        try
+        {
+            var (read, degraded) = await ReadProcessingModelAsync(query.TenantId, party, key, cacheGeneration, verifyInline: false, token).ConfigureAwait(false);
+            return await ReadProcessingPageAsync(query, party, read.Value ?? new PartyProcessingSdkReadModel(), read.ETag,
+                degraded || detailDegraded, cacheGeneration, token).ConfigureAwait(false);
+        }
+        finally
+        {
+            lastKnownCache.EndRead(cacheGeneration);
+        }
+    }
+
     private async Task<QueryResult> ReadProcessingPageAsync(QueryEnvelope query, string party, PartyProcessingSdkReadModel model,
-        string? etag, bool degraded, CancellationToken token)
+        string? etag, bool degraded, long cacheGeneration, CancellationToken token)
     {
         PartyProcessingBucketValidation.ValidateCoverage(model);
         int size = query.Paging!.PageSize ?? 20;
         string scope = QueryCursorScope.Create().Add("tenant", query.TenantId).Add("party", party).Add("user", query.UserId)
                     .Add("page-size", size.ToString(CultureInfo.InvariantCulture)).Add("revision", etag)
                     .Add("generation", model.BucketGeneration).Build();
-        if (string.IsNullOrEmpty(etag))
+        if (string.IsNullOrWhiteSpace(etag))
             return QueryResult.Failure(PartySdkQueryFailureReason.ReadModelUnavailable);
         if (!TryDecodeCursor(query, scope, out string? position, out string? cursorFailureReason))
         {
@@ -48,6 +65,12 @@ public sealed partial class PartySdkQueryService
             }
         }
         await VerifyProcessingRevisionAsync(query.TenantId, party, model, etag, token).ConfigureAwait(false);
+        token.ThrowIfCancellationRequested();
+        if (model.BucketGeneration is null && !lastKnownCache.StoreProcessingIfCurrent(query.TenantId, party, cacheGeneration, model, etag))
+        {
+            return QueryResult.Failure(PartySdkQueryFailureReason.ReadModelUnavailable);
+        }
+
         bool more = records.Count > size;
         var items = records.Take(size).ToArray();
         string? next = more ? cursorCodec.Encode(query.QueryType, CompactCursorScope(scope), items[^1].SequenceNumber.ToString(CultureInfo.InvariantCulture)) : null;
@@ -74,11 +97,10 @@ public sealed partial class PartySdkQueryService
         if (model.BucketGeneration is null)
         {
             ValidateInlineProcessingScope(model, tenant, party);
-            await VerifyProcessingRevisionAsync(tenant, party, model, etag, token).ConfigureAwait(false);
             return model.Records;
         }
 
-        if (string.IsNullOrEmpty(etag))
+        if (string.IsNullOrWhiteSpace(etag))
         {
             throw new InvalidOperationException("processing-history-revision-unavailable");
         }
@@ -116,12 +138,15 @@ public sealed partial class PartySdkQueryService
 
     private async Task VerifyProcessingRevisionAsync(string tenant, string party, PartyProcessingSdkReadModel model, string? etag, CancellationToken token)
     {
-        if (model.BucketGeneration is null && etag is null)
-        {
-            return;
-        }
         var latest = await readModelStore.GetAsync<PartyProcessingSdkReadModel>(StoreName,
                     PartySdkReadModelAddresses.Processing(tenant, party), token).ConfigureAwait(false);
+        token.ThrowIfCancellationRequested();
+        RequireProcessingRevision(tenant, party, model, etag, latest);
+    }
+
+    private void RequireProcessingRevision(string tenant, string party, PartyProcessingSdkReadModel model, string? etag,
+        ReadModelEntry<PartyProcessingSdkReadModel> latest)
+    {
         if (etag is null || latest.Value is null || latest.ETag != etag)
         {
             lastKnownCache.EvictProcessingIfSame(tenant, party, model, etag);
