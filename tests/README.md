@@ -976,9 +976,8 @@ per-test outcomes and cleanup are retained in the dated batch receipt.
 
 ## Repeat the released-catalog deferred-work checks
 
-From the repository root on Linux, use the SDK in `global.json`, Python 3,
-and the workstation's `run-with-temp` helper. Pass a new results directory
-under an existing parent.
+From the repository root on Linux, use the SDK in `global.json` and Python 3.
+Pass a new results directory under an existing parent.
 
 ```bash
 mkdir -p artifacts/qualification-results
@@ -994,9 +993,12 @@ suite covers shared freshness, live regions, optimistic reconciliation, and
 SignalR membership recovery (DW-100).
 
 The results directory retains build and test logs, xUnit XML, resolved runtime
-dependencies, test assembly hashes, and a count by test class. A passing run
-requires zero skipped tests and passing results in each required class.
-The temporary build tree is removed after the run.
+dependencies, test assembly hashes, and the evaluated catalog versions.
+In `summary.json`, each lane lists its passing test count, resolved packages,
+and the named cases for each deferred item. Every required theory variant
+must pass exactly once. The verifier checks individual outcomes and xUnit
+totals against the report and confirms the packages in each active runtime
+target match the catalog. The temporary build tree is removed after the run.
 
 Run the owned Redis/Dapr backfill using the
 [migration rehearsal runbook](../docs/read-model-migration.md).

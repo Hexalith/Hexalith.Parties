@@ -371,6 +371,8 @@ followup_released_catalog_2026_11_21: The maintained released-catalog runner pas
 
 qualification_2026_11_22: EventStore 5.4.0 complete reads and exports now reject invalid inline sequence coverage and bucket metadata with a missing generation. The three public read paths return the same ordered values across bucket boundaries. The released-package query and generation recovery tests passed. See `spec-read-model-and-memories-recovery-qualification.md`.
 
+qualification_2026_11_23: The catalog check now requires all seven paging and cursor scenarios, both interrupted-rebuild paths, and the bounded projection rebuild. See `spec-verify-five-deferred-behaviors.md` for the released-package run and remaining gates.
+
 ### DW-51: Resolve projection-handler performance and validation-coupling debt
 
 status: done 2026-10-21
@@ -453,6 +455,8 @@ qualification_2026_11_22: Eight Redis/Dapr provider cases passed, including roll
 
 qualification_supervisor_2026_11_22: The original parent now runs on Linux without a task children file. The EventStore 5.4.0 rehearsal passed all 11 selected cases on Redis 7.4.7 and Dapr 1.19.2. The parent verified all 12 workload reports for empty and existing canonical targets. Deployed writer drain, migration approval and rollback evidence remain open. See `spec-five-backfill-and-released-memories-deferrals.md`.
 followup_repeatable_2026_11_22: The maintained runner reproduces the 11 EventStore 5.4.0 backfill cases and validates all 12 workload reports against their input and phase receipts. Deployed writer drain, cutover and rollback still require operator evidence. See `spec-repeat-backfill-and-memories-deferrals.md`.
+
+qualification_2026_11_23: The catalog check now requires all six in-memory migration cases covering restart and rollback, incomplete history, and competing canonical writers. See `spec-verify-five-deferred-behaviors.md` for the released-package run and remaining gates.
 
 ### DW-59: Preserve mappings when unit ID and source URI match different rows
 
@@ -663,6 +667,8 @@ followup_released_catalog_2026_11_21: The maintained runner passes 18 source inv
 
 qualification_2026_11_22: The owned Memories 4.1.0 producer rehearsal began with two remote sources and no local mappings or intents. Interrupting the first deletion left a durable obligation for a fresh client. After deletion, scoped absence was verified in both cases. The incomplete-history source remained open on retry and the complete-history source closed. Production writer exclusion and historical owner reconciliation remain open. See `spec-read-model-and-memories-recovery-qualification.md`.
 
+qualification_2026_11_23: The catalog check now requires empty-local-state results for both complete and incomplete inventory, wrong-tenant refusal, and full-capacity REST paging. See `spec-verify-five-deferred-behaviors.md` for the released-package run and remaining gates.
+
 ### DW-83: Persist recovery when mapping and compensating deletion both fail
 
 status: done 2026-10-23
@@ -800,6 +806,8 @@ verification_2026_11_15: `tests/five-current-package-capability-deferrals-2026-1
 qualification_released_catalog_2026_11_21: The released FrontComposer 6.0.1 and EventStore 5.4.0 UI suite passes 465 controls, including registered shared reconciliation, fallback, freshness, live regions and real SignalR membership recovery. Production composition and named owner acceptance remain open. See `spec-five-released-catalog-deferrals.md`.
 
 followup_released_catalog_2026_11_21: The maintained runner passes all 465 UI controls, including shared and fallback freshness, live regions, optimistic reconciliation and SignalR membership recovery. Production composition and named owner acceptance remain open. See `spec-reproduce-five-released-catalog-deferrals.md`.
+
+qualification_2026_11_23: The catalog check now requires both reconciliation registrations, freshness and live-region behavior, fallback polling, and reconnection through the production transport adapter. See `spec-verify-five-deferred-behaviors.md` for the released-package run and remaining gates.
 
 ### DW-101: Consolidate Admin and Consumer exports onto the approved FrontComposer browser-download service after G4-D delivery
 
@@ -1344,6 +1352,8 @@ qualification_released_catalog_2026_11_21: The Parties consumer, built with rele
 followup_released_catalog_2026_11_21: The maintained runner passes 39 terminal cleanup and recovery controls. The producer built from the Memories 4.1.0 package source passes delayed ingestion, physical deletion, survivor and replay checks with generation-scoped ownership in the disposable runtime. Historical reconciliation, production workload custody and deployed physical erasure remain open. See `spec-reproduce-five-released-catalog-deferrals.md`.
 
 qualification_2026_11_22: The delayed-ingestion and deletion rehearsal passed against the Memories 4.1.0 producer. After the consumer restarted, its first successful cleanup observed terminal source inventory and scoped physical absence and persisted the settled receipt. All seven focused terminal-wait controls passed. Production workload custody, historical reconciliation and deployed physical erasure remain open. See `spec-read-model-and-memories-recovery-qualification.md`.
+
+qualification_2026_11_23: The catalog check now requires accepted deletion to retain obligations, pending producers to survive restart, and a mapping-removal failure to prevent cleanup success. See `spec-verify-five-deferred-behaviors.md` for the released-package run and remaining gates.
 
 ### DW-169: D7 — Use concurrency-aware removal when cleaning a party memory-unit mapping inventory.
 

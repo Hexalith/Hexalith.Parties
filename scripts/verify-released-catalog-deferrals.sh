@@ -9,7 +9,7 @@ fi
 
 results="$(realpath -m -- "$1")"
 repository="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
-for tool in dotnet python3 run-with-temp; do
+for tool in dotnet python3; do
     if ! command -v "$tool" >/dev/null; then
         printf 'Required command not found: %s\n' "$tool" >&2
         exit 2
@@ -20,9 +20,10 @@ cd -- "$repository"
 # UI fitness tests resolve source files from the assembly's parent directories.
 mkdir -p -- artifacts/j
 
-TMPDIR="$repository/artifacts/j" run-with-temp bash -euo pipefail -s -- "$results" <<'JOB'
-results=$1
-artifacts="$TMPDIR/artifacts"
+scratch="$(mktemp -d "$repository/artifacts/j/catalog.XXXXXXXX")"
+trap 'rm -rf -- "$scratch"' EXIT
+export TMPDIR="$scratch"
+artifacts="$scratch/artifacts"
 
 # Use the standalone checkout's catalog even inside a source-mapped shell.
 unset HexalithBuildsRoot Hexalith1BuildPackageProps Hexalith2BuildPackageProps \
@@ -58,53 +59,13 @@ for class in "${core_classes[@]}"; do
 done
 
 dotnet --version > "$results/dotnet-sdk.txt"
+dotnet msbuild tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -nologo \
+    -p:Configuration=Release -p:UseHexalithProjectReferences=false \
+    -getProperty:HexalithEventStoreVersion,HexalithMemoriesVersion,HexalithFrontComposerVersion \
+    > "$results/catalog.json"
 run_tests Hexalith.Parties.Tests core "${core_selectors[@]}"
 run_tests Hexalith.Parties.Projections.Tests projections \
     -nomethod '*PublishedSdkPreservesLargeLegacyLiveAndRebuildCompatibilityAsync'
 run_tests Hexalith.Parties.UI.Tests ui
 
-python3 - "$results" "${core_classes[@]}" <<'PY'
-from collections import Counter
-import json
-from pathlib import Path
-import sys
-import xml.etree.ElementTree as ET
-
-results = Path(sys.argv[1])
-required_classes = {
-    "core": sys.argv[2:],
-    "projections": ["Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests"],
-    "ui": [
-        f"Hexalith.Parties.UI.Tests.{name}"
-        for name in (
-            "DataFreshnessIndicatorTests",
-            "OptimisticReconcileTests",
-            "ProjectionFreshnessCompositionTests",
-            "ProjectionFreshnessFallbackTests",
-            "ProjectionTransportPackageTests",
-            "StatusLiveRegionTests",
-        )
-    ],
-}
-summary = {}
-for lane, classes in required_classes.items():
-    report = ET.parse(results / f"{lane}.xml")
-    assemblies = report.findall("assembly")
-    if len(assemblies) != 1:
-        raise SystemExit(f"{lane}: expected one xUnit assembly result")
-    assembly = assemblies[0]
-    if any(assembly.get(field) != "0" for field in ("errors", "failed", "skipped", "not-run")):
-        raise SystemExit(f"{lane}: report contains errors or tests that did not pass")
-    counts = Counter(test.attrib["type"] for test in assembly.findall(".//test[@result='Pass']"))
-    missing = [name for name in classes if not counts[name]]
-    if missing:
-        raise SystemExit(f"{lane}: no passing tests in {', '.join(missing)}")
-    passed = sum(counts.values())
-    if passed != int(assembly.attrib["passed"]):
-        raise SystemExit(f"{lane}: passing test total does not match individual results")
-    summary[lane] = {"passed": passed, "classes": dict(counts)}
-(results / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-for lane, outcome in summary.items():
-    print(f"{lane}: {outcome['passed']} passed")
-PY
-JOB
+python3 scripts/verify-released-catalog-results.py "$results"
