@@ -22,10 +22,18 @@ internal sealed class PartyMemoryRestHandler : HttpMessageHandler
 
     public bool AcknowledgeRefresh { get; set; } = true;
 
+    public Func<HttpResponseMessage>? PredecessorLookup { get; set; }
+
     public string SubmissionBody { get; set; } = "{\"instanceId\":\"workflow\"}";
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
+        if (PredecessorLookup is not null && request.Method == HttpMethod.Get
+            && request.RequestUri!.AbsolutePath.EndsWith("/memory-units/by-source-uri", StringComparison.Ordinal))
+        {
+            return PredecessorLookup();
+        }
+
         if (request.Method == HttpMethod.Post && request.RequestUri!.AbsolutePath.EndsWith("/api/v1/ingest", StringComparison.Ordinal))
         {
             using JsonDocument payload = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));

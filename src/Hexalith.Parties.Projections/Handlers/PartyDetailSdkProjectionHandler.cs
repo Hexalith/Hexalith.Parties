@@ -91,31 +91,19 @@ public sealed partial class PartyDetailSdkProjectionHandler(
             return DeliveryFailure(ProjectionRebuildRequiredReason);
         }
 
-#if !HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY
-        if (currentProcessing.Value?.BucketGeneration is not null)
-            return DeliveryFailure("processing-bucket-writer-requires-published-sdk-generation-support");
-#else
-        if (currentProcessing.Value is { } storedProcessing)
+#if HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY
+        if (currentProcessing.Value is null && request.Events.Length > PartyProcessingBucket.Capacity)
         {
-            try
-            {
-                PartyProcessingBucketValidation.ValidateCoverage(storedProcessing);
-                if (storedProcessing.BucketGeneration is null && storedProcessing.Records.Any(record => record.TenantId != request.TenantId || record.PartyId != request.AggregateId))
-                    throw new InvalidOperationException("processing-bucket-invalid");
-            }
-            catch (InvalidOperationException error) { return DeliveryFailure(error.Message); }
-        }
-        if (currentProcessing.Value?.BucketGeneration is not null
-            || (currentProcessing.Value?.Records.Count ?? 0) + request.Events.Length > PartyProcessingBucket.Capacity)
             return await ProjectBucketsAsync(request, dispatchId, cancellationToken).ConfigureAwait(false);
+        }
 #endif
 
-        long oldestCheckpoint = Math.Min(
-            current.Value?.LastSequenceNumber ?? long.MinValue,
-            currentProcessing.Value?.LastSequenceNumber ?? long.MinValue);
-        string? deliveryFailure = PartySdkProjectionFold.GetDeliveryFailureReason(request.Events, oldestCheckpoint);
-        if (current.Value is null && currentProcessing.Value is null
-            && string.Equals(deliveryFailure, PartySdkProjectionFold.UnresolvedOrUnsupportedEventReason, StringComparison.Ordinal))
+        string? deliveryFailure = null;
+        if (current.Value is null && currentProcessing.Value is null)
+        {
+            deliveryFailure = PartySdkProjectionFold.GetDeliveryFailureReason(request.Events, long.MinValue);
+        }
+        if (deliveryFailure == PartySdkProjectionFold.UnresolvedOrUnsupportedEventReason)
         {
             var initialization = new ReadModelBatch(initializationScope,
             [
@@ -140,10 +128,27 @@ public sealed partial class PartyDetailSdkProjectionHandler(
                 return DeliveryFailure(ProjectionRebuildRequiredReason);
             }
 
-            oldestCheckpoint = Math.Min(current.Value.LastSequenceNumber, currentProcessing.Value.LastSequenceNumber);
-            deliveryFailure = PartySdkProjectionFold.GetDeliveryFailureReason(request.Events, oldestCheckpoint);
+            deliveryFailure = null;
         }
 
+        if (currentProcessing.Value is { } storedProcessing)
+        {
+            try
+            {
+                ValidateProcessingSnapshot(storedProcessing, request);
+            }
+            catch (InvalidOperationException error) { return DeliveryFailure(error.Message); }
+            if (RequiresBucketWriter(storedProcessing, request))
+            {
+#if HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY
+                return await ProjectBucketsAsync(request, dispatchId, cancellationToken).ConfigureAwait(false);
+#else
+                return DeliveryFailure("processing-bucket-writer-requires-published-sdk-generation-support");
+#endif
+            }
+        }
+        deliveryFailure ??= PartySdkProjectionFold.GetDeliveryFailureReason(request.Events, Math.Min(
+            current.Value?.LastSequenceNumber ?? long.MinValue, currentProcessing.Value?.LastSequenceNumber ?? long.MinValue));
         if (deliveryFailure is not null)
         {
             if (string.Equals(
@@ -153,14 +158,12 @@ public sealed partial class PartyDetailSdkProjectionHandler(
             {
                 try
                 {
-                    await RecordUnresolvedProcessingAsync(request, storeName, processingKey, cancellationToken)
+                    deliveryFailure = await RecordUnresolvedProcessingAsync(request, storeName, key, processingKey, cancellationToken)
                         .ConfigureAwait(false);
                 }
                 catch (InvalidOperationException)
                 {
-                    // The audit-record write lost the optimistic-concurrency race (retry-budget
-                    // exhausted). The delivery is still retryable — a future attempt retries both
-                    // the audit write and the main fold, so this must not crash dispatch.
+                    // A newly read snapshot failed validation. Redelivery re-reads both slots.
                 }
             }
 
@@ -387,28 +390,49 @@ public sealed partial class PartyDetailSdkProjectionHandler(
 
     private string StoreName => options.Value.GetStoreName();
 
-    private async Task RecordUnresolvedProcessingAsync(
+    private static void ValidateProcessingSnapshot(PartyProcessingSdkReadModel model, ProjectionRequest request)
+    {
+        PartyProcessingBucketValidation.ValidateCoverage(model);
+        if (model.BucketGeneration is null && model.Records.Any(record => record.TenantId != request.TenantId || record.PartyId != request.AggregateId))
+            throw new InvalidOperationException("processing-bucket-invalid");
+    }
+
+    private static bool RequiresBucketWriter(PartyProcessingSdkReadModel model, ProjectionRequest request)
+#if HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY
+        => model.BucketGeneration is not null || model.Records.Count + request.Events.Length > PartyProcessingBucket.Capacity;
+#else
+        => model.BucketGeneration is not null;
+#endif
+
+    private async Task<string> RecordUnresolvedProcessingAsync(
         ProjectionRequest request,
         string storeName,
+        string detailKey,
         string processingKey,
         CancellationToken cancellationToken)
     {
-        // ReadModelWritePolicy.UpdateAsync re-invokes this callback on every optimistic-concurrency
-        // retry with a fresh `current` snapshot; request.Events never changes across retries, so
-        // logging on every attempt would repeat the same diagnostic under writer contention. Log at
-        // most once per delivery by only passing the real logger on the first attempt.
-        bool loggedThisDelivery = false;
-        await ReadModelWritePolicy.UpdateAsync<PartyProcessingSdkReadModel>(
-            readModelStore,
-            storeName,
-            processingKey,
-            current =>
-            {
-                PartyProcessingSdkReadModel next = PartyProcessingActivityFold.Fold(request, current, loggedThisDelivery ? null : _processingFoldLogger);
-                loggedThisDelivery = true;
-                return next;
-            },
-            cancellationToken: cancellationToken).ConfigureAwait(false);
+        const string unresolved = PartySdkProjectionFold.UnresolvedOrUnsupportedEventReason;
+        for (int attempt = 0; attempt < ReadModelWritePolicy.DefaultMaxAttempts; attempt++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var processing = await readModelStore.GetAsync<PartyProcessingSdkReadModel>(storeName, processingKey, cancellationToken).ConfigureAwait(false);
+            var detail = await readModelStore.GetAsync<PartyDetailSdkReadModel>(storeName, detailKey, cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (processing.Value is not { } current || detail.Value is null || string.IsNullOrEmpty(processing.ETag))
+                return ProjectionRebuildRequiredReason;
+            ValidateProcessingSnapshot(current, request);
+            if (RequiresBucketWriter(current, request)
+                || PartySdkProjectionFold.GetDeliveryFailureReason(request.Events, current.LastSequenceNumber) != unresolved)
+                return unresolved;
+
+            // Audit only the processing slot. A conflict invalidates the observed pair, so the
+            // next attempt must confirm that the companion detail row still exists as well.
+            var next = PartyProcessingActivityFold.Fold(request, current, attempt == 0 ? _processingFoldLogger : null);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (await readModelStore.TrySaveAsync(storeName, processingKey, next, processing.ETag, cancellationToken).ConfigureAwait(false))
+                break;
+        }
+        return unresolved;
     }
 
     private async Task<bool> RecoverInitializationAsync(

@@ -124,11 +124,10 @@ internal sealed class PartyMemoryIngestionIntentStore(
                     if (existing.WorkflowInstanceId is not null || existing.MemoryUnitId is not null)
                     { throw new InvalidOperationException("memory-ingestion-rejected-attempt-has-producer"); }
                     created = true;
-                    // This exact attempt has independent non-admission proof (including a newly
-                    // reserved successor). Bind its actual submission before clearing that proof.
-                    // Already submitted/ambiguous attempts never enter this branch.
+                    // Refresh preparation keeps non-admission proof until the final claim.
+                    // Already submitted or ambiguous attempts never enter this branch.
                     return current with { Intents = [.. current.Intents.Select(item => item.AttemptId == attemptId
-                        ? item with { SubmissionRejected = false, RefreshIdentityDigest = intent.RefreshIdentityDigest } : item)] };
+                        ? item with { SubmissionRejected = intent.SubmissionRejected, RefreshIdentityDigest = intent.RefreshIdentityDigest } : item)] };
                 }
 
                 return current;
@@ -143,6 +142,21 @@ internal sealed class PartyMemoryIngestionIntentStore(
             return current with { Intents = [.. current.Intents, intent with { AttemptId = attemptId, Generation = current.Generation }] };
         }, cancellationToken).ConfigureAwait(false);
         return new(saved.Intents.Single(item => item.AttemptId == attemptId), created);
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> TryClaimSubmissionAsync(string tenantId, string partyId, PartyMemoryIngestionIntent prepared, CancellationToken cancellationToken)
+    {
+        bool claimed = false;
+        _ = await ChangeAsync(tenantId, partyId, current =>
+        {
+            claimed = !current.CleanupRequested && current.Generation == prepared.Generation
+                && prepared is { SubmissionRejected: true, WorkflowInstanceId: null, MemoryUnitId: null, SuccessorAttemptId: null }
+                && current.Intents.Contains(prepared);
+            return claimed ? current with { Intents = [.. current.Intents.Select(item => item == prepared
+                ? item with { SubmissionRejected = false } : item)] } : current;
+        }, cancellationToken).ConfigureAwait(false);
+        return claimed;
     }
 
     /// <inheritdoc/>
@@ -299,6 +313,13 @@ internal sealed class PartyMemoryIngestionIntentStore(
                     || (workflowId is null && item.MemoryUnitId == canonicalId)
                     || (item.WorkflowInstanceId is null && retryIdentityHash is not null
                         && Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(item.AttemptId))) == retryIdentityHash)));
+            // A unit-only inventory row can precede the workflow row on another page.
+            // Attach that observation to its producer without merging independent workflows.
+            PartyMemoryIngestionIntent? unitObservation = workflowId is null || canonicalId is null ? null
+                : current.Intents.Find(item => item.WorkflowInstanceId is null && item.MemoryUnitId == canonicalId
+                    && item.CaseId == caseId && item.SourceUri == sourceUri && item.ProducerAuthority == producerAuthority
+                    && item.AttemptId.StartsWith("inventory-", StringComparison.Ordinal));
+            existing ??= unitObservation;
             if (existing is not null)
             {
                 if (existing.MemoryUnitId is not null && canonicalId is not null && existing.MemoryUnitId != canonicalId)
@@ -308,12 +329,15 @@ internal sealed class PartyMemoryIngestionIntentStore(
                 if ((current.CleanupReceipts ?? []).Contains(existing)) { return current; }
                 PartyMemoryIngestionIntent captured = existing with
                 {
+                    SubmissionRejected = false,
+                    ProducerAuthority = existing.ProducerAuthority ?? producerAuthority,
                     WorkflowInstanceId = existing.WorkflowInstanceId ?? workflowId,
                     MemoryUnitId = existing.MemoryUnitId ?? canonicalId,
-                    RequiresTerminalEvidence = !terminalVerified && workflowId is not null
-                        && (existing.RequiresTerminalEvidence || existing.MemoryUnitId is null),
+                    RequiresTerminalEvidence = workflowId is null ? existing.RequiresTerminalEvidence
+                        : !terminalVerified && (existing.RequiresTerminalEvidence || existing.WorkflowInstanceId is null || existing.MemoryUnitId is null),
                 };
-                return current with { Intents = [.. current.Intents.Select(item => item == existing ? captured : item)] };
+                return current with { Intents = [.. current.Intents.Where(item => item == existing || item != unitObservation)
+                    .Select(item => item == existing ? captured : item)] };
             }
             if (current.Intents.Count + (current.CleanupReceipts?.Count ?? 0) >= Capacity)
             {

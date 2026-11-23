@@ -1,3 +1,7 @@
+#if HFC_SHARED_UI
+using Hexalith.FrontComposer.Shell.Extensions;
+#endif
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -31,6 +35,13 @@ public static class ProjectionFreshnessServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
+
+#if HFC_SHARED_UI
+        if (configuration.GetValue<bool>("Parties:FrontComposer:UseSharedUiPrimitives"))
+        {
+            services.AddFrontComposerFeedback();
+        }
+#endif
 
         _ = services
             .AddOptions<ProjectionFreshnessOptions>()

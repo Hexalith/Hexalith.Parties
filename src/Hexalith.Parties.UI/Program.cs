@@ -51,13 +51,6 @@ builder.Services.Configure<Hexalith.FrontComposer.Shell.Options.FrontComposerRou
     options.ReservedSegments.UnionWith(["admin", "me", "no-party-binding"]));
 builder.Services.AddHexalithFrontComposerQuickstart(o => o.ScanAssemblies(typeof(Program).Assembly));
 builder.Services.AddFrontComposerDevMode(builder.Environment);
-#if HFC_SHARED_UI
-// Approved 4.7.1 primitives remain opt-in. Registration does not enable its older reconciler.
-if (builder.Configuration.GetValue<bool>("Parties:FrontComposer:UseSharedUiPrimitives"))
-{
-    builder.Services.AddFrontComposerFeedback();
-}
-#endif
 builder.Services.AddHexalithDomain<PartiesUiDomainMarker>();
 builder.Services.AddHexalithPartiesAdminPortal();
 builder.Services.AddHexalithPartyPicker();

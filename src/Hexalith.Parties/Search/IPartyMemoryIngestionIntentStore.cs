@@ -9,6 +9,9 @@ internal interface IPartyMemoryIngestionIntentStore
     /// <summary>Atomically reserves an attempt before submission, rejecting fenced or full inventories.</summary>
     Task<PartyMemoryIngestionRegistration> RegisterAsync(string tenantId, string partyId, PartyMemoryIngestionIntent intent, CancellationToken cancellationToken);
 
+    /// <summary>Exclusively claims an unsubmitted refresh after its read-only prerequisites have succeeded.</summary>
+    Task<bool> TryClaimSubmissionAsync(string tenantId, string partyId, PartyMemoryIngestionIntent prepared, CancellationToken cancellationToken);
+
     /// <summary>Retains a definitively superseded terminal producer and a stable successor reservation for redelivery.</summary>
     Task RegisterSupersededSuccessorAsync(string tenantId, string partyId, PartyMemoryIngestionIntent prior,
         string supersededOutputId, string? currentPredecessor, CancellationToken cancellationToken);

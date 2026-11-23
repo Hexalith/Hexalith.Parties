@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reproduce the five backfill and Memories 4.1.0 release checks on Linux."""
+"""Reproduce the backfill and Memories 4.1.0 release checks on Linux."""
 
 import argparse
 from collections import Counter
@@ -31,34 +31,67 @@ BACKFILL_NAMESPACE = "Hexalith.Parties.Tests.Projections"
 BACKFILL_RUNTIME = f"{BACKFILL_NAMESPACE}.PartyLegacyReadModelBackfillRuntimeTests"
 BACKFILL_PROCESS = f"{BACKFILL_NAMESPACE}.PartyLegacyBackfillProcessRuntimeTests"
 WORKLOAD_METHOD = f"{BACKFILL_PROCESS}.ActualProviderBackfillSurvivesSeparateWorkloadProcesses"
+
+
+def boolean_cases(parameter):
+    return tuple(f"({parameter}: {value})" for value in ("False", "True"))
+
+
+FACT = ("",)
 BACKFILL_METHODS = {
-    f"{BACKFILL_RUNTIME}.ActualProviderRebuildPersistsAcrossFreshClientsAndPreservesErasureAndRollbackBytes": 2,
-    f"{BACKFILL_RUNTIME}.ActualProviderCompetingWriteAfterPreparationRefusesPublicationAndPreservesEveryCanonicalKey": 6,
-    f"{BACKFILL_PROCESS}.EvidenceRetentionFailureStillDeletesScratchAndPreservesPrimary": 2,
-    WORKLOAD_METHOD: 1,
+    f"{BACKFILL_RUNTIME}.ActualProviderRebuildPersistsAcrossFreshClientsAndPreservesErasureAndRollbackBytes": boolean_cases("existing"),
+    f"{BACKFILL_RUNTIME}.ActualProviderCompetingWriteAfterPreparationRefusesPublicationAndPreservesEveryCanonicalKey": tuple(
+        f'(target: "{target}", existing: {existing})'
+        for target in ("detail", "processing", "index") for existing in ("False", "True")),
+    f"{BACKFILL_PROCESS}.EvidenceRetentionFailureStillDeletesScratchAndPreservesPrimary": boolean_cases("qualificationFailed"),
+    WORKLOAD_METHOD: FACT,
 }
 INGESTION = f"{MEMORIES_PROJECT}.Ingestion"
 DISCOVERY = f"{INGESTION}.NaturalLanguageErasureIntegrationTests"
 AUTHORITY = f"{INGESTION}.UnitOwnershipAuthorityIntegrationTests"
 MEMORIES_METHODS = {
     "same-uri-refresh": {
-        f"{INGESTION}.RefreshPublicationIntegrationTests.BothCompletionOrdersPreserveCurrentContentAndRetryableNewerRevision": 2,
+        f"{INGESTION}.RefreshPublicationIntegrationTests.BothCompletionOrdersPreserveCurrentContentAndRetryableNewerRevision": boolean_cases("newerFirst"),
     },
     "bounded-discovery": {
-        f"{DISCOVERY}.ModernDiscoveryUsesExactOwnershipAndMissingLegacyIndexRequiresReconciliation": 1,
-        f"{DISCOVERY}.LegacyNativeDiscoveryCoversExactUnitChunksAndBothNamespacesWhileOtherUnitsSurvive": 1,
-        f"{DISCOVERY}.LegacyDiscoveryRefusesPartialTimeoutPolicyWithoutSealingCompleteness": 1,
-        f"{DISCOVERY}.MissingOptionalLegacyTagRemainsUnqualifiedAndPreservesTheObligation": 1,
+        f"{DISCOVERY}.ModernDiscoveryUsesExactOwnershipAndMissingLegacyIndexRequiresReconciliation": FACT,
+        f"{DISCOVERY}.LegacyNativeDiscoveryCoversExactUnitChunksAndBothNamespacesWhileOtherUnitsSurvive": FACT,
+        f"{DISCOVERY}.LegacyDiscoveryRefusesPartialTimeoutPolicyWithoutSealingCompleteness": FACT,
+        f"{DISCOVERY}.MissingOptionalLegacyTagRemainsUnqualifiedAndPreservesTheObligation": FACT,
     },
     "cross-source-authority": {
-        f"{AUTHORITY}.IssuedAnnotationRetainsAuthorityAcrossDeletionPurgeAndSourceChange": 1,
-        f"{AUTHORITY}.HistoricalUnitRequiresExactEvidenceRegardlessOfSourceOrBareMarker": 3,
-        f"{AUTHORITY}.HistoricalReconciliationRefusesForeignKeysChangedEvidenceAndReusedGeneration": 1,
+        f"{AUTHORITY}.UnconfiguredProducerCannotBorrowIssuedAuthorityForUnscheduledCleanup": FACT,
+        f"{AUTHORITY}.IssuedAnnotationRetainsAuthorityAcrossDeletionPurgeAndSourceChange": FACT,
+        f"{AUTHORITY}.HistoricalUnitRequiresExactEvidenceRegardlessOfSourceOrBareMarker": (
+            "(bareMarker: null)", '(bareMarker: "modern")', '(bareMarker: "legacy-owner-reconciled-v1")'),
+        f"{AUTHORITY}.HistoricalReconciliationRefusesForeignKeysChangedEvidenceAndReusedGeneration": FACT,
+    },
+    "concurrent-older-admission": {
+        f"{INGESTION}.RetryWorkflowErasureIntegrationTests.ActualOlderProducerBetweenAbsentReadAndAdmissionCannotGainModernAuthority": boolean_cases("annotation"),
+        f"{INGESTION}.MemoryErasureProcessRestartTests.ActualOlderProducerCompletesBetweenAbsentReadAndAdmissionAcrossReplacement": boolean_cases("annotation"),
     },
     "purged-identity-reuse": {
-        f"{INGESTION}.RetryWorkflowErasureIntegrationTests.PurgedActualHistoricalWorkflowCannotGainCompletenessFromReusedIdentity": 2,
+        f"{INGESTION}.RetryWorkflowErasureIntegrationTests.PurgedActualHistoricalWorkflowCannotGainCompletenessFromReusedIdentity": boolean_cases("crossSource"),
     },
 }
+
+
+# Freeze the required outcomes separately from the selectors used to launch each assembly.
+REQUIRED_CASES = {
+    lane: frozenset(method + args for method, variants in methods.items() for args in variants)
+    for lane, methods in {"backfill": BACKFILL_METHODS, **MEMORIES_METHODS}.items()
+}
+
+
+def complete_summary(summary):
+    checks = summary["checks"]
+    if checks.keys() != REQUIRED_CASES.keys():
+        raise ValueError("Missing or unexpected qualification lane")
+    for lane, required in REQUIRED_CASES.items():
+        outcome = checks[lane]
+        if outcome["passed"] != len(required) or Counter(outcome["cases"]) != Counter(required):
+            raise ValueError(f"{lane}: incomplete required case evidence")
+    summary["status"] = "passed"
 
 
 def git(repo, *args):
@@ -142,22 +175,39 @@ def package_sources(assets, revision):
     return identities
 
 
-def check_report(report, expected):
-    assemblies = ET.parse(report).getroot().findall("assembly")
-    if len(assemblies) != 1:
-        raise ValueError(f"{report}: expected one xUnit assembly result")
+def check_pass_counts(report, node, count):
+    for field in ("total", "passed", "failed", "skipped", "not-run"):
+        if node.get(field) != str(count if field in ("total", "passed") else 0):
+            raise ValueError(f"{report}: inconsistent xUnit {node.tag} {field} count")
+
+
+def check_report(report, expected, project):
+    root = ET.parse(report).getroot()
+    assemblies = root.findall("assembly")
+    if len(assemblies) != 1 or Path(assemblies[0].get("name", "")).name != f"{project}.dll":
+        raise ValueError(f"{report}: expected one {project} assembly")
     assembly = assemblies[0]
-    if any(assembly.get(field) != "0" for field in ("errors", "failed", "skipped", "not-run")):
-        raise ValueError(f"{report}: xUnit reported errors or cases that did not pass")
-    tests = assembly.findall(".//test")
-    passing = Counter(f"{test.attrib['type']}.{test.attrib['method']}"
-                      for test in tests if test.attrib["result"] == "Pass")
-    total = sum(expected.values())
-    names = sorted({case.attrib["name"] for case in tests})
-    if passing != expected or len(tests) != total or len(names) != total or any(
-            assembly.get(field) != str(total) for field in ("total", "passed")):
-        raise ValueError(f"{report}: expected {expected}, observed {dict(passing)}")
-    return {"passed": total, "cases": names}
+    if assembly.get("errors") != "0" or assembly.find("errors/error") is not None:
+        raise ValueError(f"{report}: xUnit reported assembly errors")
+
+    tests = assembly.findall("collection/test")
+    if len(tests) != len(list(root.iter("test"))):
+        raise ValueError(f"{report}: xUnit test outside assembly/collection")
+    check_pass_counts(report, assembly, len(tests))
+    for collection in assembly.findall("collection"):
+        check_pass_counts(report, collection, len(collection.findall("test")))
+
+    required = Counter((method, method + args) for method, variants in expected.items() for args in variants)
+    observed = Counter()
+    for test in tests:
+        if test.get("result") != "Pass":
+            raise ValueError(f"{report}: test did not pass: {test.get('name')}")
+        method = f"{test.attrib['type']}.{test.attrib['method']}"
+        name = test.attrib["name"].replace(r'\"', '"')
+        observed[method, name] += 1
+    if observed != required:
+        raise ValueError(f"{report}: missing {list((required - observed).elements())}, unexpected {list((observed - required).elements())}")
+    return {"passed": len(tests), "cases": sorted(name for _, name in observed)}
 
 
 def run_lane(lane, assembly, methods, repo, env, results):
@@ -165,7 +215,7 @@ def run_lane(lane, assembly, methods, repo, env, results):
     selectors = [argument for method in methods for argument in ("-method", method)]
     run(["dotnet", str(assembly), "-failSkips", "-result-xml", str(report), *selectors],
         repo, env, results / f"{lane}.log")
-    return check_report(report, methods)
+    return check_report(report, methods, assembly.stem)
 
 
 def verify_workloads(directory):
@@ -179,7 +229,7 @@ def verify_workloads(directory):
             raise ValueError(f"{target}: unexpected backfill workload manifest")
         pids = set()
         for phase in phases:
-            check_report(target / f"{phase}.xml", {WORKLOAD_METHOD: 1})
+            check_report(target / f"{phase}.xml", {WORKLOAD_METHOD: FACT}, BACKFILL_PROJECT)
             receipt = json.loads((target / f"{phase}.json").read_text())
             if (receipt["tenant"], receipt["operation"], receipt["phase"]) != (
                     target.name, manifest["indexOperation"], phase):
@@ -297,7 +347,7 @@ def qualify(source, results, config, scratch):
     retain_summary()
 
     for project, lanes in ((MEMORIES_PROJECT, ("same-uri-refresh", "bounded-discovery", "cross-source-authority")),
-                           (NIGHTLY_PROJECT, ("purged-identity-reuse",))):
+                           (NIGHTLY_PROJECT, ("purged-identity-reuse", "concurrent-older-admission"))):
         assembly, _ = build(source, project, scratch / "memories", env, results, override)
         summary["assemblies"][project] = file_hash(assembly)
         retain_summary()
@@ -305,7 +355,7 @@ def qualify(source, results, config, scratch):
             summary["checks"][lane] = run_lane(lane, assembly, MEMORIES_METHODS[lane], source, env, results)
             retain_summary()
 
-    summary["status"] = "passed"
+    complete_summary(summary)
     retain_summary()
     for lane, outcome in summary["checks"].items():
         print(f"{lane}: {outcome['passed']} passed")

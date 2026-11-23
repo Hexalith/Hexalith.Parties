@@ -1088,9 +1088,14 @@ python3 scripts/verify-backfill-and-memories-deferrals.py \
 ```
 
 The runner builds the three test projects in Release/package mode and executes
-five lanes. Expect 11 backfill cases, with 12 reports from the empty and existing
-target workloads, followed by 2 same-URI refresh, 4 bounded discovery, 5
-cross-source authority and 2 purged-identity reuse cases. The destination must
+six lanes. Expect 11 backfill cases, with 12 reports from the empty and existing
+target workloads, followed by 2 same-URI refresh, 4 bounded discovery, 6
+cross-source authority (including the unconfigured producer), 2 purged-identity
+reuse and 4 competing older-producer admission cases. The last lane exercises
+ordinary and annotation admission both in process and across worker replacement.
+The runner checks each xUnit theory argument, collection total and required lane.
+Run its evidence-reader controls with
+`python3 -m unittest discover -s scripts -p 'test_backfill_and_memories_integration.py'`. The destination must
 be new. Its logs, XML and `summary.json` retain the executed test and package
 identities. Remove the provider, placement and scheduler you started after the
 run. The results qualify the disposable provider and producer paths used here.

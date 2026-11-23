@@ -2,6 +2,8 @@ using System.Net;
 using System.Text;
 
 using Hexalith.Memories.Client.Rest;
+using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Projections.Models;
 using Hexalith.Parties.Search;
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -73,6 +75,99 @@ public sealed class PartyMemoryRestClientRecoveryTests
         (await PartyMemoryRecoveryTests.Indexer(state, Client(http)).IndexAsync(PartyMemoryRecoveryTests.Entry(), context, Token)).ShouldNotBeNull().Indexed.ShouldBeTrue();
         handler.Submissions.ShouldHaveSingleItem();
         handler.Recovery.InventoryRequests.Count.ShouldBeGreaterThan(11);
+        (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", Token)).ShouldHaveSingleItem().MemoryUnitId.ShouldBe("canonical");
+    }
+
+    [Fact]
+    public async Task FailedPredecessorReadCanRetryOnceAcrossSerializedRestart()
+    {
+        var state = new PartyMemoryTestReadModelStore();
+        string source = PartyMemoryUrn.Build("tenant", "party");
+        await PartyMemoryRecoveryTests.Mappings(state).RecordMappingAsync("tenant", "party", "previous", source, "case", Token);
+        var handler = new PartyMemoryRestHandler { PredecessorLookup = () => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable) };
+        using var http = PartyMemoryRecoveryTests.Http(handler);
+        var entry = PartyMemoryRecoveryTests.Entry();
+        var context = PartyMemoryRecoveryTests.Context();
+
+        (await PartyMemoryRecoveryTests.Indexer(state, Client(http)).IndexAsync(entry, context, Token)).ShouldNotBeNull().Indexed.ShouldBeFalse();
+        handler.Submissions.ShouldBeEmpty();
+        var intent = (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", Token)).ShouldHaveSingleItem();
+        intent.SubmissionRejected.ShouldBeTrue();
+        (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", Token)).ShouldHaveSingleItem().MemoryUnitId.ShouldBe("previous");
+
+        handler.PredecessorLookup = () => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = System.Net.Http.Json.JsonContent.Create(new { memoryUnitId = "previous" }),
+        };
+        handler.Recovery.Workflows["workflow"] = PartyMemoryRecoveryHandler.Completed();
+        for (int delivery = 0; delivery < 2; delivery++)
+        {
+            (await PartyMemoryRecoveryTests.Indexer(state, Client(http)).IndexAsync(entry, context, Token)).ShouldNotBeNull().Indexed.ShouldBeTrue();
+        }
+        var submission = handler.Submissions.ShouldHaveSingleItem();
+        submission.GetProperty("expectedMemoryUnitId").GetString().ShouldBe("previous");
+        submission.GetProperty("idempotencyToken").GetString().ShouldBe(intent.AttemptId);
+        (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", Token))
+            .Select(item => item.MemoryUnitId).ShouldBe(["canonical", "previous"], ignoreOrder: true);
+    }
+
+    [Fact]
+    public async Task InterruptedReopenPreflightKeepsItsGenerationAndConcurrentRedeliverySubmitsOnlyOnce()
+    {
+        var state = new PartyMemoryTestReadModelStore();
+        var intents = PartyMemoryRecoveryTests.Intents(state);
+        await intents.BeginCleanupAsync("tenant", "party", Token, permanent: false);
+        var entry = PartyMemoryRecoveryTests.Entry();
+        (await state.TrySaveAsync("statestore", PartySdkReadModelAddresses.Index("tenant"),
+            new PartyIndexSdkReadModel { Entries = new Dictionary<string, PartyIndexEntry>() { ["party"] = entry } },
+            string.Empty, Token)).ShouldBeTrue();
+        (await intents.TryReopenAsync("tenant", "party", Token)).ShouldBeTrue();
+        var handler = new PartyMemoryRestHandler();
+        handler.Recovery.Workflows["workflow"] = PartyMemoryRecoveryHandler.Completed();
+        using var http = PartyMemoryRecoveryTests.Http(handler);
+        Task<PartyMemoryIndexingResult?> DeliverAsync() => PartyMemoryRecoveryTests.Indexer(state, Client(http))
+            .IndexAsync(entry, PartyMemoryRecoveryTests.Context(), Token);
+        handler.Recovery.InventoryRequest = (_, _) =>
+        {
+            // A crash or unavailable store at this boundary cannot persist a compensating write.
+            state.SaveFailure = new IOException("intent store offline");
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
+        };
+        (await DeliverAsync()).ShouldNotBeNull().Indexed.ShouldBeFalse();
+        var prepared = (await intents.GetAsync("tenant", "party", Token)).ShouldHaveSingleItem();
+        prepared.Generation.ShouldBe(1);
+        prepared.SubmissionRejected.ShouldBeTrue();
+        handler.Submissions.ShouldBeEmpty();
+
+        state.SaveFailure = null;
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        int reads = 0;
+        handler.Recovery.InventoryRequest = async (_, ct) =>
+        {
+            if (Interlocked.Increment(ref reads) == 1)
+            {
+                entered.SetResult();
+                await release.Task.WaitAsync(ct).ConfigureAwait(false);
+            }
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = System.Net.Http.Json.JsonContent.Create(new { tenantId = "tenant", sourceUri = prepared.SourceUri,
+                    version = "reopen-generation-one", coverageComplete = true, admissionClosed = true, permanent = false,
+                    entries = Array.Empty<object>(), nextCursor = (string?)null }),
+            };
+        };
+        Task<PartyMemoryIndexingResult?> interrupted = DeliverAsync();
+        try
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(10), Token);
+            (await DeliverAsync()).ShouldNotBeNull().Indexed.ShouldBeTrue();
+        }
+        finally { release.TrySetResult(); }
+        (await interrupted.ConfigureAwait(true)).ShouldNotBeNull().Indexed.ShouldBeFalse();
+        var submission = handler.Submissions.ShouldHaveSingleItem();
+        submission.GetProperty("reopenSourceVersion").GetString().ShouldBe("reopen-generation-one");
+        submission.GetProperty("idempotencyToken").GetString().ShouldBe(prepared.AttemptId);
         (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", Token)).ShouldHaveSingleItem().MemoryUnitId.ShouldBe("canonical");
     }
 

@@ -7,7 +7,7 @@ namespace Hexalith.Parties.Search;
 /// <param name="WorkflowInstanceId">Acknowledged workflow, or null for uncertain acceptance.</param>
 /// <param name="MemoryUnitId">Canonical output, when known; imported output can still require terminal evidence.</param>
 /// <param name="Generation">Admission generation that reserved this attempt.</param>
-/// <param name="SubmissionRejected">Whether submission was definitively rejected before acceptance.</param>
+/// <param name="SubmissionRejected">Whether this attempt is known to be unsubmitted or definitively rejected before acceptance.</param>
 /// <param name="CleanupSettled">Whether scoped terminal ingestion and subsequent absence have already been verified.</param>
 /// <param name="RequiresTerminalEvidence">Whether output is known but the admitted producer still needs independent terminal proof.</param>
 /// <param name="ProducerAuthority">Qualified producer endpoint for an admitted/discovered obligation; null preserves unknown legacy origin.</param>

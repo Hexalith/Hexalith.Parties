@@ -456,6 +456,83 @@ public sealed class PartyProcessingGenerationRecoveryTests
         (await store.GetAsync<PartyProcessingSdkReadModel>(StoreName, s_processingKey, token)).Value!.LastSequenceNumber.ShouldBe(40);
     }
 
+    [Theory]
+    [InlineData("rebuild")]
+    [InlineData("bucket-audit")]
+    [InlineData("detail-removed")]
+    [InlineData("processing-removed")]
+    public async Task InlineAuditRetryPreservesConcurrentRebuildOrMissingSlotAsync(string race)
+    {
+        var token = TestContext.Current.CancellationToken;
+        var store = new InMemoryReadModelStore();
+        var full = History() with { Events = History().Events.Take(42).ToArray() };
+        var prefix = full with { Events = full.Events.Take(2).ToArray() };
+        await SeedLegacyAsync(store, prefix, token);
+        bool removed = race is "detail-removed" or "processing-removed";
+        var recovery = new PartyDetailSdkProjectionHandler(store, store, s_options);
+        var intercepted = Substitute.For<IReadModelStore>();
+        intercepted.GetAsync<PartyDetailSdkReadModel>(StoreName, s_detailKey, token)
+            .Returns(_ => store.GetAsync<PartyDetailSdkReadModel>(StoreName, s_detailKey, token));
+        intercepted.GetAsync<PartyProcessingSdkReadModel>(StoreName, s_processingKey, token)
+            .Returns(_ => store.GetAsync<PartyProcessingSdkReadModel>(StoreName, s_processingKey, token));
+        IReadOnlyDictionary<string, byte[]>? winner = null;
+        intercepted.TrySaveAsync(StoreName, s_processingKey, Arg.Any<PartyProcessingSdkReadModel>(), Arg.Any<string>(), token)
+            .Returns(async call =>
+            {
+                if (winner is null)
+                {
+                    if (race == "processing-removed")
+                    {
+                        (await store.TryEraseAsync(StoreName, s_processingKey, call.ArgAt<string>(3), token).ConfigureAwait(false)).ShouldBeTrue();
+                    }
+                    else if (race == "detail-removed")
+                    {
+                        var detail = await store.GetAsync<PartyDetailSdkReadModel>(StoreName, s_detailKey, token).ConfigureAwait(false);
+                        (await store.TryEraseAsync(StoreName, s_detailKey, detail.ETag!, token).ConfigureAwait(false)).ShouldBeTrue();
+                        // A competing processing write forces the rejected CAS to re-read the missing companion.
+                        store.SeedRaw(StoreName, s_processingKey, PartyProcessingActivityFold.Fold(prefix, null));
+                    }
+                    else if (race == "bucket-audit")
+                    {
+                        var tail = full with { Events = full.Events.Skip(2).Select(item => item with { EventTypeName = "FutureUnresolvedEvent" }).ToArray() };
+                        (await recovery.ProjectAsync(tail, "competing-bucket-audit", token).ConfigureAwait(false)).Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+                        var published = (await store.GetAsync<PartyProcessingSdkReadModel>(StoreName, s_processingKey, token).ConfigureAwait(false)).Value!;
+                        published.BucketGeneration.ShouldNotBeNull();
+                        published.LastSequenceNumber.ShouldBe(2);
+                    }
+                    else
+                    {
+                        (await ExecuteAsync(recovery, store, full, "competing-rebuild", true, token).ConfigureAwait(false)).ShouldBe(ProjectionDispatchStatus.Completed);
+                    }
+                    winner = store.SnapshotRawEntries(StoreName);
+                }
+                return await store.TrySaveAsync(StoreName, s_processingKey, call.Arg<PartyProcessingSdkReadModel>(), call.ArgAt<string>(3), token).ConfigureAwait(false);
+            });
+
+        var audit = full with { Events = [full.Events[2] with { EventTypeName = "FutureUnresolvedEvent" }] };
+        var handler = new PartyDetailSdkProjectionHandler(intercepted, store, s_options);
+        var result = await handler.ProjectAsync(audit, "inline-audit", token);
+        result.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        result.ReasonCode.ShouldBe(removed ? "projection-rebuild-required" : PartySdkProjectionFold.UnresolvedOrUnsupportedEventReason);
+        winner.ShouldNotBeNull();
+        store.SnapshotRawEntries(StoreName).Keys.ShouldBe(winner.Keys, ignoreOrder: true);
+        foreach (var row in winner) { store.SnapshotRaw(StoreName, row.Key).ShouldBe(row.Value); }
+
+        if (removed)
+        {
+            (await recovery.ProjectAsync(audit, "redelivery", token)).ReasonCode.ShouldBe("projection-rebuild-required");
+            (await ExecuteAsync(recovery, store, full, "restore-slot", true, token)).ShouldBe(ProjectionDispatchStatus.Completed);
+        }
+        else if (race == "bucket-audit")
+        {
+            (await recovery.ProjectAsync(full, "resolved-bucket-audit", token)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        }
+        var next = Append(full, new PartyReactivated());
+        (await recovery.ProjectAsync(next with { Events = [next.Events[^1]] }, "resolved-tail", token)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        var metadata = (await store.GetAsync<PartyProcessingSdkReadModel>(StoreName, s_processingKey, token)).Value!;
+        await AssertCompleteGenerationAsync(store, metadata.BucketGeneration!, next, token);
+    }
+
     [Fact]
     public async Task CompetingInlineAppendAtCutoverUsesNewSnapshotForStagingAndPromotionAsync()
     {

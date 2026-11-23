@@ -12,6 +12,7 @@ using Hexalith.Parties.AdminPortal.Extensions;
 using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Client.AdminPortal;
+using Hexalith.Parties.UI.Extensions;
 using Hexalith.Parties.UI.IdentityBinding;
 using Hexalith.Parties.UI.Services;
 
@@ -22,6 +23,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -54,10 +56,25 @@ public sealed class PartiesUiHostCompositionTests
                 builder.UseSetting("Parties:FrontComposer:UseSharedUiPrimitives", enabled.Value.ToString());
             }
         });
-        using IServiceScope scope = factory.Services.CreateScope();
+        IConfiguration configuration = factory.Services.GetRequiredService<IConfiguration>();
+        var embeddedServices = new ServiceCollection();
+        embeddedServices.AddLogging();
+        embeddedServices.AddSingleton(Substitute.For<Microsoft.JSInterop.IJSRuntime>());
+        embeddedServices.AddHexalithPartiesUiModule(configuration, enableGatewayAuthorization: false);
+        await using ServiceProvider embedded = embeddedServices.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+        await using AsyncServiceScope standaloneScope = factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope embeddedScope = embedded.CreateAsyncScope();
+        CheckServices(standaloneScope.ServiceProvider, enabled);
+        CheckServices(embeddedScope.ServiceProvider, enabled);
+    }
+
+    private static void CheckServices(IServiceProvider services, bool? enabled)
+    {
+        services.GetRequiredService<OptimisticReconcile>().ShouldNotBeNull();
+        services.GetRequiredService<ProjectionFreshnessFallback>().Interval.ShouldBe(TimeSpan.FromSeconds(30));
 #if HFC_SHARED_UI
-        object? reconcile = scope.ServiceProvider.GetService<Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler>();
-        object? download = scope.ServiceProvider.GetService<Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService>();
+        object? reconcile = services.GetService<Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler>();
+        object? download = services.GetService<Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService>();
         if (enabled == true)
         {
             reconcile.ShouldBeOfType<Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler>();
@@ -80,7 +97,7 @@ public sealed class PartiesUiHostCompositionTests
         {
             if (Type.GetType(name, throwOnError: false) is { } serviceType)
             {
-                scope.ServiceProvider.GetService(serviceType).ShouldBeNull();
+                services.GetService(serviceType).ShouldBeNull();
             }
         }
 #endif

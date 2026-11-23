@@ -182,9 +182,11 @@ public sealed class PartyMemorySourceInventoryTests
     }
 
     [Theory]
-    [InlineData("Completed")]
-    [InlineData("Deleted")]
-    public async Task OutputKnownOrDeletedStillRequiresIndependentWorkflowTerminalEvidence(string state)
+    [InlineData("Completed", true)]
+    [InlineData("Completed", false)]
+    [InlineData("Deleted", true)]
+    [InlineData("Deleted", false)]
+    public async Task OutputKnownOrDeletedStillRequiresIndependentWorkflowTerminalEvidence(string state, bool unitFirst)
     {
         CancellationToken token = TestContext.Current.CancellationToken;
         var persisted = new PartyMemoryTestReadModelStore();
@@ -193,9 +195,14 @@ public sealed class PartyMemorySourceInventoryTests
         remote.Workflows["producer"] = PartyMemoryRecoveryHandler.Completed("producer", "canonical") with
         { RuntimeStatus = "Running", MemoryUnitId = null, MemoryUnitStatus = null };
         remote.Units.Add("canonical");
-        remote.InventoryRequest = (request, _) => Task.FromResult(request.Method == HttpMethod.Post
-            ? new HttpResponseMessage(HttpStatusCode.NoContent)
-            : Page([new { caseId = "case", workflowInstanceId = "producer", memoryUnitId = "canonical", state = terminal ? remote.Units.Contains("canonical") ? "Completed" : "Deleted" : state, terminalVerified = terminal }]));
+        remote.InventoryRequest = (request, _) =>
+        {
+            if (request.Method == HttpMethod.Post) { return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NoContent)); }
+            string observed = terminal ? remote.Units.Contains("canonical") ? "Completed" : "Deleted" : state;
+            object unit = new { caseId = "case", memoryUnitId = "canonical", state = observed, terminalVerified = true };
+            object workflow = new { caseId = "case", workflowInstanceId = "producer", memoryUnitId = "canonical", state = observed, terminalVerified = terminal };
+            return Task.FromResult(Page(unitFirst ? [unit, workflow] : [workflow, unit]));
+        };
         using var http = PartyMemoryRecoveryTests.Http(remote);
         (await PartyMemoryRecoveryTests.Cleanup(persisted, http).DeleteByPartyAsync("tenant", "case", "party", token)).Cleaned.ShouldBeFalse();
         remote.Units.ShouldContain("canonical");
@@ -232,6 +239,42 @@ public sealed class PartyMemorySourceInventoryTests
         await store.BeginCleanupAsync("tenant", "party", token);
         await Should.ThrowAsync<InvalidOperationException>(() => store.RegisterSupersededSuccessorAsync("tenant", "party", active,
             "another-output", "another-predecessor", token));
+    }
+
+    [Fact]
+    public async Task LegacyIntentRetainsFirstInventoryProducerAcrossRestartUntilItsUnitIsAbsent()
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        var state = new PartyMemoryTestReadModelStore();
+        string source = PartyMemoryUrn.Build("tenant", "party");
+        await PartyMemoryRecoveryTests.Intents(state).RegisterAsync("tenant", "party",
+            new("legacy", "case", source, WorkflowInstanceId: "workflow"), token);
+        var producerA = new PartyMemoryRecoveryHandler { DelayDeletion = true };
+        producerA.Units.UnionWith(["unit", "survivor"]);
+        producerA.InventoryRequest = (request, _) => Task.FromResult(request.Method == HttpMethod.Post
+            ? new HttpResponseMessage(HttpStatusCode.NoContent)
+            : Page([new { caseId = "case", workflowInstanceId = "workflow", memoryUnitId = "unit",
+                state = producerA.Units.Contains("unit") ? "Completed" : "Deleted", terminalVerified = true }]));
+        using var first = PartyMemoryRecoveryTests.Http(producerA);
+        first.BaseAddress = new Uri("https://producer-a.example/");
+        (await PartyMemoryRecoveryTests.Cleanup(state, first).DeleteByPartyAsync("tenant", "case", "party", token)).Cleaned.ShouldBeFalse();
+
+        var captured = (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", token)).ShouldHaveSingleItem();
+        captured.AttemptId.ShouldBe("legacy");
+        captured.MemoryUnitId.ShouldBe("unit");
+        captured.ProducerAuthority.ShouldBe(PartyMemoryCleanupService.BuildProducerAuthority(first.BaseAddress));
+        var producerB = new PartyMemoryRecoveryHandler();
+        using var second = PartyMemoryRecoveryTests.Http(producerB);
+        second.BaseAddress = new Uri("https://producer-b.example/");
+        (await PartyMemoryRecoveryTests.Cleanup(state, second).DeleteByPartyAsync("tenant", "case", "party", token)).Cleaned.ShouldBeFalse();
+        producerB.Requests.ShouldBeEmpty();
+        (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", token)).ShouldHaveSingleItem().ShouldBe(captured);
+        producerA.Units.ShouldContain("unit");
+
+        producerA.DelayDeletion = false;
+        (await PartyMemoryRecoveryTests.Cleanup(state, first).DeleteByPartyAsync("tenant", "case", "party", token)).Cleaned.ShouldBeTrue();
+        producerA.Units.ShouldBe(["survivor"]);
+        (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", token)).ShouldBeEmpty();
     }
 
     [Fact]

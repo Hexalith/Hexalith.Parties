@@ -18,6 +18,7 @@ namespace Hexalith.Parties.Middleware;
 /// </summary>
 public sealed class DegradedResponseMiddleware(RequestDelegate next, HealthCheckService healthCheckService)
 {
+    private readonly Lock _healthStateLock = new();
     private DateTimeOffset? _degradedSince;
 
     public async Task InvokeAsync(HttpContext context)
@@ -57,10 +58,15 @@ public sealed class DegradedResponseMiddleware(RequestDelegate next, HealthCheck
         // the sidecar and SDK read-model store remain reachable (or degraded).
         bool canServeStaleReads = CanServeStaleReads(report);
 
-        if (canServeStaleReads)
+        DateTimeOffset? requestDegradedSince;
+        lock (_healthStateLock)
         {
-            _degradedSince ??= DateTimeOffset.UtcNow;
+            _degradedSince = canServeStaleReads ? _degradedSince ?? DateTimeOffset.UtcNow : null;
+            requestDegradedSince = _degradedSince;
+        }
 
+        if (requestDegradedSince is { } since)
+        {
             context.Response.Headers["X-Service-Degraded"] = "true";
             context.Response.Headers["X-Stale-Data-Age"] = "0";
 
@@ -80,16 +86,12 @@ public sealed class DegradedResponseMiddleware(RequestDelegate next, HealthCheck
                 }
 
                 return Task.CompletedTask;
-            }, (context, _degradedSince.Value));
-        }
-        else
-        {
-            _degradedSince = null;
+            }, (context, since));
         }
 
         await next(context).ConfigureAwait(false);
 
-        if (context.Response.StatusCode >= StatusCodes.Status500InternalServerError)
+        if (!context.Response.HasStarted && context.Response.StatusCode >= StatusCodes.Status500InternalServerError)
         {
             context.Response.Headers.Remove("X-Service-Degraded");
             context.Response.Headers.Remove("X-Stale-Data-Age");

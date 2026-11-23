@@ -61,6 +61,7 @@ internal sealed partial class PartyMemoryIndexingService(
 #if HEXALITH_MEMORIES_SOURCE_REFRESH
         intent = intent with
         {
+            SubmissionRejected = true,
             ProducerAuthority = PartyMemoryCleanupService.BuildProducerAuthority(memoriesClient.BaseAddress),
             RefreshProtocolVersion = SourceRefreshProtocol.Version,
             SourceRevisionNumber = context.SequenceNumber.Value,
@@ -77,20 +78,27 @@ internal sealed partial class PartyMemoryIndexingService(
             if (registration.Created)
             {
                 string workflow;
+#if HEXALITH_MEMORIES_SOURCE_REFRESH
+                if (intent.RefreshIdentityDigest != SourceRefreshProtocol.CreateIdentityDigest(unit.SourceUri, "text/plain", context.SequenceNumber!.Value, unit.Metadata, content))
+                {
+                    throw new InvalidOperationException("memory-ingestion-original-refresh-body-unavailable");
+                }
+                string? predecessor = await memoriesClient.LookupMemoryUnitIdBySourceUriAsync(unit.TenantId, intent.CaseId, intent.SourceUri, cancellationToken).ConfigureAwait(false);
+                string? reopenVersion = null;
+                if (intent.Generation > 0)
+                {
+                    SourceInventoryPage inventory = await memoriesClient.GetSourceInventoryAsync(unit.TenantId, intent.SourceUri, ct: cancellationToken).ConfigureAwait(false);
+                    if (inventory.AdmissionClosed && !inventory.Permanent) { reopenVersion = inventory.Version; }
+                }
+                if (!await intentStore.TryClaimSubmissionAsync(unit.TenantId, unit.PartyId, intent, cancellationToken).ConfigureAwait(false))
+                {
+                    return Failed(unit, intent, "Refresh preparation was superseded or fenced; retry canonical redelivery.");
+                }
+                intent = intent with { SubmissionRejected = false };
+#endif
                 try
                 {
 #if HEXALITH_MEMORIES_SOURCE_REFRESH
-                    if (intent.RefreshIdentityDigest != SourceRefreshProtocol.CreateIdentityDigest(unit.SourceUri, "text/plain", context.SequenceNumber!.Value, unit.Metadata, content))
-                    {
-                        throw new InvalidOperationException("memory-ingestion-original-refresh-body-unavailable");
-                    }
-                    string? predecessor = await memoriesClient.LookupMemoryUnitIdBySourceUriAsync(unit.TenantId, intent.CaseId, intent.SourceUri, cancellationToken).ConfigureAwait(false);
-                    string? reopenVersion = null;
-                    if (intent.Generation > 0)
-                    {
-                        SourceInventoryPage inventory = await memoriesClient.GetSourceInventoryAsync(unit.TenantId, intent.SourceUri, ct: cancellationToken).ConfigureAwait(false);
-                        if (inventory.AdmissionClosed && !inventory.Permanent) { reopenVersion = inventory.Version; }
-                    }
                     workflow = await memoriesClient.RefreshAsync(unit.TenantId, intent.CaseId, intent.SourceUri, content, "text/plain", "Hexalith.Parties",
                         unit.Metadata, intent.AttemptId, predecessor, context.SequenceNumber!.Value, cancellationToken, reopenVersion).ConfigureAwait(false);
 #else
@@ -100,8 +108,7 @@ internal sealed partial class PartyMemoryIndexingService(
                 }
                 catch (MemoriesRemoteException ex) when (PartyMemoryIngestionEvidence.IsDefiniteSubmissionRejection(ex))
                 {
-                    // Only verified submission preflight rejections prove that no producer
-                    // was admitted. Status-read failures never reopen submission.
+                    // Only an explicit non-admission response can relinquish a submitted claim.
                     intent = intent with { SubmissionRejected = true };
                     using var rejectedBudget = new CancellationTokenSource(TimeSpan.FromSeconds(5));
                     await intentStore.UpdateAsync(unit.TenantId, unit.PartyId, intent, rejectedBudget.Token).ConfigureAwait(false);
@@ -144,7 +151,7 @@ internal sealed partial class PartyMemoryIndexingService(
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            if (reserved)
+            if (reserved && intent.WorkflowInstanceId is not null)
             {
                 // The caller's budget cannot abandon an acknowledged remote producer. Attempt
                 // bounded persistence/reconciliation independently, then preserve cancellation.

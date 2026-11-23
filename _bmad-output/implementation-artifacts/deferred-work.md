@@ -372,6 +372,7 @@ followup_released_catalog_2026_11_21: The maintained released-catalog runner pas
 qualification_2026_11_22: EventStore 5.4.0 complete reads and exports now reject invalid inline sequence coverage and bucket metadata with a missing generation. The three public read paths return the same ordered values across bucket boundaries. The released-package query and generation recovery tests passed. See `spec-read-model-and-memories-recovery-qualification.md`.
 
 qualification_2026_11_23: The catalog check now requires all seven paging and cursor scenarios, both interrupted-rebuild paths, and the bounded projection rebuild. See `spec-verify-five-deferred-behaviors.md` for the released-package run and remaining gates.
+recovery_batch_2026_11_23: An unresolved delivery rechecks the selected processing representation on each conditional write. A competing bucket rebuild preserves its generation and records. The released-package query and projection tests cover subsequent reads. Deployed paging and cutover remain open. See `spec-ten-deferred-recovery-and-runtime-checks.md`.
 
 ### DW-51: Resolve projection-handler performance and validation-coupling debt
 
@@ -457,6 +458,7 @@ qualification_supervisor_2026_11_22: The original parent now runs on Linux witho
 followup_repeatable_2026_11_22: The maintained runner reproduces the 11 EventStore 5.4.0 backfill cases and validates all 12 workload reports against their input and phase receipts. Deployed writer drain, cutover and rollback still require operator evidence. See `spec-repeat-backfill-and-memories-deferrals.md`.
 
 qualification_2026_11_23: The catalog check now requires all six in-memory migration cases covering restart and rollback, incomplete history, and competing canonical writers. See `spec-verify-five-deferred-behaviors.md` for the released-package run and remaining gates.
+recovery_batch_2026_11_23: An audit retry now re-reads both slots, preserves a missing canonical slot, and returns rebuild-required on observing the loss. The released processing-only conditional write cannot detect an independent detail deletion after its last companion read. Deployed writer coordination is still required. The disposable Redis/Dapr migration passed for empty and existing targets, including six separately verified workload phases per target. Deployed writer drain, cutover and rollback remain open. See `spec-ten-deferred-recovery-and-runtime-checks.md`.
 
 ### DW-59: Preserve mappings when unit ID and source URI match different rows
 
@@ -668,6 +670,7 @@ followup_released_catalog_2026_11_21: The maintained runner passes 18 source inv
 qualification_2026_11_22: The owned Memories 4.1.0 producer rehearsal began with two remote sources and no local mappings or intents. Interrupting the first deletion left a durable obligation for a fresh client. After deletion, scoped absence was verified in both cases. The incomplete-history source remained open on retry and the complete-history source closed. Production writer exclusion and historical owner reconciliation remain open. See `spec-read-model-and-memories-recovery-qualification.md`.
 
 qualification_2026_11_23: The catalog check now requires empty-local-state results for both complete and incomplete inventory, wrong-tenant refusal, and full-capacity REST paging. See `spec-verify-five-deferred-behaviors.md` for the released-package run and remaining gates.
+recovery_batch_2026_11_23: Discovery binds an unbound legacy intent to the producer that supplied the matched inventory. After restart, another producer cannot settle that obligation from its own inventory. Historical inventory reconciliation and deployed writer exclusion remain open. See `spec-ten-deferred-recovery-and-runtime-checks.md`.
 
 ### DW-83: Persist recovery when mapping and compensating deletion both fail
 
@@ -772,6 +775,7 @@ origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferra
 location: Parties runtime boundaries, AppHost, and Story 8.3 prerequisite matrix
 reason: deferral_id: `8.8-runtime-boundary-cleanup` authored_by_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md` owner: `Hexalith.EventStore, Hexalith.Commons, Hexalith.FrontComposer, Builds, platform-AppHost owners + Amelia (Parties Developer) + Murat (Test Architect)` exit_proof: `Deliver and approve exact identities plus producer/consumer parity for G1/G2 degraded response and DAPR health, G6 envelopes/freshness, G7/G9 claims and identifiers, G8 security/typed-client/integrated topology, and G11 MCP/deep-link/capability helpers; exercise switch-back before deleting Parties-local paths or retiring the AppHost.` rollback: `Keep the Parties degraded middleware and health checks, Authentication project, typed clients, MCP context forwarding and five tools, AdminPortal links/probes, build selectors, and Parties AppHost. Revert each future adoption slice independently to these retained paths.` evidence: `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md — EventStore degraded response, client envelopes, tenant claims, Aspire publish helpers, MCP/deep-link/search, Commons HTTP, and Builds rows; sprint-status.yaml keeps 8.8 blocked.`
 status: open
+recovery_batch_2026_11_23: The retained degraded-response middleware preserves a downstream response that has already sent its headers. Its wire-level checks cover started 5xx responses and the degraded headers on successful reads. This qualifies the retained runtime behavior. Shared-runtime adoption and switch-back require separate evidence. See `spec-ten-deferred-recovery-and-runtime-checks.md`.
 
 ### DW-99: Complete Story 8.9 FrontComposer UI consolidation
 
@@ -808,6 +812,7 @@ qualification_released_catalog_2026_11_21: The released FrontComposer 6.0.1 and 
 followup_released_catalog_2026_11_21: The maintained runner passes all 465 UI controls, including shared and fallback freshness, live regions, optimistic reconciliation and SignalR membership recovery. Production composition and named owner acceptance remain open. See `spec-reproduce-five-released-catalog-deferrals.md`.
 
 qualification_2026_11_23: The catalog check now requires both reconciliation registrations, freshness and live-region behavior, fallback polling, and reconnection through the production transport adapter. See `spec-verify-five-deferred-behaviors.md` for the released-package run and remaining gates.
+recovery_batch_2026_11_23: The public embedded UI module and the standalone host now honor the same shared-primitives setting. Registration tests exercise enabled, disabled and absent configuration. Deployment and named owner acceptance remain open. See `spec-ten-deferred-recovery-and-runtime-checks.md`.
 
 ### DW-101: Consolidate Admin and Consumer exports onto the approved FrontComposer browser-download service after G4-D delivery
 
@@ -1354,6 +1359,7 @@ followup_released_catalog_2026_11_21: The maintained runner passes 39 terminal c
 qualification_2026_11_22: The delayed-ingestion and deletion rehearsal passed against the Memories 4.1.0 producer. After the consumer restarted, its first successful cleanup observed terminal source inventory and scoped physical absence and persisted the settled receipt. All seven focused terminal-wait controls passed. Production workload custody, historical reconciliation and deployed physical erasure remain open. See `spec-read-model-and-memories-recovery-qualification.md`.
 
 qualification_2026_11_23: The catalog check now requires accepted deletion to retain obligations, pending producers to survive restart, and a mapping-removal failure to prevent cleanup success. See `spec-verify-five-deferred-behaviors.md` for the released-package run and remaining gates.
+recovery_batch_2026_11_23: Cleanup retains the observed producer binding when legacy inventory imports workflow and unit facts. Restarting against another endpoint preserves the outstanding work for its original producer. Production custody and erasure evidence remain open. See `spec-ten-deferred-recovery-and-runtime-checks.md`.
 
 ### DW-169: D7 — Use concurrency-aware removal when cleaning a party memory-unit mapping inventory.
 
@@ -1850,6 +1856,7 @@ archived: 2026-10-21
 
   qualification_2026_11_22: Two tests at the Memories 4.1.0 producer source revision passed both publication completion orders with the real Redis and graph stores. Each verified current content and a retryable newer revision at the same source URI. The earlier Parties consumer rehearsal and pending deployment and owner prerequisites retain their existing scope. See `spec-five-backfill-and-released-memories-deferrals.md`.
   followup_repeatable_2026_11_22: The maintained runner binds the producer checkout to both restored Memories 4.1.0 packages and checks both refresh publication orders. Installed deployment and owner acceptance remain open. See `spec-repeat-backfill-and-memories-deferrals.md`.
+  recovery_batch_2026_11_23: A failed predecessor lookup before the refresh request permits a subsequent delivery to retry. The consumer verifies one submission and the resulting mapping. Both completion orders passed against the source of the released producer. Installed deployment and owner acceptance remain open. See `spec-ten-deferred-recovery-and-runtime-checks.md`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-memories-recovery-deferred-items.md`
   summary: Qualify whether ingestion-inventory persistence needs a separate health capability probe.
@@ -2675,6 +2682,7 @@ archived: 2026-11-15
 
   qualification_2026_11_22: Two Memories 4.1.0 producer cases purged actual Dapr workflow history and retried with the same or a different source URI. Both refused publication and complete cleanup while preserving the historical and survivor hashes. Production inventory and writer exclusion remain open. See `spec-five-backfill-and-released-memories-deferrals.md`.
   followup_repeatable_2026_11_22: The maintained runner executes both actual Dapr purge and reuse variants with a private scheduler and placement service. Production inventory and writer exclusion remain open. See `spec-repeat-backfill-and-memories-deferrals.md`.
+  recovery_batch_2026_11_23: The maintained producer check requires both same-source and changed-source reuse after real workflow purge. Both cases passed at the package revision. Production inventory and writer exclusion remain open. See `spec-ten-deferred-recovery-and-runtime-checks.md`.
 
 - source_spec: `spec-five-memories-proof-and-process-observation-deferred-items.md`
   summary: Qualify child-parent membership when a listed PID is reused before the first child birth-identity read.
@@ -2709,6 +2717,7 @@ archived: 2026-11-15
   qualification_process_2026_11_16: An actual absent lookup precedes completion of the actual older chunk/NL producer. Its observed exit and a distinct replacement precede ordinary/annotation admission. Missing exact-unit authority still blocks complete erasure while all historical and survivor hashes remain unchanged. No production older-writer exclusion is attested.
   verification_process_2026_11_16: `tests/five-process-erasure-boundaries-2026-11-16/` retains the ordered checkpoints and process/backing identities.
   qualification_2026_11_22: Both ordinary and annotation admission passed the deterministic Redis/Dapr interleaving at the source revision of the Memories 4.1.0 packages. Each case preserved the existing chunk bytes after reconnection and refused historical cleanup authority. Production writer exclusion remains open. See `spec-read-model-and-memories-recovery-qualification.md`.
+  recovery_batch_2026_11_23: The maintained nightly selection now exercises ordinary and annotation admission both within a process and across producer replacement after the absent-history read. All four cases passed against the released producer source. Production older-writer exclusion remains open. See `spec-ten-deferred-recovery-and-runtime-checks.md`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-snapshot-history-and-publish-deferrals.md`
   summary: Establish per-unit historical identity authority across source changes without blocking ordinary fresh production cleanup.
@@ -2729,6 +2738,7 @@ archived: 2026-11-15
 
   qualification_2026_11_22: Five Memories 4.1.0 producer cases verified that legitimate issued authority survives source and lifecycle changes, while source-only coverage, bare markers and invalid reconciliation evidence cannot establish exact-unit authority. Deployed historical inventory and writer exclusion remain open. See `spec-five-backfill-and-released-memories-deferrals.md`.
   followup_repeatable_2026_11_22: The maintained runner verifies the five cross-source authority cases, including all three historical marker variants. Deployed historical inventory and writer exclusion remain open. See `spec-repeat-backfill-and-memories-deferrals.md`.
+  recovery_batch_2026_11_23: The runner checks all three historical-marker variants and rejects borrowed authority from an unconfigured producer. Six authority cases passed against the released producer source. Existing deployments still require historical inventory and verified writer exclusion. See `spec-ten-deferred-recovery-and-runtime-checks.md`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-sync-release-2026-11-13.md`
   summary: Qualify the exact EventStore 5.0.0 catalog/host/selector capabilities before admitting that current catalog family to Parties runtime gates.
