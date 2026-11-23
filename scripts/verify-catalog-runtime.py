@@ -24,9 +24,11 @@ import time
 
 ROOT = Path(__file__).resolve().parents[1]
 PROJECT = "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj"
-METHOD = (
-    "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyIsolationTests."
-    "ConcurrentSessions_IsolateStreamsRejectCrossCallsAndSurvivePeerDisposalAsync"
+TOPOLOGY = "Hexalith.Parties.IntegrationTests.Topology."
+METHODS = (
+    TOPOLOGY + "PartiesTopologyIsolationTests.ConcurrentSessions_IsolateStreamsRejectCrossCallsAndSurvivePeerDisposalAsync",
+    TOPOLOGY + "PartiesTopologyCleanupTests.Cleanup_RechecksWorkerExitAfterSdkStopDisposesTheProvider",
+    TOPOLOGY + "PartiesTopologyCleanupTests.OrdinaryCliWrapper_ExitingBeforeFirstPoll_LeavesItsRuntimeAdoptedThenTerminated",
 )
 
 
@@ -135,8 +137,8 @@ def verify(configuration, results, *, reuse_build=False, artifacts=None):
                     test_environment = dict(environment, TMPDIR=str(custody),
                                             TMP=str(custody), TEMP=str(custody))
                     execute(["dotnet", "test", "--project", PROJECT, *output, *properties,
-                             "--no-build", "--no-restore", "--filter-method", METHOD,
-                             "--minimum-expected-tests", "1", "--fail-skips", "on",
+                             "--no-build", "--no-restore", "--filter-method", *METHODS,
+                             "--minimum-expected-tests", "4", "--fail-skips", "on",
                              "--report-xunit-trx", "--results-directory", str(results)],
                             test_environment, results / "test.log")
                 finally:

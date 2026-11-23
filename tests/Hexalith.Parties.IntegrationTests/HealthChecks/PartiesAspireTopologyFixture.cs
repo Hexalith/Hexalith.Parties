@@ -82,6 +82,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     private string[]? _workerResourceNames;
     private readonly HashSet<string> _stoppedWorkerNames = new(StringComparer.Ordinal);
     private bool _workersQuiesced;
+    private bool _sdkShutdownStarted;
     private bool _startupScheduled;
     private readonly object _startupGate = new();
     private bool _cleanupStarted;
@@ -672,21 +673,34 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         BeginCleanup();
         _partiesClient?.Dispose();
         _eventStoreClient?.Dispose();
-        // One cumulative worker-quiescence budget spans host/sidecar stop commands,
-        // fresh exit observations and the automatic fallback within this cleanup attempt.
+        // Both attempts to drain the live resource model share the same deadline.
         using var quiescence = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        async Task PrepareSdkShutdownAsync(DistributedApplication app)
+        {
+            if (_sdkShutdownStarted)
+            {
+                // StopAsync can already have disposed the model. Refresh process ownership
+                // independently of the time Aspire spent stopping its host.
+                await ConfirmExitAfterSdkShutdownAsync().ConfigureAwait(false);
+                return;
+            }
+            if (!_workersQuiesced) { await QuiesceOwnedWorkersAsync(app, quiescence.Token).ConfigureAwait(false); }
+            await ConfirmOwnedWorkersStoppedAsync(quiescence.Token).ConfigureAwait(false);
+            _sdkShutdownStarted = true;
+        }
+
+        async Task ConfirmExitAfterSdkShutdownAsync()
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            await ConfirmOwnedWorkersStoppedAsync(timeout.Token).ConfigureAwait(false);
+        }
+
         await PartiesTopologyCleanup.RunAsync(
             async () =>
             {
-                if (_app is not null)
+                if (_app is not null && !_sdkShutdownStarted)
                 {
-                    if (!_workersQuiesced) { await QuiesceOwnedWorkersAsync(_app, quiescence.Token).ConfigureAwait(false); }
-                    await ConfirmOwnedWorkersStoppedAsync(quiescence.Token).ConfigureAwait(false);
-                    // Stop all workers and sidecars before the testing host removes owned Redis.
-                    // Aspire.Hosting.Testing 13.6.1 delegates StopAsync to its factory disposal:
-                    // HostOptions.ShutdownTimeout bounds that path and DCP waits for resource
-                    // cleanup. Keep awaiting disposal below even if this observation cancels;
-                    // a caller-side WaitAsync timeout must never authorize control-plane removal.
+                    await PrepareSdkShutdownAsync(_app).ConfigureAwait(false);
                     using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
                     await _app.StopAsync(timeout.Token).ConfigureAwait(false);
                 }
@@ -695,10 +709,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             {
                 if (_app is not null)
                 {
-                    // A failed stop must not let testing-factory disposal remove infrastructure
-                    // while owned workers remain active. Retry quiescence before starting disposal.
-                    if (!_workersQuiesced) { await QuiesceOwnedWorkersAsync(_app, quiescence.Token).ConfigureAwait(false); }
-                    await ConfirmOwnedWorkersStoppedAsync(quiescence.Token).ConfigureAwait(false);
+                    await PrepareSdkShutdownAsync(_app).ConfigureAwait(false);
                     await _app.DisposeAsync().ConfigureAwait(false);
                     _app = null;
                     _stoppedWorkerNames.Clear();
@@ -708,10 +719,9 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             {
                 if (_builder is not null)
                 {
-                    if (_app is not null && !_workersQuiesced)
+                    if (_app is not null)
                     {
-                        // The application callback already reports the failed observation.
-                        // Retain the builder as well; disposing it would dispose the same app.
+                        // Application disposal failed. Keep the builder and its resources for retry.
                         return;
                     }
                     try
@@ -733,8 +743,9 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             },
             async () =>
             {
-                // Retain the final check for retry after any SDK stop/disposal failure.
-                await ConfirmOwnedWorkersStoppedAsync(quiescence.Token).ConfigureAwait(false);
+                if (_app is not null) { return; }
+                // SDK disposal can outlive the original worker drain budget.
+                await ConfirmExitAfterSdkShutdownAsync().ConfigureAwait(false);
                 await CleanupCiDaprMtlsAsync().ConfigureAwait(false);
                 if (_workerObservationCancellation is not null)
                 {

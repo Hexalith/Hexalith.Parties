@@ -65,6 +65,30 @@ existing owner tests and UI/MCP continuity. The legacy Keycloak/admin/UI/MCP/sam
 hosts are outside Platform's reference composition and have not been extended or retired.
 The remaining browser and MCP walkthroughs describe those legacy surfaces.
 
+### Verify legacy AppHost startup
+
+Run the legacy AppHost in a development account with a private, writable user
+profile. Aspire 17 creates its control socket under that profile even when
+`ASPIRE_HOME` points elsewhere. On a read-only runner, use a disposable SDK
+container or VM with its own writable profile and the local runtime prerequisites.
+
+From the checkout, run `aspire run --apphost src/Hexalith.Parties.AppHost --isolated`.
+In a second terminal in the same environment, run the startup check (requires
+Bash, jq and curl).
+
+```bash
+bash scripts/check-legacy-apphost-startup.sh
+```
+
+The check discovers the allocated HTTP ports and requires HTTP 200 from Parties
+`/alive` and HTTP 204 from its Dapr sidecar at `/v1.0/healthz`. Stop this launch
+with Ctrl+C in the first terminal. Without an active route catalog, the legacy
+host can pass the startup check and still return 503 from `/ready`.
+
+Use the seven-server Platform command in Step 1 for readiness. The existing
+`verify-public-package-integration` CI job exercises the published configuration
+with an authenticated command and checks the persisted events and projection.
+
 EventStore owns public authentication, tenant validation, RBAC, command/query routing, and generic response mapping. Parties owns domain execution and SDK projection/query handlers behind the domain-service host. Do not call Parties internals to manage tenant lifecycle, RBAC, authorization, read models, or domain invocation.
 
 The Parties DAPR sidecar is deny-by-default. Only the `eventstore` app ID may

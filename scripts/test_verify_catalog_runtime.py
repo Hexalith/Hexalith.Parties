@@ -48,10 +48,15 @@ elif phase == 'prepare':
         receipt.write_text('{"prepared":true}')
 elif phase == 'test':
     assert receipt.is_file() and (build / 'bin' / 'generated.dll').is_file()
-    assert arguments[arguments.index('--minimum-expected-tests') + 1] == '1'
+    assert arguments[arguments.index('--minimum-expected-tests') + 1] == '4'
     assert arguments[arguments.index('--fail-skips') + 1] == 'on'
     assert '--no-build' in arguments and '--no-restore' in arguments
-    assert arguments[arguments.index('--filter-method') + 1].endswith('ConcurrentSessions_IsolateStreamsRejectCrossCallsAndSurvivePeerDisposalAsync')
+    methods = arguments[arguments.index('--filter-method') + 1:arguments.index('--minimum-expected-tests')]
+    assert [method.rsplit('.', 1)[-1] for method in methods] == [
+        'ConcurrentSessions_IsolateStreamsRejectCrossCallsAndSurvivePeerDisposalAsync',
+        'Cleanup_RechecksWorkerExitAfterSdkStopDisposesTheProvider',
+        'OrdinaryCliWrapper_ExitingBeforeFirstPoll_LeavesItsRuntimeAdoptedThenTerminated',
+    ]
     results = pathlib.Path(arguments[arguments.index('--results-directory') + 1])
     assert os.environ.get('REUSE_PREBUILT') or not results.is_relative_to(build.parent)
     assert pathlib.Path(os.environ['TMPDIR']) == results / 'runtime-custody'

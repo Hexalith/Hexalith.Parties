@@ -349,7 +349,11 @@ owned container/network removal and released listeners under observation deadlin
 The fixture stops application hosts concurrently, then sidecars, and confirms
 fresh OS identities by PID and kernel start-clock identity before Aspire removes backing
 containers. One cumulative thirty-second worker-quiescence budget covers both
-stop groups, exit observations and automatic fallback within each cleanup attempt.
+stop groups, exit observations and automatic fallback before SDK shutdown.
+Aspire can dispose the model during its stop call. Later cleanup attempts check
+the owned processes directly with a fresh deadline before releasing infrastructure.
+The published catalog runtime job exercises this retry, both CLI child-exit
+variants and the authenticated concurrent-session case.
 Pending or absent startup snapshots must become stopped or stoppable before
 backing dependencies drain; models that never enter SDK startup dispose normally.
 Completed stops remain recorded until application disposal succeeds, including

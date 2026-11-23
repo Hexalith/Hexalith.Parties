@@ -122,6 +122,49 @@ public sealed class PartiesTopologyCleanupTests
         }).ConfigureAwait(true);
     }
 
+    [Fact]
+    public async Task Cleanup_RechecksWorkerExitAfterSdkStopDisposesTheProvider()
+    {
+        var fixture = new PartiesAspireTopologyFixture();
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(new DistributedApplicationOptions { DisableDashboard = true });
+        await using DistributedApplication inner = builder.Build();
+        var app = new DisposingStopApplication(inner, fixture);
+        typeof(PartiesAspireTopologyFixture).GetField("_app", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(fixture, app);
+        fixture.AdmitStartup();
+
+        (await Should.ThrowAsync<IOException>(() => fixture.DisposeAsync().AsTask())).Message.ShouldBe("controlled disposal failure");
+        fixture.CurrentApplication.ShouldBeSameAs(app);
+        await fixture.DisposeAsync();
+
+        app.StopCalls.ShouldBe(1);
+        app.DisposeCalls.ShouldBe(2);
+        fixture.CurrentApplication.ShouldBeNull();
+    }
+
+    private sealed class DisposingStopApplication(DistributedApplication inner, PartiesAspireTopologyFixture fixture)
+        : DistributedApplication(inner)
+    {
+        internal int StopCalls { get; private set; }
+        internal int DisposeCalls { get; private set; }
+
+        public override ValueTask DisposeAsync() => ++DisposeCalls == 1
+            ? ValueTask.FromException(new IOException("controlled disposal failure"))
+            : base.DisposeAsync();
+
+        public override async Task StopAsync(CancellationToken cancellationToken = default)
+        {
+            StopCalls++;
+            await inner.DisposeAsync().ConfigureAwait(false);
+            // A newly observed worker invalidates the earlier exit proof even after SDK stop.
+            var start = new ProcessStartInfo("dotnet", "--version") { UseShellExecute = false };
+            start.Environment[PartiesAspireTopologyFixture.WorkerOwnershipVariable] = fixture.WorkerOwnershipMarker;
+            using Process worker = Process.Start(start)
+                ?? throw new InvalidOperationException("Could not start the test worker.");
+            fixture.CaptureOwnedWorker(worker.Id);
+            await worker.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData("stop")]
