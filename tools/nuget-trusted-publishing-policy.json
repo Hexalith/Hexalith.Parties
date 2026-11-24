@@ -1,5 +1,5 @@
 {
-  "description": "User-reported active nuget.org Trusted Publishing policy; this file records settings and does not register or activate the policy.",
+  "description": "Record of the active nuget.org Trusted Publishing policy.",
   "policyName": "Hexalith.Parties",
   "packageOwner": "Hexalith",
   "provider": "GitHubActions",
@@ -8,10 +8,9 @@
   "workflowFile": "release.yml",
   "environment": "production",
   "scope": [
-    "Push new packages and package versions",
-    "Unlist or relist package versions"
+    "Push new packages and package versions"
   ],
-  "packageGlobPattern": "*",
+  "packageGlobPattern": "Hexalith.Parties*",
   "packageIds": [
     "Hexalith.Parties.Contracts",
     "Hexalith.Parties.Client",
@@ -40,6 +39,6 @@
   "repositoryId": 1170072276,
   "registration": {
     "status": "Active",
-    "evidence": "Operator-provided NuGet policy details; authenticated OIDC exchange and publication verification remain pending."
+    "evidence": "Verified on the signed-in NuGet Trusted Publishing page after saving and reloading on 2026-11-24."
   }
 }

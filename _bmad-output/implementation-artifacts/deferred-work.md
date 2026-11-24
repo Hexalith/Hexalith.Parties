@@ -1519,7 +1519,8 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: operator-owned NuGet trusted-publishing policy (packageGlobPattern and key permissions)
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
 reason: The recorded active policy uses `packageGlobPattern: "*"` and grants unlist/relist in addition to push; the local nine-ID inventory does not limit the NuGet-issued key. The policy was created separately from the original release patch and must be changed by its owner.
-status: open
+status: done 2026-11-24
+resolution: Verified the active NuGet policy after saving and reloading. The approved Hexalith.Parties* glob limits package scope, and Push new packages and package versions is the only permission.
 
 ### DW-186: Check whether BMAD visual-tool consumers require an array from the layered TOML setting.
 
