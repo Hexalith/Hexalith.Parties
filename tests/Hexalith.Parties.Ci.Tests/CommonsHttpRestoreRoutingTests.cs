@@ -144,7 +144,7 @@ public sealed class CommonsHttpRestoreRoutingTests
     }
 
     [Theory]
-    [InlineData("", "3.0.2")]
+    [InlineData("", "3.0.4")]
     [InlineData("package", "3.0.1")]
     public void MsbuildPropertyResolverReturnsCurrentCentralVersion(string mappingMode, string commonsVersion)
     {
