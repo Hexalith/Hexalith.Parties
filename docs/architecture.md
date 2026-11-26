@@ -53,6 +53,9 @@ If a task has no declared parent, use its touched files to find every affected m
 
 ## 3. Technology stack
 
+The table shows the default Parties versions. Package mode follows its selected
+catalog for HTTP resilience and service discovery.
+
 | Category | Technology | Version |
 |----------|-----------|---------|
 | Runtime | .NET | `net11.0` (SDK `11.0.100`, rollForward latestPatch) |
