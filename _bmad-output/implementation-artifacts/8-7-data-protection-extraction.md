@@ -3,13 +3,13 @@ story_key: 8-7-data-protection-extraction
 story_id: "8.7"
 epic: "8"
 created: 2026-07-16T00:23:38+02:00
-revalidated: 2026-11-03
+revalidated: 2026-11-26
 source_status: backlog
 target_status: blocked
 baseline_commit_at_story_start: a35b151
-baseline_commit_at_revalidation: fcf7cbc86076ce43f0982e4959da9691feaf2d3a
-eventstore_root_pin_at_revalidation: 7c93a1234d14c66f5ee85ed48caaee1d30a671f3
-eventstore_checkout_at_revalidation: 7c93a1234d14c66f5ee85ed48caaee1d30a671f3
+baseline_commit_at_revalidation: 3eb2aee3884604d1c36b06e82b427c1789740ca8
+eventstore_root_pin_at_revalidation: 7435254cc1a148031224eebe1aafd53a8659b2cd
+eventstore_checkout_at_revalidation: 7435254cc1a148031224eebe1aafd53a8659b2cd
 ---
 
 # Story 8.7: Data-protection extraction
@@ -18,7 +18,11 @@ Status: blocked
 
 <!-- This story is complete enough for workflow intake, but production source migration is hard-gated by the Story 8.3 G5 row and the authoritative Epic 8 sequence. -->
 
-## Current Gate Revalidation — 2026-11-03
+## Current Gate Revalidation — 2026-11-26
+
+Story 8.7 remains `blocked`. The selected EventStore revision has generic Server persistence and snapshot integration in progress and the G5 approval closure in backlog. The DW-97 recheck records the source and package identities, outstanding approval, and local-provider retention. [DW-97 recheck](spec-dw-97-g5-prerequisite-recheck.md)
+
+## Historical Gate Revalidation — 2026-11-03
 
 G5 remains `needs-additive-api`; Story 8.7 remains `blocked`. At Parties
 `fcf7cbc86076ce43f0982e4959da9691feaf2d3a`, the committed root gitlinks

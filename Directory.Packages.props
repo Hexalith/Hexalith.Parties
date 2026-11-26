@@ -30,6 +30,11 @@
   <Import Project="$(Hexalith1BuildPackageProps)" Condition="Exists('$(Hexalith1BuildPackageProps)') And '$(HexalithVersionsLoaded)' != 'true'" />
   <Import Project="$(Hexalith2BuildPackageProps)" Condition="Exists('$(Hexalith2BuildPackageProps)') And '$(HexalithVersionsLoaded)' != 'true'" />
   <Import Project="$(Hexalith3BuildPackageProps)" Condition="'$(HexalithVersionsLoaded)' != 'true'" />
+  <!-- Match the dependency floors of the default Commons.ServiceDefaults 3.0.4. -->
+  <ItemGroup Condition="'$(_PartiesUsesDefaultCatalog)' == 'true' and '$(HexalithSourceMappingMode)' != 'package'">
+    <PackageVersion Update="Microsoft.Extensions.Http.Resilience" Version="11.0.1" />
+    <PackageVersion Update="Microsoft.Extensions.ServiceDiscovery" Version="11.0.1" />
+  </ItemGroup>
   <PropertyGroup Condition="'$(HexalithSourceMappingMode)' != 'package'">
     <HexalithAspireAppHostSdkVersion>17.0.0</HexalithAspireAppHostSdkVersion>
     <HexalithAspireHostingDaprVersion>17.0.0-preview.1.261120-0454</HexalithAspireHostingDaprVersion>

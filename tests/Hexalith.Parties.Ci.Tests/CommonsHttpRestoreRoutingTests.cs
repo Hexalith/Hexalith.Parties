@@ -10,6 +10,8 @@ public sealed class CommonsHttpRestoreRoutingTests
     private const string CommonsHttpProjectReference = @"$(HexalithCommonsRoot)\src\libraries\Hexalith.Commons.Http\Hexalith.Commons.Http.csproj";
     private const string ClientProject = "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj";
     private const string EventStoreContractsPackageId = "Hexalith.EventStore.Contracts";
+    private const string HttpResiliencePackageId = "Microsoft.Extensions.Http.Resilience";
+    private const string ServiceDiscoveryPackageId = "Microsoft.Extensions.ServiceDiscovery";
     private const string PackageCondition = "'$(HexalithCommonsHttpFromSource)' != 'true'";
     private const string PackageId = "Hexalith.Commons.Http";
     private const int PythonCaptureTimeoutMilliseconds = 5_000;
@@ -34,7 +36,9 @@ public sealed class CommonsHttpRestoreRoutingTests
             ["Aspire.Hosting.Orchestration.linux-x64", "Aspire.Dashboard.Sdk.linux-x64"]);
         runtimeTools.ShouldAllBe(item => (string?)item.Attribute("Version") == "$(HexalithAspireAppHostSdkVersion)");
         packageVersions.Where(item => item.Attribute("Update") is not null)
-            .ShouldAllBe(item => ((string?)item.Attribute("Version"))!.StartsWith("17.0.0", StringComparison.Ordinal));
+            .ShouldAllBe(item => ((string?)item.Attribute("Update") == HttpResiliencePackageId
+                || (string?)item.Attribute("Update") == ServiceDiscoveryPackageId)
+                || ((string?)item.Attribute("Version"))!.StartsWith("17.0.0", StringComparison.Ordinal));
         XDocument buildsPackages = XDocument.Load(CiTestPaths.RepoFile("references/Hexalith.Builds/Props/Directory.Packages.props"));
         XElement contractUiVersion = buildsPackages.Descendants("PackageVersion")
             .Single(element => element.Attribute("Include")?.Value == "Hexalith.FrontComposer.Contracts.UI");
@@ -144,9 +148,9 @@ public sealed class CommonsHttpRestoreRoutingTests
     }
 
     [Theory]
-    [InlineData("", "3.0.4")]
-    [InlineData("package", "3.0.1")]
-    public void MsbuildPropertyResolverReturnsCurrentCentralVersion(string mappingMode, string commonsVersion)
+    [InlineData("", "3.0.4", "11.0.1")]
+    [InlineData("package", "3.0.1", "11.0.0")]
+    public void MsbuildPropertyResolverReturnsCurrentCentralVersion(string mappingMode, string commonsVersion, string hostingDependencyVersion)
     {
         Dictionary<string, string> properties = new() { ["HexalithSourceMappingMode"] = mappingMode };
         IReadOnlyDictionary<string, string> effectivePackages = EffectivePackageVersions.ReadPackages(
@@ -154,6 +158,8 @@ public sealed class CommonsHttpRestoreRoutingTests
         string aspireVersion = EffectivePackageVersions.ReadProperty(
             CiTestPaths.RepositoryRoot, "HexalithAspireAppHostSdkVersion", ClientProject, globalProperties: properties);
         effectivePackages[PackageId].ShouldBe(commonsVersion);
+        effectivePackages[HttpResiliencePackageId].ShouldBe(hostingDependencyVersion);
+        effectivePackages[ServiceDiscoveryPackageId].ShouldBe(hostingDependencyVersion);
         effectivePackages["Aspire.Hosting.Orchestration.linux-x64"].ShouldBe(aspireVersion);
         effectivePackages["Aspire.Dashboard.Sdk.linux-x64"].ShouldBe(aspireVersion);
 

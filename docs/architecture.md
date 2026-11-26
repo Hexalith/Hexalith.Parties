@@ -70,7 +70,7 @@ If a task has no declared parent, use its touched files to find every affected m
 | | Microsoft.AspNetCore.Components.CustomElements | `11.0.0` |
 | Rich search (opt) | Hexalith.Memories.Client.Rest | package `4.1.0` by default |
 | Observability | OpenTelemetry (exporter/hosting/instrumentation) | `1.21.0` core/hosting/exporter and ASP.NET Core/HTTP/runtime instrumentation |
-| Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `11.0.0` |
+| Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `11.0.1` |
 | Versioning | MinVer (git-tag SemVer, prefix `v`) | `8.0.0` |
 | Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `4.0.3` / `4.3.0` / `6.2.0` / `2.15.2` / `4.17.0`† / `18.1.0` |
 
