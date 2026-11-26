@@ -300,6 +300,50 @@ public sealed class AppHostTenantsTopologyTests
         }
     }
 
+    [Fact]
+    public void LocalModuleToolMatchesSignedBuildsRelease()
+    {
+        string root = RepositoryRoot.Locate();
+        using JsonDocument tools = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, ".config/dotnet-tools.json")));
+        string moduleVersion = tools.RootElement.GetProperty("tools")
+            .GetProperty("hexalith.builds.module.cli").GetProperty("version").GetString()!;
+
+        string? signedVersion = null;
+        string? signedSha = null;
+        foreach (string line in File.ReadAllLines(Path.Combine(root, ".gitlink-signoff.tsv")))
+        {
+            if (line.Length == 0 || line[0] == '#')
+            {
+                continue;
+            }
+
+            string[] parts = line.Split('|');
+            if (parts.Length < 4
+                || parts[0] != "references/Hexalith.Builds"
+                || parts[2] != "validated-advance")
+            {
+                continue;
+            }
+
+            int at = parts[3].IndexOf('@', StringComparison.Ordinal);
+            string reference = at >= 0 ? parts[3][..at] : parts[3];
+            if (reference.Length > 1
+                && reference[0] == 'v'
+                && Version.TryParse(reference.AsSpan(1), out _))
+            {
+                signedVersion = reference[1..];
+                signedSha = parts[1];
+            }
+        }
+
+        signedVersion.ShouldNotBeNull();
+        signedSha.ShouldNotBeNull();
+        moduleVersion.ShouldBe(signedVersion);
+
+        string lsTree = RepositoryTestProcess.RunGit(root, "ls-tree", "HEAD", "references/Hexalith.Builds");
+        lsTree.ShouldContain(signedSha);
+    }
+
     private static string StripCSharpComments(string source)
     {
         // Remove block comments first, then single-line comments. This prevents fitness
