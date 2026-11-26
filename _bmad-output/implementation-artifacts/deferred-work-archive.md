@@ -2187,3 +2187,13 @@ reason: The child writes `ready` with `pathlib.Path.write_text`, which creates t
 exit_proof: The supervisor fixtures publish `ready` atomically (write a temporary file, then `os.replace`), or the reader waits for complete content, and the Contracts.Tests supervisor facts pass repeatedly under parallel CPU load.
 rollback: None required (test-only).
 
+### DW-185: Narrow the operator-created NuGet trusted-publishing policy to the Parties package IDs and publish-only operations.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
+location: operator-owned NuGet trusted-publishing policy (packageGlobPattern and key permissions)
+source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+reason: The recorded active policy uses `packageGlobPattern: "*"` and grants unlist/relist in addition to push; the local nine-ID inventory does not limit the NuGet-issued key. The policy was created separately from the original release patch and must be changed by its owner.
+status: done 2026-11-24
+archived: 2026-11-26
+resolution: Verified the active NuGet policy after saving and reloading. The approved Hexalith.Parties* glob limits package scope, and Push new packages and package versions is the only permission.
+
