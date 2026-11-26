@@ -89,9 +89,14 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
         }
     }
 
-    [Fact]
-    public void EditMyProfilePage_Loading_RendersSkeletonBeforeDataResolves()
+    [Theory]
+    [InlineData(false)]
+#if HFC_SHARED_UI
+    [InlineData(true)]
+#endif
+    public void EditMyProfilePage_Loading_RendersSkeletonBeforeDataResolves(bool sharedFeedback)
     {
+        RegisterFeedback(sharedFeedback);
         var pending = new TaskCompletionSource<PartyDetail>(TaskCreationOptions.RunContinuationsAsynchronously);
         var dataClient = new QueueProfileDataClient(_ => pending.Task);
         Services.AddSingleton<IConsumerProfileDataClient>(dataClient);
@@ -99,11 +104,26 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
 
         IRenderedComponent<EditMyProfilePage> cut = Render<EditMyProfilePage>();
 
-        cut.Markup.ShouldContain("Loading editable profile details");
         cut.Markup.ShouldContain("aria-busy=\"true\"");
-        cut.FindAll("[role='status']").Count.ShouldBe(1);
+        AssertPoliteStatus(cut, "Loading editable profile details", sharedFeedback);
         dataClient.CallCount.ShouldBe(1);
     }
+
+#if HFC_SHARED_UI
+    [Fact]
+    public void DownloadOnlyRegistrationRendersLoadingStatusWithoutResolvingDownloads()
+    {
+        var pending = new TaskCompletionSource<PartyDetail>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Services.AddSingleton<IConsumerProfileDataClient>(new QueueProfileDataClient(_ => pending.Task));
+        Services.AddSingleton<IConsumerProfileEditClient>(new QueueProfileEditClient());
+        Services.AddScoped<Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService>(_ =>
+            throw new InvalidOperationException("The profile status should not resolve the download service."));
+
+        var cut = Render<EditMyProfilePage>();
+
+        AssertPoliteStatus(cut, "Loading editable profile details", sharedFeedback: false);
+    }
+#endif
 
     [Fact]
     public void EditMyProfilePage_PersonPrefill_MatchesStoredValuesAndHidesOrganizationFields()
@@ -201,9 +221,14 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
         });
     }
 
-    [Fact]
-    public async Task EditMyProfilePage_AcceptedSave_OptimisticallyUpdatesAndUsesOnePoliteStatusSource()
+    [Theory]
+    [InlineData(false)]
+#if HFC_SHARED_UI
+    [InlineData(true)]
+#endif
+    public async Task EditMyProfilePage_AcceptedSave_OptimisticallyUpdatesAndUsesOnePoliteStatusSource(bool sharedFeedback)
     {
+        RegisterFeedback(sharedFeedback);
         var save = new TaskCompletionSource<ConsumerProfileUpdateResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         var readback = new TaskCompletionSource<PartyDetail>(TaskCreationOptions.RunContinuationsAsynchronously);
         var readbackStarted = new TaskCompletionSource<CancellationToken>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -225,8 +250,7 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
 
         cut.WaitForAssertion(() =>
         {
-            cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldContain("Saving...");
-            cut.FindAll("[role='status'][aria-live='polite']").Count.ShouldBe(1);
+            AssertPoliteStatus(cut, "Saving...", sharedFeedback);
         });
 
         PartyDetail updated = CurrentPerson() with
@@ -243,8 +267,7 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
             cut.Markup.ShouldContain("Grace Lovelace");
             cut.Markup.ShouldContain("ACCEPTED-ID");
             cut.Find("fieldset").HasAttribute("disabled").ShouldBeFalse();
-            cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldBe("Saved - updating");
-            cut.FindAll("[role='status'][aria-live='polite']").Count.ShouldBe(1);
+            AssertPoliteStatus(cut, "Saved - updating", sharedFeedback);
             dataClient.CallCount.ShouldBe(2);
             readbackToken.CanBeCanceled.ShouldBeTrue();
             readbackToken.IsCancellationRequested.ShouldBeFalse();
@@ -260,11 +283,32 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
         cut.WaitForAssertion(() =>
         {
             FindTextInput(cut, "First name").Instance.Value.ShouldBe("Grace");
-            cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldBe("Saved");
+            AssertPoliteStatus(cut, "Saved", sharedFeedback);
             editClient.LastRequest.ShouldNotBeNull();
             editClient.LastRequest!.PersonDetails!.FirstName.ShouldBe("Grace");
             dataClient.CallCount.ShouldBe(2);
         });
+    }
+
+    private void RegisterFeedback(bool sharedFeedback)
+    {
+#if HFC_SHARED_UI
+        if (sharedFeedback)
+        {
+            Hexalith.FrontComposer.Shell.Extensions.FrontComposerFeedbackServiceExtensions.AddFrontComposerFeedback(Services);
+        }
+#endif
+    }
+
+    private static void AssertPoliteStatus(IRenderedComponent<EditMyProfilePage> cut, string message, bool sharedFeedback)
+    {
+        var status = cut.FindAll("[role='status']").ShouldHaveSingleItem();
+        status.GetAttribute("aria-live").ShouldBe("polite");
+        status.TextContent.Trim().ShouldBe(message);
+        status.LocalName.ShouldBe(sharedFeedback ? "div" : "p");
+#if HFC_SHARED_UI
+        cut.FindComponents<Hexalith.FrontComposer.Shell.Components.Feedback.FcLiveRegion>().Count.ShouldBe(sharedFeedback ? 1 : 0);
+#endif
     }
 
     [Fact]

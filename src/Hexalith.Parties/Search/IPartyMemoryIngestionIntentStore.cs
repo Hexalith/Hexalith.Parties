@@ -40,10 +40,11 @@ internal interface IPartyMemoryIngestionIntentStore
         CancellationToken cancellationToken, string? producerAuthority = null, bool requirePending = false,
         IReadOnlyCollection<PartyMemoryIngestionIntent>? expectedCase = null);
 
-    /// <summary>Retains a discovered producer under the cleanup fence, returning false for an unproved typed retry binding.</summary>
+    /// <summary>Retains a discovered producer under the cleanup fence, returning false for an unproved typed retry binding. A current unit-only observation requires fresh absence evidence.</summary>
     Task<bool> RetainDiscoveredAsync(string tenantId, string partyId, string caseId, string sourceUri, string? workflowId,
         string? canonicalId, string? retryIdentityHash, bool terminalVerified, CancellationToken cancellationToken, string? producerAuthority = null,
-        bool requireTerminalEvidence = false, (string? ProtocolVersion, long? SourceRevision, string? IdentityDigest) admission = default);
+        bool requireTerminalEvidence = false, (string? ProtocolVersion, long? SourceRevision, string? IdentityDigest) admission = default,
+        bool unitPresent = false);
 
     /// <summary>Reads previously verified complete absence under an enduring remote permanent fence.</summary>
     Task<string?> GetSourceClosureVersionAsync(string tenantId, string partyId, CancellationToken cancellationToken, string? producerAuthority = null);

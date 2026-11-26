@@ -368,13 +368,15 @@ internal sealed class PartyMemoryIngestionIntentStore(
     /// <inheritdoc/>
     public async Task<bool> RetainDiscoveredAsync(string tenantId, string partyId, string caseId, string sourceUri, string? workflowId,
         string? canonicalId, string? retryIdentityHash, bool terminalVerified, CancellationToken cancellationToken, string? producerAuthority = null,
-        bool requireTerminalEvidence = false, (string? ProtocolVersion, long? SourceRevision, string? IdentityDigest) admission = default)
+        bool requireTerminalEvidence = false, (string? ProtocolVersion, long? SourceRevision, string? IdentityDigest) admission = default,
+        bool unitPresent = false)
     {
         bool retained = false;
         _ = await ChangeAsync(tenantId, partyId, current =>
         {
             if (!current.CleanupRequested || sourceUri != PartyMemoryUrn.Build(tenantId, partyId)
-                || string.IsNullOrWhiteSpace(caseId) || (string.IsNullOrWhiteSpace(workflowId) && string.IsNullOrWhiteSpace(canonicalId)))
+                || string.IsNullOrWhiteSpace(caseId) || (string.IsNullOrWhiteSpace(workflowId) && string.IsNullOrWhiteSpace(canonicalId))
+                || (unitPresent && (workflowId is not null || string.IsNullOrWhiteSpace(producerAuthority))))
             {
                 throw new InvalidOperationException("memory-ingestion-remote-scope-mismatch");
             }
@@ -393,7 +395,8 @@ internal sealed class PartyMemoryIngestionIntentStore(
             }
 
             retained = true;
-            PartyMemoryIngestionIntent? existing = typedRetry ?? current.Intents.Concat(current.CleanupReceipts ?? []).FirstOrDefault(item =>
+            List<PartyMemoryIngestionIntent> receipts = current.CleanupReceipts ?? [];
+            PartyMemoryIngestionIntent? existing = typedRetry ?? current.Intents.Concat(unitPresent ? [] : receipts).FirstOrDefault(item =>
                 item.CaseId == caseId && item.SourceUri == sourceUri
                 && (current.Intents.Contains(item) ? item.ProducerAuthority is null || item.ProducerAuthority == producerAuthority
                     : !string.IsNullOrWhiteSpace(producerAuthority) && item.AbsenceAuthority == producerAuthority)
@@ -414,7 +417,7 @@ internal sealed class PartyMemoryIngestionIntentStore(
                 {
                     throw new InvalidOperationException("memory-ingestion-remote-identity-mismatch");
                 }
-                if ((current.CleanupReceipts ?? []).Contains(existing)) { return current; }
+                if (receipts.Contains(existing)) { return current; }
                 bool unverifiedLegacyWorkflow = existing.ProducerAuthority is null && existing.WorkflowInstanceId is not null
                     && (workflowId is null || canonicalId is null || !terminalVerified);
                 PartyMemoryIngestionIntent captured = existing with
@@ -424,6 +427,8 @@ internal sealed class PartyMemoryIngestionIntentStore(
                         ?? (workflowId is null && existing.WorkflowInstanceId is not null ? null : producerAuthority),
                     WorkflowInstanceId = existing.WorkflowInstanceId ?? workflowId,
                     MemoryUnitId = existing.MemoryUnitId ?? canonicalId,
+                    CleanupRevision = unitPresent && existing.ProducerAuthority == producerAuthority
+                        ? checked(existing.CleanupRevision + 1) : existing.CleanupRevision,
                     TerminalObservationId = terminalVerified && workflowId is not null && canonicalId is not null
                         ? null : existing.TerminalObservationId,
                     RequiresTerminalEvidence = requireTerminalEvidence || unverifiedLegacyWorkflow || (workflowId is null ? existing.RequiresTerminalEvidence
@@ -432,16 +437,49 @@ internal sealed class PartyMemoryIngestionIntentStore(
                 return current with { Intents = [.. current.Intents.Where(item => item == existing || item != unitObservation)
                     .Select(item => item == existing ? captured : item)] };
             }
-            if (current.Intents.Count + (current.CleanupReceipts?.Count ?? 0) >= Capacity)
+            string attemptId = "inventory-" + Convert.ToHexStringLower(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(
+                new { CaseId = caseId, WorkflowId = workflowId, CanonicalId = workflowId is null ? canonicalId : null, SourceUri = sourceUri, ProducerAuthority = producerAuthority })));
+            // Reopen the exact inventory slot, including any workflow alias adopted later.
+            // Separate workflow receipts normally stay historical, but an exact scoped receipt
+            // can carry the current obligation when no new slot is available.
+            bool atCapacity = current.Intents.Count + receipts.Count >= Capacity;
+            if (unitPresent)
+            {
+                PartyMemoryIngestionIntent? reopened = receipts.Find(item => item.AttemptId == attemptId && MatchesUnitReceipt(item));
+                if (reopened is null && atCapacity)
+                {
+                    reopened = receipts.Find(MatchesUnitReceipt);
+                }
+
+                if (reopened is not null)
+                {
+                    return current with
+                    {
+                        Intents = [.. current.Intents, reopened with
+                        {
+                            CleanupSettled = false,
+                            AbsenceAuthority = null,
+                            CleanupRevision = checked(reopened.CleanupRevision + 1),
+                        }],
+                        CleanupReceipts = [.. receipts.Where(item => item != reopened)],
+                    };
+                }
+            }
+
+            if (atCapacity)
             {
                 throw new InvalidOperationException("memory-ingestion-intent-capacity");
             }
-            string attemptId = "inventory-" + Convert.ToHexStringLower(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(
-                new { CaseId = caseId, WorkflowId = workflowId, CanonicalId = workflowId is null ? canonicalId : null, SourceUri = sourceUri, ProducerAuthority = producerAuthority })));
-            return current with { Intents = [.. current.Intents, new(attemptId, caseId, sourceUri, workflowId, canonicalId, current.Generation,
-                RequiresTerminalEvidence: workflowId is not null && !terminalVerified, ProducerAuthority: producerAuthority)] };
+
+            var discovered = new PartyMemoryIngestionIntent(attemptId, caseId, sourceUri, workflowId, canonicalId, current.Generation,
+                RequiresTerminalEvidence: workflowId is not null && !terminalVerified, ProducerAuthority: producerAuthority);
+            return current with { Intents = [.. current.Intents, discovered] };
         }, cancellationToken).ConfigureAwait(false);
         return retained;
+
+        bool MatchesUnitReceipt(PartyMemoryIngestionIntent receipt) => !receipt.SubmissionRejected
+            && receipt.CaseId == caseId && receipt.SourceUri == sourceUri && receipt.MemoryUnitId == canonicalId
+            && receipt.ProducerAuthority == producerAuthority && receipt.AbsenceAuthority == producerAuthority;
     }
 
     /// <inheritdoc/>

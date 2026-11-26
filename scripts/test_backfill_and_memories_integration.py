@@ -40,7 +40,14 @@ class BackfillMemoriesReportTests(unittest.TestCase):
             return runner["check_report"](report, methods, project)
 
     def write_workloads(self, directory, *, empty_operation="operation-empty"):
-        phases = ("seed", "interrupt", "rebuild", "stage", "commit", "verify")
+        snapshots_by_phase = {
+            "seed": ("survivors.json", "canonical.json"),
+            "interrupt": ("survivors.json", "canonical.json", "generation.json"),
+            "rebuild": ("survivors.json", "canonical.json", "generation.json"),
+            "stage": ("survivors.json",),
+            "commit": ("survivors.json",),
+            "verify": ("survivors.json", "generation.json"),
+        }
         assembly = self.report_for_methods({runner["WORKLOAD_METHOD"]: runner["FACT"]}, runner["BACKFILL_PROJECT"])
         root = ET.Element("assemblies")
         root.append(assembly)
@@ -53,16 +60,34 @@ class BackfillMemoriesReportTests(unittest.TestCase):
             manifest = json.dumps({"tenant": tenant, "existing": existing, "indexOperation": operation}, indent=2).encode()
             (target / "input.json").write_bytes(manifest)
             digest = hashlib.sha256(manifest).hexdigest()
-            for pid, phase in enumerate(phases, start=1):
+            snapshots = {}
+            for name in ("survivors.json", "canonical.json", "generation.json"):
+                snapshot = {"tenant": tenant, "snapshot": name}
+                if name == "generation.json":
+                    snapshot["interruptedProcess"] = 2
+                data = json.dumps(snapshot).encode()
+                (target / name).write_bytes(data)
+                snapshots[name] = hashlib.sha256(data).hexdigest()
+            for pid, (phase, observations) in enumerate(snapshots_by_phase.items(), start=1):
                 receipt = json.dumps({
                     "tenant": tenant, "operation": operation, "phase": phase, "processId": pid, "inputSha256": digest,
+                    "snapshotSha256": {name: snapshots[name] for name in observations},
                 }).encode("utf-8")
                 encoded = base64.b64encode(receipt).decode("ascii")
                 output.text = f"Synthetic diagnostic\n{runner['WORKLOAD_RECEIPT_PREFIX']}{encoded}\n"
                 ET.ElementTree(root).write(target / f"{phase}.xml")
                 (target / f"{phase}.json").write_bytes(receipt)
-            outcomes[tenant] = {"tenant": tenant, "inputSha256": digest, "phases": list(phases)}
+            outcomes[tenant] = {"tenant": tenant, "inputSha256": digest, "phases": list(snapshots_by_phase),
+                                "snapshotSha256": snapshots}
         return outcomes
+
+    def rewrite_workload_receipt(self, target, phase, content):
+        (target / f"{phase}.json").write_bytes(content)
+        report = target / f"{phase}.xml"
+        root = ET.parse(report)
+        encoded = base64.b64encode(content).decode("ascii")
+        root.find("assembly/collection/test/output").text = runner["WORKLOAD_RECEIPT_PREFIX"] + encoded
+        root.write(report)
 
     def test_every_phase_binds_the_retained_manifest_for_both_starting_states(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -128,6 +153,64 @@ class BackfillMemoriesReportTests(unittest.TestCase):
                 self.write_workloads(directory, empty_operation=operation)
                 with self.assertRaisesRegex(ValueError, "invalid backfill workload operation"):
                     runner["verify_workloads"](directory)
+
+    def test_workloads_reject_missing_or_changed_snapshots_even_with_matching_receipt_layers(self):
+        for filename in ("survivors.json", "canonical.json", "generation.json"):
+            for defect in ("missing", "changed"):
+                with self.subTest(filename=filename, defect=defect), tempfile.TemporaryDirectory() as tmp:
+                    directory = Path(tmp)
+                    self.write_workloads(directory)
+                    target = directory / "existing" / filename
+                    if defect == "missing":
+                        target.unlink()
+                        message = "missing retained workload snapshot"
+                    else:
+                        target.write_bytes((directory / "empty" / filename).read_bytes())
+                        message = "retained workload snapshot SHA-256 mismatch"
+                    with self.assertRaisesRegex(ValueError, message):
+                        runner["verify_workloads"](directory)
+
+    def test_workloads_reject_inconsistent_snapshot_observations_even_with_matching_receipt_layers(self):
+        for phase, name in (("stage", "survivors.json"), ("interrupt", "canonical.json"), ("verify", "generation.json")):
+            for defect in ("missing", "different", "duplicate"):
+                with self.subTest(phase=phase, name=name, defect=defect), tempfile.TemporaryDirectory() as tmp:
+                    directory = Path(tmp)
+                    self.write_workloads(directory)
+                    target = directory / "existing"
+                    receipt = json.loads((target / f"{phase}.json").read_text())
+                    if defect == "missing":
+                        del receipt["snapshotSha256"][name]
+                        message = "missing or unexpected .* workload snapshot observations"
+                    elif defect == "different":
+                        receipt["snapshotSha256"][name] = "0" * 64
+                        message = "inconsistent workload observations"
+                    else:
+                        message = "Duplicate workload receipt property"
+                    content = json.dumps(receipt).encode("utf-8")
+                    if defect == "duplicate":
+                        key = json.dumps(name).encode("utf-8")
+                        content = content.replace(key + b":", key + b': "duplicate", ' + key + b":", 1)
+                    self.rewrite_workload_receipt(target, phase, content)
+                    with self.assertRaisesRegex(ValueError, message):
+                        runner["verify_workloads"](directory)
+
+    def test_workloads_reject_unrelated_interruption_process_with_consistent_hashes_and_receipts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp)
+            target = directory / "existing"
+            self.write_workloads(directory)
+            generation = target / "generation.json"
+            snapshot = json.loads(generation.read_bytes())
+            snapshot["interruptedProcess"] = 999
+            content = json.dumps(snapshot).encode()
+            generation.write_bytes(content)
+            digest = hashlib.sha256(content).hexdigest()
+            for phase in ("interrupt", "rebuild", "verify"):
+                receipt = json.loads((target / f"{phase}.json").read_bytes())
+                receipt["snapshotSha256"]["generation.json"] = digest
+                self.rewrite_workload_receipt(target, phase, json.dumps(receipt).encode())
+            with self.assertRaisesRegex(ValueError, "generation snapshot process differs from interruption receipt"):
+                runner["verify_workloads"](directory)
 
     def test_misplaced_test_is_rejected_even_when_reported_counts_match(self):
         project = runner["MEMORIES_PROJECT"]

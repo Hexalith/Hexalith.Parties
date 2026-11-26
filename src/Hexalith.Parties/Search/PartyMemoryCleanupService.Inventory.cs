@@ -109,7 +109,7 @@ internal sealed partial class PartyMemoryCleanupService
                     // Even a producer deletion marker needs independent observation of scoped absence.
                     bool retained = await intentStore.RetainDiscoveredAsync(tenantId, partyId, capturedCase, sourceUri, workflow,
                         admitted ? null : canonical, retryHash, terminalVerified && !admitted, cancellationToken,
-                        producerAuthority, requireTerminalEvidence: contradictory).ConfigureAwait(false);
+                        producerAuthority, requireTerminalEvidence: contradictory, unitPresent: workflow is null && state == "Completed").ConfigureAwait(false);
                     if (!retained)
                     {
                         complete = false;

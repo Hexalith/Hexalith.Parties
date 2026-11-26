@@ -110,13 +110,10 @@ internal sealed partial class PartyMemoryCleanupService(
                     throw new InvalidOperationException("memory-source-inventory-output-mismatch");
                 }
 
+                PartyMemoryIngestionIntent retainedSibling = await RetainDirectTerminalStatusAsync(observedSibling, observed).ConfigureAwait(false);
                 if (observed == canonical)
                 {
-                    sharedSiblings.Add(await RetainDirectTerminalStatusAsync(observedSibling, observed).ConfigureAwait(false));
-                }
-                else if (observedSibling.TerminalObservationId is not null || !HasAbsenceReceipt(observed))
-                {
-                    _ = await RetainDirectTerminalStatusAsync(observedSibling, observed).ConfigureAwait(false);
+                    sharedSiblings.Add(retainedSibling);
                 }
             }
 

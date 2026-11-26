@@ -7,10 +7,12 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using Hexalith.Parties.Contracts.Models
 @using Hexalith.Parties.Contracts.ValueObjects
+@using Microsoft.Extensions.DependencyInjection
 
 @inject IConsumerProfileDataClient ProfileDataClient
 @inject IConsumerProfileEditClient ProfileEditClient
 @inject NavigationManager NavigationManager
+@inject IServiceProvider Services
 
 <PageTitle>@ConsumerPortalLabels.EditProfileTitle</PageTitle>
 
@@ -19,19 +21,22 @@
         <p class="hx-parties-profile__eyebrow"><FluentText Size="TextSize.Size200" Weight="TextWeight.Semibold">@ConsumerPortalLabels.AreaLabel</FluentText></p>
         <FluentText As="TextTag.H1" Size="TextSize.Size800" Weight="TextWeight.Semibold" id="@_titleId">@ConsumerPortalLabels.EditProfileTitle</FluentText>
         <p class="hx-parties-profile__summary">@ConsumerPortalLabels.EditProfileSummary</p>
-        @if (!string.IsNullOrWhiteSpace(_saveStatusMessage))
+        @if (StatusMessage is { } statusMessage)
         {
-            <p class="hx-parties-profile__freshness" role="status" aria-live="polite">@_saveStatusMessage</p>
+            @if (SharedLiveRegionType is { } sharedType)
+            {
+                <div class="hx-parties-profile__freshness">
+                    <DynamicComponent Type="@sharedType" Parameters="@(new Dictionary<string, object> { ["Message"] = statusMessage })" />
+                </div>
+            }
+            else
+            {
+                <p class="hx-parties-profile__freshness" role="status" aria-live="polite">@statusMessage</p>
+            }
         }
         else if (_profile is not null)
         {
             <FreshnessStatus Freshness="@_profile.Freshness" />
-        }
-        else if (_isLoading)
-        {
-            <p class="hx-parties-profile__freshness" role="status" aria-live="polite">
-                @ConsumerPortalLabels.EditProfileLoadingStatus
-            </p>
         }
     </header>
 
@@ -204,6 +209,22 @@
     private bool _pendingAlertFocus;
     private string? _formAlert;
     private string? _saveStatusMessage;
+    private string? StatusMessage => _saveStatusMessage ?? (_profile is null && _isLoading ? ConsumerPortalLabels.EditProfileLoadingStatus : null);
+
+    private Type? SharedLiveRegionType
+    {
+        get
+        {
+#if HFC_SHARED_UI
+            if (Services.GetService<IServiceProviderIsService>() is { } registrations
+                && registrations.IsService(typeof(Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler)))
+            {
+                return typeof(Hexalith.FrontComposer.Shell.Components.Feedback.FcLiveRegion);
+            }
+#endif
+            return null;
+        }
+    }
 
     private string _titleId => $"hx-parties-edit-title-{_instanceId}";
     private string _loadingId => $"hx-parties-edit-loading-{_instanceId}";

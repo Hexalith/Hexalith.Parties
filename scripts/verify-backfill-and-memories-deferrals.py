@@ -33,6 +33,14 @@ BACKFILL_RUNTIME = f"{BACKFILL_NAMESPACE}.PartyLegacyReadModelBackfillRuntimeTes
 BACKFILL_PROCESS = f"{BACKFILL_NAMESPACE}.PartyLegacyBackfillProcessRuntimeTests"
 WORKLOAD_METHOD = f"{BACKFILL_PROCESS}.ActualProviderBackfillSurvivesSeparateWorkloadProcesses"
 WORKLOAD_RECEIPT_PREFIX = "Backfill workload receipt (base64): "
+WORKLOAD_SNAPSHOTS = {
+    "seed": {"survivors.json", "canonical.json"},
+    "interrupt": {"survivors.json", "canonical.json", "generation.json"},
+    "rebuild": {"survivors.json", "canonical.json", "generation.json"},
+    "stage": {"survivors.json"},
+    "commit": {"survivors.json"},
+    "verify": {"survivors.json", "generation.json"},
+}
 
 
 def boolean_cases(parameter):
@@ -232,8 +240,14 @@ def run_lane(lane, assembly, methods, repo, env, results):
     return check_report(report, methods, assembly.stem)
 
 
+def unique_receipt_object(pairs):
+    result = dict(pairs)
+    if len(result) != len(pairs):
+        raise ValueError("Duplicate workload receipt property")
+    return result
+
+
 def verify_workloads(directory):
-    phases = ("seed", "interrupt", "rebuild", "stage", "commit", "verify")
     outcomes = {}
     for target in sorted(directory.iterdir()):
         manifest_bytes = (target / "input.json").read_bytes()
@@ -246,9 +260,11 @@ def verify_workloads(directory):
         if not isinstance(operation, str) or not operation.strip():
             raise ValueError(f"{target}: invalid backfill workload operation")
         pids = set()
-        for phase in phases:
+        interrupted_pid = None
+        snapshots = {}
+        for phase, expected_snapshots in WORKLOAD_SNAPSHOTS.items():
             receipt_bytes = (target / f"{phase}.json").read_bytes()
-            receipt = json.loads(receipt_bytes)
+            receipt = json.loads(receipt_bytes, object_pairs_hook=unique_receipt_object)
             if (receipt["tenant"], receipt["operation"], receipt["phase"]) != (target.name, operation, phase):
                 raise ValueError(f"{target}: mismatched {phase} workload receipt")
             if receipt.get("inputSha256") != input_sha256:
@@ -256,11 +272,32 @@ def verify_workloads(directory):
             pid = receipt["processId"]
             if type(pid) is not int or pid <= 0:
                 raise ValueError(f"{target}: invalid {phase} workload process ID")
+            if phase == "interrupt":
+                interrupted_pid = pid
             check_report(target / f"{phase}.xml", {WORKLOAD_METHOD: FACT}, BACKFILL_PROJECT, expected_receipt=receipt_bytes)
+            observations = receipt.get("snapshotSha256")
+            if not isinstance(observations, dict) or observations.keys() != expected_snapshots:
+                raise ValueError(f"{target}: missing or unexpected {phase} workload snapshot observations")
+            for name, digest in observations.items():
+                if snapshots.setdefault(name, digest) != digest:
+                    raise ValueError(f"{target}: inconsistent workload observations for {name}")
             pids.add(pid)
-        if len(pids) != len(phases):
+        if len(pids) != len(WORKLOAD_SNAPSHOTS):
             raise ValueError(f"{target}: expected a distinct process for each phase")
-        outcomes[existing] = {"tenant": target.name, "inputSha256": input_sha256, "phases": list(phases)}
+        for name, digest in snapshots.items():
+            try:
+                retained = (target / name).read_bytes()
+            except FileNotFoundError as error:
+                raise ValueError(f"{target}: missing retained workload snapshot {name}") from error
+            if hashlib.sha256(retained).hexdigest() != digest:
+                raise ValueError(f"{target}: retained workload snapshot SHA-256 mismatch for {name}")
+            if name == "generation.json":
+                generation = json.loads(retained, object_pairs_hook=unique_receipt_object)
+                observed_pid = generation.get("interruptedProcess") if isinstance(generation, dict) else None
+                if type(observed_pid) is not int or observed_pid != interrupted_pid:
+                    raise ValueError(f"{target}: generation snapshot process differs from interruption receipt")
+        outcomes[existing] = {"tenant": target.name, "inputSha256": input_sha256,
+                              "phases": list(WORKLOAD_SNAPSHOTS), "snapshotSha256": snapshots}
     if outcomes.keys() != {False, True}:
         raise ValueError(f"{directory}: expected workload receipts for the empty and existing targets")
     return {"empty": outcomes[False], "existing": outcomes[True]}

@@ -114,6 +114,97 @@ public sealed class PartySdkQueryHandlerTests
     }
 
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CompleteFirstBucketPageRetiresFallbackOnlyWhenVerificationSucceedsAsync(bool verificationFails)
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        const string tenant = "tenant-a";
+        const string party = "party-1";
+        const string generation = "generation";
+        string key = PartySdkReadModelAddresses.Processing(tenant, party);
+        var retained = new ProcessingActivityRecord
+        {
+            TenantId = tenant, PartyId = party, SequenceNumber = 31, EventType = "PartyUpdated",
+            Timestamp = s_now, Summary = "Retained fact.",
+        };
+        ProcessingActivityRecord[] published =
+        [
+            retained with { Summary = "First bucket fact." },
+            retained with { SequenceNumber = 32, Summary = "Second bucket fact." },
+        ];
+        var inline = new PartyProcessingSdkReadModel { Records = [retained] };
+        var header = new PartyProcessingSdkReadModel
+        {
+            BucketGeneration = generation, FirstBucket = 0, LastBucket = 1, RecordCount = published.Length,
+            FirstRecordSequenceNumber = 31, LastRecordSequenceNumber = 32, LastSequenceNumber = 32,
+        };
+        var store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", PartySdkReadModelAddresses.Detail(tenant, party), token)
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel { Detail = Detail(party) }, "detail"));
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", key, token)
+            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(inline, "inline"));
+        foreach (ProcessingActivityRecord record in published)
+        {
+            string bucketKey = PartySdkReadModelAddresses.ProcessingBucket(tenant, party, generation, PartyProcessingBucket.Number(record.SequenceNumber));
+            store.GetAsync<PartyProcessingBucket>("statestore", bucketKey, token)
+                .Returns(new ReadModelEntry<PartyProcessingBucket>(new PartyProcessingBucket { Records = [record] }, "bucket"));
+        }
+
+        var cache = new PartySdkLastKnownReadModelCache();
+        var service = CreateService(store, lastKnownCache: cache);
+        QueryEnvelope query = CreateDetailEnvelope("GetProcessingRecords");
+        (await service.GetProcessingRecordsAsync(query, token)).Success.ShouldBeTrue();
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", key, token)
+            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(header, "bucketed"));
+
+        QueryResult partial = await service.GetProcessingRecordsAsync(query with { Paging = new QueryPagingOptions(PageSize: 1) }, token);
+        ReadRecords(partial).ShouldBe([published[0]]);
+        string cursor = partial.Metadata!.Paging!.NextCursor.ShouldNotBeNull();
+        cache.TryGetProcessing(tenant, party, out var fallback).ShouldBeTrue();
+        fallback.ShouldBe(inline);
+
+        QueryResult continued = await service.GetProcessingRecordsAsync(
+            query with { Paging = new QueryPagingOptions(PageSize: 1, Cursor: cursor) }, token);
+        ReadRecords(continued).ShouldBe([published[1]]);
+        continued.Metadata!.Paging!.HasMore.ShouldBe(false);
+        cache.TryGetProcessing(tenant, party, out fallback).ShouldBeTrue();
+        fallback.ShouldBe(inline);
+
+        if (verificationFails)
+        {
+            store.GetAsync<PartyProcessingSdkReadModel>("statestore", key, token).Returns(
+                _ => Task.FromResult(new ReadModelEntry<PartyProcessingSdkReadModel>(header, "bucketed")),
+                _ => Task.FromException<ReadModelEntry<PartyProcessingSdkReadModel>>(new IOException("verification unavailable")));
+        }
+
+        QueryResult complete = await service.GetProcessingRecordsAsync(query with { Paging = new QueryPagingOptions(PageSize: 2) }, token);
+        complete.Success.ShouldBe(!verificationFails);
+        if (verificationFails)
+        {
+            complete.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.QueryExecutionFailure);
+        }
+        else
+        {
+            ReadRecords(complete).ShouldBe(published);
+            complete.Metadata!.Paging!.HasMore.ShouldBe(false);
+        }
+
+        cache.TryGetProcessing(tenant, party, out fallback).ShouldBe(verificationFails);
+        fallback.ShouldBe(verificationFails ? inline : null);
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", key, token).ThrowsAsync(new IOException("store unavailable"));
+        QueryResult degraded = await service.GetProcessingRecordsAsync(query, token);
+        ReadRecords(degraded).ShouldBe(verificationFails ? [retained] : []);
+        degraded.Metadata!.IsDegraded.ShouldBe(true);
+
+        static ProcessingActivityRecord[] ReadRecords(QueryResult result)
+        {
+            result.Success.ShouldBeTrue();
+            return result.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!;
+        }
+    }
+
+    [Theory]
     [InlineData(false, false)]
     [InlineData(true, false)]
     [InlineData(false, true)]

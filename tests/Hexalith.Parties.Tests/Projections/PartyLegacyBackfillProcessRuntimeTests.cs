@@ -25,6 +25,9 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
     private const string PhaseVariable = "PARTIES_BACKFILL_WORKLOAD_PHASE";
     private const string HashVariable = "PARTIES_BACKFILL_WORKLOAD_HASH";
     private const string ReceiptPrefix = "Backfill workload receipt (base64): ";
+    private const string CanonicalSnapshot = "canonical.json";
+    private const string GenerationSnapshot = "generation.json";
+    private const string SurvivorSnapshot = "survivors.json";
     private static readonly JsonSerializerOptions s_json = new(JsonSerializerDefaults.Web);
 
     private static string WorkloadMethod => typeof(PartyLegacyBackfillProcessRuntimeTests).FullName + "." + nameof(ActualProviderBackfillSurvivesSeparateWorkloadProcesses);
@@ -65,6 +68,8 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
             {
                 await File.WriteAllBytesAsync(path, immutable, token).ConfigureAwait(true);
                 HashSet<int> workloads = [];
+                int interruptedProcess = 0;
+                Dictionary<string, string> retainedDigests = new(StringComparer.Ordinal);
                 foreach (string phase in new[] { "seed", "interrupt", "rebuild", "stage", "commit", "verify" })
                 {
                     var start = new ProcessStartInfo("dotnet");
@@ -84,8 +89,40 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
                     receipt.RootElement.GetProperty("operation").GetString().ShouldBe(manifest.IndexOperation);
                     receipt.RootElement.GetProperty("phase").GetString().ShouldBe(phase);
                     receipt.RootElement.GetProperty("inputSha256").GetString().ShouldBe(hash);
-                    workloads.Add(receipt.RootElement.GetProperty("processId").GetInt32()).ShouldBeTrue();
+                    int processId = receipt.RootElement.GetProperty("processId").GetInt32();
+                    workloads.Add(processId).ShouldBeTrue();
+                    if (phase == "interrupt")
+                    {
+                        interruptedProcess = processId;
+                    }
+                    JsonProperty[] observations = receipt.RootElement.GetProperty("snapshotSha256").EnumerateObject().ToArray();
+                    string[] expectedSnapshots = phase switch
+                    {
+                        "seed" => [SurvivorSnapshot, CanonicalSnapshot],
+                        "interrupt" or "rebuild" => [SurvivorSnapshot, CanonicalSnapshot, GenerationSnapshot],
+                        "verify" => [SurvivorSnapshot, GenerationSnapshot],
+                        _ => [SurvivorSnapshot],
+                    };
+                    observations.Select(item => item.Name).ShouldBe(expectedSnapshots, ignoreOrder: true);
+                    foreach (JsonProperty observation in observations)
+                    {
+                        string digest = observation.Value.GetString().ShouldNotBeNull();
+                        if (!retainedDigests.TryAdd(observation.Name, digest))
+                        {
+                            digest.ShouldBe(retainedDigests[observation.Name], $"Snapshot changed between workload observations: {observation.Name}");
+                        }
+                    }
                     (await File.ReadAllBytesAsync(path, token).ConfigureAwait(true)).ShouldBe(immutable);
+                }
+                foreach ((string name, string digest) in retainedDigests)
+                {
+                    byte[] snapshot = await File.ReadAllBytesAsync(Path.Combine(directory, name), token).ConfigureAwait(true);
+                    SnapshotDigest(snapshot).ShouldBe(digest, $"Retained snapshot differs from workload observations: {name}");
+                    if (name == GenerationSnapshot)
+                    {
+                        using JsonDocument generation = JsonDocument.Parse(snapshot);
+                        generation.RootElement.GetProperty("interruptedProcess").GetInt32().ShouldBe(interruptedProcess);
+                    }
                 }
                 workloads.Count.ShouldBe(6);
                 workloads.ShouldNotContain(Environment.ProcessId);
@@ -237,17 +274,21 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
     {
         string directory = Path.GetDirectoryName(path)!;
         var fixture = new PartyLegacyBackfillRuntimeFixture(configuration, manifest.Tenant, manifest.Histories);
-        string survivorsPath = Path.Combine(directory, "survivors.json");
+        Dictionary<string, string> snapshotSha256 = new(StringComparer.Ordinal);
+        string survivorsPath = Path.Combine(directory, SurvivorSnapshot);
+        string canonicalPath = Path.Combine(directory, CanonicalSnapshot);
         string indexKey = PartySdkReadModelAddresses.Index(manifest.Tenant);
         ProjectionRequest large = manifest.Histories.Single(history => history.AggregateId == "party-large");
         string detailKey = PartySdkReadModelAddresses.Detail(manifest.Tenant, large.AggregateId);
         string processingKey = PartySdkReadModelAddresses.Processing(manifest.Tenant, large.AggregateId);
-        string recoveryPath = Path.Combine(directory, "generation.json");
+        string recoveryPath = Path.Combine(directory, GenerationSnapshot);
+        byte[]? seededSurvivors = null;
         if (phase == "seed")
         {
             await fixture.SeedAsync(token).ConfigureAwait(true);
             fixture.Survivors.Count.ShouldBe(9);
-            await File.WriteAllBytesAsync(survivorsPath, JsonSerializer.SerializeToUtf8Bytes(fixture.Survivors, s_json), token).ConfigureAwait(true);
+            seededSurvivors = JsonSerializer.SerializeToUtf8Bytes(fixture.Survivors, s_json);
+            await File.WriteAllBytesAsync(survivorsPath, seededSurvivors, token).ConfigureAwait(true);
             if (manifest.Existing)
             {
                 foreach (var history in manifest.Histories)
@@ -259,11 +300,13 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
             }
             await fixture.SaveAsync(detailKey, PartyDetailSdkProjectionHandler.Fold(large with { Events = large.Events.Take(1).ToArray() }, null), token).ConfigureAwait(true);
             await fixture.SaveAsync(processingKey, PartyProcessingActivityFold.Fold(large, null), token).ConfigureAwait(true);
-            await File.WriteAllBytesAsync(Path.Combine(directory, "canonical.json"), JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, byte[]>
+            byte[] canonical = JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, byte[]>
             {
                 [detailKey] = await fixture.RawAsync(detailKey, token).ConfigureAwait(true),
                 [processingKey] = await fixture.RawAsync(processingKey, token).ConfigureAwait(true),
-            }, s_json), token).ConfigureAwait(true);
+            }, s_json);
+            await File.WriteAllBytesAsync(canonicalPath, canonical, token).ConfigureAwait(true);
+            snapshotSha256.Add(CanonicalSnapshot, SnapshotDigest(canonical));
         }
         else if (phase == "interrupt")
         {
@@ -291,13 +334,18 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
             (await fixture.ReadAsync<PartyProcessingBucket>(firstKey, token).ConfigureAwait(true)).Value.ShouldNotBeNull();
             (await fixture.ReadAsync<PartyProcessingBucket>(PartySdkReadModelAddresses.ProcessingBucket(manifest.Tenant,
                 large.AggregateId, generation, PartyProcessingBucket.Number(4097)), token).ConfigureAwait(true)).Value.ShouldBeNull();
-            var before = JsonSerializer.Deserialize<Dictionary<string, byte[]>>(await File.ReadAllBytesAsync(Path.Combine(directory, "canonical.json"), token).ConfigureAwait(true), s_json)!;
-            foreach (var canonical in before) (await fixture.RawAsync(canonical.Key, token).ConfigureAwait(true)).ShouldBe(canonical.Value);
+            byte[] canonical = await File.ReadAllBytesAsync(canonicalPath, token).ConfigureAwait(true);
+            var before = JsonSerializer.Deserialize<Dictionary<string, byte[]>>(canonical, s_json).ShouldNotBeNull();
+            before.Keys.ShouldBe([detailKey, processingKey], ignoreOrder: true);
+            foreach (var entry in before) (await fixture.RawAsync(entry.Key, token).ConfigureAwait(true)).ShouldBe(entry.Value);
+            snapshotSha256.Add(CanonicalSnapshot, SnapshotDigest(canonical));
             var previous = (await fixture.ReadAsync<PartyDetailSdkReadModel>(detailKey, token).ConfigureAwait(true)).Value.ShouldNotBeNull();
             previous.LastSequenceNumber.ShouldBe(1);
             previous.Detail.ShouldNotBeNull().DisplayName.ShouldNotBe("Synthetic Updated");
-            await File.WriteAllBytesAsync(recoveryPath, JsonSerializer.SerializeToUtf8Bytes(new
-            { generation, firstKey, first, prior, operation = manifest.LargeOperation, batches = batches.Select(batch => batch.Scope.BatchId).ToArray(), interruptedProcess = Environment.ProcessId }, s_json), token).ConfigureAwait(true);
+            byte[] interruptedGeneration = JsonSerializer.SerializeToUtf8Bytes(new
+            { generation, firstKey, first, prior, operation = manifest.LargeOperation, batches = batches.Select(batch => batch.Scope.BatchId).ToArray(), interruptedProcess = Environment.ProcessId }, s_json);
+            await File.WriteAllBytesAsync(recoveryPath, interruptedGeneration, token).ConfigureAwait(true);
+            snapshotSha256.Add(GenerationSnapshot, SnapshotDigest(interruptedGeneration));
         }
         else if (phase == "rebuild")
         {
@@ -309,21 +357,17 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
                     .Outcomes.ShouldHaveSingleItem().Status.ShouldBe(ProjectionDispatchStatus.Completed);
                 if (history == large)
                 {
-                    using JsonDocument recovery = JsonDocument.Parse(await File.ReadAllBytesAsync(recoveryPath, token).ConfigureAwait(true));
-                    JsonElement retained = recovery.RootElement;
-                    retained.GetProperty("operation").GetString().ShouldBe(manifest.LargeOperation);
-                    retained.GetProperty("interruptedProcess").GetInt32().ShouldNotBe(Environment.ProcessId);
+                    JsonElement retained = await ObserveGenerationAsync().ConfigureAwait(true);
                     batches.Where(IsGeneration).Select(batch => batch.Scope.BatchId).Take(2)
                         .ShouldBe(retained.GetProperty("batches").EnumerateArray().Take(2).Select(item => item.GetString()));
                     batches.Where(IsGeneration).ShouldAllBe(batch => batch.Operations.Count <= 32);
                     batches.Last().Operations.Select(operation => operation.Key).Order(StringComparer.Ordinal).ShouldBe(new[] { detailKey, processingKey }.Order(StringComparer.Ordinal));
-                    (await fixture.RawAsync(retained.GetProperty("firstKey").GetString()!, token).ConfigureAwait(true)).ShouldBe(retained.GetProperty("first").GetBytesFromBase64());
-                    foreach (JsonProperty bucket in retained.GetProperty("prior").EnumerateObject())
-                        (await fixture.RawAsync(bucket.Name, token).ConfigureAwait(true)).ShouldBe(bucket.Value.GetBytesFromBase64());
                     (await fixture.ReadAsync<PartyProcessingSdkReadModel>(processingKey, token).ConfigureAwait(true)).Value.ShouldNotBeNull()
                         .BucketGeneration.ShouldBe(retained.GetProperty("generation").GetString());
-                    var before = JsonSerializer.Deserialize<Dictionary<string, byte[]>>(await File.ReadAllBytesAsync(Path.Combine(directory, "canonical.json"), token).ConfigureAwait(true), s_json)!;
+                    byte[] canonical = await File.ReadAllBytesAsync(canonicalPath, token).ConfigureAwait(true);
+                    var before = JsonSerializer.Deserialize<Dictionary<string, byte[]>>(canonical, s_json).ShouldNotBeNull();
                     (await fixture.RawAsync(detailKey, token).ConfigureAwait(true)).ShouldNotBe(before[detailKey]);
+                    snapshotSha256.Add(CanonicalSnapshot, SnapshotDigest(canonical));
                     var completedDetail = (await fixture.ReadAsync<PartyDetailSdkReadModel>(detailKey, token).ConfigureAwait(true)).Value.ShouldNotBeNull();
                     JsonSerializer.Serialize(completedDetail, PartiesJsonOptions.Default)
                         .ShouldBe(JsonSerializer.Serialize(PartyDetailSdkProjectionHandler.Fold(large, null), PartiesJsonOptions.Default));
@@ -366,8 +410,8 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
                     {
                         processing.RecordCount.ShouldBe(4097);
                         processing.Records.ShouldBeEmpty();
-                        using JsonDocument recovery = JsonDocument.Parse(await File.ReadAllBytesAsync(recoveryPath, token).ConfigureAwait(true));
-                        string generation = recovery.RootElement.GetProperty("generation").GetString()!;
+                        JsonElement retained = await ObserveGenerationAsync().ConfigureAwait(true);
+                        string generation = retained.GetProperty("generation").GetString()!;
                         processing.BucketGeneration.ShouldBe(generation);
                         var records = new List<ProcessingActivityRecord>();
                         for (long number = 0; number <= PartyProcessingBucket.Number(4097); number++)
@@ -393,15 +437,43 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
             index.ErasureSequenceNumbers["party-erased"].ShouldBe(2);
         }
         else throw new InvalidOperationException("Unknown backfill workload phase.");
-        var survivors = JsonSerializer.Deserialize<Dictionary<string, byte[]>>(await File.ReadAllBytesAsync(survivorsPath, token).ConfigureAwait(true), s_json).ShouldNotBeNull();
+        byte[] survivorBytes = await File.ReadAllBytesAsync(survivorsPath, token).ConfigureAwait(true);
+        if (seededSurvivors is not null)
+        {
+            survivorBytes.ShouldBe(seededSurvivors);
+        }
+
+        var survivors = JsonSerializer.Deserialize<Dictionary<string, byte[]>>(survivorBytes, s_json).ShouldNotBeNull();
         survivors.Count.ShouldBe(9);
         foreach (var survivor in survivors) (await fixture.RawAsync(survivor.Key, token).ConfigureAwait(true)).ShouldBe(survivor.Value);
+        snapshotSha256.Add(SurvivorSnapshot, SnapshotDigest(survivorBytes));
         byte[] receipt = JsonSerializer.SerializeToUtf8Bytes(new
-        { tenant = manifest.Tenant, operation = manifest.IndexOperation, phase, inputSha256, processId = Environment.ProcessId }, s_json);
+        { tenant = manifest.Tenant, operation = manifest.IndexOperation, phase, inputSha256, processId = Environment.ProcessId, snapshotSha256 }, s_json);
         await File.WriteAllBytesAsync(Path.Combine(directory, phase + ".json"), receipt, token).ConfigureAwait(true);
         // Base64 preserves the exact JSON bytes through xUnit's XML text escaping.
         TestContext.Current.TestOutputHelper.ShouldNotBeNull().WriteLine(ReceiptPrefix + Convert.ToBase64String(receipt));
+
+        async Task<JsonElement> ObserveGenerationAsync()
+        {
+            byte[] snapshot = await File.ReadAllBytesAsync(recoveryPath, token).ConfigureAwait(true);
+            JsonElement retained = JsonSerializer.Deserialize<JsonElement>(snapshot, s_json);
+            retained.GetProperty("operation").GetString().ShouldBe(manifest.LargeOperation);
+            retained.GetProperty("interruptedProcess").GetInt32().ShouldNotBe(Environment.ProcessId);
+            var prior = retained.GetProperty("prior");
+            prior.EnumerateObject().Count().ShouldBe(64);
+            prior.GetProperty(retained.GetProperty("firstKey").GetString().ShouldNotBeNull()).GetBytesFromBase64()
+                .ShouldBe(retained.GetProperty("first").GetBytesFromBase64());
+            foreach (JsonProperty bucket in prior.EnumerateObject())
+            {
+                (await fixture.RawAsync(bucket.Name, token).ConfigureAwait(true)).ShouldBe(bucket.Value.GetBytesFromBase64());
+            }
+
+            snapshotSha256.Add(GenerationSnapshot, SnapshotDigest(snapshot));
+            return retained;
+        }
     }
+
+    private static string SnapshotDigest(byte[] snapshot) => Convert.ToHexStringLower(SHA256.HashData(snapshot));
 
     private static bool IsGeneration(ReadModelBatch batch) => batch.Scope.ProjectionType.EndsWith(".generation", StringComparison.Ordinal);
 }

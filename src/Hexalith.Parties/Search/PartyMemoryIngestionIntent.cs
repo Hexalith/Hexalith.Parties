@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Hexalith.Parties.Search;
 
 /// <summary>Content-free durable obligation created before an ingestion can be submitted.</summary>
@@ -17,6 +19,7 @@ namespace Hexalith.Parties.Search;
 /// <param name="RefreshIdentityDigest">Original admitted body digest, independent of later delivery context and ignored collections.</param>
 /// <param name="SuccessorAttemptId">Durably linked retry after a definitively compensated source publication conflict.</param>
 /// <param name="TerminalObservationId">Ownership of a cleanup observation for a typed producer without a known output.</param>
+/// <param name="CleanupRevision">Distinguishes fresh unit observations from earlier cleanup evidence for the same obligation.</param>
 internal sealed record PartyMemoryIngestionIntent(
     string AttemptId,
     string CaseId,
@@ -33,4 +36,5 @@ internal sealed record PartyMemoryIngestionIntent(
     string? RefreshProtocolVersion = null,
     long? SourceRevisionNumber = null,
     string? RefreshIdentityDigest = null,
-    string? TerminalObservationId = null);
+    string? TerminalObservationId = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] long CleanupRevision = 0);

@@ -66,15 +66,19 @@ public sealed partial class PartySdkQueryService
         }
         await VerifyProcessingRevisionAsync(query.TenantId, party, model, etag, cacheGeneration, token).ConfigureAwait(false);
         token.ThrowIfCancellationRequested();
-        bool current = model.BucketGeneration is null
-            ? lastKnownCache.AcceptProcessingRead(query.TenantId, party, cacheGeneration, model, etag)
-            : lastKnownCache.IsProcessingReadCurrent(query.TenantId, party, cacheGeneration);
+        bool more = records.Count > size;
+        bool coversGeneration = !more && string.IsNullOrWhiteSpace(query.Paging.Cursor) && records.Count == model.RecordCount;
+        bool current = model.BucketGeneration switch
+        {
+            null => lastKnownCache.AcceptProcessingRead(query.TenantId, party, cacheGeneration, model, etag),
+            _ when coversGeneration => lastKnownCache.RetireEarlierProcessingFallback(query.TenantId, party, cacheGeneration),
+            _ => lastKnownCache.IsProcessingReadCurrent(query.TenantId, party, cacheGeneration),
+        };
         if (!current)
         {
             return QueryResult.Failure(PartySdkQueryFailureReason.ReadModelUnavailable);
         }
 
-        bool more = records.Count > size;
         var items = records.Take(size).ToArray();
         string? next = more ? cursorCodec.Encode(query.QueryType, CompactCursorScope(scope), items[^1].SequenceNumber.ToString(CultureInfo.InvariantCulture)) : null;
         return Success(items, PartyDetailQueryTypes.ProjectionType, model, etag, timeProvider.GetUtcNow(), degraded,

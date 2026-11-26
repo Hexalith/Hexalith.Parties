@@ -383,6 +383,8 @@ recovery_boundaries_2026_11_23: Inline history and export cache a revision only 
 
 recovery_followthrough_2026_11_23: A missing bucket or unavailable revision verification leaves the last verified inline history available for degraded history and portability export. Complete bucket validation with a current revision, or an authoritative missing canonical model, retires the older fallback. A later registered verified inline observation prevents an earlier overlapping read from replacing it. The erasure fence still invalidates pending reads and cached values. Deployed older-writer drain, historical reconciliation, migration approval and rollback qualification remain open. See `spec-five-deferred-recovery-followthrough.md`.
 
+recovery_evidence_2026_11_26: EventStore 5.4.0 package checks verify a revision-confirmed first page covering the whole generation retires older inline fallback. A partial first page, the final continuation and unavailable revision readback retain it. Ordered history, compatibility export and the erasure cache fence remain covered. Deployed older-writer drain, historical private-material reconciliation, migration approval and rollback qualification remain open. See `spec-dw-50-58-82-100-168-recovery-evidence.md`.
+
 ### DW-51: Resolve projection-handler performance and validation-coupling debt
 
 status: done 2026-10-21
@@ -475,6 +477,8 @@ recovery_evidence_followup_2026_11_23: Each passing xUnit workload result carrie
 recovery_integrity_2026_11_23: The maintained backfill runner now requires all five workload report integrity cases. Omission of any one case prevents qualification. See `spec-five-deferred-recovery-integrity-checks.md`.
 
 recovery_boundaries_2026_11_23: Disposable Redis/Dapr checks cover a competing canonical index erasure fence after successful staging from absent and existing index states. Commit and a fresh commit retry report a delivery identity conflict and preserve the competing bytes, ETag and unrelated keys. Deployed provider and workload qualification, production capture and key completeness, writer drain, authorization, cutover and rollback acceptance remain open. See `spec-five-deferred-recovery-boundaries.md`.
+
+recovery_evidence_2026_11_26: For empty and existing canonical starting states, the owned EventStore 5.4.0 rehearsal passed 18 cases with 12 distinct workload processes on Redis 7.4.7 and Dapr 1.19.1. Phase receipts bind the immutable history and retained survivor, canonical and early-generation bytes. The Python verifier checks independent phase observations against the retained snapshots, binds the generation to the interruption receipt process, and refuses missing, changed or conflicting evidence. Owned runtime cleanup succeeded. Deployed provider and workload qualification, aggregate guarded staged resume, production history and key completeness, writer drain, authorization, cutover and rollback acceptance remain open. See `spec-dw-50-58-82-100-168-recovery-evidence.md`.
 
 ### DW-59: Preserve mappings when unit ID and source URI match different rows
 
@@ -695,6 +699,8 @@ recovery_integrity_2026_11_23: An unacknowledged legacy reservation retains poss
 
 recovery_boundaries_2026_11_23: Cleanup requires an exact typed refresh protocol, source revision and identity digest before binding an unacknowledged retry. Incomplete coverage, missing evidence, conflicting claims and canceled pagination retain the affected case and allow a later exact observation. Older typed records with a unit ID still require workflow admission. Historical inventory reconciliation, deployed writer exclusion, production configuration and owner acceptance remain open. See `spec-five-deferred-recovery-boundaries.md`.
 
+recovery_evidence_2026_11_26: With the Memories 4.1.0 REST client, a current completed unit-only inventory row creates or reopens a producer-scoped obligation when mappings are empty. A previous cleanup snapshot cannot settle a newly observed or reopened obligation. Reopening preserves an adopted workflow alias and can reuse its exact scoped receipt at capacity. Scoped absence settles the current obligation, preserving unrelated remote units. Historical owner reconciliation, production configuration, writer exclusion, deployed qualification and owner acceptance remain open. See `spec-dw-50-58-82-100-168-recovery-evidence.md`.
+
 ### DW-83: Persist recovery when mapping and compensating deletion both fail
 
 status: done 2026-10-23
@@ -843,6 +849,8 @@ recovery_evidence_followup_2026_11_23: An inconclusive first profile readback sc
 recovery_integrity_2026_11_23: A stale same-profile acceptance payload preserves submitted editable details and the read-only fields returned by the acceptance response. Erasure and replacement retain precedence. See `spec-five-deferred-recovery-integrity-checks.md`.
 
 recovery_followthrough_2026_11_23: The form reopens on acceptance and an exceptional first readback gets the same bounded retry as an inconclusive response. An unchanged repeat submit cannot interrupt the accepted readback or duplicate the update. A current match confirms the single save while preserving a newer draft. Disposal cancels observation. Production composition and named owner acceptance remain open. See `spec-five-deferred-recovery-followthrough.md`.
+
+recovery_evidence_2026_11_26: The FrontComposer 6.0.1 package tests exercise the actual shared live region and the unregistered markup for loading, saving, accepted and confirmed saves. Each renders one polite status. A download-only registration uses the local status. The shared Chromium profile route passed. Production composition and named owner acceptance remain open. See `spec-dw-50-58-82-100-168-recovery-evidence.md`.
 
 ### DW-101: Consolidate Admin and Consumer exports onto the approved FrontComposer browser-download service after G4-D delivery
 
@@ -1400,6 +1408,8 @@ recovery_integrity_2026_11_23: Direct cleanup retains the selected alias while a
 recovery_boundaries_2026_11_23: Direct cleanup requires fresh scoped absence when an active terminal producer shares the unit, whether selected by its workflow or by a historical receipt. Failed DELETE and delayed absence retain the pending obligations for retry. Qualification of concurrent inventory imports and newly observed legacy aliases remains open. Production workload, key and trust custody, historical reconciliation, writer drain, adoption, deployed physical erasure and owner acceptance remain open. See `spec-five-deferred-recovery-boundaries.md`.
 
 recovery_followthrough_2026_11_23: Direct cleanup persists exact terminal status before attempting deletion. A durable observation marker holds same-case candidates after a terminal-evidence write failure and later unavailable status, in both direct and bulk paths. Shared units and mappings remain until exact inventory evidence and independent scoped absence are available. Imports persisted before the deletion decision prevent the stale request. Imports during DELETE or receipt-based completion prevent stale settlement. Separately verified newer typed revisions can still progress when an ordinary older status is unavailable. Pending status alone supplies no authority for unrelated units. Production workload, key and trust custody, historical reconciliation, writer drain, adoption, deployed physical erasure and owner acceptance remain open. See `spec-five-deferred-recovery-followthrough.md`.
+
+recovery_evidence_2026_11_26: With the Memories 4.1.0 REST client, direct cleanup durably binds an independently terminal sibling to its different unit even when that unit has an old absence receipt. A fresh client retries from the binding after workflow status expires, retains the obligation while the unit is present and settles it after new scoped absence. Production workload, key and trust custody, historical reconciliation, writer drain, adoption, deployed physical erasure and owner acceptance remain open. See `spec-dw-50-58-82-100-168-recovery-evidence.md`.
 
 ### DW-169: D7 — Use concurrency-aware removal when cleaning a party memory-unit mapping inventory.
 
