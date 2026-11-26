@@ -44,7 +44,7 @@ dotnet tool restore
 dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json
 ```
 
-The command waits for seven servers: `parties`, `eventstore`, `tenants`,
+The local tool manifest pins module tool **6.8.5**. The command waits for seven servers: `parties`, `eventstore`, `tenants`,
 `tenants-api`, `memories`, `memories-access-telemetry-clock`, and `memories-access-telemetry`.
 It uses only mapped direct projects and Debug assets. Missing selected source fails
 with a diagnostic; sibling checkouts and packages are not fallback sources.
