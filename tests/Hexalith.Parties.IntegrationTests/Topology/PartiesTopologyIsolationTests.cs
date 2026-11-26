@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Net;
+using System.Net.Sockets;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
 using System.Security.Claims;
@@ -29,8 +30,8 @@ public sealed class PartiesTopologyIsolationTests
     [Fact]
     public void SessionConfiguration_SeparatesEveryOwnedIdentityPathAndLoopbackListener()
     {
-        PartiesTopologySession first = PartiesTopologySession.Create(isolatedIdentities: true);
-        PartiesTopologySession second = PartiesTopologySession.Create(isolatedIdentities: true);
+        using PartiesTopologySession first = PartiesTopologySession.Create(isolatedIdentities: true);
+        using PartiesTopologySession second = PartiesTopologySession.Create(isolatedIdentities: true);
         first.Id.ShouldNotBe(second.Id);
         first.Namespace.ShouldNotBe(second.Namespace);
         first.CertificateDirectory.ShouldNotBe(second.CertificateDirectory);
@@ -47,7 +48,7 @@ public sealed class PartiesTopologyIsolationTests
             .Intersect(secondEnvironment.Where(pair => pair.Key.EndsWith("PORT", StringComparison.Ordinal)).Select(pair => pair.Value))
             .ShouldBeEmpty();
         // The production ACL profile retains its original literal identities and namespace.
-        PartiesTopologySession production = PartiesTopologySession.Create();
+        using PartiesTopologySession production = PartiesTopologySession.Create();
         production.AppId("parties").ShouldBe("parties");
         production.Namespace.ShouldBe("default");
     }
@@ -59,7 +60,7 @@ public sealed class PartiesTopologyIsolationTests
         int[] ephemeral = File.ReadAllText("/proc/sys/net/ipv4/ip_local_port_range")
             .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
             .Select(value => int.Parse(value, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
-        PartiesTopologySession session = PartiesTopologySession.Create(isolatedIdentities: true);
+        using PartiesTopologySession session = PartiesTopologySession.Create(isolatedIdentities: true);
         var bootstrap = new Dictionary<string, string?>();
         session.ConfigureBootstrapEnvironment(bootstrap);
         int[] ports = bootstrap.Where(pair => pair.Key.EndsWith("PORT", StringComparison.Ordinal))
@@ -70,6 +71,27 @@ public sealed class PartiesTopologyIsolationTests
         ports.Distinct().Count().ShouldBe(16);
         ports.Where(port => port >= ephemeral[0] && port <= ephemeral[1]).ShouldBeEmpty(
             "Released listener reservations must not be claimed by outbound client connections.");
+    }
+
+    [Fact]
+    public void SessionConfiguration_HoldsLoopbackListenersUntilReleasedToTheOwningControlPlane()
+    {
+        using PartiesTopologySession first = PartiesTopologySession.Create(isolatedIdentities: true);
+        using PartiesTopologySession second = PartiesTopologySession.Create(isolatedIdentities: true);
+        int sentryHealth = second.SentryHealthPort;
+        int eventStoreHttp = second.EventStoreHttpPort;
+        TryBindDualStack(sentryHealth).ShouldBeFalse("A peer Aspire host must not steal the second sentry health port.");
+        TryBindDualStack(eventStoreHttp).ShouldBeFalse("A peer Aspire host must not steal the second application port.");
+        first.ReleaseControlPlaneListeners();
+        first.ReleaseApplicationListeners();
+        TryBindDualStack(sentryHealth).ShouldBeFalse("Releasing the first session must not free the second sentry endpoint.");
+        second.ReleaseControlPlaneListeners();
+        using TcpListener sentry = BindDualStack(sentryHealth);
+        TryBindDualStack(eventStoreHttp).ShouldBeFalse("Application ports stay held until this session starts Aspire.");
+        second.ReleaseApplicationListeners();
+        using TcpListener application = BindDualStack(eventStoreHttp);
+        sentry.ShouldNotBeNull();
+        application.ShouldNotBeNull();
     }
 
     [Fact]
@@ -404,5 +426,26 @@ public sealed class PartiesTopologyIsolationTests
             }
             await Task.Delay(TimeSpan.FromMilliseconds(250), budget.Token).ConfigureAwait(false);
         }
+    }
+
+    private static bool TryBindDualStack(int port)
+    {
+        try
+        {
+            BindDualStack(port).Stop();
+            return true;
+        }
+        catch (SocketException exception) when (exception.SocketErrorCode == SocketError.AddressAlreadyInUse)
+        {
+            return false;
+        }
+    }
+
+    private static TcpListener BindDualStack(int port)
+    {
+        var listener = new TcpListener(Socket.OSSupportsIPv6 ? IPAddress.IPv6Any : IPAddress.Any, port);
+        if (Socket.OSSupportsIPv6) { listener.Server.DualMode = true; }
+        listener.Start();
+        return listener;
     }
 }

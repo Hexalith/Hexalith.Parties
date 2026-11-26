@@ -29,7 +29,7 @@ public sealed class PartiesMtlsProfileTests
     public void InternalGrpcListeners_AreDeclaredProxylessBeforeDynamicEndpointAllocation()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
-        PartiesTopologySession session = PartiesTopologySession.Create(isolatedIdentities: true);
+        using PartiesTopologySession session = PartiesTopologySession.Create(isolatedIdentities: true);
         foreach (string name in session.InternalGrpcPorts.Keys.Append("memories-domain-service"))
         {
             builder.Resources.Add(new ProjectResource(name));

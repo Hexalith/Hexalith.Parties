@@ -716,6 +716,48 @@ public sealed class AspireRuntimePreparationTests
         finally { Directory.Delete(workspace, recursive: true); }
     }
 
+    /// <summary>A newer module-tool catalog that fills empty family versions cannot deselect the signed Platform lock.</summary>
+    [Fact]
+    public async Task DefaultToolCatalogEmptyConditionKeepsSignedOwnerVersions()
+    {
+        string workspace = Directory.CreateTempSubdirectory("parties-tool-catalog-lock-").FullName;
+        try
+        {
+            string buildsRoot = Path.Combine(workspace, "tool-catalog");
+            string catalog = Path.Combine(buildsRoot, "Props", "Directory.Packages.props");
+            Directory.CreateDirectory(Path.GetDirectoryName(catalog)!);
+            File.WriteAllText(catalog, """
+                <Project>
+                  <PropertyGroup>
+                    <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == ''">5.6.0</HexalithEventStoreVersion>
+                    <HexalithTenantsVersion Condition="'$(HexalithTenantsVersion)' == ''">8.1.0</HexalithTenantsVersion>
+                    <HexalithMemoriesVersion Condition="'$(HexalithMemoriesVersion)' == ''">4.1.2</HexalithMemoriesVersion>
+                    <HexalithFrontComposerVersion Condition="'$(HexalithFrontComposerVersion)' == ''">6.2.0</HexalithFrontComposerVersion>
+                    <HexalithVersionsLoaded>true</HexalithVersionsLoaded>
+                  </PropertyGroup>
+                </Project>
+                """);
+            string wrapper = Path.Combine(workspace, "Directory.Packages.props");
+            File.Copy(CiTestPaths.RepoFile("Directory.Packages.props"), wrapper);
+            string project = Path.Combine(workspace, "Capability.proj");
+            new XDocument(new XElement("Project",
+                new XElement("PropertyGroup", new XElement("HexalithBuildsRoot", buildsRoot)),
+                new XElement("Import", new XAttribute("Project", wrapper)),
+                new XElement("Import", new XAttribute("Project", CiTestPaths.RepoFile("Directory.Build.targets")))))
+                .Save(project);
+            var result = await RunDotnetAsync(workspace, "msbuild", project, "-nologo",
+                "-getProperty:HexalithEventStoreVersion,HexalithTenantsVersion,HexalithMemoriesVersion,HexalithFrontComposerVersion").ConfigureAwait(true);
+            result.ExitCode.ShouldBe(0, result.Output + result.Error);
+            using JsonDocument evaluation = JsonDocument.Parse(result.Output);
+            JsonElement properties = evaluation.RootElement.GetProperty("Properties");
+            properties.GetProperty("HexalithEventStoreVersion").GetString().ShouldBe("5.4.0");
+            properties.GetProperty("HexalithTenantsVersion").GetString().ShouldBe("8.0.2");
+            properties.GetProperty("HexalithMemoriesVersion").GetString().ShouldBe("4.1.0");
+            properties.GetProperty("HexalithFrontComposerVersion").GetString().ShouldBe("6.0.1");
+        }
+        finally { Directory.Delete(workspace, recursive: true); }
+    }
+
     /// <summary>Unconditionally evaluates the real transport target and the separate selector fence, even when guarded callers compile away.</summary>
     /// <param name="version">The exact selected EventStore package.</param>
     /// <param name="source">Whether the tool selected current source.</param>

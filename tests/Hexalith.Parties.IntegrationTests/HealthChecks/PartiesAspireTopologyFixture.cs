@@ -213,11 +213,13 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             if (_prepareCiBootstrap)
             {
                 InitializationPhase = "owned-control-plane-bootstrap";
+                Session.ReleaseControlPlaneListeners();
                 await PrepareCiDaprMtlsAsync(cts.Token).ConfigureAwait(false);
                 if (ObserveOwnershipProgressAsync is not null) { await ObserveOwnershipProgressAsync().ConfigureAwait(false); }
             }
 
             InitializationPhase = "create-builder";
+            Session.ReleaseApplicationListeners();
             _builder = await _createBuilder(Session, cts.Token).ConfigureAwait(false);
             // The runner owns console cancellation. A competing ConsoleLifetime
             // stops Aspire notifications before the runner's finally can settle
@@ -521,6 +523,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             throw new AggregateException("Topology initialization and owned cleanup both failed at " + InitializationPhase + ".",
                 _initializationFailure, cleanupException);
         }
+        finally { Session.Dispose(); }
     }
 
     /// <summary>Reads the invocation cap applied to this fixture's actual modeled private gateway.</summary>

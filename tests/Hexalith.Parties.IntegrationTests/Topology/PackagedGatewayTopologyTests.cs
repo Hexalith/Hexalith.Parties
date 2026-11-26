@@ -216,7 +216,8 @@ public sealed class PackagedGatewayTopologyTests
     [Fact]
     public void SessionSelectsTheGatewayMatchingItsCompiledDependencyMode()
     {
-        string[] arguments = PartiesTopologySession.Create().Arguments(complete: false, mtls: false);
+        using PartiesTopologySession session = PartiesTopologySession.Create();
+        string[] arguments = session.Arguments(complete: false, mtls: false);
 #if HEXALITH_DEVELOPMENT_CATALOG_SOURCE
         arguments.ShouldNotContain(argument => argument.StartsWith("--Parties:Testing:UsePackagedGateway", StringComparison.Ordinal));
 #else

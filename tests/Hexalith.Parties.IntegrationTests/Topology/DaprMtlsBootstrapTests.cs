@@ -197,7 +197,7 @@ public sealed class DaprMtlsBootstrapTests
     public async Task ConcurrentAppHostModel_MapsSidecarsAclRoutingAndWorkloadAuthorityTogether()
     {
         if (!OperatingSystem.IsLinux()) { Assert.Skip("The session mTLS launcher requires Linux bash."); return; }
-        PartiesTopologySession session = PartiesTopologySession.Create(isolatedIdentities: true);
+        using PartiesTopologySession session = PartiesTopologySession.Create(isolatedIdentities: true);
         using var commands = new MtlsBootstrapCommandDouble();
         var settings = new Dictionary<string, string?>();
         session.ConfigureBootstrapEnvironment(settings);

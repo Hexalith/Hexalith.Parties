@@ -15,16 +15,15 @@
     <Hexalith2BuildPackageProps>$(MSBuildThisFileDirectory)../Hexalith.Builds/Props/Directory.Packages.props</Hexalith2BuildPackageProps>
     <Hexalith3BuildPackageProps>$(MSBuildThisFileDirectory)../../Hexalith.Builds/Props/Directory.Packages.props</Hexalith3BuildPackageProps>
     <!-- Standalone family fallbacks defer to an existing caller-selected catalog. -->
-    <!-- Unmapped builds can use current packages while Platform package mode uses its signed catalog. -->
+    <!-- Keep the signed Platform v2.2.5 owner versions when the default catalog is
+         a newer module-tool import. Explicit caller properties and a distinct caller
+         catalog still win; an imported default catalog that assigns unconditionally
+         still overwrites these values. -->
     <HexalithCommonsVersion Condition="'$(HexalithCommonsVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true' and '$(HexalithSourceMappingMode)' != 'package'">3.0.4</HexalithCommonsVersion>
-    <!-- Select the published EventStore default when the shared catalog is unavailable. -->
-    <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == '' and !Exists('$(Hexalith1BuildPackageProps)') and !Exists('$(Hexalith2BuildPackageProps)') and !Exists('$(Hexalith3BuildPackageProps)')">5.4.0</HexalithEventStoreVersion>
-    <!-- Latest compatible published Tenants family, before the shared catalog defaults. -->
-    <HexalithTenantsVersion Condition="'$(HexalithTenantsVersion)' == '' and !Exists('$(Hexalith1BuildPackageProps)') and !Exists('$(Hexalith2BuildPackageProps)') and !Exists('$(Hexalith3BuildPackageProps)')">8.0.2</HexalithTenantsVersion>
-    <!-- Shared theme accessibility correction, qualified through the package browser gate. -->
-    <HexalithFrontComposerVersion Condition="'$(HexalithFrontComposerVersion)' == '' and !Exists('$(Hexalith1BuildPackageProps)') and !Exists('$(Hexalith2BuildPackageProps)') and !Exists('$(Hexalith3BuildPackageProps)')">6.0.1</HexalithFrontComposerVersion>
-    <!-- Published recovery/catalog compatibility fixes, before shared defaults. -->
-    <HexalithMemoriesVersion Condition="'$(HexalithMemoriesVersion)' == '' and !Exists('$(Hexalith1BuildPackageProps)') and !Exists('$(Hexalith2BuildPackageProps)') and !Exists('$(Hexalith3BuildPackageProps)')">4.1.0</HexalithMemoriesVersion>
+    <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true'">5.4.0</HexalithEventStoreVersion>
+    <HexalithTenantsVersion Condition="'$(HexalithTenantsVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true'">8.0.2</HexalithTenantsVersion>
+    <HexalithFrontComposerVersion Condition="'$(HexalithFrontComposerVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true'">6.0.1</HexalithFrontComposerVersion>
+    <HexalithMemoriesVersion Condition="'$(HexalithMemoriesVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true'">4.1.0</HexalithMemoriesVersion>
   </PropertyGroup>
   <!-- Import the required Hexalith.Packages.props file. -->
   <Import Project="$(Hexalith1BuildPackageProps)" Condition="Exists('$(Hexalith1BuildPackageProps)') And '$(HexalithVersionsLoaded)' != 'true'" />

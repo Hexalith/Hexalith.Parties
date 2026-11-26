@@ -6,11 +6,13 @@ using System.Net.Sockets;
 namespace Hexalith.Parties.IntegrationTests.HealthChecks;
 
 /// <summary>Immutable identities, private paths and loopback listeners owned by one topology lifetime.</summary>
-internal sealed class PartiesTopologySession
+internal sealed class PartiesTopologySession : IDisposable
 {
     private static readonly Lock PortAllocationLock = new();
     private static readonly HashSet<int> AllocatedPorts = [];
     private static readonly string[] SidecarNames = ["eventstore", "eventstore-admin", "eventstore-admin-ui", "memories", "parties", "sample", "sample-blazor-ui", "tenants"];
+    private readonly List<TcpListener> _heldListeners = [];
+    private readonly HashSet<int> _controlPlanePorts = [];
     private PartiesTopologySession(bool isolatedIdentities, string? authorizedId = null, string? authorizedRoot = null)
     {
         Id = authorizedId ?? Guid.NewGuid().ToString("N")[..12];
@@ -32,8 +34,9 @@ internal sealed class PartiesTopologySession
         {
             throw new InvalidOperationException("The OS ephemeral client port range could not be validated.");
         }
-        // Hold candidates together and exclude prior in-process sessions. Explicit binds can
-        // still race after release; readiness continues to fail closed on any such collision.
+        // Keep every candidate bound until this session's docker or Aspire bind.
+        // A peer session's Aspire host otherwise claims the released ports, and two
+        // Dapr control planes then collide on the same sentry endpoint.
         lock (PortAllocationLock)
         {
             var listeners = new List<TcpListener>();
@@ -76,16 +79,21 @@ internal sealed class PartiesTopologySession
                 MemoriesDomainInternalGrpcPort = ports[^1];
                 InternalGrpcPorts = SidecarNames.Select((name, index) => new KeyValuePair<string, int>(name, ports[index + 7]))
                     .ToFrozenDictionary(StringComparer.Ordinal);
+                _controlPlanePorts.UnionWith(ports.Take(6));
                 allocated = true;
             }
             finally
             {
-                foreach (TcpListener listener in listeners)
+                if (!allocated)
                 {
-                    if (!allocated) { AllocatedPorts.Remove(((IPEndPoint)listener.LocalEndpoint).Port); }
-                    listener.Stop();
+                    foreach (TcpListener listener in listeners)
+                    {
+                        AllocatedPorts.Remove(((IPEndPoint)listener.LocalEndpoint).Port);
+                        listener.Stop();
+                    }
                 }
             }
+            _heldListeners.AddRange(listeners);
         }
     }
 
@@ -162,5 +170,28 @@ internal sealed class PartiesTopologySession
         environment["DAPR_MTLS_PLACEMENT_HEALTH_PORT"] = PlacementHealthPort.ToString(CultureInfo.InvariantCulture);
         environment["DAPR_MTLS_SCHEDULER_PORT"] = SchedulerPort.ToString(CultureInfo.InvariantCulture);
         environment["DAPR_MTLS_SCHEDULER_HEALTH_PORT"] = SchedulerHealthPort.ToString(CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>Frees the six docker-published control-plane loopbacks immediately before this session binds them.</summary>
+    internal void ReleaseControlPlaneListeners() => StopHeld(port => _controlPlanePorts.Contains(port));
+
+    /// <summary>Frees sidecar and gateway loopbacks immediately before this session's Aspire host binds them.</summary>
+    internal void ReleaseApplicationListeners() => StopHeld(port => !_controlPlanePorts.Contains(port));
+
+    /// <inheritdoc />
+    public void Dispose() => StopHeld(_ => true);
+
+    private void StopHeld(Func<int, bool> match)
+    {
+        lock (PortAllocationLock)
+        {
+            for (int index = _heldListeners.Count - 1; index >= 0; index--)
+            {
+                int port = ((IPEndPoint)_heldListeners[index].LocalEndpoint).Port;
+                if (!match(port)) { continue; }
+                _heldListeners[index].Stop();
+                _heldListeners.RemoveAt(index);
+            }
+        }
     }
 }
