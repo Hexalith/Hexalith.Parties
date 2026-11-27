@@ -71,13 +71,13 @@ catalog for HTTP resilience and service discovery.
 | MCP | ModelContextProtocol / .AspNetCore | `2.4.0` / `2.4.0` |
 | UI | Microsoft.FluentUI.AspNetCore.Components | `5.1.0` |
 | | Microsoft.AspNetCore.Components.CustomElements | `11.0.0` |
-| Rich search (opt) | Hexalith.Memories.Client.Rest | package `4.1.1` by default |
+| Rich search (opt) | Hexalith.Memories.Client.Rest | package `4.1.4` by default |
 | Observability | OpenTelemetry (exporter/hosting/instrumentation) | `1.21.0` core/hosting/exporter and ASP.NET Core/HTTP/runtime instrumentation |
 | Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `11.0.1` |
 | Versioning | MinVer (git-tag SemVer, prefix `v`) | `8.0.0` |
 | Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `4.0.3` / `4.3.0` / `6.2.0` / `2.15.2` / `4.17.0`† / `18.1.0` |
 
-The recorded Platform **v2.8.0** release uses the **Builds v6.8.3** catalog. In Release package mode, the Parties service, gateway test host, and attached lifecycle qualification suite select EventStore `5.5.2` by default. The compatibility suite selects `4.2.0` explicitly. The private Development catalog reader loads the prepared owner and adapter assemblies and checks its restored packages against the gateway test host’s evaluated `HexalithEventStoreVersion`. An explicit version takes precedence over the catalog default. Record the project, build mode and effective version when comparing results. [Package selection guards](../Directory.Build.targets) · [Private catalog reader](../src/Hexalith.Parties.AppHost/PartiesDevelopmentCatalogTool.cs) · [CI verification](ci.md#local-verification)
+The recorded Platform **v2.9.0** release uses the **Builds v6.9.1** catalog. In Release package mode, the Parties service, gateway test host, and attached lifecycle qualification suite select EventStore `5.6.0` by default. The compatibility suite selects `4.2.0` explicitly. The private Development catalog reader loads the prepared owner and adapter assemblies and checks its restored packages against the gateway test host’s evaluated `HexalithEventStoreVersion`. An explicit version takes precedence over the catalog default. Record the project, build mode and effective version when comparing results. [Package selection guards](../Directory.Build.targets) · [Private catalog reader](../src/Hexalith.Parties.AppHost/PartiesDevelopmentCatalogTool.cs) · [CI verification](ci.md#local-verification)
 
 The earlier Tenants source identity `fcdcb4205a3f6e46f736cdd3e6f2b20ca2f241df`
 (`v5.7.0-180-gfcdcb420`), recorded at Parties

@@ -30,6 +30,7 @@ public sealed class MemoriesRefreshCompilationTests(ITestOutputHelper output)
     [InlineData("3.0.27", false, true)]
     [InlineData("4.0.0", false, true)]
     [InlineData("4.1.0", false, true)]
+    [InlineData("4.1.4", false, true)]
     [InlineData("3.9.9", false, false)]
     [InlineData("4.0.1", false, false)]
     [InlineData("4.0.0-preview.1", false, false)]

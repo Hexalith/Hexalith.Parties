@@ -40,8 +40,8 @@ def prepare(owner: Path, output: Path, configuration: str, version: str, framewo
     target_file = output / "target.txt"
     for previous in (manifest, target_file):
         previous.unlink(missing_ok=True)
-    if version not in {"4.2.0", "5.4.0", "5.5.2"}:
-        raise ValueError("The mapped private native UI boundary requires exact SDK 4.2.0, 5.4.0 or 5.5.2")
+    if version not in {"4.2.0", "5.4.0", "5.5.2", "5.6.0"}:
+        raise ValueError("The mapped private native UI boundary requires exact SDK 4.2.0, 5.4.0, 5.5.2 or 5.6.0")
     project = owner.resolve() / "src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj"
     if not project.is_file():
         raise ValueError("The complete selected native Admin UI project is required")

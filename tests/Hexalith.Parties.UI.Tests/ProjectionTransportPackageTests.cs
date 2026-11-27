@@ -42,7 +42,7 @@ public sealed class ProjectionTransportPackageTests
         Dictionary<string, string?> selection = typeof(ProjectionTransportPackageTests).Assembly
             .GetCustomAttributes(typeof(System.Reflection.AssemblyMetadataAttribute), false)
             .Cast<System.Reflection.AssemblyMetadataAttribute>().ToDictionary(attribute => attribute.Key, attribute => attribute.Value);
-        bool retiresUncertainConnection = selection["HexalithEventStoreVersion"] is "5.1.0" or "5.1.1" or "5.3.0" or "5.3.1" or "5.4.0" or "5.5.2"
+        bool retiresUncertainConnection = selection["HexalithEventStoreVersion"] is "5.1.0" or "5.1.1" or "5.3.0" or "5.3.1" or "5.4.0" or "5.5.2" or "5.6.0"
             || (bool.TryParse(selection["HexalithEventStoreFromSource"], out bool fromSource) && fromSource);
         int removedCallbackCalls = 0;
         Action callback = () => Interlocked.Increment(ref removedCallbackCalls);

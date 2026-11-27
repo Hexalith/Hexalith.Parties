@@ -916,3 +916,7 @@ references/Hexalith.Memories|45e165d88d358c1349dbcb772e2e2a8a0f2218ce|validated-
 
 # Match the Memories source to the signed catalog's published Contracts API.
 references/Hexalith.Memories|24cbc1927e29c03a8576279554064fb9e0219b30|validated-advance|v4.1.1@24cbc1927e29c03a8576279554064fb9e0219b30|codex-agent|2026-11-27
+
+# Adopt the published Platform v2.9.0 and its Builds v6.9.1 catalog.
+references/Hexalith.Platform|a670a4c51d76f63f3142e38f02542a246e1926fb|validated-advance|v2.9.0@a670a4c51d76f63f3142e38f02542a246e1926fb|codex-agent|2026-11-27
+references/Hexalith.Builds|91cb7cba990ffdf82930f9bf8cb68aef41baba76|validated-advance|v6.9.1@91cb7cba990ffdf82930f9bf8cb68aef41baba76|codex-agent|2026-11-27

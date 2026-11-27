@@ -15,21 +15,21 @@
     <Hexalith2BuildPackageProps>$(MSBuildThisFileDirectory)../Hexalith.Builds/Props/Directory.Packages.props</Hexalith2BuildPackageProps>
     <Hexalith3BuildPackageProps>$(MSBuildThisFileDirectory)../../Hexalith.Builds/Props/Directory.Packages.props</Hexalith3BuildPackageProps>
     <!-- Standalone family fallbacks defer to an existing caller-selected catalog. -->
-    <!-- Keep the signed Platform v2.8.0 owner versions when the default catalog is
+    <!-- Keep the signed Platform v2.9.0 owner versions when the default catalog is
          a newer module-tool import. Explicit caller properties and a distinct caller
          catalog still win; an imported default catalog that assigns unconditionally
          still overwrites these values. -->
     <HexalithCommonsVersion Condition="'$(HexalithCommonsVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true' and '$(HexalithSourceMappingMode)' != 'package'">3.0.4</HexalithCommonsVersion>
-    <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true'">5.5.2</HexalithEventStoreVersion>
-    <HexalithTenantsVersion Condition="'$(HexalithTenantsVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true'">8.0.4</HexalithTenantsVersion>
+    <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true'">5.6.0</HexalithEventStoreVersion>
+    <HexalithTenantsVersion Condition="'$(HexalithTenantsVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true'">8.1.1</HexalithTenantsVersion>
     <HexalithFrontComposerVersion Condition="'$(HexalithFrontComposerVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true'">6.1.0</HexalithFrontComposerVersion>
-    <HexalithMemoriesVersion Condition="'$(HexalithMemoriesVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true'">4.1.1</HexalithMemoriesVersion>
+    <HexalithMemoriesVersion Condition="'$(HexalithMemoriesVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true'">4.1.4</HexalithMemoriesVersion>
   </PropertyGroup>
   <!-- Import the required Hexalith.Packages.props file. -->
   <Import Project="$(Hexalith1BuildPackageProps)" Condition="Exists('$(Hexalith1BuildPackageProps)') And '$(HexalithVersionsLoaded)' != 'true'" />
   <Import Project="$(Hexalith2BuildPackageProps)" Condition="Exists('$(Hexalith2BuildPackageProps)') And '$(HexalithVersionsLoaded)' != 'true'" />
   <Import Project="$(Hexalith3BuildPackageProps)" Condition="'$(HexalithVersionsLoaded)' != 'true'" />
-  <PropertyGroup Condition="'$(HexalithCatalogEventStoreVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true' and '$(HexalithEventStoreVersion)' == '5.5.2'">
+  <PropertyGroup Condition="'$(HexalithCatalogEventStoreVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true' and '$(HexalithEventStoreVersion)' == '5.6.0'">
     <!-- The signed cohort also applies to executable owners built with an explicit version. -->
     <HexalithCatalogEventStoreVersion>$(HexalithEventStoreVersion)</HexalithCatalogEventStoreVersion>
   </PropertyGroup>

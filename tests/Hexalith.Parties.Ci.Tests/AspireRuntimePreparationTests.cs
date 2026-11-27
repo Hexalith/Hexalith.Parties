@@ -708,9 +708,9 @@ public sealed class AspireRuntimePreparationTests
             result.ExitCode.ShouldBe(0, result.Output + result.Error);
             using JsonDocument evaluation = JsonDocument.Parse(result.Output);
             JsonElement properties = evaluation.RootElement.GetProperty("Properties");
-            properties.GetProperty("HexalithEventStoreVersion").GetString().ShouldBe(selection == "fallback" ? "5.5.2" : "5.0.0");
-            properties.GetProperty("HexalithTenantsVersion").GetString().ShouldBe(selection == "fallback" ? "8.0.4" : "7.0.7");
-            properties.GetProperty("HexalithMemoriesVersion").GetString().ShouldBe(selection == "fallback" ? "4.1.1" : "3.0.27");
+            properties.GetProperty("HexalithEventStoreVersion").GetString().ShouldBe(selection == "fallback" ? "5.6.0" : "5.0.0");
+            properties.GetProperty("HexalithTenantsVersion").GetString().ShouldBe(selection == "fallback" ? "8.1.1" : "7.0.7");
+            properties.GetProperty("HexalithMemoriesVersion").GetString().ShouldBe(selection == "fallback" ? "4.1.4" : "3.0.27");
             properties.GetProperty("HexalithFrontComposerVersion").GetString().ShouldBe(selection == "fallback" ? "6.1.0" : "5.0.0");
             properties.GetProperty("HexalithEventStoreCatalogHostsSupported").GetString().ShouldBe(selection == "fallback" ? "true" : string.Empty);
         }
@@ -730,7 +730,7 @@ public sealed class AspireRuntimePreparationTests
             File.WriteAllText(catalog, """
                 <Project>
                   <PropertyGroup>
-                    <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == ''">5.6.0</HexalithEventStoreVersion>
+                    <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == ''">5.7.0</HexalithEventStoreVersion>
                     <HexalithTenantsVersion Condition="'$(HexalithTenantsVersion)' == ''">8.1.0</HexalithTenantsVersion>
                     <HexalithMemoriesVersion Condition="'$(HexalithMemoriesVersion)' == ''">4.1.2</HexalithMemoriesVersion>
                     <HexalithFrontComposerVersion Condition="'$(HexalithFrontComposerVersion)' == ''">6.2.0</HexalithFrontComposerVersion>
@@ -751,9 +751,9 @@ public sealed class AspireRuntimePreparationTests
             result.ExitCode.ShouldBe(0, result.Output + result.Error);
             using JsonDocument evaluation = JsonDocument.Parse(result.Output);
             JsonElement properties = evaluation.RootElement.GetProperty("Properties");
-            properties.GetProperty("HexalithEventStoreVersion").GetString().ShouldBe("5.5.2");
-            properties.GetProperty("HexalithTenantsVersion").GetString().ShouldBe("8.0.4");
-            properties.GetProperty("HexalithMemoriesVersion").GetString().ShouldBe("4.1.1");
+            properties.GetProperty("HexalithEventStoreVersion").GetString().ShouldBe("5.6.0");
+            properties.GetProperty("HexalithTenantsVersion").GetString().ShouldBe("8.1.1");
+            properties.GetProperty("HexalithMemoriesVersion").GetString().ShouldBe("4.1.4");
             properties.GetProperty("HexalithFrontComposerVersion").GetString().ShouldBe("6.1.0");
         }
         finally { Directory.Delete(workspace, recursive: true); }

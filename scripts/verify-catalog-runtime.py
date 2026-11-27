@@ -106,7 +106,7 @@ def verify(configuration, results, *, reuse_build=False, artifacts=None):
             if not reuse_build:
                 # Qualify the current EventStore SDK with the Tenants 8.x package cohort.
                 # Keep one compatible EventStore SDK across build, preparation and test.
-                environment.setdefault("HexalithEventStoreVersion", "5.5.2")
+                environment.setdefault("HexalithEventStoreVersion", "5.6.0")
             environment["PARTIES_MTLS_TOPOLOGY_TESTS"] = "true"
             environment["PARTIES_TEST_REPOSITORY_ROOT"] = str(ROOT)
             receipts = build / "runtime-profile" / configuration

@@ -31,7 +31,7 @@ public sealed class RetainedCatalogViewTests
         {
             IReadOnlyDictionary<string, string> current = EffectivePackageVersions.ReadPackages(root, project,
                 configuration: "Release", isolateEnvironment: true, globalProperties: properties);
-            current["Hexalith.EventStore.Contracts"].ShouldBe("5.5.2", project);
+            current["Hexalith.EventStore.Contracts"].ShouldBe("5.6.0", project);
             properties["HexalithEventStoreVersion"] = "4.2.0";
             IReadOnlyDictionary<string, string> compatibility = EffectivePackageVersions.ReadPackages(root, project,
                 configuration: "Release", isolateEnvironment: true, globalProperties: properties);
