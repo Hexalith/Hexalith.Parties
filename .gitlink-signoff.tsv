@@ -909,3 +909,7 @@ references/Hexalith.PolymorphicSerializations|12d0a2ca4004a6f2ec22866a68d271837c
 references/Hexalith.McpCli|bb11083c084b926e80aebb09ba42366284e4a405|validated-advance|origin/main@bb11083c084b926e80aebb09ba42366284e4a405|codex-agent|2026-11-27
 references/Hexalith.Platform|3bcac63c6fe20b46687b6e0bb7a333ea8c66fb4d|validated-advance|v2.8.0@3bcac63c6fe20b46687b6e0bb7a333ea8c66fb4d|codex-agent|2026-11-27
 references/Hexalith.CiCd|f65b6c7378c4be144a8236e42507045a359dbbb0|validated-advance|origin/main@f65b6c7378c4be144a8236e42507045a359dbbb0|codex-agent|2026-11-27
+
+# Runtime source owners match the released Platform package catalog.
+references/Hexalith.Tenants|d58f24d8d6909d7498ecec34955e7f17720c1ba0|validated-advance|origin/main@d58f24d8d6909d7498ecec34955e7f17720c1ba0|codex-agent|2026-11-27
+references/Hexalith.Memories|45e165d88d358c1349dbcb772e2e2a8a0f2218ce|validated-advance|origin/main@45e165d88d358c1349dbcb772e2e2a8a0f2218ce|codex-agent|2026-11-27
