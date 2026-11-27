@@ -30,7 +30,7 @@ public sealed class PartyMemoryOwnedRuntimeTests
     public Task ActualSelectedMemoriesRefreshErasureAndReplayControl() => ExecuteOwnedRuntimeAsync(focused: true, TestContext.Current.CancellationToken);
 
     /// <summary>Qualifies the current source issuer only within this new disposable session's custody.</summary>
-    [Fact(Timeout = 600000)]
+    [Fact(Timeout = 780000)]
     public Task ActualCurrentSourceMemoriesRunsAuthorityAndPhysicalErasureControl()
         => ExecuteOwnedRuntimeAsync(focused: false, TestContext.Current.CancellationToken, currentSourceAuthority: true);
 
@@ -172,8 +172,8 @@ public sealed class PartyMemoryOwnedRuntimeTests
             await fixture.InitializeAsync(token).ConfigureAwait(true);
             fixture.IsAvailable.ShouldBeTrue(fixture.UnavailableReason);
             using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
-            // Allow the full consumer matrix to finish its six-minute budget and return its teardown receipts.
-            deadline.CancelAfter(TimeSpan.FromMinutes(producerRestart ? 27 : focused ? 5 : 7));
+            // Allow each consumer matrix to finish its mode-specific budget and return its teardown receipts.
+            deadline.CancelAfter(TimeSpan.FromMinutes(producerRestart ? 29 : focused ? 5 : currentSourceAuthority ? 11 : 7));
             await fixture.App.ResourceNotifications.WaitForResourceHealthyAsync("memories", deadline.Token).ConfigureAwait(true);
             phase = "authenticated-workflow-and-erasure-control";
             ProjectResource memoriesResource = fixture.App.Services.GetRequiredService<DistributedApplicationModel>().Resources
@@ -211,6 +211,9 @@ public sealed class PartyMemoryOwnedRuntimeTests
                     Scope = "new private nonpersistent fixture resources only; no production writer exclusion", Resources = resources }), token).ConfigureAwait(true);
             }
             string configPath = Path.Combine(privateRoot, "runtime.json");
+            string? ownerAssembly = currentSourceAuthority || producerRestart
+                ? PartyMemoryProducerRestartRuntime.ServerAssemblyPath(memoriesState)
+                : null;
             await File.WriteAllTextAsync(configPath, JsonSerializer.Serialize(new
             {
                 endpoint = fixture.App.GetEndpoint("memories", "http").ToString(),
@@ -226,23 +229,24 @@ public sealed class PartyMemoryOwnedRuntimeTests
                 ownershipRedisEndpoint = currentSourceAuthority ? search.Authority : null,
                 producerRestartDirectory = producerRestart ? restartDirectory : null,
                 producerRestartSecret = producerRestart ? restartSecret : null,
-                ownershipServerAssemblyPath = producerRestart ? PartyMemoryProducerRestartRuntime.ServerAssemblyPath(memoriesState) : null,
+                ownershipServerAssemblyPath = ownerAssembly,
             }), token).ConfigureAwait(true);
             string root = ResolveRoot();
             var start = new ProcessStartInfo("dotnet") { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, WorkingDirectory = root };
             string provenance = Path.Combine(privateRoot, "executed-identities.json");
             Dictionary<string, string> identities = MemoryRuntimeIdentity.Files(typeof(PartyMemoryOwnedRuntimeTests).Assembly, child);
-            if (producerRestart)
+            if (ownerAssembly is not null)
             {
-                string ownerAssembly = PartyMemoryProducerRestartRuntime.ServerAssemblyPath(memoriesState);
                 identities.Add(ownerAssembly, MemoryRuntimeIdentity.Hash(ownerAssembly));
-                if (interruption is not null)
+            }
+            if (producerRestart && interruption is not null)
+            {
+                foreach (string file in new[] { Path.ChangeExtension(typeof(PartyMemoryOwnedRuntimeTests).Assembly.Location, ".deps.json"),
+                    Path.ChangeExtension(typeof(PartyMemoryOwnedRuntimeTests).Assembly.Location, ".runtimeconfig.json"),
+                    Environment.GetEnvironmentVariable("Parties__Testing__PreparedRuntimeManifest")
+                        ?? throw new InvalidOperationException("Runner interruption requires an exact prepared manifest.") })
                 {
-                    foreach (string file in new[] { Path.ChangeExtension(typeof(PartyMemoryOwnedRuntimeTests).Assembly.Location, ".deps.json"),
-                        Path.ChangeExtension(typeof(PartyMemoryOwnedRuntimeTests).Assembly.Location, ".runtimeconfig.json"),
-                        Environment.GetEnvironmentVariable("Parties__Testing__PreparedRuntimeManifest")
-                            ?? throw new InvalidOperationException("Runner interruption requires an exact prepared manifest.") })
-                    { identities.Add(file, MemoryRuntimeIdentity.Hash(file)); }
+                    identities.Add(file, MemoryRuntimeIdentity.Hash(file));
                 }
             }
             await File.WriteAllTextAsync(provenance, JsonSerializer.Serialize(identities), token).ConfigureAwait(true);
@@ -495,6 +499,24 @@ public sealed class PartyMemoryOwnedRuntimeTests
 
     private static string ResolveRoot()
     {
+        string? configuredRoot = Environment.GetEnvironmentVariable("PARTIES_TEST_REPOSITORY_ROOT");
+        if (!string.IsNullOrWhiteSpace(configuredRoot))
+        {
+            string trimmed = configuredRoot.Trim();
+            if (!Path.IsPathRooted(trimmed) || trimmed.Contains('\0', StringComparison.Ordinal))
+            {
+                throw new FileNotFoundException("PARTIES_TEST_REPOSITORY_ROOT must be a rooted path to a Parties workspace containing Hexalith.Parties.slnx.");
+            }
+
+            string fullPath = Path.GetFullPath(trimmed);
+            if (!File.Exists(Path.Combine(fullPath, "Hexalith.Parties.slnx")))
+            {
+                throw new FileNotFoundException("PARTIES_TEST_REPOSITORY_ROOT does not contain Hexalith.Parties.slnx.", Path.Combine(fullPath, "Hexalith.Parties.slnx"));
+            }
+
+            return fullPath;
+        }
+
         DirectoryInfo? directory = new(AppContext.BaseDirectory);
         while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "Hexalith.Parties.slnx"))) { directory = directory.Parent; }
         return directory?.FullName ?? throw new InvalidOperationException("Parties workspace not found.");

@@ -160,13 +160,42 @@ internal sealed class PartyLegacyBackfillRuntimeFixture
     }
 
     /// <summary>Reads the disposable provider's physical bytes and revision beneath SDK visibility.</summary>
+    /// <param name="key">The logical Dapr state key to inspect.</param>
+    /// <param name="token">A cancellation token for the read operation.</param>
+    /// <returns>The persisted physical bytes and non-empty ETag.</returns>
     public async Task<(byte[] Bytes, string ETag)> ReadPhysicalAsync(string key, CancellationToken token)
     {
+        (bool present, byte[] bytes, string? etag) = await TryReadPhysicalAsync(key, token).ConfigureAwait(false);
+        present.ShouldBeTrue();
+        string verified = etag.ShouldNotBeNull();
+        verified.ShouldNotBeNullOrWhiteSpace();
+        return (bytes, verified);
+    }
+
+    /// <summary>Reads the disposable provider's physical bytes and revision beneath SDK visibility when present.</summary>
+    /// <param name="key">The logical Dapr state key to inspect.</param>
+    /// <param name="token">A cancellation token for the read operation.</param>
+    /// <returns>The physical presence flag, raw bytes, and ETag when the key exists.</returns>
+    public async Task<(bool Present, byte[] Bytes, string? ETag)> TryReadPhysicalAsync(string key, CancellationToken token)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
         using DaprClient dapr = Client();
         (ReadOnlyMemory<byte> value, string etag) = await dapr.GetByteStateAndETagAsync(
             _configuration.StateStoreName, key, consistencyMode: ConsistencyMode.Strong, cancellationToken: token).ConfigureAwait(false);
-        etag.ShouldNotBeNullOrWhiteSpace();
-        return (value.ToArray(), etag);
+        return string.IsNullOrWhiteSpace(etag) && value.IsEmpty
+            ? (false, [], null)
+            : (true, value.ToArray(), string.IsNullOrWhiteSpace(etag) ? null : etag);
+    }
+
+    /// <summary>Serializes a read model with the same Dapr client options used by SDK writes.</summary>
+    /// <typeparam name="TValue">The read-model type to serialize.</typeparam>
+    /// <param name="value">The read-model instance to serialize.</param>
+    /// <returns>The UTF-8 JSON bytes produced with the Dapr client's serializer options.</returns>
+    public byte[] Serialize<TValue>(TValue value) where TValue : class
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        using DaprClient dapr = Client();
+        return JsonSerializer.SerializeToUtf8Bytes(value, dapr.JsonSerializerOptions);
     }
 
     /// <summary>Reads SDK-visible persisted state through a fresh client and SDK store.</summary>

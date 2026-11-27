@@ -70,6 +70,8 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
                 HashSet<int> workloads = [];
                 int interruptedProcess = 0;
                 Dictionary<string, string> retainedDigests = new(StringComparer.Ordinal);
+                (bool Present, string? Sha256, string? ETag)? baselineIndex = null;
+                (bool Present, string? Sha256, string? ETag)? committedIndex = null;
                 foreach (string phase in new[] { "seed", "interrupt", "rebuild", "stage", "commit", "verify" })
                 {
                     var start = new ProcessStartInfo("dotnet");
@@ -95,6 +97,16 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
                     {
                         interruptedProcess = processId;
                     }
+                    (bool Present, string? Sha256, string? ETag) observedIndex = VerifyIndexReceipt(
+                        receipt.RootElement, phase, existing, baselineIndex, committedIndex);
+                    if (phase == "seed")
+                    {
+                        baselineIndex = observedIndex;
+                    }
+                    else if (phase == "commit")
+                    {
+                        committedIndex = observedIndex;
+                    }
                     JsonProperty[] observations = receipt.RootElement.GetProperty("snapshotSha256").EnumerateObject().ToArray();
                     string[] expectedSnapshots = phase switch
                     {
@@ -114,6 +126,8 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
                     }
                     (await File.ReadAllBytesAsync(path, token).ConfigureAwait(true)).ShouldBe(immutable);
                 }
+                baselineIndex.HasValue.ShouldBeTrue();
+                committedIndex.HasValue.ShouldBeTrue();
                 foreach ((string name, string digest) in retainedDigests)
                 {
                     byte[] snapshot = await File.ReadAllBytesAsync(Path.Combine(directory, name), token).ConfigureAwait(true);
@@ -190,6 +204,225 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
 
         Should.Throw<ShouldAssertException>(() => VerifyWorkloadReport(xml, receipt));
     }
+
+    /// <summary>Rejects missing, drifted, leaked, unchanged, or mismatched shared-index phase receipts.</summary>
+    /// <param name="existing">Whether the synthetic target started with a preexisting canonical index.</param>
+    /// <param name="defect">The synthetic index-receipt defect injected into the phase sequence.</param>
+    [Theory]
+    [InlineData(false, "missing-object")]
+    [InlineData(false, "duplicate-object")]
+    [InlineData(false, "missing-field")]
+    [InlineData(false, "extra-field")]
+    [InlineData(false, "duplicate-field")]
+    [InlineData(false, "absent-leaked-present")]
+    [InlineData(false, "absent-leaked-etag")]
+    [InlineData(false, "stage-leaked-candidate")]
+    [InlineData(false, "commit-missing")]
+    [InlineData(false, "commit-null-etag")]
+    [InlineData(false, "invalid-sha256")]
+    [InlineData(false, "blank-etag")]
+    [InlineData(false, "untrimmed-etag")]
+    [InlineData(false, "verify-mismatched-hash")]
+    [InlineData(true, "existing-missing")]
+    [InlineData(true, "interrupt-drifted-etag")]
+    [InlineData(true, "rebuild-drifted-hash")]
+    [InlineData(true, "stage-leaked-etag")]
+    [InlineData(true, "stage-drifted-hash")]
+    [InlineData(true, "commit-unchanged-hash")]
+    [InlineData(true, "commit-unchanged-etag")]
+    [InlineData(true, "verify-mismatched-etag")]
+    public void IndexReceiptRefusesMissingDriftedLeakedUnchangedOrMismatchedState(bool existing, string defect)
+    {
+        string seedHash = SnapshotDigest("seed-index"u8.ToArray());
+        string commitHash = SnapshotDigest("commit-index"u8.ToArray());
+        string otherHash = SnapshotDigest("other-index"u8.ToArray());
+        string preexistingJson = existing
+            ? $$$"""{"index":{"present":true,"sha256":"{{{seedHash}}}","etag":"etag-seed"}}"""
+            : """{"index":{"present":false,"sha256":null,"etag":null}}""";
+        string stageJson = existing
+            ? $$$"""{"index":{"present":true,"sha256":"{{{seedHash}}}","etag":null}}"""
+            : """{"index":{"present":false,"sha256":null,"etag":null}}""";
+        string commitJson = $$$"""{"index":{"present":true,"sha256":"{{{commitHash}}}","etag":"etag-commit"}}""";
+        var receipts = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["seed"] = preexistingJson,
+            ["interrupt"] = preexistingJson,
+            ["rebuild"] = preexistingJson,
+            ["stage"] = stageJson,
+            ["commit"] = commitJson,
+            ["verify"] = commitJson,
+        };
+        VerifyPhaseSequence(receipts, existing);
+
+        switch (defect)
+        {
+            case "missing-object":
+                receipts["stage"] = "{}";
+                break;
+            case "duplicate-object":
+                receipts["stage"] = """{"index":{"present":false,"sha256":null,"etag":null},"index":{"present":false,"sha256":null,"etag":null}}""";
+                break;
+            case "missing-field":
+                receipts["commit"] = $$$"""{"index":{"present":true,"sha256":"{{{commitHash}}}"}}""";
+                break;
+            case "extra-field":
+                receipts["commit"] = $$$"""{"index":{"present":true,"sha256":"{{{commitHash}}}","etag":"etag-commit","extra":true}}""";
+                break;
+            case "duplicate-field":
+                receipts["commit"] = $$$"""{"index":{"present":true,"sha256":"{{{commitHash}}}","etag":"etag-1","etag":"etag-2"}}""";
+                break;
+            case "absent-leaked-present":
+                receipts["rebuild"] = $$$"""{"index":{"present":true,"sha256":"{{{commitHash}}}","etag":"etag-1"}}""";
+                break;
+            case "absent-leaked-etag":
+                receipts["rebuild"] = """{"index":{"present":false,"sha256":null,"etag":"etag-1"}}""";
+                break;
+            case "stage-leaked-candidate":
+                receipts["stage"] = $$$"""{"index":{"present":true,"sha256":"{{{commitHash}}}","etag":null}}""";
+                break;
+            case "commit-missing":
+                receipts["commit"] = """{"index":{"present":false,"sha256":null,"etag":null}}""";
+                break;
+            case "commit-null-etag":
+                receipts["commit"] = $$$"""{"index":{"present":true,"sha256":"{{{commitHash}}}","etag":null}}""";
+                break;
+            case "invalid-sha256":
+                receipts["commit"] = $$$"""{"index":{"present":true,"sha256":"{{{commitHash.ToUpperInvariant()}}}","etag":"etag-commit"}}""";
+                break;
+            case "blank-etag":
+                receipts["commit"] = $$$"""{"index":{"present":true,"sha256":"{{{commitHash}}}","etag":"   "}}""";
+                break;
+            case "untrimmed-etag":
+                receipts["commit"] = $$$"""{"index":{"present":true,"sha256":"{{{commitHash}}}","etag":" etag-commit "}}""";
+                break;
+            case "verify-mismatched-hash":
+                receipts["verify"] = $$$"""{"index":{"present":true,"sha256":"{{{otherHash}}}","etag":"etag-commit"}}""";
+                break;
+            case "existing-missing":
+                receipts["seed"] = """{"index":{"present":false,"sha256":null,"etag":null}}""";
+                break;
+            case "interrupt-drifted-etag":
+                receipts["interrupt"] = $$$"""{"index":{"present":true,"sha256":"{{{seedHash}}}","etag":"etag-drifted"}}""";
+                break;
+            case "rebuild-drifted-hash":
+                receipts["rebuild"] = $$$"""{"index":{"present":true,"sha256":"{{{otherHash}}}","etag":"etag-seed"}}""";
+                break;
+            case "stage-leaked-etag":
+                receipts["stage"] = $$$"""{"index":{"present":true,"sha256":"{{{seedHash}}}","etag":"etag-seed"}}""";
+                break;
+            case "stage-drifted-hash":
+                receipts["stage"] = $$$"""{"index":{"present":true,"sha256":"{{{commitHash}}}","etag":null}}""";
+                break;
+            case "commit-unchanged-hash":
+                receipts["commit"] = $$$"""{"index":{"present":true,"sha256":"{{{seedHash}}}","etag":"etag-commit"}}""";
+                break;
+            case "commit-unchanged-etag":
+                receipts["commit"] = $$$"""{"index":{"present":true,"sha256":"{{{commitHash}}}","etag":"etag-seed"}}""";
+                break;
+            case "verify-mismatched-etag":
+                receipts["verify"] = $$$"""{"index":{"present":true,"sha256":"{{{commitHash}}}","etag":"etag-other"}}""";
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(defect));
+        }
+
+        Should.Throw<ShouldAssertException>(() => VerifyPhaseSequence(receipts, existing));
+
+        static void VerifyPhaseSequence(IReadOnlyDictionary<string, string> phaseReceipts, bool isExisting)
+        {
+            (bool Present, string? Sha256, string? ETag)? baseline = null;
+            (bool Present, string? Sha256, string? ETag)? committed = null;
+            foreach (string phase in new[] { "seed", "interrupt", "rebuild", "stage", "commit", "verify" })
+            {
+                using JsonDocument document = JsonDocument.Parse(phaseReceipts[phase]);
+                (bool Present, string? Sha256, string? ETag) observed = VerifyIndexReceipt(
+                    document.RootElement, phase, isExisting, baseline, committed);
+                if (phase == "seed")
+                {
+                    baseline = observed;
+                }
+                else if (phase == "commit")
+                {
+                    committed = observed;
+                }
+            }
+        }
+    }
+
+    private static (bool Present, string? Sha256, string? ETag) VerifyIndexReceipt(
+        JsonElement root,
+        string phase,
+        bool existing,
+        (bool Present, string? Sha256, string? ETag)? baseline,
+        (bool Present, string? Sha256, string? ETag)? committed)
+    {
+        root.EnumerateObject().Count(static property => property.Name == "index").ShouldBe(1, $"Missing or duplicate {phase} index receipt.");
+        JsonElement index = root.GetProperty("index");
+        index.ValueKind.ShouldBe(JsonValueKind.Object);
+        JsonProperty[] properties = index.EnumerateObject().ToArray();
+        properties.Select(static property => property.Name).ShouldBe(["present", "sha256", "etag"], ignoreOrder: true);
+        properties.Length.ShouldBe(3);
+
+        JsonElement presentProperty = index.GetProperty("present");
+        (presentProperty.ValueKind is JsonValueKind.True or JsonValueKind.False).ShouldBeTrue($"Invalid {phase} index presence.");
+        bool present = presentProperty.GetBoolean();
+        bool expectedPresent = phase is "commit" or "verify" || existing;
+        present.ShouldBe(expectedPresent, $"Unexpected {phase} index presence.");
+
+        JsonElement sha256Property = index.GetProperty("sha256");
+        JsonElement etagProperty = index.GetProperty("etag");
+        if (!present)
+        {
+            sha256Property.ValueKind.ShouldBe(JsonValueKind.Null, $"Unexpected {phase} index SHA-256 while absent.");
+            etagProperty.ValueKind.ShouldBe(JsonValueKind.Null, $"Unexpected {phase} index ETag while absent.");
+            return (false, null, null);
+        }
+
+        sha256Property.ValueKind.ShouldBe(JsonValueKind.String, $"Missing {phase} index SHA-256.");
+        string sha256 = sha256Property.GetString().ShouldNotBeNull();
+        IsSha256(sha256).ShouldBeTrue($"Invalid {phase} index SHA-256.");
+
+        if (phase == "stage")
+        {
+            etagProperty.ValueKind.ShouldBe(JsonValueKind.Null, "Stage index receipt must not expose an ETag.");
+            baseline.HasValue.ShouldBeTrue();
+            (bool Present, string? Sha256, string? ETag) seed = baseline.GetValueOrDefault();
+            sha256.ShouldBe(seed.Sha256, "Stage index SHA-256 drifted from preexisting index.");
+            return (true, sha256, null);
+        }
+
+        etagProperty.ValueKind.ShouldBe(JsonValueKind.String, $"Missing {phase} index ETag.");
+        string etag = etagProperty.GetString().ShouldNotBeNull();
+        string.IsNullOrWhiteSpace(etag).ShouldBeFalse($"Invalid {phase} index ETag.");
+        etag.ShouldBe(etag.Trim(), $"Untrimmed {phase} index ETag.");
+
+        if (phase is "interrupt" or "rebuild")
+        {
+            baseline.HasValue.ShouldBeTrue();
+            (bool Present, string? Sha256, string? ETag) seed = baseline.GetValueOrDefault();
+            sha256.ShouldBe(seed.Sha256, $"{phase} index SHA-256 drifted from seed index.");
+            etag.ShouldBe(seed.ETag, $"{phase} index ETag drifted from seed index.");
+        }
+        else if (phase == "commit" && existing)
+        {
+            baseline.HasValue.ShouldBeTrue();
+            (bool Present, string? Sha256, string? ETag) seed = baseline.GetValueOrDefault();
+            sha256.ShouldNotBe(seed.Sha256, "Commit index SHA-256 did not change preexisting index bytes.");
+            etag.ShouldNotBe(seed.ETag, "Commit index ETag did not change preexisting index ETag.");
+        }
+        else if (phase == "verify")
+        {
+            committed.HasValue.ShouldBeTrue();
+            (bool Present, string? Sha256, string? ETag) target = committed.GetValueOrDefault();
+            sha256.ShouldBe(target.Sha256, "Verify index SHA-256 mismatched commit index.");
+            etag.ShouldBe(target.ETag, "Verify index ETag mismatched commit index.");
+        }
+
+        return (true, sha256, etag);
+    }
+
+    private static bool IsSha256(string value)
+        => value.Length == 64 && value.All(static character => character is (>= '0' and <= '9') or (>= 'a' and <= 'f'));
 
     private static void VerifyWorkloadReport(XDocument report, byte[] receipt)
     {
@@ -283,6 +516,7 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
         string processingKey = PartySdkReadModelAddresses.Processing(manifest.Tenant, large.AggregateId);
         string recoveryPath = Path.Combine(directory, GenerationSnapshot);
         byte[]? seededSurvivors = null;
+        (bool Present, string? Sha256, string? ETag) indexObservation;
         if (phase == "seed")
         {
             await fixture.SeedAsync(token).ConfigureAwait(true);
@@ -307,6 +541,7 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
             }, s_json);
             await File.WriteAllBytesAsync(canonicalPath, canonical, token).ConfigureAwait(true);
             snapshotSha256.Add(CanonicalSnapshot, SnapshotDigest(canonical));
+            indexObservation = await ObservePreStageIndexAsync().ConfigureAwait(true);
         }
         else if (phase == "interrupt")
         {
@@ -346,6 +581,7 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
             { generation, firstKey, first, prior, operation = manifest.LargeOperation, batches = batches.Select(batch => batch.Scope.BatchId).ToArray(), interruptedProcess = Environment.ProcessId }, s_json);
             await File.WriteAllBytesAsync(recoveryPath, interruptedGeneration, token).ConfigureAwait(true);
             snapshotSha256.Add(GenerationSnapshot, SnapshotDigest(interruptedGeneration));
+            indexObservation = await ObservePreStageIndexAsync().ConfigureAwait(true);
         }
         else if (phase == "rebuild")
         {
@@ -373,17 +609,44 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
                         .ShouldBe(JsonSerializer.Serialize(PartyDetailSdkProjectionHandler.Fold(large, null), PartiesJsonOptions.Default));
                 }
             }
+            indexObservation = await ObservePreStageIndexAsync().ConfigureAwait(true);
         }
         else if (phase == "stage")
         {
             (await fixture.PrepareIndexAsync(manifest.IndexOperation, token).ConfigureAwait(true)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
             (await fixture.IndexAsync(manifest.IndexOperation, DomainSharedProjectionRebuildAction.Stage, token).ConfigureAwait(true)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
-            var staged = (await fixture.ReadAsync<PartyIndexSdkReadModel>(indexKey, token).ConfigureAwait(true)).Value;
-            if (manifest.Existing) staged.ShouldNotBeNull().ProjectionVersion.ShouldBe("previous-canonical");
-            else staged.ShouldBeNull();
+            (bool physicalPresent, byte[] physicalBytes, string? physicalEtag) = await fixture.TryReadPhysicalAsync(indexKey, token).ConfigureAwait(true);
+            physicalPresent.ShouldBeTrue();
+            physicalBytes.ShouldNotBeEmpty();
+            physicalEtag.ShouldNotBeNullOrWhiteSpace();
+            ReadModelEntry<PartyIndexSdkReadModel> staged = await fixture.ReadAsync<PartyIndexSdkReadModel>(indexKey, token).ConfigureAwait(true);
+            staged.ETag.ShouldBeNullOrEmpty();
+            if (manifest.Existing)
+            {
+                PartyIndexSdkReadModel stagedModel = staged.Value.ShouldNotBeNull();
+                stagedModel.ProjectionVersion.ShouldBe("previous-canonical");
+                byte[] visibleBytes = fixture.Serialize(stagedModel);
+                visibleBytes.ShouldNotBe(physicalBytes);
+                indexObservation = (true, SnapshotDigest(visibleBytes), null);
+            }
+            else
+            {
+                staged.Value.ShouldBeNull();
+                indexObservation = (false, null, null);
+            }
         }
         else if (phase == "commit")
+        {
             (await fixture.IndexAsync(manifest.IndexOperation, DomainSharedProjectionRebuildAction.Commit, token).ConfigureAwait(true)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+            (bool committedPresent, byte[] committedBytes, string? committedEtag) = await fixture.TryReadPhysicalAsync(indexKey, token).ConfigureAwait(true);
+            committedPresent.ShouldBeTrue();
+            committedBytes.ShouldNotBeEmpty();
+            committedEtag.ShouldNotBeNullOrWhiteSpace();
+            ReadModelEntry<PartyIndexSdkReadModel> committedVisible = await fixture.ReadAsync<PartyIndexSdkReadModel>(indexKey, token).ConfigureAwait(true);
+            committedVisible.Value.ShouldNotBeNull();
+            committedVisible.ETag.ShouldBe(committedEtag);
+            indexObservation = (true, SnapshotDigest(committedBytes), committedEtag);
+        }
         else if (phase == "verify")
         {
             (await fixture.IndexAsync(manifest.IndexOperation, DomainSharedProjectionRebuildAction.Verify, token).ConfigureAwait(true)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
@@ -428,13 +691,20 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
                     else processing.Records.Select(record => record.SequenceNumber).ShouldBe([1, 2, 3]);
                 }
             }
-            var index = (await fixture.ReadAsync<PartyIndexSdkReadModel>(indexKey, token).ConfigureAwait(true)).Value.ShouldNotBeNull();
+            ReadModelEntry<PartyIndexSdkReadModel> verifiedIndex = await fixture.ReadAsync<PartyIndexSdkReadModel>(indexKey, token).ConfigureAwait(true);
+            PartyIndexSdkReadModel index = verifiedIndex.Value.ShouldNotBeNull();
             index.Entries.Keys.Order(StringComparer.Ordinal).ShouldBe(["party-large", "party-live"]);
             index.Entries["party-live"].DisplayName.ShouldBe("Synthetic Updated");
             index.Entries["party-live"].IsActive.ShouldBeFalse();
             index.LastSequenceNumbers["party-live"].ShouldBe(3);
             index.LastSequenceNumbers["party-large"].ShouldBe(4097);
             index.ErasureSequenceNumbers["party-erased"].ShouldBe(2);
+            (bool verifiedPresent, byte[] verifiedBytes, string? verifiedEtag) = await fixture.TryReadPhysicalAsync(indexKey, token).ConfigureAwait(true);
+            verifiedPresent.ShouldBeTrue();
+            verifiedBytes.ShouldNotBeEmpty();
+            verifiedEtag.ShouldNotBeNullOrWhiteSpace();
+            verifiedIndex.ETag.ShouldBe(verifiedEtag);
+            indexObservation = (true, SnapshotDigest(verifiedBytes), verifiedEtag);
         }
         else throw new InvalidOperationException("Unknown backfill workload phase.");
         byte[] survivorBytes = await File.ReadAllBytesAsync(survivorsPath, token).ConfigureAwait(true);
@@ -448,10 +718,42 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
         foreach (var survivor in survivors) (await fixture.RawAsync(survivor.Key, token).ConfigureAwait(true)).ShouldBe(survivor.Value);
         snapshotSha256.Add(SurvivorSnapshot, SnapshotDigest(survivorBytes));
         byte[] receipt = JsonSerializer.SerializeToUtf8Bytes(new
-        { tenant = manifest.Tenant, operation = manifest.IndexOperation, phase, inputSha256, processId = Environment.ProcessId, snapshotSha256 }, s_json);
+        {
+            tenant = manifest.Tenant,
+            operation = manifest.IndexOperation,
+            phase,
+            inputSha256,
+            processId = Environment.ProcessId,
+            snapshotSha256,
+            index = new { present = indexObservation.Present, sha256 = indexObservation.Sha256, etag = indexObservation.ETag },
+        }, s_json);
         await File.WriteAllBytesAsync(Path.Combine(directory, phase + ".json"), receipt, token).ConfigureAwait(true);
         // Base64 preserves the exact JSON bytes through xUnit's XML text escaping.
         TestContext.Current.TestOutputHelper.ShouldNotBeNull().WriteLine(ReceiptPrefix + Convert.ToBase64String(receipt));
+
+        async Task<(bool Present, string? Sha256, string? ETag)> ObservePreStageIndexAsync()
+        {
+            (bool present, byte[] bytes, string? etag) = await fixture.TryReadPhysicalAsync(indexKey, token).ConfigureAwait(true);
+            ReadModelEntry<PartyIndexSdkReadModel> visible = await fixture.ReadAsync<PartyIndexSdkReadModel>(indexKey, token).ConfigureAwait(true);
+            if (manifest.Existing)
+            {
+                present.ShouldBeTrue();
+                bytes.ShouldNotBeEmpty();
+                etag.ShouldNotBeNullOrWhiteSpace();
+                PartyIndexSdkReadModel model = visible.Value.ShouldNotBeNull();
+                model.ProjectionVersion.ShouldBe("previous-canonical");
+                visible.ETag.ShouldBe(etag);
+                fixture.Serialize(model).ShouldBe(bytes);
+                return (true, SnapshotDigest(bytes), etag);
+            }
+
+            present.ShouldBeFalse();
+            bytes.ShouldBeEmpty();
+            etag.ShouldBeNull();
+            visible.Value.ShouldBeNull();
+            visible.ETag.ShouldBeNull();
+            return (false, null, null);
+        }
 
         async Task<JsonElement> ObserveGenerationAsync()
         {

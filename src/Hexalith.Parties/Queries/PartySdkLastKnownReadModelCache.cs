@@ -12,7 +12,7 @@ public sealed class PartySdkLastKnownReadModelCache
     private const int DefaultMaximumEntries = 1024;
     private static readonly TimeSpan s_defaultRetention = TimeSpan.FromMinutes(5);
     private readonly Dictionary<string, PartySdkLastKnownReadModelCacheEntry> _entries = new(StringComparer.Ordinal);
-    private readonly Dictionary<long, (string Key, bool Superseded)> _activeReads = new();
+    private readonly Dictionary<long, (string Key, bool Superseded, bool FallbackRetired)> _activeReads = new();
     private readonly object _gate = new();
     private readonly int _maximumEntries;
     private readonly TimeProvider _timeProvider;
@@ -75,7 +75,7 @@ public sealed class PartySdkLastKnownReadModelCache
             }
 
             long generation = ++_lastReadToken;
-            _activeReads.Add(generation, (cacheKey, false));
+            _activeReads.Add(generation, (cacheKey, false, false));
             return generation;
         }
     }
@@ -159,7 +159,7 @@ public sealed class PartySdkLastKnownReadModelCache
         }
     }
 
-    /// <summary>Retires earlier inline fallback after verified bucketed history or authoritative absence.</summary>
+    /// <summary>Retires inline fallback after verified bucketed history or authoritative absence.</summary>
     internal bool RetireEarlierProcessingFallback(string tenantId, string partyId, long generation, bool invalidateEarlier = false)
     {
         string key = PartySdkReadModelAddresses.Processing(tenantId, partyId);
@@ -170,17 +170,16 @@ public sealed class PartySdkLastKnownReadModelCache
                 return false;
             }
 
+            if (!invalidateEarlier)
+            {
+                SupersedeOtherReads(key, generation);
+                _ = _entries.Remove(key);
+                return true;
+            }
+
             if (!read.Superseded)
             {
-                if (invalidateEarlier)
-                {
-                    InvalidateReads(key, generation);
-                }
-                else
-                {
-                    SupersedeEarlierReads(key, generation);
-                }
-
+                InvalidateReads(key, generation);
                 _ = _entries.Remove(key);
             }
 
@@ -252,7 +251,7 @@ public sealed class PartySdkLastKnownReadModelCache
                 return false;
             }
 
-            if (read.Superseded)
+            if (read.Superseded || read.FallbackRetired)
             {
                 return acceptSuperseded;
             }
@@ -282,7 +281,18 @@ public sealed class PartySdkLastKnownReadModelCache
             .Select(static pair => pair.Key).ToArray();
         foreach (long prior in superseded)
         {
-            _activeReads[prior] = (key, true);
+            _activeReads[prior] = (key, true, _activeReads[prior].FallbackRetired);
+        }
+    }
+
+    private void SupersedeOtherReads(string key, long generation)
+    {
+        // Complete bucket verification retires fallback for all overlapping reads without suppressing later absence fences.
+        long[] retired = _activeReads.Where(pair => pair.Key != generation && pair.Value.Key == key)
+            .Select(static pair => pair.Key).ToArray();
+        foreach (long other in retired)
+        {
+            _activeReads[other] = (key, _activeReads[other].Superseded, true);
         }
     }
 

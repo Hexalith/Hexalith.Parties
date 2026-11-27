@@ -41,6 +41,7 @@ WORKLOAD_SNAPSHOTS = {
     "commit": {"survivors.json"},
     "verify": {"survivors.json", "generation.json"},
 }
+INDEX_RECEIPT_KEYS = frozenset(("present", "sha256", "etag"))
 
 
 def boolean_cases(parameter):
@@ -58,6 +59,31 @@ BACKFILL_METHODS = {
     WORKLOAD_METHOD: FACT,
     f"{BACKFILL_PROCESS}.WorkloadReportRefusesSubstitutedOrMalformedEvidence": tuple(
         f'(defect: "{defect}")' for defect in ("phase", "target", "nested output", "identity", "counts")),
+    f"{BACKFILL_PROCESS}.IndexReceiptRefusesMissingDriftedLeakedUnchangedOrMismatchedState": tuple(
+        f'(existing: {existing}, defect: "{defect}")' for existing, defect in (
+            ("False", "missing-object"),
+            ("False", "duplicate-object"),
+            ("False", "missing-field"),
+            ("False", "extra-field"),
+            ("False", "duplicate-field"),
+            ("False", "absent-leaked-present"),
+            ("False", "absent-leaked-etag"),
+            ("False", "stage-leaked-candidate"),
+            ("False", "commit-missing"),
+            ("False", "commit-null-etag"),
+            ("False", "invalid-sha256"),
+            ("False", "blank-etag"),
+            ("False", "untrimmed-etag"),
+            ("False", "verify-mismatched-hash"),
+            ("True", "existing-missing"),
+            ("True", "interrupt-drifted-etag"),
+            ("True", "rebuild-drifted-hash"),
+            ("True", "stage-leaked-etag"),
+            ("True", "stage-drifted-hash"),
+            ("True", "commit-unchanged-hash"),
+            ("True", "commit-unchanged-etag"),
+            ("True", "verify-mismatched-etag"),
+        )),
 }
 INGESTION = f"{MEMORIES_PROJECT}.Ingestion"
 DISCOVERY = f"{INGESTION}.NaturalLanguageErasureIntegrationTests"
@@ -247,6 +273,47 @@ def unique_receipt_object(pairs):
     return result
 
 
+def is_sha256(value):
+    return isinstance(value, str) and len(value) == 64 and all(ch in "0123456789abcdef" for ch in value)
+
+
+def validate_index_receipt(target, phase, existing, index, baseline, committed):
+    if not isinstance(index, dict) or index.keys() != INDEX_RECEIPT_KEYS:
+        raise ValueError(f"{target}: missing or malformed {phase} workload index receipt")
+    present = index["present"]
+    sha256 = index["sha256"]
+    etag = index["etag"]
+    if type(present) is not bool:
+        raise ValueError(f"{target}: invalid {phase} workload index presence")
+    expected_present = True if phase in ("commit", "verify") else existing
+    if present is not expected_present:
+        raise ValueError(f"{target}: unexpected {phase} workload index presence")
+    if not present:
+        if sha256 is not None or etag is not None:
+            raise ValueError(f"{target}: unexpected {phase} workload index digest or ETag while absent")
+        return index
+    if not is_sha256(sha256):
+        raise ValueError(f"{target}: missing or invalid {phase} workload index SHA-256")
+    if phase == "stage":
+        if etag is not None:
+            raise ValueError(f"{target}: stage workload index receipt must not expose an ETag")
+        if sha256 != baseline["sha256"]:
+            raise ValueError(f"{target}: stage workload index SHA-256 drifted from preexisting index")
+        return index
+    if not isinstance(etag, str) or not etag.strip() or etag != etag.strip():
+        raise ValueError(f"{target}: missing or invalid {phase} workload index ETag")
+    if phase in ("interrupt", "rebuild"):
+        if sha256 != baseline["sha256"] or etag != baseline["etag"]:
+            raise ValueError(f"{target}: {phase} workload index drifted from seed index")
+    elif phase == "commit":
+        if existing and (sha256 == baseline["sha256"] or etag == baseline["etag"]):
+            raise ValueError(f"{target}: commit workload index did not change preexisting index bytes and ETag")
+    elif phase == "verify":
+        if sha256 != committed["sha256"] or etag != committed["etag"]:
+            raise ValueError(f"{target}: verify workload index mismatched commit index")
+    return index
+
+
 def verify_workloads(directory):
     outcomes = {}
     for target in sorted(directory.iterdir()):
@@ -262,6 +329,9 @@ def verify_workloads(directory):
         pids = set()
         interrupted_pid = None
         snapshots = {}
+        baseline_index = None
+        committed_index = None
+        index_by_phase = {}
         for phase, expected_snapshots in WORKLOAD_SNAPSHOTS.items():
             receipt_bytes = (target / f"{phase}.json").read_bytes()
             receipt = json.loads(receipt_bytes, object_pairs_hook=unique_receipt_object)
@@ -281,6 +351,12 @@ def verify_workloads(directory):
             for name, digest in observations.items():
                 if snapshots.setdefault(name, digest) != digest:
                     raise ValueError(f"{target}: inconsistent workload observations for {name}")
+            index = validate_index_receipt(target, phase, existing, receipt.get("index"), baseline_index, committed_index)
+            index_by_phase[phase] = index
+            if phase == "seed":
+                baseline_index = index
+            elif phase == "commit":
+                committed_index = index
             pids.add(pid)
         if len(pids) != len(WORKLOAD_SNAPSHOTS):
             raise ValueError(f"{target}: expected a distinct process for each phase")
@@ -297,7 +373,8 @@ def verify_workloads(directory):
                 if type(observed_pid) is not int or observed_pid != interrupted_pid:
                     raise ValueError(f"{target}: generation snapshot process differs from interruption receipt")
         outcomes[existing] = {"tenant": target.name, "inputSha256": input_sha256,
-                              "phases": list(WORKLOAD_SNAPSHOTS), "snapshotSha256": snapshots}
+                              "phases": list(WORKLOAD_SNAPSHOTS), "snapshotSha256": snapshots,
+                              "index": index_by_phase}
     if outcomes.keys() != {False, True}:
         raise ValueError(f"{directory}: expected workload receipts for the empty and existing targets")
     return {"empty": outcomes[False], "existing": outcomes[True]}

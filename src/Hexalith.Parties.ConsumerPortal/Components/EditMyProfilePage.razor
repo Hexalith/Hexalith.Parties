@@ -21,22 +21,15 @@
         <p class="hx-parties-profile__eyebrow"><FluentText Size="TextSize.Size200" Weight="TextWeight.Semibold">@ConsumerPortalLabels.AreaLabel</FluentText></p>
         <FluentText As="TextTag.H1" Size="TextSize.Size800" Weight="TextWeight.Semibold" id="@_titleId">@ConsumerPortalLabels.EditProfileTitle</FluentText>
         <p class="hx-parties-profile__summary">@ConsumerPortalLabels.EditProfileSummary</p>
-        @if (StatusMessage is { } statusMessage)
+        @if (SharedLiveRegionType is { } sharedType)
         {
-            @if (SharedLiveRegionType is { } sharedType)
-            {
-                <div class="hx-parties-profile__freshness">
-                    <DynamicComponent Type="@sharedType" Parameters="@(new Dictionary<string, object> { ["Message"] = statusMessage })" />
-                </div>
-            }
-            else
-            {
-                <p class="hx-parties-profile__freshness" role="status" aria-live="polite">@statusMessage</p>
-            }
+            <div class="hx-parties-profile__freshness">
+                <DynamicComponent Type="@sharedType" Parameters="@(new Dictionary<string, object> { ["Message"] = StatusMessage })" />
+            </div>
         }
-        else if (_profile is not null)
+        else
         {
-            <FreshnessStatus Freshness="@_profile.Freshness" />
+            <p class="hx-parties-profile__freshness" role="status" aria-live="polite">@StatusMessage</p>
         }
     </header>
 
@@ -209,7 +202,21 @@
     private bool _pendingAlertFocus;
     private string? _formAlert;
     private string? _saveStatusMessage;
-    private string? StatusMessage => _saveStatusMessage ?? (_profile is null && _isLoading ? ConsumerPortalLabels.EditProfileLoadingStatus : null);
+    private string StatusMessage
+        => _saveStatusMessage
+            ?? (_isLoading
+                ? ConsumerPortalLabels.EditProfileLoadingStatus
+                : _profile is not null
+                    ? FreshnessMessage(_profile.Freshness)
+                    : string.Empty);
+
+    private static string FreshnessMessage(ProjectionFreshnessMetadata? freshness)
+        => freshness?.Status switch
+        {
+            ProjectionFreshnessStatus.Current => ConsumerPortalLabels.MyProfileFreshnessCurrent,
+            ProjectionFreshnessStatus.Stale => ConsumerPortalLabels.MyProfileFreshnessStale,
+            _ => ConsumerPortalLabels.MyProfileFreshnessLastKnown,
+        };
 
     private Type? SharedLiveRegionType
     {

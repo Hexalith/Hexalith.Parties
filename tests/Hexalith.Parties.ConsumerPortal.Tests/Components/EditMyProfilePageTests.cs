@@ -229,11 +229,12 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
     public async Task EditMyProfilePage_AcceptedSave_OptimisticallyUpdatesAndUsesOnePoliteStatusSource(bool sharedFeedback)
     {
         RegisterFeedback(sharedFeedback);
+        var initialLoad = new TaskCompletionSource<PartyDetail>(TaskCreationOptions.RunContinuationsAsynchronously);
         var save = new TaskCompletionSource<ConsumerProfileUpdateResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         var readback = new TaskCompletionSource<PartyDetail>(TaskCreationOptions.RunContinuationsAsynchronously);
         var readbackStarted = new TaskCompletionSource<CancellationToken>(TaskCreationOptions.RunContinuationsAsynchronously);
         var dataClient = new QueueProfileDataClient(
-            _ => Task.FromResult(CurrentPerson()),
+            _ => initialLoad.Task,
             token =>
             {
                 readbackStarted.SetResult(token);
@@ -243,14 +244,22 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
         Services.AddSingleton<IConsumerProfileDataClient>(dataClient);
         Services.AddSingleton<IConsumerProfileEditClient>(editClient);
         IRenderedComponent<EditMyProfilePage> cut = Render<EditMyProfilePage>();
-        cut.WaitForAssertion(() => FindTextInput(cut, "First name").Instance.Value.ShouldBe("Ada"));
+
+        var liveRegion = AssertPoliteStatus(cut, "Loading editable profile details", sharedFeedback);
+
+        initialLoad.SetResult(CurrentPerson());
+        cut.WaitForAssertion(() =>
+        {
+            FindTextInput(cut, "First name").Instance.Value.ShouldBe("Ada");
+            liveRegion = AssertPoliteStatus(cut, "Up to date", sharedFeedback, liveRegion);
+        });
 
         SetTextInput(cut, "First name", "Grace");
         cut.Find("form").Submit();
 
         cut.WaitForAssertion(() =>
         {
-            AssertPoliteStatus(cut, "Saving...", sharedFeedback);
+            liveRegion = AssertPoliteStatus(cut, "Saving...", sharedFeedback, liveRegion);
         });
 
         PartyDetail updated = CurrentPerson() with
@@ -267,7 +276,7 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
             cut.Markup.ShouldContain("Grace Lovelace");
             cut.Markup.ShouldContain("ACCEPTED-ID");
             cut.Find("fieldset").HasAttribute("disabled").ShouldBeFalse();
-            AssertPoliteStatus(cut, "Saved - updating", sharedFeedback);
+            liveRegion = AssertPoliteStatus(cut, "Saved - updating", sharedFeedback, liveRegion);
             dataClient.CallCount.ShouldBe(2);
             readbackToken.CanBeCanceled.ShouldBeTrue();
             readbackToken.IsCancellationRequested.ShouldBeFalse();
@@ -277,16 +286,166 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
         editClient.LastRequest.ShouldBeSameAs(accepted);
         readbackToken.IsCancellationRequested.ShouldBeFalse();
         dataClient.CallCount.ShouldBe(2);
-        cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldBe("Saved - updating");
+        liveRegion = AssertPoliteStatus(cut, "Saved - updating", sharedFeedback, liveRegion);
         readback.SetResult(updated);
 
         cut.WaitForAssertion(() =>
         {
             FindTextInput(cut, "First name").Instance.Value.ShouldBe("Grace");
-            AssertPoliteStatus(cut, "Saved", sharedFeedback);
+            liveRegion = AssertPoliteStatus(cut, "Saved", sharedFeedback, liveRegion);
             editClient.LastRequest.ShouldNotBeNull();
             editClient.LastRequest!.PersonDetails!.FirstName.ShouldBe("Grace");
             dataClient.CallCount.ShouldBe(2);
+        });
+    }
+
+    [Theory]
+    [InlineData(false)]
+#if HFC_SHARED_UI
+    [InlineData(true)]
+#endif
+    public async Task EditMyProfilePage_DegradedAfterSave_PreservesSingleLiveRegionAcrossReadbackFailure(bool sharedFeedback)
+    {
+        RegisterFeedback(sharedFeedback);
+        var initialLoad = new TaskCompletionSource<PartyDetail>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var save = new TaskCompletionSource<ConsumerProfileUpdateResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var firstReadback = new TaskCompletionSource<PartyDetail>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var firstReadbackStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var dataClient = new QueueProfileDataClient(
+            _ => initialLoad.Task,
+            _ =>
+            {
+                firstReadbackStarted.TrySetResult();
+                return firstReadback.Task;
+            },
+            _ => Task.FromException<PartyDetail>(new InvalidOperationException("readback failure")));
+        Services.AddSingleton<IConsumerProfileDataClient>(dataClient);
+        Services.AddSingleton<IConsumerProfileEditClient>(new QueueProfileEditClient(_ => save.Task));
+        IRenderedComponent<EditMyProfilePage> cut = Render<EditMyProfilePage>();
+
+        var liveRegion = AssertPoliteStatus(cut, "Loading editable profile details", sharedFeedback);
+
+        initialLoad.SetResult(CurrentPerson());
+        cut.WaitForAssertion(() =>
+        {
+            FindTextInput(cut, "First name").Instance.Value.ShouldBe("Ada");
+            liveRegion = AssertPoliteStatus(cut, "Up to date", sharedFeedback, liveRegion);
+        });
+
+        SetTextInput(cut, "First name", "Grace");
+        Task submit = cut.Find("form").TriggerEventAsync("onsubmit", EventArgs.Empty);
+        cut.WaitForAssertion(() =>
+        {
+            liveRegion = AssertPoliteStatus(cut, "Saving...", sharedFeedback, liveRegion);
+        });
+
+        save.SetResult(new ConsumerProfileUpdateResult(ConsumerProfileUpdateOutcome.Accepted));
+        await firstReadbackStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), Xunit.TestContext.Current.CancellationToken);
+        cut.WaitForAssertion(() =>
+        {
+            liveRegion = AssertPoliteStatus(cut, "Saved - updating", sharedFeedback, liveRegion);
+        });
+
+        firstReadback.SetException(new InvalidOperationException("readback failure"));
+        await submit.WaitAsync(TimeSpan.FromSeconds(5), Xunit.TestContext.Current.CancellationToken);
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find("fieldset").HasAttribute("disabled").ShouldBeFalse();
+            FindTextInput(cut, "First name").Instance.Value.ShouldBe("Grace");
+            liveRegion = AssertPoliteStatus(cut, "Saved - showing the latest available details", sharedFeedback, liveRegion);
+            dataClient.CallCount.ShouldBe(3);
+        });
+    }
+
+    [Theory]
+    [InlineData(false, ProjectionFreshnessStatus.Stale, "Showing what we last knew - refreshing")]
+    [InlineData(false, ProjectionFreshnessStatus.Degraded, "Showing last known")]
+#if HFC_SHARED_UI
+    [InlineData(true, ProjectionFreshnessStatus.Stale, "Showing what we last knew - refreshing")]
+    [InlineData(true, ProjectionFreshnessStatus.Degraded, "Showing last known")]
+#endif
+    public void EditMyProfilePage_NonCurrentFreshness_PreservesSingleLiveRegionAcrossLoadAndValidation(
+        bool sharedFeedback,
+        ProjectionFreshnessStatus freshness,
+        string expectedFreshness)
+    {
+        RegisterFeedback(sharedFeedback);
+        var initialLoad = new TaskCompletionSource<PartyDetail>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Services.AddSingleton<IConsumerProfileDataClient>(new QueueProfileDataClient(_ => initialLoad.Task));
+        Services.AddSingleton<IConsumerProfileEditClient>(new QueueProfileEditClient());
+        IRenderedComponent<EditMyProfilePage> cut = Render<EditMyProfilePage>();
+
+        var liveRegion = AssertPoliteStatus(cut, "Loading editable profile details", sharedFeedback);
+
+        initialLoad.SetResult(CurrentPerson() with { Freshness = ProjectionFreshnessMetadata.Create(freshness) });
+        cut.WaitForAssertion(() =>
+        {
+            FindTextInput(cut, "First name").Instance.Value.ShouldBe("Ada");
+            liveRegion = AssertPoliteStatus(cut, expectedFreshness, sharedFeedback, liveRegion);
+        });
+
+        SetTextInput(cut, "Last name", string.Empty);
+        cut.Find("form").Submit();
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.FindAll("[role='alert']").ShouldHaveSingleItem().TextContent.ShouldContain("Check the highlighted fields and try again.");
+            liveRegion = AssertPoliteStatus(cut, expectedFreshness, sharedFeedback, liveRegion);
+        });
+    }
+
+    [Theory]
+    [InlineData(false)]
+#if HFC_SHARED_UI
+    [InlineData(true)]
+#endif
+    public void EditMyProfilePage_LoadFailureRetryAndSaveFailure_KeepLiveRegionMountedWhileRenderingAlerts(bool sharedFeedback)
+    {
+        RegisterFeedback(sharedFeedback);
+        var initialLoad = new TaskCompletionSource<PartyDetail>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var retryLoad = new TaskCompletionSource<PartyDetail>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var save = new TaskCompletionSource<ConsumerProfileUpdateResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var dataClient = new QueueProfileDataClient(_ => initialLoad.Task, _ => retryLoad.Task);
+        Services.AddSingleton<IConsumerProfileDataClient>(dataClient);
+        Services.AddSingleton<IConsumerProfileEditClient>(new QueueProfileEditClient(_ => save.Task));
+        IRenderedComponent<EditMyProfilePage> cut = Render<EditMyProfilePage>();
+
+        var liveRegion = AssertPoliteStatus(cut, "Loading editable profile details", sharedFeedback);
+
+        initialLoad.SetException(new InvalidOperationException("load failure"));
+        cut.WaitForAssertion(() =>
+        {
+            cut.FindAll("[role='alert']").ShouldHaveSingleItem().TextContent.ShouldContain("We couldn't load the editable profile details. Please try again.");
+            liveRegion = AssertPoliteStatus(cut, string.Empty, sharedFeedback, liveRegion);
+        });
+
+        cut.Find("fluent-button").Click();
+        cut.WaitForAssertion(() =>
+        {
+            cut.FindAll("[role='alert']").ShouldBeEmpty();
+            liveRegion = AssertPoliteStatus(cut, "Loading editable profile details", sharedFeedback, liveRegion);
+        });
+
+        retryLoad.SetResult(CurrentPerson());
+        cut.WaitForAssertion(() =>
+        {
+            FindTextInput(cut, "First name").Instance.Value.ShouldBe("Ada");
+            liveRegion = AssertPoliteStatus(cut, "Up to date", sharedFeedback, liveRegion);
+        });
+
+        SetTextInput(cut, "First name", "Grace");
+        cut.Find("form").Submit();
+        cut.WaitForAssertion(() =>
+        {
+            liveRegion = AssertPoliteStatus(cut, "Saving...", sharedFeedback, liveRegion);
+        });
+
+        save.SetResult(new ConsumerProfileUpdateResult(ConsumerProfileUpdateOutcome.Failed));
+        cut.WaitForAssertion(() =>
+        {
+            cut.FindAll("[role='alert']").ShouldHaveSingleItem().TextContent.ShouldContain("We couldn't save the changes. Please try again.");
+            liveRegion = AssertPoliteStatus(cut, "Up to date", sharedFeedback, liveRegion);
         });
     }
 
@@ -300,15 +459,131 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
 #endif
     }
 
-    private static void AssertPoliteStatus(IRenderedComponent<EditMyProfilePage> cut, string message, bool sharedFeedback)
+    private static (
+        string Message,
+        AngleSharp.Dom.INode HeaderSnapshot,
+        int HeaderChildIndex,
+        int? DynamicComponentId,
+        DynamicComponent? DynamicInstance,
+        int? LiveRegionComponentId,
+        object? LiveRegionInstance) AssertPoliteStatus(
+        IRenderedComponent<EditMyProfilePage> cut,
+        string message,
+        bool sharedFeedback,
+        (
+            string Message,
+            AngleSharp.Dom.INode HeaderSnapshot,
+            int HeaderChildIndex,
+            int? DynamicComponentId,
+            DynamicComponent? DynamicInstance,
+            int? LiveRegionComponentId,
+            object? LiveRegionInstance)? expected = null)
     {
-        var status = cut.FindAll("[role='status']").ShouldHaveSingleItem();
+        cut.FindComponents<FreshnessStatus>().ShouldBeEmpty();
+        AngleSharp.Dom.IElement header = cut.Find("header.hx-parties-profile__header");
+        AngleSharp.Dom.IElement status = cut.FindAll("[role='status']").ShouldHaveSingleItem();
         status.GetAttribute("aria-live").ShouldBe("polite");
         status.TextContent.Trim().ShouldBe(message);
         status.LocalName.ShouldBe(sharedFeedback ? "div" : "p");
+        AngleSharp.Dom.IElement headerChild;
+        if (sharedFeedback)
+        {
+            headerChild = status.ParentElement.ShouldNotBeNull();
+            headerChild.ClassList.Contains("hx-parties-profile__freshness").ShouldBeTrue();
+            headerChild.ParentElement.ShouldNotBeNull().LocalName.ShouldBe("header");
+        }
+        else
+        {
+            headerChild = status;
+            status.ClassList.Contains("hx-parties-profile__freshness").ShouldBeTrue();
+            status.ParentElement.ShouldNotBeNull().LocalName.ShouldBe("header");
+        }
+
+        int headerChildIndex = Array.IndexOf(header.Children.ToArray(), headerChild);
+        headerChildIndex.ShouldBeGreaterThanOrEqualTo(0);
+
+        int? dynamicComponentId = null;
+        DynamicComponent? dynamicInstance = null;
+        int? liveRegionComponentId = null;
+        object? liveRegionInstance = null;
+
+        if (sharedFeedback)
+        {
+            IRenderedComponent<DynamicComponent> dynamicHost = cut.FindComponents<DynamicComponent>().ShouldHaveSingleItem();
+            dynamicHost.IsDisposed.ShouldBeFalse();
+            dynamicComponentId = dynamicHost.ComponentId;
+            dynamicInstance = dynamicHost.Instance;
 #if HFC_SHARED_UI
-        cut.FindComponents<Hexalith.FrontComposer.Shell.Components.Feedback.FcLiveRegion>().Count.ShouldBe(sharedFeedback ? 1 : 0);
+            IRenderedComponent<Hexalith.FrontComposer.Shell.Components.Feedback.FcLiveRegion> liveRegion =
+                cut.FindComponents<Hexalith.FrontComposer.Shell.Components.Feedback.FcLiveRegion>().ShouldHaveSingleItem();
+            liveRegion.IsDisposed.ShouldBeFalse();
+            liveRegionComponentId = liveRegion.ComponentId;
+            liveRegionInstance = liveRegion.Instance;
 #endif
+        }
+        else
+        {
+            cut.FindComponents<DynamicComponent>().ShouldBeEmpty();
+#if HFC_SHARED_UI
+            cut.FindComponents<Hexalith.FrontComposer.Shell.Components.Feedback.FcLiveRegion>().ShouldBeEmpty();
+#endif
+        }
+
+        if (expected is { } prior)
+        {
+            headerChildIndex.ShouldBe(prior.HeaderChildIndex);
+
+            IReadOnlyList<AngleSharp.Diffing.Core.IDiff> headerDiffs = prior.HeaderSnapshot.ChildNodes
+                .CompareTo(header.ChildNodes);
+            if (string.Equals(message, prior.Message, StringComparison.Ordinal))
+            {
+                headerDiffs.ShouldBeEmpty();
+            }
+            else
+            {
+                headerDiffs.ShouldNotBeEmpty();
+            }
+
+            foreach (AngleSharp.Diffing.Core.IDiff diff in headerDiffs)
+            {
+                bool isAllowedStatusTextChange = diff switch
+                {
+                    AngleSharp.Diffing.Core.TextDiff textDiff =>
+                        textDiff.Control.Node.ParentElement?.GetAttribute("role") == "status"
+                        && textDiff.Test.Node.ParentElement?.GetAttribute("role") == "status",
+                    AngleSharp.Diffing.Core.MissingNodeDiff missing =>
+                        missing.Control.Node is AngleSharp.Dom.IText
+                        && missing.Control.Node.ParentElement?.GetAttribute("role") == "status",
+                    AngleSharp.Diffing.Core.UnexpectedNodeDiff unexpected =>
+                        unexpected.Test.Node is AngleSharp.Dom.IText
+                        && unexpected.Test.Node.ParentElement?.GetAttribute("role") == "status",
+                    _ => false,
+                };
+                isAllowedStatusTextChange.ShouldBeTrue(
+                    $"Expected only in-place text updates inside [role='status'], but observed {diff.GetType().Name} ({diff.Target}).");
+            }
+
+            dynamicComponentId.ShouldBe(prior.DynamicComponentId);
+            if (prior.DynamicInstance is not null)
+            {
+                dynamicInstance.ShouldBeSameAs(prior.DynamicInstance);
+            }
+
+            liveRegionComponentId.ShouldBe(prior.LiveRegionComponentId);
+            if (prior.LiveRegionInstance is not null)
+            {
+                liveRegionInstance.ShouldBeSameAs(prior.LiveRegionInstance);
+            }
+        }
+
+        return (
+            message,
+            header.Clone(deep: true),
+            headerChildIndex,
+            dynamicComponentId,
+            dynamicInstance,
+            liveRegionComponentId,
+            liveRegionInstance);
     }
 
     [Fact]

@@ -348,16 +348,24 @@ test.describe('Consumer portal route shells', () => {
     await expect(page.getByRole('textbox', { name: 'Last name', exact: true })).toHaveValue('Consumer');
     await expectInteractiveShell(page);
 
-    await page.getByRole('textbox', { name: 'First name', exact: true }).fill('Updated');
-    await page.getByRole('button', { name: 'Save changes' }).click();
+    const liveRegion = await observeProfileLiveRegion(page);
+    try {
+      await expect(liveRegion.status).toContainText('Up to date');
 
-    await expect.poll(async () => (await latestUpdateRequest(request))?.partyId ?? null).toBe('party-bound-001');
-    await expect(page.locator('.hx-parties-profile').getByRole('status')).toHaveCount(1);
-    await expect(page.locator('.hx-parties-profile').getByRole('status')).toContainText('Saved');
-    await expect(page.getByRole('textbox', { name: 'First name', exact: true })).toHaveValue('Updated');
-    await expect(page.getByText('Updated Consumer')).toBeVisible();
-    expect(new URL(page.url()).pathname).toBe('/me/edit');
-    expect(browserVisibleDataRequests).toEqual([]);
+      await page.getByRole('textbox', { name: 'First name', exact: true }).fill('Updated');
+      await page.getByRole('button', { name: 'Save changes' }).click();
+
+      await expect.poll(async () => (await latestUpdateRequest(request))?.partyId ?? null).toBe('party-bound-001');
+      await expect(page.locator('.hx-parties-profile').getByRole('status')).toHaveCount(1);
+      await expect(page.locator('.hx-parties-profile').getByRole('status')).toContainText('Saved');
+      await liveRegion.expectPreserved();
+      await expect(page.getByRole('textbox', { name: 'First name', exact: true })).toHaveValue('Updated');
+      await expect(page.getByText('Updated Consumer')).toBeVisible();
+      expect(new URL(page.url()).pathname).toBe('/me/edit');
+      expect(browserVisibleDataRequests).toEqual([]);
+    } finally {
+      await liveRegion.dispose();
+    }
   });
 
   test('bound Consumer validation preserves typed values and does not issue a command', async ({ context, page, request }) => {
@@ -367,18 +375,26 @@ test.describe('Consumer portal route shells', () => {
     await page.goto('/me/edit');
     await expect(page.getByRole('heading', { name: 'Edit profile' })).toBeVisible();
     await expectInteractiveShell(page);
-    await page.getByRole('textbox', { name: 'First name', exact: true }).fill('Typed');
-    await page.getByRole('textbox', { name: 'Last name', exact: true }).fill('');
+    const liveRegion = await observeProfileLiveRegion(page);
+    try {
+      await expect(liveRegion.status).toContainText('Up to date');
+      await page.getByRole('textbox', { name: 'First name', exact: true }).fill('Typed');
+      await page.getByRole('textbox', { name: 'Last name', exact: true }).fill('');
 
-    await page.getByRole('button', { name: 'Save changes' }).click();
+      await page.getByRole('button', { name: 'Save changes' }).click();
 
-    await expect(page.getByRole('alert').filter({ hasText: 'Check the highlighted fields and try again.' })).toBeVisible();
-    await expect(page.getByRole('textbox', { name: 'First name', exact: true })).toHaveValue('Typed');
-    await expect(page.getByRole('textbox', { name: 'Last name', exact: true })).toHaveValue('');
-    expect(await latestUpdateRequest(request)).toBeUndefined();
-    await expect(page.getByText('Saving...')).toHaveCount(0);
-    await expect(page.getByText('Saved - updating')).toHaveCount(0);
-    expect(browserVisibleDataRequests).toEqual([]);
+      await expect(page.getByRole('alert').filter({ hasText: 'Check the highlighted fields and try again.' })).toBeVisible();
+      await liveRegion.expectPreserved();
+      await expect(liveRegion.status).toContainText('Up to date');
+      await expect(page.getByRole('textbox', { name: 'First name', exact: true })).toHaveValue('Typed');
+      await expect(page.getByRole('textbox', { name: 'Last name', exact: true })).toHaveValue('');
+      expect(await latestUpdateRequest(request)).toBeUndefined();
+      await expect(page.getByText('Saving...')).toHaveCount(0);
+      await expect(page.getByText('Saved - updating')).toHaveCount(0);
+      expect(browserVisibleDataRequests).toEqual([]);
+    } finally {
+      await liveRegion.dispose();
+    }
   });
 
   test('bound Consumer consent surface exposes semantic switches and honest lawful-basis split', async ({ context, page }) => {
@@ -694,6 +710,94 @@ test.describe('Consumer portal route shells', () => {
 
 // Before the circuit renders, the upgraded Fluent input has no accessible name yet; target its labelled host's input.
 const firstNameInput = (page: Page): Locator => page.locator('fluent-text-input[aria-label="First name"]').locator('input');
+
+const observeProfileLiveRegion = async (page: Page) => {
+  const status = page.locator('.hx-parties-profile [role="status"][aria-live="polite"]');
+  await expect(status).toHaveCount(1);
+  const tracker = await status.evaluateHandle((node) => {
+    const header = node.closest('.hx-parties-profile__header');
+    let removed = false;
+    let statusNodeMutations = 0;
+    let attributeMutations = 0;
+    const containsStatus = (candidate: Node): boolean => candidate === node
+      || (candidate instanceof Element
+        && (candidate.contains(node)
+          || candidate.matches('[role="status"]')
+          || candidate.querySelector('[role="status"]') !== null));
+    const observer = new MutationObserver((records) => {
+      for (const record of records) {
+        if (record.type === 'attributes') {
+          if (record.target === node
+            || (record.target instanceof Element
+              && (record.target.matches('[role="status"]')
+                || record.target.contains(node)))) {
+            attributeMutations++;
+          }
+          continue;
+        }
+        for (const removedNode of record.removedNodes) {
+          if (containsStatus(removedNode)) {
+            removed = true;
+            statusNodeMutations++;
+          }
+        }
+        for (const addedNode of record.addedNodes) {
+          if (addedNode instanceof Element
+            && (addedNode.matches('[role="status"]')
+              || addedNode.querySelector('[role="status"]') !== null)) {
+            statusNodeMutations++;
+          }
+        }
+      }
+    });
+    if (header) {
+      observer.observe(header, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['role', 'aria-live'],
+      });
+    }
+    return {
+      node,
+      disconnect: () => {
+        observer.disconnect();
+        return {
+          headerFound: header !== null,
+          connected: node.isConnected,
+          removed,
+          statusNodeMutations,
+          attributeMutations,
+        };
+      },
+    };
+  });
+
+  return {
+    status,
+    expectPreserved: async (): Promise<void> => {
+      await expect(status).toHaveCount(1);
+      const continuity = await status.evaluate((current, state) => ({
+        sameNode: current === state.node,
+        ...state.disconnect(),
+      }), tracker);
+      expect(continuity).toEqual({
+        sameNode: true,
+        headerFound: true,
+        connected: true,
+        removed: false,
+        statusNodeMutations: 0,
+        attributeMutations: 0,
+      });
+    },
+    dispose: async (): Promise<void> => {
+      await tracker.evaluate((state) => {
+        state.disconnect();
+      }).catch(() => undefined);
+      await tracker.dispose();
+    },
+  };
+};
 
 const enableAdminFixture = async (context: BrowserContext): Promise<void> => {
   await context.addCookies([

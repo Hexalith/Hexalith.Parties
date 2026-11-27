@@ -278,6 +278,199 @@ public sealed class PartySdkQueryHandlerTests
         }
     }
 
+    /// <summary>
+    /// Verifies a delayed inline revision check cannot restore retired fallback after complete bucket verification,
+    /// regardless of whether the inline read starts first, starts after the bucket read, or completes before bucket verification finishes.
+    /// </summary>
+    /// <param name="schedule">The overlap ordering between the inline and bucketed reads.</param>
+    /// <param name="bucketMode">The complete bucketed read surface retiring the fallback.</param>
+    /// <param name="inlinePaged">Whether the overlapping inline read uses the paged processing endpoint.</param>
+    /// <returns>A task that represents the verification.</returns>
+    [Theory]
+    [InlineData("inline-first", "complete", false)]
+    [InlineData("inline-first", "export", false)]
+    [InlineData("inline-first", "complete-page", false)]
+    [InlineData("inline-first", "complete", true)]
+    [InlineData("bucket-first", "complete", false)]
+    [InlineData("bucket-first", "export", false)]
+    [InlineData("bucket-first", "complete-page", false)]
+    [InlineData("bucket-first", "export", true)]
+    [InlineData("inline-completes-before-bucket", "complete", false)]
+    [InlineData("inline-completes-before-bucket", "export", false)]
+    [InlineData("inline-completes-before-bucket", "complete-page", false)]
+    [InlineData("inline-completes-before-bucket", "complete-page", true)]
+    public async Task DelayedInlineRevisionCheckCannotRestoreRetiredFallbackAfterBucketCutoverAsync(
+        string schedule,
+        string bucketMode,
+        bool inlinePaged)
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        const string tenant = "tenant-a";
+        const string party = "party-1";
+        string processingKey = PartySdkReadModelAddresses.Processing(tenant, party);
+        string bucketKey = PartySdkReadModelAddresses.ProcessingBucket(tenant, party, "generation", 0);
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", PartySdkReadModelAddresses.Detail(tenant, party), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel { Detail = Detail(party) }, "detail"));
+        var warmRecord = new ProcessingActivityRecord
+        {
+            TenantId = tenant,
+            PartyId = party,
+            SequenceNumber = 1,
+            EventType = "PartyUpdated",
+            Timestamp = s_now,
+            Summary = "Warm prior fact.",
+        };
+        var retained = warmRecord with { Summary = "Delayed inline fact." };
+        var published = warmRecord with { Summary = "Bucketed fact." };
+        var warmModel = new PartyProcessingSdkReadModel { Records = [warmRecord] };
+        var inline = new PartyProcessingSdkReadModel { Records = [retained] };
+        var header = new PartyProcessingSdkReadModel
+        {
+            BucketGeneration = "generation",
+            FirstBucket = 0,
+            LastBucket = 0,
+            FirstRecordSequenceNumber = 1,
+            LastRecordSequenceNumber = 1,
+            RecordCount = 1,
+            LastSequenceNumber = 1,
+        };
+        var inlineEntry = new ReadModelEntry<PartyProcessingSdkReadModel>(inline, "inline-revision");
+        var bucketEntry = new ReadModelEntry<PartyProcessingSdkReadModel>(header, "bucket-revision");
+        var bucketRead = new ReadModelEntry<PartyProcessingBucket>(new PartyProcessingBucket { Records = [published] }, "bucket");
+        var cache = new PartySdkLastKnownReadModelCache();
+        cache.StoreProcessing(tenant, party, warmModel);
+        var service = CreateService(store, lastKnownCache: cache);
+        QueryEnvelope history = CreateDetailEnvelope("GetProcessingRecords");
+        QueryEnvelope export = CreateDetailEnvelope("ExportPartyData");
+
+        using var inlineCancellation = CancellationTokenSource.CreateLinkedTokenSource(token);
+        using var bucketCancellation = CancellationTokenSource.CreateLinkedTokenSource(token);
+        var inlineAtVerification = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseInlineVerification = new TaskCompletionSource<ReadModelEntry<PartyProcessingSdkReadModel>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var bucketInFlight = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseBucket = new TaskCompletionSource<ReadModelEntry<PartyProcessingBucket>>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        if (schedule == "inline-completes-before-bucket")
+        {
+            store.GetAsync<PartyProcessingSdkReadModel>("statestore", processingKey, inlineCancellation.Token)
+                .Returns(inlineEntry);
+        }
+        else
+        {
+            store.GetAsync<PartyProcessingSdkReadModel>("statestore", processingKey, inlineCancellation.Token).Returns(
+                _ => Task.FromResult(inlineEntry),
+                _ =>
+                {
+                    inlineAtVerification.SetResult();
+                    return releaseInlineVerification.Task;
+                });
+        }
+
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", processingKey, bucketCancellation.Token)
+            .Returns(bucketEntry);
+        if (schedule == "inline-first")
+        {
+            store.GetAsync<PartyProcessingBucket>("statestore", bucketKey, bucketCancellation.Token)
+                .Returns(bucketRead);
+        }
+        else
+        {
+            store.GetAsync<PartyProcessingBucket>("statestore", bucketKey, bucketCancellation.Token).Returns(_ =>
+            {
+                bucketInFlight.SetResult();
+                return releaseBucket.Task;
+            });
+        }
+
+        Task<QueryResult> inlineTask;
+        Task<QueryResult> bucketTask;
+        try
+        {
+            if (schedule == "inline-first")
+            {
+                inlineTask = ReadInlineAsync(inlineCancellation.Token);
+                await inlineAtVerification.Task.WaitAsync(TimeSpan.FromSeconds(5), token);
+                bucketTask = ReadBucketAsync(bucketCancellation.Token);
+                _ = await bucketTask.WaitAsync(TimeSpan.FromSeconds(5), token);
+                _ = releaseInlineVerification.TrySetResult(inlineEntry);
+            }
+            else if (schedule == "bucket-first")
+            {
+                bucketTask = ReadBucketAsync(bucketCancellation.Token);
+                await bucketInFlight.Task.WaitAsync(TimeSpan.FromSeconds(5), token);
+                inlineTask = ReadInlineAsync(inlineCancellation.Token);
+                await inlineAtVerification.Task.WaitAsync(TimeSpan.FromSeconds(5), token);
+                _ = releaseBucket.TrySetResult(bucketRead);
+                _ = await bucketTask.WaitAsync(TimeSpan.FromSeconds(5), token);
+                _ = releaseInlineVerification.TrySetResult(inlineEntry);
+            }
+            else
+            {
+                bucketTask = ReadBucketAsync(bucketCancellation.Token);
+                await bucketInFlight.Task.WaitAsync(TimeSpan.FromSeconds(5), token);
+                inlineTask = ReadInlineAsync(inlineCancellation.Token);
+                _ = await inlineTask.WaitAsync(TimeSpan.FromSeconds(5), token);
+                cache.TryGetProcessing(tenant, party, out PartyProcessingSdkReadModel? installedDuringBucketRead).ShouldBeTrue();
+                installedDuringBucketRead.ShouldBe(inline);
+                _ = releaseBucket.TrySetResult(bucketRead);
+            }
+        }
+        finally
+        {
+            _ = releaseBucket.TrySetResult(bucketRead);
+            _ = releaseInlineVerification.TrySetResult(inlineEntry);
+        }
+
+        QueryResult bucketResult = await bucketTask.WaitAsync(TimeSpan.FromSeconds(5), token);
+        QueryResult inlineResult = await inlineTask.WaitAsync(TimeSpan.FromSeconds(5), token);
+        bucketResult.Success.ShouldBeTrue();
+        bucketResult.Metadata!.IsDegraded.ShouldBe(false);
+        ReadRecords(bucketResult, isExport: bucketMode == "export").ShouldBe([published]);
+        inlineResult.Success.ShouldBeTrue();
+        inlineResult.Metadata!.IsDegraded.ShouldBe(false);
+        ReadRecords(inlineResult, isExport: !inlinePaged && bucketMode == "complete").ShouldBe([retained]);
+
+        cache.TryGetProcessing(tenant, party, out _).ShouldBeFalse();
+        ActiveReadCount(cache).ShouldBe(0);
+
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", processingKey, token)
+            .ThrowsAsync(new IOException("store unavailable"));
+        store.ClearReceivedCalls();
+
+        QueryResult degradedHistory = await service.GetProcessingRecordsAsync(history, token);
+        degradedHistory.Success.ShouldBeTrue();
+        degradedHistory.Metadata!.IsDegraded.ShouldBe(true);
+        ReadRecords(degradedHistory, isExport: false).ShouldBeEmpty();
+
+        QueryResult degradedExport = await service.ExportPartyDataAsync(export, token);
+        degradedExport.Success.ShouldBeTrue();
+        degradedExport.Metadata!.IsDegraded.ShouldBe(true);
+        ReadRecords(degradedExport, isExport: true).ShouldBeEmpty();
+
+        await store.DidNotReceive().GetAsync<PartyProcessingBucket>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+
+        Task<QueryResult> ReadInlineAsync(CancellationToken cancellationToken)
+            => inlinePaged
+                ? service.GetProcessingRecordsAsync(history with { Paging = new QueryPagingOptions(PageSize: 5) }, cancellationToken)
+                : bucketMode == "complete"
+                    ? service.ExportPartyDataAsync(export, cancellationToken)
+                    : service.GetProcessingRecordsAsync(history, cancellationToken);
+
+        Task<QueryResult> ReadBucketAsync(CancellationToken cancellationToken)
+            => bucketMode switch
+            {
+                "export" => service.ExportPartyDataAsync(export, cancellationToken),
+                "complete-page" => service.GetProcessingRecordsAsync(history with { Paging = new QueryPagingOptions(PageSize: 5) }, cancellationToken),
+                _ => service.GetProcessingRecordsAsync(history, cancellationToken),
+            };
+
+        static IReadOnlyList<ProcessingActivityRecord> ReadRecords(QueryResult result, bool isExport)
+            => isExport
+                ? result.GetPayload().Deserialize<PartyDataPortabilityPackage>(PartiesJsonOptions.Default)!.ProcessingRecords
+                : result.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!;
+    }
+
     [Theory]
     [InlineData("page")]
     [InlineData("complete")]
@@ -2284,6 +2477,84 @@ public sealed class PartySdkQueryHandlerTests
             .OfType<System.Collections.IDictionary>()
             .Sum(dictionary => dictionary.Count);
         retainedEntries.ShouldBe(0);
+    }
+
+    /// <summary>
+    /// Verifies complete bucket retirement supersedes earlier and later active reads for the same key while
+    /// preserving unrelated tokens, erasure fences, and authoritative absence ordering.
+    /// </summary>
+    [Fact]
+    public void LastKnownReadModelCache_BucketRetirementSupersedesAllOverlappingReadsWithoutBreakingFences()
+    {
+        const string tenant = "tenant-a";
+        const string party = "party-1";
+        string key = PartySdkReadModelAddresses.Processing(tenant, party);
+        string unrelatedKey = PartySdkReadModelAddresses.Processing("tenant-b", party);
+        var cache = new PartySdkLastKnownReadModelCache();
+        var inline = new PartyProcessingSdkReadModel { LastSequenceNumber = 1 };
+        var replacement = new PartyProcessingSdkReadModel { LastSequenceNumber = 2 };
+        var unrelatedModel = new PartyProcessingSdkReadModel { LastSequenceNumber = 3 };
+
+        cache.StoreProcessing(tenant, party, inline);
+        long earlier = cache.BeginRead(key);
+        long bucket = cache.BeginRead(key);
+        long later = cache.BeginRead(key);
+        long unrelated = cache.BeginRead(unrelatedKey);
+
+        cache.RetireEarlierProcessingFallback(tenant, party, bucket).ShouldBeTrue();
+        cache.TryGetProcessing(tenant, party, out _).ShouldBeFalse();
+        cache.StoreProcessingIfCurrent(tenant, party, earlier, inline).ShouldBeFalse();
+        cache.StoreProcessingIfCurrent(tenant, party, later, inline).ShouldBeFalse();
+        cache.AcceptProcessingRead(tenant, party, earlier, inline, "inline-1").ShouldBeTrue();
+        cache.AcceptProcessingRead(tenant, party, later, inline, "inline-2").ShouldBeTrue();
+        cache.TryGetProcessing(tenant, party, out _).ShouldBeFalse();
+        cache.StoreProcessingIfCurrent("tenant-b", party, unrelated, unrelatedModel).ShouldBeTrue();
+        cache.TryGetProcessing("tenant-b", party, out PartyProcessingSdkReadModel? preservedUnrelated).ShouldBeTrue();
+        preservedUnrelated.ShouldBe(unrelatedModel);
+        cache.EndRead(earlier);
+        cache.EndRead(bucket);
+        cache.EndRead(later);
+        cache.EndRead(unrelated);
+        cache.EvictProcessing("tenant-b", party);
+
+        long bucketFirst = cache.BeginRead(key);
+        long inlineLater = cache.BeginRead(key);
+        cache.AcceptProcessingRead(tenant, party, inlineLater, inline, "inline-3").ShouldBeTrue();
+        cache.EndRead(inlineLater);
+        cache.TryGetProcessing(tenant, party, out PartyProcessingSdkReadModel? installedBeforeRetirement).ShouldBeTrue();
+        installedBeforeRetirement.ShouldBe(inline);
+        cache.RetireEarlierProcessingFallback(tenant, party, bucketFirst).ShouldBeTrue();
+        cache.TryGetProcessing(tenant, party, out _).ShouldBeFalse();
+        cache.EndRead(bucketFirst);
+
+        long evictedBucket = cache.BeginRead(key);
+        cache.EvictProcessing(tenant, party);
+        cache.RetireEarlierProcessingFallback(tenant, party, evictedBucket).ShouldBeFalse();
+        cache.EndRead(evictedBucket);
+
+        long olderAbsence = cache.BeginRead(key);
+        long newerInline = cache.BeginRead(key);
+        cache.AcceptProcessingRead(tenant, party, newerInline, replacement, "inline-4").ShouldBeTrue();
+        cache.EndRead(newerInline);
+        cache.RetireEarlierProcessingFallback(tenant, party, olderAbsence, invalidateEarlier: true).ShouldBeTrue();
+        cache.TryGetProcessing(tenant, party, out PartyProcessingSdkReadModel? keptAfterOlderAbsence).ShouldBeTrue();
+        keptAfterOlderAbsence.ShouldBe(replacement);
+        cache.EndRead(olderAbsence);
+        cache.EvictProcessing(tenant, party);
+
+        long earlierActive = cache.BeginRead(key);
+        long retiringBucket = cache.BeginRead(key);
+        long laterAbsence = cache.BeginRead(key);
+        cache.RetireEarlierProcessingFallback(tenant, party, retiringBucket).ShouldBeTrue();
+        cache.EndRead(retiringBucket);
+        cache.IsProcessingReadCurrent(tenant, party, earlierActive).ShouldBeTrue();
+        cache.RetireEarlierProcessingFallback(tenant, party, laterAbsence, invalidateEarlier: true).ShouldBeTrue();
+        cache.IsProcessingReadCurrent(tenant, party, earlierActive).ShouldBeFalse();
+        cache.IsProcessingReadCurrent(tenant, party, laterAbsence).ShouldBeFalse();
+        cache.EndRead(earlierActive);
+        cache.EndRead(laterAbsence);
+
+        ActiveReadCount(cache).ShouldBe(0);
     }
 
     [Fact]
