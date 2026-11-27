@@ -84,10 +84,13 @@ test.describe('Story 7.4 projection platform compatibility adapter', () => {
     expect(detail).toContain('nextProcessing.LastSequenceNumber == currentProcessing.Value.LastSequenceNumber');
     expect(detail).toContain('ReadModelBatchOperation.Write(key, next, concurrency)');
     expect(detail).toContain('ReadModelBatchOperation.Write(processingKey, nextProcessing, processingConcurrency)');
-    const failureGuardIndex = detail.indexOf('GetDeliveryFailureReason(request.Events, oldestCheckpoint)');
+    const failureGuardIndex = detail.indexOf('GetDeliveryFailureReason(request.Events, Math.Min(');
     const batchExecuteIndex = detail.indexOf('batchStore.ExecuteAsync(batch, cancellationToken)');
     expect(failureGuardIndex).toBeGreaterThanOrEqual(0);
     expect(batchExecuteIndex).toBeGreaterThan(failureGuardIndex);
+    const guardedWrite = detail.slice(failureGuardIndex, batchExecuteIndex);
+    expect(guardedWrite).toContain('current.Value?.LastSequenceNumber ?? long.MinValue, currentProcessing.Value?.LastSequenceNumber ?? long.MinValue');
+    expect(guardedWrite).toContain('return DeliveryFailure(deliveryFailure);');
     expect(index).toContain('GetDeliveryFailureReason(request.Events, lastSequence)');
     expect(index).toContain('DomainProjectionHandlerResult.AlreadyCompleted()');
     expect(index).toContain('ReadModelWritePolicy.UpdateAsync<PartyIndexSdkReadModel>');

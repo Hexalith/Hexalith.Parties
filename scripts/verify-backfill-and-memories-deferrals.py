@@ -41,6 +41,9 @@ WORKLOAD_SNAPSHOTS = {
     "commit": {"survivors.json"},
     "verify": {"survivors.json", "generation.json"},
 }
+WORKLOAD_RECEIPT_KEYS = frozenset((
+    "tenant", "operation", "phase", "inputSha256", "processId", "snapshotSha256", "index",
+))
 INDEX_RECEIPT_KEYS = frozenset(("present", "sha256", "etag"))
 
 
@@ -59,6 +62,18 @@ BACKFILL_METHODS = {
     WORKLOAD_METHOD: FACT,
     f"{BACKFILL_PROCESS}.WorkloadReportRefusesSubstitutedOrMalformedEvidence": tuple(
         f'(defect: "{defect}")' for defect in ("phase", "target", "nested output", "identity", "counts")),
+    f"{BACKFILL_PROCESS}.WorkloadReceiptRefusesUnexpectedTopLevelProperties": tuple(
+        f'(phase: "{phase}", defect: "{defect}")' for phase, defect in (
+            ("seed", "misspelled-envelope"),
+            ("interrupt", "misspelled-envelope"),
+            ("rebuild", "misspelled-envelope"),
+            ("stage", "extra"),
+            ("stage", "misspelled-envelope"),
+            ("commit", "misspelled-envelope"),
+            ("verify", "misspelled-envelope"),
+            ("verify", "missing"),
+            ("verify", "duplicate"),
+        )),
     f"{BACKFILL_PROCESS}.IndexReceiptRefusesMissingDriftedLeakedUnchangedOrMismatchedState": tuple(
         f'(existing: {existing}, defect: "{defect}")' for existing, defect in (
             ("False", "missing-object"),
@@ -90,13 +105,20 @@ BACKFILL_METHODS = {
             ("True", "missing-object"),
             ("False", "duplicate-object"),
             ("False", "null-object"),
+            ("False", "array-object"),
+            ("False", "string-object"),
             ("False", "missing-field"),
             ("False", "extra-field"),
             ("False", "duplicate-field"),
             ("False", "present-false"),
             ("False", "non-bool-present"),
             ("False", "invalid-sha256"),
+            ("False", "null-sha256"),
+            ("False", "non-string-sha256"),
+            ("False", "short-sha256"),
+            ("False", "non-hex-sha256"),
             ("False", "null-etag"),
+            ("False", "non-string-etag"),
             ("False", "blank-etag"),
             ("False", "untrimmed-etag"),
             ("True", "stage-unchanged-hash"),
@@ -345,13 +367,8 @@ def validate_index_receipt(target, phase, existing, index, baseline, staged_enve
 
 
 def validate_staging_envelope_receipt(target, phase, existing, receipt, baseline):
-    has_envelope = "stagingEnvelope" in receipt
     if phase != "stage":
-        if has_envelope:
-            raise ValueError(f"{target}: unexpected {phase} workload stagingEnvelope receipt")
         return None
-    if not has_envelope:
-        raise ValueError(f"{target}: missing or malformed stage workload stagingEnvelope receipt")
     envelope = receipt["stagingEnvelope"]
     if not isinstance(envelope, dict) or envelope.keys() != INDEX_RECEIPT_KEYS:
         raise ValueError(f"{target}: missing or malformed stage workload stagingEnvelope receipt")
@@ -391,6 +408,9 @@ def verify_workloads(directory):
         for phase, expected_snapshots in WORKLOAD_SNAPSHOTS.items():
             receipt_bytes = (target / f"{phase}.json").read_bytes()
             receipt = json.loads(receipt_bytes, object_pairs_hook=unique_receipt_object)
+            expected_keys = WORKLOAD_RECEIPT_KEYS | {"stagingEnvelope"} if phase == "stage" else WORKLOAD_RECEIPT_KEYS
+            if not isinstance(receipt, dict) or receipt.keys() != expected_keys:
+                raise ValueError(f"{target}: invalid {phase} workload receipt properties")
             if (receipt["tenant"], receipt["operation"], receipt["phase"]) != (target.name, operation, phase):
                 raise ValueError(f"{target}: mismatched {phase} workload receipt")
             if receipt.get("inputSha256") != input_sha256:

@@ -11,10 +11,13 @@ const ADMIN_COOKIE = 'parties-admin-e2e';
 const CONSUMER_COOKIE = 'parties-consumer-e2e';
 const CONSUMER_ERASURE_STATUS_COOKIE = 'parties-consumer-erasure-e2e';
 const CONSUMER_PROCESSING_STATE_COOKIE = 'parties-consumer-processing-e2e';
+const CONSUMER_FRESHNESS_MODE_COOKIE = 'parties-consumer-freshness-e2e';
 const REQUESTS_ROUTE = '/__parties/specimens/admin-portal/requests';
 const RESET_ROUTE = '/__parties/specimens/admin-portal/reset';
 const CONSUMER_PROFILE_LOAD_GATE_ARM_ROUTE = '/__parties/specimens/admin-portal/consumer-profile-load-gate/arm';
 const CONSUMER_PROFILE_LOAD_GATE_RELEASE_ROUTE = '/__parties/specimens/admin-portal/consumer-profile-load-gate/release';
+const CONSUMER_PROFILE_SAVE_GATE_ARM_ROUTE = '/__parties/specimens/admin-portal/consumer-profile-save-gate/arm';
+const CONSUMER_PROFILE_SAVE_GATE_RELEASE_ROUTE = '/__parties/specimens/admin-portal/consumer-profile-save-gate/release';
 const BASE_URL = process.env.BASE_URL ?? 'http://127.0.0.1:5072';
 
 const CONSUMER_ROUTES = [
@@ -341,7 +344,7 @@ test.describe('Consumer portal route shells', () => {
     });
   }
 
-  test('bound Consumer preserves single polite live region and freshness styling across loading, ready, and save', async ({ context, page, request }) => {
+  test('bound Consumer preserves one polite live region through loading, ready, saving, and saved', async ({ context, page, request }) => {
     await enableConsumerFixture(context);
     const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
 
@@ -380,26 +383,126 @@ test.describe('Consumer portal route shells', () => {
       await expect(page.getByRole('textbox', { name: 'Last name', exact: true })).toHaveValue('Consumer');
       await liveRegion.expectPreserved();
 
+      const saveArmResponse = await request.post(CONSUMER_PROFILE_SAVE_GATE_ARM_ROUTE);
+      expect(saveArmResponse.ok()).toBe(true);
+
       await page.getByRole('textbox', { name: 'First name', exact: true }).fill('Updated');
       await page.getByRole('button', { name: 'Save changes' }).click();
 
       await expect.poll(async () => (await latestUpdateRequest(request))?.partyId ?? null).toBe('party-bound-001');
+      await expect(liveRegion.status).toHaveText('Saving...');
+      await expect(page.locator('.hx-parties-profile').getByRole('status')).toHaveCount(1);
+      await expect(freshnessDot).toBeHidden();
+      await liveRegion.expectPreserved();
+
+      const saveReleaseResponse = await request.post(CONSUMER_PROFILE_SAVE_GATE_RELEASE_ROUTE);
+      expect(saveReleaseResponse.ok()).toBe(true);
       await expect(page.locator('.hx-parties-profile').getByRole('status')).toHaveCount(1);
       await expect(liveRegion.status).toHaveText('Saved');
       await expect(freshness).not.toHaveClass(/hx-parties-profile__freshness--(current|last-known)/);
       await expect(freshnessDot).toBeHidden();
       await liveRegion.expectPreserved();
+      await liveRegion.expectTextSequence('Up to date', 'Saving...', 'Saved');
       await expect(page.getByRole('textbox', { name: 'First name', exact: true })).toHaveValue('Updated');
       await expect(page.getByText('Updated Consumer')).toBeVisible();
       expect(new URL(page.url()).pathname).toBe('/me/edit');
       expect(browserVisibleDataRequests).toEqual([]);
     } finally {
+      await request.post(CONSUMER_PROFILE_SAVE_GATE_RELEASE_ROUTE).catch(() => undefined);
       await request.post(CONSUMER_PROFILE_LOAD_GATE_RELEASE_ROUTE).catch(() => undefined);
       if (liveRegion) {
         await liveRegion.dispose();
       }
     }
   });
+
+  const freshnessVariants = [
+    { mode: 'current', variant: 'current', label: 'Up to date' },
+    { mode: 'stale', variant: 'last-known', label: 'Showing what we last knew - refreshing' },
+  ] as const;
+
+  for (const { mode, variant, label } of freshnessVariants) {
+    test(`bound Consumer freshness dots render ${variant} in normal and forced colors`, async ({ context, page }) => {
+      await enableConsumerFixture(context);
+      if (mode === 'stale') {
+        await context.addCookies([{
+          name: CONSUMER_FRESHNESS_MODE_COOKIE,
+          value: mode,
+          url: BASE_URL,
+          sameSite: 'Lax',
+        }]);
+      }
+
+      for (const path of ['/me', '/me/edit']) {
+        await page.emulateMedia({ forcedColors: 'none' });
+        await page.goto(path);
+        await expectInteractiveShell(page);
+        const freshness = page.locator(`.hx-parties-profile__freshness--${variant}`);
+        const dot = freshness.locator('.hx-parties-profile__freshness-dot');
+        await expect(freshness).toHaveCount(1);
+        const liveRegion = await observeProfileLiveRegion(page);
+
+        try {
+          await expect(liveRegion.status).toHaveText(label);
+          await expect(dot).toBeVisible();
+          await expect(dot).toHaveAttribute('aria-hidden', 'true');
+          await expect(dot).not.toHaveAttribute('role');
+          await expect(dot).not.toHaveAttribute('aria-live');
+          const normalPaint = await dot.evaluate((element, mode) => {
+            const reference = document.createElement('span');
+            const statusToken = mode === 'current' ? 'Success' : 'Warning';
+            reference.style.backgroundColor = `var(--colorStatus${statusToken}Background1, Canvas)`;
+            reference.style.color = `var(--colorStatus${statusToken}Foreground1, CanvasText)`;
+            element.after(reference);
+
+            const expected = getComputedStyle(reference);
+            const actual = getComputedStyle(element);
+            const paint = {
+              backgroundColor: actual.backgroundColor,
+              borderColor: actual.borderColor,
+              borderStyle: actual.borderStyle,
+              borderWidth: parseFloat(actual.borderWidth),
+              expectedBackgroundColor: expected.backgroundColor,
+              expectedBorderColor: expected.color,
+            };
+            reference.remove();
+            return paint;
+          }, mode);
+          expect(normalPaint.backgroundColor).not.toMatch(/^rgba\([^)]*, 0\)$/);
+          expect(normalPaint.backgroundColor).toBe(normalPaint.expectedBackgroundColor);
+          expect(normalPaint.borderColor).toBe(normalPaint.expectedBorderColor);
+          expect(normalPaint.borderStyle).toBe('solid');
+          expect(normalPaint.borderWidth).toBeGreaterThan(0);
+
+          await page.emulateMedia({ forcedColors: 'active' });
+          await expect(dot).toBeVisible();
+          const colors = await dot.evaluate((element) => {
+            const reference = document.createElement('span');
+            reference.style.color = 'CanvasText';
+            reference.style.forcedColorAdjust = 'none';
+            document.body.append(reference);
+            const canvasText = getComputedStyle(reference).color;
+            reference.remove();
+
+            const style = getComputedStyle(element);
+            return {
+              forcedColors: matchMedia('(forced-colors: active)').matches,
+              backgroundColor: style.backgroundColor,
+              borderColor: style.borderColor,
+              canvasText,
+            };
+          });
+          expect(colors.forcedColors).toBe(true);
+          expect(colors.backgroundColor).toBe(colors.canvasText);
+          expect(colors.borderColor).toBe(colors.canvasText);
+          await expect(liveRegion.status).toHaveText(label);
+          await liveRegion.expectPreserved();
+        } finally {
+          await liveRegion.dispose();
+        }
+      }
+    });
+  }
 
   test('bound Consumer saves editable profile details through the self-scoped command path', async ({ context, page, request }) => {
     await enableConsumerFixture(context);
@@ -791,59 +894,82 @@ const observeProfileLiveRegion = async (page: Page) => {
   const status = page.locator('.hx-parties-profile [role="status"][aria-live="polite"]');
   await expect(status).toHaveCount(1);
   const tracker = await status.evaluateHandle((node) => {
+    const profile = node.closest('.hx-parties-profile');
     const header = node.closest('.hx-parties-profile__header');
     let removed = false;
     let statusNodeMutations = 0;
     let attributeMutations = 0;
+    const textHistory = [node.textContent?.trim() ?? ''];
     const containsStatus = (candidate: Node): boolean => candidate === node
       || (candidate instanceof Element
         && (candidate.contains(node)
           || candidate.matches('[role="status"]')
           || candidate.querySelector('[role="status"]') !== null));
-    const observer = new MutationObserver((records) => {
+    const recordMutations = (records: MutationRecord[]) => {
       for (const record of records) {
+        const inProfile = profile?.contains(record.target)
+          || header?.contains(record.target)
+          || node.contains(record.target);
         if (record.type === 'attributes') {
-          if (record.target === node
-            || (record.target instanceof Element
-              && (record.target.matches('[role="status"]')
-                || record.target.contains(node)))) {
+          if (inProfile
+            && (record.target === node
+              || (record.attributeName === 'role' && record.oldValue === 'status')
+              || (record.target instanceof Element
+                && (record.target.matches('[role="status"]')
+                  || record.target.contains(node))))) {
             attributeMutations++;
           }
           continue;
         }
         for (const removedNode of record.removedNodes) {
-          if (containsStatus(removedNode)) {
+          if (removedNode.contains(profile)
+            || (inProfile && (removedNode.contains(header) || containsStatus(removedNode)))) {
             removed = true;
             statusNodeMutations++;
           }
         }
         for (const addedNode of record.addedNodes) {
-          if (addedNode instanceof Element
-            && (addedNode.matches('[role="status"]')
-              || addedNode.querySelector('[role="status"]') !== null)) {
+          if (addedNode.contains(profile)
+            || (inProfile && (addedNode.contains(header) || containsStatus(addedNode)))) {
             statusNodeMutations++;
           }
         }
       }
-    });
-    if (header) {
-      observer.observe(header, {
+
+      const text = node.textContent?.trim() ?? '';
+      if (text !== textHistory.at(-1)) {
+        textHistory.push(text);
+      }
+    };
+    const observer = new MutationObserver(recordMutations);
+    if (profile && header) {
+      observer.observe(document.body, {
         childList: true,
+        characterData: true,
         subtree: true,
         attributes: true,
+        attributeOldValue: true,
         attributeFilter: ['role', 'aria-live'],
       });
     }
-    const snapshot = () => ({
-      headerFound: header !== null,
-      connected: node.isConnected,
-      removed,
-      statusNodeMutations,
-      attributeMutations,
-    });
+    const snapshot = () => {
+      recordMutations(observer.takeRecords());
+      return {
+        profileFound: profile !== null,
+        headerFound: header !== null,
+        connected: node.isConnected,
+        removed,
+        statusNodeMutations,
+        attributeMutations,
+      };
+    };
     return {
       node,
       snapshot,
+      observedText: () => {
+        recordMutations(observer.takeRecords());
+        return textHistory;
+      },
       disconnect: () => {
         observer.disconnect();
         return snapshot();
@@ -861,12 +987,22 @@ const observeProfileLiveRegion = async (page: Page) => {
       }), tracker);
       expect(continuity).toEqual({
         sameNode: true,
+        profileFound: true,
         headerFound: true,
         connected: true,
         removed: false,
         statusNodeMutations: 0,
         attributeMutations: 0,
       });
+    },
+    expectTextSequence: async (...messages: string[]): Promise<void> => {
+      const observed = await tracker.evaluate((state) => state.observedText());
+      let position = -1;
+      for (const message of messages) {
+        const next = observed.indexOf(message, position + 1);
+        expect(next, `Expected "${message}" in sequence, observed ${JSON.stringify(observed)}`).toBeGreaterThan(position);
+        position = next;
+      }
     },
     dispose: async (): Promise<void> => {
       await tracker.evaluate((state) => {

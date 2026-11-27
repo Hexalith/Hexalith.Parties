@@ -109,6 +109,7 @@ if [[ "$gateway_profile" == packaged ]]; then
     fi
     target_framework="$(dotnet msbuild "$gateway_project" -nologo "-p:Configuration=$configuration" -getProperty:TargetFramework)"
     case "$target_framework" in net10.0|net11.0) ;; *) printf 'The packaged runtime requires a qualified evaluated target framework; received: %s\n' "$target_framework" >&2; exit 1 ;; esac
+    commons_version="$(dotnet msbuild "$gateway_project" -nologo "-p:Configuration=$configuration" -getProperty:HexalithCommonsVersion)"
     catalog_sdk_version="$(dotnet msbuild "$gateway_project" -nologo "-p:Configuration=$configuration" -getProperty:HexalithCatalogEventStoreVersion)"
     catalog_hosts="$(dotnet msbuild "$gateway_project" -nologo "-p:Configuration=$configuration" -getProperty:HexalithEventStoreCatalogHostsSupported)"
     if [[ "$catalog_hosts" == true ]]; then
@@ -126,7 +127,7 @@ if [[ "$gateway_profile" == packaged ]]; then
     mcpcli_version="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["HexalithMcpCliVersion"])' <<< "$families_json")"
     cohort_arguments=("-p:HexalithPartiesRuntimeTargetFramework=$target_framework"
         "-p:CustomAfterMicrosoftCommonProps=$script_directory/PartiesHostedRuntime.props" "-p:HexalithEventStoreVersion=$sdk_version" "-p:HexalithUsePublishedSdkForHostedTests=true"
-        "-p:HexalithTenantsVersion=$tenants_version" "-p:HexalithMemoriesVersion=$memories_version"
+        "-p:HexalithCommonsVersion=$commons_version" "-p:HexalithTenantsVersion=$tenants_version" "-p:HexalithMemoriesVersion=$memories_version"
         "-p:HexalithFrontComposerVersion=$frontcomposer_version" "-p:HexalithMcpCliVersion=$mcpcli_version")
     if [[ "$catalog_sdk_version" == "$sdk_version" ]]; then
         cohort_arguments+=("-p:HexalithCatalogEventStoreVersion=$catalog_sdk_version")

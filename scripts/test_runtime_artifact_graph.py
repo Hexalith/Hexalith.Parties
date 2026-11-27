@@ -19,13 +19,21 @@ class RuntimeArtifactGraphTests(unittest.TestCase):
             child_source = root / "child/Example.cs"
             child_source.write_text("public class Example { public int Value => 1; }")
             (root/'child/Child.csproj').write_text('''<Project Sdk="Microsoft.NET.Sdk">
-<PropertyGroup><TargetFramework>net11.0</TargetFramework></PropertyGroup>
+<PropertyGroup>
+<TargetFramework>net11.0</TargetFramework>
+<HexalithCommonsVersion Condition="'$(HexalithCommonsVersion)' == ''">3.0.2</HexalithCommonsVersion>
+</PropertyGroup>
 <Target Name="VerifyRuntimeProfile" BeforeTargets="Build">
 <Error Condition="'$(Configuration)' != 'Release'" Text="Runtime configuration drifted" />
 <Error Condition="'$(HexalithUsePublishedSdkForHostedTests)' != 'true'" Text="Runtime package boundary drifted" />
+<Error Condition="'$(HexalithCommonsVersion)' != '3.0.4'" Text="Runtime Commons version drifted" />
 </Target></Project>''')
             (root/'Owner.csproj').write_text(f'''<Project Sdk="Microsoft.NET.Sdk">
-<PropertyGroup><TargetFramework>net11.0</TargetFramework><EnableDefaultCompileItems>false</EnableDefaultCompileItems></PropertyGroup>
+<PropertyGroup>
+<TargetFramework>net11.0</TargetFramework>
+<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+<HexalithCommonsVersion>3.0.4</HexalithCommonsVersion>
+</PropertyGroup>
 <Import Project="{ROOT}/scripts/PartiesRuntimeGraph.props" />
 <ItemGroup><ProjectReference Include="child/Child.csproj" AdditionalProperties="$(_PartiesRuntimeBuildProperties)" /></ItemGroup>
 </Project>''')

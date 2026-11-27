@@ -3,7 +3,9 @@ using System.Text.Json;
 using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.Client.AdminPortal;
 using Hexalith.Parties.Contracts.Authorization;
+using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.UI.Services;
 
 using Microsoft.AspNetCore.Authentication;
@@ -164,7 +166,7 @@ public sealed class PartiesAdminPortalE2eFixtureTests
     public async Task ConsumerProfileLoadGate_BlocksInteractiveReadOnceWithoutBlockingSsrPrerenderAsync()
     {
         var fixtureState = new PartiesAdminPortalE2eFixtureState();
-        fixtureState.ArmConsumerProfileLoadGate();
+        fixtureState.ConsumerProfileLoadGate.Arm();
 
         var ssrContext = new DefaultHttpContext();
         ssrContext.Request.Path = "/me/edit";
@@ -185,7 +187,7 @@ public sealed class PartiesAdminPortalE2eFixtureTests
         Task<PartyDetail> gatedRead = interactiveClient.GetPartyAsync("party-bound-001", TestContext.Current.CancellationToken);
         gatedRead.IsCompleted.ShouldBeFalse();
 
-        fixtureState.ReleaseConsumerProfileLoadGate();
+        fixtureState.ConsumerProfileLoadGate.Release();
         PartyDetail released = await gatedRead.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken).ConfigureAwait(true);
         released.Id.ShouldBe("party-bound-001");
 
@@ -198,7 +200,7 @@ public sealed class PartiesAdminPortalE2eFixtureTests
     public async Task ConsumerProfileLoadGate_ResetReleasesInFlightInteractiveReadAsync()
     {
         var fixtureState = new PartiesAdminPortalE2eFixtureState();
-        fixtureState.ArmConsumerProfileLoadGate();
+        fixtureState.ConsumerProfileLoadGate.Arm();
 
         var circuitContext = new DefaultHttpContext();
         circuitContext.Request.Path = "/_blazor";
@@ -222,19 +224,102 @@ public sealed class PartiesAdminPortalE2eFixtureTests
     public async Task ConsumerProfileLoadGate_AlreadyCanceledTokenPreservesArmedGateAsync()
     {
         var fixtureState = new PartiesAdminPortalE2eFixtureState();
-        fixtureState.ArmConsumerProfileLoadGate();
+        fixtureState.ConsumerProfileLoadGate.Arm();
 
         using var canceled = new CancellationTokenSource();
         await canceled.CancelAsync().ConfigureAwait(true);
 
         await Should.ThrowAsync<OperationCanceledException>(
-            () => fixtureState.WaitForConsumerProfileLoadGateAsync("party-bound-001", canceled.Token)).ConfigureAwait(true);
+            () => fixtureState.ConsumerProfileLoadGate.WaitAsync(canceled.Token)).ConfigureAwait(true);
 
-        Task stillArmed = fixtureState.WaitForConsumerProfileLoadGateAsync("party-bound-001", TestContext.Current.CancellationToken);
+        Task stillArmed = fixtureState.ConsumerProfileLoadGate.WaitAsync(TestContext.Current.CancellationToken);
         stillArmed.IsCompleted.ShouldBeFalse();
 
-        fixtureState.ReleaseConsumerProfileLoadGate();
+        fixtureState.ConsumerProfileLoadGate.Release();
         await stillArmed.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken).ConfigureAwait(true);
+    }
+
+    [Theory]
+    [InlineData(null, null, "party-bound-001", ProjectionFreshnessStatus.Current)]
+    [InlineData("bound", null, "party-bound-001", ProjectionFreshnessStatus.Current)]
+    [InlineData("bound", "unknown", "party-bound-001", ProjectionFreshnessStatus.Current)]
+    [InlineData("bound", "stale", "party-bound-001", ProjectionFreshnessStatus.Stale)]
+    [InlineData("bound", "stale", "ada-lovelace", ProjectionFreshnessStatus.Current)]
+    [InlineData(null, "stale", "party-bound-001", ProjectionFreshnessStatus.Current)]
+    public async Task ConsumerProfileFreshnessCookie_ChangesOnlyTheBoundConsumerProfileAsync(
+        string? consumerState,
+        string? freshnessMode,
+        string partyId,
+        ProjectionFreshnessStatus expected)
+    {
+        var context = new DefaultHttpContext();
+        List<string> cookies = [];
+        if (consumerState is not null)
+        {
+            cookies.Add($"{PartiesAdminPortalE2eFixture.ConsumerCookieName}={consumerState}");
+        }
+
+        if (freshnessMode is not null)
+        {
+            cookies.Add($"{PartiesAdminPortalE2eFixture.ConsumerFreshnessModeCookieName}={freshnessMode}");
+        }
+
+        context.Request.Headers.Cookie = string.Join("; ", cookies);
+        var client = new PartiesAdminPortalE2ePartiesQueryClient(
+            new PartiesAdminPortalE2eFixtureState(),
+            new HttpContextAccessor { HttpContext = context });
+
+        PartyDetail profile = await client.GetPartyAsync(partyId, TestContext.Current.CancellationToken).ConfigureAwait(true);
+
+        profile.Freshness.ShouldNotBeNull().Status.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ConsumerProfileSaveGate_HoldsOneBoundResponseAndReleasesOnResetAsync(bool reset)
+    {
+        const string boundPartyId = "party-bound-001";
+        var fixtureState = new PartiesAdminPortalE2eFixtureState();
+        var client = new PartiesAdminPortalE2ePartiesCommandClient(fixtureState);
+        var update = new UpdatePartyComposite
+        {
+            PartyId = boundPartyId,
+            PersonDetails = new PersonDetails { FirstName = "Updated", LastName = "Consumer" },
+        };
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        fixtureState.ConsumerProfileSaveGate.Arm();
+
+        const string otherPartyId = "ada-lovelace";
+        var otherSave = client.UpdatePartyCompositeWithResultAsync(otherPartyId, update with { PartyId = otherPartyId }, cancellationToken);
+        otherSave.IsCompletedSuccessfully.ShouldBeTrue();
+        (await otherSave.ConfigureAwait(true)).Payload.ShouldNotBeNull().Id.ShouldBe(otherPartyId);
+
+        var gatedSave = client.UpdatePartyCompositeWithResultAsync(boundPartyId, update, cancellationToken);
+        gatedSave.IsCompleted.ShouldBeFalse();
+        fixtureState.Snapshot().UpdateRequests.Select(request => request.PartyId).ShouldBe([otherPartyId, boundPartyId]);
+
+        var concurrentSave = client.UpdatePartyCompositeWithResultAsync(boundPartyId, update, cancellationToken);
+        concurrentSave.IsCompletedSuccessfully.ShouldBeTrue();
+        (await concurrentSave.ConfigureAwait(true)).Payload.ShouldNotBeNull().Id.ShouldBe(boundPartyId);
+        gatedSave.IsCompleted.ShouldBeFalse();
+
+        if (reset)
+        {
+            fixtureState.Reset();
+        }
+        else
+        {
+            fixtureState.ConsumerProfileSaveGate.Release();
+        }
+
+        var released = await gatedSave.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(true);
+        released.Payload.ShouldNotBeNull().DisplayName.ShouldBe("Updated Consumer");
+        fixtureState.Snapshot().UpdateRequests.Count.ShouldBe(reset ? 0 : 3);
+
+        var nextSave = client.UpdatePartyCompositeWithResultAsync(boundPartyId, update, cancellationToken);
+        nextSave.IsCompletedSuccessfully.ShouldBeTrue();
+        (await nextSave.ConfigureAwait(true)).Payload.ShouldNotBeNull().Id.ShouldBe(boundPartyId);
     }
 
     private static ServiceProvider BuildAuthenticationProvider(IHttpContextAccessor accessor)

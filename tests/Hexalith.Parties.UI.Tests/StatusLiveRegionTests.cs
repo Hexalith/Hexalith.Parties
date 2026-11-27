@@ -58,6 +58,26 @@ public sealed class StatusLiveRegionTests : BunitContext
     }
 
 #if HFC_SHARED_UI
+    /// <summary>Shared live feedback renders without resolving the browser download service.</summary>
+    [Fact]
+    public void SharedFeedbackRendersLiveRegionWithoutResolvingDownloads()
+    {
+        int downloadResolutions = 0;
+        Services.AddScoped<Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService>(_ =>
+        {
+            downloadResolutions++;
+            throw new InvalidOperationException("The status live region should not resolve the download service.");
+        });
+
+        IRenderedComponent<StatusLiveRegion> cut = Render<StatusLiveRegion>(p => p
+            .Add(c => c.Kind, StatusKind.AcceptedProcessing)
+            .Add(c => c.Message, "Shared feedback"));
+
+        cut.FindComponent<Hexalith.FrontComposer.Shell.Components.Feedback.FcLiveRegion>();
+        cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldBe("Shared feedback");
+        downloadResolutions.ShouldBe(0);
+    }
+
     /// <summary>
     /// Proves that registering only the shared browser download service keeps <see cref="StatusLiveRegion"/>
     /// on local markup without resolving <c>IFcBrowserDownloadService</c>.

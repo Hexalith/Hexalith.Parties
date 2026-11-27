@@ -50,6 +50,25 @@ public sealed class DataFreshnessIndicatorTests : BunitContext
     }
 
 #if HFC_SHARED_UI
+    /// <summary>Shared record freshness renders without resolving the browser download service.</summary>
+    [Fact]
+    public void SharedFeedbackRendersFreshnessIndicatorWithoutResolvingDownloads()
+    {
+        int downloadResolutions = 0;
+        Services.AddScoped<Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService>(_ =>
+        {
+            downloadResolutions++;
+            throw new InvalidOperationException("The freshness indicator should not resolve the download service.");
+        });
+
+        IRenderedComponent<DataFreshnessIndicator> cut = Render<DataFreshnessIndicator>(p => p
+            .Add(c => c.Freshness, ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Stale)));
+
+        cut.FindComponent<Hexalith.FrontComposer.Shell.Components.Feedback.FcFreshnessIndicator>();
+        cut.Find("[data-fc-freshness='stale']").TextContent.ShouldBe("Showing what we last knew - refreshing");
+        downloadResolutions.ShouldBe(0);
+    }
+
     /// <summary>
     /// Proves that registering only the shared browser download service keeps <see cref="DataFreshnessIndicator"/>
     /// on local freshness markup without resolving <c>IFcBrowserDownloadService</c>.

@@ -156,6 +156,7 @@ class BackfillMemoriesReportTests(unittest.TestCase):
             with self.subTest(defect=defect), tempfile.TemporaryDirectory() as tmp:
                 directory = Path(tmp)
                 self.write_workloads(directory)
+                message = "missing or mismatched .* workload input SHA-256"
                 if defect == "changed manifest bytes":
                     manifest = directory / "existing" / "input.json"
                     manifest.write_bytes(manifest.read_bytes() + b"\n")
@@ -166,8 +167,37 @@ class BackfillMemoriesReportTests(unittest.TestCase):
                         receipt["inputSha256"] = "0" * 64
                     else:
                         del receipt["inputSha256"]
+                        message = "invalid stage workload receipt properties"
                     receipt_path.write_text(json.dumps(receipt))
-                with self.assertRaisesRegex(ValueError, "missing or mismatched .* workload input SHA-256"):
+                with self.assertRaisesRegex(ValueError, message):
+                    runner["verify_workloads"](directory)
+
+    def test_workloads_reject_inexact_top_level_receipt_properties(self):
+        cases = (
+            *((phase, "misspelled-envelope") for phase in runner["WORKLOAD_SNAPSHOTS"]),
+            ("stage", "extra"),
+            ("verify", "missing"),
+            ("verify", "duplicate"),
+        )
+        for phase, defect in cases:
+            with self.subTest(phase=phase, defect=defect), tempfile.TemporaryDirectory() as tmp:
+                directory = Path(tmp)
+                self.write_workloads(directory)
+                target = directory / "empty"
+                receipt = json.loads((target / f"{phase}.json").read_bytes())
+                if defect == "misspelled-envelope":
+                    receipt["staging_envelope"] = receipt.pop("stagingEnvelope", None)
+                elif defect == "extra":
+                    receipt["extra"] = None
+                elif defect == "missing":
+                    del receipt["tenant"]
+                content = json.dumps(receipt).encode("utf-8")
+                message = f"invalid {phase} workload receipt properties"
+                if defect == "duplicate":
+                    content = content.replace(b'"tenant":', b'"tenant": "empty", "tenant":', 1)
+                    message = "Duplicate workload receipt property"
+                self.rewrite_workload_receipt(target, phase, content)
+                with self.assertRaisesRegex(ValueError, message):
                     runner["verify_workloads"](directory)
 
     def test_workloads_reject_invalid_operations_with_matching_receipts_and_digests(self):
@@ -238,7 +268,7 @@ class BackfillMemoriesReportTests(unittest.TestCase):
 
     def test_workloads_reject_missing_or_malformed_index_receipts(self):
         cases = (
-            ("missing", "empty", "stage", "missing or malformed stage workload index receipt"),
+            ("missing", "empty", "stage", "invalid stage workload receipt properties"),
             ("missing-field", "empty", "commit", "missing or malformed commit workload index receipt"),
             ("extra-field", "existing", "commit", "missing or malformed commit workload index receipt"),
             ("duplicate-field", "existing", "commit", "Duplicate workload receipt property"),
@@ -348,18 +378,24 @@ class BackfillMemoriesReportTests(unittest.TestCase):
 
     def test_workloads_reject_missing_or_malformed_staging_envelope_receipts(self):
         cases = (
-            ("missing-empty", "empty", "missing or malformed stage workload stagingEnvelope receipt"),
-            ("missing-existing", "existing", "missing or malformed stage workload stagingEnvelope receipt"),
+            ("missing-empty", "empty", "invalid stage workload receipt properties"),
+            ("missing-existing", "existing", "invalid stage workload receipt properties"),
             ("duplicate-object", "empty", "Duplicate workload receipt property"),
             ("null-object", "empty", "missing or malformed stage workload stagingEnvelope receipt"),
+            ("array-object", "empty", "missing or malformed stage workload stagingEnvelope receipt"),
+            ("string-object", "empty", "missing or malformed stage workload stagingEnvelope receipt"),
             ("missing-field", "empty", "missing or malformed stage workload stagingEnvelope receipt"),
             ("extra-field", "existing", "missing or malformed stage workload stagingEnvelope receipt"),
             ("duplicate-field", "existing", "Duplicate workload receipt property"),
             ("present-false", "empty", "invalid stage workload stagingEnvelope presence"),
             ("non-bool-present", "empty", "invalid stage workload stagingEnvelope presence"),
             ("uppercase-sha256", "empty", "missing or invalid stage workload stagingEnvelope SHA-256"),
+            ("null-sha256", "empty", "missing or invalid stage workload stagingEnvelope SHA-256"),
+            ("non-string-sha256", "empty", "missing or invalid stage workload stagingEnvelope SHA-256"),
             ("short-sha256", "existing", "missing or invalid stage workload stagingEnvelope SHA-256"),
+            ("non-hex-sha256", "empty", "missing or invalid stage workload stagingEnvelope SHA-256"),
             ("null-etag", "empty", "missing or invalid stage workload stagingEnvelope ETag"),
+            ("non-string-etag", "empty", "missing or invalid stage workload stagingEnvelope ETag"),
             ("blank-etag", "empty", "missing or invalid stage workload stagingEnvelope ETag"),
             ("untrimmed-etag", "existing", "missing or invalid stage workload stagingEnvelope ETag"),
         )
@@ -374,6 +410,10 @@ class BackfillMemoriesReportTests(unittest.TestCase):
                     del receipt["stagingEnvelope"]
                 elif defect == "null-object":
                     receipt["stagingEnvelope"] = None
+                elif defect == "array-object":
+                    receipt["stagingEnvelope"] = []
+                elif defect == "string-object":
+                    receipt["stagingEnvelope"] = "envelope"
                 elif defect == "missing-field":
                     del receipt["stagingEnvelope"]["etag"]
                 elif defect == "extra-field":
@@ -384,10 +424,18 @@ class BackfillMemoriesReportTests(unittest.TestCase):
                     receipt["stagingEnvelope"]["present"] = 1
                 elif defect == "uppercase-sha256":
                     receipt["stagingEnvelope"]["sha256"] = receipt["stagingEnvelope"]["sha256"].upper()
+                elif defect == "null-sha256":
+                    receipt["stagingEnvelope"]["sha256"] = None
+                elif defect == "non-string-sha256":
+                    receipt["stagingEnvelope"]["sha256"] = 42
                 elif defect == "short-sha256":
-                    receipt["stagingEnvelope"]["sha256"] = "abcd"
+                    receipt["stagingEnvelope"]["sha256"] = receipt["stagingEnvelope"]["sha256"][:-1]
+                elif defect == "non-hex-sha256":
+                    receipt["stagingEnvelope"]["sha256"] = "g" * 64
                 elif defect == "null-etag":
                     receipt["stagingEnvelope"]["etag"] = None
+                elif defect == "non-string-etag":
+                    receipt["stagingEnvelope"]["etag"] = 42
                 elif defect == "blank-etag":
                     receipt["stagingEnvelope"]["etag"] = "   "
                 elif defect == "untrimmed-etag":
@@ -427,22 +475,22 @@ class BackfillMemoriesReportTests(unittest.TestCase):
              "commit workload index did not change staged envelope bytes and ETag"),
             ("empty-seed-leaked-object", "empty", "seed",
              lambda r, o: r.__setitem__("stagingEnvelope", dict(o["empty"]["stagingEnvelope"])),
-             "unexpected seed workload stagingEnvelope receipt"),
+             "invalid seed workload receipt properties"),
             ("existing-interrupt-leaked-null", "existing", "interrupt",
              lambda r, _o: r.__setitem__("stagingEnvelope", None),
-             "unexpected interrupt workload stagingEnvelope receipt"),
+             "invalid interrupt workload receipt properties"),
             ("empty-rebuild-leaked-absent-object", "empty", "rebuild",
              lambda r, _o: r.__setitem__("stagingEnvelope", {"present": False, "sha256": None, "etag": None}),
-             "unexpected rebuild workload stagingEnvelope receipt"),
+             "invalid rebuild workload receipt properties"),
             ("empty-commit-leaked-null", "empty", "commit",
              lambda r, _o: r.__setitem__("stagingEnvelope", None),
-             "unexpected commit workload stagingEnvelope receipt"),
+             "invalid commit workload receipt properties"),
             ("existing-commit-leaked-object", "existing", "commit",
              lambda r, o: r.__setitem__("stagingEnvelope", dict(o["existing"]["stagingEnvelope"])),
-             "unexpected commit workload stagingEnvelope receipt"),
+             "invalid commit workload receipt properties"),
             ("existing-verify-leaked-object", "existing", "verify",
              lambda r, o: r.__setitem__("stagingEnvelope", dict(o["existing"]["stagingEnvelope"])),
-             "unexpected verify workload stagingEnvelope receipt"),
+             "invalid verify workload receipt properties"),
         )
         for defect, target_name, phase, mutate, message in cases:
             with self.subTest(defect=defect), tempfile.TemporaryDirectory() as tmp:
@@ -607,22 +655,39 @@ class BackfillMemoriesReportTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "backfill: incomplete required case evidence"):
                     runner["complete_summary"]({"checks": checks})
 
-    def test_backfill_requires_every_staging_envelope_receipt_integrity_case(self):
+    def test_backfill_requires_every_top_level_and_staging_envelope_receipt_integrity_case(self):
         project = runner["BACKFILL_PROJECT"]
-        method = ("Hexalith.Parties.Tests.Projections.PartyLegacyBackfillProcessRuntimeTests."
-                  "StagingEnvelopeReceiptRefusesMissingMalformedUnchangedOrLeakedState")
-        cases = (
+        process = "Hexalith.Parties.Tests.Projections.PartyLegacyBackfillProcessRuntimeTests"
+        top_level = (
+            ("seed", "misspelled-envelope"),
+            ("interrupt", "misspelled-envelope"),
+            ("rebuild", "misspelled-envelope"),
+            ("stage", "extra"),
+            ("stage", "misspelled-envelope"),
+            ("commit", "misspelled-envelope"),
+            ("verify", "misspelled-envelope"),
+            ("verify", "missing"),
+            ("verify", "duplicate"),
+        )
+        envelopes = (
             ("False", "missing-object"),
             ("True", "missing-object"),
             ("False", "duplicate-object"),
             ("False", "null-object"),
+            ("False", "array-object"),
+            ("False", "string-object"),
             ("False", "missing-field"),
             ("False", "extra-field"),
             ("False", "duplicate-field"),
             ("False", "present-false"),
             ("False", "non-bool-present"),
             ("False", "invalid-sha256"),
+            ("False", "null-sha256"),
+            ("False", "non-string-sha256"),
+            ("False", "short-sha256"),
+            ("False", "non-hex-sha256"),
             ("False", "null-etag"),
+            ("False", "non-string-etag"),
             ("False", "blank-etag"),
             ("False", "untrimmed-etag"),
             ("True", "stage-unchanged-hash"),
@@ -638,12 +703,17 @@ class BackfillMemoriesReportTests(unittest.TestCase):
             ("True", "commit-leaked-object"),
             ("True", "verify-leaked-object"),
         )
-        for existing, defect in cases:
-            with self.subTest(existing=existing, defect=defect):
+        cases = (
+            *(f'{process}.WorkloadReceiptRefusesUnexpectedTopLevelProperties(phase: "{phase}", defect: "{defect}")'
+              for phase, defect in top_level),
+            *(f'{process}.StagingEnvelopeReceiptRefusesMissingMalformedUnchangedOrLeakedState'
+              f'(existing: {existing}, defect: "{defect}")' for existing, defect in envelopes),
+        )
+        for case in cases:
+            with self.subTest(case=case):
                 assembly = self.report_for_methods(runner["BACKFILL_METHODS"], project)
                 complete = self.verify(assembly, "backfill", project)
                 collection = assembly.find("collection")
-                case = f'{method}(existing: {existing}, defect: "{defect}")'
                 self.assertIn(case, complete["cases"])
                 collection.remove(next(test for test in collection if test.get("name") == case))
                 self.recount(assembly)

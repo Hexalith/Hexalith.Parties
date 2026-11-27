@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Runtime.ExceptionServices;
+using System.Text;
 using System.Text.Json;
 using System.Xml.Linq;
 
@@ -86,8 +87,8 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
                     await File.WriteAllTextAsync(Path.Combine(directory, phase + ".log"), result.Diagnostic, token).ConfigureAwait(true);
                     result.ExitCode.ShouldBe(0, result.Diagnostic);
                     byte[] receiptBytes = await File.ReadAllBytesAsync(Path.Combine(directory, phase + ".json"), token).ConfigureAwait(true);
-                    VerifyWorkloadReport(XDocument.Load(Path.Combine(directory, phase + ".xml")), receiptBytes);
-                    using var receipt = JsonDocument.Parse(receiptBytes);
+                    using JsonDocument receipt = ReadWorkloadReceipt(
+                        XDocument.Load(Path.Combine(directory, phase + ".xml")), receiptBytes, phase);
                     receipt.RootElement.GetProperty("tenant").GetString().ShouldBe(manifest.Tenant);
                     receipt.RootElement.GetProperty("operation").GetString().ShouldBe(manifest.IndexOperation);
                     receipt.RootElement.GetProperty("phase").GetString().ShouldBe(phase);
@@ -176,17 +177,7 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
     public void WorkloadReportRefusesSubstitutedOrMalformedEvidence(string defect)
     {
         byte[] receipt = """{"tenant":"test-tenant","phase":"stage"}"""u8.ToArray();
-        XDocument xml = XDocument.Parse($"""
-            <assemblies>
-              <assembly name="{typeof(PartyLegacyBackfillProcessRuntimeTests).Assembly.GetName().Name}.dll" errors="0" total="1" passed="1" failed="0" skipped="0" not-run="0">
-                <collection total="1" passed="1" failed="0" skipped="0" not-run="0">
-                  <test type="{typeof(PartyLegacyBackfillProcessRuntimeTests).FullName}" method="{nameof(ActualProviderBackfillSurvivesSeparateWorkloadProcesses)}" name="{WorkloadMethod}" result="Pass">
-                    <output>{ReceiptPrefix}{Convert.ToBase64String(receipt)}</output>
-                  </test>
-                </collection>
-              </assembly>
-            </assemblies>
-            """);
+        XDocument xml = CreateWorkloadReport(receipt);
         VerifyWorkloadReport(xml, receipt);
 
         XElement test = xml.Descendants("test").ShouldHaveSingleItem();
@@ -324,6 +315,45 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
         Should.Throw<ShouldAssertException>(() => VerifyPhaseSequence(receipts, existing));
     }
 
+    /// <summary>Requires exactly the workload receipt properties defined for each phase.</summary>
+    /// <param name="phase">The phase whose receipt is changed.</param>
+    /// <param name="defect">The invalid change to the top-level properties.</param>
+    [Theory]
+    [InlineData("seed", "misspelled-envelope")]
+    [InlineData("interrupt", "misspelled-envelope")]
+    [InlineData("rebuild", "misspelled-envelope")]
+    [InlineData("stage", "extra")]
+    [InlineData("stage", "misspelled-envelope")]
+    [InlineData("commit", "misspelled-envelope")]
+    [InlineData("verify", "misspelled-envelope")]
+    [InlineData("verify", "missing")]
+    [InlineData("verify", "duplicate")]
+    public void WorkloadReceiptRefusesUnexpectedTopLevelProperties(string phase, string defect)
+    {
+        Dictionary<string, string> receipts = CreateValidPhaseReceipts(false, out _, out _, out _);
+        string valid = WithWorkloadReceiptMetadata(phase, receipts[phase]);
+        byte[] validBytes = Encoding.UTF8.GetBytes(valid);
+        using JsonDocument validReceipt = ReadWorkloadReceipt(CreateWorkloadReport(validBytes), validBytes, phase);
+
+        string invalid = defect switch
+        {
+            "misspelled-envelope" when phase == "stage" => valid.Replace(
+                "\"stagingEnvelope\":", "\"staging_envelope\":", StringComparison.Ordinal),
+            "misspelled-envelope" => valid[..^1] + ""","staging_envelope":null}""",
+            "extra" => valid[..^1] + ""","extra":null}""",
+            "missing" => valid.Replace("\"tenant\":\"test-tenant\",", string.Empty, StringComparison.Ordinal),
+            "duplicate" => valid[..^1] + ""","tenant":"test-tenant"}""",
+            _ => throw new ArgumentOutOfRangeException(nameof(defect)),
+        };
+        byte[] invalidBytes = Encoding.UTF8.GetBytes(invalid);
+        XDocument invalidReport = CreateWorkloadReport(invalidBytes);
+        Should.Throw<ShouldAssertException>(() =>
+        {
+            using JsonDocument invalidReceipt = ReadWorkloadReceipt(invalidReport, invalidBytes, phase);
+        })
+            .Message.ShouldContain($"Invalid {phase} workload receipt properties.");
+    }
+
     /// <summary>Rejects missing, malformed, unchanged, or leaked staging-envelope phase receipts.</summary>
     /// <param name="existing">Whether the synthetic target started with a preexisting canonical index.</param>
     /// <param name="defect">The synthetic staging-envelope receipt defect injected into the phase sequence.</param>
@@ -332,13 +362,20 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
     [InlineData(true, "missing-object")]
     [InlineData(false, "duplicate-object")]
     [InlineData(false, "null-object")]
+    [InlineData(false, "array-object")]
+    [InlineData(false, "string-object")]
     [InlineData(false, "missing-field")]
     [InlineData(false, "extra-field")]
     [InlineData(false, "duplicate-field")]
     [InlineData(false, "present-false")]
     [InlineData(false, "non-bool-present")]
     [InlineData(false, "invalid-sha256")]
+    [InlineData(false, "null-sha256")]
+    [InlineData(false, "non-string-sha256")]
+    [InlineData(false, "short-sha256")]
+    [InlineData(false, "non-hex-sha256")]
     [InlineData(false, "null-etag")]
+    [InlineData(false, "non-string-etag")]
     [InlineData(false, "blank-etag")]
     [InlineData(false, "untrimmed-etag")]
     [InlineData(true, "stage-unchanged-hash")]
@@ -376,6 +413,12 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
             case "null-object":
                 receipts["stage"] = stageIndexPrefix + ""","stagingEnvelope":null}""";
                 break;
+            case "array-object":
+                receipts["stage"] = stageIndexPrefix + ""","stagingEnvelope":[]}""";
+                break;
+            case "string-object":
+                receipts["stage"] = stageIndexPrefix + ""","stagingEnvelope":"envelope"}""";
+                break;
             case "missing-field":
                 receipts["stage"] = stageIndexPrefix + $$$""","stagingEnvelope":{"present":true,"sha256":"{{{stagingEnvelopeHash}}}"}}""";
                 break;
@@ -394,8 +437,23 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
             case "invalid-sha256":
                 receipts["stage"] = stageIndexPrefix + $$$""","stagingEnvelope":{"present":true,"sha256":"{{{stagingEnvelopeHash.ToUpperInvariant()}}}","etag":"etag-stage"}}""";
                 break;
+            case "null-sha256":
+                receipts["stage"] = stageIndexPrefix + ""","stagingEnvelope":{"present":true,"sha256":null,"etag":"etag-stage"}}""";
+                break;
+            case "non-string-sha256":
+                receipts["stage"] = stageIndexPrefix + ""","stagingEnvelope":{"present":true,"sha256":42,"etag":"etag-stage"}}""";
+                break;
+            case "short-sha256":
+                receipts["stage"] = stageIndexPrefix + $$$""","stagingEnvelope":{"present":true,"sha256":"{{{stagingEnvelopeHash[..^1]}}}","etag":"etag-stage"}}""";
+                break;
+            case "non-hex-sha256":
+                receipts["stage"] = stageIndexPrefix + $$$""","stagingEnvelope":{"present":true,"sha256":"{{{new string('g', 64)}}}","etag":"etag-stage"}}""";
+                break;
             case "null-etag":
                 receipts["stage"] = stageIndexPrefix + $$$""","stagingEnvelope":{"present":true,"sha256":"{{{stagingEnvelopeHash}}}","etag":null}}""";
+                break;
+            case "non-string-etag":
+                receipts["stage"] = stageIndexPrefix + $$$""","stagingEnvelope":{"present":true,"sha256":"{{{stagingEnvelopeHash}}}","etag":42}}""";
                 break;
             case "blank-etag":
                 receipts["stage"] = stageIndexPrefix + $$$""","stagingEnvelope":{"present":true,"sha256":"{{{stagingEnvelopeHash}}}","etag":"   "}}""";
@@ -437,7 +495,19 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
                 throw new ArgumentOutOfRangeException(nameof(defect));
         }
 
-        Should.Throw<ShouldAssertException>(() => VerifyPhaseSequence(receipts, existing));
+        var error = Should.Throw<ShouldAssertException>(() => VerifyPhaseSequence(receipts, existing));
+        string? expectedMessage = defect switch
+        {
+            "null-object" or "array-object" or "string-object" => "Malformed stage stagingEnvelope receipt.",
+            "null-sha256" or "non-string-sha256" => "Missing stage stagingEnvelope SHA-256.",
+            "short-sha256" or "non-hex-sha256" => "Invalid stage stagingEnvelope SHA-256.",
+            "null-etag" or "non-string-etag" => "Missing stage stagingEnvelope ETag.",
+            _ => null,
+        };
+        if (expectedMessage is not null)
+        {
+            error.Message.ShouldContain(expectedMessage);
+        }
     }
 
     private static Dictionary<string, string> CreateValidPhaseReceipts(
@@ -474,7 +544,8 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
         (bool Present, string? Sha256, string? ETag)? committed = null;
         foreach (string phase in new[] { "seed", "interrupt", "rebuild", "stage", "commit", "verify" })
         {
-            using JsonDocument document = JsonDocument.Parse(phaseReceipts[phase]);
+            using JsonDocument document = JsonDocument.Parse(WithWorkloadReceiptMetadata(phase, phaseReceipts[phase]));
+            VerifyWorkloadReceiptProperties(document.RootElement, phase);
             (bool Present, string? Sha256, string? ETag) observed = VerifyIndexReceipt(
                 document.RootElement, phase, isExisting, baseline, stagedEnvelope, committed);
             (bool Present, string Sha256, string ETag)? observedEnvelope = VerifyStagingEnvelopeReceipt(
@@ -498,6 +569,23 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
         committed.HasValue.ShouldBeTrue();
     }
 
+    private static string WithWorkloadReceiptMetadata(string phase, string receiptDetails)
+        => $$$"""{"tenant":"test-tenant","operation":"test-operation","phase":"{{{phase}}}","inputSha256":"manifest-hash","processId":1,"snapshotSha256":{},{{{receiptDetails[1..]}}}""";
+
+    private static void VerifyWorkloadReceiptProperties(JsonElement receipt, string phase)
+    {
+        string message = $"Invalid {phase} workload receipt properties.";
+        receipt.ValueKind.ShouldBe(JsonValueKind.Object, message);
+        string[] expected = ["tenant", "operation", "phase", "inputSha256", "processId", "snapshotSha256", "index"];
+        if (phase == "stage")
+        {
+            expected = [.. expected, "stagingEnvelope"];
+        }
+
+        receipt.EnumerateObject().Select(static property => property.Name).Order(StringComparer.Ordinal)
+            .SequenceEqual(expected.Order(StringComparer.Ordinal), StringComparer.Ordinal).ShouldBeTrue(message);
+    }
+
     private static (bool Present, string? Sha256, string? ETag) VerifyIndexReceipt(
         JsonElement root,
         string phase,
@@ -506,7 +594,6 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
         (bool Present, string Sha256, string ETag)? stagedEnvelope,
         (bool Present, string? Sha256, string? ETag)? committed)
     {
-        root.EnumerateObject().Count(static property => property.Name == "index").ShouldBe(1, $"Missing or duplicate {phase} index receipt.");
         JsonElement index = root.GetProperty("index");
         index.ValueKind.ShouldBe(JsonValueKind.Object);
         JsonProperty[] properties = index.EnumerateObject().ToArray();
@@ -587,15 +674,11 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
     {
         if (phase != "stage")
         {
-            root.EnumerateObject().Any(static property => property.Name == "stagingEnvelope")
-                .ShouldBeFalse($"Unexpected {phase} stagingEnvelope receipt.");
             return null;
         }
 
-        root.EnumerateObject().Count(static property => property.Name == "stagingEnvelope")
-            .ShouldBe(1, "Missing or duplicate stage stagingEnvelope receipt.");
         JsonElement envelope = root.GetProperty("stagingEnvelope");
-        envelope.ValueKind.ShouldBe(JsonValueKind.Object);
+        envelope.ValueKind.ShouldBe(JsonValueKind.Object, "Malformed stage stagingEnvelope receipt.");
         JsonProperty[] properties = envelope.EnumerateObject().ToArray();
         properties.Select(static property => property.Name).ShouldBe(["present", "sha256", "etag"], ignoreOrder: true);
         properties.Length.ShouldBe(3);
@@ -627,6 +710,35 @@ public sealed class PartyLegacyBackfillProcessRuntimeTests
 
     private static bool IsSha256(string value)
         => value.Length == 64 && value.All(static character => character is (>= '0' and <= '9') or (>= 'a' and <= 'f'));
+
+    private static XDocument CreateWorkloadReport(byte[] receipt)
+        => XDocument.Parse($"""
+            <assemblies>
+              <assembly name="{typeof(PartyLegacyBackfillProcessRuntimeTests).Assembly.GetName().Name}.dll" errors="0" total="1" passed="1" failed="0" skipped="0" not-run="0">
+                <collection total="1" passed="1" failed="0" skipped="0" not-run="0">
+                  <test type="{typeof(PartyLegacyBackfillProcessRuntimeTests).FullName}" method="{nameof(ActualProviderBackfillSurvivesSeparateWorkloadProcesses)}" name="{WorkloadMethod}" result="Pass">
+                    <output>{ReceiptPrefix}{Convert.ToBase64String(receipt)}</output>
+                  </test>
+                </collection>
+              </assembly>
+            </assemblies>
+            """);
+
+    private static JsonDocument ReadWorkloadReceipt(XDocument report, byte[] receiptBytes, string phase)
+    {
+        VerifyWorkloadReport(report, receiptBytes);
+        var receipt = JsonDocument.Parse(receiptBytes);
+        try
+        {
+            VerifyWorkloadReceiptProperties(receipt.RootElement, phase);
+            return receipt;
+        }
+        catch
+        {
+            receipt.Dispose();
+            throw;
+        }
+    }
 
     private static void VerifyWorkloadReport(XDocument report, byte[] receipt)
     {

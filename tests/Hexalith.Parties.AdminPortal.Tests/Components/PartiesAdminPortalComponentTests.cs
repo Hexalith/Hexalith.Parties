@@ -258,6 +258,35 @@ public sealed class PartiesAdminPortalComponentTests : AdminPortalBunitContext
         api.ErasureRequests.Count.ShouldBe(1);
     }
 
+    /// <summary>Shared erasure confirmation renders without resolving the browser download service.</summary>
+    [Fact]
+    public void SharedFeedbackRendersErasureDialogWithoutResolvingDownloads()
+    {
+        Services.AddLocalization();
+        Hexalith.FrontComposer.Shell.Extensions.FrontComposerFeedbackServiceExtensions.AddFrontComposerFeedback(Services);
+        int downloadResolutions = 0;
+        Services.AddScoped<Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService>(_ =>
+        {
+            downloadResolutions++;
+            throw new InvalidOperationException("The erasure confirmation dialog should not resolve the download service.");
+        });
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-shared", "Shared Confirmation", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-shared", "Shared Confirmation", PartyType.Person, isActive: true));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Shared Confirmation"));
+        ClickFluentButton(cut, "Shared Confirmation");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR operations"));
+        ClickFluentButton(cut, "Request erasure");
+
+        cut.FindComponent<Hexalith.FrontComposer.Shell.Components.Forms.FcDestructiveConfirmationDialog>();
+        cut.Find(".hx-parties-admin__erasure-modal").GetAttribute("aria-labelledby").ShouldBe("fc-destructive-dialog-title");
+        FindFluentButton(cut, "Erase").HasAttribute("disabled").ShouldBeTrue();
+        downloadResolutions.ShouldBe(0);
+    }
+
     /// <summary>Proves download-only registration keeps the GDPR erasure dialog on local markup without resolving downloads.</summary>
     [Fact]
     public void DownloadOnlyRegistrationRetainsLocalErasureDialogWithoutResolvingDownloads()
@@ -284,10 +313,27 @@ public sealed class PartiesAdminPortalComponentTests : AdminPortalBunitContext
         cut.WaitForAssertion(() => FindFluentButton(cut, "Erase").HasAttribute("disabled").ShouldBeFalse());
     }
 
-    [Fact]
-    public void SharedDownloadCandidatePreservesAdminBytesAndSafeCallerFilename()
+    /// <summary>Admin export uses the registered downloader with or without shared feedback.</summary>
+    /// <param name="sharedFeedback">Whether the full feedback capability is registered.</param>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void RegisteredDownloadPreservesAdminBytesAndSafeCallerFilename(bool sharedFeedback)
     {
-        Hexalith.FrontComposer.Shell.Extensions.FrontComposerFeedbackServiceExtensions.AddFrontComposerFeedback(Services);
+        int downloadResolutions = 0;
+        if (sharedFeedback)
+        {
+            Hexalith.FrontComposer.Shell.Extensions.FrontComposerFeedbackServiceExtensions.AddFrontComposerFeedback(Services);
+        }
+        else
+        {
+            Services.AddScoped<Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService>(provider =>
+            {
+                downloadResolutions++;
+                return new Hexalith.FrontComposer.Shell.Services.Downloads.FcBrowserDownloadService(provider.GetRequiredService<IJSRuntime>());
+            });
+        }
+
         var module = JSInterop.SetupModule("./_content/Hexalith.FrontComposer.Shell/js/fc-download.js");
         module.Mode = JSRuntimeMode.Loose;
         var api = new RecordingAdminPortalApiClient();
@@ -308,16 +354,32 @@ public sealed class PartiesAdminPortalComponentTests : AdminPortalBunitContext
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("Shared Export"));
         ClickFluentButton(cut, "Shared Export");
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR operations"));
+        if (!sharedFeedback)
+        {
+            ClickFluentButton(cut, "Request erasure");
+            cut.FindComponents<Hexalith.FrontComposer.Shell.Components.Forms.FcDestructiveConfirmationDialog>().ShouldBeEmpty();
+            cut.Find(".hx-parties-admin__erasure-dialog [data-erasure-confirmation-live]");
+            downloadResolutions.ShouldBe(0);
+            ClickFluentButton(cut, "Cancel");
+        }
+
         ClickFluentButton(cut, "Export party data");
         cut.WaitForAssertion(() =>
         {
+            api.ExportRequests.Single().ShouldBe("party-shared-export");
             actual.ShouldBe(payload);
             var invocation = module.Invocations["downloadStream"].Single();
-            invocation.Arguments[1]!.ToString()!.ShouldStartWith("party-party-shared-export-");
+            var fileName = (string)invocation.Arguments[1]!;
+            fileName.ShouldStartWith("party-party-shared-export-");
+            fileName.ShouldEndWith("Z.json");
             invocation.Arguments[2].ShouldBe("application/json");
             module.Invocations["cancelDownload"].Count.ShouldBe(1);
             JSInterop.Invocations.ShouldNotContain(call => call.Identifier == "HexalithPartiesAdminPortal.downloadJson");
         });
+        if (!sharedFeedback)
+        {
+            downloadResolutions.ShouldBe(1);
+        }
     }
 #endif
 

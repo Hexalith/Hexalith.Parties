@@ -79,25 +79,25 @@
     padding-block: var(--spacingVerticalS, .5rem);
 }
 
-.hx-parties-profile__freshness {
+.hx-parties-profile__header ::deep .hx-parties-profile__freshness {
     align-items: center;
     display: inline-flex;
     gap: var(--spacingHorizontalXS, .25rem);
 }
 
-.hx-parties-profile__freshness-dot {
+.hx-parties-profile__header ::deep .hx-parties-profile__freshness-dot {
     block-size: .625rem;
     border-radius: var(--borderRadiusCircular, 9999px);
     display: inline-block;
     inline-size: .625rem;
 }
 
-.hx-parties-profile__freshness--current .hx-parties-profile__freshness-dot {
+.hx-parties-profile__header ::deep .hx-parties-profile__freshness--current .hx-parties-profile__freshness-dot {
     background: var(--colorStatusSuccessBackground1, Canvas);
     border: var(--strokeWidthThin, 1px) solid var(--colorStatusSuccessForeground1, CanvasText);
 }
 
-.hx-parties-profile__freshness--last-known .hx-parties-profile__freshness-dot {
+.hx-parties-profile__header ::deep .hx-parties-profile__freshness--last-known .hx-parties-profile__freshness-dot {
     background: var(--colorStatusWarningBackground1, Canvas);
     border: var(--strokeWidthThin, 1px) solid var(--colorStatusWarningForeground1, CanvasText);
 }
@@ -137,7 +137,8 @@
 }
 
 @media (forced-colors: active) {
-    .hx-parties-profile__freshness-dot {
+    .hx-parties-profile__header ::deep .hx-parties-profile__freshness .hx-parties-profile__freshness-dot {
+        forced-color-adjust: none;
         background: CanvasText;
         border-color: CanvasText;
     }

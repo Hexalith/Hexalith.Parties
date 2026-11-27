@@ -87,6 +87,7 @@
 
 @media (forced-colors: active) {
     .hx-parties-profile__freshness .hx-parties-profile__freshness-dot {
+        forced-color-adjust: none;
         background: CanvasText;
         border-color: CanvasText;
     }

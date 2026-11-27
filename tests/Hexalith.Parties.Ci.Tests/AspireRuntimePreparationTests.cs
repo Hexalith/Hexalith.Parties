@@ -109,6 +109,8 @@ public sealed class AspireRuntimePreparationTests
                 if '-getProperty:HexalithEventStoreVersion' in args:
                     if os.environ['PARTIES_COHORT_MUTATION'] == 'probe-failed': sys.exit(33)
                     print('3.130.2')
+                elif '-getProperty:HexalithCommonsVersion' in args:
+                    print('3.0.4')
                 elif '-getProperty:TargetFramework' in args:
                     print('net11.0')
                 elif '-getProperty:HexalithEventStoreCatalogHostsSupported' in args:
@@ -247,7 +249,7 @@ public sealed class AspireRuntimePreparationTests
                 arguments.Where(call => call.Any(argument => argument.StartsWith("-getProperty:TargetPath,", StringComparison.Ordinal)))
                     .ShouldAllBe(call => call.Contains("-p:HexalithPartiesRuntimeTargetFramework=net11.0") && call.Contains("-p:CustomAfterMicrosoftCommonProps=" + Path.Combine(root, "scripts", "PartiesHostedRuntime.props")));
                 builds.ShouldAllBe(call => call.Contains("-t:Rebuild") && call.Contains("-p:HexalithFrontComposerVersion=4.7.4")
-                    && call.Contains("-p:HexalithTenantsVersion=6.0.0") && call.Contains("-p:HexalithMemoriesVersion=3.0.13")
+                    && call.Contains("-p:HexalithCommonsVersion=3.0.4") && call.Contains("-p:HexalithTenantsVersion=6.0.0") && call.Contains("-p:HexalithMemoriesVersion=3.0.13")
                     && call.Contains("-p:HexalithMcpCliVersion=2.0.1"));
                 arguments.Where(call => call[0] == "msbuild").ShouldAllBe(call => call.Contains("-p:Configuration=" + configuration));
                 string artifacts = Path.Combine(root, profile == "packaged-isolated" ? "isolated-artifacts" : "artifacts");

@@ -50,6 +50,30 @@ public sealed class MyProfilePageTests : ConsumerPortalBunitContext
             .ShouldBe("Showing what we last knew - refreshing");
     }
 
+    /// <summary>The Consumer profile uses shared freshness without resolving the browser download service.</summary>
+    [Fact]
+    public void SharedFeedbackRendersProfileFreshnessWithoutResolvingDownloads()
+    {
+        int downloadResolutions = 0;
+        Services.AddScoped<Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService>(_ =>
+        {
+            downloadResolutions++;
+            throw new InvalidOperationException("The profile freshness status should not resolve the download service.");
+        });
+        Services.AddSingleton<IConsumerProfileDataClient>(new QueueProfileDataClient(_ =>
+            Task.FromResult(CurrentPerson() with { Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Stale) })));
+
+        IRenderedComponent<MyProfilePage> cut = Render<MyProfilePage>();
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.FindComponent<Hexalith.FrontComposer.Shell.Components.Feedback.FcFreshnessIndicator>();
+            cut.Find("[data-fc-freshness='stale']").TextContent
+                .ShouldBe("Showing what we last knew - refreshing");
+        });
+        downloadResolutions.ShouldBe(0);
+    }
+
     /// <summary>
     /// Proves that registering only the shared browser download service keeps <see cref="FreshnessStatus"/>
     /// on local markup without resolving <c>IFcBrowserDownloadService</c>.

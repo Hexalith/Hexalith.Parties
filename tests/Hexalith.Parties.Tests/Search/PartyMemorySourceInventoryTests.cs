@@ -1607,10 +1607,14 @@ public sealed class PartyMemorySourceInventoryTests
         }
     }
 
-    /// <summary>Isolates the bulk pre-DELETE race where a same-case admitted obligation is imported before DELETE dispatch while Parties refuses completion and preserves the pending obligation.</summary>
-    [Fact]
-    public async Task BulkCleanupPreDeleteRaceSendsUnconditionalDeleteWhileRetainingImportedObligation()
+    /// <summary>Verifies bulk cleanup retains an obligation imported before DELETE dispatch and requires fresh qualified absence after that workflow becomes terminal.</summary>
+    /// <param name="importedUnit">The canonical memory unit produced when the imported obligation becomes terminal.</param>
+    [Theory]
+    [InlineData("shared")]
+    [InlineData("different")]
+    public async Task BulkCleanupPreDeleteRaceSendsUnconditionalDeleteWhileRetainingImportedObligation(string importedUnit)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(importedUnit);
         CancellationToken token = TestContext.Current.CancellationToken;
         const string tenant = "tenant";
         const string party = "party";
@@ -1720,7 +1724,6 @@ public sealed class PartyMemorySourceInventoryTests
         persistedAfterRace.SourceClosureVersion.ShouldBeNull();
         persistedAfterRace.SourceClosureAuthority.ShouldBeNull();
         persistedAfterRace.Intents.ShouldHaveSingleItem().WorkflowInstanceId.ShouldBe("imported");
-        persistedAfterRace.CleanupReceipts.ShouldNotBeNull().ShouldHaveSingleItem().WorkflowInstanceId.ShouldBe("selected");
 
         PartyMemoryIngestionIntent pendingImported = (await PartyMemoryRecoveryTests.Intents(state).GetAsync(tenant, party, token))
             .ShouldHaveSingleItem();
@@ -1738,6 +1741,7 @@ public sealed class PartyMemorySourceInventoryTests
         settledSelected.CleanupSettled.ShouldBeTrue();
         settledSelected.RequiresTerminalEvidence.ShouldBeFalse();
         settledSelected.AbsenceAuthority.ShouldBe(producer);
+        persistedAfterRace.CleanupReceipts.ShouldNotBeNull().ShouldHaveSingleItem().ShouldBe(settledSelected);
         snapshotAfterRace.Single(item => item.WorkflowInstanceId == "imported").ShouldBe(pendingImported);
 
         bulk.Requests.Clear();
@@ -1765,6 +1769,65 @@ public sealed class PartyMemorySourceInventoryTests
             .Value.ShouldNotBeNull();
         persistedAfterFresh.SourceClosureVersion.ShouldBeNull();
         persistedAfterFresh.SourceClosureAuthority.ShouldBeNull();
+
+        bulk.Workflows["imported"] = PartyMemoryRecoveryHandler.Completed("imported", importedUnit);
+        if (importedUnit == "shared")
+        {
+            bulk.AbsenceBody = "{}";
+        }
+        else
+        {
+            bulk.Units.Add(importedUnit);
+            bulk.DelayDeletion = true;
+        }
+
+        string importedPath = "/gateway/" + MemoriesRoutes.CaseMemoryUnitPath(tenant, caseId, importedUnit);
+        string importedStatusPath = "/gateway/" + MemoriesRoutes.IngestStatusPath("imported");
+        bulk.Requests.Clear();
+        using var unconfirmedBulkHttp = new HttpClient(bulk, disposeHandler: false) { BaseAddress = bulkHttp.BaseAddress };
+        PartyMemoryCleanupResult unconfirmedResult = await PartyMemoryRecoveryTests.Cleanup(state, unconfirmedBulkHttp)
+            .DeleteByPartyAsync(tenant, caseId, party, token);
+        unconfirmedResult.Cleaned.ShouldBeFalse();
+        unconfirmedResult.BlockedReason.ShouldNotBeNull().ShouldContain("awaits qualified unit absence");
+        bulk.Requests.ShouldBe([(HttpMethod.Get, importedStatusPath), (HttpMethod.Delete, importedPath), (HttpMethod.Get, importedPath)]);
+        deleteRequestsObserved.ShouldBe(2);
+        sawDeletePrecondition.ShouldBeFalse();
+        if (importedUnit == "shared")
+        {
+            bulk.Units.ShouldBe(["unrelated"]);
+        }
+        else
+        {
+            bulk.Units.ShouldBe([importedUnit, "unrelated"], ignoreOrder: true);
+        }
+
+        PartyMemoryIngestionIntent terminalImported = pendingImported with { MemoryUnitId = importedUnit, RequiresTerminalEvidence = false };
+        PartyMemoryIngestionInventory persistedAfterUnconfirmed = (await state.GetAsync<PartyMemoryIngestionInventory>("statestore", inventoryKey, token))
+            .Value.ShouldNotBeNull();
+        persistedAfterUnconfirmed.Intents.ShouldHaveSingleItem().ShouldBe(terminalImported);
+        persistedAfterUnconfirmed.CleanupReceipts.ShouldNotBeNull().ShouldHaveSingleItem().ShouldBe(settledSelected);
+        persistedAfterUnconfirmed.SourceClosureVersion.ShouldBeNull();
+        persistedAfterUnconfirmed.SourceClosureAuthority.ShouldBeNull();
+
+        bulk.AbsenceBody = "{\"code\":\"MEMORY_UNIT_NOT_FOUND\"}";
+        bulk.DelayDeletion = false;
+        bulk.Requests.Clear();
+        using var confirmedBulkHttp = new HttpClient(bulk, disposeHandler: false) { BaseAddress = bulkHttp.BaseAddress };
+        (await PartyMemoryRecoveryTests.Cleanup(state, confirmedBulkHttp).DeleteByPartyAsync(tenant, caseId, party, token)).Cleaned.ShouldBeTrue();
+        bulk.Requests.ShouldBe([(HttpMethod.Delete, importedPath), (HttpMethod.Get, importedPath)]);
+        deleteRequestsObserved.ShouldBe(3);
+        sawDeletePrecondition.ShouldBeFalse();
+        bulk.Units.ShouldBe(["unrelated"]);
+
+        PartyMemoryIngestionInventory persistedAfterConfirmed = (await state.GetAsync<PartyMemoryIngestionInventory>("statestore", inventoryKey, token))
+            .Value.ShouldNotBeNull();
+        persistedAfterConfirmed.Intents.ShouldBeEmpty();
+        persistedAfterConfirmed.CleanupReceipts.ShouldNotBeNull().ShouldBe(
+            [settledSelected, terminalImported with { CleanupSettled = true, AbsenceAuthority = producer }], ignoreOrder: true);
+        const string closureVersion = "synthetic-complete-inventory";
+        persistedAfterConfirmed.SourceClosureVersion.ShouldBe(closureVersion);
+        persistedAfterConfirmed.SourceClosureAuthority.ShouldBe(producer);
+        (await PartyMemoryRecoveryTests.Intents(state).GetSourceClosureVersionAsync(tenant, party, token, producer)).ShouldBe(closureVersion);
     }
 
     [Theory]

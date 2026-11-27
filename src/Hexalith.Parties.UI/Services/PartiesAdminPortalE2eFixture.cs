@@ -26,6 +26,13 @@ internal static class PartiesAdminPortalE2eFixture
     public const string ConsumerCookieName = "parties-consumer-e2e";
     public const string ConsumerErasureStatusCookieName = "parties-consumer-erasure-e2e";
     public const string ConsumerProcessingStateCookieName = "parties-consumer-processing-e2e";
+
+    /// <summary>Gets the test-only cookie that selects freshness for the bound consumer profile.</summary>
+    public const string ConsumerFreshnessModeCookieName = "parties-consumer-freshness-e2e";
+
+    /// <summary>Gets the synthetic party identifier for the bound consumer.</summary>
+    public const string BoundConsumerPartyId = "party-bound-001";
+
     public const string Story35RealContractCookieName = "parties-admin-e2e-story-3-5";
     public const string RequestsRoute = "/__parties/specimens/admin-portal/requests";
     public const string ResetRoute = "/__parties/specimens/admin-portal/reset";
@@ -39,6 +46,12 @@ internal static class PartiesAdminPortalE2eFixture
     /// Gets the test-only route that releases any armed or active consumer profile read gate.
     /// </summary>
     public const string ConsumerProfileLoadGateReleaseRoute = "/__parties/specimens/admin-portal/consumer-profile-load-gate/release";
+
+    /// <summary>Gets the test-only route that arms the next bound consumer profile save response.</summary>
+    public const string ConsumerProfileSaveGateArmRoute = "/__parties/specimens/admin-portal/consumer-profile-save-gate/arm";
+
+    /// <summary>Gets the test-only route that releases the bound consumer profile save response.</summary>
+    public const string ConsumerProfileSaveGateReleaseRoute = "/__parties/specimens/admin-portal/consumer-profile-save-gate/release";
 
     public static bool IsEnabled(IConfiguration configuration, IHostEnvironment environment)
     {
@@ -75,6 +88,17 @@ internal static class PartiesAdminPortalE2eFixture
 
     public static string? ConsumerProcessingFixtureState(IHttpContextAccessor httpContextAccessor)
         => httpContextAccessor.HttpContext?.Request.Cookies[ConsumerProcessingStateCookieName];
+
+    /// <summary>Gets the projected freshness for a profile in the current fixture request.</summary>
+    /// <param name="partyId">The identifier of the profile being read.</param>
+    /// <param name="httpContextAccessor">The current fixture request context.</param>
+    /// <returns>Stale for a bound consumer reading their profile in stale mode, or current otherwise.</returns>
+    public static ProjectionFreshnessStatus ConsumerProfileFreshnessStatus(string partyId, IHttpContextAccessor httpContextAccessor)
+        => partyId == BoundConsumerPartyId
+            && ConsumerFixtureState(httpContextAccessor) == "bound"
+            && httpContextAccessor.HttpContext?.Request.Cookies[ConsumerFreshnessModeCookieName] == "stale"
+            ? ProjectionFreshnessStatus.Stale
+            : ProjectionFreshnessStatus.Current;
 
     /// <summary>
     /// Returns <see langword="true"/> when the current call is executing on an interactive Blazor circuit
@@ -137,7 +161,7 @@ internal static class PartiesAdminPortalE2eFixture
         {
             case "bound":
             case "no-tenant":
-                claims.Add(new Claim(PartiesClaimTypes.PartyId, "party-bound-001"));
+                claims.Add(new Claim(PartiesClaimTypes.PartyId, BoundConsumerPartyId));
                 break;
             case "empty":
                 claims.Add(new Claim(PartiesClaimTypes.PartyId, " "));
@@ -187,13 +211,9 @@ internal sealed class PartiesAdminPortalE2eAuthorizationService(IHttpContextAcce
 
 internal sealed class PartiesAdminPortalE2eFixtureState
 {
-    private const string BoundConsumerPartyId = "party-bound-001";
     private static readonly DateTimeOffset BaseDate = new(2026, 06, 10, 10, 00, 00, TimeSpan.Zero);
-    private static readonly TimeSpan ConsumerProfileLoadGateTimeout = TimeSpan.FromSeconds(30);
 
     private readonly object _sync = new();
-    private TaskCompletionSource? _consumerProfileLoadGate;
-    private TaskCompletionSource? _activeConsumerProfileLoadGate;
     private readonly List<AdminPortalRequestCapture> _listRequests = [];
     private readonly List<AdminPortalRequestCapture> _searchRequests = [];
     private readonly List<AdminPortalRequestCapture> _detailRequests = [];
@@ -212,6 +232,19 @@ internal sealed class PartiesAdminPortalE2eFixtureState
     private readonly List<AdminPortalRequestCapture> _pickerSearchRequests = [];
     private readonly List<AdminPortalRequestCapture> _pickerDetailRequests = [];
     private readonly Dictionary<string, PartyDetail> _details = CreateInitialDetails();
+
+    /// <summary>Initializes the specimen data and its one-shot profile gates.</summary>
+    public PartiesAdminPortalE2eFixtureState()
+    {
+        ConsumerProfileLoadGate = new(_sync);
+        ConsumerProfileSaveGate = new(_sync);
+    }
+
+    /// <summary>Gets the one-shot gate for the bound consumer's interactive profile read.</summary>
+    public PartiesAdminPortalE2eProfileGate ConsumerProfileLoadGate { get; }
+
+    /// <summary>Gets the one-shot gate for the bound consumer's profile save response.</summary>
+    public PartiesAdminPortalE2eProfileGate ConsumerProfileSaveGate { get; }
 
     public void CaptureList(AdminPortalListRequest request)
     {
@@ -287,6 +320,31 @@ internal sealed class PartiesAdminPortalE2eFixtureState
             _updateRequests.Add(AdminPortalRequestCapture.FromUpdate(partyId, command));
             return updated;
         }
+    }
+
+    /// <summary>Captures a consumer profile update and holds its result if the save gate is armed.</summary>
+    /// <param name="partyId">The identifier of the profile being saved.</param>
+    /// <param name="command">The submitted profile update.</param>
+    /// <param name="cancellationToken">The cancellation token for the save.</param>
+    /// <returns>The updated profile when the result may be returned.</returns>
+    public async Task<PartyDetail> CaptureConsumerProfileUpdateAsync(
+        string partyId,
+        UpdatePartyComposite command,
+        CancellationToken cancellationToken)
+    {
+        PartyDetail detail;
+        Task gate;
+        lock (_sync)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            detail = CaptureUpdate(partyId, command);
+            gate = partyId == PartiesAdminPortalE2eFixture.BoundConsumerPartyId
+                ? ConsumerProfileSaveGate.WaitAsync(cancellationToken)
+                : Task.CompletedTask;
+        }
+
+        await gate.ConfigureAwait(false);
+        return detail;
     }
 
     public void CaptureErasure(string partyId)
@@ -453,110 +511,12 @@ internal sealed class PartiesAdminPortalE2eFixtureState
         }
     }
 
-    /// <summary>
-    /// Arms a one-shot gate so the next interactive read for the bound E2E consumer profile waits until released.
-    /// </summary>
-    public void ArmConsumerProfileLoadGate()
-    {
-        TaskCompletionSource? priorArmed;
-        TaskCompletionSource? priorActive;
-        lock (_sync)
-        {
-            priorArmed = _consumerProfileLoadGate;
-            priorActive = _activeConsumerProfileLoadGate;
-            _consumerProfileLoadGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            _activeConsumerProfileLoadGate = null;
-        }
-
-        priorArmed?.TrySetResult();
-        priorActive?.TrySetResult();
-    }
-
-    /// <summary>
-    /// Releases any armed or currently awaiting consumer profile load gate.
-    /// </summary>
-    public void ReleaseConsumerProfileLoadGate()
-    {
-        TaskCompletionSource? armed;
-        TaskCompletionSource? active;
-        lock (_sync)
-        {
-            armed = _consumerProfileLoadGate;
-            active = _activeConsumerProfileLoadGate;
-            _consumerProfileLoadGate = null;
-            _activeConsumerProfileLoadGate = null;
-        }
-
-        armed?.TrySetResult();
-        active?.TrySetResult();
-    }
-
-    /// <summary>
-    /// Awaits and consumes the armed one-shot gate when reading the bound E2E consumer profile.
-    /// </summary>
-    /// <param name="partyId">The party identifier being read.</param>
-    /// <param name="cancellationToken">The cancellation token for the read.</param>
-    /// <returns>A task that completes when the read may proceed.</returns>
-    public Task WaitForConsumerProfileLoadGateAsync(string partyId, CancellationToken cancellationToken)
-    {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return Task.FromCanceled(cancellationToken);
-        }
-
-        if (!string.Equals(partyId, BoundConsumerPartyId, StringComparison.Ordinal))
-        {
-            return Task.CompletedTask;
-        }
-
-        TaskCompletionSource? gate;
-        lock (_sync)
-        {
-            gate = _consumerProfileLoadGate;
-            if (gate is null)
-            {
-                return Task.CompletedTask;
-            }
-
-            _consumerProfileLoadGate = null;
-            _activeConsumerProfileLoadGate = gate;
-        }
-
-        return AwaitConsumerProfileLoadGateAsync(gate, cancellationToken);
-    }
-
-    private async Task AwaitConsumerProfileLoadGateAsync(TaskCompletionSource gate, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await gate.Task.WaitAsync(ConsumerProfileLoadGateTimeout, cancellationToken).ConfigureAwait(false);
-        }
-        catch (TimeoutException)
-        {
-            gate.TrySetResult();
-        }
-        finally
-        {
-            lock (_sync)
-            {
-                if (ReferenceEquals(_activeConsumerProfileLoadGate, gate))
-                {
-                    _activeConsumerProfileLoadGate = null;
-                }
-            }
-        }
-    }
-
     public void Reset()
     {
-        TaskCompletionSource? armed;
-        TaskCompletionSource? active;
         lock (_sync)
         {
-            armed = _consumerProfileLoadGate;
-            active = _activeConsumerProfileLoadGate;
-            _consumerProfileLoadGate = null;
-            _activeConsumerProfileLoadGate = null;
+            ConsumerProfileLoadGate.Release();
+            ConsumerProfileSaveGate.Release();
             _listRequests.Clear();
             _searchRequests.Clear();
             _detailRequests.Clear();
@@ -580,9 +540,6 @@ internal sealed class PartiesAdminPortalE2eFixtureState
                 _details[key] = detail;
             }
         }
-
-        armed?.TrySetResult();
-        active?.TrySetResult();
     }
 
     public AdminPortalE2eSnapshot Snapshot()
@@ -1250,9 +1207,10 @@ internal sealed class PartiesAdminPortalE2ePartiesQueryClient(
         Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null)
     {
         ct.ThrowIfCancellationRequested();
-        if (PartiesAdminPortalE2eFixture.IsInteractiveCircuitRequest(httpContextAccessor))
+        if (partyId == PartiesAdminPortalE2eFixture.BoundConsumerPartyId
+            && PartiesAdminPortalE2eFixture.IsInteractiveCircuitRequest(httpContextAccessor))
         {
-            await state.WaitForConsumerProfileLoadGateAsync(partyId, ct).ConfigureAwait(false);
+            await state.ConsumerProfileLoadGate.WaitAsync(ct).ConfigureAwait(false);
         }
 
         state.CapturePickerDetail(partyId);
@@ -1262,7 +1220,8 @@ internal sealed class PartiesAdminPortalE2ePartiesQueryClient(
         {
             return current with
             {
-                Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Current),
+                Freshness = ProjectionFreshnessMetadata.Create(
+                    PartiesAdminPortalE2eFixture.ConsumerProfileFreshnessStatus(partyId, httpContextAccessor)),
             };
         }
 
@@ -1486,21 +1445,19 @@ internal sealed class PartiesAdminPortalE2ePartiesCommandClient(PartiesAdminPort
     public Task<PartiesCommandResult<PartyDetail>> CreatePartyCompositeWithResultAsync(CreatePartyComposite command, CancellationToken ct)
         => Unsupported<PartiesCommandResult<PartyDetail>>();
 
-    public Task<string> UpdatePartyCompositeAsync(string partyId, UpdatePartyComposite command, CancellationToken ct)
+    public async Task<string> UpdatePartyCompositeAsync(string partyId, UpdatePartyComposite command, CancellationToken ct)
     {
-        ct.ThrowIfCancellationRequested();
-        _ = state.CaptureUpdate(partyId, command);
-        return Task.FromResult("corr-consumer-update");
+        _ = await state.CaptureConsumerProfileUpdateAsync(partyId, command, ct).ConfigureAwait(false);
+        return "corr-consumer-update";
     }
 
-    public Task<PartiesCommandResult<PartyDetail>> UpdatePartyCompositeWithResultAsync(
+    public async Task<PartiesCommandResult<PartyDetail>> UpdatePartyCompositeWithResultAsync(
         string partyId,
         UpdatePartyComposite command,
         CancellationToken ct)
     {
-        ct.ThrowIfCancellationRequested();
-        PartyDetail detail = state.CaptureUpdate(partyId, command);
-        return Task.FromResult(new PartiesCommandResult<PartyDetail>("corr-consumer-update", detail));
+        PartyDetail detail = await state.CaptureConsumerProfileUpdateAsync(partyId, command, ct).ConfigureAwait(false);
+        return new PartiesCommandResult<PartyDetail>("corr-consumer-update", detail);
     }
 
     public Task<string> SetIsNaturalPersonAsync(string partyId, SetIsNaturalPerson command, CancellationToken ct)

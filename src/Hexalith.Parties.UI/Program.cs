@@ -254,14 +254,28 @@ if (adminPortalE2eFixtureEnabled)
         PartiesAdminPortalE2eFixture.ConsumerProfileLoadGateArmRoute,
         (PartiesAdminPortalE2eFixtureState state) =>
         {
-            state.ArmConsumerProfileLoadGate();
+            state.ConsumerProfileLoadGate.Arm();
             return Results.NoContent();
         });
     app.MapPost(
         PartiesAdminPortalE2eFixture.ConsumerProfileLoadGateReleaseRoute,
         (PartiesAdminPortalE2eFixtureState state) =>
         {
-            state.ReleaseConsumerProfileLoadGate();
+            state.ConsumerProfileLoadGate.Release();
+            return Results.NoContent();
+        });
+    app.MapPost(
+        PartiesAdminPortalE2eFixture.ConsumerProfileSaveGateArmRoute,
+        (PartiesAdminPortalE2eFixtureState state) =>
+        {
+            state.ConsumerProfileSaveGate.Arm();
+            return Results.NoContent();
+        });
+    app.MapPost(
+        PartiesAdminPortalE2eFixture.ConsumerProfileSaveGateReleaseRoute,
+        (PartiesAdminPortalE2eFixtureState state) =>
+        {
+            state.ConsumerProfileSaveGate.Release();
             return Results.NoContent();
         });
 }
