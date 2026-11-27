@@ -140,9 +140,17 @@ development_status:
   8-5-eventstore-domain-service-sdk-host-cutover: done
   8-6-projection-and-query-sdk-migration: done
   8-7-data-protection-extraction: blocked
-  # Revalidated 2026-11-27 at EventStore 5484fae6 (v5.6.0-67-g5484fae6c) / package 5.6.0
+  # EventStore producer sprint, checked 2026-11-27 at 5484fae6 (v5.6.0-67-g5484fae6c) / package 5.6.0
   # (Platform v2.9.0 / Builds v6.9.1, commit 2d52234a): 8.1-8.5 & 8.12 are done,
   # 8.6-8.7 are in progress, and packaging/parity/rollback/G5 approval (8.8-8.11) remain backlog.
+  # DW-98 rechecked 2026-11-27 on cohort 2d52234ae52f64266ea257baf9e66030841df942.
+  # EventStore 5.6.0 root 5484fae6c284cd8fe70b51bf921c5b31509b6c27.
+  # Tenants 8.1.1 root d58f24d8d6909d7498ecec34955e7f17720c1ba0.
+  # Platform v2.9.0 a670a4c51d76f63f3142e38f02542a246e1926fb.
+  # Builds v6.9.1 91cb7cba990ffdf82930f9bf8cb68aef41baba76.
+  # McpCli 3.0.0 Abstractions, root bb11083c084b926e80aebb09ba42366284e4a405.
+  # Story 8.7, replacement parity/switch-back and MCP retirement remain open.
+  # Release retention checks passed: Server 315/315, MCP 94/94, Aspire 9/9, health 124/124.
   8-8-client-mcp-apphost-build-and-deploy-cleanup: blocked
   8-9-ui-frontcomposer-and-fluent-consolidation: blocked
   8-10-final-readiness-documentation-and-retirement-gate: done

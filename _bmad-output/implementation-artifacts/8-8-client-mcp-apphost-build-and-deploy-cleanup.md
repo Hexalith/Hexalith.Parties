@@ -3,29 +3,33 @@ story_key: 8-8-client-mcp-apphost-build-and-deploy-cleanup
 story_id: "8.8"
 epic: "8"
 created: 2026-07-16T04:07:47+02:00
-revalidated: 2026-07-31T15:45:08+02:00
+revalidated: 2026-11-27
+previous_revalidation: 2026-07-31T15:45:08+02:00
 source_status: backlog
 target_status: blocked
 baseline_commit_at_story_start: 8644b1b1a50d2f1ab7f1cdad8dc00a88314080e2
-baseline_commit_at_revalidation: ed007f81878bb4f32bab5a56f5bd7978ed738f80
-ai_tools_root_pin_at_revalidation: 859d53b792e1db9562b0ff66dbc335f418a688be
-ai_tools_checkout_at_revalidation: 859d53b792e1db9562b0ff66dbc335f418a688be
-builds_root_pin_at_revalidation: b529b665a6f076d07d218266ab74ca211f34f5a7
-builds_checkout_at_revalidation: b529b665a6f076d07d218266ab74ca211f34f5a7
-commons_root_pin_at_revalidation: f2b5f1b12b478dce902756876138a60cde4fde65
-commons_checkout_at_revalidation: f2b5f1b12b478dce902756876138a60cde4fde65
-eventstore_root_pin_at_revalidation: e4618d9114c8824fd50fdfc8d135438aa261377c
-eventstore_checkout_at_revalidation: e4618d9114c8824fd50fdfc8d135438aa261377c
+baseline_commit_at_revalidation: 37f23c6e52dc2f3b730b639f3487acd4b59108a6
+ai_tools_root_pin_at_revalidation: 8c75bcccb4c592d749e2898ca1dbbedf61577474
+ai_tools_checkout_at_revalidation: 8c75bcccb4c592d749e2898ca1dbbedf61577474
+builds_root_pin_at_revalidation: 91cb7cba990ffdf82930f9bf8cb68aef41baba76
+builds_checkout_at_revalidation: 91cb7cba990ffdf82930f9bf8cb68aef41baba76
+commons_root_pin_at_revalidation: c4a74445c0d0aaf0d1f102a06af204d6e7834ee0
+commons_checkout_at_revalidation: c4a74445c0d0aaf0d1f102a06af204d6e7834ee0
+eventstore_root_pin_at_revalidation: 5484fae6c284cd8fe70b51bf921c5b31509b6c27
+eventstore_checkout_at_revalidation: 5484fae6c284cd8fe70b51bf921c5b31509b6c27
 eventstore_owner_approved_source: fa2d1c9910f8976553adb33dcdb1c9ff2ea75594
 eventstore_owner_approved_proof_package: 999.1.20-proof.fa2d1c9910f8
-frontcomposer_root_pin_at_revalidation: b6efcad5b293017f9805e4fc7dc982b92abff678
-frontcomposer_checkout_at_revalidation: b6efcad5b293017f9805e4fc7dc982b92abff678
-memories_root_pin_at_revalidation: a1f64d552f843ed299cb95ef4ffa18b81516a2fb
-memories_checkout_at_revalidation: a1f64d552f843ed299cb95ef4ffa18b81516a2fb
-polymorphic_serializations_root_pin_at_revalidation: f3b23304283b0e7a35ffa66bf8d9bf2499e35e66
-polymorphic_serializations_checkout_at_revalidation: f3b23304283b0e7a35ffa66bf8d9bf2499e35e66
-tenants_root_pin_at_revalidation: 2cd7edf5088c54bbeced37d2f8164c36889b7cac
-tenants_checkout_at_revalidation: 2cd7edf5088c54bbeced37d2f8164c36889b7cac
+frontcomposer_root_pin_at_revalidation: b3342381f59f3d1912f299b6dc597c3bff0e76a1
+frontcomposer_checkout_at_revalidation: b3342381f59f3d1912f299b6dc597c3bff0e76a1
+memories_root_pin_at_revalidation: 24cbc1927e29c03a8576279554064fb9e0219b30
+memories_checkout_at_revalidation: 24cbc1927e29c03a8576279554064fb9e0219b30
+polymorphic_serializations_root_pin_at_revalidation: 12d0a2ca4004a6f2ec22866a68d271837c3d1a42
+polymorphic_serializations_checkout_at_revalidation: 12d0a2ca4004a6f2ec22866a68d271837c3d1a42
+tenants_root_pin_at_revalidation: d58f24d8d6909d7498ecec34955e7f17720c1ba0
+tenants_checkout_at_revalidation: d58f24d8d6909d7498ecec34955e7f17720c1ba0
+mcpcli_root_pin_at_revalidation: bb11083c084b926e80aebb09ba42366284e4a405
+platform_root_pin_at_revalidation: a670a4c51d76f63f3142e38f02542a246e1926fb
+cicd_root_pin_at_revalidation: f65b6c7378c4be144a8236e42507045a359dbbb0
 ---
 
 # Story 8.8: Client, MCP, AppHost, build, and runtime-boundary cleanup
@@ -33,6 +37,51 @@ tenants_checkout_at_revalidation: 2cd7edf5088c54bbeced37d2f8164c36889b7cac
 Status: blocked
 
 <!-- The implementation packet is complete enough for workflow intake. Parties production migration is hard-gated by the authoritative Epic 8 sequence and by the independently governed Story 8.3 G6, G7/G9, G8, G11, Commons HTTP, and Builds rows. -->
+
+## Runtime-boundary requalification — 2026-11-27
+
+**Status remains blocked.** Cohort adoption
+`2d52234ae52f64266ea257baf9e66030841df942` and inspected Parties baseline
+`37f23c6e52dc2f3b730b639f3487acd4b59108a6` select EventStore `5.6.0` and
+Tenants `8.1.1` packages and the Platform `v2.9.0` / Builds `v6.9.1` cohort.
+The [Story 8.3 recheck](story-8-3-platform-api-prerequisite-matrix.md#story-88-runtime-boundary-recheck--2026-11-27)
+binds package provenance independently of the root source gitlinks.
+
+- G1 has no shared successor for the degraded/stale GET response and already-started response handling. G2 has Gateway health registration and a DomainService state-store helper. Parties owns the policy that leaves degraded pub/sub, Memories search and read-model health outside readiness.
+- G7/G9 has a Gateway transformation reused by the Tenants 8.1.1 host. The lightweight package, approved public claim and identifier APIs, host/UI parity and rollback remain required.
+- G8-A's mode-aware JWT helper is in the selected Aspire package. G8-B requires independent typed-client registration. G8-C requires an accepted integrated topology, security, publish and switch-back receipt.
+- Builds v6.9.1 provides the pinned catalog and module CLI. The local selectors and build rules remain in use pending replacement parity. The MCP retirement verdict stays `retirement-blocked` under G01–G06 and the separate classification/exposure conflict.
+
+The retained suites ran from the standalone package-mode Release build.
+
+```bash
+flags=(-p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true -m:1)
+run-with-temp dotnet restore Hexalith.Parties.Standalone.slnx -p:Configuration=Release "${flags[@]}"
+run-with-temp dotnet build Hexalith.Parties.Standalone.slnx -c Release --no-restore "${flags[@]}"
+results="$PWD/TestResults/dw-168-100-58-99-98-2026-11-27"
+mkdir -p "$results/dotnet"
+for suffix in Server Mcp Aspire; do
+    suite="Hexalith.Parties.$suffix.Tests"
+    run-with-temp dotnet "tests/$suite/bin/Release/net11.0/$suite.dll" -result-xml "$results/dotnet/$suite.xml"
+done
+run-with-temp dotnet tests/Hexalith.Parties.Tests/bin/Release/net11.0/Hexalith.Parties.Tests.dll \
+    -namespace Hexalith.Parties.Tests.HealthChecks -failSkips -result-xml "$results/health.xml"
+```
+
+Replacement, deployed and switch-back parity have independent acceptance gates.
+
+| Suite | Retained coverage | Result |
+| --- | --- | --- |
+| `Hexalith.Parties.Server.Tests` | Aggregate identity, actor authorization, lifecycle and domain behavior | 315/315 passed |
+| `Hexalith.Parties.Mcp.Tests` | Tool contracts and dispatch, result mapping, legacy host composition | 94/94 passed |
+| `Hexalith.Parties.Aspire.Tests` | Server resource, sidecar and ACL composition | 9/9 passed |
+
+The G1/G2 middleware and named health controls live under
+`tests/Hexalith.Parties.Tests/HealthChecks` and passed 124/124 in Release.
+[Local xUnit receipts](../../TestResults/dw-168-100-58-99-98-2026-11-27/)
+The July 2026 checklist and log below retain their original observation
+scope. The authoritative story sequence remains `8.6 -> 8.7 -> 8.8` and
+Story 8.7 remains `blocked`.
 
 ## Story
 
@@ -133,11 +182,11 @@ so that Parties packages and runtime-boundary assets describe only Parties-owned
 
 ## Dev Notes
 
-### Story Classification and Current Blockers
+### Story Classification and July 2026 Baseline
 
 - Epic 8 is Class C post-MVP maintenance with zero new PRD functional coverage. Story 8.8 changes ownership and plumbing, not product features. [Source: `_bmad-output/planning-artifacts/epics.md#Story-8.8-Client-MCP-AppHost-build-and-runtime-boundary-cleanup`]
 - The approved sequence remains `8.6 -> 8.7 -> 8.8`. Story 8.6 is `done`; Story 8.7 remains `blocked`, so owner work may proceed but Parties source consumption remains sequence-gated.
-- Root and `origin/main` both select baseline `ed007f8...`, whose current message fails `npx --no-install commitlint --last --verbose` with `type-empty`, `subject-empty`, and `body-max-line-length`. This is an owner-governed release-policy blocker: do not amend or force-rewrite pushed `main` in this story, and do not tag/release until the repository's approved Git governance dispositions it and direct-main protection is verified.
+- The July root and `origin/main` selected baseline `ed007f8...`, whose message failed `npx --no-install commitlint --last --verbose` with `type-empty`, `subject-empty`, and `body-max-line-length`. This is an owner-governed release-policy blocker: do not amend or force-rewrite pushed `main` in this story, and do not tag/release until the repository's approved Git governance dispositions it and direct-main protection is verified.
 - The draft 8.8 spec is explicitly `blocked-prerequisite` and recommends a split or hard gates. Treat Commons HTTP, G6 EventStore client, G11 MCP relay, G11 Admin links, G11 named-health capability, G7/G9 authentication, G8-A security, G8-B client registration, G8-C topology, Builds, G1/G2 runtime health, and G12 package-only parity as independent evidence gates. Proof for one gate never authorizes another gate's activation or deletion.
 - EventStore Story 1.20 is now `done` with an owner-approved `available` packet dated 2026-07-26. It authorizes migration only to exact source `fa2d1c9...`, proof package `999.1.20-proof.fa2d1c9910f8`, or the digest-pinned container recorded there. The current Parties EventStore root/checkout `e4618d9...` (`v3.86.0`) is a descendant and has no source delta from `fa2d1c9...` across the relevant G6 gateway/client/contracts files, but it is not an approved exact identity. Story 8.6 is `done`; Story 8.8 stays sequence-gated on 8.7, and G6 consumption still requires selected-identity acceptance.
 - G6 API delivery is complete at the exact approved Story 1.20 identity: typed command/query results, all six lifecycle states, `200`/`304` metadata, typed gateway failures, and gateway/DAPR registration exist with producer tests. Reclassify the stale matrix row from `needs-additive-api` to available-at-approved-identity before consumption; the remaining work is selected-identity acceptance, Parties adapter parity, and rollback, not another additive owner API. G7/G9 delivery remains absent: the tenant claim constant is not in the approved public Contracts surface, and `AggregateIdentity.IsValid(string)` and `UniqueIdHelper.IsValidUlid(string)` do not exist at the current pins.
@@ -350,7 +399,7 @@ GPT-5 Codex
 - Story 8.8 is context-complete as a guarded packet but remains blocked for production work by Story 8.7 and slice-specific owner/identity/parity prerequisites. Story 8.6 is `done`.
 - EventStore G6 owner delivery is approved, but its exact approved identity is not selected by Parties; Commons HTTP and Builds also require matrix refresh against current identities and facet-level consumer parity.
 - G5, G7/G9, G8, and G11 still require delivered/approved surfaces plus exact identities, Parties parity, and exercised rollback. Updating every root submodule removed checkout drift but did not close those evidence gates.
-- No product tests were run during this documentation-only revalidation because no production code changed. YAML/front-matter, repository-state, Markdown integrity, link, File List, and diff checks are the applicable validation; the baseline commitlint gate is explicitly failing as recorded above.
+- The July documentation-only revalidation ran without product tests. YAML/front-matter, repository-state, Markdown integrity, link, File List, and diff checks are the applicable validation; the baseline commitlint gate is explicitly failing as recorded above.
 
 ### File List
 
