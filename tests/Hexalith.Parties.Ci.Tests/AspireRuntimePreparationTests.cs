@@ -707,10 +707,10 @@ public sealed class AspireRuntimePreparationTests
             result.ExitCode.ShouldBe(0, result.Output + result.Error);
             using JsonDocument evaluation = JsonDocument.Parse(result.Output);
             JsonElement properties = evaluation.RootElement.GetProperty("Properties");
-            properties.GetProperty("HexalithEventStoreVersion").GetString().ShouldBe(selection == "fallback" ? "5.4.0" : "5.0.0");
-            properties.GetProperty("HexalithTenantsVersion").GetString().ShouldBe(selection == "fallback" ? "8.0.2" : "7.0.7");
-            properties.GetProperty("HexalithMemoriesVersion").GetString().ShouldBe(selection == "fallback" ? "4.1.0" : "3.0.27");
-            properties.GetProperty("HexalithFrontComposerVersion").GetString().ShouldBe(selection == "fallback" ? "6.0.1" : "5.0.0");
+            properties.GetProperty("HexalithEventStoreVersion").GetString().ShouldBe(selection == "fallback" ? "5.5.2" : "5.0.0");
+            properties.GetProperty("HexalithTenantsVersion").GetString().ShouldBe(selection == "fallback" ? "8.0.4" : "7.0.7");
+            properties.GetProperty("HexalithMemoriesVersion").GetString().ShouldBe(selection == "fallback" ? "4.1.1" : "3.0.27");
+            properties.GetProperty("HexalithFrontComposerVersion").GetString().ShouldBe(selection == "fallback" ? "6.1.0" : "5.0.0");
             properties.GetProperty("HexalithEventStoreCatalogHostsSupported").GetString().ShouldBe(selection == "fallback" ? "true" : string.Empty);
         }
         finally { Directory.Delete(workspace, recursive: true); }
@@ -750,10 +750,10 @@ public sealed class AspireRuntimePreparationTests
             result.ExitCode.ShouldBe(0, result.Output + result.Error);
             using JsonDocument evaluation = JsonDocument.Parse(result.Output);
             JsonElement properties = evaluation.RootElement.GetProperty("Properties");
-            properties.GetProperty("HexalithEventStoreVersion").GetString().ShouldBe("5.4.0");
-            properties.GetProperty("HexalithTenantsVersion").GetString().ShouldBe("8.0.2");
-            properties.GetProperty("HexalithMemoriesVersion").GetString().ShouldBe("4.1.0");
-            properties.GetProperty("HexalithFrontComposerVersion").GetString().ShouldBe("6.0.1");
+            properties.GetProperty("HexalithEventStoreVersion").GetString().ShouldBe("5.5.2");
+            properties.GetProperty("HexalithTenantsVersion").GetString().ShouldBe("8.0.4");
+            properties.GetProperty("HexalithMemoriesVersion").GetString().ShouldBe("4.1.1");
+            properties.GetProperty("HexalithFrontComposerVersion").GetString().ShouldBe("6.1.0");
         }
         finally { Directory.Delete(workspace, recursive: true); }
     }

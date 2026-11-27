@@ -21,7 +21,7 @@ authentication setup; those hosts are outside the reference environment.
 | Git | Any recent version | [git-scm.com](https://git-scm.com) |
 | `jq` | Latest, optional for Bash examples | [jqlang.org](https://jqlang.org) |
 
-Install Aspire CLI **17.0.0** to match the Parties AppHost SDK and hosting packages. The local tool manifest pins module tool **6.5.1**; `dotnet tool restore` restores that exact version. The tool owns run-scoped infrastructure, readiness and diagnostics; its catalog requires Dapr CLI 1.19.1 and runtime 1.19.2. Verify the downloaded archives against the [pinned toolchain checksums](https://github.com/Hexalith/Hexalith.Builds/blob/055d7df5b49669d5b705ce163b0b2e187ecb9a50/Props/dapr-toolchain-sha256.json). Set `HEXALITH_DAPR_HOME` to a prepared absolute isolated Dapr home with the CLI at `tools/dapr` and runtime binaries at `.dapr/bin/{daprd,placement,scheduler}`; an unset or unprepared home is refused.
+Install Aspire CLI **17.0.0** to match the Parties AppHost SDK and hosting packages. The local tool manifest pins module tool **6.9.0**; `dotnet tool restore` restores that exact version. The tool owns run-scoped infrastructure, readiness and diagnostics; its catalog requires Dapr CLI 1.19.1 and runtime 1.19.2. Verify the downloaded archives against the [pinned toolchain checksums](https://github.com/Hexalith/Hexalith.Builds/blob/62876129eaa035e78bd0324419231f07d43a07b8/Props/dapr-toolchain-sha256.json). Set `HEXALITH_DAPR_HOME` to a prepared absolute isolated Dapr home with the CLI at `tools/dapr` and runtime binaries at `.dapr/bin/{daprd,placement,scheduler}`; an unset or unprepared home is refused.
 
 Verify your setup:
 
@@ -44,7 +44,7 @@ dotnet tool restore
 dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json
 ```
 
-The local tool manifest pins module tool **6.5.1**. The command waits for seven servers: `parties`, `eventstore`, `tenants`,
+The local tool manifest pins module tool **6.9.0**. The command waits for seven servers: `parties`, `eventstore`, `tenants`,
 `tenants-api`, `memories`, `memories-access-telemetry-clock`, and `memories-access-telemetry`.
 It uses only mapped direct projects and Debug assets. Missing selected source fails
 with a diagnostic; sibling checkouts and packages are not fallback sources.
