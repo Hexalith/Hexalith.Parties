@@ -631,6 +631,7 @@ public sealed class AspireRuntimePreparationTests
     [InlineData("5.3.0", false, true, true)]
     [InlineData("5.3.1", false, true, true)]
     [InlineData("5.4.0", false, true, true)]
+    [InlineData("5.5.2", false, true, true)]
     [InlineData("5.3.2", false, false, false)]
     [InlineData("5.1.0-preview.1", false, false, false)]
     [InlineData("5.1.0+build.1", false, false, false)]
@@ -668,7 +669,7 @@ public sealed class AspireRuntimePreparationTests
             constants.Contains("HEXALITH_EVENTSTORE_CATALOG_HOSTS", StringComparer.Ordinal).ShouldBe(hostsAvailable);
             constants.Contains("HEXALITH_DEVELOPMENT_CATALOG_SOURCE", StringComparer.Ordinal).ShouldBe(source);
             constants.Contains("HEXALITH_EVENTSTORE_QUERY_SELECTOR_BINDINGS", StringComparer.Ordinal)
-                .ShouldBe(source || version is "4.1.0" or "4.2.0" or "5.1.0" or "5.1.1" or "5.3.0" or "5.3.1" or "5.4.0");
+                .ShouldBe(source || version is "4.1.0" or "4.2.0" or "5.1.0" or "5.1.1" or "5.3.0" or "5.3.1" or "5.4.0" or "5.5.2");
         }
         finally { Directory.Delete(workspace, recursive: true); }
     }
@@ -776,6 +777,7 @@ public sealed class AspireRuntimePreparationTests
     [InlineData("5.3.0", false, true, true)]
     [InlineData("5.3.1", false, true, true)]
     [InlineData("5.4.0", false, true, true)]
+    [InlineData("5.5.2", false, true, true)]
     [InlineData("5.3.2", false, false, false)]
     [InlineData("5.1.0-preview.1", false, false, false)]
     [InlineData("5.1.0+build.1", false, false, false)]
@@ -829,7 +831,7 @@ public sealed class AspireRuntimePreparationTests
     [InlineData("6.0.0", false, true, true)]
     [InlineData("6.0.1", false, true, true)]
     [InlineData("5.9.9", false, false, false)]
-    [InlineData("6.1.0", false, false, false)]
+    [InlineData("6.1.0", false, true, true)]
     [InlineData("6.0.0-preview.1", false, false, false)]
     [InlineData("6.0.0+build.1", false, false, false)]
     [InlineData("6.0.0.0", false, false, false)]

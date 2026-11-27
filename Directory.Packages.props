@@ -29,6 +29,10 @@
   <Import Project="$(Hexalith1BuildPackageProps)" Condition="Exists('$(Hexalith1BuildPackageProps)') And '$(HexalithVersionsLoaded)' != 'true'" />
   <Import Project="$(Hexalith2BuildPackageProps)" Condition="Exists('$(Hexalith2BuildPackageProps)') And '$(HexalithVersionsLoaded)' != 'true'" />
   <Import Project="$(Hexalith3BuildPackageProps)" Condition="'$(HexalithVersionsLoaded)' != 'true'" />
+  <PropertyGroup Condition="'$(HexalithCatalogEventStoreVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true' and '$(HexalithEventStoreVersion)' == '5.5.2'">
+    <!-- The signed cohort also applies to executable owners built with an explicit version. -->
+    <HexalithCatalogEventStoreVersion>$(HexalithEventStoreVersion)</HexalithCatalogEventStoreVersion>
+  </PropertyGroup>
   <!-- Match the dependency floors of the default Commons.ServiceDefaults 3.0.4. -->
   <ItemGroup Condition="'$(_PartiesUsesDefaultCatalog)' == 'true' and '$(HexalithSourceMappingMode)' != 'package'">
     <PackageVersion Update="Microsoft.Extensions.Http.Resilience;Microsoft.Extensions.ServiceDiscovery">
