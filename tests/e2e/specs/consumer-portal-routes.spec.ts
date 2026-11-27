@@ -13,6 +13,8 @@ const CONSUMER_ERASURE_STATUS_COOKIE = 'parties-consumer-erasure-e2e';
 const CONSUMER_PROCESSING_STATE_COOKIE = 'parties-consumer-processing-e2e';
 const REQUESTS_ROUTE = '/__parties/specimens/admin-portal/requests';
 const RESET_ROUTE = '/__parties/specimens/admin-portal/reset';
+const CONSUMER_PROFILE_LOAD_GATE_ARM_ROUTE = '/__parties/specimens/admin-portal/consumer-profile-load-gate/arm';
+const CONSUMER_PROFILE_LOAD_GATE_RELEASE_ROUTE = '/__parties/specimens/admin-portal/consumer-profile-load-gate/release';
 const BASE_URL = process.env.BASE_URL ?? 'http://127.0.0.1:5072';
 
 const CONSUMER_ROUTES = [
@@ -97,6 +99,7 @@ test.describe('Consumer portal route shells', () => {
       await page.emulateMedia({ forcedColors, reducedMotion: 'reduce' });
       for (const route of CONSUMER_ROUTES) {
         await page.goto(route.path);
+        await expectInteractiveShell(page);
         const content = page.locator('section.hx-parties-profile');
         await expect(content).toHaveCount(1);
         const accordion = content.locator('fluent-accordion');
@@ -338,6 +341,66 @@ test.describe('Consumer portal route shells', () => {
     });
   }
 
+  test('bound Consumer preserves single polite live region and freshness styling across loading, ready, and save', async ({ context, page, request }) => {
+    await enableConsumerFixture(context);
+    const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
+
+    const armResponse = await request.post(CONSUMER_PROFILE_LOAD_GATE_ARM_ROUTE);
+    expect(armResponse.ok()).toBe(true);
+
+    let liveRegion: Awaited<ReturnType<typeof observeProfileLiveRegion>> | undefined;
+    try {
+      await page.goto('/me/edit');
+      await expect(page.getByRole('heading', { name: 'Edit profile' })).toBeVisible();
+      await expectInteractiveShell(page);
+
+      const freshness = page.locator('.hx-parties-profile__freshness');
+      const freshnessDot = page.locator('.hx-parties-profile__freshness-dot');
+      await expect(page.locator('section.hx-parties-profile__skeleton[aria-busy="true"]')).toBeVisible();
+      await expect(page.locator('.hx-parties-profile [role="status"][aria-live="polite"]')).toHaveText('Loading editable profile details');
+      await expect(freshness).not.toHaveClass(/hx-parties-profile__freshness--(current|last-known)/);
+      await expect(freshnessDot).toBeHidden();
+      await expect(freshnessDot).toHaveAttribute('aria-hidden', 'true');
+      await expect(freshnessDot).not.toHaveAttribute('role');
+      await expect(freshnessDot).not.toHaveAttribute('aria-live');
+
+      liveRegion = await observeProfileLiveRegion(page);
+      await expect(liveRegion.status).toHaveText('Loading editable profile details');
+
+      const releaseResponse = await request.post(CONSUMER_PROFILE_LOAD_GATE_RELEASE_ROUTE);
+      expect(releaseResponse.ok()).toBe(true);
+
+      await expect(liveRegion.status).toHaveText('Up to date');
+      await expect(page.locator('section.hx-parties-profile__skeleton')).toHaveCount(0);
+      await expect(freshness).toHaveClass(/hx-parties-profile__freshness--current/);
+      await expect(freshness).not.toHaveClass(/hx-parties-profile__freshness--last-known/);
+      await expect(freshnessDot).toBeVisible();
+      await expect(freshnessDot).toHaveAttribute('aria-hidden', 'true');
+      await expect(page.getByRole('textbox', { name: 'First name', exact: true })).toHaveValue('Consumer');
+      await expect(page.getByRole('textbox', { name: 'Last name', exact: true })).toHaveValue('Consumer');
+      await liveRegion.expectPreserved();
+
+      await page.getByRole('textbox', { name: 'First name', exact: true }).fill('Updated');
+      await page.getByRole('button', { name: 'Save changes' }).click();
+
+      await expect.poll(async () => (await latestUpdateRequest(request))?.partyId ?? null).toBe('party-bound-001');
+      await expect(page.locator('.hx-parties-profile').getByRole('status')).toHaveCount(1);
+      await expect(liveRegion.status).toHaveText('Saved');
+      await expect(freshness).not.toHaveClass(/hx-parties-profile__freshness--(current|last-known)/);
+      await expect(freshnessDot).toBeHidden();
+      await liveRegion.expectPreserved();
+      await expect(page.getByRole('textbox', { name: 'First name', exact: true })).toHaveValue('Updated');
+      await expect(page.getByText('Updated Consumer')).toBeVisible();
+      expect(new URL(page.url()).pathname).toBe('/me/edit');
+      expect(browserVisibleDataRequests).toEqual([]);
+    } finally {
+      await request.post(CONSUMER_PROFILE_LOAD_GATE_RELEASE_ROUTE).catch(() => undefined);
+      if (liveRegion) {
+        await liveRegion.dispose();
+      }
+    }
+  });
+
   test('bound Consumer saves editable profile details through the self-scoped command path', async ({ context, page, request }) => {
     await enableConsumerFixture(context);
     const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
@@ -350,7 +413,12 @@ test.describe('Consumer portal route shells', () => {
 
     const liveRegion = await observeProfileLiveRegion(page);
     try {
+      const freshness = page.locator('.hx-parties-profile__freshness');
+      const freshnessDot = page.locator('.hx-parties-profile__freshness-dot');
       await expect(liveRegion.status).toContainText('Up to date');
+      await expect(freshness).toHaveClass(/hx-parties-profile__freshness--current/);
+      await expect(freshnessDot).toBeVisible();
+      await expect(freshnessDot).toHaveAttribute('aria-hidden', 'true');
 
       await page.getByRole('textbox', { name: 'First name', exact: true }).fill('Updated');
       await page.getByRole('button', { name: 'Save changes' }).click();
@@ -358,6 +426,8 @@ test.describe('Consumer portal route shells', () => {
       await expect.poll(async () => (await latestUpdateRequest(request))?.partyId ?? null).toBe('party-bound-001');
       await expect(page.locator('.hx-parties-profile').getByRole('status')).toHaveCount(1);
       await expect(page.locator('.hx-parties-profile').getByRole('status')).toContainText('Saved');
+      await expect(freshness).not.toHaveClass(/hx-parties-profile__freshness--(current|last-known)/);
+      await expect(freshnessDot).toBeHidden();
       await liveRegion.expectPreserved();
       await expect(page.getByRole('textbox', { name: 'First name', exact: true })).toHaveValue('Updated');
       await expect(page.getByText('Updated Consumer')).toBeVisible();
@@ -377,7 +447,11 @@ test.describe('Consumer portal route shells', () => {
     await expectInteractiveShell(page);
     const liveRegion = await observeProfileLiveRegion(page);
     try {
+      const freshness = page.locator('.hx-parties-profile__freshness');
+      const freshnessDot = page.locator('.hx-parties-profile__freshness-dot');
       await expect(liveRegion.status).toContainText('Up to date');
+      await expect(freshness).toHaveClass(/hx-parties-profile__freshness--current/);
+      await expect(freshnessDot).toBeVisible();
       await page.getByRole('textbox', { name: 'First name', exact: true }).fill('Typed');
       await page.getByRole('textbox', { name: 'Last name', exact: true }).fill('');
 
@@ -386,6 +460,8 @@ test.describe('Consumer portal route shells', () => {
       await expect(page.getByRole('alert').filter({ hasText: 'Check the highlighted fields and try again.' })).toBeVisible();
       await liveRegion.expectPreserved();
       await expect(liveRegion.status).toContainText('Up to date');
+      await expect(freshness).toHaveClass(/hx-parties-profile__freshness--current/);
+      await expect(freshnessDot).toBeVisible();
       await expect(page.getByRole('textbox', { name: 'First name', exact: true })).toHaveValue('Typed');
       await expect(page.getByRole('textbox', { name: 'Last name', exact: true })).toHaveValue('');
       expect(await latestUpdateRequest(request)).toBeUndefined();
@@ -758,17 +834,19 @@ const observeProfileLiveRegion = async (page: Page) => {
         attributeFilter: ['role', 'aria-live'],
       });
     }
+    const snapshot = () => ({
+      headerFound: header !== null,
+      connected: node.isConnected,
+      removed,
+      statusNodeMutations,
+      attributeMutations,
+    });
     return {
       node,
+      snapshot,
       disconnect: () => {
         observer.disconnect();
-        return {
-          headerFound: header !== null,
-          connected: node.isConnected,
-          removed,
-          statusNodeMutations,
-          attributeMutations,
-        };
+        return snapshot();
       },
     };
   });
@@ -779,7 +857,7 @@ const observeProfileLiveRegion = async (page: Page) => {
       await expect(status).toHaveCount(1);
       const continuity = await status.evaluate((current, state) => ({
         sameNode: current === state.node,
-        ...state.disconnect(),
+        ...state.snapshot(),
       }), tracker);
       expect(continuity).toEqual({
         sameNode: true,

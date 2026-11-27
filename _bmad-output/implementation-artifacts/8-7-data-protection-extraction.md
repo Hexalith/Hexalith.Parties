@@ -3,13 +3,13 @@ story_key: 8-7-data-protection-extraction
 story_id: "8.7"
 epic: "8"
 created: 2026-07-16T00:23:38+02:00
-revalidated: 2026-11-26
+revalidated: 2026-11-27
 source_status: backlog
 target_status: blocked
 baseline_commit_at_story_start: a35b151
-baseline_commit_at_revalidation: 3eb2aee3884604d1c36b06e82b427c1789740ca8
-eventstore_root_pin_at_revalidation: 7435254cc1a148031224eebe1aafd53a8659b2cd
-eventstore_checkout_at_revalidation: 7435254cc1a148031224eebe1aafd53a8659b2cd
+baseline_commit_at_revalidation: 869bd04362f914a05a010c039227f668c8ad903f
+eventstore_root_pin_at_revalidation: 5484fae6c284cd8fe70b51bf921c5b31509b6c27
+eventstore_checkout_at_revalidation: 5484fae6c284cd8fe70b51bf921c5b31509b6c27
 ---
 
 # Story 8.7: Data-protection extraction
@@ -18,7 +18,17 @@ Status: blocked
 
 <!-- This story is complete enough for workflow intake, but production source migration is hard-gated by the Story 8.3 G5 row and the authoritative Epic 8 sequence. -->
 
-## Current Gate Revalidation — 2026-11-26
+## Current Gate Revalidation — 2026-11-27
+
+G5 remains `needs-additive-api`, Story 8.7 remains `blocked`, the Epic 7 crypto-retention action remains `open`, and DW-97 remains `open`. Parties Story 8.6 is `done`. At Parties baseline `869bd04362f914a05a010c039227f668c8ad903f` following cohort adoption commit `2d52234ae52f64266ea257baf9e66030841df942` (`fix(deps): adopt Platform 2.9 and Builds 6.9.1`), committed root gitlinks match clean checkouts: `references/Hexalith.EventStore` `5484fae6c284cd8fe70b51bf921c5b31509b6c27` (`v5.6.0-67-g5484fae6c`; tag `v5.6.0`=`295b5a6ba584167f21cfef40787477b8814e32da`, tag `v5.5.2`=`f0694e52814a8cbaed632fa608f54cb20c512d85`), `references/Hexalith.Builds` `91cb7cba990ffdf82930f9bf8cb68aef41baba76` (`v6.9.1`), and `references/Hexalith.Platform` `a670a4c51d76f63f3142e38f02542a246e1926fb` (`v2.9.0`). `Directory.Packages.props` pins `HexalithEventStoreVersion=5.6.0` (bumped from `5.5.2` in `2d52234a`), `HexalithCatalogEventStoreVersion=5.6.0`, `HexalithCommonsVersion=3.0.4`, `HexalithTenantsVersion=8.1.1`, `HexalithFrontComposerVersion=6.1.0`, and `HexalithMemoriesVersion=4.1.4`; `.config/dotnet-tools.json` pins `hexalith.builds.module.cli` `6.9.1` (`rollForward: false`).
+
+Neither EventStore `5.5.2` nor `5.6.0` packs or publishes `Hexalith.EventStore.PayloadProtection*` (`<IsPackable>false</IsPackable>` in both `Hexalith.EventStore.PayloadProtection.csproj` and `Hexalith.EventStore.PayloadProtection.AzureKeyVault.csproj`; absent from `tools/release-packages.json` and `references/Hexalith.Builds/Props/Directory.Packages.props`). `ServiceCollectionExtensions.cs` still defaults to `NoOpEventPayloadProtectionService`, and `PayloadProtectionServiceCollectionExtensions.cs` still throws `InvalidOperationException("Payload protection startup admission is unavailable.")` when `Enabled == true`. In `references/Hexalith.EventStore/_bmad-output/implementation-artifacts/sprint-status.yaml`, EventStore `8-1`–`8-5` and `8-12` are `done`, `8-6` and `8-7` remain `in-progress`, and `8-8`, `8-9`, `8-10`, and `8-11-g5-evidence-and-approval-closure` remain `backlog` (no `8-11` story/closure packet exists). I2/I19a policy-hook classification approval, named owner/security G5 availability approval, dual-provider GDPR parity, the seven deletion proofs, and post-v2 switch-back remain missing; production KMS remains a separate release gate.
+
+All 32/32 unchanged structural checks in the Story 8.3 G5 matrix row matched expected exit codes (30 exit `0`, 2 `expected no matches` exit `1`). All 24 governed local security files in `src/Hexalith.Parties.Security/` (18 MOVE + 5 KEEP + `EventStorePartyPayloadProtectionAdapter.cs`), local DI wiring in `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs`, and `tests/Hexalith.Parties.Security.Tests/` (17 test classes, including `CryptoKeyManagementCompatibilityHarnessTests.cs`) remain intact. No production code, public APIs, dependencies, gitlinks, or rollback paths were changed. [Matrix recheck](story-8-3-platform-api-prerequisite-matrix.md#story-87-g5-prerequisite-recheck--2026-11-27)
+
+- **Security test execution on `5.6.0`:** Release `Hexalith.Parties.Security.Tests` passed **334/334** (`0` failed, `0` skipped) on EventStore `5.6.0` (Platform `v2.9.0` / Builds `v6.9.1`), including **19/19** `CryptoKeyManagementCompatibilityHarnessTests` exercising `EventStorePartyPayloadProtectionAdapter` and `PartyPayloadProtectionService`; dual-provider, GDPR provider-parity, and post-v2 switch-back suites remain unrun and uncredited.
+
+## Historical Gate Revalidation — 2026-11-26
 
 Story 8.7 remains `blocked`. The selected EventStore revision has generic Server persistence and snapshot integration in progress and the G5 approval closure in backlog. The DW-97 recheck records the source and package identities, outstanding approval, and local-provider retention. [DW-97 recheck](spec-dw-97-g5-prerequisite-recheck.md)
 

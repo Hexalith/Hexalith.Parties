@@ -84,6 +84,34 @@ BACKFILL_METHODS = {
             ("True", "commit-unchanged-etag"),
             ("True", "verify-mismatched-etag"),
         )),
+    f"{BACKFILL_PROCESS}.StagingEnvelopeReceiptRefusesMissingMalformedUnchangedOrLeakedState": tuple(
+        f'(existing: {existing}, defect: "{defect}")' for existing, defect in (
+            ("False", "missing-object"),
+            ("True", "missing-object"),
+            ("False", "duplicate-object"),
+            ("False", "null-object"),
+            ("False", "missing-field"),
+            ("False", "extra-field"),
+            ("False", "duplicate-field"),
+            ("False", "present-false"),
+            ("False", "non-bool-present"),
+            ("False", "invalid-sha256"),
+            ("False", "null-etag"),
+            ("False", "blank-etag"),
+            ("False", "untrimmed-etag"),
+            ("True", "stage-unchanged-hash"),
+            ("True", "stage-unchanged-etag"),
+            ("False", "commit-unchanged-envelope-hash"),
+            ("False", "commit-unchanged-envelope-etag"),
+            ("True", "commit-unchanged-envelope-hash"),
+            ("True", "commit-unchanged-envelope-etag"),
+            ("False", "seed-leaked-object"),
+            ("True", "interrupt-leaked-null"),
+            ("False", "rebuild-leaked-absent-object"),
+            ("False", "commit-leaked-null"),
+            ("True", "commit-leaked-object"),
+            ("True", "verify-leaked-object"),
+        )),
 }
 INGESTION = f"{MEMORIES_PROJECT}.Ingestion"
 DISCOVERY = f"{INGESTION}.NaturalLanguageErasureIntegrationTests"
@@ -277,7 +305,7 @@ def is_sha256(value):
     return isinstance(value, str) and len(value) == 64 and all(ch in "0123456789abcdef" for ch in value)
 
 
-def validate_index_receipt(target, phase, existing, index, baseline, committed):
+def validate_index_receipt(target, phase, existing, index, baseline, staged_envelope, committed):
     if not isinstance(index, dict) or index.keys() != INDEX_RECEIPT_KEYS:
         raise ValueError(f"{target}: missing or malformed {phase} workload index receipt")
     present = index["present"]
@@ -308,10 +336,37 @@ def validate_index_receipt(target, phase, existing, index, baseline, committed):
     elif phase == "commit":
         if existing and (sha256 == baseline["sha256"] or etag == baseline["etag"]):
             raise ValueError(f"{target}: commit workload index did not change preexisting index bytes and ETag")
+        if staged_envelope is None or sha256 == staged_envelope["sha256"] or etag == staged_envelope["etag"]:
+            raise ValueError(f"{target}: commit workload index did not change staged envelope bytes and ETag")
     elif phase == "verify":
         if sha256 != committed["sha256"] or etag != committed["etag"]:
             raise ValueError(f"{target}: verify workload index mismatched commit index")
     return index
+
+
+def validate_staging_envelope_receipt(target, phase, existing, receipt, baseline):
+    has_envelope = "stagingEnvelope" in receipt
+    if phase != "stage":
+        if has_envelope:
+            raise ValueError(f"{target}: unexpected {phase} workload stagingEnvelope receipt")
+        return None
+    if not has_envelope:
+        raise ValueError(f"{target}: missing or malformed stage workload stagingEnvelope receipt")
+    envelope = receipt["stagingEnvelope"]
+    if not isinstance(envelope, dict) or envelope.keys() != INDEX_RECEIPT_KEYS:
+        raise ValueError(f"{target}: missing or malformed stage workload stagingEnvelope receipt")
+    present = envelope["present"]
+    sha256 = envelope["sha256"]
+    etag = envelope["etag"]
+    if type(present) is not bool or present is not True:
+        raise ValueError(f"{target}: invalid stage workload stagingEnvelope presence")
+    if not is_sha256(sha256):
+        raise ValueError(f"{target}: missing or invalid stage workload stagingEnvelope SHA-256")
+    if not isinstance(etag, str) or not etag.strip() or etag != etag.strip():
+        raise ValueError(f"{target}: missing or invalid stage workload stagingEnvelope ETag")
+    if existing and (sha256 == baseline["sha256"] or etag == baseline["etag"]):
+        raise ValueError(f"{target}: stage workload stagingEnvelope did not change preexisting index bytes and ETag")
+    return envelope
 
 
 def verify_workloads(directory):
@@ -330,6 +385,7 @@ def verify_workloads(directory):
         interrupted_pid = None
         snapshots = {}
         baseline_index = None
+        staged_envelope = None
         committed_index = None
         index_by_phase = {}
         for phase, expected_snapshots in WORKLOAD_SNAPSHOTS.items():
@@ -351,13 +407,19 @@ def verify_workloads(directory):
             for name, digest in observations.items():
                 if snapshots.setdefault(name, digest) != digest:
                     raise ValueError(f"{target}: inconsistent workload observations for {name}")
-            index = validate_index_receipt(target, phase, existing, receipt.get("index"), baseline_index, committed_index)
+            index = validate_index_receipt(
+                target, phase, existing, receipt.get("index"), baseline_index, staged_envelope, committed_index)
+            envelope = validate_staging_envelope_receipt(target, phase, existing, receipt, baseline_index)
             index_by_phase[phase] = index
             if phase == "seed":
                 baseline_index = index
+            elif phase == "stage":
+                staged_envelope = envelope
             elif phase == "commit":
                 committed_index = index
             pids.add(pid)
+        if staged_envelope is None:
+            raise ValueError(f"{target}: missing stage workload stagingEnvelope receipt")
         if len(pids) != len(WORKLOAD_SNAPSHOTS):
             raise ValueError(f"{target}: expected a distinct process for each phase")
         for name, digest in snapshots.items():
@@ -374,7 +436,7 @@ def verify_workloads(directory):
                     raise ValueError(f"{target}: generation snapshot process differs from interruption receipt")
         outcomes[existing] = {"tenant": target.name, "inputSha256": input_sha256,
                               "phases": list(WORKLOAD_SNAPSHOTS), "snapshotSha256": snapshots,
-                              "index": index_by_phase}
+                              "index": index_by_phase, "stagingEnvelope": staged_envelope}
     if outcomes.keys() != {False, True}:
         raise ValueError(f"{directory}: expected workload receipts for the empty and existing targets")
     return {"empty": outcomes[False], "existing": outcomes[True]}

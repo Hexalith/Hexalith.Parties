@@ -1,5 +1,6 @@
 @inject IServiceProvider Services
 @using Hexalith.Parties.Contracts.Models
+@using Microsoft.Extensions.DependencyInjection
 
 <p class="hx-parties-profile__freshness @StatusClass">
     <span class="hx-parties-profile__freshness-dot" aria-hidden="true"></span>
@@ -19,7 +20,8 @@
         get
         {
 #if HFC_SHARED_UI
-            if (Services.GetService(typeof(Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService)) is not null)
+            if (Services.GetService<IServiceProviderIsService>() is { } registrations
+                && registrations.IsService(typeof(Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler)))
             {
                 return typeof(Hexalith.FrontComposer.Shell.Components.Feedback.FcFreshnessIndicator);
             }

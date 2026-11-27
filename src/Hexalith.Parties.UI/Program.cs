@@ -250,6 +250,20 @@ if (adminPortalE2eFixtureEnabled)
             state.Reset();
             return Results.NoContent();
         });
+    app.MapPost(
+        PartiesAdminPortalE2eFixture.ConsumerProfileLoadGateArmRoute,
+        (PartiesAdminPortalE2eFixtureState state) =>
+        {
+            state.ArmConsumerProfileLoadGate();
+            return Results.NoContent();
+        });
+    app.MapPost(
+        PartiesAdminPortalE2eFixture.ConsumerProfileLoadGateReleaseRoute,
+        (PartiesAdminPortalE2eFixtureState state) =>
+        {
+            state.ReleaseConsumerProfileLoadGate();
+            return Results.NoContent();
+        });
 }
 
 app.Run();

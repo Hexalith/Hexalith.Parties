@@ -1369,10 +1369,14 @@ public sealed class PartyMemorySourceInventoryTests
         }
     }
 
-    /// <summary>Isolates the post-authorization-to-DELETE gap where an unconditional DELETE mutates Memories while Parties retains pending obligations.</summary>
-    [Fact]
-    public async Task DirectCleanupPostAuthorizationGapSendsUnconditionalDeleteWhileRetainingPendingObligations()
+    /// <summary>Isolates the post-authorization-to-DELETE gap where an unconditional DELETE mutates Memories while Parties retains pending obligations, then verifies terminal follow-through.</summary>
+    /// <param name="importedUnit">The canonical memory unit produced when the concurrently imported obligation later becomes terminal.</param>
+    [Theory]
+    [InlineData("shared")]
+    [InlineData("different")]
+    public async Task DirectCleanupPostAuthorizationGapSendsUnconditionalDeleteWhileRetainingPendingObligations(string importedUnit)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(importedUnit);
         CancellationToken token = TestContext.Current.CancellationToken;
         const string tenant = "tenant";
         const string party = "party";
@@ -1492,6 +1496,275 @@ public sealed class PartyMemorySourceInventoryTests
 
         (await PartyMemoryRecoveryTests.Intents(state).GetAsync(tenant, party, token)).ShouldBe(pendingAfterRace, ignoreOrder: true);
         (await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync(tenant, party, token)).ShouldBe(pendingAfterRace, ignoreOrder: true);
+
+        string producer = PartyMemoryCleanupService.BuildProducerAuthority(directHttp.BaseAddress)!;
+        string sharedPath = "/gateway/" + MemoriesRoutes.CaseMemoryUnitPath(tenant, caseId, "shared");
+        direct.Workflows["imported"] = PartyMemoryRecoveryHandler.Completed("imported", importedUnit);
+        if (importedUnit == "different")
+        {
+            direct.Units.Add("different");
+        }
+
+        direct.AbsenceBody = "{}";
+        direct.Requests.Clear();
+        using var unqualifiedSelectedHttp = new HttpClient(direct, disposeHandler: false) { BaseAddress = directHttp.BaseAddress };
+        (await PartyMemoryRecoveryTests.Cleanup(state, unqualifiedSelectedHttp).DeleteMemoryUnitAsync(tenant, caseId, party, "selected", token))
+            .Cleaned.ShouldBeFalse();
+        direct.Requests.ShouldContain(item => item.Method == HttpMethod.Get && item.Path.EndsWith("/ingest/imported", StringComparison.Ordinal));
+        direct.Requests.Where(item => item.Path == sharedPath).Select(item => item.Method).ShouldBe([HttpMethod.Delete, HttpMethod.Get]);
+        sawDeletePrecondition.ShouldBeFalse();
+
+        IReadOnlyList<PartyMemoryIngestionIntent> pendingAfterUnqualified = await PartyMemoryRecoveryTests.Intents(state).GetAsync(tenant, party, token);
+        pendingAfterUnqualified.Count.ShouldBe(2);
+        pendingAfterUnqualified.ShouldAllBe(item => !item.CleanupSettled && !item.RequiresTerminalEvidence && item.AbsenceAuthority == null);
+        pendingAfterUnqualified.Single(item => item.WorkflowInstanceId == "selected").MemoryUnitId.ShouldBe("shared");
+        pendingAfterUnqualified.Single(item => item.WorkflowInstanceId == "imported").MemoryUnitId.ShouldBe(importedUnit);
+
+        if (importedUnit == "shared")
+        {
+            direct.Units.ShouldBe(["unrelated"]);
+
+            direct.AbsenceBody = "{\"code\":\"MEMORY_UNIT_NOT_FOUND\"}";
+            direct.Requests.Clear();
+            using var qualifiedSharedHttp = new HttpClient(direct, disposeHandler: false) { BaseAddress = directHttp.BaseAddress };
+            (await PartyMemoryRecoveryTests.Cleanup(state, qualifiedSharedHttp).DeleteMemoryUnitAsync(tenant, caseId, party, "selected", token))
+                .Cleaned.ShouldBeTrue();
+            direct.Requests.ShouldBe([(HttpMethod.Delete, sharedPath), (HttpMethod.Get, sharedPath)]);
+            sawDeletePrecondition.ShouldBeFalse();
+            direct.Units.ShouldBe(["unrelated"]);
+
+            (await PartyMemoryRecoveryTests.Intents(state).GetAsync(tenant, party, token)).ShouldBeEmpty();
+            IReadOnlyList<PartyMemoryIngestionIntent> settledShared = await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync(tenant, party, token);
+            settledShared.Count.ShouldBe(2);
+            settledShared.Select(item => item.WorkflowInstanceId).ShouldBe(["selected", "imported"], ignoreOrder: true);
+            settledShared.ShouldAllBe(item => item.CleanupSettled
+                && !item.RequiresTerminalEvidence
+                && item.AbsenceAuthority == producer
+                && item.MemoryUnitId == "shared");
+        }
+        else
+        {
+            string differentPath = "/gateway/" + MemoriesRoutes.CaseMemoryUnitPath(tenant, caseId, "different");
+            direct.Requests.ShouldNotContain(item => item.Path == differentPath);
+            direct.Units.ShouldBe(["different", "unrelated"], ignoreOrder: true);
+
+            direct.AbsenceBody = "{\"code\":\"MEMORY_UNIT_NOT_FOUND\"}";
+            direct.Requests.Clear();
+            using var qualifiedSelectedHttp = new HttpClient(direct, disposeHandler: false) { BaseAddress = directHttp.BaseAddress };
+            (await PartyMemoryRecoveryTests.Cleanup(state, qualifiedSelectedHttp).DeleteMemoryUnitAsync(tenant, caseId, party, "selected", token))
+                .Cleaned.ShouldBeTrue();
+            direct.Requests.ShouldBe([(HttpMethod.Delete, sharedPath), (HttpMethod.Get, sharedPath)]);
+            direct.Units.ShouldBe(["different", "unrelated"], ignoreOrder: true);
+
+            PartyMemoryIngestionIntent remainingImported = (await PartyMemoryRecoveryTests.Intents(state).GetAsync(tenant, party, token))
+                .ShouldHaveSingleItem();
+            remainingImported.WorkflowInstanceId.ShouldBe("imported");
+            remainingImported.MemoryUnitId.ShouldBe("different");
+            remainingImported.CleanupSettled.ShouldBeFalse();
+            remainingImported.RequiresTerminalEvidence.ShouldBeFalse();
+            remainingImported.AbsenceAuthority.ShouldBeNull();
+
+            IReadOnlyList<PartyMemoryIngestionIntent> afterSelectedSettled = await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync(tenant, party, token);
+            afterSelectedSettled.Count.ShouldBe(2);
+            PartyMemoryIngestionIntent settledSelected = afterSelectedSettled.Single(item => item.WorkflowInstanceId == "selected");
+            settledSelected.CleanupSettled.ShouldBeTrue();
+            settledSelected.RequiresTerminalEvidence.ShouldBeFalse();
+            settledSelected.MemoryUnitId.ShouldBe("shared");
+            settledSelected.AbsenceAuthority.ShouldBe(producer);
+
+            direct.DelayDeletion = true;
+            direct.Requests.Clear();
+            using var delayedImportedHttp = new HttpClient(direct, disposeHandler: false) { BaseAddress = directHttp.BaseAddress };
+            (await PartyMemoryRecoveryTests.Cleanup(state, delayedImportedHttp).DeleteMemoryUnitAsync(tenant, caseId, party, "imported", token))
+                .Cleaned.ShouldBeFalse();
+            direct.Requests.ShouldBe([(HttpMethod.Delete, differentPath), (HttpMethod.Get, differentPath)]);
+            direct.Units.ShouldBe(["different", "unrelated"], ignoreOrder: true);
+            (await PartyMemoryRecoveryTests.Intents(state).GetAsync(tenant, party, token))
+                .ShouldHaveSingleItem().ShouldBe(remainingImported);
+
+            direct.DelayDeletion = false;
+            direct.Requests.Clear();
+            using var finalImportedHttp = new HttpClient(direct, disposeHandler: false) { BaseAddress = directHttp.BaseAddress };
+            (await PartyMemoryRecoveryTests.Cleanup(state, finalImportedHttp).DeleteMemoryUnitAsync(tenant, caseId, party, "imported", token))
+                .Cleaned.ShouldBeTrue();
+            direct.Requests.ShouldBe([(HttpMethod.Delete, differentPath), (HttpMethod.Get, differentPath)]);
+            sawDeletePrecondition.ShouldBeFalse();
+            direct.Units.ShouldBe(["unrelated"]);
+
+            (await PartyMemoryRecoveryTests.Intents(state).GetAsync(tenant, party, token)).ShouldBeEmpty();
+            IReadOnlyList<PartyMemoryIngestionIntent> allSettled = await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync(tenant, party, token);
+            allSettled.Count.ShouldBe(2);
+            PartyMemoryIngestionIntent finalSelected = allSettled.Single(item => item.WorkflowInstanceId == "selected");
+            finalSelected.CleanupSettled.ShouldBeTrue();
+            finalSelected.RequiresTerminalEvidence.ShouldBeFalse();
+            finalSelected.MemoryUnitId.ShouldBe("shared");
+            finalSelected.AbsenceAuthority.ShouldBe(producer);
+            PartyMemoryIngestionIntent finalImported = allSettled.Single(item => item.WorkflowInstanceId == "imported");
+            finalImported.CleanupSettled.ShouldBeTrue();
+            finalImported.RequiresTerminalEvidence.ShouldBeFalse();
+            finalImported.MemoryUnitId.ShouldBe("different");
+            finalImported.AbsenceAuthority.ShouldBe(producer);
+        }
+    }
+
+    /// <summary>Isolates the bulk pre-DELETE race where a same-case admitted obligation is imported before DELETE dispatch while Parties refuses completion and preserves the pending obligation.</summary>
+    [Fact]
+    public async Task BulkCleanupPreDeleteRaceSendsUnconditionalDeleteWhileRetainingImportedObligation()
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        const string tenant = "tenant";
+        const string party = "party";
+        const string caseId = "case";
+        string source = PartyMemoryUrn.Build(tenant, party);
+        var state = new PartyMemoryTestReadModelStore();
+        var bulk = new PartyMemoryRecoveryHandler();
+        bulk.Units.UnionWith(["shared", "unrelated"]);
+        bulk.Workflows["selected"] = PartyMemoryRecoveryHandler.Completed("selected", "shared");
+        bulk.Workflows["imported"] = new IngestionWorkflowStatus(
+            "imported", tenant, caseId, "Admitted", DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, null, null, null);
+        bool sawDeletePrecondition = false;
+        int deleteRequestsObserved = 0;
+        bulk.BeforeRequest = (request, _) =>
+        {
+            if (request.Method == HttpMethod.Delete)
+            {
+                deleteRequestsObserved++;
+                if (request.Headers.IfMatch.Count > 0
+                    || request.Headers.IfNoneMatch.Count > 0
+                    || request.Headers.IfUnmodifiedSince is not null
+                    || request.Content is not null
+                    || !string.IsNullOrEmpty(request.RequestUri!.Query)
+                    || request.Headers.Any(header => !header.Key.Equals("Authorization", StringComparison.OrdinalIgnoreCase)))
+                {
+                    sawDeletePrecondition = true;
+                }
+            }
+
+            return Task.CompletedTask;
+        };
+        using HttpClient bulkHttp = PartyMemoryRecoveryTests.Http(bulk);
+        string producer = PartyMemoryCleanupService.BuildProducerAuthority(bulkHttp.BaseAddress)!;
+        await PartyMemoryRecoveryTests.Intents(state).RegisterAsync(
+            tenant,
+            party,
+            new PartyMemoryIngestionIntent("selected-attempt", caseId, source, WorkflowInstanceId: "selected", ProducerAuthority: producer),
+            token);
+
+        var inventory = new PartyMemoryRecoveryHandler
+        {
+            InventoryRequest = (request, _) => Task.FromResult(request.Method == HttpMethod.Post
+                ? new HttpResponseMessage(HttpStatusCode.NoContent)
+                : Page([new { caseId, workflowInstanceId = "imported", state = "Admitted" }])),
+        };
+        using HttpClient inventoryHttp = PartyMemoryRecoveryTests.Http(inventory);
+
+        var pausedAfterTerminalRetention = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseDelete = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var interceptingIntents = new PartyMemoryDirectCleanupInterceptingIntentStore(
+            PartyMemoryRecoveryTests.Intents(state),
+            afterRetainTerminalStatus: async cancellationToken =>
+            {
+                pausedAfterTerminalRetention.TrySetResult();
+                await releaseDelete.Task.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
+            });
+        var racingBulkCleanup = new PartyMemoryCleanupService(
+            bulkHttp,
+            PartyMemoryRecoveryTests.Mappings(state),
+            NullLogger<PartyMemoryCleanupService>.Instance,
+            interceptingIntents);
+        PartyMemoryCleanupService importingBulkCleanup = PartyMemoryRecoveryTests.Cleanup(state, inventoryHttp);
+
+        Task<PartyMemoryCleanupResult> pending = racingBulkCleanup.DeleteByPartyAsync(tenant, caseId, party, token);
+        try
+        {
+            await pausedAfterTerminalRetention.Task.WaitAsync(TimeSpan.FromSeconds(5), token);
+            interceptingIntents.RetainTerminalStatusCount.ShouldBe(1);
+            deleteRequestsObserved.ShouldBe(0);
+            bulk.Requests.ShouldNotContain(item => item.Method == HttpMethod.Delete);
+            bulk.Units.ShouldBe(["shared", "unrelated"], ignoreOrder: true);
+
+            (await importingBulkCleanup.DeleteByPartyAsync(tenant, caseId, party, token)).Cleaned.ShouldBeFalse();
+            IReadOnlyList<PartyMemoryIngestionIntent> pausedIntents = await PartyMemoryRecoveryTests.Intents(state).GetAsync(tenant, party, token);
+            pausedIntents.ShouldContain(item => item.CaseId == caseId
+                && item.WorkflowInstanceId == "imported"
+                && item.RequiresTerminalEvidence
+                && item.MemoryUnitId == null
+                && !item.CleanupSettled);
+            deleteRequestsObserved.ShouldBe(0);
+            bulk.Requests.ShouldNotContain(item => item.Method == HttpMethod.Delete);
+            inventory.Requests.ShouldNotContain(item => item.Method == HttpMethod.Delete);
+            bulk.Units.ShouldBe(["shared", "unrelated"], ignoreOrder: true);
+        }
+        finally
+        {
+            releaseDelete.TrySetResult();
+        }
+
+        PartyMemoryCleanupResult raceResult = await pending.WaitAsync(TimeSpan.FromSeconds(5), token);
+        raceResult.Cleaned.ShouldBeFalse();
+        raceResult.BlockedReason.ShouldNotBeNullOrWhiteSpace();
+        interceptingIntents.RetainTerminalStatusCount.ShouldBe(1);
+
+        deleteRequestsObserved.ShouldBe(1);
+        sawDeletePrecondition.ShouldBeFalse();
+        string sharedPath = "/gateway/" + MemoriesRoutes.CaseMemoryUnitPath(tenant, caseId, "shared");
+        bulk.Requests.Where(item => item.Method == HttpMethod.Delete).ShouldHaveSingleItem().Path.ShouldBe(sharedPath);
+        bulk.Units.ShouldBe(["unrelated"]);
+        inventory.Requests.ShouldNotContain(item => item.Method == HttpMethod.Delete);
+
+        (await PartyMemoryRecoveryTests.Intents(state).GetSourceClosureVersionAsync(tenant, party, token, producer)).ShouldBeNull();
+        string inventoryKey = PartyMemoryUnitMappingStore.BuildKey(tenant, party)
+            .Replace("memory-mapping", "memory-ingestion", StringComparison.Ordinal);
+        PartyMemoryIngestionInventory persistedAfterRace = (await state.GetAsync<PartyMemoryIngestionInventory>("statestore", inventoryKey, token))
+            .Value.ShouldNotBeNull();
+        persistedAfterRace.SourceClosureVersion.ShouldBeNull();
+        persistedAfterRace.SourceClosureAuthority.ShouldBeNull();
+        persistedAfterRace.Intents.ShouldHaveSingleItem().WorkflowInstanceId.ShouldBe("imported");
+        persistedAfterRace.CleanupReceipts.ShouldNotBeNull().ShouldHaveSingleItem().WorkflowInstanceId.ShouldBe("selected");
+
+        PartyMemoryIngestionIntent pendingImported = (await PartyMemoryRecoveryTests.Intents(state).GetAsync(tenant, party, token))
+            .ShouldHaveSingleItem();
+        pendingImported.CaseId.ShouldBe(caseId);
+        pendingImported.WorkflowInstanceId.ShouldBe("imported");
+        pendingImported.RequiresTerminalEvidence.ShouldBeTrue();
+        pendingImported.MemoryUnitId.ShouldBeNull();
+        pendingImported.CleanupSettled.ShouldBeFalse();
+
+        IReadOnlyList<PartyMemoryIngestionIntent> snapshotAfterRace = await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync(tenant, party, token);
+        snapshotAfterRace.Count.ShouldBe(2);
+        PartyMemoryIngestionIntent settledSelected = snapshotAfterRace.Single(item => item.WorkflowInstanceId == "selected");
+        settledSelected.CaseId.ShouldBe(caseId);
+        settledSelected.MemoryUnitId.ShouldBe("shared");
+        settledSelected.CleanupSettled.ShouldBeTrue();
+        settledSelected.RequiresTerminalEvidence.ShouldBeFalse();
+        settledSelected.AbsenceAuthority.ShouldBe(producer);
+        snapshotAfterRace.Single(item => item.WorkflowInstanceId == "imported").ShouldBe(pendingImported);
+
+        bulk.Requests.Clear();
+        using var freshBulkHttp = new HttpClient(bulk, disposeHandler: false) { BaseAddress = bulkHttp.BaseAddress };
+        PartyMemoryCleanupService freshBulkCleanup = PartyMemoryRecoveryTests.Cleanup(state, freshBulkHttp);
+        (await freshBulkCleanup.DeleteByPartyAsync(tenant, caseId, party, token)).Cleaned.ShouldBeFalse();
+        deleteRequestsObserved.ShouldBe(1);
+        bulk.Requests.ShouldNotContain(item => item.Method == HttpMethod.Delete);
+        bulk.Requests.ShouldContain(item => item.Method == HttpMethod.Get && item.Path.EndsWith("/ingest/imported", StringComparison.Ordinal));
+        bulk.Units.ShouldBe(["unrelated"]);
+
+        bulk.Requests.Clear();
+        using var freshDirectHttp = new HttpClient(bulk, disposeHandler: false) { BaseAddress = bulkHttp.BaseAddress };
+        PartyMemoryCleanupService freshDirectCleanup = PartyMemoryRecoveryTests.Cleanup(state, freshDirectHttp);
+        (await freshDirectCleanup.DeleteMemoryUnitAsync(tenant, caseId, party, "selected", token)).Cleaned.ShouldBeFalse();
+        deleteRequestsObserved.ShouldBe(1);
+        bulk.Requests.ShouldNotContain(item => item.Method == HttpMethod.Delete);
+        bulk.Requests.ShouldContain(item => item.Method == HttpMethod.Get && item.Path.EndsWith("/ingest/imported", StringComparison.Ordinal));
+        bulk.Units.ShouldBe(["unrelated"]);
+
+        (await PartyMemoryRecoveryTests.Intents(state).GetAsync(tenant, party, token)).ShouldHaveSingleItem().ShouldBe(pendingImported);
+        (await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync(tenant, party, token)).ShouldBe(snapshotAfterRace, ignoreOrder: true);
+        (await PartyMemoryRecoveryTests.Intents(state).GetSourceClosureVersionAsync(tenant, party, token, producer)).ShouldBeNull();
+        PartyMemoryIngestionInventory persistedAfterFresh = (await state.GetAsync<PartyMemoryIngestionInventory>("statestore", inventoryKey, token))
+            .Value.ShouldNotBeNull();
+        persistedAfterFresh.SourceClosureVersion.ShouldBeNull();
+        persistedAfterFresh.SourceClosureAuthority.ShouldBeNull();
     }
 
     [Theory]

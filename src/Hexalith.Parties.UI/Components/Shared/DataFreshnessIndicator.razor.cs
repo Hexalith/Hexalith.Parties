@@ -1,4 +1,7 @@
 using Hexalith.Parties.Contracts.Models;
+#if HFC_SHARED_UI
+using Microsoft.Extensions.DependencyInjection;
+#endif
 
 namespace Hexalith.Parties.UI.Components.Shared;
 
@@ -16,7 +19,8 @@ public partial class DataFreshnessIndicator
         get
         {
 #if HFC_SHARED_UI
-            if (Services.GetService(typeof(Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService)) is not null)
+            if (Services.GetService<IServiceProviderIsService>() is { } registrations
+                && registrations.IsService(typeof(Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler)))
             {
                 return typeof(Hexalith.FrontComposer.Shell.Components.Feedback.FcFreshnessIndicator);
             }

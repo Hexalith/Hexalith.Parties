@@ -34,6 +34,43 @@ public sealed class MyProfilePageTests : ConsumerPortalBunitContext
             .ShouldBe("Showing what we last knew - refreshing");
     }
 
+#if HFC_SHARED_UI
+    /// <summary>
+    /// Proves that registering shared feedback activates <c>FcFreshnessIndicator</c> when rendering
+    /// <see cref="FreshnessStatus"/> directly.
+    /// </summary>
+    [Fact]
+    public void RegisteredFeedbackActivatesSharedConsumerFreshnessIndicator()
+    {
+        IRenderedComponent<FreshnessStatus> cut = Render<FreshnessStatus>(p => p
+            .Add(c => c.Freshness, ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Stale)));
+
+        cut.FindComponent<Hexalith.FrontComposer.Shell.Components.Feedback.FcFreshnessIndicator>();
+        cut.Find("[data-fc-freshness='stale']").TextContent
+            .ShouldBe("Showing what we last knew - refreshing");
+    }
+
+    /// <summary>
+    /// Proves that registering only the shared browser download service keeps <see cref="FreshnessStatus"/>
+    /// on local markup without resolving <c>IFcBrowserDownloadService</c>.
+    /// </summary>
+    [Fact]
+    public void DownloadOnlyRegistrationRetainsLocalConsumerFreshnessWithoutResolvingDownloads()
+    {
+        using var context = new BunitContext();
+        context.Services.AddScoped<Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService>(_ =>
+            throw new InvalidOperationException("The consumer freshness status should not resolve the download service."));
+
+        IRenderedComponent<FreshnessStatus> cut = context.Render<FreshnessStatus>(p => p
+            .Add(c => c.Freshness, ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Stale)));
+
+        cut.FindComponents<Hexalith.FrontComposer.Shell.Components.Feedback.FcFreshnessIndicator>().ShouldBeEmpty();
+        cut.FindAll("[data-fc-freshness]").ShouldBeEmpty();
+        cut.Find("[role='status'][aria-live='polite']").TextContent
+            .ShouldBe("Showing what we last knew - refreshing");
+    }
+#endif
+
     [Fact]
     public void MyProfilePage_Loading_RendersCalmSkeleton()
     {

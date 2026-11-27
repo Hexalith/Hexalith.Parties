@@ -258,6 +258,32 @@ public sealed class PartiesAdminPortalComponentTests : AdminPortalBunitContext
         api.ErasureRequests.Count.ShouldBe(1);
     }
 
+    /// <summary>Proves download-only registration keeps the GDPR erasure dialog on local markup without resolving downloads.</summary>
+    [Fact]
+    public void DownloadOnlyRegistrationRetainsLocalErasureDialogWithoutResolvingDownloads()
+    {
+        Services.AddScoped<Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService>(_ =>
+            throw new InvalidOperationException("The erasure confirmation dialog should not resolve the download service."));
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-download-only", "Download Only Party", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-download-only", "Download Only Party", PartyType.Person, isActive: true));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Download Only Party"));
+        ClickFluentButton(cut, "Download Only Party");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR operations"));
+        ClickFluentButton(cut, "Request erasure");
+
+        cut.FindComponents<Hexalith.FrontComposer.Shell.Components.Forms.FcDestructiveConfirmationDialog>().ShouldBeEmpty();
+        cut.Find(".hx-parties-admin__erasure-modal").GetAttribute("aria-labelledby").ShouldNotBe("fc-destructive-dialog-title");
+        cut.Find(".hx-parties-admin__erasure-dialog").ShouldNotBeNull();
+        cut.Find("[data-erasure-confirmation-live]").ShouldNotBeNull();
+        FindFluentButton(cut, "Erase").HasAttribute("disabled").ShouldBeTrue();
+        SetTextInput(cut, "Type the selected party display name", "Download Only Party");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Erase").HasAttribute("disabled").ShouldBeFalse());
+    }
+
     [Fact]
     public void SharedDownloadCandidatePreservesAdminBytesAndSafeCallerFilename()
     {

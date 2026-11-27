@@ -21,16 +21,17 @@
         <p class="hx-parties-profile__eyebrow"><FluentText Size="TextSize.Size200" Weight="TextWeight.Semibold">@ConsumerPortalLabels.AreaLabel</FluentText></p>
         <FluentText As="TextTag.H1" Size="TextSize.Size800" Weight="TextWeight.Semibold" id="@_titleId">@ConsumerPortalLabels.EditProfileTitle</FluentText>
         <p class="hx-parties-profile__summary">@ConsumerPortalLabels.EditProfileSummary</p>
-        @if (SharedLiveRegionType is { } sharedType)
-        {
-            <div class="hx-parties-profile__freshness">
+        <div class="@FreshnessContainerClass">
+            <span class="hx-parties-profile__freshness-dot" aria-hidden="true" hidden="@(!ShowFreshnessIndicator)"></span>
+            @if (SharedLiveRegionType is { } sharedType)
+            {
                 <DynamicComponent Type="@sharedType" Parameters="@(new Dictionary<string, object> { ["Message"] = StatusMessage })" />
-            </div>
-        }
-        else
-        {
-            <p class="hx-parties-profile__freshness" role="status" aria-live="polite">@StatusMessage</p>
-        }
+            }
+            else
+            {
+                <span role="status" aria-live="polite">@StatusMessage</span>
+            }
+        </div>
     </header>
 
     @if (_isLoading)
@@ -203,12 +204,23 @@
     private string? _formAlert;
     private string? _saveStatusMessage;
     private string StatusMessage
-        => _saveStatusMessage
-            ?? (_isLoading
+        => !string.IsNullOrWhiteSpace(_saveStatusMessage)
+            ? _saveStatusMessage
+            : _isLoading
                 ? ConsumerPortalLabels.EditProfileLoadingStatus
                 : _profile is not null
                     ? FreshnessMessage(_profile.Freshness)
-                    : string.Empty);
+                    : string.Empty;
+
+    private bool ShowFreshnessIndicator
+        => !_isLoading && _profile is not null && string.IsNullOrWhiteSpace(_saveStatusMessage);
+
+    private string FreshnessContainerClass
+        => !ShowFreshnessIndicator
+            ? "hx-parties-profile__freshness"
+            : _profile?.Freshness?.Status == ProjectionFreshnessStatus.Current
+                ? "hx-parties-profile__freshness hx-parties-profile__freshness--current"
+                : "hx-parties-profile__freshness hx-parties-profile__freshness--last-known";
 
     private static string FreshnessMessage(ProjectionFreshnessMetadata? freshness)
         => freshness?.Status switch

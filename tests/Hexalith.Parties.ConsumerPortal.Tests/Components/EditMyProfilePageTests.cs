@@ -18,6 +18,9 @@ namespace Hexalith.Parties.ConsumerPortal.Tests.Components;
 
 public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
 {
+    private const string CurrentFreshnessClass = "hx-parties-profile__freshness--current";
+    private const string LastKnownFreshnessClass = "hx-parties-profile__freshness--last-known";
+
     public EditMyProfilePageTests()
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
@@ -251,7 +254,7 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
         cut.WaitForAssertion(() =>
         {
             FindTextInput(cut, "First name").Instance.Value.ShouldBe("Ada");
-            liveRegion = AssertPoliteStatus(cut, "Up to date", sharedFeedback, liveRegion);
+            liveRegion = AssertPoliteStatus(cut, "Up to date", sharedFeedback, liveRegion, CurrentFreshnessClass);
         });
 
         SetTextInput(cut, "First name", "Grace");
@@ -329,7 +332,7 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
         cut.WaitForAssertion(() =>
         {
             FindTextInput(cut, "First name").Instance.Value.ShouldBe("Ada");
-            liveRegion = AssertPoliteStatus(cut, "Up to date", sharedFeedback, liveRegion);
+            liveRegion = AssertPoliteStatus(cut, "Up to date", sharedFeedback, liveRegion, CurrentFreshnessClass);
         });
 
         SetTextInput(cut, "First name", "Grace");
@@ -382,7 +385,7 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
         cut.WaitForAssertion(() =>
         {
             FindTextInput(cut, "First name").Instance.Value.ShouldBe("Ada");
-            liveRegion = AssertPoliteStatus(cut, expectedFreshness, sharedFeedback, liveRegion);
+            liveRegion = AssertPoliteStatus(cut, expectedFreshness, sharedFeedback, liveRegion, LastKnownFreshnessClass);
         });
 
         SetTextInput(cut, "Last name", string.Empty);
@@ -391,7 +394,7 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
         cut.WaitForAssertion(() =>
         {
             cut.FindAll("[role='alert']").ShouldHaveSingleItem().TextContent.ShouldContain("Check the highlighted fields and try again.");
-            liveRegion = AssertPoliteStatus(cut, expectedFreshness, sharedFeedback, liveRegion);
+            liveRegion = AssertPoliteStatus(cut, expectedFreshness, sharedFeedback, liveRegion, LastKnownFreshnessClass);
         });
     }
 
@@ -431,7 +434,7 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
         cut.WaitForAssertion(() =>
         {
             FindTextInput(cut, "First name").Instance.Value.ShouldBe("Ada");
-            liveRegion = AssertPoliteStatus(cut, "Up to date", sharedFeedback, liveRegion);
+            liveRegion = AssertPoliteStatus(cut, "Up to date", sharedFeedback, liveRegion, CurrentFreshnessClass);
         });
 
         SetTextInput(cut, "First name", "Grace");
@@ -445,7 +448,7 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
         cut.WaitForAssertion(() =>
         {
             cut.FindAll("[role='alert']").ShouldHaveSingleItem().TextContent.ShouldContain("We couldn't save the changes. Please try again.");
-            liveRegion = AssertPoliteStatus(cut, "Up to date", sharedFeedback, liveRegion);
+            liveRegion = AssertPoliteStatus(cut, "Up to date", sharedFeedback, liveRegion, CurrentFreshnessClass);
         });
     }
 
@@ -461,8 +464,10 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
 
     private static (
         string Message,
+        string? FreshnessModifier,
         AngleSharp.Dom.INode HeaderSnapshot,
         int HeaderChildIndex,
+        int StatusChildIndex,
         int? DynamicComponentId,
         DynamicComponent? DynamicInstance,
         int? LiveRegionComponentId,
@@ -472,35 +477,46 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
         bool sharedFeedback,
         (
             string Message,
+            string? FreshnessModifier,
             AngleSharp.Dom.INode HeaderSnapshot,
             int HeaderChildIndex,
+            int StatusChildIndex,
             int? DynamicComponentId,
             DynamicComponent? DynamicInstance,
             int? LiveRegionComponentId,
-            object? LiveRegionInstance)? expected = null)
+            object? LiveRegionInstance)? expected = null,
+        string? expectedFreshnessModifier = null)
     {
         cut.FindComponents<FreshnessStatus>().ShouldBeEmpty();
         AngleSharp.Dom.IElement header = cut.Find("header.hx-parties-profile__header");
         AngleSharp.Dom.IElement status = cut.FindAll("[role='status']").ShouldHaveSingleItem();
         status.GetAttribute("aria-live").ShouldBe("polite");
         status.TextContent.Trim().ShouldBe(message);
-        status.LocalName.ShouldBe(sharedFeedback ? "div" : "p");
-        AngleSharp.Dom.IElement headerChild;
-        if (sharedFeedback)
-        {
-            headerChild = status.ParentElement.ShouldNotBeNull();
-            headerChild.ClassList.Contains("hx-parties-profile__freshness").ShouldBeTrue();
-            headerChild.ParentElement.ShouldNotBeNull().LocalName.ShouldBe("header");
-        }
-        else
-        {
-            headerChild = status;
-            status.ClassList.Contains("hx-parties-profile__freshness").ShouldBeTrue();
-            status.ParentElement.ShouldNotBeNull().LocalName.ShouldBe("header");
-        }
+        status.LocalName.ShouldBe(sharedFeedback ? "div" : "span");
 
-        int headerChildIndex = Array.IndexOf(header.Children.ToArray(), headerChild);
+        AngleSharp.Dom.IElement freshnessContainer = status.ParentElement.ShouldNotBeNull();
+        freshnessContainer.LocalName.ShouldBe("div");
+        freshnessContainer.ParentElement.ShouldBe(header);
+        freshnessContainer.HasAttribute("role").ShouldBeFalse();
+        freshnessContainer.HasAttribute("aria-live").ShouldBeFalse();
+        freshnessContainer.ClassList.Contains("hx-parties-profile__freshness").ShouldBeTrue();
+        freshnessContainer.ClassList.Contains(CurrentFreshnessClass).ShouldBe(expectedFreshnessModifier == CurrentFreshnessClass);
+        freshnessContainer.ClassList.Contains(LastKnownFreshnessClass).ShouldBe(expectedFreshnessModifier == LastKnownFreshnessClass);
+
+        AngleSharp.Dom.IElement dot = freshnessContainer.QuerySelectorAll(".hx-parties-profile__freshness-dot").ShouldHaveSingleItem();
+        dot.LocalName.ShouldBe("span");
+        dot.GetAttribute("aria-hidden").ShouldBe("true");
+        dot.HasAttribute("role").ShouldBeFalse();
+        dot.HasAttribute("aria-live").ShouldBeFalse();
+        dot.HasAttribute("hidden").ShouldBe(expectedFreshnessModifier is null);
+        freshnessContainer.Children.Length.ShouldBe(2);
+        freshnessContainer.Children[0].ShouldBe(dot);
+        freshnessContainer.Children[1].ShouldBe(status);
+
+        int headerChildIndex = Array.IndexOf(header.Children.ToArray(), freshnessContainer);
         headerChildIndex.ShouldBeGreaterThanOrEqualTo(0);
+        int statusChildIndex = Array.IndexOf(freshnessContainer.Children.ToArray(), status);
+        statusChildIndex.ShouldBe(1);
 
         int? dynamicComponentId = null;
         DynamicComponent? dynamicInstance = null;
@@ -532,10 +548,13 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
         if (expected is { } prior)
         {
             headerChildIndex.ShouldBe(prior.HeaderChildIndex);
+            statusChildIndex.ShouldBe(prior.StatusChildIndex);
 
             IReadOnlyList<AngleSharp.Diffing.Core.IDiff> headerDiffs = prior.HeaderSnapshot.ChildNodes
                 .CompareTo(header.ChildNodes);
-            if (string.Equals(message, prior.Message, StringComparison.Ordinal))
+            bool expectsDiff = !string.Equals(message, prior.Message, StringComparison.Ordinal)
+                || !string.Equals(expectedFreshnessModifier, prior.FreshnessModifier, StringComparison.Ordinal);
+            if (!expectsDiff)
             {
                 headerDiffs.ShouldBeEmpty();
             }
@@ -546,7 +565,7 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
 
             foreach (AngleSharp.Diffing.Core.IDiff diff in headerDiffs)
             {
-                bool isAllowedStatusTextChange = diff switch
+                bool isAllowedHeaderDiff = diff switch
                 {
                     AngleSharp.Diffing.Core.TextDiff textDiff =>
                         textDiff.Control.Node.ParentElement?.GetAttribute("role") == "status"
@@ -557,10 +576,16 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
                     AngleSharp.Diffing.Core.UnexpectedNodeDiff unexpected =>
                         unexpected.Test.Node is AngleSharp.Dom.IText
                         && unexpected.Test.Node.ParentElement?.GetAttribute("role") == "status",
+                    AngleSharp.Diffing.Core.AttrDiff attrDiff =>
+                        IsAllowedFreshnessClassAttrDiff(attrDiff),
+                    AngleSharp.Diffing.Core.MissingAttrDiff missingAttr =>
+                        IsAllowedFreshnessDotHiddenAttr(missingAttr.Control),
+                    AngleSharp.Diffing.Core.UnexpectedAttrDiff unexpectedAttr =>
+                        IsAllowedFreshnessDotHiddenAttr(unexpectedAttr.Test),
                     _ => false,
                 };
-                isAllowedStatusTextChange.ShouldBeTrue(
-                    $"Expected only in-place text updates inside [role='status'], but observed {diff.GetType().Name} ({diff.Target}).");
+                isAllowedHeaderDiff.ShouldBeTrue(
+                    $"Expected only in-place [role='status'] text updates or non-live freshness container/dot attribute updates, but observed {diff.GetType().Name} ({diff.Target}).");
             }
 
             dynamicComponentId.ShouldBe(prior.DynamicComponentId);
@@ -578,13 +603,35 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
 
         return (
             message,
+            expectedFreshnessModifier,
             header.Clone(deep: true),
             headerChildIndex,
+            statusChildIndex,
             dynamicComponentId,
             dynamicInstance,
             liveRegionComponentId,
             liveRegionInstance);
     }
+
+    private static bool IsAllowedFreshnessClassAttrDiff(AngleSharp.Diffing.Core.AttrDiff attrDiff)
+        => attrDiff.Kind == AngleSharp.Diffing.Core.AttrDiffKind.Value
+            && string.Equals(attrDiff.Control.Attribute.Name, "class", StringComparison.Ordinal)
+            && string.Equals(attrDiff.Test.Attribute.Name, "class", StringComparison.Ordinal)
+            && attrDiff.Control.ElementSource.Node is AngleSharp.Dom.IElement controlElement
+            && attrDiff.Test.ElementSource.Node is AngleSharp.Dom.IElement testElement
+            && controlElement.ClassList.Contains("hx-parties-profile__freshness")
+            && testElement.ClassList.Contains("hx-parties-profile__freshness")
+            && !controlElement.HasAttribute("role")
+            && !controlElement.HasAttribute("aria-live")
+            && !testElement.HasAttribute("role")
+            && !testElement.HasAttribute("aria-live");
+
+    private static bool IsAllowedFreshnessDotHiddenAttr(AngleSharp.Diffing.Core.AttributeComparisonSource source)
+        => string.Equals(source.Attribute.Name, "hidden", StringComparison.Ordinal)
+            && source.ElementSource.Node is AngleSharp.Dom.IElement element
+            && element.ClassList.Contains("hx-parties-profile__freshness-dot")
+            && !element.HasAttribute("role")
+            && !element.HasAttribute("aria-live");
 
     [Fact]
     public async Task EditMyProfilePage_LateAcceptanceAfterDisposalDoesNotReadBack()
@@ -1071,7 +1118,7 @@ public sealed class EditMyProfilePageTests : ConsumerPortalBunitContext
         cut.WaitForAssertion(() =>
         {
             FindTextInput(cut, "First name").Instance.Value.ShouldBe("Ada");
-            cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldContain(expectedFreshness);
+            AssertPoliteStatus(cut, expectedFreshness, sharedFeedback: false, expectedFreshnessModifier: LastKnownFreshnessClass);
         });
     }
 

@@ -4,6 +4,10 @@ using Bunit;
 
 using Hexalith.Parties.UI.Components.Shared;
 using Hexalith.Parties.UI.Status;
+#if HFC_SHARED_UI
+
+using Microsoft.Extensions.DependencyInjection;
+#endif
 
 using Shouldly;
 
@@ -52,6 +56,34 @@ public sealed class StatusLiveRegionTests : BunitContext
         status.GetAttribute("aria-live").ShouldBe(expected.AriaLive);
         status.TextContent.ShouldBe("Local feedback");
     }
+
+#if HFC_SHARED_UI
+    /// <summary>
+    /// Proves that registering only the shared browser download service keeps <see cref="StatusLiveRegion"/>
+    /// on local markup without resolving <c>IFcBrowserDownloadService</c>.
+    /// </summary>
+    /// <param name="kind">The announced status kind.</param>
+    [Theory]
+    [MemberData(nameof(PoliteKinds))]
+    [MemberData(nameof(AssertiveKinds))]
+    public void DownloadOnlyRegistrationRetainsLocalLiveRegionWithoutResolvingDownloads(StatusKind kind)
+    {
+        using var context = new BunitContext();
+        context.Services.AddScoped<Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService>(_ =>
+            throw new InvalidOperationException("The status live region should not resolve the download service."));
+
+        IRenderedComponent<StatusLiveRegion> cut = context.Render<StatusLiveRegion>(p => p
+            .Add(c => c.Kind, kind)
+            .Add(c => c.Message, "Local feedback"));
+
+        cut.FindComponents<Hexalith.FrontComposer.Shell.Components.Feedback.FcLiveRegion>().ShouldBeEmpty();
+        (string? role, string? ariaLive) = StatusPresentation.LiveRegionAttributes(StatusPresentation.PolitenessFor(kind));
+        IElement status = cut.Find("div");
+        status.GetAttribute("role").ShouldBe(role);
+        status.GetAttribute("aria-live").ShouldBe(ariaLive);
+        status.TextContent.ShouldBe("Local feedback");
+    }
+#endif
 
     [Theory]
     [MemberData(nameof(PoliteKinds))]

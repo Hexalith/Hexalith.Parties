@@ -160,6 +160,83 @@ public sealed class PartiesAdminPortalE2eFixtureTests
         fixtureState.Snapshot().ExportRequests.Single().PartyId.ShouldBe("party-bound-001");
     }
 
+    [Fact]
+    public async Task ConsumerProfileLoadGate_BlocksInteractiveReadOnceWithoutBlockingSsrPrerenderAsync()
+    {
+        var fixtureState = new PartiesAdminPortalE2eFixtureState();
+        fixtureState.ArmConsumerProfileLoadGate();
+
+        var ssrContext = new DefaultHttpContext();
+        ssrContext.Request.Path = "/me/edit";
+        var ssrClient = new PartiesAdminPortalE2ePartiesQueryClient(
+            fixtureState,
+            new HttpContextAccessor { HttpContext = ssrContext });
+
+        Task<PartyDetail> ssrRead = ssrClient.GetPartyAsync("party-bound-001", TestContext.Current.CancellationToken);
+        ssrRead.IsCompletedSuccessfully.ShouldBeTrue();
+        (await ssrRead.ConfigureAwait(true)).Id.ShouldBe("party-bound-001");
+
+        var circuitContext = new DefaultHttpContext();
+        circuitContext.Request.Path = "/_blazor";
+        var interactiveClient = new PartiesAdminPortalE2ePartiesQueryClient(
+            fixtureState,
+            new HttpContextAccessor { HttpContext = circuitContext });
+
+        Task<PartyDetail> gatedRead = interactiveClient.GetPartyAsync("party-bound-001", TestContext.Current.CancellationToken);
+        gatedRead.IsCompleted.ShouldBeFalse();
+
+        fixtureState.ReleaseConsumerProfileLoadGate();
+        PartyDetail released = await gatedRead.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken).ConfigureAwait(true);
+        released.Id.ShouldBe("party-bound-001");
+
+        Task<PartyDetail> secondRead = interactiveClient.GetPartyAsync("party-bound-001", TestContext.Current.CancellationToken);
+        secondRead.IsCompletedSuccessfully.ShouldBeTrue();
+        (await secondRead.ConfigureAwait(true)).Id.ShouldBe("party-bound-001");
+    }
+
+    [Fact]
+    public async Task ConsumerProfileLoadGate_ResetReleasesInFlightInteractiveReadAsync()
+    {
+        var fixtureState = new PartiesAdminPortalE2eFixtureState();
+        fixtureState.ArmConsumerProfileLoadGate();
+
+        var circuitContext = new DefaultHttpContext();
+        circuitContext.Request.Path = "/_blazor";
+        var interactiveClient = new PartiesAdminPortalE2ePartiesQueryClient(
+            fixtureState,
+            new HttpContextAccessor { HttpContext = circuitContext });
+
+        Task<PartyDetail> gatedRead = interactiveClient.GetPartyAsync("party-bound-001", TestContext.Current.CancellationToken);
+        gatedRead.IsCompleted.ShouldBeFalse();
+
+        fixtureState.Reset();
+        PartyDetail released = await gatedRead.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken).ConfigureAwait(true);
+        released.Id.ShouldBe("party-bound-001");
+
+        Task<PartyDetail> followUpRead = interactiveClient.GetPartyAsync("party-bound-001", TestContext.Current.CancellationToken);
+        followUpRead.IsCompletedSuccessfully.ShouldBeTrue();
+        (await followUpRead.ConfigureAwait(true)).Id.ShouldBe("party-bound-001");
+    }
+
+    [Fact]
+    public async Task ConsumerProfileLoadGate_AlreadyCanceledTokenPreservesArmedGateAsync()
+    {
+        var fixtureState = new PartiesAdminPortalE2eFixtureState();
+        fixtureState.ArmConsumerProfileLoadGate();
+
+        using var canceled = new CancellationTokenSource();
+        await canceled.CancelAsync().ConfigureAwait(true);
+
+        await Should.ThrowAsync<OperationCanceledException>(
+            () => fixtureState.WaitForConsumerProfileLoadGateAsync("party-bound-001", canceled.Token)).ConfigureAwait(true);
+
+        Task stillArmed = fixtureState.WaitForConsumerProfileLoadGateAsync("party-bound-001", TestContext.Current.CancellationToken);
+        stillArmed.IsCompleted.ShouldBeFalse();
+
+        fixtureState.ReleaseConsumerProfileLoadGate();
+        await stillArmed.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken).ConfigureAwait(true);
+    }
+
     private static ServiceProvider BuildAuthenticationProvider(IHttpContextAccessor accessor)
     {
         var services = new ServiceCollection();

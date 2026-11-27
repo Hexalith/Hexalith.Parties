@@ -1,6 +1,7 @@
 @namespace Hexalith.Parties.UI.Components.Shared
 @inject IServiceProvider Services
 @using Hexalith.Parties.UI.Status
+@using Microsoft.Extensions.DependencyInjection
 
 @*
     Story 1.6 (AC2/AC5) — the minimal, semantics-only primitive that renders a StatusKind into the
@@ -29,7 +30,8 @@
         get
         {
 #if HFC_SHARED_UI
-            if (Services.GetService(typeof(Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService)) is not null)
+            if (Services.GetService<IServiceProviderIsService>() is { } registrations
+                && registrations.IsService(typeof(Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler)))
             {
                 return typeof(Hexalith.FrontComposer.Shell.Components.Feedback.FcLiveRegion);
             }

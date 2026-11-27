@@ -5,6 +5,10 @@ using Bunit;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.UI.Components.Shared;
 using Hexalith.Parties.UI.Status;
+#if HFC_SHARED_UI
+
+using Microsoft.Extensions.DependencyInjection;
+#endif
 
 using Shouldly;
 
@@ -44,6 +48,29 @@ public sealed class DataFreshnessIndicatorTests : BunitContext
         status.GetAttribute("aria-live").ShouldBe("polite");
         status.TextContent.ShouldBe("Showing last known");
     }
+
+#if HFC_SHARED_UI
+    /// <summary>
+    /// Proves that registering only the shared browser download service keeps <see cref="DataFreshnessIndicator"/>
+    /// on local freshness markup without resolving <c>IFcBrowserDownloadService</c>.
+    /// </summary>
+    [Fact]
+    public void DownloadOnlyRegistrationRetainsLocalFreshnessMarkupWithoutResolvingDownloads()
+    {
+        using var context = new BunitContext();
+        context.Services.AddScoped<Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService>(_ =>
+            throw new InvalidOperationException("The freshness indicator should not resolve the download service."));
+
+        IRenderedComponent<DataFreshnessIndicator> cut = context.Render<DataFreshnessIndicator>(p => p
+            .Add(c => c.Freshness, ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Stale)));
+
+        cut.FindComponents<Hexalith.FrontComposer.Shell.Components.Feedback.FcFreshnessIndicator>().ShouldBeEmpty();
+        cut.FindAll("[data-fc-freshness]").ShouldBeEmpty();
+        IElement status = cut.Find("[role='status']");
+        status.GetAttribute("aria-live").ShouldBe("polite");
+        status.TextContent.ShouldBe("Showing what we last knew - refreshing");
+    }
+#endif
 
     [Theory]
     [InlineData(ProjectionFreshnessStatus.Current, "Up to date")]

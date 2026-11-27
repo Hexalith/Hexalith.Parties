@@ -2,12 +2,14 @@ using Hexalith.Parties.Search;
 
 namespace Hexalith.Parties.Tests.Search;
 
-/// <summary>Delegates ingestion-intent persistence while intercepting direct cleanup confirmation boundaries.</summary>
+/// <summary>Delegates ingestion-intent persistence while intercepting cleanup confirmation and terminal-status retention boundaries.</summary>
 /// <param name="inner">The underlying durable ingestion-intent store.</param>
 /// <param name="afterAuthorization">Optional callback invoked after an empty pre-delete confirmation succeeds.</param>
+/// <param name="afterRetainTerminalStatus">Optional callback invoked after terminal-status retention succeeds.</param>
 internal sealed class PartyMemoryDirectCleanupInterceptingIntentStore(
     IPartyMemoryIngestionIntentStore inner,
-    Func<CancellationToken, Task>? afterAuthorization = null) : IPartyMemoryIngestionIntentStore
+    Func<CancellationToken, Task>? afterAuthorization = null,
+    Func<CancellationToken, Task>? afterRetainTerminalStatus = null) : IPartyMemoryIngestionIntentStore
 {
     private readonly IPartyMemoryIngestionIntentStore _inner = inner ?? throw new ArgumentNullException(nameof(inner));
 
@@ -16,6 +18,9 @@ internal sealed class PartyMemoryDirectCleanupInterceptingIntentStore(
 
     /// <summary>Gets the number of post-delete settlement confirmations attempted.</summary>
     internal int SettlementCount { get; private set; }
+
+    /// <summary>Gets the number of terminal-status retention writes completed.</summary>
+    internal int RetainTerminalStatusCount { get; private set; }
 
     /// <summary>Gets the exception thrown by the most recent settlement confirmation, if any.</summary>
     internal Exception? SettlementException { get; private set; }
@@ -94,10 +99,20 @@ internal sealed class PartyMemoryDirectCleanupInterceptingIntentStore(
         => _inner.SetTerminalObservationAsync(tenantId, partyId, snapshot, observationId, cancellationToken);
 
     /// <inheritdoc/>
-    public Task<PartyMemoryIngestionIntent> RetainTerminalStatusAsync(
+    public async Task<PartyMemoryIngestionIntent> RetainTerminalStatusAsync(
         string tenantId, string partyId, PartyMemoryIngestionIntent snapshot,
         string canonicalId, string producerAuthority, CancellationToken cancellationToken)
-        => _inner.RetainTerminalStatusAsync(tenantId, partyId, snapshot, canonicalId, producerAuthority, cancellationToken);
+    {
+        PartyMemoryIngestionIntent retained = await _inner.RetainTerminalStatusAsync(
+            tenantId, partyId, snapshot, canonicalId, producerAuthority, cancellationToken).ConfigureAwait(false);
+        RetainTerminalStatusCount++;
+        if (afterRetainTerminalStatus is not null)
+        {
+            await afterRetainTerminalStatus(cancellationToken).ConfigureAwait(false);
+        }
+
+        return retained;
+    }
 
     /// <inheritdoc/>
     public Task<PartyMemoryIngestionIntent> RetainLegacyAsync(

@@ -69,6 +69,7 @@ class BackfillMemoriesReportTests(unittest.TestCase):
                 (target / name).write_bytes(data)
                 snapshots[name] = hashlib.sha256(data).hexdigest()
             seed_index_sha = hashlib.sha256(f"{tenant}:seed-index".encode()).hexdigest()
+            staging_envelope_sha = hashlib.sha256(f"{tenant}:staging-envelope".encode()).hexdigest()
             commit_index_sha = hashlib.sha256(f"{tenant}:commit-index".encode()).hexdigest()
             if existing:
                 preexisting = {"present": True, "sha256": seed_index_sha, "etag": f"etag-seed-{tenant}"}
@@ -76,6 +77,7 @@ class BackfillMemoriesReportTests(unittest.TestCase):
             else:
                 preexisting = {"present": False, "sha256": None, "etag": None}
                 staged = {"present": False, "sha256": None, "etag": None}
+            staging_envelope = {"present": True, "sha256": staging_envelope_sha, "etag": f"etag-stage-{tenant}"}
             committed = {"present": True, "sha256": commit_index_sha, "etag": f"etag-commit-{tenant}"}
             index_by_phase = {
                 "seed": preexisting,
@@ -86,17 +88,21 @@ class BackfillMemoriesReportTests(unittest.TestCase):
                 "verify": committed,
             }
             for pid, (phase, observations) in enumerate(snapshots_by_phase.items(), start=1):
-                receipt = json.dumps({
+                payload = {
                     "tenant": tenant, "operation": operation, "phase": phase, "processId": pid, "inputSha256": digest,
                     "snapshotSha256": {name: snapshots[name] for name in observations},
                     "index": index_by_phase[phase],
-                }).encode("utf-8")
+                }
+                if phase == "stage":
+                    payload["stagingEnvelope"] = staging_envelope
+                receipt = json.dumps(payload).encode("utf-8")
                 encoded = base64.b64encode(receipt).decode("ascii")
                 output.text = f"Synthetic diagnostic\n{runner['WORKLOAD_RECEIPT_PREFIX']}{encoded}\n"
                 ET.ElementTree(root).write(target / f"{phase}.xml")
                 (target / f"{phase}.json").write_bytes(receipt)
             outcomes[tenant] = {"tenant": tenant, "inputSha256": digest, "phases": list(snapshots_by_phase),
-                                "snapshotSha256": snapshots, "index": index_by_phase}
+                                "snapshotSha256": snapshots, "index": index_by_phase,
+                                "stagingEnvelope": staging_envelope}
         return outcomes
 
     def rewrite_workload_receipt(self, target, phase, content):
@@ -340,6 +346,115 @@ class BackfillMemoriesReportTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, message):
                     runner["verify_workloads"](directory)
 
+    def test_workloads_reject_missing_or_malformed_staging_envelope_receipts(self):
+        cases = (
+            ("missing-empty", "empty", "missing or malformed stage workload stagingEnvelope receipt"),
+            ("missing-existing", "existing", "missing or malformed stage workload stagingEnvelope receipt"),
+            ("duplicate-object", "empty", "Duplicate workload receipt property"),
+            ("null-object", "empty", "missing or malformed stage workload stagingEnvelope receipt"),
+            ("missing-field", "empty", "missing or malformed stage workload stagingEnvelope receipt"),
+            ("extra-field", "existing", "missing or malformed stage workload stagingEnvelope receipt"),
+            ("duplicate-field", "existing", "Duplicate workload receipt property"),
+            ("present-false", "empty", "invalid stage workload stagingEnvelope presence"),
+            ("non-bool-present", "empty", "invalid stage workload stagingEnvelope presence"),
+            ("uppercase-sha256", "empty", "missing or invalid stage workload stagingEnvelope SHA-256"),
+            ("short-sha256", "existing", "missing or invalid stage workload stagingEnvelope SHA-256"),
+            ("null-etag", "empty", "missing or invalid stage workload stagingEnvelope ETag"),
+            ("blank-etag", "empty", "missing or invalid stage workload stagingEnvelope ETag"),
+            ("untrimmed-etag", "existing", "missing or invalid stage workload stagingEnvelope ETag"),
+        )
+        for defect, target_name, message in cases:
+            with self.subTest(defect=defect), tempfile.TemporaryDirectory() as tmp:
+                directory = Path(tmp)
+                self.write_workloads(directory)
+                target = directory / target_name
+                receipt = json.loads((target / "stage.json").read_bytes())
+                original_etag = receipt["stagingEnvelope"]["etag"]
+                if defect in ("missing-empty", "missing-existing"):
+                    del receipt["stagingEnvelope"]
+                elif defect == "null-object":
+                    receipt["stagingEnvelope"] = None
+                elif defect == "missing-field":
+                    del receipt["stagingEnvelope"]["etag"]
+                elif defect == "extra-field":
+                    receipt["stagingEnvelope"]["extra"] = True
+                elif defect == "present-false":
+                    receipt["stagingEnvelope"]["present"] = False
+                elif defect == "non-bool-present":
+                    receipt["stagingEnvelope"]["present"] = 1
+                elif defect == "uppercase-sha256":
+                    receipt["stagingEnvelope"]["sha256"] = receipt["stagingEnvelope"]["sha256"].upper()
+                elif defect == "short-sha256":
+                    receipt["stagingEnvelope"]["sha256"] = "abcd"
+                elif defect == "null-etag":
+                    receipt["stagingEnvelope"]["etag"] = None
+                elif defect == "blank-etag":
+                    receipt["stagingEnvelope"]["etag"] = "   "
+                elif defect == "untrimmed-etag":
+                    receipt["stagingEnvelope"]["etag"] = f" {original_etag} "
+                content = json.dumps(receipt).encode("utf-8")
+                if defect == "duplicate-object":
+                    needle = b'"stagingEnvelope":'
+                    self.assertIn(needle, content)
+                    content = content.replace(needle, b'"stagingEnvelope": null, "stagingEnvelope":', 1)
+                elif defect == "duplicate-field":
+                    needle = f'"etag": "{original_etag}"'.encode("utf-8")
+                    self.assertIn(needle, content)
+                    content = content.replace(needle, b'"etag": "dup", ' + needle, 1)
+                self.rewrite_workload_receipt(target, "stage", content)
+                with self.assertRaisesRegex(ValueError, message):
+                    runner["verify_workloads"](directory)
+
+    def test_workloads_reject_unchanged_or_leaked_staging_envelope_receipts(self):
+        cases = (
+            ("existing-stage-unchanged-hash", "existing", "stage",
+             lambda r, o: r["stagingEnvelope"].update(sha256=o["existing"]["index"]["seed"]["sha256"]),
+             "stage workload stagingEnvelope did not change preexisting index bytes and ETag"),
+            ("existing-stage-unchanged-etag", "existing", "stage",
+             lambda r, o: r["stagingEnvelope"].update(etag=o["existing"]["index"]["seed"]["etag"]),
+             "stage workload stagingEnvelope did not change preexisting index bytes and ETag"),
+            ("empty-commit-unchanged-envelope-hash", "empty", "commit",
+             lambda r, o: r["index"].update(sha256=o["empty"]["stagingEnvelope"]["sha256"]),
+             "commit workload index did not change staged envelope bytes and ETag"),
+            ("empty-commit-unchanged-envelope-etag", "empty", "commit",
+             lambda r, o: r["index"].update(etag=o["empty"]["stagingEnvelope"]["etag"]),
+             "commit workload index did not change staged envelope bytes and ETag"),
+            ("existing-commit-unchanged-envelope-hash", "existing", "commit",
+             lambda r, o: r["index"].update(sha256=o["existing"]["stagingEnvelope"]["sha256"]),
+             "commit workload index did not change staged envelope bytes and ETag"),
+            ("existing-commit-unchanged-envelope-etag", "existing", "commit",
+             lambda r, o: r["index"].update(etag=o["existing"]["stagingEnvelope"]["etag"]),
+             "commit workload index did not change staged envelope bytes and ETag"),
+            ("empty-seed-leaked-object", "empty", "seed",
+             lambda r, o: r.__setitem__("stagingEnvelope", dict(o["empty"]["stagingEnvelope"])),
+             "unexpected seed workload stagingEnvelope receipt"),
+            ("existing-interrupt-leaked-null", "existing", "interrupt",
+             lambda r, _o: r.__setitem__("stagingEnvelope", None),
+             "unexpected interrupt workload stagingEnvelope receipt"),
+            ("empty-rebuild-leaked-absent-object", "empty", "rebuild",
+             lambda r, _o: r.__setitem__("stagingEnvelope", {"present": False, "sha256": None, "etag": None}),
+             "unexpected rebuild workload stagingEnvelope receipt"),
+            ("empty-commit-leaked-null", "empty", "commit",
+             lambda r, _o: r.__setitem__("stagingEnvelope", None),
+             "unexpected commit workload stagingEnvelope receipt"),
+            ("existing-commit-leaked-object", "existing", "commit",
+             lambda r, o: r.__setitem__("stagingEnvelope", dict(o["existing"]["stagingEnvelope"])),
+             "unexpected commit workload stagingEnvelope receipt"),
+            ("existing-verify-leaked-object", "existing", "verify",
+             lambda r, o: r.__setitem__("stagingEnvelope", dict(o["existing"]["stagingEnvelope"])),
+             "unexpected verify workload stagingEnvelope receipt"),
+        )
+        for defect, target_name, phase, mutate, message in cases:
+            with self.subTest(defect=defect), tempfile.TemporaryDirectory() as tmp:
+                directory = Path(tmp)
+                outcomes = self.write_workloads(directory)
+                target = directory / target_name
+                receipt = json.loads((target / f"{phase}.json").read_bytes())
+                mutate(receipt, outcomes)
+                self.rewrite_workload_receipt(target, phase, json.dumps(receipt).encode("utf-8"))
+                with self.assertRaisesRegex(ValueError, message):
+                    runner["verify_workloads"](directory)
+
     def test_misplaced_test_is_rejected_even_when_reported_counts_match(self):
         project = runner["MEMORIES_PROJECT"]
         lane = "same-uri-refresh"
@@ -472,6 +587,56 @@ class BackfillMemoriesReportTests(unittest.TestCase):
             ("True", "commit-unchanged-hash"),
             ("True", "commit-unchanged-etag"),
             ("True", "verify-mismatched-etag"),
+        )
+        for existing, defect in cases:
+            with self.subTest(existing=existing, defect=defect):
+                assembly = self.report_for_methods(runner["BACKFILL_METHODS"], project)
+                complete = self.verify(assembly, "backfill", project)
+                collection = assembly.find("collection")
+                case = f'{method}(existing: {existing}, defect: "{defect}")'
+                self.assertIn(case, complete["cases"])
+                collection.remove(next(test for test in collection if test.get("name") == case))
+                self.recount(assembly)
+                with self.assertRaisesRegex(ValueError, "missing"):
+                    self.verify(assembly, "backfill", project)
+
+                checks = {lane: {"passed": len(cases_for_lane), "cases": sorted(cases_for_lane)}
+                          for lane, cases_for_lane in runner["REQUIRED_CASES"].items()}
+                remaining = [name for name in complete["cases"] if name != case]
+                checks["backfill"] = {"passed": len(remaining), "cases": remaining}
+                with self.assertRaisesRegex(ValueError, "backfill: incomplete required case evidence"):
+                    runner["complete_summary"]({"checks": checks})
+
+    def test_backfill_requires_every_staging_envelope_receipt_integrity_case(self):
+        project = runner["BACKFILL_PROJECT"]
+        method = ("Hexalith.Parties.Tests.Projections.PartyLegacyBackfillProcessRuntimeTests."
+                  "StagingEnvelopeReceiptRefusesMissingMalformedUnchangedOrLeakedState")
+        cases = (
+            ("False", "missing-object"),
+            ("True", "missing-object"),
+            ("False", "duplicate-object"),
+            ("False", "null-object"),
+            ("False", "missing-field"),
+            ("False", "extra-field"),
+            ("False", "duplicate-field"),
+            ("False", "present-false"),
+            ("False", "non-bool-present"),
+            ("False", "invalid-sha256"),
+            ("False", "null-etag"),
+            ("False", "blank-etag"),
+            ("False", "untrimmed-etag"),
+            ("True", "stage-unchanged-hash"),
+            ("True", "stage-unchanged-etag"),
+            ("False", "commit-unchanged-envelope-hash"),
+            ("False", "commit-unchanged-envelope-etag"),
+            ("True", "commit-unchanged-envelope-hash"),
+            ("True", "commit-unchanged-envelope-etag"),
+            ("False", "seed-leaked-object"),
+            ("True", "interrupt-leaked-null"),
+            ("False", "rebuild-leaked-absent-object"),
+            ("False", "commit-leaked-null"),
+            ("True", "commit-leaked-object"),
+            ("True", "verify-leaked-object"),
         )
         for existing, defect in cases:
             with self.subTest(existing=existing, defect=defect):

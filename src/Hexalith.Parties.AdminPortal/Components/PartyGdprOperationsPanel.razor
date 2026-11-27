@@ -1,4 +1,5 @@
 @implements IDisposable
+@using Microsoft.Extensions.DependencyInjection
 @inject AdminPortalPartyQueryService QueryService
 @inject AdminPortalEventStoreAdminLinks EventStoreLinks
 @inject AdminPortalGdprStateCoordinator GdprCoordinator
@@ -184,7 +185,8 @@
         get
         {
 #if HFC_SHARED_UI
-            if (Services.GetService(typeof(Hexalith.FrontComposer.Contracts.Downloads.IFcBrowserDownloadService)) is not null)
+            if (Services.GetService<IServiceProviderIsService>() is { } registrations
+                && registrations.IsService(typeof(Hexalith.FrontComposer.Shell.Services.Feedback.FcOptimisticReconciler)))
             {
                 return typeof(Hexalith.FrontComposer.Shell.Components.Forms.FcDestructiveConfirmationDialog);
             }
