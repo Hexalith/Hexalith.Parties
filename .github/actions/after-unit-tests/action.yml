@@ -1,0 +1,37 @@
+name: Parties browser qualification
+description: Run the locked browser suite against the prebuilt Release UI.
+runs:
+  using: composite
+  steps:
+    - name: Verify browser configuration and types
+      shell: bash
+      working-directory: tests/e2e
+      run: |
+        npm run test:config
+        npm run typecheck
+
+    - name: Verify restored UI asset lookup
+      shell: bash
+      env:
+        CI: 'true'
+      run: python3 tests/Hexalith.Parties.UI.Tests/verify-restored-assets.py
+
+    - name: Run accessibility, portal and picker scenarios
+      shell: bash
+      working-directory: tests/e2e
+      env:
+        CI: 'true'
+        BASE_URL: http://127.0.0.1:5072
+        PLAYWRIGHT_SKIP_WEBSERVER: ''
+      run: npm run test:ui
+
+    - name: Upload browser reports
+      if: always()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      with:
+        name: ui-a11y-results
+        path: |
+          tests/e2e/playwright-report
+          tests/e2e/test-results
+        retention-days: 14
+        if-no-files-found: warn

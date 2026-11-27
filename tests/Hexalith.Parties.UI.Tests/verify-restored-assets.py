@@ -16,6 +16,7 @@ assert len(METADATA) == 2
 ASSET = Path('hexalith.frontcomposer.shell/1.0.0/staticwebassets/css/fc-shell.css')
 CONTENT = '/* restored fixture stylesheet */'
 CONFIGURATION = 'Release' if os.environ.get('CI') else 'Debug'
+TARGET_FRAMEWORK = 'net11.0'
 
 
 def invoke(directory, env, *args):
@@ -55,7 +56,7 @@ with tempfile.TemporaryDirectory(prefix='parties-restored-assets-') as temporary
 
         project = ET.Element('Project', Sdk='Microsoft.NET.Sdk')
         properties = ET.SubElement(project, 'PropertyGroup')
-        for name, value in [('TargetFramework', 'net10.0'), ('OutputType', 'Exe'),
+        for name, value in [('TargetFramework', TARGET_FRAMEWORK), ('OutputType', 'Exe'),
                             ('ImplicitUsings', 'enable'), ('Nullable', 'enable'),
                             ('HexalithFrontComposerVersion', '1.0.0')]:
             ET.SubElement(properties, name).text = value
@@ -95,7 +96,7 @@ Console.WriteLine(JsonSerializer.Serialize(new {
         invoke(directory, env, 'restore', str(project_file), '--configfile', str(directory / 'NuGet.Config'),
                '-p:NuGetAudit=false', *arguments)
         invoke(directory, env, 'build', str(project_file), '--no-restore', '-c', CONFIGURATION, *arguments)
-        result = json.loads(invoke(directory, env, str(directory / f'bin/{CONFIGURATION}/net10.0/probe.dll')))
+        result = json.loads(invoke(directory, env, str(directory / f'bin/{CONFIGURATION}/{TARGET_FRAMEWORK}/probe.dll')))
         assert Path(result['Asset']).resolve() == (expected / ASSET).resolve(), result
         assert result['Content'] == CONTENT, result
         assert expected.resolve() in {Path(folder).resolve() for folder in result['Folders'].split(';') if folder}, result

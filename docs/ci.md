@@ -1,9 +1,9 @@
 # CI/CD and product qualification
 
 Parties is preparing to adopt the shared Hexalith.CiCd pipeline. Registration,
-App delivery and hosted acceptance are pending. The eight legacy workflows are
-unchanged during product preparation; CiCd delivery replaces the owned perimeter.
-The prior pipeline description is retained as [historical reference](ci-legacy-reference.md).
+App delivery and hosted acceptance are pending. Legacy workflows remain active
+until CiCd replaces the owned perimeter. See the
+[historical pipeline description](ci-legacy-reference.md).
 
 ## Product boundary
 
@@ -15,14 +15,15 @@ helpers. Do not initialize nested submodules in an umbrella workspace.
 Keep compilation, security and dependency audits, commit validation and package
 publishing. Retain actual runtime authentication, persistence, concurrency,
 isolation, cleanup, module/ACL declarations, dependency compatibility, package,
-container, browser and accessibility checks. Tests of workflow YAML, assistant
-instructions, story status, historical CI receipts and controller orchestration
-are retired. Historical records and actual product fixture bytes remain available.
+container, browser and accessibility checks. Shared CI will retire checks of
+workflow YAML, assistant instructions, story status, historical CI receipts and
+controller orchestration. Legacy workflows still invoke controller tests during
+preparation. Historical records and product fixtures remain available.
 
-The solutions list three runner-owned projects. Their ordinary builds include
-`Hexalith.Parties.Platform.IntegrationTests`. Build the two opt-in suites,
+The standalone solution builds all three runner-owned projects,
+`Hexalith.Parties.Platform.IntegrationTests`,
 `Hexalith.Parties.Platform.LifecycleTests` and
-`Hexalith.Parties.Platform.AttachedLifecycleQualification.Tests`, directly.
+`Hexalith.Parties.Platform.AttachedLifecycleQualification.Tests`.
 The attached suite uses the current EventStore SDK for lineage and expiry.
 The original attached project path forwards legacy builds to that suite. The
 package graph selects EventStore through `HexalithEventStoreVersion`. Explicit
@@ -63,11 +64,11 @@ permits SDK property queries during preparation, verifies all 13 receipts
 and compares the entry binaries' hashes and timestamps before and after.
 It needs network access for the existing public package archive verification.
 
-Compatibility-cohort routing and enabled hooks remain pending. The shipped
-native runner still compiles its model and tests for each private execution;
-package-mode native hooks require shared artifact-reuse support before they can
-satisfy the approved build-once boundary. Direct legacy qualification paths remain
-available, and their results do not establish central-pipeline acceptance.
+The browser hook is prepared for shared environment setup and the prebuilt
+Release UI. Its registration and compatibility-cohort routing remain pending.
+The shipped native runner still compiles its model and tests for each private
+execution. Package-mode native hooks require shared artifact reuse to use the
+same standalone build. Direct legacy qualification paths remain available.
 
 ## Adoption and releases
 
@@ -85,5 +86,5 @@ per-project clocks and commit timestamps do not satisfy that requirement.
 
 Keep the publishing switch exactly `true` and retention at 90 days. Maintainer
 prerequisites, migration ordering, scoped publisher grants, App adoption, green
-shared CI and the next scheduled nightly outcome remain acceptance requirements.
+shared CI and a post-adoption central nightly outcome remain acceptance requirements.
 Use the [release checklist](../RELEASE-CHECKLIST.md) for that boundary.

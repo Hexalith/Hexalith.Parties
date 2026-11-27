@@ -129,12 +129,13 @@ public sealed class StandaloneSolutionTests
         program.ShouldContain("builder.AddProject(\"tenants\", tenantsProjectPath)");
     }
 
-    /// <summary>Verifies the solution includes the native integration and dedicated lifecycle projects.</summary>
+    /// <summary>Verifies standalone builds produce all three native test assemblies.</summary>
     /// <param name="solutionName">The owned solution whose default build graph is checked.</param>
+    /// <param name="buildLifecycleProjects">Whether lifecycle assemblies are built by default.</param>
     [Theory]
-    [InlineData("Hexalith.Parties.Standalone.slnx")]
-    [InlineData("Hexalith.Parties.slnx")]
-    public void QualifiedNativeProjectsParticipateInTheSolutionBuild(string solutionName)
+    [InlineData("Hexalith.Parties.Standalone.slnx", true)]
+    [InlineData("Hexalith.Parties.slnx", false)]
+    public void QualifiedNativeProjectsParticipateInTheSolutionBuild(string solutionName, bool buildLifecycleProjects)
     {
         ArgumentNullException.ThrowIfNull(solutionName);
         XDocument solution = XDocument.Load(CiTestPaths.RepoFile(solutionName));
@@ -149,7 +150,14 @@ public sealed class StandaloneSolutionTests
         foreach (string path in lifecycleProjects)
         {
             XElement native = solution.Descendants("Project").Single(project => (string?)project.Attribute("Path") == path);
-            native.Elements("Build").Single().Attribute("Project")!.Value.ShouldBe("false");
+            if (buildLifecycleProjects)
+            {
+                native.Elements("Build").ShouldBeEmpty();
+            }
+            else
+            {
+                native.Elements("Build").Single().Attribute("Project")!.Value.ShouldBe("false");
+            }
         }
     }
 
