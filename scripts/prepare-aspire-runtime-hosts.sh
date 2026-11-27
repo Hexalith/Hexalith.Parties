@@ -109,6 +109,7 @@ if [[ "$gateway_profile" == packaged ]]; then
     fi
     target_framework="$(dotnet msbuild "$gateway_project" -nologo "-p:Configuration=$configuration" -getProperty:TargetFramework)"
     case "$target_framework" in net10.0|net11.0) ;; *) printf 'The packaged runtime requires a qualified evaluated target framework; received: %s\n' "$target_framework" >&2; exit 1 ;; esac
+    catalog_sdk_version="$(dotnet msbuild "$gateway_project" -nologo "-p:Configuration=$configuration" -getProperty:HexalithCatalogEventStoreVersion)"
     catalog_hosts="$(dotnet msbuild "$gateway_project" -nologo "-p:Configuration=$configuration" -getProperty:HexalithEventStoreCatalogHostsSupported)"
     if [[ "$catalog_hosts" == true ]]; then
         runtime_hosts[2]=tests/Hexalith.Parties.EventStoreAdminUI.TestHost/Hexalith.Parties.EventStoreAdminUI.TestHost.csproj
@@ -127,6 +128,9 @@ if [[ "$gateway_profile" == packaged ]]; then
         "-p:CustomAfterMicrosoftCommonProps=$script_directory/PartiesHostedRuntime.props" "-p:HexalithEventStoreVersion=$sdk_version" "-p:HexalithUsePublishedSdkForHostedTests=true"
         "-p:HexalithTenantsVersion=$tenants_version" "-p:HexalithMemoriesVersion=$memories_version"
         "-p:HexalithFrontComposerVersion=$frontcomposer_version" "-p:HexalithMcpCliVersion=$mcpcli_version")
+    if [[ "$catalog_sdk_version" == "$sdk_version" ]]; then
+        cohort_arguments+=("-p:HexalithCatalogEventStoreVersion=$catalog_sdk_version")
+    fi
 fi
 if [[ "$reuse_build" == true ]]; then
     cohort_arguments+=("-p:HexalithPartiesReuseRuntimeGraph=true" "-p:BuildingSolutionFile=true")
