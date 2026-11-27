@@ -913,3 +913,6 @@ references/Hexalith.CiCd|f65b6c7378c4be144a8236e42507045a359dbbb0|validated-adva
 # Runtime source owners match the released Platform package catalog.
 references/Hexalith.Tenants|d58f24d8d6909d7498ecec34955e7f17720c1ba0|validated-advance|origin/main@d58f24d8d6909d7498ecec34955e7f17720c1ba0|codex-agent|2026-11-27
 references/Hexalith.Memories|45e165d88d358c1349dbcb772e2e2a8a0f2218ce|validated-advance|origin/main@45e165d88d358c1349dbcb772e2e2a8a0f2218ce|codex-agent|2026-11-27
+
+# Match the Memories source to the signed catalog's published Contracts API.
+references/Hexalith.Memories|24cbc1927e29c03a8576279554064fb9e0219b30|validated-advance|v4.1.1@24cbc1927e29c03a8576279554064fb9e0219b30|codex-agent|2026-11-27
