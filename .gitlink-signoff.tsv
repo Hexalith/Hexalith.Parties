@@ -920,3 +920,15 @@ references/Hexalith.Memories|24cbc1927e29c03a8576279554064fb9e0219b30|validated-
 # Adopt the published Platform v2.9.0 and its Builds v6.9.1 catalog.
 references/Hexalith.Platform|a670a4c51d76f63f3142e38f02542a246e1926fb|validated-advance|v2.9.0@a670a4c51d76f63f3142e38f02542a246e1926fb|codex-agent|2026-11-27
 references/Hexalith.Builds|91cb7cba990ffdf82930f9bf8cb68aef41baba76|validated-advance|v6.9.1@91cb7cba990ffdf82930f9bf8cb68aef41baba76|codex-agent|2026-11-27
+
+# Sync root gitlinks to current published catalogs and owning origin/main tips.
+references/Hexalith.Builds|bb48c5c649eee8caebf366894b0c138a21429c21|validated-advance|v6.9.3@bb48c5c649eee8caebf366894b0c138a21429c21|jpiquot|2026-11-28
+references/Hexalith.Memories|e5e3be99157db3a843c6e714a3b9b4bf1d55aa2a|validated-advance|v4.1.4@e5e3be99157db3a843c6e714a3b9b4bf1d55aa2a|jpiquot|2026-11-28
+references/Hexalith.AI.Tools|f4c12476ace1c4f10b423c9ac9181882c9f47c3c|validated-advance|origin/main@f4c12476ace1c4f10b423c9ac9181882c9f47c3c|jpiquot|2026-11-28
+references/Hexalith.CiCd|9ada4b8a87e128e1b811944e13d1e79017941446|validated-advance|origin/main@9ada4b8a87e128e1b811944e13d1e79017941446|jpiquot|2026-11-28
+references/Hexalith.Commons|881ab57961de99ee129dd03a61d4a53d537af59d|validated-advance|origin/main@881ab57961de99ee129dd03a61d4a53d537af59d|jpiquot|2026-11-28
+references/Hexalith.EventStore|b88c7a184f288a96fab9df78abdfd044812ed145|validated-advance|origin/main@b88c7a184f288a96fab9df78abdfd044812ed145|jpiquot|2026-11-28
+references/Hexalith.FrontComposer|ad278791dbfbeabc70ceb589c2512ac4325c158d|validated-advance|origin/main@ad278791dbfbeabc70ceb589c2512ac4325c158d|jpiquot|2026-11-28
+references/Hexalith.McpCli|6919e847179b371b8370f069ba92c51a76a4463c|validated-advance|origin/main@6919e847179b371b8370f069ba92c51a76a4463c|jpiquot|2026-11-28
+references/Hexalith.PolymorphicSerializations|0bba78456f85111d172d919f4ee6129d41faf481|validated-advance|origin/main@0bba78456f85111d172d919f4ee6129d41faf481|jpiquot|2026-11-28
+references/Hexalith.Tenants|b5cce6f814e692f41c7c91ff6adbe6626d19fb38|validated-advance|origin/main@b5cce6f814e692f41c7c91ff6adbe6626d19fb38|jpiquot|2026-11-28

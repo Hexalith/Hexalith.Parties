@@ -22,7 +22,7 @@
     <HexalithCommonsVersion Condition="'$(HexalithCommonsVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true' and '$(HexalithSourceMappingMode)' != 'package'">3.0.4</HexalithCommonsVersion>
     <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true'">5.6.0</HexalithEventStoreVersion>
     <HexalithTenantsVersion Condition="'$(HexalithTenantsVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true'">8.1.1</HexalithTenantsVersion>
-    <HexalithFrontComposerVersion Condition="'$(HexalithFrontComposerVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true'">6.1.0</HexalithFrontComposerVersion>
+    <HexalithFrontComposerVersion Condition="'$(HexalithFrontComposerVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true'">6.2.0</HexalithFrontComposerVersion>
     <HexalithMemoriesVersion Condition="'$(HexalithMemoriesVersion)' == '' and '$(_PartiesUsesDefaultCatalog)' == 'true'">4.1.4</HexalithMemoriesVersion>
   </PropertyGroup>
   <!-- Import the required Hexalith.Packages.props file. -->
