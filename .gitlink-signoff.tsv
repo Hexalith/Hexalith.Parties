@@ -936,3 +936,7 @@ references/Hexalith.Tenants|b5cce6f814e692f41c7c91ff6adbe6626d19fb38|validated-a
 # Align Platform with the Builds v6.9.3 catalog it now pins, and Memories with that Platform tuple.
 references/Hexalith.Platform|d72ec18aa07250f632e5e23a43f0fa79931fe71a|validated-advance|origin/main@d72ec18aa07250f632e5e23a43f0fa79931fe71a|jpiquot|2026-11-28
 references/Hexalith.Memories|a3ee240a2a6d421b0212950500e9a2ba6f1b2ce2|validated-advance|origin/main@a3ee240a2a6d421b0212950500e9a2ba6f1b2ce2|jpiquot|2026-11-28
+
+# Catalog runtime compiles Tenants source against Commons 3.0.4; origin/main
+# now needs an unpublished Commons type, so restore the published v8.1.1 tag.
+references/Hexalith.Tenants|5b97ef94de2d94f79da177817cfb8b9d371a6faa|validated-advance|v8.1.1@5b97ef94de2d94f79da177817cfb8b9d371a6faa|jpiquot|2026-11-28
