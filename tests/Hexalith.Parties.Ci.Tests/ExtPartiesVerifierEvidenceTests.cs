@@ -324,8 +324,9 @@ public sealed class ExtPartiesVerifierEvidenceTests(ITestOutputHelper output)
             UseShellExecute = false,
         };
         // Copy runtime discovery paths only; owner inputs and credentials never reach a child.
+        // HOME/USER/LANG keep pwsh from SIGSEGV on GitHub runners when the environment is otherwise empty.
         start.Environment.Clear();
-        foreach (string name in new[] { "PATH", "DOTNET_ROOT", "SystemRoot", "WINDIR" })
+        foreach (string name in new[] { "PATH", "DOTNET_ROOT", "SystemRoot", "WINDIR", "HOME", "USER", "LANG", "LC_ALL", "LD_LIBRARY_PATH", "DOTNET_SYSTEM_GLOBALIZATION_INVARIANT" })
         {
             string? value = Environment.GetEnvironmentVariable(name);
             if (value is not null) { start.Environment[name] = value; }
