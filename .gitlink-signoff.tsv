@@ -940,3 +940,7 @@ references/Hexalith.Memories|a3ee240a2a6d421b0212950500e9a2ba6f1b2ce2|validated-
 # Catalog runtime compiles Tenants source against Commons 3.0.4; origin/main
 # now needs an unpublished Commons type, so restore the published v8.1.1 tag.
 references/Hexalith.Tenants|5b97ef94de2d94f79da177817cfb8b9d371a6faa|validated-advance|v8.1.1@5b97ef94de2d94f79da177817cfb8b9d371a6faa|jpiquot|2026-11-28
+
+# Keep the last tagged Builds sign-off on the Platform v2.9.0 catalog pin
+# (v6.9.1) so the local module CLI matches HEAD after the v6.9.3 attempt.
+references/Hexalith.Builds|91cb7cba990ffdf82930f9bf8cb68aef41baba76|validated-advance|v6.9.1@91cb7cba990ffdf82930f9bf8cb68aef41baba76|jpiquot|2026-11-28

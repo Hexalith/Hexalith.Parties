@@ -129,11 +129,11 @@ public sealed class StandaloneSolutionTests
         program.ShouldContain("builder.AddProject(\"tenants\", tenantsProjectPath)");
     }
 
-    /// <summary>Verifies standalone builds produce all three native test assemblies.</summary>
+    /// <summary>Verifies ordinary solution builds keep integration tests and exclude lifecycle qualification assemblies.</summary>
     /// <param name="solutionName">The owned solution whose default build graph is checked.</param>
     /// <param name="buildLifecycleProjects">Whether lifecycle assemblies are built by default.</param>
     [Theory]
-    [InlineData("Hexalith.Parties.Standalone.slnx", true)]
+    [InlineData("Hexalith.Parties.Standalone.slnx", false)]
     [InlineData("Hexalith.Parties.slnx", false)]
     public void QualifiedNativeProjectsParticipateInTheSolutionBuild(string solutionName, bool buildLifecycleProjects)
     {
