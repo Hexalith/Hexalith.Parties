@@ -32,7 +32,7 @@ async function fixture(version, mismatch, check) {
   } finally { await rm(root, { recursive: true, force: true }); }
 }
 
-for (const version of ['5.0.0', '6.0.0', '6.0.1', '6.1.0']) {
+for (const version of ['5.0.0', '6.0.0', '6.0.1', '6.1.0', '6.2.0']) {
   test(`exact ${version} compares all served assets and retains hashes`, async () => {
     await fixture(version, null, async (qualify, requests, attachments) => {
       assert.equal(await qualify(), 'package');
